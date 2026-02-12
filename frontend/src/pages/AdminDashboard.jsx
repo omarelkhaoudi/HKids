@@ -23,33 +23,35 @@ function AdminDashboard() {
   const isActive = (path) => location.pathname === path;
 
   return (
-    <div className="min-h-screen bg-neutral-50">
+    <div className="min-h-screen bg-gradient-to-br from-neutral-50 via-white to-neutral-100 text-neutral-900">
       {/* Sidebar */}
-      <motion.div
-        initial={{ x: -100, opacity: 0 }}
+      <motion.aside
+        initial={{ x: -80, opacity: 0 }}
         animate={{ x: 0, opacity: 1 }}
         transition={{ duration: 0.3 }}
-        className="fixed inset-y-0 left-0 w-64 bg-white border-r border-neutral-200 z-40"
+        className="fixed inset-y-0 left-0 w-64 bg-white border-r border-neutral-200 z-40 hidden md:flex"
       >
         <div className="p-6 h-full flex flex-col">
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
+            transition={{ delay: 0.15 }}
           >
-            <div className="mb-2">
+            <div className="mb-3">
               <Logo size="default" showText={true} className="pointer-events-none" />
             </div>
-            <p className="text-sm text-neutral-600 mb-8">Tableau de bord administrateur</p>
+            <p className="text-xs text-neutral-500 mb-6 uppercase tracking-wide">
+              Tableau de bord administrateur
+            </p>
           </motion.div>
 
-          <nav className="space-y-2 flex-1">
+          <nav className="space-y-1.5 flex-1 text-sm">
             <Link
               to="/admin"
               end
-              className={`block px-4 py-3 rounded-lg font-medium transition-all flex items-center gap-3 ${
+              className={`group flex items-center gap-3 px-4 py-2.5 rounded-xl font-medium transition-all ${
                 isActive('/admin')
-                  ? 'bg-neutral-900 text-white'
+                  ? 'bg-neutral-900 text-white shadow-md'
                   : 'text-neutral-700 hover:bg-neutral-100'
               }`}
             >
@@ -58,9 +60,9 @@ function AdminDashboard() {
             </Link>
             <Link
               to="/admin/categories"
-              className={`block px-4 py-3 rounded-lg font-medium transition-all flex items-center gap-3 ${
+              className={`group flex items-center gap-3 px-4 py-2.5 rounded-xl font-medium transition-all ${
                 isActive('/admin/categories')
-                  ? 'bg-neutral-900 text-white'
+                  ? 'bg-neutral-900 text-white shadow-md'
                   : 'text-neutral-700 hover:bg-neutral-100'
               }`}
             >
@@ -69,9 +71,9 @@ function AdminDashboard() {
             </Link>
           </nav>
 
-          <div className="border-t border-neutral-200 pt-6">
-            <div className="mb-4 p-3 bg-neutral-50 rounded-lg">
-              <p className="text-xs text-neutral-500 mb-1">Connecté en tant que</p>
+          <div className="border-t border-neutral-200 pt-5 mt-4 text-xs">
+            <div className="mb-3 p-3 rounded-xl bg-neutral-50 border border-neutral-200">
+              <p className="text-neutral-500 mb-1">Connecté en tant que</p>
               <p className="font-medium text-neutral-900 flex items-center gap-2">
                 <UserIcon className="w-4 h-4" />
                 {user.username}
@@ -79,27 +81,47 @@ function AdminDashboard() {
             </div>
             <button
               onClick={handleLogout}
-              className="w-full px-4 py-3 bg-neutral-900 text-white rounded-lg font-medium hover:bg-neutral-800 transition-colors flex items-center justify-center gap-2"
+              className="w-full px-4 py-2.5 rounded-xl bg-neutral-900 text-white font-medium hover:bg-neutral-800 transition-colors flex items-center justify-center gap-2 text-sm"
             >
               <LogOutIcon className="w-4 h-4" />
               <span>Déconnexion</span>
             </button>
           </div>
         </div>
-      </motion.div>
+      </motion.aside>
 
       {/* Main Content */}
-      <motion.div
-        initial={{ opacity: 0, x: 20 }}
+      <motion.main
+        initial={{ opacity: 0, x: 16 }}
         animate={{ opacity: 1, x: 0 }}
-        transition={{ delay: 0.3 }}
-        className="ml-64"
+        transition={{ delay: 0.25 }}
+        className="md:ml-64"
       >
-        <Routes>
-          <Route index element={<BookManagement />} />
-          <Route path="categories" element={<CategoryManagement />} />
-        </Routes>
-      </motion.div>
+        {/* Top bar for mobile */}
+        <header className="md:hidden sticky top-0 z-30 bg-white/95 border-b border-neutral-200 px-4 py-3 flex items-center justify-between">
+          <Logo size="small" />
+          <div className="flex items-center gap-3 text-xs text-neutral-600">
+            <span className="hidden xs:inline-flex items-center gap-1 px-2 py-1 rounded-full bg-neutral-100 border border-neutral-200">
+              <UserIcon className="w-3 h-3" />
+              {user.username}
+            </span>
+            <button
+              onClick={handleLogout}
+              className="px-3 py-1 rounded-lg bg-neutral-900 hover:bg-neutral-800 text-xs font-medium text-white flex items-center gap-1"
+            >
+              <LogOutIcon className="w-3 h-3" />
+              <span>Quitter</span>
+            </button>
+          </div>
+        </header>
+
+        <div className="px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+          <Routes>
+            <Route index element={<BookManagement />} />
+            <Route path="categories" element={<CategoryManagement />} />
+          </Routes>
+        </div>
+      </motion.main>
     </div>
   );
 }
