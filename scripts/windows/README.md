@@ -1,42 +1,25 @@
 # Scripts Windows
 
-Ce dossier contient tous les scripts Windows (.bat et .ps1) pour faciliter la gestion du projet.
+Scripts PowerShell pour gérer le projet HKids sur Windows.
 
 ## Scripts disponibles
 
-### Scripts Batch (.bat)
+### `start.ps1`
+Script principal de démarrage. Démarre automatiquement le backend et le frontend dans des fenêtres séparées.
 
-- **redemarrer-backend.bat** - Redémarre le serveur backend
-- **start-all.bat** - Démarre tous les serveurs (backend + frontend)
-
-### Scripts PowerShell (.ps1)
-
-- **force-restart-backend.ps1** - Force le redémarrage du backend
-- **restart-backend-now.ps1** - Redémarre le backend immédiatement
-- **restart-backend.ps1** - Redémarre le backend
-- **start-all.ps1** - Démarre tous les serveurs
-
-## Utilisation
-
-### Pour les scripts .bat
-Double-cliquez sur le fichier ou exécutez dans PowerShell :
+**Utilisation :**
 ```powershell
-.\scripts\windows\nom-du-script.bat
+.\scripts\windows\start.ps1
 ```
 
-### Pour les scripts .ps1
-Exécutez dans PowerShell :
-```powershell
-.\scripts\windows\nom-du-script.ps1
-```
+**Fonctionnalités :**
+- Vérifie que PostgreSQL est en cours d'exécution
+- Crée le fichier `.env` s'il n'existe pas
+- Démarre le backend sur http://localhost:3000
+- Démarre le frontend sur http://localhost:5173
 
-Si vous obtenez une erreur d'exécution, vous devrez peut-être modifier la politique d'exécution :
-```powershell
-Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
-```
+## Prérequis
 
-## Recommandations
-
-- Utilisez `start-all.bat` ou `start-all.ps1` pour démarrer facilement tous les serveurs
-- Utilisez `redemarrer-backend.bat` si vous rencontrez des problèmes avec le backend
-
+- Node.js installé
+- PostgreSQL en cours d'exécution sur le port 5432
+- Les dépendances installées (`npm install` dans `backend/` et `frontend/`)

@@ -6,8 +6,18 @@ import { getDatabase } from '../database/init.js';
 const router = express.Router();
 const JWT_SECRET = process.env.JWT_SECRET || 'hkids-secret-key-change-in-production';
 
+// Helper function to get database pool safely
+function getPool() {
+  try {
+    return getDatabase();
+  } catch (error) {
+    console.error('Database not initialized:', error);
+    throw new Error('Database connection not available');
+  }
+}
+
 // Signup
-router.post('/signup', (req, res) => {
+router.post('/signup', async (req, res) => {
   const { username, password } = req.body;
 
   if (!username || !password) {
@@ -22,97 +32,84 @@ router.post('/signup', (req, res) => {
     return res.status(400).json({ error: 'Password must be at least 6 characters' });
   }
 
-  const db = getDatabase();
-  
-  // Check if user already exists
-  db.get(
-    'SELECT * FROM users WHERE username = ?',
-    [username.trim()],
-    (err, existingUser) => {
-      if (err) {
-        console.error('Database error during signup:', err);
-        return res.status(500).json({ error: 'Database error' });
-      }
+  try {
+    const pool = getPool();
+    const existing = await pool.query(
+      'SELECT * FROM users WHERE username = $1',
+      [username.trim()]
+    );
 
-      if (existingUser) {
-        console.log(`Signup attempt failed: User '${username}' already exists`);
-        return res.status(409).json({ error: 'Username already exists' });
-      }
-
-      // Hash password and create user
-      const hashedPassword = bcrypt.hashSync(password, 10);
-      
-      db.run(
-        'INSERT INTO users (username, password, role) VALUES (?, ?, ?)',
-        [username.trim(), hashedPassword, 'admin'],
-        function(err) {
-          if (err) {
-            console.error('Error creating user:', err);
-            return res.status(500).json({ error: 'Error creating user' });
-          }
-
-          console.log(`✅ New user created: ${username}`);
-          res.status(201).json({
-            message: 'User created successfully',
-            user: {
-              id: this.lastID,
-              username: username.trim(),
-              role: 'admin'
-            }
-          });
-        }
-      );
+    if (existing.rows.length > 0) {
+      console.log(`Signup attempt failed: User '${username}' already exists`);
+      return res.status(409).json({ error: 'Username already exists' });
     }
-  );
+
+    const hashedPassword = bcrypt.hashSync(password, 10);
+
+    const result = await pool.query(
+      'INSERT INTO users (username, password, role) VALUES ($1, $2, $3) RETURNING id, username, role',
+      [username.trim(), hashedPassword, 'admin']
+    );
+
+    const user = result.rows[0];
+    console.log(`✅ New user created: ${user.username}`);
+
+    res.status(201).json({
+      message: 'User created successfully',
+      user,
+    });
+  } catch (err) {
+    console.error('Database error during signup:', err);
+    res.status(500).json({ error: 'Database error' });
+  }
 });
 
 // Login
-router.post('/login', (req, res) => {
+router.post('/login', async (req, res) => {
   const { username, password } = req.body;
 
   if (!username || !password) {
     return res.status(400).json({ error: 'Username and password required' });
   }
 
-  const db = getDatabase();
-  
-  db.get(
-    'SELECT * FROM users WHERE username = ?',
-    [username.trim()],
-    (err, user) => {
-      if (err) {
-        console.error('Database error during login:', err);
-        return res.status(500).json({ error: 'Database error' });
-      }
+  try {
+    const pool = getPool();
+    const result = await pool.query(
+      'SELECT * FROM users WHERE username = $1',
+      [username.trim()]
+    );
 
-      if (!user) {
-        console.log(`Login attempt failed: User '${username}' not found`);
-        return res.status(401).json({ error: 'Invalid credentials' });
-      }
-
-      const isValid = bcrypt.compareSync(password, user.password);
-      if (!isValid) {
-        console.log(`Login attempt failed: Invalid password for user '${username}'`);
-        return res.status(401).json({ error: 'Invalid credentials' });
-      }
-
-      const token = jwt.sign(
-        { id: user.id, username: user.username, role: user.role },
-        JWT_SECRET,
-        { expiresIn: '24h' }
-      );
-
-      console.log(`✅ Successful login for user: ${user.username}`);
-      res.json({
-        token,
-        user: {
-          id: user.id,
-          username: user.username,
-          role: user.role
-        }
-      });
+    const user = result.rows[0];
+    if (!user) {
+      console.log(`Login attempt failed: User '${username}' not found`);
+      return res.status(401).json({ error: 'Invalid credentials' });
     }
-  );
+
+    const isValid = bcrypt.compareSync(password, user.password);
+    if (!isValid) {
+      console.log(`Login attempt failed: Invalid password for user '${username}'`);
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+
+    const token = jwt.sign(
+      { id: user.id, username: user.username, role: user.role },
+      JWT_SECRET,
+      { expiresIn: '24h' }
+    );
+
+    console.log(`✅ Successful login for user: ${user.username}`);
+    res.json({
+      token,
+      user: {
+        id: user.id,
+        username: user.username,
+        role: user.role,
+      },
+    });
+  } catch (err) {
+    console.error('Database error during login:', err);
+    res.status(500).json({ error: 'Database error' });
+  }
 });
 
 // Verify token middleware

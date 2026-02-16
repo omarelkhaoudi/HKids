@@ -11,6 +11,16 @@ const __dirname = path.dirname(__filename);
 
 const router = express.Router();
 
+// Helper function to get database pool safely
+function getPool() {
+  try {
+    return getDatabase();
+  } catch (error) {
+    console.error('Database not initialized:', error);
+    throw new Error('Database connection not available');
+  }
+}
+
 // Configure multer for file uploads
 const storage = multer.diskStorage({
   destination: async (req, file, cb) => {
@@ -41,92 +51,86 @@ const upload = multer({
 });
 
 // Get all published books (public)
-router.get('/published', (req, res) => {
+router.get('/published', async (req, res) => {
   const { age_group, category_id } = req.query;
-  const db = getDatabase();
-  
+
   let query = `
     SELECT b.*, c.name as category_name 
     FROM books b
     LEFT JOIN categories c ON b.category_id = c.id
-    WHERE b.is_published = 1
+    WHERE b.is_published = TRUE
   `;
   const params = [];
+  let index = 1;
 
   if (age_group) {
-    query += ' AND b.age_group_min <= ? AND b.age_group_max >= ?';
+    query += ` AND b.age_group_min <= $${index} AND b.age_group_max >= $${index + 1}`;
     params.push(age_group, age_group);
+    index += 2;
   }
 
   if (category_id) {
-    query += ' AND b.category_id = ?';
+    query += ` AND b.category_id = $${index}`;
     params.push(category_id);
+    index += 1;
   }
 
   query += ' ORDER BY b.created_at DESC';
 
-  db.all(query, params, (err, books) => {
-    if (err) {
-      db.close();
-      return res.status(500).json({ error: 'Database error' });
-    }
-    db.close();
-    res.json(books);
-  });
+  try {
+    const pool = getPool();
+    const result = await pool.query(query, params);
+    res.json(result.rows);
+  } catch (err) {
+    console.error('Error fetching published books:', err);
+    res.status(500).json({ error: 'Database error' });
+  }
 });
 
 // Get single book (public)
-router.get('/:id', (req, res) => {
-  const db = getDatabase();
-  db.get(
-    `SELECT b.*, c.name as category_name 
-     FROM books b
-     LEFT JOIN categories c ON b.category_id = c.id
-     WHERE b.id = ?`,
-    [req.params.id],
-    (err, book) => {
-      if (err) {
-        db.close();
-        return res.status(500).json({ error: 'Database error' });
-      }
-      if (!book) {
-        db.close();
-        return res.status(404).json({ error: 'Book not found' });
-      }
-      
-      // Get pages
-      db.all(
-        'SELECT * FROM book_pages WHERE book_id = ? ORDER BY page_number',
-        [req.params.id],
-        (err, pages) => {
-          db.close();
-          if (err) {
-            return res.status(500).json({ error: 'Database error' });
-          }
-          res.json({ ...book, pages });
-        }
-      );
+router.get('/:id', async (req, res) => {
+  try {
+    const pool = getPool();
+    const bookResult = await pool.query(
+      `SELECT b.*, c.name as category_name 
+       FROM books b
+       LEFT JOIN categories c ON b.category_id = c.id
+       WHERE b.id = $1`,
+      [req.params.id]
+    );
+
+    const book = bookResult.rows[0];
+    if (!book) {
+      return res.status(404).json({ error: 'Book not found' });
     }
-  );
+
+    const pagesResult = await pool.query(
+      'SELECT * FROM book_pages WHERE book_id = $1 ORDER BY page_number',
+      [req.params.id]
+    );
+
+    res.json({ ...book, pages: pagesResult.rows });
+  } catch (err) {
+    console.error('Error fetching book:', err);
+    res.status(500).json({ error: 'Database error' });
+  }
 });
 
 // Get all books (admin only)
-router.get('/', verifyToken, (req, res) => {
-  const db = getDatabase();
-  db.all(
-    `SELECT b.*, c.name as category_name 
-     FROM books b
-     LEFT JOIN categories c ON b.category_id = c.id
-     ORDER BY b.created_at DESC`,
-    [],
-    (err, books) => {
-      db.close();
-      if (err) {
-        return res.status(500).json({ error: 'Database error' });
-      }
-      res.json(books);
-    }
-  );
+router.get('/', verifyToken, async (req, res) => {
+  try {
+    const pool = getPool();
+    const result = await pool.query(
+      `SELECT b.*, c.name as category_name 
+       FROM books b
+       LEFT JOIN categories c ON b.category_id = c.id
+       ORDER BY b.created_at DESC`
+    );
+    res.json(result.rows);
+  } catch (err) {
+    console.error('Error fetching books:', err);
+    res.status(500).json({ error: 'Database error' });
+  }
 });
 
 // Create book (admin only)
@@ -150,61 +154,60 @@ router.post('/', verifyToken, upload.fields([
       console.log(`📄 Pages:`, pageFiles.map(f => f.originalname));
     }
 
-    const db = getDatabase();
-    
-    db.run(
-      `INSERT INTO books (title, author, description, cover_image, category_id, age_group_min, age_group_max, is_published, file_path)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [
-        title,
-        author || null,
-        description || null,
-        coverImage ? `/uploads/books/${coverImage}` : null,
-        category_id || null,
-        age_group_min || 0,
-        age_group_max || 12,
-        is_published === 'true' || is_published === true ? 1 : 0,
-        'uploaded'
-      ],
-      function(err) {
-        if (err) {
-          db.close();
-          return res.status(500).json({ error: 'Database error' });
-        }
+    const pool = getPool();
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
 
-        const bookId = this.lastID;
+      const insertBook = await client.query(
+        `INSERT INTO books (title, author, description, cover_image, category_id, age_group_min, age_group_max, is_published, file_path)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+         RETURNING id`,
+        [
+          title,
+          author || null,
+          description || null,
+          coverImage ? `/uploads/books/${coverImage}` : null,
+          category_id || null,
+          age_group_min || 0,
+          age_group_max || 12,
+          is_published === 'true' || is_published === true,
+          'uploaded',
+        ]
+      );
 
-        // Insert pages
-        if (pageFiles.length > 0) {
-          console.log(`💾 Insertion de ${pageFiles.length} pages dans la base de données...`);
-          const stmt = db.prepare(
-            'INSERT INTO book_pages (book_id, page_number, image_path) VALUES (?, ?, ?)'
+      const bookId = insertBook.rows[0].id;
+
+      if (pageFiles.length > 0) {
+        console.log(`💾 Insertion de ${pageFiles.length} pages dans la base de données...`);
+        for (let index = 0; index < pageFiles.length; index++) {
+          const file = pageFiles[index];
+          const pagePath = `/uploads/books/${file.filename}`;
+          await client.query(
+            'INSERT INTO book_pages (book_id, page_number, image_path) VALUES ($1, $2, $3)',
+            [bookId, index + 1, pagePath]
           );
-
-          pageFiles.forEach((file, index) => {
-            const pagePath = `/uploads/books/${file.filename}`;
-            stmt.run(bookId, index + 1, pagePath);
-            console.log(`  Page ${index + 1}: ${file.originalname} -> ${pagePath}`);
-          });
-
-          stmt.finalize();
-
-          // Update page count
-          db.run('UPDATE books SET page_count = ? WHERE id = ?', [pageFiles.length, bookId], (err) => {
-            if (err) {
-              console.error('Erreur lors de la mise à jour du nombre de pages:', err);
-            } else {
-              console.log(`✅ ${pageFiles.length} pages insérées avec succès!`);
-            }
-          });
-        } else {
-          console.log('⚠️ Aucune page fournie pour ce livre');
+          console.log(`  Page ${index + 1}: ${file.originalname} -> ${pagePath}`);
         }
 
-        db.close();
-        res.status(201).json({ id: bookId, message: 'Book created successfully' });
+        await client.query(
+          'UPDATE books SET page_count = $1 WHERE id = $2',
+          [pageFiles.length, bookId]
+        );
+        console.log(`✅ ${pageFiles.length} pages insérées avec succès!`);
+      } else {
+        console.log('⚠️ Aucune page fournie pour ce livre');
       }
-    );
+
+      await client.query('COMMIT');
+      res.status(201).json({ id: bookId, message: 'Book created successfully' });
+    } catch (err) {
+      await client.query('ROLLBACK');
+      console.error('Error saving book:', err);
+      res.status(500).json({ error: 'Database error' });
+    } finally {
+      client.release();
+    }
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -213,26 +216,27 @@ router.post('/', verifyToken, upload.fields([
 // Update book (admin only)
 router.put('/:id', verifyToken, upload.fields([
   { name: 'cover', maxCount: 1 }
-]), (req, res) => {
+]), async (req, res) => {
   const { title, author, description, category_id, age_group_min, age_group_max, is_published } = req.body;
-  const db = getDatabase();
 
-  // Get existing book
-  db.get('SELECT * FROM books WHERE id = ?', [req.params.id], (err, book) => {
-    if (err || !book) {
-      db.close();
+  try {
+    const pool = getPool();
+    const bookResult = await pool.query('SELECT * FROM books WHERE id = $1', [req.params.id]);
+    const book = bookResult.rows[0];
+
+    if (!book) {
       return res.status(404).json({ error: 'Book not found' });
     }
 
     const coverImage = req.files?.cover?.[0]?.filename;
     const coverPath = coverImage ? `/uploads/books/${coverImage}` : book.cover_image;
 
-    db.run(
+    await pool.query(
       `UPDATE books 
-       SET title = ?, author = ?, description = ?, cover_image = ?, 
-           category_id = ?, age_group_min = ?, age_group_max = ?, 
-           is_published = ?, updated_at = CURRENT_TIMESTAMP
-       WHERE id = ?`,
+       SET title = $1, author = $2, description = $3, cover_image = $4,
+           category_id = $5, age_group_min = $6, age_group_max = $7,
+           is_published = $8, updated_at = NOW()
+       WHERE id = $9`,
       [
         title || book.title,
         author !== undefined ? author : book.author,
@@ -241,47 +245,45 @@ router.put('/:id', verifyToken, upload.fields([
         category_id || book.category_id,
         age_group_min !== undefined ? age_group_min : book.age_group_min,
         age_group_max !== undefined ? age_group_max : book.age_group_max,
-        is_published !== undefined ? (is_published === 'true' || is_published === true ? 1 : 0) : book.is_published,
-        req.params.id
-      ],
-      (err) => {
-        db.close();
-        if (err) {
-          return res.status(500).json({ error: 'Database error' });
-        }
-        res.json({ message: 'Book updated successfully' });
-      }
+        is_published !== undefined
+          ? (is_published === 'true' || is_published === true)
+          : book.is_published,
+        req.params.id,
+      ]
     );
-  });
+
+    res.json({ message: 'Book updated successfully' });
+  } catch (err) {
+    console.error('Error updating book:', err);
+    res.status(500).json({ error: 'Database error' });
+  }
 });
 
 // Delete book (admin only)
 router.delete('/:id', verifyToken, (req, res) => {
-  const db = getDatabase();
-  
-  // Get book to delete files
-  db.get('SELECT * FROM books WHERE id = ?', [req.params.id], (err, book) => {
-    if (err || !book) {
-      db.close();
-      return res.status(404).json({ error: 'Book not found' });
-    }
+  (async () => {
+    try {
+      const pool = getPool();
+      const bookResult = await pool.query('SELECT * FROM books WHERE id = $1', [req.params.id]);
+      const book = bookResult.rows[0];
 
-    // Delete book (cascade will delete pages)
-    db.run('DELETE FROM books WHERE id = ?', [req.params.id], (err) => {
-      db.close();
-      if (err) {
-        return res.status(500).json({ error: 'Database error' });
+      if (!book) {
+        return res.status(404).json({ error: 'Book not found' });
       }
 
-      // Delete files (optional cleanup)
+      await pool.query('DELETE FROM books WHERE id = $1', [req.params.id]);
+
       if (book.cover_image) {
         const coverPath = path.join(__dirname, '..', book.cover_image);
-        fs.unlink(coverPath).catch(() => {}); // Ignore errors
+        fs.unlink(coverPath).catch(() => {});
       }
 
       res.json({ message: 'Book deleted successfully' });
-    });
-  });
+    } catch (err) {
+      console.error('Error deleting book:', err);
+      res.status(500).json({ error: 'Database error' });
+    }
+  })();
 });
 
 export default router;

@@ -1,165 +1,278 @@
-import sqlite3 from 'sqlite3';
-import path from 'path';
-import { fileURLToPath } from 'url';
-import fs from 'fs-extra';
+import { Pool } from 'pg';
 import bcrypt from 'bcryptjs';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+// Fonction pour valider et parser DATABASE_URL
+function parseDatabaseUrl(url) {
+  if (!url) return null;
+  
+  try {
+    const parsed = new URL(url);
+    if (parsed.protocol !== 'postgres:' && parsed.protocol !== 'postgresql:') {
+      return null;
+    }
+    
+    // Vérifier que le username est présent
+    if (!parsed.username) {
+      return null;
+    }
+    
+    // Extraire les composants pour validation
+    const password = parsed.password || '';
+    const host = parsed.hostname || 'localhost';
+    const port = parsed.port || '5432';
+    const database = parsed.pathname ? parsed.pathname.slice(1) : 'hkids';
+    
+    return {
+      connectionString: url,
+      isValid: true,
+      user: parsed.username,
+      password: password,
+      host: host,
+      port: parseInt(port, 10),
+      database: database
+    };
+  } catch (e) {
+    return null;
+  }
+}
 
-const dbPath = path.join(__dirname, '../data/hkids.db');
-const dbDir = path.dirname(dbPath);
+// Configuration PostgreSQL
+let poolConfig = {};
+const dbUrl = parseDatabaseUrl(process.env.DATABASE_URL);
+let useConnectionString = false;
 
-// Ensure data directory exists
-fs.ensureDirSync(dbDir);
+// Debug: Afficher ce qui est détecté (sans afficher le mot de passe complet)
+if (process.env.DATABASE_URL) {
+  const urlForDebug = process.env.DATABASE_URL.replace(/:([^:@]+)@/, ':****@');
+  console.log(`🔍 DATABASE_URL détecté: ${urlForDebug}`);
+} else {
+  console.log('🔍 DATABASE_URL non défini, vérification des variables DB_*...');
+  if (process.env.DB_USER || process.env.DB_PASSWORD || process.env.DB_NAME) {
+    console.log(`   DB_USER=${process.env.DB_USER || 'non défini'}`);
+    console.log(`   DB_PASSWORD=${process.env.DB_PASSWORD ? '****' : 'non défini'}`);
+    console.log(`   DB_NAME=${process.env.DB_NAME || 'non défini'}`);
+  }
+}
+
+if (dbUrl && dbUrl.isValid) {
+  // Si le mot de passe est vide dans l'URL, utiliser les variables séparées à la place
+  // car pg ne gère pas bien les mots de passe vides dans connectionString
+  if (dbUrl.password === '' && !process.env.DB_PASSWORD) {
+    console.warn('⚠️  DATABASE_URL a un mot de passe vide. Utilisation des variables séparées...');
+    poolConfig = {
+      host: process.env.DB_HOST || dbUrl.host,
+      port: process.env.DB_PORT ? parseInt(process.env.DB_PORT, 10) : dbUrl.port,
+      user: process.env.DB_USER || dbUrl.user,
+      password: process.env.DB_PASSWORD || '',
+      database: process.env.DB_NAME || dbUrl.database,
+    };
+  } else if (dbUrl.password && dbUrl.password.length > 0) {
+    // Utiliser DATABASE_URL si valide et avec mot de passe
+    console.log('✅ Utilisation de DATABASE_URL avec mot de passe');
+    poolConfig = {
+      connectionString: process.env.DATABASE_URL,
+    };
+    useConnectionString = true;
+  } else {
+    // Fallback: utiliser les variables séparées
+    console.warn('⚠️  Utilisation des variables séparées (DB_*)');
+    poolConfig = {
+      host: process.env.DB_HOST || dbUrl.host || 'localhost',
+      port: process.env.DB_PORT ? parseInt(process.env.DB_PORT, 10) : (dbUrl.port || 5432),
+      user: process.env.DB_USER || dbUrl.user || 'postgres',
+      password: process.env.DB_PASSWORD || '',
+      database: process.env.DB_NAME || dbUrl.database || 'hkids',
+    };
+  }
+} else {
+  // Sinon, utiliser les variables individuelles
+  if (process.env.DATABASE_URL) {
+    console.warn('⚠️  DATABASE_URL mal formaté, utilisation des variables séparées (DB_*)');
+  }
+  poolConfig = {
+    host: process.env.DB_HOST || 'localhost',
+    port: parseInt(process.env.DB_PORT || '5432', 10),
+    user: process.env.DB_USER || 'postgres',
+    password: process.env.DB_PASSWORD || '',
+    database: process.env.DB_NAME || 'hkids',
+  };
+}
+
+// Validation finale AVANT de créer le pool
+const finalPassword = useConnectionString ? (dbUrl?.password || '') : (process.env.DB_PASSWORD || poolConfig.password || '');
+
+let pool;
+
+if (!finalPassword || finalPassword.trim() === '') {
+  console.error('❌ Erreur: Mot de passe PostgreSQL manquant');
+  console.error('   Le mot de passe est requis pour se connecter à PostgreSQL.');
+  console.error('');
+  if (process.env.DATABASE_URL) {
+    console.error('   Votre DATABASE_URL actuel semble avoir un mot de passe vide.');
+    console.error('   Format correct: DATABASE_URL=postgres://user:VOTRE_MOT_DE_PASSE@localhost:5432/database');
+    console.error('   Exemple: DATABASE_URL=postgres://postgres:postgres123@localhost:5432/hkids');
+  } else {
+    console.error('   Option 1 - Utilisez DATABASE_URL:');
+    console.error('   DATABASE_URL=postgres://postgres:postgres123@localhost:5432/hkids');
+    console.error('');
+    console.error('   Option 2 - Utilisez les variables séparées:');
+    console.error('   DB_USER=postgres');
+    console.error('   DB_PASSWORD=postgres123');
+    console.error('   DB_NAME=hkids');
+    console.error('   DB_HOST=localhost');
+    console.error('   DB_PORT=5432');
+  }
+  // Créer un pool factice qui échouera proprement
+  pool = null;
+} else {
+  // Debug: confirmer la configuration utilisée
+  if (useConnectionString) {
+    console.log(`✅ Configuration: DATABASE_URL (user: ${dbUrl.user}, database: ${dbUrl.database})`);
+  } else {
+    console.log(`✅ Configuration: Variables séparées (user: ${poolConfig.user}, database: ${poolConfig.database})`);
+  }
+  // Pool PostgreSQL partagé - seulement si le mot de passe est valide
+  pool = new Pool(poolConfig);
+  
+  // Gestion des erreurs de connexion (seulement si pool existe)
+  pool.on('error', (err) => {
+    console.error('❌ Erreur PostgreSQL inattendue:', err);
+  });
+}
 
 export function getDatabase() {
-  return new sqlite3.Database(dbPath, (err) => {
-    if (err) {
-      console.error('Error opening database:', err);
+  if (!pool) {
+    throw new Error('PostgreSQL pool not initialized. Please check your .env configuration.');
+  }
+  return pool;
+}
+
+export async function initDatabase() {
+  if (!pool) {
+    throw new Error('PostgreSQL pool not initialized. Please configure DATABASE_URL or DB_* variables in .env');
+  }
+  
+  let client;
+  
+  try {
+    // Tester la connexion
+    client = await pool.connect();
+    console.log('✅ Connexion PostgreSQL établie');
+    
+    await client.query('BEGIN');
+
+    // Users table
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS users (
+        id SERIAL PRIMARY KEY,
+        username TEXT UNIQUE NOT NULL,
+        password TEXT NOT NULL,
+        role TEXT DEFAULT 'admin',
+        created_at TIMESTAMPTZ DEFAULT NOW()
+      );
+    `);
+
+    // Categories table
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS categories (
+        id SERIAL PRIMARY KEY,
+        name TEXT UNIQUE NOT NULL,
+        description TEXT,
+        created_at TIMESTAMPTZ DEFAULT NOW()
+      );
+    `);
+
+    // Books table
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS books (
+        id SERIAL PRIMARY KEY,
+        title TEXT NOT NULL,
+        author TEXT,
+        description TEXT,
+        cover_image TEXT,
+        file_path TEXT NOT NULL,
+        category_id INTEGER REFERENCES categories(id),
+        age_group_min INTEGER DEFAULT 0,
+        age_group_max INTEGER DEFAULT 12,
+        page_count INTEGER DEFAULT 0,
+        is_published BOOLEAN DEFAULT FALSE,
+        created_at TIMESTAMPTZ DEFAULT NOW(),
+        updated_at TIMESTAMPTZ DEFAULT NOW()
+      );
+    `);
+
+    // Book pages table
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS book_pages (
+        id SERIAL PRIMARY KEY,
+        book_id INTEGER NOT NULL REFERENCES books(id) ON DELETE CASCADE,
+        page_number INTEGER NOT NULL,
+        image_path TEXT,
+        content TEXT
+      );
+    `);
+
+    // Default categories
+    const defaultCategories = [
+      { name: 'Fiction', description: 'Fictional stories and tales' },
+      { name: 'Educational', description: 'Educational content' },
+      { name: 'Adventure', description: 'Adventure stories' },
+      { name: 'Animals', description: 'Stories about animals' },
+    ];
+
+    for (const cat of defaultCategories) {
+      await client.query(
+        `INSERT INTO categories (name, description)
+         VALUES ($1, $2)
+         ON CONFLICT (name) DO NOTHING`,
+        [cat.name, cat.description]
+      );
     }
-  });
+
+    // Default admin user
+    const defaultPassword = bcrypt.hashSync('admin123', 10);
+    await client.query(
+      `INSERT INTO users (username, password, role)
+       VALUES ($1, $2, $3)
+       ON CONFLICT (username) DO NOTHING`,
+      ['admin', defaultPassword, 'admin']
+    );
+
+    await client.query('COMMIT');
+    console.log('✅ PostgreSQL database initialized');
+  } catch (err) {
+    if (client) {
+      try {
+        await client.query('ROLLBACK');
+      } catch (rollbackErr) {
+        // Ignore rollback errors
+      }
+    }
+    
+    if (err.message && err.message.includes('password must be a string')) {
+      console.error('❌ Erreur de connexion PostgreSQL:');
+      console.error('   Le mot de passe dans DATABASE_URL est vide ou invalide.');
+      console.error('   Vérifiez votre fichier .env dans le dossier backend/');
+      console.error('   Format: DATABASE_URL=postgres://user:password@localhost:5432/database');
+      console.error('   Si pas de mot de passe: postgres://user:@localhost:5432/database');
+    } else if (err.code === 'ECONNREFUSED') {
+      console.error('❌ Erreur de connexion PostgreSQL:');
+      console.error('   Impossible de se connecter au serveur PostgreSQL.');
+      console.error('   Vérifiez que PostgreSQL est démarré et accessible.');
+    } else if (err.code === '3D000') {
+      console.error('❌ Erreur de connexion PostgreSQL:');
+      console.error('   La base de données n\'existe pas.');
+      console.error('   Créez la base de données dans pgAdmin ou avec: createdb hkids');
+    } else if (err.code === '28P01') {
+      console.error('❌ Erreur de connexion PostgreSQL:');
+      console.error('   Authentification échouée. Vérifiez votre nom d\'utilisateur et mot de passe.');
+    } else {
+      console.error('❌ Database initialization failed:', err.message || err);
+    }
+    throw err;
+  } finally {
+    if (client) {
+      client.release();
+    }
+  }
 }
-
-export function initDatabase() {
-  return new Promise((resolve, reject) => {
-    const db = getDatabase();
-
-    // Create tables
-    db.serialize(() => {
-      // Users table (for admin)
-      db.run(`
-        CREATE TABLE IF NOT EXISTS users (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          username TEXT UNIQUE NOT NULL,
-          password TEXT NOT NULL,
-          role TEXT DEFAULT 'admin',
-          created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-        )
-      `, (err) => {
-        if (err) {
-          console.error('Error creating users table:', err);
-          db.close();
-          return reject(err);
-        }
-      });
-
-      // Categories table
-      db.run(`
-        CREATE TABLE IF NOT EXISTS categories (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          name TEXT NOT NULL,
-          description TEXT,
-          created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-        )
-      `, (err) => {
-        if (err) {
-          console.error('Error creating categories table:', err);
-          db.close();
-          return reject(err);
-        }
-      });
-
-      // Books table
-      db.run(`
-        CREATE TABLE IF NOT EXISTS books (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          title TEXT NOT NULL,
-          author TEXT,
-          description TEXT,
-          cover_image TEXT,
-          file_path TEXT NOT NULL,
-          category_id INTEGER,
-          age_group_min INTEGER DEFAULT 0,
-          age_group_max INTEGER DEFAULT 12,
-          page_count INTEGER DEFAULT 0,
-          is_published INTEGER DEFAULT 0,
-          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-          updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-          FOREIGN KEY (category_id) REFERENCES categories(id)
-        )
-      `, (err) => {
-        if (err) {
-          console.error('Error creating books table:', err);
-          db.close();
-          return reject(err);
-        }
-      });
-
-      // Book pages table (for storing page images/content)
-      db.run(`
-        CREATE TABLE IF NOT EXISTS book_pages (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          book_id INTEGER NOT NULL,
-          page_number INTEGER NOT NULL,
-          image_path TEXT,
-          content TEXT,
-          FOREIGN KEY (book_id) REFERENCES books(id) ON DELETE CASCADE
-        )
-      `, (err) => {
-        if (err) {
-          console.error('Error creating book_pages table:', err);
-          db.close();
-          return reject(err);
-        }
-      });
-
-      // Create default categories first
-      const defaultCategories = [
-        { name: 'Fiction', description: 'Fictional stories and tales' },
-        { name: 'Educational', description: 'Educational content' },
-        { name: 'Adventure', description: 'Adventure stories' },
-        { name: 'Animals', description: 'Stories about animals' }
-      ];
-
-      let categoriesProcessed = 0;
-      const totalCategories = defaultCategories.length;
-
-      defaultCategories.forEach((cat) => {
-        db.run(
-          `INSERT OR IGNORE INTO categories (name, description) VALUES (?, ?)`,
-          [cat.name, cat.description],
-          function(err) {
-            categoriesProcessed++;
-            if (err) {
-              console.error(`Error creating category ${cat.name}:`, err);
-            }
-            
-            // After all categories are processed, create admin user
-            if (categoriesProcessed === totalCategories) {
-              // Create default admin user
-              const defaultPassword = bcrypt.hashSync('admin123', 10);
-              db.run(
-                `INSERT OR IGNORE INTO users (username, password, role) VALUES (?, ?, ?)`,
-                ['admin', defaultPassword, 'admin'],
-                function(err) {
-                  if (err && !err.message.includes('UNIQUE constraint')) {
-                    console.error('Error creating default admin:', err);
-                    db.close();
-                    return reject(err);
-                  } else {
-                    if (this.changes > 0) {
-                      console.log('✅ Default admin user created (username: admin, password: admin123)');
-                    } else {
-                      console.log('✅ Default admin user already exists');
-                    }
-                    
-                    console.log('✅ Database tables created');
-                    db.close((err) => {
-                      if (err) {
-                        console.error('Error closing database:', err);
-                        return reject(err);
-                      }
-                      resolve();
-                    });
-                  }
-                }
-              );
-            }
-          }
-        );
-      });
-    });
-  });
-}
-

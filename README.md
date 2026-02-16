@@ -21,7 +21,7 @@ HKids addresses the challenge of providing consistent, age-appropriate reading e
 
 ### Backend
 - **Node.js** with **Express**: RESTful API
-- **SQLite**: Lightweight database (easily upgradeable to PostgreSQL)
+- **PostgreSQL**: Database
 - **Multer**: File upload handling
 - **JWT**: Admin authentication
 
@@ -34,9 +34,25 @@ HKids addresses the challenge of providing consistent, age-appropriate reading e
 
 ```
 HKids/
-├── backend/          # Express API server
-├── frontend/         # React application
-├── docs/            # Technical documentation
+├── backend/              # Express API server
+│   ├── config/          # Configuration files
+│   ├── database/         # Database initialization
+│   ├── middleware/       # Express middleware
+│   ├── routes/           # API routes
+│   ├── scripts/          # Utility scripts
+│   ├── uploads/          # Uploaded files
+│   └── server.js         # Main server file
+├── frontend/             # React application
+│   ├── src/
+│   │   ├── api/         # API client
+│   │   ├── components/  # React components
+│   │   ├── context/     # React context
+│   │   ├── pages/       # Page components
+│   │   └── utils/       # Utility functions
+│   └── public/          # Static assets
+├── scripts/              # Project scripts
+│   └── windows/         # Windows PowerShell scripts
+├── docs/                 # Documentation
 └── README.md
 ```
 
@@ -44,22 +60,56 @@ HKids/
 
 ### Prerequisites
 - Node.js 18+ and npm
+- PostgreSQL 12+ (running on port 5432)
 
 ### Installation
 
 1. Install all dependencies:
 ```bash
-npm run install:all
+# Backend
+cd backend
+npm install
+
+# Frontend
+cd ../frontend
+npm install
 ```
 
-2. Start the backend server:
+2. Configure the backend:
 ```bash
-npm run dev:backend
+# Copy the example environment file
+cd backend
+cp env.example .env
+
+# Edit .env with your PostgreSQL credentials:
+# DB_HOST=localhost
+# DB_PORT=5432
+# DB_USER=postgres
+# DB_PASSWORD=your_password
+# DB_NAME=hkids
 ```
 
-3. Start the frontend (in a new terminal):
+3. Create the database:
+```sql
+CREATE DATABASE hkids;
+```
+
+4. Start the application:
+
+**Windows:**
+```powershell
+.\scripts\windows\start.ps1
+```
+
+**Manual start:**
 ```bash
-npm run dev:frontend
+# Terminal 1 - Backend
+cd backend
+npm run dev
+
+# Terminal 2 - Frontend
+cd frontend
+npm run dev
 ```
 
 ### Default Access
@@ -88,19 +138,17 @@ Default admin credentials:
 ## Documentation
 
 ### Quick Start
-- **[QUICK_START.md](./QUICK_START.md)** - Guide de démarrage rapide en 3 étapes
-- **[SETUP.md](./SETUP.md)** - Guide de configuration détaillé
+- **[docs/guides/QUICK_START.md](./docs/guides/QUICK_START.md)** - Guide de démarrage rapide
+- **[docs/guides/SETUP.md](./docs/guides/SETUP.md)** - Guide de configuration détaillé
 
 ### Technical Documentation
-- **[docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md)** - Architecture technique complète
+- **[docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md)** - Architecture technique
 - **[docs/STACK_JUSTIFICATION.md](./docs/STACK_JUSTIFICATION.md)** - Justification du stack
 - **[docs/API_DOCUMENTATION.md](./docs/API_DOCUMENTATION.md)** - Documentation API
 - **[docs/DEPLOYMENT.md](./docs/DEPLOYMENT.md)** - Guide de déploiement
-- **[docs/REQUIREMENTS_CHECKLIST.md](./docs/REQUIREMENTS_CHECKLIST.md)** - Vérification des exigences
 
-### Project Status
-- **[CHECKLIST.md](./CHECKLIST.md)** - Checklist complète de vérification
-- **[PROJECT_SUMMARY.md](./PROJECT_SUMMARY.md)** - Résumé du projet
+### Troubleshooting
+- **[docs/troubleshooting/RESTART_BACKEND.md](./docs/troubleshooting/RESTART_BACKEND.md)** - Redémarrer le backend
 
 ## ✅ Project Status
 
@@ -153,7 +201,7 @@ All required deliverables have been completed:
 
 ### Backend
 - Node.js + Express
-- SQLite (easily migrable to PostgreSQL)
+- PostgreSQL
 - JWT authentication
 - Multer (file uploads)
 - bcryptjs (password hashing)
