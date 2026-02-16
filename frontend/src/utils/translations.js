@@ -51,6 +51,12 @@ export const translations = {
     readingFact: 'Reading just 20 minutes a day exposes a child to approximately 1.8 million words per year, significantly enriching their vocabulary.',
     imaginationInAction: 'Imagination in action',
     imaginationFact: 'Reading activates more brain regions than watching television, stimulating imagination and creativity.',
+    betterConcentration: 'Better concentration',
+    concentrationFact: 'Regular reading improves children\'s attention span and ability to focus, essential skills for academic success.',
+    languageSkills: 'Language skills boost',
+    languageFact: 'Children who read regularly develop stronger language skills, better grammar, and improved writing abilities.',
+    stressRelief: 'Stress relief',
+    stressFact: 'Reading can reduce stress levels by up to 68%, helping children relax and improve their overall well-being.',
     
     // Reading aid
     fromAwakeningToLearning: 'From awakening to learning to read',
@@ -218,6 +224,12 @@ export const translations = {
     readingFact: 'Lire seulement 20 minutes par jour expose un enfant à environ 1,8 million de mots par an, enrichissant considérablement son vocabulaire.',
     imaginationInAction: 'L\'imagination en action',
     imaginationFact: 'La lecture active plus de régions du cerveau que regarder la télévision, stimulant l\'imagination et la créativité.',
+    betterConcentration: 'Meilleure concentration',
+    concentrationFact: 'La lecture régulière améliore la capacité d\'attention et de concentration des enfants, compétences essentielles pour la réussite scolaire.',
+    languageSkills: 'Renforcement des compétences linguistiques',
+    languageFact: 'Les enfants qui lisent régulièrement développent de meilleures compétences linguistiques, une meilleure grammaire et de meilleures capacités d\'écriture.',
+    stressRelief: 'Réduction du stress',
+    stressFact: 'La lecture peut réduire le niveau de stress jusqu\'à 68%, aidant les enfants à se détendre et à améliorer leur bien-être général.',
     
     // Reading aid
     fromAwakeningToLearning: 'De l\'éveil à l\'apprentissage de la lecture',
