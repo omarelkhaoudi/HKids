@@ -7,11 +7,21 @@ import { useToast } from '../components/ToastProvider';
 import { BookGridSkeleton } from '../components/SkeletonLoader';
 import { 
   BookIcon, SearchIcon, HeartIcon, HistoryIcon, 
-  MoonIcon, SunIcon, LockIcon, GridIcon, ListIcon, XIcon 
+  MoonIcon, SunIcon, LockIcon, GridIcon, ListIcon, XIcon,
+  CategoryIcon, StarIcon, ChildIcon, PaletteIcon, SparklesIcon,
+  AudioIcon, MicrophoneIcon, TheaterIcon, FontIcon, RulerIcon, VolumeIcon,
+  ChevronRightIcon, UserIcon, ComputerIcon, TabletIcon, SmartphoneIcon,
+  FacebookIcon, InstagramIcon, WhatsAppIcon, TwitterIcon, YouTubeIcon, LinkedInIcon
 } from '../components/Icons';
 import { Logo } from '../components/Logo';
+import LibraryMenu from '../components/LibraryMenu';
+import LanguageSelector from '../components/LanguageSelector';
+import { useLanguage } from '../context/LanguageContext';
+import { translations } from '../utils/translations';
 
 function Home({ darkMode, setDarkMode }) {
+  const { language } = useLanguage();
+  const t = translations[language];
   const [books, setBooks] = useState([]);
   const [allBooks, setAllBooks] = useState([]); // Tous les livres pour la recherche
   const [categories, setCategories] = useState([]);
@@ -117,7 +127,7 @@ function Home({ darkMode, setDarkMode }) {
       ]);
       setAllBooks(booksRes.data);
       // Filtrer par recherche si nécessaire
-      filterBooks(booksRes.data);
+      filterAndSortBooks(booksRes.data);
       setCategories(categoriesRes.data);
       console.log('Books loaded:', booksRes.data);
       console.log('Books count:', booksRes.data?.length || 0);
@@ -156,7 +166,7 @@ function Home({ darkMode, setDarkMode }) {
   const totalCategories = categories?.length || 0;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#fdf2ff] via-white to-[#e0f2ff]">
+    <div className="min-h-screen bg-white">
       {/* Header */}
       <motion.header 
         initial={{ y: -100, opacity: 0 }}
@@ -167,339 +177,490 @@ function Home({ darkMode, setDarkMode }) {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4 flex justify-between items-center gap-3">
           <Logo size="default" />
           <nav className="flex items-center gap-2 text-neutral-100">
+            <LibraryMenu
+              categories={categories}
+              onCategorySelect={setSelectedCategory}
+              onAgeSelect={setSelectedAge}
+              selectedCategory={selectedCategory}
+              selectedAge={selectedAge}
+            />
             <Link 
               to="/favorites" 
               className="btn-nav flex items-center gap-2 text-neutral-100 hover:text-white hover:bg-neutral-800/80"
-              title="Mes favoris"
+              title={t.favorites}
             >
               <HeartIcon className="w-4 h-4" filled={false} />
-              <span className="hidden sm:inline">Favoris</span>
+              <span className="hidden sm:inline">{t.favorites}</span>
             </Link>
             <Link 
               to="/history" 
               className="btn-nav flex items-center gap-2 text-neutral-100 hover:text-white hover:bg-neutral-800/80"
-              title="Historique"
+              title={t.history}
             >
               <HistoryIcon className="w-4 h-4" />
-              <span className="hidden sm:inline">Historique</span>
+              <span className="hidden sm:inline">{t.history}</span>
             </Link>
             <Link 
               to="/admin/login" 
               className="btn-nav flex items-center gap-2 text-neutral-100 hover:text-white hover:bg-neutral-800/80"
             >
               <LockIcon className="w-4 h-4" />
-              <span className="hidden sm:inline">Admin</span>
+              <span className="hidden sm:inline">{t.admin}</span>
             </Link>
+            <div className="ml-2 px-3 py-1.5 bg-white/10 rounded-lg backdrop-blur-sm">
+              <LanguageSelector />
+            </div>
           </nav>
         </div>
       </motion.header>
 
-      {/* Hero Section */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 md:py-16 lg:py-20">
-        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)] gap-12 lg:gap-16 items-center">
-          {/* Hero text */}
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="order-2 lg:order-1 text-center lg:text-left"
-          >
+      {/* Section 1: Hero - Donner le goût de lire */}
+      <section className="relative overflow-hidden bg-gradient-to-br from-white via-red-50/30 to-pink-50/30 py-8 md:py-12 lg:py-16">
+        {/* Étoiles animées en arrière-plan */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          {Array.from({ length: 20 }).map((_, i) => (
             <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.05 }}
-              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/80 backdrop-blur border border-neutral-200 shadow-sm mb-4"
+              key={i}
+              className="absolute text-yellow-400"
+              style={{
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+              }}
+              animate={{
+                y: [0, -20, 0],
+                opacity: [0.3, 1, 0.3],
+                scale: [1, 1.2, 1],
+              }}
+              transition={{
+                duration: 3 + Math.random() * 2,
+                repeat: Infinity,
+                delay: Math.random() * 2,
+              }}
             >
-              <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-br from-amber-400 to-pink-500 text-white text-xs font-bold">
-                HK
-              </span>
-              <span className="text-xs font-semibold uppercase tracking-wide text-neutral-600">
-                Lecture autonome pour les enfants
-              </span>
+              <StarIcon className="w-6 h-6" />
             </motion.div>
+          ))}
+        </div>
 
-            <motion.h2 
-              className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold mb-4 tracking-tight leading-tight"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 relative z-10">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
+            {/* Left: Text content */}
+            <motion.div 
+              initial={{ opacity: 0, x: -30 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6 }}
+              className="text-center lg:text-left"
             >
-              <span className="bg-gradient-to-r from-neutral-900 via-neutral-700 to-neutral-900 bg-clip-text text-transparent">
-                Bibliothèque numérique
-              </span>
-            </motion.h2>
-            <motion.p 
-              className="text-base sm:text-lg md:text-xl text-neutral-600 max-w-2xl leading-relaxed mx-auto lg:mx-0"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-            >
-              Une expérience de lecture pensée pour les enfants&nbsp;: livres illustrés, navigation simple
-              et contenus adaptés par âge pour lire en toute autonomie.
-            </motion.p>
+              <motion.h1 
+                className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold mb-4 leading-tight"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+              >
+                <span className="text-red-600 drop-shadow-lg">{t.heroTitle1}</span>
+                <br />
+                <span className="text-neutral-900">{t.heroTitle2}</span>
+              </motion.h1>
+              
+              <motion.p 
+                className="text-xl sm:text-2xl md:text-3xl font-bold text-neutral-800 mb-4"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+              >
+                {t.heroSubtitle}{' '}
+                <span className="text-red-600">{totalBooks} {t.heroSubtitle2}</span>
+              </motion.p>
 
-            {/* Stats strip */}
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-              className="mt-6 sm:mt-8 grid grid-cols-2 gap-3 sm:flex sm:flex-row sm:gap-6 justify-center lg:justify-start"
-            >
-              <div className="px-4 py-3 rounded-2xl bg-white/80 backdrop-blur border border-neutral-200 shadow-sm">
-                <p className="text-xs uppercase tracking-wide text-neutral-500 font-semibold">Livres</p>
-                <p className="text-2xl font-extrabold text-neutral-900">
-                  {totalBooks}
-                  <span className="text-sm font-medium text-neutral-500 ml-1">titres</span>
-                </p>
-              </div>
-              <div className="px-4 py-3 rounded-2xl bg-white/80 backdrop-blur border border-neutral-200 shadow-sm">
-                <p className="text-xs uppercase tracking-wide text-neutral-500 font-semibold">Catégories</p>
-                <p className="text-2xl font-extrabold text-neutral-900">
-                  {totalCategories}
-                  <span className="text-sm font-medium text-neutral-500 ml-1">thèmes</span>
-                </p>
-              </div>
-              <div className="px-4 py-3 rounded-2xl bg-neutral-900 text-white shadow-md hidden sm:block">
-                <p className="text-xs uppercase tracking-wide text-neutral-300 font-semibold">Âges</p>
-                <p className="text-2xl font-extrabold">
-                  3–12
-                  <span className="text-sm font-medium text-neutral-300 ml-1">ans</span>
-                </p>
-              </div>
-            </motion.div>
-
-            {/* Search Bar */}
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.35 }}
-              className="mt-8 sm:mt-10 max-w-3xl mx-auto lg:mx-0"
-            >
-              <div className="relative group">
-                <div className="absolute inset-0 bg-gradient-to-r from-purple-500/15 via-sky-500/15 to-amber-400/15 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                <div className="relative">
-                  <SearchIcon className="absolute left-5 top-1/2 transform -translate-y-1/2 w-5 h-5 text-neutral-400 group-focus-within:text-neutral-600 transition-colors" />
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Rechercher un livre, un auteur..."
-                    className="w-full pl-14 pr-12 py-4 bg-white/90 backdrop-blur-sm border-2 border-neutral-200 rounded-2xl focus:ring-4 focus:ring-neutral-900/10 focus:border-neutral-900 text-base transition-all placeholder:text-neutral-400 shadow-lg hover:shadow-xl focus:shadow-2xl"
-                  />
-                  {searchQuery && (
-                    <motion.button
-                      onClick={() => setSearchQuery('')}
-                      className="absolute right-4 top-1/2 transform -translate-y-1/2 text-neutral-400 hover:text-neutral-900 transition-colors p-1 rounded-lg hover:bg-neutral-100"
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.9 }}
-                    >
-                      <XIcon className="w-5 h-5" />
-                    </motion.button>
-                  )}
-                </div>
-              </div>
-              {searchQuery && (
-                <motion.p 
-                  className="text-sm text-neutral-600 mt-3 ml-1 font-medium text-left"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                >
-                  {books.length} {books.length === 1 ? 'résultat trouvé' : 'résultats trouvés'}
-                </motion.p>
-              )}
-            </motion.div>
+              <motion.p 
+                className="text-sm sm:text-base text-neutral-600 mb-6 leading-relaxed"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+              >
+                {t.heroDescription}
+              </motion.p>
           </motion.div>
 
-          {/* Hero illustration */}
+          {/* Right: Illustration card */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+            initial={{ opacity: 0, scale: 0.9, y: 30 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.15 }}
-            className="order-1 lg:order-2"
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="relative"
           >
             <div className="relative mx-auto max-w-md">
-              <div className="absolute inset-0 bg-gradient-to-tr from-purple-500/20 via-sky-400/15 to-amber-300/20 blur-3xl rounded-[2.5rem]" />
-              <div className="relative rounded-[2.5rem] bg-white/90 backdrop-blur border border-neutral-200 shadow-2xl px-6 py-6 md:px-8 md:py-8">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="h-10 w-10 rounded-2xl bg-neutral-900 flex items-center justify-center shadow-md">
-                    <BookIcon className="w-5 h-5 text-white" />
+              <div className="absolute inset-0 bg-gradient-to-tr from-red-500/30 via-pink-500/20 to-orange-500/30 blur-3xl rounded-[2.5rem]" />
+              <div className="relative rounded-[2.5rem] bg-white/95 backdrop-blur border-2 border-red-100 shadow-2xl p-6">
+                <div className="text-center mb-6">
+                  <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-red-500 to-pink-500 mb-4 shadow-lg">
+                    <BookIcon className="w-10 h-10 text-white" />
                   </div>
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-wide text-neutral-500">
-                      Espace enfant
-                    </p>
-                    <p className="text-sm font-bold text-neutral-900">
-                      Lecture en un clic
-                    </p>
-                  </div>
+                  <h3 className="text-2xl font-bold text-neutral-900 mb-2">{t.digitalLibrary}</h3>
+                  <p className="text-sm text-neutral-600">{t.forChildrenAges}</p>
                 </div>
 
-                <div className="space-y-4">
-                  {[0, 1, 2].map((i) => (
-                    <motion.div
-                      key={i}
-                      initial={{ opacity: 0, x: 10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.2 + i * 0.05 }}
-                      className="flex items-center gap-3 rounded-2xl px-3 py-3 bg-gradient-to-r from-neutral-900/5 via-white to-white border border-neutral-200/70 shadow-sm"
-                    >
-                      <div
-                        className="h-12 w-10 rounded-xl flex-shrink-0"
-                        style={{ backgroundColor: ['#FF6B9D', '#4CAF50', '#FFA500'][i] }}
-                      />
-                      <div className="flex-1">
-                        <p className="text-sm font-semibold text-neutral-900 line-clamp-1">
-                          {i === 0 && 'Histoires du soir douces et rassurantes'}
-                          {i === 1 && 'Aventures colorées pour les petits explorateurs'}
-                          {i === 2 && 'Albums éducatifs pour apprendre en s’amusant'}
-                        </p>
-                        <p className="text-xs text-neutral-500">
-                          {i === 0 && 'Parfaites avant de dormir'}
-                          {i === 1 && 'Idéales pour développer l’imagination'}
-                          {i === 2 && 'Conçues avec des pédagogues'}
-                        </p>
-                      </div>
-                    </motion.div>
-                  ))}
+                <div className="space-y-3">
+                  {[
+                    { icon: BookIcon, text: t.illustratedBooks, color: 'from-red-500 to-pink-500' },
+                    { icon: PaletteIcon, text: t.simpleNavigation, color: 'from-pink-500 to-orange-500' },
+                    { icon: StarIcon, text: t.adaptedContent, color: 'from-orange-500 to-amber-500' }
+                  ].map((item, i) => {
+                    const IconComponent = item.icon;
+                    const isBooksLink = item.text === t.illustratedBooks;
+                    return (
+                      <motion.div
+                        key={i}
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.3 + i * 0.1 }}
+                        className={`flex items-center gap-4 p-4 rounded-xl bg-gradient-to-r from-neutral-50 to-white border border-neutral-200 shadow-sm hover:shadow-md transition-shadow ${isBooksLink ? 'cursor-pointer' : ''}`}
+                        onClick={isBooksLink ? () => {
+                          document.getElementById('books-section')?.scrollIntoView({ behavior: 'smooth' });
+                        } : undefined}
+                        whileHover={isBooksLink ? { scale: 1.02 } : {}}
+                        whileTap={isBooksLink ? { scale: 0.98 } : {}}
+                      >
+                        <IconComponent className="w-8 h-8 text-red-600" />
+                        <span className="font-semibold text-neutral-900">{item.text}</span>
+                      </motion.div>
+                    );
+                  })}
                 </div>
 
-                <div className="mt-6 flex items-center justify-between gap-3">
+                <div className="mt-6 pt-6 border-t border-neutral-200 flex items-center justify-between">
                   <div className="flex -space-x-2">
-                    <div className="h-8 w-8 rounded-full bg-amber-400 border-2 border-white" />
-                    <div className="h-8 w-8 rounded-full bg-sky-400 border-2 border-white" />
-                    <div className="h-8 w-8 rounded-full bg-pink-400 border-2 border-white" />
+                    {[0, 1, 2].map((i) => (
+                      <motion.div
+                        key={i}
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        transition={{ delay: 0.5 + i * 0.1, type: 'spring' }}
+                        className="w-10 h-10 rounded-full bg-gradient-to-br from-red-100 to-pink-100 border-2 border-white flex items-center justify-center shadow-md"
+                      >
+                        <ChildIcon className="w-5 h-5 text-red-600" />
+                      </motion.div>
+                    ))}
                   </div>
-                  <p className="text-xs text-neutral-500 text-right">
-                    Pensé pour être utilisé seul par l’enfant,
-                    <span className="block font-semibold text-neutral-800">
-                      sans menus compliqués.
-                    </span>
+                  <p className="text-xs text-neutral-600 text-right">
+                    <span className="font-bold text-neutral-900">{t.designedForChildren}</span>
+                    <br />
+                    {t.intuitiveInterface}
                   </p>
                 </div>
               </div>
             </div>
           </motion.div>
+          </div>
         </div>
+      </section>
 
-        {/* Filters & Sort */}
-        <motion.div 
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          className="flex flex-col md:flex-row md:flex-wrap items-stretch md:items-center gap-3 md:gap-4 mb-8 md:mb-10"
-        >
-          <div className="relative group w-full md:w-auto">
-            <select
-              value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.target.value)}
-              className="w-full md:w-auto px-4 sm:px-5 py-3 bg-white/90 backdrop-blur-sm border-2 border-neutral-200 rounded-xl focus:ring-4 focus:ring-neutral-900/10 focus:border-neutral-900 transition-all cursor-pointer appearance-none pr-10 sm:pr-12 text-sm font-medium text-neutral-700 shadow-md hover:shadow-lg focus:shadow-xl"
+      {/* Section 1.5: Livre de la semaine - Inspiré de freechildrenstories.com */}
+      {allBooks && allBooks.length > 0 && (
+        <section className="bg-white py-12 md:py-16">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+              className="text-center mb-8"
             >
-              <option value="">Toutes les catégories</option>
-              {categories.map(cat => (
-                <option key={cat.id} value={cat.id}>{cat.name}</option>
-              ))}
-            </select>
-            <div className="absolute right-4 top-1/2 transform -translate-y-1/2 pointer-events-none">
-              <svg className="w-4 h-4 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
-            </div>
+              <div className="inline-block px-4 py-2 bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-full text-sm font-bold mb-4">
+                {t.bookOfTheWeek}
+              </div>
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-neutral-900 mb-4">
+                {allBooks[0]?.title || t.discoverSelection}
+              </h2>
+              {allBooks[0]?.description && (
+                <p className="text-lg text-neutral-600 max-w-3xl mx-auto leading-relaxed">
+                  {allBooks[0].description.length > 200 
+                    ? `${allBooks[0].description.substring(0, 200)}...` 
+                    : allBooks[0].description}
+                </p>
+              )}
+            </motion.div>
+
+            {allBooks[0] && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6, delay: 0.2 }}
+                className="max-w-4xl mx-auto"
+              >
+                <Link to={`/book-details/${allBooks[0].id}`}>
+                  <div className="bg-gradient-to-br from-red-50 via-pink-50 to-orange-50 rounded-3xl p-8 md:p-12 shadow-2xl border-4 border-white hover:shadow-3xl transition-all group">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                      <div className="relative">
+                        <div className="absolute inset-0 bg-gradient-to-tr from-red-500/20 via-pink-500/20 to-orange-500/20 blur-2xl rounded-3xl"></div>
+                        <div className="relative bg-white rounded-2xl p-6 shadow-xl">
+                          {allBooks[0].cover_image ? (
+                            <img
+                              src={`http://localhost:3000${allBooks[0].cover_image}`}
+                              alt={allBooks[0].title}
+                              className="w-full h-auto object-contain rounded-xl group-hover:scale-105 transition-transform duration-300"
+                            />
+                          ) : (
+                            <div className="w-full h-64 flex items-center justify-center bg-gradient-to-br from-red-100 to-pink-100 rounded-xl">
+                              <BookIcon className="w-32 h-32 text-red-400" />
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      <div className="space-y-4">
+                        <div>
+                          <h3 className="text-2xl md:text-3xl font-bold text-neutral-900 mb-2 group-hover:text-red-600 transition-colors">
+                            {allBooks[0].title}
+                          </h3>
+                          {allBooks[0].author && (
+                            <p className="text-lg text-neutral-600 mb-4">{t.by} {allBooks[0].author}</p>
+                          )}
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          {allBooks[0].category_name && (
+                            <span className="px-4 py-2 bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-full text-sm font-semibold">
+                              {allBooks[0].category_name}
+                            </span>
+                          )}
+                          {allBooks[0].age_group_min !== undefined && allBooks[0].age_group_max !== undefined && (
+                            <span className="px-4 py-2 bg-gradient-to-r from-orange-400 to-pink-400 text-white rounded-full text-sm font-semibold">
+                              {allBooks[0].age_group_min}-{allBooks[0].age_group_max} {t.years}
+                            </span>
+                          )}
+                        </div>
+                        <motion.button
+                          whileHover={{ scale: 1.05, y: -2 }}
+                          whileTap={{ scale: 0.95 }}
+                          className="w-full md:w-auto px-8 py-4 bg-gradient-to-r from-red-600 to-pink-600 text-white rounded-full font-bold text-lg shadow-xl hover:shadow-2xl transition-all flex items-center justify-center gap-3"
+                        >
+                          <BookIcon className="w-6 h-6" />
+                          {t.readNow}
+                        </motion.button>
+                      </div>
+                    </div>
+                  </div>
+                </Link>
+              </motion.div>
+            )}
           </div>
+        </section>
+      )}
 
-          <div className="relative group w-full md:w-auto">
-            <select
-              value={selectedAge}
-              onChange={(e) => setSelectedAge(e.target.value)}
-              className="w-full md:w-auto px-4 sm:px-5 py-3 bg-white/90 backdrop-blur-sm border-2 border-neutral-200 rounded-xl focus:ring-4 focus:ring-neutral-900/10 focus:border-neutral-900 transition-all cursor-pointer appearance-none pr-10 sm:pr-12 text-sm font-medium text-neutral-700 shadow-md hover:shadow-lg focus:shadow-xl"
-            >
-              <option value="">Tous les âges</option>
-              <option value="3">3+ ans</option>
-              <option value="5">5+ ans</option>
-              <option value="7">7+ ans</option>
-              <option value="9">9+ ans</option>
-            </select>
-            <div className="absolute right-4 top-1/2 transform -translate-y-1/2 pointer-events-none">
-              <svg className="w-4 h-4 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
-            </div>
-          </div>
-
-          <div className="relative group w-full md:w-auto">
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
-              className="w-full md:w-auto px-4 sm:px-5 py-3 bg-white/90 backdrop-blur-sm border-2 border-neutral-200 rounded-xl focus:ring-4 focus:ring-neutral-900/10 focus:border-neutral-900 transition-all cursor-pointer appearance-none pr-10 sm:pr-12 text-sm font-medium text-neutral-700 shadow-md hover:shadow-lg focus:shadow-xl"
-            >
-              <option value="recent">Plus récents</option>
-              <option value="title">Par titre (A-Z)</option>
-              <option value="author">Par auteur (A-Z)</option>
-            </select>
-            <div className="absolute right-4 top-1/2 transform -translate-y-1/2 pointer-events-none">
-              <svg className="w-4 h-4 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
-            </div>
-          </div>
-
-          <div className="flex w-full md:w-auto justify-between md:justify-start gap-1 bg-white/90 backdrop-blur-sm rounded-xl p-1.5 border-2 border-neutral-200 shadow-md">
-            <motion.button
-              onClick={() => setViewMode('grid')}
-              className={`p-2.5 rounded-lg transition-all ${
-                viewMode === 'grid' 
-                  ? 'bg-neutral-900 text-white shadow-lg' 
-                  : 'text-neutral-600 hover:bg-neutral-100'
-              }`}
-              title="Vue grille"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <GridIcon className="w-4 h-4" />
-            </motion.button>
-            <motion.button
-              onClick={() => setViewMode('list')}
-              className={`p-2.5 rounded-lg transition-all ${
-                viewMode === 'list' 
-                  ? 'bg-neutral-900 text-white shadow-lg' 
-                  : 'text-neutral-600 hover:bg-neutral-100'
-              }`}
-              title="Vue liste"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <ListIcon className="w-4 h-4" />
-            </motion.button>
-          </div>
-        </motion.div>
-
-        {/* Results Count */}
-        {books.length > 0 && (
-          <motion.div 
-            className="mb-8"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.5 }}
+      {/* Section 1.6: Navigation par âge - Inspiré de freechildrenstories.com */}
+      <section className="bg-gradient-to-r from-red-50 via-pink-50 to-orange-50 py-12 md:py-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-12"
           >
-            <p className="text-base text-neutral-600 font-medium">
-              <span className="font-bold text-neutral-900 text-lg">{books.length}</span> 
-              {' '}livre{books.length > 1 ? 's' : ''} disponible{books.length > 1 ? 's' : ''}
-              {selectedCategory && (
-                <span className="ml-2 px-3 py-1 bg-neutral-100 text-neutral-700 rounded-lg text-sm font-medium">
-                  {categories.find(c => c.id == selectedCategory)?.name}
-                </span>
-              )}
-              {selectedAge && (
-                <span className="ml-2 px-3 py-1 bg-neutral-100 text-neutral-700 rounded-lg text-sm font-medium">
-                  {selectedAge}+ ans
-                </span>
-              )}
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-neutral-900 mb-4">
+              {t.browseByAge}
+            </h2>
+            <p className="text-lg text-neutral-600 max-w-2xl mx-auto">
+              {t.ageDescription}
             </p>
           </motion.div>
-        )}
-      </div>
 
-      {/* Books Grid */}
-      <div className="max-w-7xl mx-auto px-6 pb-20">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+            {[
+              { label: t.age3to5, age: '3', desc: t.firstSteps, image: '/enfant3ans.webp' },
+              { label: t.age5to8, age: '5', desc: t.shortStories, image: encodeURI('/enfant 5 8ans.webp') },
+              { label: t.age8to10, age: '8', desc: t.adventures, image: '/enfant10ans.webp' },
+              { label: t.age10plus, age: '10', desc: t.novels, image: '/enfant12.webp' }
+            ].map((item, i) => (
+              <motion.button
+                key={i}
+                onClick={() => {
+                  setSelectedAge(item.age);
+                  document.getElementById('books-section')?.scrollIntoView({ behavior: 'smooth' });
+                }}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1, duration: 0.5 }}
+                whileHover={{ scale: 1.05, y: -5 }}
+                whileTap={{ scale: 0.95 }}
+                className="p-6 rounded-2xl bg-gradient-to-br from-red-500 via-pink-500 to-orange-500 text-white shadow-lg hover:shadow-xl transition-all text-center border-2 border-white/20 relative overflow-hidden group"
+              >
+                {/* Image de fond avec overlay */}
+                <div className="absolute inset-0 opacity-20 group-hover:opacity-30 transition-opacity">
+                  <img 
+                    src={item.image} 
+                    alt={item.label}
+                    className="w-full h-full object-cover"
+                    loading="lazy"
+                    onError={(e) => {
+                      // Si l'image n'existe pas, masquer l'image
+                      e.target.style.display = 'none';
+                    }}
+                  />
+                </div>
+                <div className="relative z-10">
+                  {/* Image principale centrée */}
+                  <div className="w-24 h-24 mx-auto mb-3 rounded-full overflow-hidden border-4 border-white/30 shadow-lg bg-white/10">
+                    <img 
+                      src={item.image} 
+                      alt={item.label}
+                      className="w-full h-full object-cover"
+                      loading="lazy"
+                      onError={(e) => {
+                        // Si l'image n'existe pas, afficher l'icône
+                        e.target.style.display = 'none';
+                        const icon = e.target.nextElementSibling;
+                        if (icon) icon.style.display = 'block';
+                      }}
+                    />
+                    <ChildIcon className="w-full h-full p-4 hidden" style={{ display: 'none' }} />
+                  </div>
+                  <h3 className="text-xl font-bold mb-2">{item.label}</h3>
+                  <p className="text-sm opacity-90">{item.desc}</p>
+                </div>
+              </motion.button>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Section 2: Bibliothèque - Filtres et tri */}
+      <section id="books-section" className="bg-gradient-to-br from-white via-red-50/30 to-pink-50/30 py-8 md:py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-8"
+          >
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-neutral-900 mb-4">
+              {t.discoverLibrary}
+            </h2>
+            <p className="text-lg text-neutral-600">
+              {totalBooks} {t.booksAvailable} • {totalCategories} {t.categories}
+            </p>
+          </motion.div>
+
+          {/* Filters & Sort */}
+          <motion.div 
+            initial={{ opacity: 0, y: 10 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.2 }}
+            className="flex flex-col md:flex-row md:flex-wrap items-stretch md:items-center gap-3 md:gap-4 mb-8 md:mb-10"
+          >
+            <div className="relative group w-full md:w-auto">
+              <select
+                value={selectedCategory}
+                onChange={(e) => setSelectedCategory(e.target.value)}
+                className="w-full md:w-auto px-4 sm:px-5 py-3 bg-white/95 backdrop-blur-sm border-2 border-red-200/50 rounded-xl focus:ring-4 focus:ring-red-500/20 focus:border-red-500 transition-all cursor-pointer appearance-none pr-10 sm:pr-12 text-sm font-medium text-neutral-700 shadow-md hover:shadow-lg focus:shadow-xl hover:border-red-300"
+              >
+                <option value="">{t.allCategories}</option>
+                {categories.map(cat => (
+                  <option key={cat.id} value={cat.id}>{cat.name}</option>
+                ))}
+              </select>
+              <div className="absolute right-4 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                <svg className="w-4 h-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+            </div>
+
+            <div className="relative group w-full md:w-auto">
+              <select
+                value={selectedAge}
+                onChange={(e) => setSelectedAge(e.target.value)}
+                className="w-full md:w-auto px-4 sm:px-5 py-3 bg-white/95 backdrop-blur-sm border-2 border-red-200/50 rounded-xl focus:ring-4 focus:ring-red-500/20 focus:border-red-500 transition-all cursor-pointer appearance-none pr-10 sm:pr-12 text-sm font-medium text-neutral-700 shadow-md hover:shadow-lg focus:shadow-xl hover:border-red-300"
+              >
+                <option value="">{t.allAges}</option>
+                <option value="3">3+ {t.agePlus}</option>
+                <option value="5">5+ {t.agePlus}</option>
+                <option value="7">7+ {t.agePlus}</option>
+                <option value="9">9+ {t.agePlus}</option>
+              </select>
+              <div className="absolute right-4 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                <svg className="w-4 h-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+            </div>
+
+            <div className="relative group w-full md:w-auto">
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                className="w-full md:w-auto px-4 sm:px-5 py-3 bg-white/95 backdrop-blur-sm border-2 border-red-200/50 rounded-xl focus:ring-4 focus:ring-red-500/20 focus:border-red-500 transition-all cursor-pointer appearance-none pr-10 sm:pr-12 text-sm font-medium text-neutral-700 shadow-md hover:shadow-lg focus:shadow-xl hover:border-red-300"
+              >
+                <option value="recent">{t.recent}</option>
+                <option value="title">{t.byTitle}</option>
+                <option value="author">{t.byAuthor}</option>
+              </select>
+              <div className="absolute right-4 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                <svg className="w-4 h-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+            </div>
+
+            <div className="flex w-full md:w-auto justify-between md:justify-start gap-1 bg-white/95 backdrop-blur-sm rounded-xl p-1.5 border-2 border-red-200/50 shadow-md">
+              <motion.button
+                onClick={() => setViewMode('grid')}
+                className={`p-2.5 rounded-lg transition-all ${
+                  viewMode === 'grid' 
+                    ? 'bg-gradient-to-r from-red-600 to-pink-600 text-white shadow-lg' 
+                    : 'text-neutral-600 hover:bg-red-50'
+                }`}
+                title={t.gridView}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <GridIcon className="w-4 h-4" />
+              </motion.button>
+              <motion.button
+                onClick={() => setViewMode('list')}
+                className={`p-2.5 rounded-lg transition-all ${
+                  viewMode === 'list' 
+                    ? 'bg-gradient-to-r from-red-600 to-pink-600 text-white shadow-lg' 
+                    : 'text-neutral-600 hover:bg-red-50'
+                }`}
+                title={t.listView}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <ListIcon className="w-4 h-4" />
+              </motion.button>
+            </div>
+          </motion.div>
+
+          {/* Results Count */}
+          {books.length > 0 && (
+            <motion.div 
+              className="mb-8"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.5 }}
+            >
+              <p className="text-base text-neutral-600 font-medium">
+                <span className="font-bold text-neutral-900 text-lg">{books.length}</span> 
+                {' '}{books.length === 1 ? t.booksFound : t.booksFoundPlural}
+                {selectedCategory && (
+                  <span className="ml-2 px-3 py-1 bg-red-100 text-red-700 rounded-lg text-sm font-medium border border-red-200">
+                    {categories.find(c => c.id == selectedCategory)?.name}
+                  </span>
+                )}
+                {selectedAge && (
+                  <span className="ml-2 px-3 py-1 bg-pink-100 text-pink-700 rounded-lg text-sm font-medium border border-pink-200">
+                    {selectedAge}+ {t.agePlus}
+                  </span>
+                )}
+              </p>
+            </motion.div>
+          )}
+
+        {/* Grille de livres */}
         {loading ? (
           <motion.div 
             initial={{ opacity: 0 }}
@@ -523,8 +684,8 @@ function Home({ darkMode, setDarkMode }) {
                 <BookIcon className="w-16 h-16 text-neutral-400" />
               </div>
             </div>
-            <h2 className="text-3xl font-bold text-neutral-900 mb-3">Aucun livre trouvé</h2>
-            <p className="text-lg text-neutral-600 mb-8 max-w-md mx-auto">Aucun livre ne correspond à vos critères de recherche</p>
+            <h2 className="text-3xl font-bold text-neutral-900 mb-3">{t.noBooksFound}</h2>
+            <p className="text-lg text-neutral-600 mb-8 max-w-md mx-auto">{t.noBooksMatch}</p>
             {(searchQuery || selectedCategory || selectedAge) && (
               <motion.button
                 onClick={() => {
@@ -536,7 +697,7 @@ function Home({ darkMode, setDarkMode }) {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
-                Réinitialiser les filtres
+                {t.resetFilters}
               </motion.button>
             )}
           </motion.div>
@@ -549,7 +710,7 @@ function Home({ darkMode, setDarkMode }) {
               exit={{ opacity: 0 }}
               transition={{ duration: 0.3 }}
               className={viewMode === 'grid' 
-                ? "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8"
+                ? "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 items-stretch"
                 : "space-y-4 max-w-4xl mx-auto"
               }
             >
@@ -567,98 +728,88 @@ function Home({ darkMode, setDarkMode }) {
                     stiffness: 100
                   }}
                   whileHover={{ 
-                    y: -12, 
-                    scale: 1.03,
+                    y: -8, 
+                    scale: 1.02,
                     transition: { duration: 0.2 }
                   }}
-                  whileTap={{ scale: 0.97 }}
+                  whileTap={{ scale: 0.98 }}
                   layout
+                  className="h-full"
                 >
-                  <div className="book-card-enhanced bg-white rounded-2xl border-2 border-neutral-200/50 overflow-hidden group h-full flex flex-col relative hover:border-neutral-300 hover:shadow-2xl transition-all duration-300">
-                    {/* Bouton favori */}
-                    <motion.button
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        const wasFavorite = storage.isFavorite(book.id);
-                        if (wasFavorite) {
-                          storage.removeFavorite(book.id);
-                          showToast('Livre retiré des favoris', 'info', 2000);
-                        } else {
-                          storage.addFavorite(book.id);
-                          showToast('Livre ajouté aux favoris', 'success', 2000);
-                        }
-                        // Force re-render
-                        setFavoritesUpdate(prev => prev + 1);
-                      }}
-                      className="absolute top-4 right-4 z-20 p-2.5 bg-white/95 backdrop-blur-md rounded-xl shadow-lg hover:shadow-xl transition-all"
-                      title={storage.isFavorite(book.id) ? "Retirer des favoris" : "Ajouter aux favoris"}
-                      whileHover={{ scale: 1.1, rotate: 5 }}
-                      whileTap={{ scale: 0.9 }}
-                    >
-                      <HeartIcon 
-                        className={`w-5 h-5 ${storage.isFavorite(book.id) ? 'text-red-500' : 'text-neutral-400'}`}
-                        filled={storage.isFavorite(book.id)}
-                      />
-                    </motion.button>
-                    
-                    <Link
-                      to={`/book-details/${book.id}`}
-                      className="flex-1 flex flex-col"
-                    >
-                      {/* Cover Image */}
-                      <div className="h-72 bg-gradient-to-br from-neutral-100 to-neutral-200 relative overflow-hidden">
-                        {book.cover_image ? (
-                          <img
-                            src={`http://localhost:3000${book.cover_image}`}
-                            alt={book.title}
-                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                  <Link
+                    to={`/book-details/${book.id}`}
+                    className="block h-full"
+                  >
+                    <div className="book-card-enhanced bg-white rounded-2xl overflow-hidden group h-full flex flex-col relative hover:shadow-xl transition-all duration-300 border border-neutral-200">
+                      {/* Section colorée en haut */}
+                      <div 
+                        className="relative px-6 py-8 text-white flex-shrink-0"
+                        style={{ 
+                          background: `linear-gradient(135deg, ${getCategoryColor(book.category_name, index)} 0%, ${getCategoryColor(book.category_name, index)}dd 100%)`
+                        }}
+                      >
+                        {/* Bouton favori */}
+                        <motion.button
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            const wasFavorite = storage.isFavorite(book.id);
+                            if (wasFavorite) {
+                              storage.removeFavorite(book.id);
+                              showToast(t.bookRemovedFromFavorites, 'info', 2000);
+                            } else {
+                              storage.addFavorite(book.id);
+                              showToast(t.bookAddedToFavorites, 'success', 2000);
+                            }
+                            setFavoritesUpdate(prev => prev + 1);
+                          }}
+                          className="absolute top-4 right-4 z-20 p-2 bg-white/20 hover:bg-white/30 rounded-full backdrop-blur-sm transition-all"
+                          title={storage.isFavorite(book.id) ? t.removeFromFavorites : t.addToFavorites}
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.9 }}
+                        >
+                          <HeartIcon 
+                            className={`w-5 h-5 ${storage.isFavorite(book.id) ? 'text-white' : 'text-white/80'}`}
+                            filled={storage.isFavorite(book.id)}
                           />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-neutral-100 via-neutral-150 to-neutral-200">
-                            <BookIcon className="w-20 h-20 text-neutral-400" />
-                          </div>
-                        )}
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                        </motion.button>
+                        
+                        {/* Titre */}
+                        <h3 className="font-bold text-xl mb-2 line-clamp-2 leading-tight pr-12">
+                          {book.title}
+                        </h3>
+                        
+                        {/* Genre/Catégorie */}
                         {book.category_name && (
-                          <div className="absolute top-4 left-4">
-                            <span 
-                              className="px-3 py-1.5 bg-white/95 backdrop-blur-md text-xs font-bold rounded-lg shadow-lg"
-                              style={{ 
-                                backgroundColor: `${getCategoryColor(book.category_name, index)}20`,
-                                color: getCategoryColor(book.category_name, index),
-                                border: `1px solid ${getCategoryColor(book.category_name, index)}40`
-                              }}
-                            >
-                              {book.category_name}
-                            </span>
-                          </div>
+                          <p className="font-bold text-base opacity-95">
+                            {book.category_name}
+                          </p>
                         )}
                       </div>
                     
-                      {/* Book Details */}
-                      <div className="p-6 flex-1 flex flex-col bg-white">
-                        <h3 className="font-bold text-xl text-neutral-900 mb-2 line-clamp-2 group-hover:text-neutral-700 transition-colors leading-tight">
+                      {/* Section blanche en bas */}
+                      <div className="p-6 flex-1 flex flex-col bg-white min-h-[180px]">
+                        <h3 className="font-bold text-lg text-neutral-900 mb-2 line-clamp-2 leading-tight">
                           {book.title}
                         </h3>
                         {book.author && (
-                          <p className="text-sm text-neutral-500 mb-4 font-medium">par {book.author}</p>
+                          <p className="text-sm text-neutral-600 mb-4">{t.by} {book.author}</p>
                         )}
-                        <div className="flex items-center gap-2 flex-wrap mt-auto pt-4 border-t border-neutral-100">
+                        <div className="flex items-center gap-2 flex-wrap mt-auto pt-2">
                           {book.age_group_min !== undefined && book.age_group_max !== undefined && (
-                            <span className="inline-block px-3 py-1.5 text-xs font-semibold bg-neutral-100 text-neutral-700 rounded-lg">
-                              {book.age_group_min}-{book.age_group_max} ans
+                            <span className="inline-block px-3 py-1.5 text-xs font-medium bg-neutral-100 text-neutral-700 rounded-lg">
+                              {book.age_group_min}-{book.age_group_max} {t.years}
                             </span>
                           )}
                           {book.page_count > 0 && (
-                            <span className="inline-block px-3 py-1.5 text-xs font-semibold bg-neutral-100 text-neutral-700 rounded-lg">
-                              {book.page_count} page{book.page_count > 1 ? 's' : ''}
+                            <span className="inline-block px-3 py-1.5 text-xs font-medium bg-neutral-100 text-neutral-700 rounded-lg">
+                              {book.page_count} {book.page_count === 1 ? t.page : t.pages}
                             </span>
                           )}
                         </div>
                       </div>
-                    </Link>
-                  </div>
+                    </div>
+                  </Link>
                 </motion.div>
               ) : (
                 <motion.div
@@ -692,7 +843,7 @@ function Home({ darkMode, setDarkMode }) {
                             {book.title}
                           </h3>
                           {book.author && (
-                            <p className="text-base text-neutral-500 mb-3 font-medium">par {book.author}</p>
+                            <p className="text-base text-neutral-500 mb-3 font-medium">{t.by} {book.author}</p>
                           )}
                           {book.description && (
                             <p className="text-sm text-neutral-600 mb-4 line-clamp-2 leading-relaxed">{book.description}</p>
@@ -713,12 +864,12 @@ function Home({ darkMode, setDarkMode }) {
                           )}
                           {book.age_group_min !== undefined && book.age_group_max !== undefined && (
                             <span className="inline-block px-3 py-1.5 text-xs font-semibold bg-neutral-100 text-neutral-700 rounded-lg">
-                              {book.age_group_min}-{book.age_group_max} ans
+                              {book.age_group_min}-{book.age_group_max} {t.years}
                             </span>
                           )}
                           {book.page_count > 0 && (
                             <span className="inline-block px-3 py-1.5 text-xs font-semibold bg-neutral-100 text-neutral-700 rounded-lg">
-                              {book.page_count} page{book.page_count > 1 ? 's' : ''}
+                              {book.page_count} {book.page_count === 1 ? t.page : t.pages}
                             </span>
                           )}
                         </div>
@@ -729,49 +880,860 @@ function Home({ darkMode, setDarkMode }) {
               );
             }) : (
               <div className={`${viewMode === 'grid' ? "col-span-full" : "w-full"} text-center py-12`}>
-                <p className="text-gray-600">Aucun livre trouvé</p>
+                <p className="text-gray-600">{t.noBooksFound}</p>
               </div>
             )}
             </motion.div>
           </AnimatePresence>
         )}
-      </div>
+        </div>
+      </section>
+
+      {/* Section 2.7: Le saviez-vous ? - Inspiré de freechildrenstories.com */}
+      <section className="bg-gradient-to-br from-red-50 via-pink-50 to-orange-50 py-16 md:py-24">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-12"
+          >
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-neutral-900 mb-4">
+              {t.didYouKnow}
+            </h2>
+            <p className="text-lg text-neutral-600 max-w-2xl mx-auto">
+              {t.funFacts}
+            </p>
+          </motion.div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[
+              {
+                icon: BookIcon,
+                title: t.readingDevelopsEmpathy,
+                fact: t.empathyFact,
+                color: 'from-blue-400 to-blue-600'
+              },
+              {
+                icon: StarIcon,
+                title: t.twentyMinutes,
+                fact: t.readingFact,
+                color: 'from-yellow-400 to-orange-500'
+              },
+              {
+                icon: SparklesIcon,
+                title: t.imaginationInAction,
+                fact: t.imaginationFact,
+                color: 'from-purple-400 to-pink-500'
+              }
+            ].map((item, i) => {
+              const IconComponent = item.icon;
+              return (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: i * 0.15, duration: 0.5 }}
+                  whileHover={{ y: -5, scale: 1.02 }}
+                  className="bg-white rounded-2xl p-8 shadow-xl hover:shadow-2xl transition-all border-2 border-transparent hover:border-red-200"
+                >
+                  <div className={`inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br ${item.color} mb-4`}>
+                    <IconComponent className="w-8 h-8 text-white" />
+                  </div>
+                  <h3 className="text-xl font-bold text-neutral-900 mb-3">{item.title}</h3>
+                  <p className="text-neutral-700 leading-relaxed">{item.fact}</p>
+                </motion.div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* Section 4: De l'éveil à l'apprentissage */}
+      <section className="bg-gradient-to-br from-neutral-50 via-white to-red-50 py-16 md:py-24">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-16"
+          >
+            <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-neutral-900 mb-6">
+              {t.fromAwakeningToLearning}
+            </h2>
+            <p className="text-lg md:text-xl text-neutral-600 max-w-3xl mx-auto leading-relaxed">
+              {t.readingAidDescription}
+            </p>
+          </motion.div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12">
+            {[
+              {
+                icon: AudioIcon,
+                title: t.audioVersions,
+                desc: t.audioVersionsDesc,
+                color: 'from-red-500 to-pink-500',
+                bgColor: 'from-red-50 to-pink-50',
+                comingSoon: false,
+                featureId: 'versions-audio'
+              },
+              {
+                icon: BookIcon,
+                title: t.readingAid,
+                desc: t.readingAidDesc,
+                color: 'from-red-500 to-pink-500',
+                bgColor: 'from-red-50 to-pink-50',
+                comingSoon: false,
+                featureId: 'aide-lecture'
+              },
+              {
+                icon: MicrophoneIcon,
+                title: t.recordVoice,
+                desc: t.recordVoiceDesc,
+                color: 'from-red-500 to-pink-500',
+                bgColor: 'from-red-50 to-pink-50',
+                comingSoon: true,
+                featureId: 'enregistrer-voix'
+              }
+            ].map((item, i) => {
+              const IconComponent = item.icon;
+              return (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, y: 40 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: i * 0.2, duration: 0.6 }}
+                  whileHover={{ y: -10, scale: 1.02 }}
+                  className="relative group"
+                >
+                  <div className={`bg-gradient-to-br ${item.bgColor} rounded-3xl p-8 shadow-xl hover:shadow-2xl transition-all border-2 border-transparent hover:border-red-200 h-full flex flex-col`}>
+                    <div className={`inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br ${item.color} mb-6 shadow-lg group-hover:scale-110 transition-transform`}>
+                      <IconComponent className="w-10 h-10 text-white" />
+                    </div>
+                    <h3 className="text-xl font-bold text-neutral-900 mb-4">{item.title}</h3>
+                    <p className="text-sm text-neutral-700 leading-relaxed mb-4 flex-1">{item.desc}</p>
+                    {item.comingSoon && (
+                      <span className="inline-block px-3 py-1 bg-red-100 text-red-700 rounded-full text-xs font-semibold mb-4">
+                        {t.comingSoon}
+                      </span>
+                    )}
+                    <Link to={`/features/${item.featureId}`}>
+                      <motion.button
+                        whileHover={{ x: 5 }}
+                        className="mt-auto text-red-600 font-semibold flex items-center gap-2 group-hover:text-red-700 transition-colors text-sm"
+                      >
+                        {t.learnMore}
+                        <ChevronRightIcon className="w-4 h-4" />
+                      </motion.button>
+                    </Link>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* Section 4.5: Module d'aide à la lecture */}
+      <section className="bg-white py-16 md:py-24">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            <motion.div
+              initial={{ opacity: 0, x: -30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+            >
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-neutral-900 mb-6">
+                {t.readingAidModule}
+              </h2>
+              <p className="text-lg text-neutral-600 mb-6 leading-relaxed">
+                {t.readingAidModuleDesc}
+              </p>
+              <ul className="space-y-4 mb-8">
+                {[
+                  t.readingAidFeature1,
+                  t.readingAidFeature2,
+                  t.readingAidFeature3
+                ].map((item, i) => (
+                  <motion.li
+                    key={i}
+                    initial={{ opacity: 0, x: -20 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: 0.1 + i * 0.1 }}
+                    className="flex items-start gap-3"
+                  >
+                    <span className="text-red-600 text-xl mt-1">✓</span>
+                    <span className="text-neutral-700">{item}</span>
+                  </motion.li>
+                ))}
+              </ul>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="px-8 py-4 bg-gradient-to-r from-red-600 to-pink-600 text-white rounded-full font-bold text-lg shadow-lg hover:shadow-xl transition-all"
+              >
+                {t.discoverReadingAid}
+              </motion.button>
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, x: 30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+              className="relative"
+            >
+              <div className="relative bg-gradient-to-br from-red-50 via-pink-50 to-orange-50 rounded-3xl p-12 shadow-2xl">
+                <div className="grid grid-cols-2 gap-6">
+                  {[
+                    { icon: FontIcon, label: t.adaptedFonts, color: 'from-red-500 to-pink-500' },
+                    { icon: RulerIcon, label: t.adjustableSizes, color: 'from-red-500 to-pink-500' },
+                    { icon: PaletteIcon, label: t.customizableColors, color: 'from-red-500 to-pink-500' },
+                    { icon: VolumeIcon, label: t.speechSynthesis, color: 'from-red-500 to-pink-500' }
+                  ].map((item, i) => {
+                    const IconComponent = item.icon;
+                    return (
+                      <motion.div
+                        key={i}
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        whileInView={{ opacity: 1, scale: 1 }}
+                        viewport={{ once: true }}
+                        transition={{ delay: 0.2 + i * 0.1 }}
+                        className="bg-white rounded-2xl p-6 text-center shadow-lg"
+                      >
+                        <div className={`inline-flex items-center justify-center w-16 h-16 rounded-xl bg-gradient-to-br ${item.color} mb-4`}>
+                          <IconComponent className="w-8 h-8 text-white" />
+                        </div>
+                        <p className="font-semibold text-neutral-900">{item.label}</p>
+                      </motion.div>
+                    );
+                  })}
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
+      {/* Section 4.7: Ils nous font confiance */}
+      <section className="bg-gradient-to-br from-red-50 via-pink-50 to-orange-50 py-16 md:py-24">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-16"
+          >
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-neutral-900 mb-4">
+              {t.theyTrustUs}
+            </h2>
+          </motion.div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {[
+              {
+                quote: t.testimonial1,
+                author: 'Fanny Joly',
+                role: 'Grand-mère et auteure jeunesse',
+                icon: UserIcon
+              },
+              {
+                quote: t.testimonial2,
+                author: 'Fabienne',
+                role: 'Enfant',
+                icon: ChildIcon
+              },
+              {
+                quote: t.testimonial3,
+                author: 'Enfant',
+                role: 'Utilisateur',
+                icon: ChildIcon
+              }
+            ].map((testimonial, i) => {
+              const IconComponent = testimonial.icon;
+              return (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: i * 0.15, duration: 0.5 }}
+                  whileHover={{ y: -5 }}
+                  className="bg-white rounded-2xl p-8 shadow-xl hover:shadow-2xl transition-all border-2 border-transparent hover:border-red-200"
+                >
+                  <div className="mb-4 flex justify-center">
+                    <div className="w-16 h-16 rounded-full bg-gradient-to-br from-red-100 to-pink-100 flex items-center justify-center">
+                      <IconComponent className="w-8 h-8 text-red-600" />
+                    </div>
+                  </div>
+                <p className="text-neutral-700 italic mb-6 leading-relaxed text-base line-clamp-3 min-h-[96px]">
+                  « {testimonial.quote} »
+                </p>
+                  <div className="border-t border-neutral-200 pt-4">
+                    <p className="font-bold text-neutral-900 text-base">{testimonial.author}</p>
+                    <p className="text-sm text-neutral-600">{testimonial.role}</p>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* Section 6: LIRE - ÉCOUTER - RACONTER - PARTAGER */}
+      <section className="bg-gradient-to-r from-red-50 via-pink-50 to-orange-50 py-12 md:py-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-12"
+          >
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-neutral-900 mb-4">
+              {t.read} • {t.listen} • {t.tell} • {t.share}
+            </h2>
+            <p className="text-lg text-neutral-600 max-w-2xl mx-auto">
+              {t.completeExperience}
+            </p>
+          </motion.div>
+
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
+            {[
+              { icon: BookIcon, title: t.read, desc: t.readDesc },
+              { icon: AudioIcon, title: t.listen, desc: t.listenDesc },
+              { icon: TheaterIcon, title: t.tell, desc: t.tellDesc },
+              { icon: HeartIcon, title: t.share, desc: t.shareDesc }
+            ].map((item, i) => {
+              const IconComponent = item.icon;
+              return (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: i * 0.1, duration: 0.5 }}
+                  whileHover={{ scale: 1.05, y: -5 }}
+                  className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all text-center border-2 border-transparent hover:border-red-200"
+                >
+                  <div className="mb-4 flex justify-center">
+                    <IconComponent className="w-12 h-12 text-red-600" />
+                  </div>
+                  <h3 className="text-xl font-bold text-neutral-900 mb-2">{item.title}</h3>
+                  <p className="text-sm text-neutral-600">{item.desc}</p>
+                </motion.div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* Section 6.5: Grille de livres (vide - les livres sont maintenant dans la section 2) */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 pb-20 hidden">
+        {loading ? (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className={viewMode === 'grid' 
+              ? "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8"
+              : "space-y-4 max-w-4xl mx-auto"
+            }
+          >
+            <BookGridSkeleton count={8} viewMode={viewMode} />
+          </motion.div>
+        ) : !books || books.length === 0 ? (
+          <motion.div 
+            className="text-center py-24"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            <div className="mb-8 flex justify-center">
+              <div className="p-6 bg-gradient-to-br from-neutral-100 to-neutral-200 rounded-3xl shadow-lg">
+                <BookIcon className="w-16 h-16 text-neutral-400" />
+              </div>
+            </div>
+            <h2 className="text-3xl font-bold text-neutral-900 mb-3">{t.noBooksFound}</h2>
+            <p className="text-lg text-neutral-600 mb-8 max-w-md mx-auto">{t.noBooksMatch}</p>
+            {(searchQuery || selectedCategory || selectedAge) && (
+              <motion.button
+                onClick={() => {
+                  setSearchQuery('');
+                  setSelectedCategory('');
+                  setSelectedAge('');
+                }}
+                className="btn-primary text-base px-8 py-3"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                {t.resetFilters}
+              </motion.button>
+            )}
+          </motion.div>
+        ) : (
+          <AnimatePresence mode="wait">
+            <motion.div 
+              key={`${viewMode}-${books.length}`}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3 }}
+              className={viewMode === 'grid' 
+                ? "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 items-stretch"
+                : "space-y-4 max-w-4xl mx-auto"
+              }
+            >
+            {books && books.length > 0 ? books.map((book, index) => {
+              const categoryColor = getCategoryColor(book.category_name, index);
+              return viewMode === 'grid' ? (
+                <motion.div
+                  key={book.id}
+                  initial={{ opacity: 0, y: 20, scale: 0.9 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  transition={{ 
+                    delay: index * 0.05, 
+                    duration: 0.4,
+                    type: 'spring',
+                    stiffness: 100
+                  }}
+                  whileHover={{ 
+                    y: -8, 
+                    scale: 1.02,
+                    transition: { duration: 0.2 }
+                  }}
+                  whileTap={{ scale: 0.98 }}
+                  layout
+                  className="h-full"
+                >
+                  <Link
+                    to={`/book-details/${book.id}`}
+                    className="block h-full"
+                  >
+                    <div className="book-card-enhanced bg-white rounded-2xl overflow-hidden group h-full flex flex-col relative hover:shadow-xl transition-all duration-300 border border-neutral-200">
+                      {/* Section colorée en haut */}
+                      <div 
+                        className="relative px-6 py-8 text-white flex-shrink-0"
+                        style={{ 
+                          background: `linear-gradient(135deg, ${getCategoryColor(book.category_name, index)} 0%, ${getCategoryColor(book.category_name, index)}dd 100%)`
+                        }}
+                      >
+                        {/* Bouton favori */}
+                        <motion.button
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            const wasFavorite = storage.isFavorite(book.id);
+                            if (wasFavorite) {
+                              storage.removeFavorite(book.id);
+                              showToast(t.bookRemovedFromFavorites, 'info', 2000);
+                            } else {
+                              storage.addFavorite(book.id);
+                              showToast(t.bookAddedToFavorites, 'success', 2000);
+                            }
+                            setFavoritesUpdate(prev => prev + 1);
+                          }}
+                          className="absolute top-4 right-4 z-20 p-2 bg-white/20 hover:bg-white/30 rounded-full backdrop-blur-sm transition-all"
+                          title={storage.isFavorite(book.id) ? t.removeFromFavorites : t.addToFavorites}
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.9 }}
+                        >
+                          <HeartIcon 
+                            className={`w-5 h-5 ${storage.isFavorite(book.id) ? 'text-white' : 'text-white/80'}`}
+                            filled={storage.isFavorite(book.id)}
+                          />
+                        </motion.button>
+                        
+                        {/* Titre */}
+                        <h3 className="font-bold text-xl mb-2 line-clamp-2 leading-tight pr-12">
+                          {book.title}
+                        </h3>
+                        
+                        {/* Genre/Catégorie */}
+                        {book.category_name && (
+                          <p className="font-bold text-base opacity-95">
+                            {book.category_name}
+                          </p>
+                        )}
+                      </div>
+                    
+                      {/* Section blanche en bas */}
+                      <div className="p-6 flex-1 flex flex-col bg-white min-h-[180px]">
+                        <h3 className="font-bold text-lg text-neutral-900 mb-2 line-clamp-2 leading-tight">
+                          {book.title}
+                        </h3>
+                        {book.author && (
+                          <p className="text-sm text-neutral-600 mb-4">{t.by} {book.author}</p>
+                        )}
+                        <div className="flex items-center gap-2 flex-wrap mt-auto pt-2">
+                          {book.age_group_min !== undefined && book.age_group_max !== undefined && (
+                            <span className="inline-block px-3 py-1.5 text-xs font-medium bg-neutral-100 text-neutral-700 rounded-lg">
+                              {book.age_group_min}-{book.age_group_max} {t.years}
+                            </span>
+                          )}
+                          {book.page_count > 0 && (
+                            <span className="inline-block px-3 py-1.5 text-xs font-medium bg-neutral-100 text-neutral-700 rounded-lg">
+                              {book.page_count} {book.page_count === 1 ? t.page : t.pages}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </Link>
+                </motion.div>
+              ) : (
+                <motion.div
+                  key={book.id}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.05, duration: 0.3 }}
+                >
+                  <Link
+                    to={`/book/${book.id}`}
+                    className="book-card-enhanced bg-white rounded-2xl border-2 border-neutral-200/50 overflow-hidden group block hover:shadow-2xl transition-all duration-300"
+                  >
+                    <div className="flex">
+                      <div className="w-40 h-52 flex-shrink-0 bg-gradient-to-br from-neutral-100 to-neutral-200 overflow-hidden relative">
+                        {book.cover_image ? (
+                          <img
+                            src={`http://localhost:3000${book.cover_image}`}
+                            alt={book.title}
+                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                          />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-neutral-100 via-neutral-150 to-neutral-200">
+                              <BookIcon className="w-16 h-16 text-neutral-400" />
+                            </div>
+                          )}
+                        <div className="absolute inset-0 bg-gradient-to-r from-black/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                      </div>
+                      <div className="flex-1 p-6 flex flex-col justify-between">
+                        <div>
+                          <h3 className="font-bold text-2xl text-neutral-900 mb-2 group-hover:text-neutral-700 transition-colors leading-tight">
+                            {book.title}
+                          </h3>
+                          {book.author && (
+                            <p className="text-base text-neutral-500 mb-3 font-medium">{t.by} {book.author}</p>
+                          )}
+                          {book.description && (
+                            <p className="text-sm text-neutral-600 mb-4 line-clamp-2 leading-relaxed">{book.description}</p>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2 flex-wrap pt-4 border-t border-neutral-100">
+                          {book.category_name && (
+                            <span 
+                              className="inline-block px-3 py-1.5 text-xs font-bold rounded-lg"
+                              style={{ 
+                                backgroundColor: `${getCategoryColor(book.category_name, index)}20`,
+                                color: getCategoryColor(book.category_name, index),
+                                border: `1px solid ${getCategoryColor(book.category_name, index)}40`
+                              }}
+                            >
+                              {book.category_name}
+                            </span>
+                          )}
+                          {book.age_group_min !== undefined && book.age_group_max !== undefined && (
+                            <span className="inline-block px-3 py-1.5 text-xs font-semibold bg-neutral-100 text-neutral-700 rounded-lg">
+                              {book.age_group_min}-{book.age_group_max} {t.years}
+                            </span>
+                          )}
+                          {book.page_count > 0 && (
+                            <span className="inline-block px-3 py-1.5 text-xs font-semibold bg-neutral-100 text-neutral-700 rounded-lg">
+                              {book.page_count} {book.page_count === 1 ? t.page : t.pages}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </Link>
+                </motion.div>
+              );
+            }) : (
+              <div className={`${viewMode === 'grid' ? "col-span-full" : "w-full"} text-center py-12`}>
+                <p className="text-gray-600">{t.noBooksFound}</p>
+              </div>
+            )}
+            </motion.div>
+          </AnimatePresence>
+        )}
+      </section>
+
+      {/* Section 7: Disponible sur les principaux supports */}
+      <section className="bg-white py-16 md:py-24">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-16"
+          >
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-neutral-900 mb-6">
+              {t.availableOnDevices}
+            </h2>
+            <p className="text-lg md:text-xl text-neutral-600 max-w-3xl mx-auto leading-relaxed">
+              {t.devicesDescription}
+            </p>
+          </motion.div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto mb-12">
+            {[
+              { icon: ComputerIcon, device: t.computer, desc: t.computerDesc, features: [t.fullInterface, t.smoothNavigation, t.allBrowsers] },
+              { icon: TabletIcon, device: t.tablet, desc: t.tabletDesc, features: [t.optimizedTouch, t.largeScreen, t.comfortableReading] },
+              { icon: SmartphoneIcon, device: t.smartphone, desc: t.smartphoneDesc, features: [t.nativeApp, t.offlineMode, t.secure] }
+            ].map((item, i) => {
+              const IconComponent = item.icon;
+              return (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: i * 0.15, duration: 0.6 }}
+                  whileHover={{ y: -10, scale: 1.02 }}
+                  className="bg-gradient-to-br from-neutral-50 to-white rounded-3xl p-8 shadow-xl hover:shadow-2xl transition-all border-2 border-transparent hover:border-red-200"
+                >
+                  <div className="mb-6 flex justify-center">
+                    <IconComponent className="w-16 h-16 text-red-600" />
+                  </div>
+                <h3 className="text-2xl font-bold text-neutral-900 mb-2 text-center">{item.device}</h3>
+                <p className="text-neutral-600 mb-6 text-center">{item.desc}</p>
+                <ul className="space-y-2">
+                  {item.features.map((feature, j) => (
+                    <li key={j} className="flex items-center gap-2 text-sm text-neutral-700">
+                      <span className="text-red-600">✓</span>
+                      <span>{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+                </motion.div>
+              );
+            })}
+          </div>
+
+          <motion.div
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            className="bg-gradient-to-r from-red-50 via-pink-50 to-orange-50 rounded-3xl p-8 md:p-12 text-center border-2 border-red-100"
+          >
+            <p className="text-lg md:text-xl text-neutral-700 leading-relaxed">
+              <span className="font-bold text-neutral-900">{t.devicesNote}</span>
+            </p>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Section 8: Partager des moments uniques */}
+      <section className="bg-gradient-to-br from-red-50 via-pink-50 to-orange-50 py-16 md:py-24">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            <motion.div
+              initial={{ opacity: 0, x: -30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+            >
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-neutral-900 mb-6">
+                {t.shareMoments}
+              </h2>
+              <p className="text-lg text-neutral-600 mb-6 leading-relaxed">
+                {t.shareDescription} {totalBooks} {t.shareDescription2}{' '}
+                <span className="font-bold text-neutral-900">{t.shareDescription3}</span>
+              </p>
+              <p className="text-base text-neutral-600 mb-8">
+                {t.shareDescription4}
+              </p>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="px-8 py-4 bg-gradient-to-r from-red-600 to-pink-600 text-white rounded-full font-bold text-lg shadow-lg hover:shadow-xl transition-all"
+              >
+                {t.howItWorks}
+              </motion.button>
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, x: 30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+              className="relative"
+            >
+              <div className="relative bg-white rounded-3xl p-8 shadow-2xl">
+                <div className="flex items-center gap-4 mb-6">
+                  <div className="w-16 h-16 rounded-full bg-gradient-to-br from-red-400 to-pink-400 flex items-center justify-center">
+                    <UserIcon className="w-8 h-8 text-white" />
+                  </div>
+                  <div>
+                    <p className="font-bold text-neutral-900">Fanny</p>
+                    <p className="text-sm text-neutral-600">Grand-mère à Paris</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-4 mb-6">
+                  <div className="flex-1 h-px bg-gradient-to-r from-transparent via-red-200 to-transparent"></div>
+                    <HeartIcon className="w-6 h-6 text-red-500" filled={true} />
+                  <div className="flex-1 h-px bg-gradient-to-r from-transparent via-pink-200 to-transparent"></div>
+                </div>
+                <div className="flex items-center gap-4">
+                  <div className="w-16 h-16 rounded-full bg-gradient-to-br from-pink-400 to-orange-400 flex items-center justify-center">
+                    <ChildIcon className="w-8 h-8 text-white" />
+                  </div>
+                  <div>
+                    <p className="font-bold text-neutral-900">Pia</p>
+                    <p className="text-sm text-neutral-600">Petite-fille à New-York</p>
+                  </div>
+                </div>
+                <div className="mt-8 p-6 bg-gradient-to-br from-red-50 to-pink-50 rounded-2xl border-2 border-red-100">
+                  <p className="text-neutral-700 italic text-center">
+                    « Nous lisons ensemble chaque semaine, même à 6000 km de distance ! »
+                  </p>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        </div>
+      </section>
 
       {/* Footer */}
-      <footer className="mt-auto border-t border-neutral-200/60 bg-neutral-900 text-neutral-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-10">
+      <footer className="mt-auto border-t border-neutral-800 bg-neutral-900 text-neutral-200 relative overflow-hidden">
+        {/* Étoiles animées en arrière-plan du footer */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-40">
+          {Array.from({ length: 16 }).map((_, i) => (
+            <motion.div
+              key={i}
+              className="absolute text-yellow-400"
+              style={{
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+              }}
+              animate={{
+                y: [0, -15, 0],
+                opacity: [0.2, 0.8, 0.2],
+                scale: [0.8, 1.1, 0.8],
+              }}
+              transition={{
+                duration: 4 + Math.random() * 2,
+                repeat: Infinity,
+                delay: Math.random() * 3,
+              }}
+            >
+              <StarIcon className="w-5 h-5" />
+            </motion.div>
+          ))}
+        </div>
+
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 py-12 sm:py-16">
           <div className="flex flex-col md:flex-row md:items-start gap-8 md:gap-10">
             {/* Brand / short description */}
             <div className="md:w-1/3">
               <div className="flex items-center gap-2 mb-4">
                 <Logo size="small" />
               </div>
-              <p className="text-sm text-neutral-400 leading-relaxed">
-                HKids aide les enfants à découvrir le plaisir de la lecture grâce à une bibliothèque numérique
-                simple, colorée et pensée pour l’autonomie.
+              <p className="text-sm text-neutral-400 leading-relaxed mb-6">
+                {t.footerDescription}
               </p>
+              
+              {/* Réseaux sociaux */}
+              <div>
+                <p className="text-xs font-semibold text-neutral-300 mb-3 uppercase tracking-wide">
+                  {t.followUs}
+                </p>
+                <div className="flex items-center gap-3">
+                  <motion.a
+                    href="https://facebook.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-10 h-10 rounded-full bg-neutral-800 hover:bg-blue-600 flex items-center justify-center transition-colors"
+                    whileHover={{ scale: 1.1, y: -2 }}
+                    whileTap={{ scale: 0.95 }}
+                    title="Facebook"
+                  >
+                    <FacebookIcon className="w-5 h-5 text-white" />
+                  </motion.a>
+                  <motion.a
+                    href="https://instagram.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-10 h-10 rounded-full bg-neutral-800 hover:bg-gradient-to-r hover:from-purple-600 hover:via-pink-600 hover:to-orange-500 flex items-center justify-center transition-colors"
+                    whileHover={{ scale: 1.1, y: -2 }}
+                    whileTap={{ scale: 0.95 }}
+                    title="Instagram"
+                  >
+                    <InstagramIcon className="w-5 h-5 text-white" />
+                  </motion.a>
+                  <motion.a
+                    href="https://wa.me"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-10 h-10 rounded-full bg-neutral-800 hover:bg-green-500 flex items-center justify-center transition-colors"
+                    whileHover={{ scale: 1.1, y: -2 }}
+                    whileTap={{ scale: 0.95 }}
+                    title="WhatsApp"
+                  >
+                    <WhatsAppIcon className="w-5 h-5 text-white" />
+                  </motion.a>
+                  <motion.a
+                    href="https://twitter.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-10 h-10 rounded-full bg-neutral-800 hover:bg-blue-400 flex items-center justify-center transition-colors"
+                    whileHover={{ scale: 1.1, y: -2 }}
+                    whileTap={{ scale: 0.95 }}
+                    title="Twitter"
+                  >
+                    <TwitterIcon className="w-5 h-5 text-white" />
+                  </motion.a>
+                  <motion.a
+                    href="https://youtube.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-10 h-10 rounded-full bg-neutral-800 hover:bg-red-600 flex items-center justify-center transition-colors"
+                    whileHover={{ scale: 1.1, y: -2 }}
+                    whileTap={{ scale: 0.95 }}
+                    title="YouTube"
+                  >
+                    <YouTubeIcon className="w-5 h-5 text-white" />
+                  </motion.a>
+                  <motion.a
+                    href="https://linkedin.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-10 h-10 rounded-full bg-neutral-800 hover:bg-blue-700 flex items-center justify-center transition-colors"
+                    whileHover={{ scale: 1.1, y: -2 }}
+                    whileTap={{ scale: 0.95 }}
+                    title="LinkedIn"
+                  >
+                    <LinkedInIcon className="w-5 h-5 text-white" />
+                  </motion.a>
+                </div>
+              </div>
             </div>
 
             {/* Links */}
             <div className="flex-1 grid grid-cols-2 sm:grid-cols-3 gap-6 text-sm">
               <div>
                 <p className="font-semibold text-neutral-100 mb-3 text-xs uppercase tracking-wide">
-                  Explorer
+                  {t.explore}
                 </p>
                 <ul className="space-y-2 text-neutral-400">
                   <li>
                     <Link to="/" className="hover:text-white transition-colors">
-                      Accueil
+                      {t.home}
                     </Link>
                   </li>
                   <li>
                     <Link to="/favorites" className="hover:text-white transition-colors">
-                      Favoris
+                      {t.favorites}
                     </Link>
                   </li>
                   <li>
                     <Link to="/history" className="hover:text-white transition-colors">
-                      Historique
+                      {t.history}
                     </Link>
                   </li>
                 </ul>
@@ -779,22 +1741,22 @@ function Home({ darkMode, setDarkMode }) {
 
               <div>
                 <p className="font-semibold text-neutral-100 mb-3 text-xs uppercase tracking-wide">
-                  Pour les parents
+                  {t.forParents}
                 </p>
                 <ul className="space-y-2 text-neutral-400">
                   <li>
                     <span className="cursor-default">
-                      Contenus vérifiés
+                      {t.verifiedContent}
                     </span>
                   </li>
                   <li>
                     <span className="cursor-default">
-                      Sans publicités
+                      {t.noAds}
                     </span>
                   </li>
                   <li>
                     <span className="cursor-default">
-                      Mode hors connexion (à venir)
+                      {t.offlineModeComing}
                     </span>
                   </li>
                 </ul>
@@ -802,22 +1764,22 @@ function Home({ darkMode, setDarkMode }) {
 
               <div>
                 <p className="font-semibold text-neutral-100 mb-3 text-xs uppercase tracking-wide">
-                  Espace admin
+                  {t.adminSpace}
                 </p>
                 <ul className="space-y-2 text-neutral-400">
                   <li>
                     <Link to="/admin/login" className="hover:text-white transition-colors">
-                      Accès administrateur
+                      {t.adminAccess}
                     </Link>
                   </li>
                   <li>
                     <span className="cursor-default">
-                      Gestion des livres
+                      {t.bookManagement}
                     </span>
                   </li>
                   <li>
                     <span className="cursor-default">
-                      Catégories & âges
+                      {t.categoriesAges}
                     </span>
                   </li>
                 </ul>
@@ -828,13 +1790,13 @@ function Home({ darkMode, setDarkMode }) {
           {/* Bottom bar */}
           <div className="mt-8 pt-6 border-t border-neutral-800 text-xs text-neutral-500 flex flex-col sm:flex-row gap-3 sm:items-center justify-between">
             <p>
-              © {new Date().getFullYear()} HKids. Tous droits réservés.
+              © {new Date().getFullYear()} HKids. {t.copyright}
             </p>
             <p className="text-[11px] sm:text-xs">
-              Conçu pour une expérience de lecture sereine, sans distractions, sur tablette ou ordinateur.
+              {t.footerNote}
             </p>
           </div>
-        </div>
+      </div>
       </footer>
     </div>
   );

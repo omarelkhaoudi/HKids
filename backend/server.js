@@ -1,3 +1,6 @@
+// IMPORTANT: Charger les variables d'environnement EN PREMIER
+import config from './config/env.js';
+
 import express from 'express';
 import cors from 'cors';
 import path from 'path';
@@ -10,7 +13,6 @@ import { errorHandler, notFound } from './middleware/errorHandler.js';
 import { requestLogger } from './middleware/logger.js';
 import { apiRateLimiter, authRateLimiter, resetRateLimit } from './middleware/rateLimiter.js';
 import { sanitizeBody } from './middleware/validator.js';
-import config from './config/env.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

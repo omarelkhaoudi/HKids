@@ -59,8 +59,8 @@ export const rateLimiter = (maxRequests = 100, windowMs = 15 * 60 * 1000) => {
  * More permissive in development mode
  */
 export const authRateLimiter = rateLimiter(
-  isDevelopment ? 50 : 5, // 50 requests in dev, 5 in production
-  isDevelopment ? 5 * 60 * 1000 : 15 * 60 * 1000 // 5 minutes in dev, 15 minutes in production
+  isDevelopment ? 200 : 5, // 200 requests in dev, 5 in production
+  isDevelopment ? 1 * 60 * 1000 : 15 * 60 * 1000 // 1 minute in dev, 15 minutes in production
 );
 
 /**
