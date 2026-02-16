@@ -13,6 +13,7 @@ import { AuthProvider } from './context/AuthContext';
 import { LanguageProvider } from './context/LanguageContext';
 import { ToastProvider } from './components/ToastProvider';
 import ErrorBoundary from './components/ErrorBoundary';
+import ScrollToTop from './components/ScrollToTop';
 import { storage } from './utils/storage';
 
 function App() {
@@ -49,6 +50,7 @@ function App() {
                 <Route path="/admin/signup" element={<SignUp />} />
                 <Route path="/admin/*" element={<AdminDashboard />} />
               </Routes>
+              <ScrollToTop />
             </div>
           </ToastProvider>
         </AuthProvider>

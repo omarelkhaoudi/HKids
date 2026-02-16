@@ -11,7 +11,8 @@ import {
   CategoryIcon, StarIcon, ChildIcon, PaletteIcon, SparklesIcon,
   AudioIcon, MicrophoneIcon, TheaterIcon, FontIcon, RulerIcon, VolumeIcon,
   ChevronRightIcon, UserIcon, ComputerIcon, TabletIcon, SmartphoneIcon,
-  FacebookIcon, InstagramIcon, WhatsAppIcon, TwitterIcon, YouTubeIcon, LinkedInIcon
+  FacebookIcon, InstagramIcon, WhatsAppIcon, TwitterIcon, YouTubeIcon, LinkedInIcon,
+  ClockIcon, BrainIcon, GraduationIcon, LanguageIcon
 } from '../components/Icons';
 import { Logo } from '../components/Logo';
 import LibraryMenu from '../components/LibraryMenu';
@@ -525,15 +526,15 @@ function Home({ darkMode, setDarkMode }) {
         </div>
       </section>
 
-      {/* Section 2: Bibliothèque - Filtres et tri */}
+      {/* Section 2: Bibliothèque */}
       <section id="books-section" className="bg-gradient-to-br from-white via-red-50/30 to-pink-50/30 py-8 md:py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 w-full">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
-            className="text-center mb-8"
+            className="text-center mb-12"
           >
             <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-neutral-900 mb-4">
               {t.discoverLibrary}
@@ -542,123 +543,6 @@ function Home({ darkMode, setDarkMode }) {
               {totalBooks} {t.booksAvailable} • {totalCategories} {t.categories}
             </p>
           </motion.div>
-
-          {/* Filters & Sort */}
-          <motion.div 
-            initial={{ opacity: 0, y: 10 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.2 }}
-            className="flex flex-col md:flex-row md:flex-wrap items-stretch md:items-center gap-3 md:gap-4 mb-8 md:mb-10"
-          >
-            <div className="relative group w-full md:w-auto">
-              <select
-                value={selectedCategory}
-                onChange={(e) => setSelectedCategory(e.target.value)}
-                className="w-full md:w-auto px-4 sm:px-5 py-3 bg-white/95 backdrop-blur-sm border-2 border-red-200/50 rounded-xl focus:ring-4 focus:ring-red-500/20 focus:border-red-500 transition-all cursor-pointer appearance-none pr-10 sm:pr-12 text-sm font-medium text-neutral-700 shadow-md hover:shadow-lg focus:shadow-xl hover:border-red-300"
-              >
-                <option value="">{t.allCategories}</option>
-                {categories.map(cat => (
-                  <option key={cat.id} value={cat.id}>{cat.name}</option>
-                ))}
-              </select>
-              <div className="absolute right-4 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                <svg className="w-4 h-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </div>
-            </div>
-
-            <div className="relative group w-full md:w-auto">
-              <select
-                value={selectedAge}
-                onChange={(e) => setSelectedAge(e.target.value)}
-                className="w-full md:w-auto px-4 sm:px-5 py-3 bg-white/95 backdrop-blur-sm border-2 border-red-200/50 rounded-xl focus:ring-4 focus:ring-red-500/20 focus:border-red-500 transition-all cursor-pointer appearance-none pr-10 sm:pr-12 text-sm font-medium text-neutral-700 shadow-md hover:shadow-lg focus:shadow-xl hover:border-red-300"
-              >
-                <option value="">{t.allAges}</option>
-                <option value="3">3+ {t.agePlus}</option>
-                <option value="5">5+ {t.agePlus}</option>
-                <option value="7">7+ {t.agePlus}</option>
-                <option value="9">9+ {t.agePlus}</option>
-              </select>
-              <div className="absolute right-4 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                <svg className="w-4 h-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </div>
-            </div>
-
-            <div className="relative group w-full md:w-auto">
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-                className="w-full md:w-auto px-4 sm:px-5 py-3 bg-white/95 backdrop-blur-sm border-2 border-red-200/50 rounded-xl focus:ring-4 focus:ring-red-500/20 focus:border-red-500 transition-all cursor-pointer appearance-none pr-10 sm:pr-12 text-sm font-medium text-neutral-700 shadow-md hover:shadow-lg focus:shadow-xl hover:border-red-300"
-              >
-                <option value="recent">{t.recent}</option>
-                <option value="title">{t.byTitle}</option>
-                <option value="author">{t.byAuthor}</option>
-              </select>
-              <div className="absolute right-4 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                <svg className="w-4 h-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </div>
-            </div>
-
-            <div className="flex w-full md:w-auto justify-between md:justify-start gap-1 bg-white/95 backdrop-blur-sm rounded-xl p-1.5 border-2 border-red-200/50 shadow-md">
-              <motion.button
-                onClick={() => setViewMode('grid')}
-                className={`p-2.5 rounded-lg transition-all ${
-                  viewMode === 'grid' 
-                    ? 'bg-gradient-to-r from-red-600 to-pink-600 text-white shadow-lg' 
-                    : 'text-neutral-600 hover:bg-red-50'
-                }`}
-                title={t.gridView}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <GridIcon className="w-4 h-4" />
-              </motion.button>
-              <motion.button
-                onClick={() => setViewMode('list')}
-                className={`p-2.5 rounded-lg transition-all ${
-                  viewMode === 'list' 
-                    ? 'bg-gradient-to-r from-red-600 to-pink-600 text-white shadow-lg' 
-                    : 'text-neutral-600 hover:bg-red-50'
-                }`}
-                title={t.listView}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <ListIcon className="w-4 h-4" />
-              </motion.button>
-            </div>
-          </motion.div>
-
-          {/* Results Count */}
-          {books.length > 0 && (
-            <motion.div 
-              className="mb-8"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.5 }}
-            >
-              <p className="text-base text-neutral-600 font-medium">
-                <span className="font-bold text-neutral-900 text-lg">{books.length}</span> 
-                {' '}{books.length === 1 ? t.booksFound : t.booksFoundPlural}
-                {selectedCategory && (
-                  <span className="ml-2 px-3 py-1 bg-red-100 text-red-700 rounded-lg text-sm font-medium border border-red-200">
-                    {categories.find(c => c.id == selectedCategory)?.name}
-                  </span>
-                )}
-                {selectedAge && (
-                  <span className="ml-2 px-3 py-1 bg-pink-100 text-pink-700 rounded-lg text-sm font-medium border border-pink-200">
-                    {selectedAge}+ {t.agePlus}
-                  </span>
-                )}
-              </p>
-            </motion.div>
-          )}
 
         {/* Grille de livres */}
         {loading ? (
@@ -710,8 +594,8 @@ function Home({ darkMode, setDarkMode }) {
               exit={{ opacity: 0 }}
               transition={{ duration: 0.3 }}
               className={viewMode === 'grid' 
-                ? "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 items-stretch"
-                : "space-y-4 max-w-4xl mx-auto"
+                ? "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 items-stretch w-full"
+                : "space-y-4 max-w-4xl mx-auto w-full"
               }
             >
             {books && books.length > 0 ? books.map((book, index) => {
@@ -910,22 +794,40 @@ function Home({ darkMode, setDarkMode }) {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[
               {
-                icon: BookIcon,
+                icon: HeartIcon,
                 title: t.readingDevelopsEmpathy,
                 fact: t.empathyFact,
-                color: 'from-blue-400 to-blue-600'
+                color: 'from-red-400 to-pink-500'
+              },
+              {
+                icon: ClockIcon,
+                title: t.twentyMinutes,
+                fact: t.readingFact,
+                color: 'from-orange-400 to-amber-500'
+              },
+              {
+                icon: BrainIcon,
+                title: t.imaginationInAction,
+                fact: t.imaginationFact,
+                color: 'from-purple-400 to-indigo-500'
+              },
+              {
+                icon: GraduationIcon,
+                title: t.betterConcentration,
+                fact: t.concentrationFact,
+                color: 'from-blue-400 to-cyan-500'
+              },
+              {
+                icon: LanguageIcon,
+                title: t.languageSkills,
+                fact: t.languageFact,
+                color: 'from-green-400 to-emerald-500'
               },
               {
                 icon: StarIcon,
-                title: t.twentyMinutes,
-                fact: t.readingFact,
-                color: 'from-yellow-400 to-orange-500'
-              },
-              {
-                icon: SparklesIcon,
-                title: t.imaginationInAction,
-                fact: t.imaginationFact,
-                color: 'from-purple-400 to-pink-500'
+                title: t.stressRelief,
+                fact: t.stressFact,
+                color: 'from-pink-400 to-rose-500'
               }
             ].map((item, i) => {
               const IconComponent = item.icon;
@@ -935,15 +837,15 @@ function Home({ darkMode, setDarkMode }) {
                   initial={{ opacity: 0, y: 30 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
-                  transition={{ delay: i * 0.15, duration: 0.5 }}
-                  whileHover={{ y: -5, scale: 1.02 }}
+                  transition={{ delay: i * 0.1, duration: 0.5 }}
+                  whileHover={{ y: -8, scale: 1.03 }}
                   className="bg-white rounded-2xl p-8 shadow-xl hover:shadow-2xl transition-all border-2 border-transparent hover:border-red-200"
                 >
-                  <div className={`inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br ${item.color} mb-4`}>
+                  <div className={`inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br ${item.color} mb-4 shadow-lg`}>
                     <IconComponent className="w-8 h-8 text-white" />
                   </div>
                   <h3 className="text-xl font-bold text-neutral-900 mb-3">{item.title}</h3>
-                  <p className="text-neutral-700 leading-relaxed">{item.fact}</p>
+                  <p className="text-neutral-700 leading-relaxed text-sm">{item.fact}</p>
                 </motion.div>
               );
             })}
@@ -1034,88 +936,6 @@ function Home({ darkMode, setDarkMode }) {
                 </motion.div>
               );
             })}
-          </div>
-        </div>
-      </section>
-
-      {/* Section 4.5: Module d'aide à la lecture */}
-      <section className="bg-white py-16 md:py-24">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            <motion.div
-              initial={{ opacity: 0, x: -30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6 }}
-            >
-              <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-neutral-900 mb-6">
-                {t.readingAidModule}
-              </h2>
-              <p className="text-lg text-neutral-600 mb-6 leading-relaxed">
-                {t.readingAidModuleDesc}
-              </p>
-              <ul className="space-y-4 mb-8">
-                {[
-                  t.readingAidFeature1,
-                  t.readingAidFeature2,
-                  t.readingAidFeature3
-                ].map((item, i) => (
-                  <motion.li
-                    key={i}
-                    initial={{ opacity: 0, x: -20 }}
-                    whileInView={{ opacity: 1, x: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ delay: 0.1 + i * 0.1 }}
-                    className="flex items-start gap-3"
-                  >
-                    <span className="text-red-600 text-xl mt-1">✓</span>
-                    <span className="text-neutral-700">{item}</span>
-                  </motion.li>
-                ))}
-              </ul>
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="px-8 py-4 bg-gradient-to-r from-red-600 to-pink-600 text-white rounded-full font-bold text-lg shadow-lg hover:shadow-xl transition-all"
-              >
-                {t.discoverReadingAid}
-              </motion.button>
-            </motion.div>
-            <motion.div
-              initial={{ opacity: 0, x: 30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6 }}
-              className="relative"
-            >
-              <div className="relative bg-gradient-to-br from-red-50 via-pink-50 to-orange-50 rounded-3xl p-12 shadow-2xl">
-                <div className="grid grid-cols-2 gap-6">
-                  {[
-                    { icon: FontIcon, label: t.adaptedFonts, color: 'from-red-500 to-pink-500' },
-                    { icon: RulerIcon, label: t.adjustableSizes, color: 'from-red-500 to-pink-500' },
-                    { icon: PaletteIcon, label: t.customizableColors, color: 'from-red-500 to-pink-500' },
-                    { icon: VolumeIcon, label: t.speechSynthesis, color: 'from-red-500 to-pink-500' }
-                  ].map((item, i) => {
-                    const IconComponent = item.icon;
-                    return (
-                      <motion.div
-                        key={i}
-                        initial={{ opacity: 0, scale: 0.8 }}
-                        whileInView={{ opacity: 1, scale: 1 }}
-                        viewport={{ once: true }}
-                        transition={{ delay: 0.2 + i * 0.1 }}
-                        className="bg-white rounded-2xl p-6 text-center shadow-lg"
-                      >
-                        <div className={`inline-flex items-center justify-center w-16 h-16 rounded-xl bg-gradient-to-br ${item.color} mb-4`}>
-                          <IconComponent className="w-8 h-8 text-white" />
-                        </div>
-                        <p className="font-semibold text-neutral-900">{item.label}</p>
-                      </motion.div>
-                    );
-                  })}
-                </div>
-              </div>
-            </motion.div>
           </div>
         </div>
       </section>
@@ -1461,142 +1281,6 @@ function Home({ darkMode, setDarkMode }) {
             </motion.div>
           </AnimatePresence>
         )}
-      </section>
-
-      {/* Section 7: Disponible sur les principaux supports */}
-      <section className="bg-white py-16 md:py-24">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-            className="text-center mb-16"
-          >
-            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-neutral-900 mb-6">
-              {t.availableOnDevices}
-            </h2>
-            <p className="text-lg md:text-xl text-neutral-600 max-w-3xl mx-auto leading-relaxed">
-              {t.devicesDescription}
-            </p>
-          </motion.div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto mb-12">
-            {[
-              { icon: ComputerIcon, device: t.computer, desc: t.computerDesc, features: [t.fullInterface, t.smoothNavigation, t.allBrowsers] },
-              { icon: TabletIcon, device: t.tablet, desc: t.tabletDesc, features: [t.optimizedTouch, t.largeScreen, t.comfortableReading] },
-              { icon: SmartphoneIcon, device: t.smartphone, desc: t.smartphoneDesc, features: [t.nativeApp, t.offlineMode, t.secure] }
-            ].map((item, i) => {
-              const IconComponent = item.icon;
-              return (
-                <motion.div
-                  key={i}
-                  initial={{ opacity: 0, y: 30 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: i * 0.15, duration: 0.6 }}
-                  whileHover={{ y: -10, scale: 1.02 }}
-                  className="bg-gradient-to-br from-neutral-50 to-white rounded-3xl p-8 shadow-xl hover:shadow-2xl transition-all border-2 border-transparent hover:border-red-200"
-                >
-                  <div className="mb-6 flex justify-center">
-                    <IconComponent className="w-16 h-16 text-red-600" />
-                  </div>
-                <h3 className="text-2xl font-bold text-neutral-900 mb-2 text-center">{item.device}</h3>
-                <p className="text-neutral-600 mb-6 text-center">{item.desc}</p>
-                <ul className="space-y-2">
-                  {item.features.map((feature, j) => (
-                    <li key={j} className="flex items-center gap-2 text-sm text-neutral-700">
-                      <span className="text-red-600">✓</span>
-                      <span>{feature}</span>
-                    </li>
-                  ))}
-                </ul>
-                </motion.div>
-              );
-            })}
-          </div>
-
-          <motion.div
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-            className="bg-gradient-to-r from-red-50 via-pink-50 to-orange-50 rounded-3xl p-8 md:p-12 text-center border-2 border-red-100"
-          >
-            <p className="text-lg md:text-xl text-neutral-700 leading-relaxed">
-              <span className="font-bold text-neutral-900">{t.devicesNote}</span>
-            </p>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* Section 8: Partager des moments uniques */}
-      <section className="bg-gradient-to-br from-red-50 via-pink-50 to-orange-50 py-16 md:py-24">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            <motion.div
-              initial={{ opacity: 0, x: -30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6 }}
-            >
-              <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-neutral-900 mb-6">
-                {t.shareMoments}
-              </h2>
-              <p className="text-lg text-neutral-600 mb-6 leading-relaxed">
-                {t.shareDescription} {totalBooks} {t.shareDescription2}{' '}
-                <span className="font-bold text-neutral-900">{t.shareDescription3}</span>
-              </p>
-              <p className="text-base text-neutral-600 mb-8">
-                {t.shareDescription4}
-              </p>
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="px-8 py-4 bg-gradient-to-r from-red-600 to-pink-600 text-white rounded-full font-bold text-lg shadow-lg hover:shadow-xl transition-all"
-              >
-                {t.howItWorks}
-              </motion.button>
-            </motion.div>
-            <motion.div
-              initial={{ opacity: 0, x: 30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6 }}
-              className="relative"
-            >
-              <div className="relative bg-white rounded-3xl p-8 shadow-2xl">
-                <div className="flex items-center gap-4 mb-6">
-                  <div className="w-16 h-16 rounded-full bg-gradient-to-br from-red-400 to-pink-400 flex items-center justify-center">
-                    <UserIcon className="w-8 h-8 text-white" />
-                  </div>
-                  <div>
-                    <p className="font-bold text-neutral-900">Fanny</p>
-                    <p className="text-sm text-neutral-600">Grand-mère à Paris</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-4 mb-6">
-                  <div className="flex-1 h-px bg-gradient-to-r from-transparent via-red-200 to-transparent"></div>
-                    <HeartIcon className="w-6 h-6 text-red-500" filled={true} />
-                  <div className="flex-1 h-px bg-gradient-to-r from-transparent via-pink-200 to-transparent"></div>
-                </div>
-                <div className="flex items-center gap-4">
-                  <div className="w-16 h-16 rounded-full bg-gradient-to-br from-pink-400 to-orange-400 flex items-center justify-center">
-                    <ChildIcon className="w-8 h-8 text-white" />
-                  </div>
-                  <div>
-                    <p className="font-bold text-neutral-900">Pia</p>
-                    <p className="text-sm text-neutral-600">Petite-fille à New-York</p>
-                  </div>
-                </div>
-                <div className="mt-8 p-6 bg-gradient-to-br from-red-50 to-pink-50 rounded-2xl border-2 border-red-100">
-                  <p className="text-neutral-700 italic text-center">
-                    « Nous lisons ensemble chaque semaine, même à 6000 km de distance ! »
-                  </p>
-                </div>
-              </div>
-            </motion.div>
-          </div>
-        </div>
       </section>
 
       {/* Footer */}

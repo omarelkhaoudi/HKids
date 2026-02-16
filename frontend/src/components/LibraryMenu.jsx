@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { BookIcon, CategoryIcon, GlobeIcon, TrophyIcon } from './Icons';
+import { BookIcon, GlobeIcon, TrophyIcon } from './Icons';
 
 function LibraryMenu({ categories, onCategorySelect, onAgeSelect, selectedCategory, selectedAge }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -26,27 +26,23 @@ function LibraryMenu({ categories, onCategorySelect, onAgeSelect, selectedCatego
   const ageButtons = [
     { age: '3-5', label: '3-5 ans', color: 'bg-blue-500 hover:bg-blue-600' },
     { age: '6-8', label: '6-8 ans', color: 'bg-orange-500 hover:bg-orange-600' },
-    { age: '9-12', label: '9-12 ans', color: 'bg-pink-500 hover:bg-pink-600' },
-    { age: '13-15', label: '13-15 ans', color: 'bg-green-500 hover:bg-green-600' }
+    { age: '9-12', label: '9-12 ans', color: 'bg-pink-500 hover:bg-pink-600' }
   ];
 
-  // Organiser les catégories en colonnes (comme Storyplay'r)
-  const categoriesPerColumn = Math.ceil(categories.length / 3);
-  const categoryColumns = [
-    categories.slice(0, categoriesPerColumn),
-    categories.slice(categoriesPerColumn, categoriesPerColumn * 2),
-    categories.slice(categoriesPerColumn * 2)
-  ];
-
-  const handleCategoryClick = (categoryId) => {
-    onCategorySelect(categoryId);
-    setIsOpen(false);
+  const scrollToBooksSection = () => {
+    setTimeout(() => {
+      const booksSection = document.getElementById('books-section');
+      if (booksSection) {
+        booksSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 100);
   };
 
   const handleAgeClick = (age) => {
     const ageValue = age.includes('-') ? age.split('-')[0] : age;
     onAgeSelect(ageValue);
     setIsOpen(false);
+    scrollToBooksSection();
   };
 
   return (
@@ -82,7 +78,7 @@ function LibraryMenu({ categories, onCategorySelect, onAgeSelect, selectedCatego
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.2 }}
-              className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 w-[90vw] max-w-5xl bg-white rounded-2xl shadow-2xl z-50 overflow-hidden border border-neutral-200"
+              className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 w-auto min-w-[400px] max-w-md bg-white rounded-2xl shadow-2xl z-50 overflow-hidden border border-neutral-200"
             >
               {/* Header avec titre et boutons d'âge */}
               <div className="bg-gradient-to-r from-red-50 via-pink-50 to-orange-50 p-6 border-b border-neutral-200">
@@ -120,109 +116,16 @@ function LibraryMenu({ categories, onCategorySelect, onAgeSelect, selectedCatego
                 </div>
               </div>
 
-              {/* Contenu : Catégories en colonnes */}
-              <div className="p-6 max-h-[60vh] overflow-y-auto">
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-                  {/* Colonne 1 */}
-                  <div className="space-y-0">
-                    <Link
-                      to="/"
-                      onClick={() => setIsOpen(false)}
-                      className="flex items-center gap-2 p-3 rounded-lg hover:bg-neutral-50 transition-colors mb-4 font-semibold text-neutral-900"
-                    >
-                      <BookIcon className="w-5 h-5" />
-                      <span>Accueil</span>
-                    </Link>
-                    {categoryColumns[0]?.map((category, index) => (
-                      <div key={category.id}>
-                        <button
-                          onClick={() => handleCategoryClick(String(category.id))}
-                          className={`w-full flex items-center gap-2 text-left p-3 rounded-lg transition-colors ${
-                            selectedCategory === String(category.id)
-                              ? 'bg-red-50 text-red-700 font-semibold'
-                              : 'text-neutral-700 hover:bg-neutral-50'
-                          }`}
-                        >
-                          <CategoryIcon className="w-4 h-4 flex-shrink-0" />
-                          <span>{category.name}</span>
-                        </button>
-                        {index < categoryColumns[0].length - 1 && (
-                          <div className="h-px bg-neutral-200 my-1" />
-                        )}
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Colonne 2 */}
-                  <div className="space-y-0">
-                    {categoryColumns[1]?.map((category, index) => (
-                      <div key={category.id}>
-                        <button
-                          onClick={() => handleCategoryClick(String(category.id))}
-                          className={`w-full flex items-center gap-2 text-left p-3 rounded-lg transition-colors ${
-                            selectedCategory === String(category.id)
-                              ? 'bg-red-50 text-red-700 font-semibold'
-                              : 'text-neutral-700 hover:bg-neutral-50'
-                          }`}
-                        >
-                          <CategoryIcon className="w-4 h-4 flex-shrink-0" />
-                          <span>{category.name}</span>
-                        </button>
-                        {index < categoryColumns[1].length - 1 && (
-                          <div className="h-px bg-neutral-200 my-1" />
-                        )}
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Colonne 3 */}
-                  <div className="space-y-0">
-                    {categoryColumns[2]?.map((category, index) => (
-                      <div key={category.id}>
-                        <button
-                          onClick={() => handleCategoryClick(String(category.id))}
-                          className={`w-full flex items-center gap-2 text-left p-3 rounded-lg transition-colors ${
-                            selectedCategory === String(category.id)
-                              ? 'bg-red-50 text-red-700 font-semibold'
-                              : 'text-neutral-700 hover:bg-neutral-50'
-                          }`}
-                        >
-                          <CategoryIcon className="w-4 h-4 flex-shrink-0" />
-                          <span>{category.name}</span>
-                        </button>
-                        {index < categoryColumns[2].length - 1 && (
-                          <div className="h-px bg-neutral-200 my-1" />
-                        )}
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Colonne 4 : Âges */}
-                  <div className="space-y-0 border-l border-neutral-200 pl-6">
-                    <h3 className="font-semibold text-neutral-900 mb-4 text-sm uppercase tracking-wide">Âges</h3>
-                    {ageButtons.map((ageBtn) => {
-                      const ageValue = ageBtn.age.includes('-') ? ageBtn.age.split('-')[0] : ageBtn.age;
-                      const isSelected = selectedAge === ageValue;
-                      return (
-                        <div key={ageBtn.age}>
-                          <button
-                            onClick={() => handleAgeClick(ageBtn.age)}
-                            className={`w-full text-left p-3 rounded-lg transition-colors ${
-                              isSelected
-                                ? 'bg-red-50 text-red-700 font-semibold'
-                                : 'text-neutral-700 hover:bg-neutral-50'
-                            }`}
-                          >
-                            {ageBtn.label}
-                          </button>
-                          {ageBtn.age !== ageButtons[ageButtons.length - 1].age && (
-                            <div className="h-px bg-neutral-200 my-1" />
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
+              {/* Contenu : Seulement le lien Accueil */}
+              <div className="p-6">
+                <Link
+                  to="/"
+                  onClick={() => setIsOpen(false)}
+                  className="flex items-center gap-2 p-3 rounded-lg hover:bg-neutral-50 transition-colors font-semibold text-neutral-900"
+                >
+                  <BookIcon className="w-5 h-5" />
+                  <span>Accueil</span>
+                </Link>
               </div>
             </motion.div>
           </>
