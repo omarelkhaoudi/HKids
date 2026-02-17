@@ -45,15 +45,8 @@ app.use('/api', apiRateLimiter);
 // Serve uploaded files
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// Initialize database
-initDatabase()
-  .then(() => {
-    console.log('✅ Database initialization completed');
-  })
-  .catch((err) => {
-    console.error('❌ Database initialization failed:', err);
-    process.exit(1);
-  });
+// Database initialization flag
+let dbInitialized = false;
 
 // Routes
 app.use('/api/auth', authRouter);
@@ -209,10 +202,13 @@ function createServer() {
             console.log('💡 Please manually stop the process using port', PORT);
             console.log('   On Windows: netstat -ano | findstr :3000');
             console.log('   Then: taskkill /PID <PID> /F');
+            process.exit(1);
           }
         });
       } else {
         console.error('❌ Server error:', err);
+        console.error('   Error code:', err.code);
+        console.error('   Error message:', err.message);
         process.exit(1);
       }
     });
@@ -258,6 +254,32 @@ process.on('unhandledRejection', (reason, promise) => {
   gracefulShutdown('unhandledRejection');
 });
 
-// Start the server
-startServer();
+// Initialize database and start server (only for non-Vercel environments)
+// On Vercel, this will be handled in the export section
+if (!process.env.VERCEL) {
+  initDatabase()
+    .then(() => {
+      console.log('✅ Database initialization completed');
+      dbInitialized = true;
+      // Start server only after database is initialized
+      startServer();
+    })
+    .catch((err) => {
+      console.error('❌ Database initialization failed:', err);
+      console.error('❌ Server will not start without database connection');
+      process.exit(1);
+    });
+} else {
+  // For Vercel: initialize DB in background (non-blocking)
+  initDatabase()
+    .then(() => {
+      console.log('✅ Database initialized for Vercel');
+      dbInitialized = true;
+    })
+    .catch((err) => console.error('⚠️  Database init warning:', err.message));
+}
+
+// Export app for Vercel serverless functions
+// Must be at the end of the file
+export default app;
 
