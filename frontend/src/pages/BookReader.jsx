@@ -6,7 +6,7 @@ import * as pdfjsLib from 'pdfjs-dist';
 import { booksAPI } from '../api/books';
 import { storage } from '../utils/storage';
 import { useToast } from '../components/ToastProvider';
-import { ChevronLeftIcon, ChevronRightIcon, HomeIcon, BookIcon, StarIcon, PlayIcon, PauseIcon, VolumeIcon } from '../components/Icons';
+import { ChevronLeftIcon, ChevronRightIcon, HomeIcon, BookIcon, StarIcon, PlayIcon, PauseIcon, VolumeIcon, XIcon } from '../components/Icons';
 import ReadingAidPanel from '../components/ReadingAidPanel';
 
 // Configuration de pdfjs-dist
@@ -243,6 +243,7 @@ function BookReader() {
   const [pdfPages, setPdfPages] = useState({}); // Cache pour les pages PDF rendues (canvas)
   const [pdfTotalPages, setPdfTotalPages] = useState(null); // Nombre total de pages dans le PDF actuel
   const [currentPdfUrl, setCurrentPdfUrl] = useState(null); // URL du PDF actuellement chargé
+  const [isFullscreen, setIsFullscreen] = useState(false); // Mode plein écran
   const workerRef = useRef(null);
   const { showToast } = useToast();
 
@@ -293,11 +294,17 @@ function BookReader() {
     const handleKeyPress = (e) => {
       if (e.key === 'ArrowLeft') prevPage();
       if (e.key === 'ArrowRight') nextPage();
-      if (e.key === 'Escape') navigate('/');
+      if (e.key === 'Escape') {
+        if (isFullscreen) {
+          setIsFullscreen(false);
+        } else {
+          navigate('/');
+        }
+      }
     };
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [currentPage, book]);
+  }, [currentPage, book, isFullscreen]);
 
   const loadBook = async () => {
     try {
@@ -685,14 +692,157 @@ function BookReader() {
   const progress = ((currentPage + 1) / totalPages) * 100;
 
   return (
-    <div 
-      className="min-h-screen bg-gradient-to-br from-purple-100 via-pink-50 to-orange-100 flex flex-col relative overflow-hidden"
-      onTouchStart={onTouchStart}
-      onTouchMove={onTouchMove}
-      onTouchEnd={onTouchEnd}
-    >
-      <Confetti show={showConfetti} />
-      <StarParticles count={15} />
+    <>
+      {/* Mode plein écran pour PDF */}
+      <AnimatePresence>
+        {isFullscreen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 bg-black flex items-center justify-center"
+            onClick={() => setIsFullscreen(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.8 }}
+              animate={{ scale: 1 }}
+              exit={{ scale: 0.8 }}
+              className="relative w-full h-full flex items-center justify-center p-4"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Bouton fermer */}
+              <motion.button
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+                onClick={() => setIsFullscreen(false)}
+                className="absolute top-4 right-4 z-10 bg-white/20 hover:bg-white/30 text-white p-3 rounded-full backdrop-blur-sm transition-colors"
+                title="Fermer (Échap)"
+              >
+                <XIcon className="w-6 h-6" />
+              </motion.button>
+
+              {/* Bouton Écouter */}
+              <motion.button
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  toggleAudio();
+                }}
+                disabled={isExtracting || (!currentPageData?.content && !currentPageData?.image_path)}
+                className={`absolute top-4 left-4 z-10 flex items-center gap-2 px-6 py-3 rounded-full font-semibold transition-colors backdrop-blur-sm ${
+                  isPlaying
+                    ? 'bg-red-500 hover:bg-red-600 text-white'
+                    : isExtracting
+                    ? 'bg-yellow-500 hover:bg-yellow-600 text-white'
+                    : 'bg-white/20 hover:bg-white/30 text-white'
+                } ${(isExtracting || (!currentPageData?.content && !currentPageData?.image_path)) ? 'opacity-50 cursor-not-allowed' : ''}`}
+                title={isExtracting ? 'Extraction du texte...' : isPlaying ? 'Arrêter la lecture' : 'Lire la page'}
+              >
+                {isExtracting ? (
+                  <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                    className="w-5 h-5 border-2 border-white border-t-transparent rounded-full"
+                  />
+                ) : isPlaying ? (
+                  <PauseIcon className="w-6 h-6" />
+                ) : (
+                  <PlayIcon className="w-6 h-6" />
+                )}
+                <span className="text-lg">
+                  {isExtracting ? 'OCR...' : isPlaying ? 'Pause' : 'Écouter'}
+                </span>
+              </motion.button>
+
+              {/* Navigation pages */}
+              {!isFirstPage && (
+                <motion.button
+                  whileHover={{ scale: 1.15, x: -5 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    prevPage();
+                  }}
+                  disabled={isTurning}
+                  className="absolute left-4 z-10 p-4 rounded-full shadow-2xl bg-white/20 hover:bg-white/30 text-white backdrop-blur-sm transition-all"
+                >
+                  <ChevronLeftIcon className="w-8 h-8" />
+                </motion.button>
+              )}
+
+              {!isLastPage && (
+                <motion.button
+                  whileHover={{ scale: 1.15, x: 5 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    nextPage();
+                  }}
+                  disabled={isTurning}
+                  className="absolute right-4 z-10 p-4 rounded-full shadow-2xl bg-white/20 hover:bg-white/30 text-white backdrop-blur-sm transition-all"
+                >
+                  <ChevronRightIcon className="w-8 h-8" />
+                </motion.button>
+              )}
+
+              {/* Page PDF en plein écran */}
+              {currentPageData.image_path && (() => {
+                const fileUrl = `http://localhost:3000${currentPageData.image_path}`;
+                const fileExtension = currentPageData.image_path.toLowerCase().split('.').pop();
+                const isPDF = fileExtension === 'pdf';
+                
+                if (isPDF) {
+                  return (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <PDFPageViewer 
+                        key={`pdf-fullscreen-${fileUrl}-${currentPage}`}
+                        pdfUrl={fileUrl} 
+                        pageNumber={currentPage + 1}
+                        onPdfLoaded={(numPages) => {
+                          if (numPages && numPages > 0) {
+                            setPdfTotalPages(numPages);
+                            setCurrentPdfUrl(fileUrl);
+                          }
+                        }}
+                      />
+                    </div>
+                  );
+                }
+                
+                return (
+                  <motion.img
+                    src={fileUrl}
+                    alt={`Page ${currentPage + 1}`}
+                    className="max-w-full max-h-full object-contain"
+                    initial={{ scale: 0.9 }}
+                    animate={{ scale: 1 }}
+                    transition={{ delay: 0.2, duration: 0.3 }}
+                  />
+                );
+              })()}
+
+              {/* Indicateur de page */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-white/20 text-white px-6 py-3 rounded-full font-bold text-lg backdrop-blur-sm shadow-lg"
+              >
+                {currentPage + 1} / {totalPages}
+              </motion.div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <div 
+        className="min-h-screen bg-gradient-to-br from-purple-100 via-pink-50 to-orange-100 flex flex-col relative overflow-hidden"
+        onTouchStart={onTouchStart}
+        onTouchMove={onTouchMove}
+        onTouchEnd={onTouchEnd}
+      >
+        <Confetti show={showConfetti} />
+        <StarParticles count={15} />
 
       {/* Header coloré et amusant */}
       <motion.header 
@@ -757,7 +907,6 @@ function BookReader() {
               className="flex items-center gap-2 bg-white/20 hover:bg-white/30 px-4 py-2 rounded-full font-semibold transition-colors backdrop-blur-sm"
               title="Aide à la lecture"
             >
-              <span className="text-xl">🔤</span>
               <span className="hidden sm:inline">Aide</span>
             </motion.button>
             <div className="text-right">
@@ -850,18 +999,25 @@ function BookReader() {
                     
                     if (isPDF) {
                       return (
-                        <PDFPageViewer 
-                          key={`pdf-${fileUrl}-${currentPage}`}
-                          pdfUrl={fileUrl} 
-                          pageNumber={currentPage + 1}
-                          onPdfLoaded={(numPages) => {
-                            // Mettre à jour le nombre total de pages si c'est un PDF
-                            if (numPages && numPages > 0) {
-                              setPdfTotalPages(numPages);
-                              setCurrentPdfUrl(fileUrl);
-                            }
-                          }}
-                        />
+                        <motion.div
+                          onClick={() => setIsFullscreen(true)}
+                          className="cursor-pointer w-full h-full flex items-center justify-center"
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                        >
+                          <PDFPageViewer 
+                            key={`pdf-${fileUrl}-${currentPage}`}
+                            pdfUrl={fileUrl} 
+                            pageNumber={currentPage + 1}
+                            onPdfLoaded={(numPages) => {
+                              // Mettre à jour le nombre total de pages si c'est un PDF
+                              if (numPages && numPages > 0) {
+                                setPdfTotalPages(numPages);
+                                setCurrentPdfUrl(fileUrl);
+                              }
+                            }}
+                          />
+                        </motion.div>
                       );
                     }
                     
@@ -995,7 +1151,6 @@ function BookReader() {
               whileHover={{ scale: 1.1 }}
               className="flex items-center gap-2 bg-white/20 px-4 py-2 rounded-full backdrop-blur-sm"
             >
-              <span className="text-2xl">⏱️</span>
               <span>{Math.floor(readingTime / 60)}m {readingTime % 60}s</span>
             </motion.div>
             <motion.div
@@ -1023,6 +1178,7 @@ function BookReader() {
         </div>
       </motion.footer>
     </div>
+    </>
   );
 }
 
