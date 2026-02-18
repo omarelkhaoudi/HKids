@@ -179,11 +179,7 @@ router.post('/', verifyToken, handleMulterUpload(upload.fields([
     const coverImage = req.files?.cover?.[0]?.filename;
     const pageFiles = req.files?.pages || [];
 
-    console.log(`📚 Création d'un livre: "${title}"`);
-    console.log(`📄 Nombre de pages reçues: ${pageFiles.length}`);
-    if (pageFiles.length > 0) {
-      console.log(`📄 Pages:`, pageFiles.map(f => f.originalname));
-    }
+    console.log(`📚 Création d'un livre: "${title}" (${pageFiles.length} pages)`);
 
     const pool = getPool();
     const client = await pool.connect();
@@ -210,24 +206,31 @@ router.post('/', verifyToken, handleMulterUpload(upload.fields([
       const bookId = insertBook.rows[0].id;
 
       if (pageFiles.length > 0) {
-        console.log(`💾 Insertion de ${pageFiles.length} pages dans la base de données...`);
-        for (let index = 0; index < pageFiles.length; index++) {
-          const file = pageFiles[index];
+        // Optimisation: insertion en lot (batch insert) au lieu d'une boucle séquentielle
+        const pageValues = pageFiles.map((file, index) => {
           const pagePath = `/uploads/books/${file.filename}`;
-          await client.query(
-            'INSERT INTO book_pages (book_id, page_number, image_path) VALUES ($1, $2, $3)',
-            [bookId, index + 1, pagePath]
-          );
-          console.log(`  Page ${index + 1}: ${file.originalname} -> ${pagePath}`);
-        }
+          return [bookId, index + 1, pagePath];
+        });
 
+        // Construction d'une seule requête SQL avec VALUES multiples
+        const valuesPlaceholders = pageValues.map((_, i) => {
+          const base = i * 3;
+          return `($${base + 1}, $${base + 2}, $${base + 3})`;
+        }).join(', ');
+
+        const flatValues = pageValues.flat();
+        await client.query(
+          `INSERT INTO book_pages (book_id, page_number, image_path) VALUES ${valuesPlaceholders}`,
+          flatValues
+        );
+
+        // Mise à jour du nombre de pages en une seule requête
         await client.query(
           'UPDATE books SET page_count = $1 WHERE id = $2',
           [pageFiles.length, bookId]
         );
-        console.log(`✅ ${pageFiles.length} pages insérées avec succès!`);
-      } else {
-        console.log('⚠️ Aucune page fournie pour ce livre');
+        
+        console.log(`✅ ${pageFiles.length} pages insérées avec succès en une seule requête!`);
       }
 
       await client.query('COMMIT');
