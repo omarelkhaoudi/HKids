@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import axios from 'axios';
+import { API_URL } from '../config/api.js';
 
 const AuthContext = createContext();
 
@@ -26,7 +27,7 @@ export function AuthProvider({ children }) {
 
   const login = async (username, password) => {
     try {
-      const response = await axios.post('/api/auth/login', { username, password }, {
+      const response = await axios.post(`${API_URL}/auth/login`, { username, password }, {
         timeout: 10000 // 10 second timeout
       });
       const { token, user } = response.data;
@@ -63,7 +64,7 @@ export function AuthProvider({ children }) {
 
   const signup = async (username, password) => {
     try {
-      const response = await axios.post('/api/auth/signup', { username, password }, {
+      const response = await axios.post(`${API_URL}/auth/signup`, { username, password }, {
         timeout: 10000
       });
       

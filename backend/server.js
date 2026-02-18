@@ -58,6 +58,25 @@ console.log('📋 Available auth routes:');
 console.log('   POST /api/auth/signup');
 console.log('   POST /api/auth/login');
 
+// Root route - API information
+app.get('/', (req, res) => {
+  res.json({
+    success: true,
+    message: 'HKids Backend API',
+    version: '1.0.0',
+    endpoints: {
+      health: '/api/health',
+      auth: {
+        signup: 'POST /api/auth/signup',
+        login: 'POST /api/auth/login'
+      },
+      books: 'GET /api/books',
+      categories: 'GET /api/categories'
+    },
+    documentation: 'Visit /api/health for API status'
+  });
+});
+
 // Health check
 app.get('/api/health', (req, res) => {
   res.json({ 
@@ -93,7 +112,15 @@ app.use(errorHandler);
 let server = null;
 
 // Function to check and free port if needed
+// Skip in production environments (Fly.io, Render, etc.)
 function checkAndFreePort(callback) {
+  // Skip port checking in production environments
+  if (config.nodeEnv === 'production' || process.env.FLY_APP_NAME || process.env.RENDER) {
+    // In production, just proceed - the platform manages the port
+    callback();
+    return;
+  }
+
   const isWindows = process.platform === 'win32';
   const command = isWindows 
     ? `netstat -ano | findstr :${PORT}`
@@ -150,8 +177,13 @@ function startServer() {
 
 function createServer() {
   try {
-    server = app.listen(PORT, () => {
-      console.log(`🚀 HKids Backend running on http://localhost:${PORT}`);
+    // In production (Fly.io, Render, etc.), listen on 0.0.0.0 to accept external connections
+    const host = (config.nodeEnv === 'production' || process.env.FLY_APP_NAME || process.env.RENDER) 
+      ? '0.0.0.0' 
+      : 'localhost';
+    
+    server = app.listen(PORT, host, () => {
+      console.log(`🚀 HKids Backend running on http://${host}:${PORT}`);
       console.log(`📝 Environment: ${config.nodeEnv}`);
       console.log(`🔒 CORS Origin: ${config.corsOrigin}`);
     });
@@ -159,6 +191,14 @@ function createServer() {
     // Handle server errors
     server.on('error', (err) => {
       if (err.code === 'EADDRINUSE') {
+        // In production, don't try to kill processes - let the platform handle it
+        if (config.nodeEnv === 'production' || process.env.FLY_APP_NAME || process.env.RENDER) {
+          console.error(`❌ Port ${PORT} is already in use.`);
+          console.log('💡 In production, the platform manages the port. This may be a configuration issue.');
+          process.exit(1);
+          return;
+        }
+
         console.error(`❌ Port ${PORT} is already in use.`);
         console.log('💡 Trying to free the port...');
         
