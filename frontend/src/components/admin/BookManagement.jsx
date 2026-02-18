@@ -140,7 +140,18 @@ function BookManagement() {
       loadData();
     } catch (error) {
       console.error('Error saving book:', error);
-      alert('Error saving book: ' + (error.response?.data?.error || error.message));
+      const errorMessage = error.response?.data?.error || error.message || 'Unknown error occurred';
+      const statusCode = error.response?.status;
+      
+      if (statusCode === 404) {
+        alert('Error: Endpoint not found. Please check your API configuration.');
+      } else if (statusCode === 401) {
+        alert('Error: Authentication failed. Please log in again.');
+      } else if (statusCode === 400) {
+        alert(`Error: ${errorMessage}`);
+      } else {
+        alert(`Error saving book: ${errorMessage}`);
+      }
     }
   };
 

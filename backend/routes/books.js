@@ -38,17 +38,48 @@ const upload = multer({
   storage: storage,
   limits: { fileSize: 50 * 1024 * 1024 }, // 50MB limit
   fileFilter: (req, file, cb) => {
-    const allowedTypes = /jpeg|jpg|png|gif|pdf/;
-    const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
-    const mimetype = allowedTypes.test(file.mimetype);
+    const allowedExtensions = /\.(jpeg|jpg|png|gif|pdf)$/i;
+    const allowedMimeTypes = /^(image\/(jpeg|jpg|png|gif)|application\/pdf)$/;
+    
+    const extname = allowedExtensions.test(path.extname(file.originalname));
+    const mimetype = allowedMimeTypes.test(file.mimetype);
     
     if (extname && mimetype) {
       cb(null, true);
     } else {
-      cb(new Error('Only image files and PDFs are allowed'));
+      cb(new Error(`File type not allowed. Only images (JPEG, PNG, GIF) and PDFs are allowed. Received: ${file.mimetype}`));
     }
   }
 });
+
+// Wrapper to handle multer errors
+const handleMulterUpload = (uploadMiddleware) => {
+  return (req, res, next) => {
+    uploadMiddleware(req, res, (err) => {
+      if (err) {
+        console.error('Multer error:', err);
+        if (err instanceof multer.MulterError) {
+          if (err.code === 'LIMIT_FILE_SIZE') {
+            return res.status(400).json({ error: 'File too large. Maximum size is 50MB.' });
+          }
+          if (err.code === 'LIMIT_FILE_COUNT') {
+            return res.status(400).json({ error: 'Too many files. Maximum is 50 pages.' });
+          }
+          if (err.code === 'LIMIT_UNEXPECTED_FILE') {
+            return res.status(400).json({ error: 'Unexpected file field. Expected: cover or pages.' });
+          }
+          return res.status(400).json({ error: `Upload error: ${err.message}` });
+        }
+        // Handle fileFilter errors
+        if (err.message && err.message.includes('File type not allowed')) {
+          return res.status(400).json({ error: err.message });
+        }
+        return res.status(400).json({ error: err.message || 'File upload error' });
+      }
+      next();
+    });
+  };
+};
 
 // Get all published books (public)
 router.get('/published', async (req, res) => {
@@ -134,10 +165,10 @@ router.get('/', verifyToken, async (req, res) => {
 });
 
 // Create book (admin only)
-router.post('/', verifyToken, upload.fields([
+router.post('/', verifyToken, handleMulterUpload(upload.fields([
   { name: 'cover', maxCount: 1 },
   { name: 'pages', maxCount: 50 }
-]), async (req, res) => {
+])), async (req, res) => {
   try {
     const { title, author, description, category_id, age_group_min, age_group_max, is_published } = req.body;
     
@@ -214,10 +245,16 @@ router.post('/', verifyToken, upload.fields([
 });
 
 // Update book (admin only)
-router.put('/:id', verifyToken, upload.fields([
+router.put('/:id', verifyToken, handleMulterUpload(upload.fields([
   { name: 'cover', maxCount: 1 }
-]), async (req, res) => {
+])), async (req, res) => {
   const { title, author, description, category_id, age_group_min, age_group_max, is_published } = req.body;
+
+  console.log(`📝 Mise à jour du livre ID: ${req.params.id}`);
+  console.log(`📋 Données reçues:`, { title, author, category_id, is_published });
+  if (req.files?.cover) {
+    console.log(`🖼️  Nouvelle image de couverture: ${req.files.cover[0].filename}`);
+  }
 
   try {
     const pool = getPool();
@@ -252,10 +289,13 @@ router.put('/:id', verifyToken, upload.fields([
       ]
     );
 
+    console.log(`✅ Livre mis à jour avec succès: ID ${req.params.id}`);
     res.json({ message: 'Book updated successfully' });
   } catch (err) {
-    console.error('Error updating book:', err);
-    res.status(500).json({ error: 'Database error' });
+    console.error('❌ Error updating book:', err);
+    console.error('   Error details:', err.message);
+    console.error('   Stack:', err.stack);
+    res.status(500).json({ error: err.message || 'Database error' });
   }
 });
 
