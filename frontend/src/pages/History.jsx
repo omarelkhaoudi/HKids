@@ -102,23 +102,23 @@ function History() {
           <Link to="/" className="flex items-center">
             <Logo size="default" />
           </Link>
-          <div className="flex items-center gap-4">
-            <Link to="/" className="text-neutral-100 hover:text-white font-medium flex items-center gap-2 transition-colors">
-              <ChevronLeftIcon className="w-4 h-4" />
+          <div className="flex items-center gap-2 sm:gap-4">
+            <Link to="/" className="text-neutral-100 hover:text-white font-medium flex items-center gap-1 sm:gap-2 transition-colors px-2 py-1 sm:px-0 sm:py-0">
+              <ChevronLeftIcon className="w-4 h-4 sm:w-5 sm:h-5" />
               <span className="hidden sm:inline">Retour</span>
             </Link>
-            <h1 className="text-lg sm:text-xl font-semibold text-white flex items-center gap-2">
-              <HistoryIcon className="w-5 h-5" />
-              <span>Historique</span>
+            <h1 className="text-base sm:text-lg md:text-xl font-semibold text-white flex items-center gap-1 sm:gap-2">
+              <HistoryIcon className="w-4 h-4 sm:w-5 sm:h-5" />
+              <span className="text-sm sm:text-base md:text-lg">Historique</span>
             </h1>
             {books.length > 0 && (
               <motion.button
                 onClick={clearHistory}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="px-4 py-2 bg-red-500/20 hover:bg-red-500/30 text-white rounded-lg transition-colors text-sm font-medium flex items-center gap-2 border border-red-400/30"
+                className="px-2 sm:px-4 py-1.5 sm:py-2 bg-red-500/20 hover:bg-red-500/30 text-white rounded-lg transition-colors text-xs sm:text-sm font-medium flex items-center gap-1 sm:gap-2 border border-red-400/30"
               >
-                <TrashIcon className="w-4 h-4" />
+                <TrashIcon className="w-3 h-3 sm:w-4 sm:h-4" />
                 <span className="hidden sm:inline">Effacer</span>
               </motion.button>
             )}
@@ -293,7 +293,7 @@ function History() {
                           to={`/book-details/${book.id}`}
                           className="bg-white rounded-2xl border-2 border-neutral-200 overflow-hidden group block hover:border-red-300 hover:shadow-xl transition-all shadow-lg"
                         >
-                          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 p-4 sm:p-6">
+                          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-3 sm:gap-4 p-3 sm:p-4 md:p-6">
                             {/* Image de couverture circulaire */}
                             <div className="flex-shrink-0">
                               <motion.div
