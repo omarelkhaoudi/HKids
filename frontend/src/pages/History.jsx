@@ -266,14 +266,13 @@ function History() {
                     const coverImageUrl = book.cover_image ? getImageUrl(book.cover_image) : null;
                     
                     // Debug: log pour vérifier les données
-                    if (index === 0) {
-                      console.log('[History] First book data:', {
-                        id: book.id,
-                        title: book.title,
-                        cover_image: book.cover_image,
-                        coverImageUrl: coverImageUrl
-                      });
-                    }
+                    console.log(`[History] Book ${index + 1}:`, {
+                      id: book.id,
+                      title: book.title,
+                      cover_image: book.cover_image,
+                      coverImageUrl: coverImageUrl,
+                      hasCoverImage: !!book.cover_image
+                    });
                     
                     return (
                       <motion.div
