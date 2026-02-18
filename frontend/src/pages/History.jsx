@@ -29,11 +29,29 @@ function History() {
         const response = await booksAPI.getPublishedBooks();
         const historyBooks = response.data.filter(book => bookIds.includes(book.id));
         
+        // Pour les livres manquants (non publiés), charger individuellement
+        const missingBookIds = bookIds.filter(id => !historyBooks.find(b => b.id === id));
+        const missingBooks = await Promise.all(
+          missingBookIds.map(async (id) => {
+            try {
+              const bookResponse = await booksAPI.getBook(id);
+              return bookResponse.data;
+            } catch (err) {
+              console.warn(`[History] Could not load book ${id}:`, err);
+              return null;
+            }
+          })
+        );
+        
+        // Combiner les livres trouvés
+        const allBooks = [...historyBooks, ...missingBooks.filter(Boolean)];
+        
         // Trier selon l'ordre de l'historique
         const sorted = historyData.map(h => 
-          historyBooks.find(b => b.id === h.bookId)
+          allBooks.find(b => b.id === h.bookId)
         ).filter(Boolean);
         
+        console.log('[History] Loaded books:', sorted.map(b => ({ id: b.id, title: b.title, cover_image: b.cover_image })));
         setBooks(sorted);
       }
     } catch (error) {
@@ -245,6 +263,18 @@ function History() {
                   {books.map((book, index) => {
                     const historyItem = history.find(h => h.bookId === book.id);
                     const progress = book.page_count > 0 ? Math.round(((historyItem?.page || 0) + 1) / book.page_count * 100) : 0;
+                    const coverImageUrl = book.cover_image ? getImageUrl(book.cover_image) : null;
+                    
+                    // Debug: log pour vérifier les données
+                    if (index === 0) {
+                      console.log('[History] First book data:', {
+                        id: book.id,
+                        title: book.title,
+                        cover_image: book.cover_image,
+                        coverImageUrl: coverImageUrl
+                      });
+                    }
+                    
                     return (
                       <motion.div
                         key={book.id}
@@ -267,30 +297,36 @@ function History() {
                           <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 p-4 sm:p-6">
                             {/* Image de couverture circulaire */}
                             <div className="flex-shrink-0">
-                              {book.cover_image ? (
-                                <motion.div
-                                  className="w-24 h-24 sm:w-32 sm:h-32 rounded-full overflow-hidden shadow-lg border-4 border-white ring-2 ring-neutral-200 group-hover:ring-red-300 transition-all relative"
-                                  whileHover={{ scale: 1.05 }}
-                                >
-                                  <img
-                                    src={getImageUrl(book.cover_image)}
-                                    alt={book.title}
-                                    className="w-full h-full object-cover"
-                                    onError={(e) => {
-                                      e.target.style.display = 'none';
-                                      const fallback = e.target.parentElement.querySelector('.image-fallback');
-                                      if (fallback) fallback.style.display = 'flex';
-                                    }}
-                                  />
-                                  <div className="image-fallback w-full h-full absolute inset-0 flex items-center justify-center bg-gradient-to-br from-neutral-100 to-neutral-50" style={{ display: 'none' }}>
-                                    <BookIcon className="w-12 h-12 text-neutral-400" />
+                              <motion.div
+                                className="w-24 h-24 sm:w-32 sm:h-32 rounded-full overflow-hidden shadow-lg border-4 border-white ring-2 ring-neutral-200 group-hover:ring-red-300 transition-all relative bg-gradient-to-br from-neutral-100 to-neutral-50"
+                                whileHover={{ scale: 1.05 }}
+                              >
+                                {coverImageUrl ? (
+                                  <>
+                                    <img
+                                      src={coverImageUrl}
+                                      alt={book.title}
+                                      className="w-full h-full object-cover"
+                                      onError={(e) => {
+                                        console.error('[History] Image load error:', coverImageUrl);
+                                        e.target.style.display = 'none';
+                                        const fallback = e.target.parentElement.querySelector('.image-fallback');
+                                        if (fallback) fallback.style.display = 'flex';
+                                      }}
+                                      onLoad={() => {
+                                        console.log('[History] Image loaded successfully:', coverImageUrl);
+                                      }}
+                                    />
+                                    <div className="image-fallback w-full h-full absolute inset-0 flex items-center justify-center bg-gradient-to-br from-neutral-100 to-neutral-50" style={{ display: 'none' }}>
+                                      <BookIcon className="w-12 h-12 text-neutral-400" />
+                                    </div>
+                                  </>
+                                ) : (
+                                  <div className="w-full h-full flex items-center justify-center">
+                                    <BookIcon className="w-12 h-12 sm:w-16 sm:h-16 text-neutral-400" />
                                   </div>
-                                </motion.div>
-                              ) : (
-                                <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-full flex items-center justify-center bg-gradient-to-br from-neutral-100 to-neutral-50 shadow-lg border-4 border-white ring-2 ring-neutral-200">
-                                  <BookIcon className="w-12 h-12 sm:w-16 sm:h-16 text-neutral-400" />
-                                </div>
-                              )}
+                                )}
+                              </motion.div>
                             </div>
                             <div className="flex-1 w-full bg-gradient-to-br from-red-50/30 to-pink-50/30 rounded-xl p-4 sm:p-6">
                               <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start mb-3 gap-2">
