@@ -1,7 +1,56 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { booksAPI, categoriesAPI } from '../../api/books';
+import { API_URL } from '../../config/api';
 import { BookIcon, PublishIcon, UnpublishIcon, XIcon, LightBulbIcon, TrashIcon, StarIcon } from '../Icons';
+
+// Helper: base URL for images (backend origin, without /api)
+const getImageBaseUrl = () => {
+  // 1) VITE_API_URL (prod) – ex: https://hkids-backend.fly.dev or https://hkids-backend.fly.dev/api
+  const viteApiUrl = import.meta.env.VITE_API_URL;
+  if (viteApiUrl) {
+    const baseUrl = viteApiUrl.replace(/\/api\/?$/, '');
+    return baseUrl;
+  }
+
+  // 2) API_URL already computed in config (may be absolute or relative)
+  if (API_URL && (API_URL.startsWith('http://') || API_URL.startsWith('https://'))) {
+    return API_URL.replace(/\/api\/?$/, '');
+  }
+
+  // 3) Dev mode with Vite proxy -> backend on localhost:3000
+  if (API_URL && API_URL.startsWith('/')) {
+    return 'http://localhost:3000';
+  }
+
+  // 4) Fallback
+  return 'http://localhost:3000';
+};
+
+// Helper: normalize image path stored in DB (can be relative or full URL)
+const normalizeImagePath = (rawPath) => {
+  if (!rawPath) return null;
+
+  let path = rawPath;
+
+  try {
+    // If full URL, keep only pathname+search (drop protocol+host)
+    if (rawPath.startsWith('http://') || rawPath.startsWith('https://')) {
+      const urlObj = new URL(rawPath);
+      path = urlObj.pathname + urlObj.search;
+    }
+  } catch {
+    // If URL parsing fails, keep original string
+    path = rawPath;
+  }
+
+  // Ensure leading slash
+  if (!path.startsWith('/')) {
+    path = `/${path}`;
+  }
+
+  return path;
+};
 
 function BookManagement() {
   const [books, setBooks] = useState([]);
@@ -19,9 +68,15 @@ function BookManagement() {
     is_published: false
   });
   const [coverFile, setCoverFile] = useState(null);
+  const [coverPreview, setCoverPreview] = useState(null);
   const [pageFiles, setPageFiles] = useState([]);
 
   useEffect(() => {
+    // Log the image base URL on component mount for debugging
+    console.log('[BookManagement] Component mounted');
+    console.log('[BookManagement] API_URL:', API_URL);
+    console.log('[BookManagement] VITE_API_URL env:', import.meta.env.VITE_API_URL);
+    console.log('[BookManagement] Image base URL will be:', getImageBaseUrl());
     loadData();
   }, []);
 
@@ -32,6 +87,11 @@ function BookManagement() {
         booksAPI.getAllBooks(),
         categoriesAPI.getAll()
       ]);
+      console.log('[BookManagement] Books loaded:', booksRes.data);
+      // Log cover images for debugging
+      booksRes.data.forEach(book => {
+        console.log(`[Book ${book.id}] ${book.title} - cover_image:`, book.cover_image);
+      });
       setBooks(booksRes.data);
       setCategories(categoriesRes.data);
     } catch (error) {
@@ -95,6 +155,15 @@ function BookManagement() {
       age_group_max: book.age_group_max || 12,
       is_published: book.is_published === true || book.is_published === 1
     });
+    // Set cover preview to existing image (normalize any stored URL)
+    const normalizedPath = normalizeImagePath(book.cover_image);
+    if (normalizedPath) {
+      const imageUrl = `${getImageBaseUrl()}${normalizedPath}`;
+      setCoverPreview(imageUrl);
+    } else {
+      setCoverPreview(null);
+    }
+    setCoverFile(null);
     setShowModal(true);
   };
 
@@ -144,8 +213,36 @@ function BookManagement() {
       is_published: false
     });
     setCoverFile(null);
+    setCoverPreview(null);
     setPageFiles([]);
     setEditingBook(null);
+  };
+
+  const handleCoverFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setCoverFile(file);
+      // Create preview URL for the new file
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setCoverPreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+    } else {
+      setCoverFile(null);
+      // If editing, restore the original cover image preview (normalized)
+      if (editingBook && editingBook.cover_image) {
+        const normalizedPath = normalizeImagePath(editingBook.cover_image);
+        if (normalizedPath) {
+          const imageUrl = `${getImageBaseUrl()}${normalizedPath}`;
+          setCoverPreview(imageUrl);
+        } else {
+          setCoverPreview(null);
+        }
+      } else {
+        setCoverPreview(null);
+      }
+    }
   };
 
   return (
@@ -286,17 +383,29 @@ function BookManagement() {
                   className="hover:bg-red-50/50 transition-colors"
                 >
                   <td className="px-6 py-4 whitespace-nowrap">
-                    {book.cover_image ? (
-                      <img
-                        src={`http://localhost:3000${book.cover_image}`}
-                        alt={book.title}
-                        className="w-16 h-20 object-cover rounded"
-                      />
-                    ) : (
-                      <div className="w-16 h-20 bg-neutral-200 rounded flex items-center justify-center">
-                        <BookIcon className="w-8 h-8 text-neutral-400" />
-                      </div>
-                    )}
+                    {(() => {
+                      const normalizedPath = normalizeImagePath(book.cover_image);
+                      if (!normalizedPath) {
+                        return (
+                          <div className="w-16 h-20 bg-neutral-200 rounded flex items-center justify-center">
+                            <BookIcon className="w-8 h-8 text-neutral-400" />
+                          </div>
+                        );
+                      }
+
+                      const imageUrl = `${getImageBaseUrl()}${normalizedPath}`;
+                      return (
+                        <img
+                          src={imageUrl}
+                          alt={book.title}
+                          className="w-16 h-20 object-cover rounded"
+                          onError={(e) => {
+                            console.error(`[Book ${book.id}] Failed to load image from:`, imageUrl);
+                            e.target.style.display = 'none';
+                          }}
+                        />
+                      );
+                    })()}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm font-medium text-gray-900">{book.title}</div>
@@ -489,9 +598,23 @@ function BookManagement() {
                   <input
                     type="file"
                     accept="image/*"
-                    onChange={(e) => setCoverFile(e.target.files[0])}
-                    className="w-full px-4 py-2.5 border-2 border-red-200 rounded-xl focus:ring-4 focus:ring-red-500/20 focus:border-red-400 transition-all bg-white"
+                    onChange={handleCoverFileChange}
+                    className="w-full px-4 py-2.5 border-2 border-red-200 rounded-xl focus:ring-4 focus:ring-red-500/20 focus:border-red-400 transition-all bg-white mb-2"
                   />
+                  {coverPreview && (
+                    <div className="mt-2">
+                      <p className="text-xs text-gray-600 mb-2">Aperçu de l'image de couverture:</p>
+                      <img
+                        src={coverPreview}
+                        alt="Cover preview"
+                        className="w-full max-w-xs h-48 object-cover rounded-lg border-2 border-red-200"
+                        onError={(e) => {
+                          console.error('Error loading cover image:', coverPreview);
+                          e.target.style.display = 'none';
+                        }}
+                      />
+                    </div>
+                  )}
                 </div>
 
                 {!editingBook && (
