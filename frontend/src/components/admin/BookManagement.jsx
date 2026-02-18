@@ -56,6 +56,7 @@ function BookManagement() {
   const [books, setBooks] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [editingBook, setEditingBook] = useState(null);
   const [formData, setFormData] = useState({
@@ -111,6 +112,7 @@ function BookManagement() {
       return;
     }
     
+    setSubmitting(true);
     try {
       const data = new FormData();
       Object.keys(formData).forEach(key => {
@@ -152,6 +154,8 @@ function BookManagement() {
       } else {
         alert(`Error saving book: ${errorMessage}`);
       }
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -766,11 +770,19 @@ function BookManagement() {
                 <div className="flex gap-4 pt-4">
                   <motion.button
                     type="submit"
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    className="flex-1 px-6 py-3 bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-xl hover:from-red-600 hover:to-pink-600 transition-all font-medium shadow-lg hover:shadow-xl"
+                    disabled={submitting}
+                    whileHover={submitting ? {} : { scale: 1.02 }}
+                    whileTap={submitting ? {} : { scale: 0.98 }}
+                    className="flex-1 px-6 py-3 bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-xl hover:from-red-600 hover:to-pink-600 transition-all font-medium shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                   >
-                    {editingBook ? 'Update Book' : 'Create Book'}
+                    {submitting ? (
+                      <>
+                        <div className="inline-block animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                        <span>Création en cours...</span>
+                      </>
+                    ) : (
+                      editingBook ? 'Update Book' : 'Create Book'
+                    )}
                   </motion.button>
                   <motion.button
                     type="button"
