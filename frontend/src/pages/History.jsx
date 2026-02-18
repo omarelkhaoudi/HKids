@@ -6,6 +6,7 @@ import { storage } from '../utils/storage';
 import { useToast } from '../components/ToastProvider';
 import { HistoryIcon, BookIcon, ChevronLeftIcon, TrashIcon, StarIcon } from '../components/Icons';
 import { Logo } from '../components/Logo';
+import { getImageUrl } from '../utils/imageUrl';
 
 function History() {
   const [history, setHistory] = useState([]);
@@ -263,22 +264,35 @@ function History() {
                           to={`/book-details/${book.id}`}
                           className="bg-white rounded-2xl border-2 border-neutral-200 overflow-hidden group block hover:border-red-300 hover:shadow-xl transition-all shadow-lg"
                         >
-                          <div className="flex flex-col sm:flex-row">
-                            <div className="w-full sm:w-40 h-48 sm:h-auto flex-shrink-0 bg-gradient-to-br from-neutral-100 to-neutral-50 overflow-hidden">
+                          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 p-4 sm:p-6">
+                            {/* Image de couverture circulaire */}
+                            <div className="flex-shrink-0">
                               {book.cover_image ? (
-                                <motion.img
-                                  src={`http://localhost:3000${book.cover_image}`}
-                                  alt={book.title}
-                                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                                  whileHover={{ scale: 1.1 }}
-                                />
+                                <motion.div
+                                  className="w-24 h-24 sm:w-32 sm:h-32 rounded-full overflow-hidden shadow-lg border-4 border-white ring-2 ring-neutral-200 group-hover:ring-red-300 transition-all relative"
+                                  whileHover={{ scale: 1.05 }}
+                                >
+                                  <img
+                                    src={getImageUrl(book.cover_image)}
+                                    alt={book.title}
+                                    className="w-full h-full object-cover"
+                                    onError={(e) => {
+                                      e.target.style.display = 'none';
+                                      const fallback = e.target.parentElement.querySelector('.image-fallback');
+                                      if (fallback) fallback.style.display = 'flex';
+                                    }}
+                                  />
+                                  <div className="image-fallback w-full h-full absolute inset-0 flex items-center justify-center bg-gradient-to-br from-neutral-100 to-neutral-50" style={{ display: 'none' }}>
+                                    <BookIcon className="w-12 h-12 text-neutral-400" />
+                                  </div>
+                                </motion.div>
                               ) : (
-                                <div className="w-full h-full flex items-center justify-center">
-                                  <BookIcon className="w-16 h-16 text-neutral-400" />
+                                <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-full flex items-center justify-center bg-gradient-to-br from-neutral-100 to-neutral-50 shadow-lg border-4 border-white ring-2 ring-neutral-200">
+                                  <BookIcon className="w-12 h-12 sm:w-16 sm:h-16 text-neutral-400" />
                                 </div>
                               )}
                             </div>
-                            <div className="flex-1 p-6 bg-gradient-to-br from-red-50/30 to-pink-50/30">
+                            <div className="flex-1 w-full bg-gradient-to-br from-red-50/30 to-pink-50/30 rounded-xl p-4 sm:p-6">
                               <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start mb-3 gap-2">
                                 <div className="flex-1">
                                   <h3 className="font-bold text-xl text-neutral-900 group-hover:text-red-600 transition-colors mb-2">
