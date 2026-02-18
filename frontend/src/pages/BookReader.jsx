@@ -5,6 +5,7 @@ import { createWorker } from 'tesseract.js';
 import * as pdfjsLib from 'pdfjs-dist';
 import { booksAPI } from '../api/books';
 import { storage } from '../utils/storage';
+import { getFileUrl } from '../utils/fileUrl';
 import { useToast } from '../components/ToastProvider';
 import { ChevronLeftIcon, ChevronRightIcon, HomeIcon, BookIcon, StarIcon, PlayIcon, PauseIcon, VolumeIcon, XIcon } from '../components/Icons';
 import ReadingAidPanel from '../components/ReadingAidPanel';
@@ -86,7 +87,22 @@ function PDFPageViewer({ pdfUrl, pageNumber, onLoad, onPdfLoaded }) {
       } catch (error) {
         if (cancelled) return;
         console.error('Erreur chargement PDF:', error);
-        setError(error.message || 'Erreur lors du chargement du PDF');
+        console.error('URL du PDF:', pdfUrl);
+        
+        // Messages d'erreur plus détaillés
+        let errorMessage = 'Erreur lors du chargement du PDF';
+        if (error.message) {
+          if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+            errorMessage = 'Impossible de charger le PDF. Vérifiez votre connexion.';
+          } else if (error.message.includes('Invalid PDF')) {
+            errorMessage = 'Le fichier PDF est invalide ou corrompu.';
+          } else if (error.message.includes('Missing PDF')) {
+            errorMessage = 'Le fichier PDF est introuvable.';
+          } else {
+            errorMessage = error.message;
+          }
+        }
+        setError(errorMessage);
       } finally {
         if (!cancelled) {
           setLoading(false);
@@ -349,7 +365,8 @@ function BookReader() {
     // Calculer le nombre total de pages effectif (PDF ou pages normales)
     const firstPageData = book?.pages?.[0];
     const isPDF = firstPageData?.image_path?.toLowerCase().endsWith('.pdf');
-    const effectiveTotalPages = (isPDF && pdfTotalPages && currentPdfUrl === `http://localhost:3000${firstPageData.image_path}`) 
+    const firstPageUrl = firstPageData?.image_path ? getFileUrl(firstPageData.image_path) : null;
+    const effectiveTotalPages = (isPDF && pdfTotalPages && currentPdfUrl === firstPageUrl) 
       ? pdfTotalPages 
       : (book?.pages?.length || 0);
     
@@ -413,7 +430,7 @@ function BookReader() {
 
     // Si pas de texte dans la base de données, essayer d'extraire depuis le fichier
     if (!textToRead && pageData.image_path) {
-      const fileUrl = `http://localhost:3000${pageData.image_path}`;
+      const fileUrl = getFileUrl(pageData.image_path);
       const fileExtension = pageData.image_path.toLowerCase().split('.').pop();
       
       // Vérifier si c'est un PDF
@@ -585,7 +602,19 @@ function BookReader() {
       }
     } catch (error) {
       console.error('Erreur extraction PDF:', error);
-      showToast('Erreur lors de l\'extraction du texte du PDF', 'error', 3000);
+      console.error('URL du PDF:', pdfUrl);
+      
+      let errorMessage = 'Erreur lors de l\'extraction du texte du PDF';
+      if (error.message) {
+        if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+          errorMessage = 'Impossible de charger le PDF pour l\'extraction du texte.';
+        } else if (error.message.includes('Invalid PDF')) {
+          errorMessage = 'Le fichier PDF est invalide ou corrompu.';
+        } else {
+          errorMessage = `Erreur: ${error.message}`;
+        }
+      }
+      showToast(errorMessage, 'error', 3000);
       return null;
     } finally {
       setIsExtracting(false);
@@ -682,7 +711,8 @@ function BookReader() {
   const currentPageData = isPDF ? firstPageData : book.pages[currentPage];
   
   // Si c'est un PDF, utiliser le nombre de pages du PDF, sinon utiliser le nombre de pages dans la base
-  const effectiveTotalPages = (isPDF && pdfTotalPages && currentPdfUrl === `http://localhost:3000${firstPageData.image_path}`) 
+  const firstPageUrl = firstPageData?.image_path ? getFileUrl(firstPageData.image_path) : null;
+  const effectiveTotalPages = (isPDF && pdfTotalPages && currentPdfUrl === firstPageUrl) 
     ? pdfTotalPages 
     : book.pages.length;
   
@@ -788,7 +818,7 @@ function BookReader() {
 
               {/* Page PDF en plein écran */}
               {currentPageData.image_path && (() => {
-                const fileUrl = `http://localhost:3000${currentPageData.image_path}`;
+                const fileUrl = getFileUrl(currentPageData.image_path);
                 const fileExtension = currentPageData.image_path.toLowerCase().split('.').pop();
                 const isPDF = fileExtension === 'pdf';
                 
@@ -993,7 +1023,7 @@ function BookReader() {
                   }}
                 >
                   {currentPageData.image_path ? (() => {
-                    const fileUrl = `http://localhost:3000${currentPageData.image_path}`;
+                    const fileUrl = getFileUrl(currentPageData.image_path);
                     const fileExtension = currentPageData.image_path.toLowerCase().split('.').pop();
                     const isPDF = fileExtension === 'pdf';
                     
