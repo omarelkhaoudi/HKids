@@ -5,6 +5,7 @@ import { booksAPI, categoriesAPI } from '../api/books';
 import { storage } from '../utils/storage';
 import { useToast } from '../components/ToastProvider';
 import { BookGridSkeleton } from '../components/SkeletonLoader';
+import { getImageUrl } from '../utils/imageUrl';
 import { 
   BookIcon, SearchIcon, HeartIcon, HistoryIcon, 
   MoonIcon, SunIcon, LockIcon, GridIcon, ListIcon, XIcon,
@@ -33,6 +34,7 @@ function Home({ darkMode, setDarkMode }) {
   const [viewMode, setViewMode] = useState('grid'); // grid, list
   const [loading, setLoading] = useState(true);
   const [favoritesUpdate, setFavoritesUpdate] = useState(0); // Pour forcer le re-render
+  const [imageError, setImageError] = useState(false);
   const { showToast } = useToast();
 
   // Fonction pour obtenir une couleur basée sur la catégorie
@@ -73,6 +75,11 @@ function Home({ darkMode, setDarkMode }) {
   useEffect(() => {
     filterAndSortBooks(allBooks);
   }, [searchQuery, allBooks, sortBy, selectedCategory, selectedAge]);
+
+  // Reset image error when book changes
+  useEffect(() => {
+    setImageError(false);
+  }, [allBooks[0]?.id]);
 
   const filterAndSortBooks = (booksToFilter) => {
     let filtered = [...booksToFilter];
@@ -396,12 +403,16 @@ function Home({ darkMode, setDarkMode }) {
                       <div className="relative">
                         <div className="absolute inset-0 bg-gradient-to-tr from-red-500/20 via-pink-500/20 to-orange-500/20 blur-2xl rounded-3xl"></div>
                         <div className="relative bg-white rounded-2xl p-6 shadow-xl">
-                          {allBooks[0].cover_image ? (
-                            <img
-                              src={`http://localhost:3000${allBooks[0].cover_image}`}
-                              alt={allBooks[0].title}
-                              className="w-full h-auto object-contain rounded-xl group-hover:scale-105 transition-transform duration-300"
-                            />
+                          {allBooks[0].cover_image && !imageError ? (
+                            <div className="w-full min-h-[400px] flex items-center justify-center rounded-xl overflow-hidden bg-gradient-to-br from-red-50 to-pink-50">
+                              <img
+                                src={getImageUrl(allBooks[0].cover_image)}
+                                alt={allBooks[0].title}
+                                className="w-full h-auto max-h-[500px] object-contain rounded-xl group-hover:scale-105 transition-transform duration-300"
+                                onError={() => setImageError(true)}
+                                onLoad={() => setImageError(false)}
+                              />
+                            </div>
                           ) : (
                             <div className="w-full h-64 flex items-center justify-center bg-gradient-to-br from-red-100 to-pink-100 rounded-xl">
                               <BookIcon className="w-32 h-32 text-red-400" />
@@ -710,11 +721,11 @@ function Home({ darkMode, setDarkMode }) {
                       <div className="w-40 h-52 flex-shrink-0 bg-gradient-to-br from-neutral-100 to-neutral-200 overflow-hidden relative">
                         {book.cover_image ? (
                           <img
-                            src={`http://localhost:3000${book.cover_image}`}
+                            src={getImageUrl(book.cover_image)}
                             alt={book.title}
                             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                           />
-                          ) : (
+                        ) : (
                             <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-neutral-100 via-neutral-150 to-neutral-200">
                               <BookIcon className="w-16 h-16 text-neutral-400" />
                             </div>
@@ -1221,11 +1232,11 @@ function Home({ darkMode, setDarkMode }) {
                       <div className="w-40 h-52 flex-shrink-0 bg-gradient-to-br from-neutral-100 to-neutral-200 overflow-hidden relative">
                         {book.cover_image ? (
                           <img
-                            src={`http://localhost:3000${book.cover_image}`}
+                            src={getImageUrl(book.cover_image)}
                             alt={book.title}
                             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                           />
-                          ) : (
+                        ) : (
                             <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-neutral-100 via-neutral-150 to-neutral-200">
                               <BookIcon className="w-16 h-16 text-neutral-400" />
                             </div>
