@@ -2,9 +2,11 @@
 // En développement : utilise le proxy Vite (/api)
 // En production : utilise VITE_API_URL ou l'URL par défaut
 const getApiUrl = () => {
-  // Si VITE_API_URL est défini (production), l'utiliser
+  // Si VITE_API_URL est défini (production), l'utiliser et ajouter /api si nécessaire
   if (import.meta.env.VITE_API_URL) {
-    return import.meta.env.VITE_API_URL;
+    const baseUrl = import.meta.env.VITE_API_URL;
+    // Si l'URL ne se termine pas déjà par /api, l'ajouter
+    return baseUrl.endsWith('/api') ? baseUrl : `${baseUrl}/api`;
   }
   // Sinon, utiliser l'URL relative (fonctionne avec le proxy Vite en dev)
   return '/api';
