@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { booksAPI } from '../api/books';
 import { storage } from '../utils/storage';
 import { useToast } from '../components/ToastProvider';
+import { getImageUrl } from '../utils/imageUrl';
 import { 
   HeartIcon, BookIcon, ChevronLeftIcon, RefreshIcon, 
   StarIcon, ChildIcon, CategoryIcon, HistoryIcon 
@@ -17,6 +18,7 @@ function BookDetails() {
   const [loading, setLoading] = useState(true);
   const [isFavorite, setIsFavorite] = useState(false);
   const [relatedBooks, setRelatedBooks] = useState([]);
+  const [imageError, setImageError] = useState(false);
   const { showToast } = useToast();
 
   useEffect(() => {
@@ -27,6 +29,7 @@ function BookDetails() {
     if (book) {
       setIsFavorite(storage.isFavorite(book.id));
       loadRelatedBooks();
+      setImageError(false); // Reset image error when book changes
     }
   }, [book]);
 
@@ -214,12 +217,16 @@ function BookDetails() {
                   transition={{ type: 'spring', stiffness: 300 }}
                   className="relative bg-white rounded-3xl p-6 shadow-2xl border-4 border-white"
                 >
-                  {book.cover_image ? (
-                    <img
-                      src={`http://localhost:3000${book.cover_image}`}
-                      alt={book.title}
-                      className="w-full max-w-sm h-auto object-contain rounded-2xl shadow-xl"
-                    />
+                  {book.cover_image && !imageError ? (
+                    <div className="w-full max-w-sm min-h-[400px] flex items-center justify-center rounded-2xl overflow-hidden bg-gradient-to-br from-red-50 to-pink-50">
+                      <img
+                        src={getImageUrl(book.cover_image)}
+                        alt={book.title}
+                        className="w-full h-auto max-h-[500px] object-contain rounded-2xl shadow-xl"
+                        onError={() => setImageError(true)}
+                        onLoad={() => setImageError(false)}
+                      />
+                    </div>
                   ) : (
                     <div className="w-full max-w-sm h-96 flex items-center justify-center bg-gradient-to-br from-red-100 to-pink-100 rounded-2xl">
                       <BookIcon className="w-32 h-32 text-red-400" />
@@ -406,13 +413,19 @@ function BookDetails() {
                       <div className="h-56 bg-gradient-to-br from-red-100 to-pink-100 flex items-center justify-center overflow-hidden">
                         {relatedBook.cover_image ? (
                           <img
-                            src={`http://localhost:3000${relatedBook.cover_image}`}
+                            src={getImageUrl(relatedBook.cover_image)}
                             alt={relatedBook.title}
                             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                            onError={(e) => {
+                              e.target.style.display = 'none';
+                              const fallback = e.target.parentElement.querySelector('.book-fallback');
+                              if (fallback) fallback.style.display = 'flex';
+                            }}
                           />
-                        ) : (
+                        ) : null}
+                        <div className={`${relatedBook.cover_image ? 'hidden' : 'flex'} book-fallback w-full h-full items-center justify-center`}>
                           <BookIcon className="w-20 h-20 text-red-400" />
-                        )}
+                        </div>
                       </div>
                       <div className="p-5">
                         <h3 className="font-bold text-neutral-900 line-clamp-2 text-base mb-2">
