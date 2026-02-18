@@ -21,11 +21,14 @@ function getPool() {
   }
 }
 
+// Créer le répertoire d'upload une seule fois au démarrage
+const uploadDir = path.join(__dirname, '../uploads/books');
+fs.ensureDirSync(uploadDir);
+
 // Configure multer for file uploads
 const storage = multer.diskStorage({
-  destination: async (req, file, cb) => {
-    const uploadDir = path.join(__dirname, '../uploads/books');
-    await fs.ensureDir(uploadDir);
+  destination: (req, file, cb) => {
+    // Le répertoire existe déjà, pas besoin de le recréer
     cb(null, uploadDir);
   },
   filename: (req, file, cb) => {
@@ -205,42 +208,71 @@ router.post('/', verifyToken, handleMulterUpload(upload.fields([
 
       const bookId = insertBook.rows[0].id;
 
-      if (pageFiles.length > 0) {
-        // Optimisation: insertion en lot (batch insert) au lieu d'une boucle séquentielle
-        const pageValues = pageFiles.map((file, index) => {
-          const pagePath = `/uploads/books/${file.filename}`;
-          return [bookId, index + 1, pagePath];
-        });
-
-        // Construction d'une seule requête SQL avec VALUES multiples
-        const valuesPlaceholders = pageValues.map((_, i) => {
-          const base = i * 3;
-          return `($${base + 1}, $${base + 2}, $${base + 3})`;
-        }).join(', ');
-
-        const flatValues = pageValues.flat();
-        await client.query(
-          `INSERT INTO book_pages (book_id, page_number, image_path) VALUES ${valuesPlaceholders}`,
-          flatValues
-        );
-
-        // Mise à jour du nombre de pages en une seule requête
-        await client.query(
-          'UPDATE books SET page_count = $1 WHERE id = $2',
-          [pageFiles.length, bookId]
-        );
-        
-        console.log(`✅ ${pageFiles.length} pages insérées avec succès en une seule requête!`);
-      }
-
+      // Commit immédiatement après la création du livre pour répondre rapidement
       await client.query('COMMIT');
-      res.status(201).json({ id: bookId, message: 'Book created successfully' });
+      client.release();
+
+      // Répondre immédiatement au client (non-bloquant)
+      res.status(201).json({ 
+        id: bookId, 
+        message: 'Book created successfully',
+        processing: pageFiles.length > 0 ? 'Pages are being processed in the background' : null
+      });
+
+      // Traiter les pages de manière asynchrone (sans bloquer la réponse)
+      if (pageFiles.length > 0) {
+        // Utiliser setImmediate pour traiter en arrière-plan
+        setImmediate(async () => {
+          const pool = getPool();
+          const asyncClient = await pool.connect();
+          try {
+            await asyncClient.query('BEGIN');
+            
+            // Optimisation: insertion en lot (batch insert)
+            const pageValues = pageFiles.map((file, index) => {
+              const pagePath = `/uploads/books/${file.filename}`;
+              return [bookId, index + 1, pagePath];
+            });
+
+            // Construction d'une seule requête SQL avec VALUES multiples
+            const valuesPlaceholders = pageValues.map((_, i) => {
+              const base = i * 3;
+              return `($${base + 1}, $${base + 2}, $${base + 3})`;
+            }).join(', ');
+
+            const flatValues = pageValues.flat();
+            await asyncClient.query(
+              `INSERT INTO book_pages (book_id, page_number, image_path) VALUES ${valuesPlaceholders}`,
+              flatValues
+            );
+
+            // Mise à jour du nombre de pages
+            await asyncClient.query(
+              'UPDATE books SET page_count = $1 WHERE id = $2',
+              [pageFiles.length, bookId]
+            );
+            
+            await asyncClient.query('COMMIT');
+            console.log(`✅ ${pageFiles.length} pages insérées avec succès pour le livre ${bookId}!`);
+          } catch (err) {
+            await asyncClient.query('ROLLBACK');
+            console.error(`❌ Erreur lors de l'insertion des pages pour le livre ${bookId}:`, err);
+          } finally {
+            asyncClient.release();
+          }
+        });
+      }
     } catch (err) {
-      await client.query('ROLLBACK');
+      if (client) {
+        try {
+          await client.query('ROLLBACK');
+        } catch (rollbackErr) {
+          console.error('Error during rollback:', rollbackErr);
+        }
+        client.release();
+      }
       console.error('Error saving book:', err);
       res.status(500).json({ error: 'Database error' });
-    } finally {
-      client.release();
     }
   } catch (error) {
     res.status(500).json({ error: error.message });
