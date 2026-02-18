@@ -7,6 +7,7 @@ import { useToast } from '../components/ToastProvider';
 import { BookGridSkeleton } from '../components/SkeletonLoader';
 import { HeartIcon, BookIcon, ChevronLeftIcon, StarIcon } from '../components/Icons';
 import { Logo } from '../components/Logo';
+import { getImageUrl } from '../utils/imageUrl';
 
 function Favorites() {
   const [favoriteBooks, setFavoriteBooks] = useState([]);
@@ -30,7 +31,29 @@ function Favorites() {
       // Charger tous les livres publiés et filtrer les favoris
       const response = await booksAPI.getPublishedBooks();
       const favorites = response.data.filter(book => favoriteIds.includes(book.id));
-      setFavoriteBooks(favorites);
+      
+      // Pour les livres manquants (non publiés), charger individuellement
+      const missingBookIds = favoriteIds.filter(id => !favorites.find(b => b.id === id));
+      const missingBooks = await Promise.all(
+        missingBookIds.map(async (id) => {
+          try {
+            const bookResponse = await booksAPI.getBook(id);
+            return bookResponse.data;
+          } catch (err) {
+            console.warn(`[Favorites] Could not load book ${id}:`, err);
+            return null;
+          }
+        })
+      );
+      
+      // Combiner les livres trouvés
+      const allFavorites = [...favorites, ...missingBooks.filter(Boolean)];
+      
+      // Trier selon l'ordre des favoris
+      const sorted = favoriteIds.map(id => allFavorites.find(b => b.id === id)).filter(Boolean);
+      
+      console.log('[Favorites] Loaded books:', sorted.map(b => ({ id: b.id, title: b.title, cover_image: b.cover_image })));
+      setFavoriteBooks(sorted);
     } catch (error) {
       console.error('Error loading favorites:', error);
     } finally {
@@ -187,14 +210,28 @@ function Favorites() {
                     >
                       <div className="bg-white rounded-2xl border-2 border-neutral-200 overflow-hidden group h-full flex flex-col hover:border-red-300 hover:shadow-xl transition-all shadow-lg">
                         <Link to={`/book-details/${book.id}`} className="flex-1">
-                          <div className="h-56 bg-gradient-to-br from-neutral-100 to-neutral-50 flex items-center justify-center overflow-hidden">
+                          <div className="h-56 bg-gradient-to-br from-neutral-100 to-neutral-50 flex items-center justify-center overflow-hidden relative">
                             {book.cover_image ? (
-                              <motion.img
-                                src={`http://localhost:3000${book.cover_image}`}
-                                alt={book.title}
-                                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                                whileHover={{ scale: 1.1 }}
-                              />
+                              <>
+                                <motion.img
+                                  src={getImageUrl(book.cover_image)}
+                                  alt={book.title}
+                                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                                  whileHover={{ scale: 1.1 }}
+                                  onError={(e) => {
+                                    console.error('[Favorites] Image load error for book', book.id, ':', getImageUrl(book.cover_image));
+                                    e.target.style.display = 'none';
+                                    const fallback = e.target.parentElement.querySelector('.image-fallback');
+                                    if (fallback) fallback.style.display = 'flex';
+                                  }}
+                                  onLoad={() => {
+                                    console.log('[Favorites] Image loaded successfully for book', book.id);
+                                  }}
+                                />
+                                <div className="image-fallback w-full h-full absolute inset-0 flex items-center justify-center bg-gradient-to-br from-neutral-100 to-neutral-50" style={{ display: 'none' }}>
+                                  <BookIcon className="w-20 h-20 text-neutral-400" />
+                                </div>
+                              </>
                             ) : (
                               <div className="w-full h-full flex items-center justify-center">
                                 <BookIcon className="w-20 h-20 text-neutral-400" />
