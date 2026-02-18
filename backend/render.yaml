@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: hkids-backend
+    env: node
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: npm start
+    plan: free
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3000
+      # Les autres variables (DB_*, JWT_SECRET, CORS_ORIGIN) doivent être ajoutées manuellement dans le Dashboard Render
+      # car elles contiennent des valeurs sensibles
+

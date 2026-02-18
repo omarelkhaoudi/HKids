@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import { LockIcon, UserIcon, EyeIcon, EyeOffIcon, AlertIcon, LoadingSpinnerIcon, ChevronLeftIcon, StarIcon } from '../components/Icons';
 import { Logo } from '../components/Logo';
+import { API_URL } from '../config/api.js';
 
 // Composant pour les étoiles animées
 function StarParticles({ count = 20 }) {
@@ -46,7 +47,7 @@ function AdminLogin() {
 
   const resetRateLimit = async () => {
     try {
-      const response = await fetch('http://localhost:3000/api/reset-rate-limit', {
+      const response = await fetch(`${API_URL}/reset-rate-limit`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
       });
