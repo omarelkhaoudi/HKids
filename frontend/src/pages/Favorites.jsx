@@ -82,14 +82,14 @@ function Favorites() {
           <Link to="/" className="flex items-center">
             <Logo size="default" />
           </Link>
-          <div className="flex items-center gap-4">
-            <Link to="/" className="text-neutral-100 hover:text-white font-medium flex items-center gap-2 transition-colors">
-              <ChevronLeftIcon className="w-4 h-4" />
+          <div className="flex items-center gap-2 sm:gap-4">
+            <Link to="/" className="text-neutral-100 hover:text-white font-medium flex items-center gap-1 sm:gap-2 transition-colors px-2 py-1 sm:px-0 sm:py-0">
+              <ChevronLeftIcon className="w-4 h-4 sm:w-5 sm:h-5" />
               <span className="hidden sm:inline">Retour</span>
             </Link>
-            <h1 className="text-lg sm:text-xl font-semibold text-white flex items-center gap-2">
-              <HeartIcon className="w-5 h-5" filled={true} />
-              <span>Mes Favoris</span>
+            <h1 className="text-base sm:text-lg md:text-xl font-semibold text-white flex items-center gap-1 sm:gap-2">
+              <HeartIcon className="w-4 h-4 sm:w-5 sm:h-5" filled={true} />
+              <span className="text-sm sm:text-base md:text-lg">Mes Favoris</span>
             </h1>
           </div>
         </div>
@@ -191,7 +191,7 @@ function Favorites() {
                 </p>
               </motion.div>
               <AnimatePresence>
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 md:gap-8">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6 md:gap-8">
                   {favoriteBooks.map((book, index) => (
                     <motion.div
                       key={book.id}

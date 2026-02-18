@@ -35,6 +35,7 @@ function Home({ darkMode, setDarkMode }) {
   const [loading, setLoading] = useState(true);
   const [favoritesUpdate, setFavoritesUpdate] = useState(0); // Pour forcer le re-render
   const [imageError, setImageError] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { showToast } = useToast();
 
   // Fonction pour obtenir une couleur basée sur la catégorie
@@ -184,7 +185,9 @@ function Home({ darkMode, setDarkMode }) {
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4 flex justify-between items-center gap-3">
           <Logo size="default" />
-          <nav className="flex items-center gap-2 text-neutral-100">
+          
+          {/* Desktop Navigation */}
+          <nav className="hidden md:flex items-center gap-2 text-neutral-100">
             <LibraryMenu
               categories={categories}
               onCategorySelect={setSelectedCategory}
@@ -198,7 +201,7 @@ function Home({ darkMode, setDarkMode }) {
               title={t.favorites}
             >
               <HeartIcon className="w-4 h-4" filled={false} />
-              <span className="hidden sm:inline">{t.favorites}</span>
+              <span>{t.favorites}</span>
             </Link>
             <Link 
               to="/history" 
@@ -206,20 +209,95 @@ function Home({ darkMode, setDarkMode }) {
               title={t.history}
             >
               <HistoryIcon className="w-4 h-4" />
-              <span className="hidden sm:inline">{t.history}</span>
+              <span>{t.history}</span>
             </Link>
             <Link 
               to="/admin/login" 
               className="btn-nav flex items-center gap-2 text-neutral-100 hover:text-white hover:bg-neutral-800/80"
             >
               <LockIcon className="w-4 h-4" />
-              <span className="hidden sm:inline">{t.admin}</span>
+              <span>{t.admin}</span>
             </Link>
             <div className="ml-2 px-3 py-1.5 bg-white/10 rounded-lg backdrop-blur-sm">
               <LanguageSelector />
             </div>
           </nav>
+
+          {/* Mobile Menu Button */}
+          <div className="md:hidden flex items-center gap-2">
+            <div className="px-2 py-1.5 bg-white/10 rounded-lg backdrop-blur-sm">
+              <LanguageSelector />
+            </div>
+            <motion.button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="p-2 text-neutral-100 hover:text-white hover:bg-neutral-800/80 rounded-lg transition-colors"
+              whileTap={{ scale: 0.95 }}
+            >
+              {mobileMenuOpen ? (
+                <XIcon className="w-6 h-6" />
+              ) : (
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+              )}
+            </motion.button>
+          </div>
         </div>
+
+        {/* Mobile Menu */}
+        <AnimatePresence>
+          {mobileMenuOpen && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.3 }}
+              className="md:hidden bg-neutral-800/95 backdrop-blur-md border-t border-neutral-700"
+            >
+              <nav className="px-4 py-4 space-y-2">
+                <Link 
+                  to="/favorites" 
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center gap-3 px-4 py-3 text-neutral-100 hover:text-white hover:bg-neutral-700/50 rounded-lg transition-colors"
+                >
+                  <HeartIcon className="w-5 h-5" filled={false} />
+                  <span>{t.favorites}</span>
+                </Link>
+                <Link 
+                  to="/history" 
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center gap-3 px-4 py-3 text-neutral-100 hover:text-white hover:bg-neutral-700/50 rounded-lg transition-colors"
+                >
+                  <HistoryIcon className="w-5 h-5" />
+                  <span>{t.history}</span>
+                </Link>
+                <Link 
+                  to="/admin/login" 
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center gap-3 px-4 py-3 text-neutral-100 hover:text-white hover:bg-neutral-700/50 rounded-lg transition-colors"
+                >
+                  <LockIcon className="w-5 h-5" />
+                  <span>{t.admin}</span>
+                </Link>
+                <div className="pt-2 border-t border-neutral-700">
+                  <LibraryMenu
+                    categories={categories}
+                    onCategorySelect={(cat) => {
+                      setSelectedCategory(cat);
+                      setMobileMenuOpen(false);
+                    }}
+                    onAgeSelect={(age) => {
+                      setSelectedAge(age);
+                      setMobileMenuOpen(false);
+                    }}
+                    selectedCategory={selectedCategory}
+                    selectedAge={selectedAge}
+                  />
+                </div>
+              </nav>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </motion.header>
 
       {/* Section 1: Hero - Donner le goût de lire */}
@@ -260,7 +338,7 @@ function Home({ darkMode, setDarkMode }) {
               className="text-center lg:text-left"
             >
               <motion.h1 
-                className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold mb-4 leading-tight"
+                className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-extrabold mb-3 sm:mb-4 leading-tight"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 }}
@@ -377,7 +455,7 @@ function Home({ darkMode, setDarkMode }) {
               <div className="inline-block px-4 py-2 bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-full text-sm font-bold mb-4">
                 {t.bookOfTheWeek}
               </div>
-              <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-neutral-900 mb-4">
+              <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-neutral-900 mb-3 sm:mb-4">
                 {allBooks[0]?.title || t.discoverSelection}
               </h2>
               {allBooks[0]?.description && (
@@ -469,7 +547,7 @@ function Home({ darkMode, setDarkMode }) {
             transition={{ duration: 0.6 }}
             className="text-center mb-12"
           >
-            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-neutral-900 mb-4">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-neutral-900 mb-3 sm:mb-4">
               {t.browseByAge}
             </h2>
             <p className="text-lg text-neutral-600 max-w-2xl mx-auto">
@@ -547,7 +625,7 @@ function Home({ darkMode, setDarkMode }) {
             transition={{ duration: 0.6 }}
             className="text-center mb-12"
           >
-            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-neutral-900 mb-4">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-neutral-900 mb-3 sm:mb-4">
               {t.discoverLibrary}
             </h2>
             <p className="text-lg text-neutral-600">
@@ -605,8 +683,8 @@ function Home({ darkMode, setDarkMode }) {
               exit={{ opacity: 0 }}
               transition={{ duration: 0.3 }}
               className={viewMode === 'grid' 
-                ? "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 items-stretch w-full"
-                : "space-y-4 max-w-4xl mx-auto w-full"
+                ? "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6 items-stretch w-full"
+                : "space-y-3 sm:space-y-4 max-w-4xl mx-auto w-full"
               }
             >
             {books && books.length > 0 ? books.map((book, index) => {
@@ -794,7 +872,7 @@ function Home({ darkMode, setDarkMode }) {
             transition={{ duration: 0.6 }}
             className="text-center mb-12"
           >
-            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-neutral-900 mb-4">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-neutral-900 mb-3 sm:mb-4">
               {t.didYouKnow}
             </h2>
             <p className="text-lg text-neutral-600 max-w-2xl mx-auto">
@@ -961,7 +1039,7 @@ function Home({ darkMode, setDarkMode }) {
             transition={{ duration: 0.6 }}
             className="text-center mb-16"
           >
-            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-neutral-900 mb-4">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-neutral-900 mb-3 sm:mb-4">
               {t.theyTrustUs}
             </h2>
           </motion.div>
@@ -1027,7 +1105,7 @@ function Home({ darkMode, setDarkMode }) {
             transition={{ duration: 0.6 }}
             className="text-center mb-12"
           >
-            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-neutral-900 mb-4">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-neutral-900 mb-3 sm:mb-4">
               {t.read} • {t.listen} • {t.tell} • {t.share}
             </h2>
             <p className="text-lg text-neutral-600 max-w-2xl mx-auto">
