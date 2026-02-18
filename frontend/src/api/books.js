@@ -19,14 +19,22 @@ export const booksAPI = {
   },
 
   createBook: (formData) => {
+    const token = localStorage.getItem('token');
     return axios.post(`${API_URL}/books`, formData, {
-      headers: { 'Content-Type': 'multipart/form-data' }
+      headers: { 
+        'Content-Type': 'multipart/form-data',
+        ...(token && { 'Authorization': `Bearer ${token}` })
+      }
     });
   },
 
   updateBook: (id, formData) => {
+    const token = localStorage.getItem('token');
     return axios.put(`${API_URL}/books/${id}`, formData, {
-      headers: { 'Content-Type': 'multipart/form-data' }
+      headers: { 
+        'Content-Type': 'multipart/form-data',
+        ...(token && { 'Authorization': `Bearer ${token}` })
+      }
     });
   },
 
