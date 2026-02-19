@@ -18,7 +18,7 @@ function getPool() {
 
 // Signup
 router.post('/signup', async (req, res) => {
-  const { username, password } = req.body;
+  const { username, password, role } = req.body;
 
   if (!username || !password) {
     return res.status(400).json({ error: 'Username and password required' });
@@ -31,6 +31,10 @@ router.post('/signup', async (req, res) => {
   if (password.length < 6) {
     return res.status(400).json({ error: 'Password must be at least 6 characters' });
   }
+
+  // Validate role if provided
+  const validRoles = ['admin', 'parent', 'kid'];
+  const userRole = role && validRoles.includes(role) ? role : 'admin';
 
   try {
     const pool = getPool();
@@ -48,11 +52,11 @@ router.post('/signup', async (req, res) => {
 
     const result = await pool.query(
       'INSERT INTO users (username, password, role) VALUES ($1, $2, $3) RETURNING id, username, role',
-      [username.trim(), hashedPassword, 'admin']
+      [username.trim(), hashedPassword, userRole]
     );
 
     const user = result.rows[0];
-    console.log(`✅ New user created: ${user.username}`);
+    console.log(`✅ New user created: ${user.username} with role: ${user.role}`);
 
     res.status(201).json({
       message: 'User created successfully',
@@ -92,7 +96,12 @@ router.post('/login', async (req, res) => {
     }
 
     const token = jwt.sign(
-      { id: user.id, username: user.username, role: user.role },
+      { 
+        id: user.id, 
+        username: user.username, 
+        role: user.role,
+        kid_profile_id: user.kid_profile_id || null
+      },
       JWT_SECRET,
       { expiresIn: '24h' }
     );
@@ -104,6 +113,7 @@ router.post('/login', async (req, res) => {
         id: user.id,
         username: user.username,
         role: user.role,
+        kid_profile_id: user.kid_profile_id || null,
       },
     });
   } catch (err) {

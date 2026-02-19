@@ -168,6 +168,7 @@ export async function initDatabase() {
         username TEXT UNIQUE NOT NULL,
         password TEXT NOT NULL,
         role TEXT DEFAULT 'admin',
+        kid_profile_id INTEGER REFERENCES kids_profiles(id) ON DELETE SET NULL,
         created_at TIMESTAMPTZ DEFAULT NOW()
       );
     `);
@@ -209,6 +210,32 @@ export async function initDatabase() {
         page_number INTEGER NOT NULL,
         image_path TEXT,
         content TEXT
+      );
+    `);
+
+    // Kids profiles table
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS kids_profiles (
+        id SERIAL PRIMARY KEY,
+        parent_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        name TEXT NOT NULL,
+        avatar TEXT,
+        age INTEGER,
+        created_at TIMESTAMPTZ DEFAULT NOW(),
+        updated_at TIMESTAMPTZ DEFAULT NOW()
+      );
+    `);
+
+    // Parent approvals table - stores which categories are approved for each kid
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS parent_approvals (
+        id SERIAL PRIMARY KEY,
+        kid_profile_id INTEGER NOT NULL REFERENCES kids_profiles(id) ON DELETE CASCADE,
+        category_id INTEGER NOT NULL REFERENCES categories(id) ON DELETE CASCADE,
+        approved BOOLEAN DEFAULT TRUE,
+        created_at TIMESTAMPTZ DEFAULT NOW(),
+        updated_at TIMESTAMPTZ DEFAULT NOW(),
+        UNIQUE(kid_profile_id, category_id)
       );
     `);
 

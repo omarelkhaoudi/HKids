@@ -1,7 +1,7 @@
 -- Script SQL pour initialiser la base de données HKids sur Supabase
 -- Exécutez ce script dans le SQL Editor de Supabase
 
--- Users table
+-- Users table (created first, kid_profile_id will be added later)
 CREATE TABLE IF NOT EXISTS users (
   id SERIAL PRIMARY KEY,
   username TEXT UNIQUE NOT NULL,
@@ -43,6 +43,39 @@ CREATE TABLE IF NOT EXISTS book_pages (
   image_path TEXT,
   content TEXT
 );
+
+-- Kids profiles table
+CREATE TABLE IF NOT EXISTS kids_profiles (
+  id SERIAL PRIMARY KEY,
+  parent_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  avatar TEXT,
+  age INTEGER,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Parent approvals table - stores which categories are approved for each kid
+CREATE TABLE IF NOT EXISTS parent_approvals (
+  id SERIAL PRIMARY KEY,
+  kid_profile_id INTEGER NOT NULL REFERENCES kids_profiles(id) ON DELETE CASCADE,
+  category_id INTEGER NOT NULL REFERENCES categories(id) ON DELETE CASCADE,
+  approved BOOLEAN DEFAULT TRUE,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(kid_profile_id, category_id)
+);
+
+-- Add kid_profile_id column to users table (after kids_profiles is created)
+DO $$ 
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'users' AND column_name = 'kid_profile_id'
+  ) THEN
+    ALTER TABLE users ADD COLUMN kid_profile_id INTEGER REFERENCES kids_profiles(id) ON DELETE SET NULL;
+  END IF;
+END $$;
 
 -- Insert default categories
 INSERT INTO categories (name, description)
