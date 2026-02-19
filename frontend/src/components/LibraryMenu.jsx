@@ -39,8 +39,8 @@ function LibraryMenu({ categories, onCategorySelect, onAgeSelect, selectedCatego
   };
 
   const handleAgeClick = (age) => {
-    const ageValue = age.includes('-') ? age.split('-')[0] : age;
-    onAgeSelect(ageValue);
+    // Passer la plage complète (ex: "3-5") au lieu de juste le premier nombre
+    onAgeSelect(age);
     setIsOpen(false);
     scrollToBooksSection();
   };
@@ -102,8 +102,8 @@ function LibraryMenu({ categories, onCategorySelect, onAgeSelect, selectedCatego
                 {/* Boutons d'âge */}
                 <div className="flex flex-wrap gap-2 sm:gap-3">
                   {ageButtons.map((ageBtn) => {
-                    const ageValue = ageBtn.age.includes('-') ? ageBtn.age.split('-')[0] : ageBtn.age;
-                    const isSelected = selectedAge === ageValue;
+                    // Comparer avec la plage complète (ex: "3-5") ou juste le premier nombre pour compatibilité
+                    const isSelected = selectedAge === ageBtn.age || selectedAge === ageBtn.age.split('-')[0];
                     return (
                       <button
                         key={ageBtn.age}
