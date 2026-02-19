@@ -277,10 +277,27 @@ function BookReader() {
   // Fonctions pour la lecture audio
   const stopAudio = () => {
     if (window.speechSynthesis) {
-      window.speechSynthesis.cancel();
+      // Arrêter proprement la synthèse vocale
+      try {
+        window.speechSynthesis.cancel();
+        // Attendre un peu pour que l'annulation soit complète
+        return new Promise((resolve) => {
+          setTimeout(() => {
+            setIsPlaying(false);
+            setSpeechUtterance(null);
+            resolve();
+          }, 100);
+        });
+      } catch (error) {
+        console.error('Erreur lors de l\'arrêt de l\'audio:', error);
+        setIsPlaying(false);
+        setSpeechUtterance(null);
+        return Promise.resolve();
+      }
     }
     setIsPlaying(false);
     setSpeechUtterance(null);
+    return Promise.resolve();
   };
 
   useEffect(() => {
@@ -288,8 +305,12 @@ function BookReader() {
       storage.addToHistory(book.id, book.title, currentPage);
     }
     // Arrêter la lecture audio quand on change de page
-    if (window.speechSynthesis) {
-      window.speechSynthesis.cancel();
+    if (window.speechSynthesis && window.speechSynthesis.speaking) {
+      try {
+        window.speechSynthesis.cancel();
+      } catch (error) {
+        console.error('Erreur lors de l\'arrêt de l\'audio au changement de page:', error);
+      }
       setIsPlaying(false);
       setSpeechUtterance(null);
     }
@@ -308,13 +329,17 @@ function BookReader() {
       storage.addReadingSession(book.id, book.title, durationSeconds, finished);
 
       // Nettoyer la synthèse vocale
-      if (window.speechSynthesis) {
-        window.speechSynthesis.cancel();
+      if (window.speechSynthesis && window.speechSynthesis.speaking) {
+        try {
+          window.speechSynthesis.cancel();
+        } catch (error) {
+          console.error('Erreur lors du nettoyage de l\'audio:', error);
+        }
       }
       setIsPlaying(false);
       setSpeechUtterance(null);
     };
-  }, [book, currentPage, readingTime, startTime]);
+  }, [book, currentPage, startTime]);
 
   useEffect(() => {
     const handleKeyPress = (e) => {
@@ -384,8 +409,12 @@ function BookReader() {
       setPageDirection('next');
       setIsTurning(true);
       // Arrêter l'audio lors du changement de page
-      if (window.speechSynthesis) {
-        window.speechSynthesis.cancel();
+      if (window.speechSynthesis && window.speechSynthesis.speaking) {
+        try {
+          window.speechSynthesis.cancel();
+        } catch (error) {
+          console.error('Erreur lors de l\'arrêt de l\'audio:', error);
+        }
         setIsPlaying(false);
         setSpeechUtterance(null);
       }
@@ -411,8 +440,12 @@ function BookReader() {
       setPageDirection('prev');
       setIsTurning(true);
       // Arrêter l'audio lors du changement de page
-      if (window.speechSynthesis) {
-        window.speechSynthesis.cancel();
+      if (window.speechSynthesis && window.speechSynthesis.speaking) {
+        try {
+          window.speechSynthesis.cancel();
+        } catch (error) {
+          console.error('Erreur lors de l\'arrêt de l\'audio:', error);
+        }
         setIsPlaying(false);
         setSpeechUtterance(null);
       }
@@ -437,8 +470,18 @@ function BookReader() {
         return;
       }
 
-      // Arrêter toute lecture en cours
-      stopAudio();
+      // Vérifier si une lecture est déjà en cours
+      if (window.speechSynthesis.speaking) {
+        // Si on est déjà en train de jouer, on arrête
+        await stopAudio();
+        // Attendre un peu pour que l'arrêt soit complet
+        await new Promise(resolve => setTimeout(resolve, 200));
+      } else {
+        // Arrêter toute lecture en cours proprement
+        await stopAudio();
+        // Attendre un peu pour que l'arrêt soit complet
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
 
       // Pour un PDF, on utilise toujours la première entrée de la base
       // mais currentPage représente la page du PDF (0 à pdfTotalPages-1)
@@ -500,32 +543,58 @@ function BookReader() {
       // Attendre que les voix soient chargées
       const waitForVoices = () => {
         return new Promise((resolve) => {
+          // Vérifier d'abord si speechSynthesis est toujours disponible
+          if (!window.speechSynthesis) {
+            resolve([]);
+            return;
+          }
+
           const voices = window.speechSynthesis.getVoices();
           if (voices.length > 0) {
             resolve(voices);
           } else {
             // Attendre que les voix soient chargées
+            let timeoutId;
             const checkVoices = () => {
+              if (!window.speechSynthesis) {
+                resolve([]);
+                return;
+              }
               const loadedVoices = window.speechSynthesis.getVoices();
               if (loadedVoices.length > 0) {
+                if (window.speechSynthesis.onvoiceschanged === checkVoices) {
+                  window.speechSynthesis.onvoiceschanged = null;
+                }
+                if (timeoutId) clearTimeout(timeoutId);
                 resolve(loadedVoices);
-              } else {
-                setTimeout(checkVoices, 100);
               }
             };
+            
+            // Écouter l'événement onvoiceschanged
+            const oldHandler = window.speechSynthesis.onvoiceschanged;
             window.speechSynthesis.onvoiceschanged = checkVoices;
+            
             // Timeout après 2 secondes
-            setTimeout(() => {
+            timeoutId = setTimeout(() => {
               if (window.speechSynthesis.onvoiceschanged === checkVoices) {
-                window.speechSynthesis.onvoiceschanged = null;
+                window.speechSynthesis.onvoiceschanged = oldHandler;
               }
-              resolve(window.speechSynthesis.getVoices());
+              if (window.speechSynthesis) {
+                resolve(window.speechSynthesis.getVoices());
+              } else {
+                resolve([]);
+              }
             }, 2000);
           }
         });
       };
 
       const voices = await waitForVoices();
+      
+      if (voices.length === 0) {
+        showToast('Aucune voix disponible pour la lecture audio', 'error', 3000);
+        return;
+      }
 
       const utterance = new SpeechSynthesisUtterance(textToRead.trim());
       
@@ -555,6 +624,15 @@ function BookReader() {
       };
 
       utterance.onerror = (event) => {
+        // L'erreur "interrupted" est normale quand on annule la lecture (changement de page, stop, etc.)
+        // On ne l'affiche donc pas comme une erreur à l'utilisateur.
+        if (event.error === 'interrupted' || event.error === 'canceled') {
+          console.warn('Lecture audio interrompue (normal):', event);
+          setIsPlaying(false);
+          setSpeechUtterance(null);
+          return;
+        }
+
         console.error('Erreur de synthèse vocale:', event);
         setIsPlaying(false);
         setSpeechUtterance(null);
@@ -576,11 +654,43 @@ function BookReader() {
 
       setSpeechUtterance(utterance);
       
-      // Vérifier que speechSynthesis est toujours disponible avant de parler
-      if (window.speechSynthesis && window.speechSynthesis.speak) {
-        window.speechSynthesis.speak(utterance);
-      } else {
+      // Vérifier que speechSynthesis est toujours disponible et qu'il n'est pas déjà en train de parler
+      if (!window.speechSynthesis) {
         showToast('La synthèse vocale n\'est plus disponible', 'error', 3000);
+        setIsPlaying(false);
+        setSpeechUtterance(null);
+        return;
+      }
+
+      // S'assurer qu'on n'est pas déjà en train de parler
+      if (window.speechSynthesis.speaking) {
+        // Attendre que la lecture en cours se termine
+        await new Promise(resolve => {
+          const checkSpeaking = setInterval(() => {
+            if (!window.speechSynthesis.speaking) {
+              clearInterval(checkSpeaking);
+              resolve();
+            }
+          }, 100);
+          // Timeout de sécurité après 5 secondes
+          setTimeout(() => {
+            clearInterval(checkSpeaking);
+            resolve();
+          }, 5000);
+        });
+        // Annuler au cas où
+        window.speechSynthesis.cancel();
+        await new Promise(resolve => setTimeout(resolve, 200));
+      }
+
+      // Lancer la lecture
+      try {
+        window.speechSynthesis.speak(utterance);
+      } catch (speakError) {
+        console.error('Erreur lors de l\'appel à speak():', speakError);
+        setIsPlaying(false);
+        setSpeechUtterance(null);
+        showToast('Impossible de démarrer la lecture audio', 'error', 3000);
       }
     } catch (error) {
       console.error('Erreur dans playAudio:', error);
@@ -590,11 +700,11 @@ function BookReader() {
     }
   };
 
-  const toggleAudio = () => {
+  const toggleAudio = async () => {
     if (isPlaying) {
-      stopAudio();
+      await stopAudio();
     } else {
-      playAudio();
+      await playAudio();
     }
   };
 
