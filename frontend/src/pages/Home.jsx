@@ -100,12 +100,38 @@ function Home({ darkMode, setDarkMode }) {
       filtered = filtered.filter(book => book.category_id == selectedCategory);
     }
 
-    // Filtre par âge
+    // Filtre par âge (plage d'âge)
     if (selectedAge) {
-      const age = parseInt(selectedAge);
-      filtered = filtered.filter(book => 
-        book.age_group_min <= age && book.age_group_max >= age
-      );
+      // selectedAge peut être "3", "6", "9" ou "3-5", "6-8", "9-12"
+      let ageMin, ageMax;
+      if (selectedAge.includes('-')) {
+        // Format "3-5", "6-8", "9-12"
+        [ageMin, ageMax] = selectedAge.split('-').map(a => parseInt(a));
+      } else {
+        // Format simple "3", "6", "9" - convertir en plage
+        const age = parseInt(selectedAge);
+        if (age === 3) {
+          ageMin = 3;
+          ageMax = 5;
+        } else if (age === 6) {
+          ageMin = 6;
+          ageMax = 8;
+        } else if (age === 9) {
+          ageMin = 9;
+          ageMax = 12;
+        } else {
+          ageMin = age;
+          ageMax = age;
+        }
+      }
+      
+      // Filtrer les livres dont la plage d'âge se chevauche avec la plage sélectionnée
+      filtered = filtered.filter(book => {
+        const bookMin = book.age_group_min || 0;
+        const bookMax = book.age_group_max || 12;
+        // Chevauchement : le livre se chevauche si bookMin <= ageMax && bookMax >= ageMin
+        return bookMin <= ageMax && bookMax >= ageMin;
+      });
     }
 
     // Tri
@@ -127,10 +153,21 @@ function Home({ darkMode, setDarkMode }) {
   const loadData = async () => {
     try {
       setLoading(true);
+      // Convertir la plage d'âge en un seul nombre pour l'API (prendre le milieu de la plage)
+      let ageGroupForAPI = undefined;
+      if (selectedAge) {
+        if (selectedAge.includes('-')) {
+          const [min, max] = selectedAge.split('-').map(a => parseInt(a));
+          ageGroupForAPI = Math.floor((min + max) / 2); // Milieu de la plage
+        } else {
+          ageGroupForAPI = parseInt(selectedAge);
+        }
+      }
+      
       const [booksRes, categoriesRes] = await Promise.all([
         booksAPI.getPublishedBooks({
           category_id: selectedCategory || undefined,
-          age_group: selectedAge || undefined
+          age_group: ageGroupForAPI
         }),
         categoriesAPI.getAll()
       ]);
