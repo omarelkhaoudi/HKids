@@ -62,9 +62,9 @@ export function AuthProvider({ children }) {
     }
   };
 
-  const signup = async (username, password) => {
+  const signup = async (username, password, role = 'admin') => {
     try {
-      const response = await axios.post(`${API_URL}/auth/signup`, { username, password }, {
+      const response = await axios.post(`${API_URL}/auth/signup`, { username, password, role }, {
         timeout: 10000
       });
       

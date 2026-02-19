@@ -161,14 +161,13 @@ export async function initDatabase() {
     
     await client.query('BEGIN');
 
-    // Users table
+    // Users table (created first without kid_profile_id to avoid circular reference)
     await client.query(`
       CREATE TABLE IF NOT EXISTS users (
         id SERIAL PRIMARY KEY,
         username TEXT UNIQUE NOT NULL,
         password TEXT NOT NULL,
         role TEXT DEFAULT 'admin',
-        kid_profile_id INTEGER REFERENCES kids_profiles(id) ON DELETE SET NULL,
         created_at TIMESTAMPTZ DEFAULT NOW()
       );
     `);
@@ -237,6 +236,20 @@ export async function initDatabase() {
         updated_at TIMESTAMPTZ DEFAULT NOW(),
         UNIQUE(kid_profile_id, category_id)
       );
+    `);
+
+    // Add kid_profile_id column to users table if it doesn't exist (migration)
+    // This must be done AFTER kids_profiles table is created
+    await client.query(`
+      DO $$ 
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns 
+          WHERE table_name = 'users' AND column_name = 'kid_profile_id'
+        ) THEN
+          ALTER TABLE users ADD COLUMN kid_profile_id INTEGER REFERENCES kids_profiles(id) ON DELETE SET NULL;
+        END IF;
+      END $$;
     `);
 
     // Default categories

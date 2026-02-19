@@ -1,4 +1,5 @@
 import express from 'express';
+import bcrypt from 'bcryptjs';
 import { getDatabase } from '../database/init.js';
 import { verifyToken } from './auth.js';
 
@@ -297,7 +298,6 @@ router.post('/kids/:id/create-account', verifyToken, verifyParent, async (req, r
     }
 
     // Create the kid account
-    const bcrypt = await import('bcryptjs');
     const hashedPassword = bcrypt.hashSync(password, 10);
 
     const result = await pool.query(
@@ -308,7 +308,21 @@ router.post('/kids/:id/create-account', verifyToken, verifyParent, async (req, r
     res.status(201).json(result.rows[0]);
   } catch (err) {
     console.error('Error creating kid account:', err);
-    res.status(500).json({ error: 'Database error' });
+    // Log more details for debugging
+    if (err.code === '42703') {
+      return res.status(500).json({ 
+        error: 'Database schema error: kid_profile_id column may not exist. Please run database migrations.' 
+      });
+    }
+    if (err.code === '23503') {
+      return res.status(500).json({ 
+        error: 'Foreign key constraint error. Please check that the kid profile exists.' 
+      });
+    }
+    res.status(500).json({ 
+      error: err.message || 'Database error',
+      details: process.env.NODE_ENV === 'development' ? err.stack : undefined
+    });
   }
 });
 
