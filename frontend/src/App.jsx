@@ -6,6 +6,8 @@ import BookDetails from './pages/BookDetails';
 import AdminLogin from './pages/AdminLogin';
 import SignUp from './pages/SignUp';
 import AdminDashboard from './pages/AdminDashboard';
+import ParentDashboard from './pages/ParentDashboard';
+import KidsLibrary from './pages/KidsLibrary';
 import Favorites from './pages/Favorites';
 import History from './pages/History';
 import FeatureDetails from './pages/FeatureDetails';
@@ -49,6 +51,8 @@ function App() {
                 <Route path="/admin/login" element={<AdminLogin />} />
                 <Route path="/admin/signup" element={<SignUp />} />
                 <Route path="/admin/*" element={<AdminDashboard />} />
+                <Route path="/parent/*" element={<ParentDashboard />} />
+                <Route path="/kids" element={<KidsLibrary />} />
               </Routes>
               <ScrollToTop />
             </div>

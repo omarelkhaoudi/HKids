@@ -9,6 +9,7 @@ import { initDatabase } from './database/init.js';
 import booksRouter from './routes/books.js';
 import authRouter from './routes/auth.js';
 import categoriesRouter from './routes/categories.js';
+import parentalRouter from './routes/parental.js';
 import { errorHandler, notFound } from './middleware/errorHandler.js';
 import { requestLogger } from './middleware/logger.js';
 import { apiRateLimiter, authRateLimiter, resetRateLimit } from './middleware/rateLimiter.js';
@@ -24,10 +25,40 @@ const PORT = config.port;
 // Trust proxy (for rate limiting behind reverse proxy)
 app.set('trust proxy', 1);
 
-// Middleware
+// Middleware CORS
+// Normaliser l'origine CORS (enlever le slash final si présent)
+const normalizeOrigin = (origin) => {
+  if (!origin) return origin;
+  return origin.endsWith('/') ? origin.slice(0, -1) : origin;
+};
+
 app.use(cors({
-  origin: config.corsOrigin,
-  credentials: true
+  origin: (origin, callback) => {
+    // Si pas d'origine (requête same-origin), autoriser
+    if (!origin) {
+      callback(null, true);
+      return;
+    }
+
+    const allowedOrigin = normalizeOrigin(config.corsOrigin);
+    const normalizedRequestOrigin = normalizeOrigin(origin);
+
+    // En production, vérifier l'origine exacte
+    if (config.nodeEnv === 'production') {
+      if (normalizedRequestOrigin === allowedOrigin) {
+        callback(null, true);
+      } else {
+        console.log(`⚠️  CORS: Origine rejetée. Reçue: ${normalizedRequestOrigin}, Attendue: ${allowedOrigin}`);
+        callback(null, false);
+      }
+    } else {
+      // En développement, accepter toutes les origines
+      callback(null, true);
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
@@ -52,6 +83,7 @@ let dbInitialized = false;
 app.use('/api/auth', authRouter);
 app.use('/api/books', booksRouter);
 app.use('/api/categories', categoriesRouter);
+app.use('/api/parental', parentalRouter);
 
 // Log available routes for debugging
 console.log('📋 Available auth routes:');
@@ -88,19 +120,18 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// Reset rate limit (development only)
-if (config.nodeEnv === 'development') {
-  app.post('/api/reset-rate-limit', (req, res) => {
-    const ip = req.ip || req.connection.remoteAddress;
-    resetRateLimit(ip);
-    res.json({ 
-      success: true, 
-      message: 'Rate limit reset for your IP',
-      ip: ip
-    });
+// Reset rate limit endpoint (available in all environments)
+// This helps users who hit rate limits during testing
+app.post('/api/reset-rate-limit', (req, res) => {
+  const ip = req.ip || req.connection.remoteAddress;
+  resetRateLimit(ip);
+  res.json({ 
+    success: true, 
+    message: 'Rate limit reset for your IP',
+    ip: ip
   });
-  console.log('   POST /api/reset-rate-limit (dev only)');
-}
+});
+console.log('   POST /api/reset-rate-limit');
 
 // 404 handler (must be before error handler)
 app.use(notFound);

@@ -3,6 +3,7 @@ import multer from 'multer';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs-extra';
+import jwt from 'jsonwebtoken';
 import { getDatabase } from '../database/init.js';
 import { verifyToken } from './auth.js';
 
@@ -84,9 +85,26 @@ const handleMulterUpload = (uploadMiddleware) => {
   };
 };
 
-// Get all published books (public)
+// Get all published books (public or filtered by parental approvals for kids)
 router.get('/published', async (req, res) => {
   const { age_group, category_id } = req.query;
+  
+  // Check if user is authenticated and is a kid
+  const token = req.headers.authorization?.split(' ')[1];
+  let kidProfileId = null;
+  
+  if (token) {
+    try {
+      const JWT_SECRET = process.env.JWT_SECRET || 'hkids-secret-key-change-in-production';
+      const decoded = jwt.verify(token, JWT_SECRET);
+      
+      if (decoded.role === 'kid' && decoded.kid_profile_id) {
+        kidProfileId = decoded.kid_profile_id;
+      }
+    } catch (err) {
+      // Invalid token, continue as public user
+    }
+  }
 
   let query = `
     SELECT b.*, c.name as category_name 
@@ -96,6 +114,16 @@ router.get('/published', async (req, res) => {
   `;
   const params = [];
   let index = 1;
+
+  // If user is a kid, filter by approved categories
+  if (kidProfileId) {
+    query += ` AND b.category_id IN (
+      SELECT category_id FROM parent_approvals 
+      WHERE kid_profile_id = $${index} AND approved = TRUE
+    )`;
+    params.push(kidProfileId);
+    index += 1;
+  }
 
   if (age_group) {
     query += ` AND b.age_group_min <= $${index} AND b.age_group_max >= $${index + 1}`;
