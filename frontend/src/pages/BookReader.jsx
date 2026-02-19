@@ -295,16 +295,26 @@ function BookReader() {
     }
   }, [currentPage, book]);
 
-  // Nettoyer la synthèse vocale au démontage
+  // Enregistrer une session de lecture (durée + livre terminé ou non) au démontage
   useEffect(() => {
     return () => {
+      if (!book) return;
+
+      const durationSeconds = readingTime || Math.floor((Date.now() - startTime) / 1000);
+
+      const totalPages = book?.pages?.length || 0;
+      const finished = totalPages > 0 ? currentPage >= totalPages - 1 : false;
+
+      storage.addReadingSession(book.id, book.title, durationSeconds, finished);
+
+      // Nettoyer la synthèse vocale
       if (window.speechSynthesis) {
         window.speechSynthesis.cancel();
       }
       setIsPlaying(false);
       setSpeechUtterance(null);
     };
-  }, []);
+  }, [book, currentPage, readingTime, startTime]);
 
   useEffect(() => {
     const handleKeyPress = (e) => {

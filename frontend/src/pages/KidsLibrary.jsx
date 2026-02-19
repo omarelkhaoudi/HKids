@@ -6,6 +6,7 @@ import { useAuth } from '../context/AuthContext';
 import { useToast } from '../components/ToastProvider';
 import { BookGridSkeleton } from '../components/SkeletonLoader';
 import { getImageUrl } from '../utils/imageUrl';
+import { storage } from '../utils/storage';
 import { 
   BookIcon, SearchIcon, HeartIcon, HistoryIcon, 
   LogOutIcon, UserIcon
@@ -24,6 +25,7 @@ function KidsLibrary() {
   const [allBooks, setAllBooks] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
+  const [readingStats, setReadingStats] = useState(() => storage.getReadingStats());
 
   useEffect(() => {
     if (!user || user.role !== 'kid') {
@@ -31,6 +33,7 @@ function KidsLibrary() {
       return;
     }
     loadData();
+    setReadingStats(storage.getReadingStats());
   }, [user, navigate]);
 
   const loadData = async () => {
@@ -91,6 +94,19 @@ function KidsLibrary() {
   const isFavorite = (bookId) => {
     const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
     return favorites.includes(bookId);
+  };
+
+  const completedBooks = readingStats.completedBookIds?.length || 0;
+  const totalSessions = readingStats.totalSessions || 0;
+  const totalMinutes = Math.floor((readingStats.totalTimeSeconds || 0) / 60);
+  const totalHours = Math.floor(totalMinutes / 60);
+  const remainingMinutes = totalMinutes % 60;
+
+  const formatTime = () => {
+    if (totalHours > 0) {
+      return `${totalHours}h ${remainingMinutes}min`;
+    }
+    return `${totalMinutes} min`;
   };
 
   const containerVariants = {
@@ -166,6 +182,55 @@ function KidsLibrary() {
           </p>
         </div>
 
+        {/* Quick actions + stats */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-4xl mx-auto mb-4">
+          <button
+            onClick={() => {
+              const el = document.getElementById('kids-books-grid');
+              if (el) el.scrollIntoView({ behavior: 'smooth' });
+            }}
+            className="flex flex-col items-center justify-center gap-2 px-4 py-4 rounded-2xl bg-white/90 shadow-lg border-2 border-red-200 hover:border-red-400 hover:shadow-xl transition-all"
+          >
+            <BookIcon className="w-8 h-8 text-red-500" />
+            <span className="text-base font-bold text-neutral-800">Lire un livre</span>
+            <span className="text-xs text-neutral-500">Choisis un livre et commence à lire</span>
+          </button>
+          <Link
+            to="/favorites"
+            className="flex flex-col items-center justify-center gap-2 px-4 py-4 rounded-2xl bg-white/90 shadow-lg border-2 border-pink-200 hover:border-pink-400 hover:shadow-xl transition-all"
+          >
+            <HeartIcon className="w-8 h-8 text-pink-500" />
+            <span className="text-base font-bold text-neutral-800">Mes favoris</span>
+            <span className="text-xs text-neutral-500">Retrouve tes histoires préférées</span>
+          </Link>
+          <Link
+            to="/history"
+            className="flex flex-col items-center justify-center gap-2 px-4 py-4 rounded-2xl bg-white/90 shadow-lg border-2 border-purple-200 hover:border-purple-400 hover:shadow-xl transition-all"
+          >
+            <HistoryIcon className="w-8 h-8 text-purple-500" />
+            <span className="text-base font-bold text-neutral-800">Mon histoire</span>
+            <span className="text-xs text-neutral-500">Vois ce que tu as déjà lu</span>
+          </Link>
+        </div>
+
+        {/* Reading stats */}
+        {(completedBooks > 0 || totalSessions > 0) && (
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-4xl mx-auto">
+            <div className="bg-white/90 rounded-2xl p-4 shadow-md border border-green-100 flex flex-col items-center">
+              <span className="text-xs text-green-600 font-semibold mb-1">Livres terminés</span>
+              <span className="text-2xl font-bold text-green-700">{completedBooks}</span>
+            </div>
+            <div className="bg-white/90 rounded-2xl p-4 shadow-md border border-blue-100 flex flex-col items-center">
+              <span className="text-xs text-blue-600 font-semibold mb-1">Temps de lecture</span>
+              <span className="text-2xl font-bold text-blue-700">{formatTime()}</span>
+            </div>
+            <div className="bg-white/90 rounded-2xl p-4 shadow-md border border-orange-100 flex flex-col items-center">
+              <span className="text-xs text-orange-600 font-semibold mb-1">Sessions</span>
+              <span className="text-2xl font-bold text-orange-700">{totalSessions}</span>
+            </div>
+          </div>
+        )}
+
         {/* Search Bar */}
         <div className="max-w-2xl mx-auto mb-8">
           <div className="relative">
@@ -182,7 +247,7 @@ function KidsLibrary() {
       </motion.section>
 
       {/* Books Grid */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 pb-12">
+      <section id="kids-books-grid" className="max-w-7xl mx-auto px-4 sm:px-6 pb-12">
         {loading ? (
           <BookGridSkeleton />
         ) : books.length === 0 ? (
