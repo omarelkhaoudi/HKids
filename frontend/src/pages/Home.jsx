@@ -218,16 +218,12 @@ function Home({ darkMode, setDarkMode }) {
               <LockIcon className="w-4 h-4" />
               <span>{t.admin}</span>
             </Link>
-            <div className="ml-2 px-3 py-1.5 bg-white/10 rounded-lg backdrop-blur-sm">
-              <LanguageSelector />
-            </div>
+            <LanguageSelector />
           </nav>
 
           {/* Mobile Menu Button */}
           <div className="md:hidden flex items-center gap-2">
-            <div className="px-2 py-1.5 bg-white/10 rounded-lg backdrop-blur-sm">
-              <LanguageSelector />
-            </div>
+            <LanguageSelector />
             <motion.button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="p-2 text-neutral-100 hover:text-white hover:bg-neutral-800/80 rounded-lg transition-colors"
@@ -247,13 +243,22 @@ function Home({ darkMode, setDarkMode }) {
         {/* Mobile Menu */}
         <AnimatePresence>
           {mobileMenuOpen && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.3 }}
-              className="md:hidden bg-neutral-800/95 backdrop-blur-md border-t border-neutral-700"
-            >
+            <>
+              {/* Overlay pour fermer le menu */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setMobileMenuOpen(false)}
+                className="md:hidden fixed inset-0 bg-black/50 z-40"
+              />
+              <motion.div
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.3 }}
+                className="md:hidden fixed top-[73px] left-0 right-0 bg-neutral-800/95 backdrop-blur-md border-t border-neutral-700 z-50 max-h-[calc(100vh-73px)] overflow-y-auto"
+              >
               <nav className="px-4 py-4 space-y-2">
                 <Link 
                   to="/favorites" 
@@ -280,22 +285,51 @@ function Home({ darkMode, setDarkMode }) {
                   <span>{t.admin}</span>
                 </Link>
                 <div className="pt-2 border-t border-neutral-700">
-                  <LibraryMenu
-                    categories={categories}
-                    onCategorySelect={(cat) => {
-                      setSelectedCategory(cat);
-                      setMobileMenuOpen(false);
-                    }}
-                    onAgeSelect={(age) => {
-                      setSelectedAge(age);
-                      setMobileMenuOpen(false);
-                    }}
-                    selectedCategory={selectedCategory}
-                    selectedAge={selectedAge}
-                  />
+                  <div className="px-4 py-3">
+                    <button
+                      onClick={() => {
+                        document.getElementById('books-section')?.scrollIntoView({ behavior: 'smooth' });
+                        setMobileMenuOpen(false);
+                      }}
+                      className="w-full flex items-center gap-3 px-4 py-3 text-neutral-100 hover:text-white hover:bg-neutral-700/50 rounded-lg transition-colors"
+                    >
+                      <BookIcon className="w-5 h-5" />
+                      <span>Bibliothèque</span>
+                    </button>
+                  </div>
+                  {/* Boutons d'âge pour mobile */}
+                  <div className="px-4 pb-3 space-y-2">
+                    <p className="text-xs text-neutral-400 uppercase tracking-wide px-4 py-2">Filtrer par âge</p>
+                    {[
+                      { age: '3-5', label: '3-5 ans', color: 'bg-blue-500 hover:bg-blue-600' },
+                      { age: '6-8', label: '6-8 ans', color: 'bg-orange-500 hover:bg-orange-600' },
+                      { age: '9-12', label: '9-12 ans', color: 'bg-pink-500 hover:bg-pink-600' }
+                    ].map((ageBtn) => {
+                      const ageValue = ageBtn.age.includes('-') ? ageBtn.age.split('-')[0] : ageBtn.age;
+                      const isSelected = selectedAge === ageValue;
+                      return (
+                        <button
+                          key={ageBtn.age}
+                          onClick={() => {
+                            setSelectedAge(ageValue);
+                            setMobileMenuOpen(false);
+                            setTimeout(() => {
+                              document.getElementById('books-section')?.scrollIntoView({ behavior: 'smooth' });
+                            }, 100);
+                          }}
+                          className={`w-full px-4 py-2.5 rounded-lg text-white font-semibold text-sm transition-all ${
+                            isSelected ? ageBtn.color + ' ring-2 ring-offset-2 ring-offset-neutral-800 ring-white' : ageBtn.color
+                          }`}
+                        >
+                          {ageBtn.label}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
               </nav>
-            </motion.div>
+              </motion.div>
+            </>
           )}
         </AnimatePresence>
       </motion.header>
