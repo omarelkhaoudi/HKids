@@ -80,6 +80,64 @@ export const storage = {
     return item ? item.page : 0;
   },
 
+  // Statistiques de lecture (temps, livres terminés, sessions)
+  getReadingStats: () => {
+    try {
+      const raw = localStorage.getItem('hkids_reading_stats');
+      const defaults = {
+        totalTimeSeconds: 0,
+        totalSessions: 0,
+        completedBookIds: [],
+        lastSession: null,
+        sessions: []
+      };
+      if (!raw) return defaults;
+      const parsed = JSON.parse(raw);
+      return { ...defaults, ...parsed };
+    } catch {
+      return {
+        totalTimeSeconds: 0,
+        totalSessions: 0,
+        completedBookIds: [],
+        lastSession: null,
+        sessions: []
+      };
+    }
+  },
+
+  addReadingSession: (bookId, bookTitle, durationSeconds = 0, finished = false) => {
+    try {
+      const stats = storage.getReadingStats();
+      const safeDuration = Number.isFinite(durationSeconds) && durationSeconds > 0
+        ? Math.floor(durationSeconds)
+        : 0;
+
+      stats.totalTimeSeconds += safeDuration;
+      stats.totalSessions += 1;
+      stats.lastSession = new Date().toISOString();
+
+      if (finished) {
+        if (!stats.completedBookIds.includes(bookId)) {
+          stats.completedBookIds.push(bookId);
+        }
+      }
+
+      const session = {
+        bookId,
+        bookTitle,
+        durationSeconds: safeDuration,
+        finished,
+        date: stats.lastSession
+      };
+
+      stats.sessions = [session, ...(stats.sessions || [])].slice(0, 50);
+
+      localStorage.setItem('hkids_reading_stats', JSON.stringify(stats));
+    } catch (error) {
+      console.error('Error adding reading session:', error);
+    }
+  },
+
   // Préférences
   getPreferences: () => {
     try {
