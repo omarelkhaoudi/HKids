@@ -425,105 +425,169 @@ function BookReader() {
   };
 
   const playAudio = async () => {
-    if (!book || !book.pages || book.pages.length === 0) {
-      showToast('Cette page ne contient pas de texte à lire', 'info', 3000);
-      return;
-    }
+    try {
+      if (!book || !book.pages || book.pages.length === 0) {
+        showToast('Cette page ne contient pas de texte à lire', 'info', 3000);
+        return;
+      }
 
-    // Pour un PDF, on utilise toujours la première entrée de la base
-    // mais currentPage représente la page du PDF (0 à pdfTotalPages-1)
-    const firstPageData = book.pages[0];
-    const isPDF = firstPageData?.image_path?.toLowerCase().endsWith('.pdf');
-    const pageData = isPDF ? firstPageData : book.pages[currentPage];
-    
-    let textToRead = pageData.content;
+      // Vérifier si la synthèse vocale est disponible
+      if (!('speechSynthesis' in window)) {
+        showToast('La lecture audio n\'est pas disponible sur votre navigateur', 'error', 3000);
+        return;
+      }
 
-    // Si pas de texte dans la base de données, essayer d'extraire depuis le fichier
-    if (!textToRead && pageData.image_path) {
-      const fileUrl = getFileUrl(pageData.image_path);
-      const fileExtension = pageData.image_path.toLowerCase().split('.').pop();
+      // Arrêter toute lecture en cours
+      stopAudio();
+
+      // Pour un PDF, on utilise toujours la première entrée de la base
+      // mais currentPage représente la page du PDF (0 à pdfTotalPages-1)
+      const firstPageData = book.pages[0];
+      const isPDF = firstPageData?.image_path?.toLowerCase().endsWith('.pdf');
+      const pageData = isPDF ? firstPageData : book.pages[currentPage];
       
-      // Vérifier si c'est un PDF
-      if (fileExtension === 'pdf') {
-        const cacheKey = `${fileUrl}-${currentPage + 1}`;
-        
-        // Vérifier si on a déjà extrait le texte de cette page du PDF
-        if (extractedTexts[cacheKey]) {
-          textToRead = extractedTexts[cacheKey];
-        } else {
-          // Extraire le texte du PDF (pageNumber est 1-indexed)
-          textToRead = await extractTextFromPDF(fileUrl, currentPage + 1);
-          if (!textToRead) {
-            showToast('Impossible d\'extraire le texte de cette page du PDF', 'error', 3000);
-            return;
+      if (!pageData) {
+        showToast('Page introuvable', 'error', 3000);
+        return;
+      }
+
+      let textToRead = pageData.content;
+
+      // Si pas de texte dans la base de données, essayer d'extraire depuis le fichier
+      if (!textToRead && pageData.image_path) {
+        try {
+          const fileUrl = getFileUrl(pageData.image_path);
+          const fileExtension = pageData.image_path.toLowerCase().split('.').pop();
+          
+          // Vérifier si c'est un PDF
+          if (fileExtension === 'pdf') {
+            const cacheKey = `${fileUrl}-${currentPage + 1}`;
+            
+            // Vérifier si on a déjà extrait le texte de cette page du PDF
+            if (extractedTexts[cacheKey]) {
+              textToRead = extractedTexts[cacheKey];
+            } else {
+              // Extraire le texte du PDF (pageNumber est 1-indexed)
+              textToRead = await extractTextFromPDF(fileUrl, currentPage + 1);
+              if (textToRead) {
+                setExtractedTexts(prev => ({ ...prev, [cacheKey]: textToRead }));
+              }
+            }
+          } else {
+            // C'est une image, utiliser OCR
+            if (extractedTexts[fileUrl]) {
+              textToRead = extractedTexts[fileUrl];
+            } else {
+              // Extraire le texte avec OCR
+              textToRead = await extractTextFromImage(fileUrl);
+              if (textToRead) {
+                setExtractedTexts(prev => ({ ...prev, [fileUrl]: textToRead }));
+              }
+            }
           }
-        }
-      } else {
-        // C'est une image, utiliser OCR
-        if (extractedTexts[fileUrl]) {
-          textToRead = extractedTexts[fileUrl];
-        } else {
-          // Extraire le texte avec OCR
-          textToRead = await extractTextFromImage(fileUrl);
-          if (!textToRead) {
-            showToast('Impossible d\'extraire le texte de cette image', 'error', 3000);
-            return;
-          }
+        } catch (extractError) {
+          console.error('Erreur lors de l\'extraction du texte:', extractError);
+          showToast('Impossible d\'extraire le texte de cette page', 'error', 3000);
+          return;
         }
       }
-    }
 
-    if (!textToRead) {
-      showToast('Cette page ne contient pas de texte à lire', 'info', 3000);
-      return;
-    }
+      if (!textToRead || textToRead.trim().length === 0) {
+        showToast('Cette page ne contient pas de texte à lire', 'info', 3000);
+        return;
+      }
 
-    // Vérifier si la synthèse vocale est disponible
-    if (!('speechSynthesis' in window)) {
-      showToast('La lecture audio n\'est pas disponible sur votre navigateur', 'error', 3000);
-      return;
-    }
+      // Attendre que les voix soient chargées
+      const waitForVoices = () => {
+        return new Promise((resolve) => {
+          const voices = window.speechSynthesis.getVoices();
+          if (voices.length > 0) {
+            resolve(voices);
+          } else {
+            // Attendre que les voix soient chargées
+            const checkVoices = () => {
+              const loadedVoices = window.speechSynthesis.getVoices();
+              if (loadedVoices.length > 0) {
+                resolve(loadedVoices);
+              } else {
+                setTimeout(checkVoices, 100);
+              }
+            };
+            window.speechSynthesis.onvoiceschanged = checkVoices;
+            // Timeout après 2 secondes
+            setTimeout(() => {
+              if (window.speechSynthesis.onvoiceschanged === checkVoices) {
+                window.speechSynthesis.onvoiceschanged = null;
+              }
+              resolve(window.speechSynthesis.getVoices());
+            }, 2000);
+          }
+        });
+      };
 
-    // Arrêter toute lecture en cours
-    stopAudio();
+      const voices = await waitForVoices();
 
-    const utterance = new SpeechSynthesisUtterance(textToRead);
-    
-    // Configuration de la voix (essayer de trouver une voix française)
-    const voices = window.speechSynthesis.getVoices();
-    const frenchVoice = voices.find(voice => 
-      voice.lang.startsWith('fr') || voice.name.toLowerCase().includes('french')
-    );
-    
-    if (frenchVoice) {
-      utterance.voice = frenchVoice;
-      utterance.lang = 'fr-FR';
-    } else {
-      utterance.lang = 'fr-FR';
-    }
+      const utterance = new SpeechSynthesisUtterance(textToRead.trim());
+      
+      // Configuration de la voix (essayer de trouver une voix française)
+      const frenchVoice = voices.find(voice => 
+        voice.lang.startsWith('fr') || voice.name.toLowerCase().includes('french')
+      );
+      
+      if (frenchVoice) {
+        utterance.voice = frenchVoice;
+        utterance.lang = 'fr-FR';
+      } else {
+        utterance.lang = 'fr-FR';
+      }
 
-    utterance.rate = speechRate;
-    utterance.pitch = 1.0;
-    utterance.volume = 1.0;
+      utterance.rate = speechRate;
+      utterance.pitch = 1.0;
+      utterance.volume = 1.0;
 
-    utterance.onstart = () => {
-      setIsPlaying(true);
-    };
+      utterance.onstart = () => {
+        setIsPlaying(true);
+      };
 
-    utterance.onend = () => {
+      utterance.onend = () => {
+        setIsPlaying(false);
+        setSpeechUtterance(null);
+      };
+
+      utterance.onerror = (event) => {
+        console.error('Erreur de synthèse vocale:', event);
+        setIsPlaying(false);
+        setSpeechUtterance(null);
+        
+        // Messages d'erreur plus spécifiques
+        let errorMessage = 'Erreur lors de la lecture audio';
+        if (event.error === 'not-allowed') {
+          errorMessage = 'Permission refusée pour la lecture audio';
+        } else if (event.error === 'network') {
+          errorMessage = 'Erreur réseau lors de la lecture audio';
+        } else if (event.error === 'synthesis-failed') {
+          errorMessage = 'La synthèse vocale a échoué';
+        } else if (event.error === 'synthesis-unavailable') {
+          errorMessage = 'La synthèse vocale n\'est pas disponible';
+        }
+        
+        showToast(errorMessage, 'error', 3000);
+      };
+
+      setSpeechUtterance(utterance);
+      
+      // Vérifier que speechSynthesis est toujours disponible avant de parler
+      if (window.speechSynthesis && window.speechSynthesis.speak) {
+        window.speechSynthesis.speak(utterance);
+      } else {
+        showToast('La synthèse vocale n\'est plus disponible', 'error', 3000);
+      }
+    } catch (error) {
+      console.error('Erreur dans playAudio:', error);
       setIsPlaying(false);
       setSpeechUtterance(null);
-    };
-
-    utterance.onerror = (event) => {
-      console.error('Erreur de synthèse vocale:', event);
-      setIsPlaying(false);
-      setSpeechUtterance(null);
-      showToast('Erreur lors de la lecture audio', 'error', 3000);
-    };
-
-    setSpeechUtterance(utterance);
-    window.speechSynthesis.speak(utterance);
+      showToast('Une erreur est survenue lors de la lecture audio', 'error', 3000);
+    }
   };
 
   const toggleAudio = () => {
