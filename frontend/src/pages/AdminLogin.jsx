@@ -275,7 +275,7 @@ function AdminLogin() {
             </motion.button>
           </form>
 
-          <div className="relative z-10 mt-8 space-y-4">
+          <div className="relative z-10 mt-8">
             <div className="text-center">
               <p className="text-sm text-neutral-600">
                 Vous n'avez pas de compte ?{' '}
@@ -286,25 +286,6 @@ function AdminLogin() {
                   Créer un compte
                 </Link>
               </p>
-            </div>
-            <div className="bg-gradient-to-br from-red-50/50 via-pink-50/50 to-orange-50/50 rounded-xl p-5 border-2 border-red-200/50 shadow-inner">
-              <p className="text-sm font-bold text-neutral-800 mb-4">Identifiants de démo</p>
-              <div className="flex items-center justify-center gap-4">
-                <motion.div 
-                  whileHover={{ scale: 1.02, y: -2 }}
-                  className="bg-white px-5 py-3 rounded-xl border-2 border-red-200/50 shadow-md flex-1"
-                >
-                  <span className="text-xs text-neutral-600 block mb-1.5 font-semibold">Nom d'utilisateur</span>
-                  <p className="font-mono text-base font-bold text-neutral-900">admin</p>
-                </motion.div>
-                <motion.div 
-                  whileHover={{ scale: 1.02, y: -2 }}
-                  className="bg-white px-5 py-3 rounded-xl border-2 border-pink-200/50 shadow-md flex-1"
-                >
-                  <span className="text-xs text-neutral-600 block mb-1.5 font-semibold">Mot de passe</span>
-                  <p className="font-mono text-base font-bold text-neutral-900">admin123</p>
-                </motion.div>
-              </div>
             </div>
           </div>
         </motion.div>
