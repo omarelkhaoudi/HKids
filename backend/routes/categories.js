@@ -156,10 +156,24 @@ router.delete('/:id', verifyToken, asyncHandler(async (req, res) => {
     const bookCount = parseInt(booksCheck.rows[0].count);
     console.log('Books using this category:', bookCount);
     
+    // If category is used by books, set their category_id to NULL before deleting
     if (bookCount > 0) {
-      return res.status(400).json({ 
-        error: `Cannot delete category "${categoryCheck.rows[0].name}": it is being used by ${bookCount} book(s). Please remove or reassign books first.` 
-      });
+      try {
+        console.log(`Removing category from ${bookCount} book(s) before deletion...`);
+        await pool.query(
+          'UPDATE books SET category_id = NULL WHERE category_id = $1',
+          [categoryId]
+        );
+        console.log(`Successfully removed category from ${bookCount} book(s)`);
+      } catch (updateError) {
+        console.error('=== ERROR UPDATING BOOKS ===');
+        console.error('Error:', updateError);
+        console.error('Error code:', updateError.code);
+        console.error('Error message:', updateError.message);
+        return res.status(500).json({ 
+          error: `Error removing category from books: ${updateError.message || 'Unknown error'}` 
+        });
+      }
     }
     
     // Delete the category
