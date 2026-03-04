@@ -73,32 +73,64 @@ router.put('/:id', verifyToken, async (req, res) => {
 
 // Delete category (admin only)
 router.delete('/:id', verifyToken, async (req, res) => {
+  let pool;
   try {
     console.log('Delete category request:', {
       categoryId: req.params.id,
       userId: req.user?.id,
       username: req.user?.username,
-      role: req.user?.role
+      role: req.user?.role,
+      authHeader: req.headers.authorization ? 'present' : 'missing'
     });
     
-    const pool = getPool();
+    // Get database pool
+    try {
+      pool = getPool();
+    } catch (dbError) {
+      console.error('Database connection error:', dbError);
+      return res.status(500).json({ 
+        error: 'Database connection failed. Please check server logs.' 
+      });
+    }
+    
+    // Validate category ID
+    const categoryId = parseInt(req.params.id);
+    if (isNaN(categoryId)) {
+      return res.status(400).json({ error: 'Invalid category ID' });
+    }
     
     // Check if category exists
-    const categoryCheck = await pool.query(
-      'SELECT id, name FROM categories WHERE id = $1',
-      [req.params.id]
-    );
+    let categoryCheck;
+    try {
+      categoryCheck = await pool.query(
+        'SELECT id, name FROM categories WHERE id = $1',
+        [categoryId]
+      );
+    } catch (queryError) {
+      console.error('Error checking category:', queryError);
+      return res.status(500).json({ 
+        error: `Database query error: ${queryError.message}` 
+      });
+    }
     
     if (categoryCheck.rows.length === 0) {
-      console.log('Category not found:', req.params.id);
+      console.log('Category not found:', categoryId);
       return res.status(404).json({ error: 'Category not found' });
     }
     
     // Check if category is being used by any books
-    const booksCheck = await pool.query(
-      'SELECT COUNT(*) as count FROM books WHERE category_id = $1',
-      [req.params.id]
-    );
+    let booksCheck;
+    try {
+      booksCheck = await pool.query(
+        'SELECT COUNT(*) as count FROM books WHERE category_id = $1',
+        [categoryId]
+      );
+    } catch (queryError) {
+      console.error('Error checking books:', queryError);
+      return res.status(500).json({ 
+        error: `Database query error: ${queryError.message}` 
+      });
+    }
     
     const bookCount = parseInt(booksCheck.rows[0].count);
     console.log('Books using this category:', bookCount);
@@ -109,33 +141,47 @@ router.delete('/:id', verifyToken, async (req, res) => {
       });
     }
     
-    const result = await pool.query(
-      'DELETE FROM categories WHERE id = $1',
-      [req.params.id]
-    );
+    // Delete the category
+    let result;
+    try {
+      result = await pool.query(
+        'DELETE FROM categories WHERE id = $1',
+        [categoryId]
+      );
+    } catch (deleteError) {
+      console.error('Error deleting category:', deleteError);
+      
+      // Check for foreign key constraint violation
+      if (deleteError.code === '23503' || deleteError.message?.includes('foreign key constraint')) {
+        return res.status(400).json({ 
+          error: 'Cannot delete category: it is being used by one or more books. Please remove or reassign books first.' 
+        });
+      }
+      
+      return res.status(500).json({ 
+        error: `Database error: ${deleteError.message}` 
+      });
+    }
 
     if (result.rowCount === 0) {
       return res.status(404).json({ error: 'Category not found' });
     }
 
-    console.log('Category deleted successfully:', req.params.id);
+    console.log('Category deleted successfully:', categoryId);
     res.json({ message: 'Category deleted successfully' });
   } catch (err) {
-    console.error('Error deleting category:', err);
+    console.error('Unexpected error deleting category:', err);
+    console.error('Error stack:', err.stack);
     console.error('Error details:', {
       code: err.code,
       message: err.message,
-      detail: err.detail
+      detail: err.detail,
+      name: err.name
     });
     
-    // Check for foreign key constraint violation
-    if (err.code === '23503' || err.message?.includes('foreign key constraint')) {
-      return res.status(400).json({ 
-        error: 'Cannot delete category: it is being used by one or more books. Please remove or reassign books first.' 
-      });
-    }
-    
-    res.status(500).json({ error: err.message || 'Database error' });
+    res.status(500).json({ 
+      error: err.message || 'An unexpected error occurred while deleting the category' 
+    });
   }
 });
 

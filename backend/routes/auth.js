@@ -124,19 +124,33 @@ router.post('/login', async (req, res) => {
 
 // Verify token middleware
 export function verifyToken(req, res, next) {
-  const token = req.headers.authorization?.split(' ')[1];
-
-  if (!token) {
-    return res.status(401).json({ error: 'No token provided' });
-  }
-
-  jwt.verify(token, JWT_SECRET, (err, decoded) => {
-    if (err) {
-      return res.status(401).json({ error: 'Invalid token' });
+  try {
+    const authHeader = req.headers.authorization;
+    
+    if (!authHeader) {
+      console.log('No authorization header provided');
+      return res.status(401).json({ error: 'No token provided' });
     }
-    req.user = decoded;
-    next();
-  });
+
+    const token = authHeader.split(' ')[1];
+
+    if (!token) {
+      console.log('No token in authorization header');
+      return res.status(401).json({ error: 'No token provided' });
+    }
+
+    jwt.verify(token, JWT_SECRET, (err, decoded) => {
+      if (err) {
+        console.log('Token verification failed:', err.message);
+        return res.status(401).json({ error: 'Invalid or expired token' });
+      }
+      req.user = decoded;
+      next();
+    });
+  } catch (error) {
+    console.error('Error in verifyToken middleware:', error);
+    return res.status(500).json({ error: 'Authentication error' });
+  }
 }
 
 export default router;

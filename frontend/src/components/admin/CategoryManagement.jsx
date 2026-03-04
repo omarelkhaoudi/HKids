@@ -65,6 +65,9 @@ function CategoryManagement() {
       return;
     }
     
+    console.log('Attempting to delete category:', id);
+    console.log('Token present:', !!token);
+    
     try {
       const response = await categoriesAPI.delete(id);
       console.log('Delete response:', response);
@@ -74,21 +77,39 @@ function CategoryManagement() {
       console.error('Error response:', error.response);
       console.error('Error status:', error.response?.status);
       console.error('Error data:', error.response?.data);
+      console.error('Error message:', error.message);
+      console.error('Full error:', JSON.stringify(error, null, 2));
       
       let errorMessage = 'Error deleting category';
-      if (error.response?.data?.error) {
-        errorMessage = error.response.data.error;
-      } else if (error.response?.status === 401) {
-        errorMessage = 'Authentication failed. Please log in again.';
-        // Clear token and redirect to login
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        window.location.href = '/admin/login';
-        return;
-      } else if (error.response?.status === 403) {
-        errorMessage = 'You do not have permission to delete categories.';
-      } else if (error.message) {
-        errorMessage = error.message;
+      
+      if (error.response) {
+        // Server responded with error
+        if (error.response.data?.error) {
+          errorMessage = error.response.data.error;
+        } else if (error.response.status === 401) {
+          errorMessage = 'Authentication failed. Please log in again.';
+          // Clear token and redirect to login
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          window.location.href = '/admin/login';
+          return;
+        } else if (error.response.status === 403) {
+          errorMessage = 'You do not have permission to delete categories.';
+        } else if (error.response.status === 404) {
+          errorMessage = 'Category not found.';
+        } else if (error.response.status === 400) {
+          errorMessage = error.response.data?.error || 'Invalid request.';
+        } else if (error.response.status === 500) {
+          errorMessage = error.response.data?.error || 'Server error. Please try again later.';
+        } else {
+          errorMessage = `Error ${error.response.status}: ${error.response.statusText}`;
+        }
+      } else if (error.request) {
+        // Request made but no response
+        errorMessage = 'No response from server. Please check your connection.';
+      } else {
+        // Error setting up request
+        errorMessage = error.message || 'An error occurred while deleting the category.';
       }
       
       alert(errorMessage);
