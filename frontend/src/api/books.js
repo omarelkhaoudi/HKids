@@ -57,7 +57,12 @@ export const categoriesAPI = {
   },
 
   delete: (id) => {
-    return axios.delete(`${API_URL}/categories/${id}`);
+    const token = localStorage.getItem('token');
+    return axios.delete(`${API_URL}/categories/${id}`, {
+      headers: {
+        ...(token && { 'Authorization': `Bearer ${token}` })
+      }
+    });
   }
 };
 
