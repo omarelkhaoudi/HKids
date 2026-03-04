@@ -75,60 +75,80 @@ router.put('/:id', verifyToken, async (req, res) => {
 router.delete('/:id', verifyToken, async (req, res) => {
   let pool;
   try {
-    console.log('Delete category request:', {
-      categoryId: req.params.id,
-      userId: req.user?.id,
-      username: req.user?.username,
-      role: req.user?.role,
-      authHeader: req.headers.authorization ? 'present' : 'missing'
-    });
+    console.log('=== DELETE CATEGORY REQUEST ===');
+    console.log('Category ID:', req.params.id);
+    console.log('User ID:', req.user?.id);
+    console.log('Username:', req.user?.username);
+    console.log('Role:', req.user?.role);
+    console.log('Auth header:', req.headers.authorization ? 'present' : 'missing');
     
     // Get database pool
     try {
       pool = getPool();
+      console.log('Database pool obtained successfully');
     } catch (dbError) {
-      console.error('Database connection error:', dbError);
+      console.error('=== DATABASE CONNECTION ERROR ===');
+      console.error('Error:', dbError);
+      console.error('Error message:', dbError.message);
+      console.error('Error stack:', dbError.stack);
       return res.status(500).json({ 
-        error: 'Database connection failed. Please check server logs.' 
+        error: `Database connection failed: ${dbError.message || 'Unable to connect to database'}` 
       });
     }
     
     // Validate category ID
     const categoryId = parseInt(req.params.id);
     if (isNaN(categoryId)) {
-      return res.status(400).json({ error: 'Invalid category ID' });
+      console.log('Invalid category ID:', req.params.id);
+      return res.status(400).json({ error: `Invalid category ID: ${req.params.id}` });
     }
+    
+    console.log('Validated category ID:', categoryId);
     
     // Check if category exists
     let categoryCheck;
     try {
+      console.log('Checking if category exists...');
       categoryCheck = await pool.query(
         'SELECT id, name FROM categories WHERE id = $1',
         [categoryId]
       );
+      console.log('Category check result:', categoryCheck.rows.length > 0 ? 'found' : 'not found');
     } catch (queryError) {
-      console.error('Error checking category:', queryError);
+      console.error('=== ERROR CHECKING CATEGORY ===');
+      console.error('Error:', queryError);
+      console.error('Error code:', queryError.code);
+      console.error('Error message:', queryError.message);
+      console.error('Error detail:', queryError.detail);
       return res.status(500).json({ 
-        error: `Database query error: ${queryError.message}` 
+        error: `Database query error: ${queryError.message || 'Unknown error'}` 
       });
     }
     
     if (categoryCheck.rows.length === 0) {
       console.log('Category not found:', categoryId);
-      return res.status(404).json({ error: 'Category not found' });
+      return res.status(404).json({ error: `Category with ID ${categoryId} not found` });
     }
+    
+    console.log('Category found:', categoryCheck.rows[0].name);
     
     // Check if category is being used by any books
     let booksCheck;
     try {
+      console.log('Checking if category is used by books...');
       booksCheck = await pool.query(
         'SELECT COUNT(*) as count FROM books WHERE category_id = $1',
         [categoryId]
       );
+      console.log('Books check completed');
     } catch (queryError) {
-      console.error('Error checking books:', queryError);
+      console.error('=== ERROR CHECKING BOOKS ===');
+      console.error('Error:', queryError);
+      console.error('Error code:', queryError.code);
+      console.error('Error message:', queryError.message);
+      console.error('Error detail:', queryError.detail);
       return res.status(500).json({ 
-        error: `Database query error: ${queryError.message}` 
+        error: `Database query error: ${queryError.message || 'Unknown error'}` 
       });
     }
     
@@ -137,50 +157,66 @@ router.delete('/:id', verifyToken, async (req, res) => {
     
     if (bookCount > 0) {
       return res.status(400).json({ 
-        error: `Cannot delete category: it is being used by ${bookCount} book(s). Please remove or reassign books first.` 
+        error: `Cannot delete category "${categoryCheck.rows[0].name}": it is being used by ${bookCount} book(s). Please remove or reassign books first.` 
       });
     }
     
     // Delete the category
     let result;
     try {
+      console.log('Attempting to delete category...');
       result = await pool.query(
         'DELETE FROM categories WHERE id = $1',
         [categoryId]
       );
+      console.log('Delete query executed, rows affected:', result.rowCount);
     } catch (deleteError) {
-      console.error('Error deleting category:', deleteError);
+      console.error('=== ERROR DELETING CATEGORY ===');
+      console.error('Error:', deleteError);
+      console.error('Error code:', deleteError.code);
+      console.error('Error message:', deleteError.message);
+      console.error('Error detail:', deleteError.detail);
+      console.error('Error constraint:', deleteError.constraint);
       
       // Check for foreign key constraint violation
-      if (deleteError.code === '23503' || deleteError.message?.includes('foreign key constraint')) {
+      if (deleteError.code === '23503' || deleteError.message?.includes('foreign key constraint') || deleteError.constraint) {
         return res.status(400).json({ 
           error: 'Cannot delete category: it is being used by one or more books. Please remove or reassign books first.' 
         });
       }
       
       return res.status(500).json({ 
-        error: `Database error: ${deleteError.message}` 
+        error: `Database error while deleting: ${deleteError.message || 'Unknown error'}` 
       });
     }
 
     if (result.rowCount === 0) {
-      return res.status(404).json({ error: 'Category not found' });
+      console.log('No rows deleted (category not found)');
+      return res.status(404).json({ error: `Category with ID ${categoryId} not found` });
     }
 
-    console.log('Category deleted successfully:', categoryId);
+    console.log('=== CATEGORY DELETED SUCCESSFULLY ===');
+    console.log('Category ID:', categoryId);
     res.json({ message: 'Category deleted successfully' });
   } catch (err) {
-    console.error('Unexpected error deleting category:', err);
+    console.error('=== UNEXPECTED ERROR ===');
+    console.error('Error:', err);
+    console.error('Error name:', err.name);
+    console.error('Error message:', err.message);
     console.error('Error stack:', err.stack);
     console.error('Error details:', {
       code: err.code,
       message: err.message,
       detail: err.detail,
-      name: err.name
+      name: err.name,
+      constraint: err.constraint
     });
     
+    const errorMessage = err.message || 'An unexpected error occurred while deleting the category';
+    console.error('Returning error:', errorMessage);
+    
     res.status(500).json({ 
-      error: err.message || 'An unexpected error occurred while deleting the category' 
+      error: errorMessage
     });
   }
 });
