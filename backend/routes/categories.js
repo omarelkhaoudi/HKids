@@ -24,7 +24,7 @@ router.get('/', async (req, res) => {
     res.json(result.rows);
   } catch (err) {
     console.error('Error fetching categories:', err);
-    res.status(500).json({ error: 'Database error' });
+    res.status(500).json({ error: `Error fetching categories: ${err.message || 'Unknown error'}` });
   }
 });
 
@@ -45,7 +45,7 @@ router.post('/', verifyToken, async (req, res) => {
     res.status(201).json(result.rows[0]);
   } catch (err) {
     console.error('Error creating category:', err);
-    res.status(500).json({ error: 'Database error' });
+    res.status(500).json({ error: `Error creating category: ${err.message || 'Unknown error'}` });
   }
 });
 
@@ -67,12 +67,12 @@ router.put('/:id', verifyToken, async (req, res) => {
     res.json({ message: 'Category updated successfully' });
   } catch (err) {
     console.error('Error updating category:', err);
-    res.status(500).json({ error: 'Database error' });
+    res.status(500).json({ error: `Error updating category: ${err.message || 'Unknown error'}` });
   }
 });
 
 // Delete category (admin only)
-router.delete('/:id', verifyToken, async (req, res) => {
+router.delete('/:id', verifyToken, async (req, res, next) => {
   let pool;
   try {
     console.log('=== DELETE CATEGORY REQUEST ===');
@@ -212,10 +212,21 @@ router.delete('/:id', verifyToken, async (req, res) => {
       constraint: err.constraint
     });
     
-    const errorMessage = err.message || 'An unexpected error occurred while deleting the category';
-    console.error('Returning error:', errorMessage);
+    // Ensure we always return a specific error message, never generic "Database error"
+    let errorMessage = 'An unexpected error occurred while deleting the category';
     
-    res.status(500).json({ 
+    if (err.message && !err.message.toLowerCase().includes('database error')) {
+      errorMessage = err.message;
+    } else if (err.code) {
+      errorMessage = `Database operation failed (code: ${err.code})`;
+    } else if (err.name) {
+      errorMessage = `Error: ${err.name}`;
+    }
+    
+    console.error('Returning specific error:', errorMessage);
+    
+    // Return error directly with specific message
+    return res.status(500).json({ 
       error: errorMessage
     });
   }

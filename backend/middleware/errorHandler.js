@@ -64,9 +64,17 @@ export const errorHandler = (err, req, res, next) => {
     error = new AppError(message, 401);
   }
 
+  // Ensure we never return generic "Database error" - provide more specific messages
+  let errorMessage = error.message || 'Server Error';
+  
+  // If error message is too generic, provide more context
+  if (errorMessage === 'Database error' || errorMessage === 'Server Error') {
+    errorMessage = `An error occurred: ${errorMessage}. Please check server logs for details.`;
+  }
+  
   res.status(error.statusCode || 500).json({
     success: false,
-    error: error.message || 'Server Error',
+    error: errorMessage,
     ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
   });
 };
