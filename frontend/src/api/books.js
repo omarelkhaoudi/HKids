@@ -49,11 +49,23 @@ export const categoriesAPI = {
   },
 
   create: (data) => {
-    return axios.post(`${API_URL}/categories`, data);
+    const token = localStorage.getItem('token');
+    return axios.post(`${API_URL}/categories`, data, {
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token && { 'Authorization': `Bearer ${token}` })
+      }
+    });
   },
 
   update: (id, data) => {
-    return axios.put(`${API_URL}/categories/${id}`, data);
+    const token = localStorage.getItem('token');
+    return axios.put(`${API_URL}/categories/${id}`, data, {
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token && { 'Authorization': `Bearer ${token}` })
+      }
+    });
   },
 
   delete: (id) => {

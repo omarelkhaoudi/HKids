@@ -74,7 +74,25 @@ router.put('/:id', verifyToken, async (req, res) => {
 // Delete category (admin only)
 router.delete('/:id', verifyToken, async (req, res) => {
   try {
+    console.log('Delete category request:', {
+      categoryId: req.params.id,
+      userId: req.user?.id,
+      username: req.user?.username,
+      role: req.user?.role
+    });
+    
     const pool = getPool();
+    
+    // Check if category exists
+    const categoryCheck = await pool.query(
+      'SELECT id, name FROM categories WHERE id = $1',
+      [req.params.id]
+    );
+    
+    if (categoryCheck.rows.length === 0) {
+      console.log('Category not found:', req.params.id);
+      return res.status(404).json({ error: 'Category not found' });
+    }
     
     // Check if category is being used by any books
     const booksCheck = await pool.query(
@@ -82,9 +100,12 @@ router.delete('/:id', verifyToken, async (req, res) => {
       [req.params.id]
     );
     
-    if (parseInt(booksCheck.rows[0].count) > 0) {
+    const bookCount = parseInt(booksCheck.rows[0].count);
+    console.log('Books using this category:', bookCount);
+    
+    if (bookCount > 0) {
       return res.status(400).json({ 
-        error: 'Cannot delete category: it is being used by one or more books. Please remove or reassign books first.' 
+        error: `Cannot delete category: it is being used by ${bookCount} book(s). Please remove or reassign books first.` 
       });
     }
     
@@ -97,18 +118,24 @@ router.delete('/:id', verifyToken, async (req, res) => {
       return res.status(404).json({ error: 'Category not found' });
     }
 
+    console.log('Category deleted successfully:', req.params.id);
     res.json({ message: 'Category deleted successfully' });
   } catch (err) {
     console.error('Error deleting category:', err);
+    console.error('Error details:', {
+      code: err.code,
+      message: err.message,
+      detail: err.detail
+    });
     
     // Check for foreign key constraint violation
-    if (err.code === '23503' || err.message.includes('foreign key constraint')) {
+    if (err.code === '23503' || err.message?.includes('foreign key constraint')) {
       return res.status(400).json({ 
         error: 'Cannot delete category: it is being used by one or more books. Please remove or reassign books first.' 
       });
     }
     
-    res.status(500).json({ error: 'Database error' });
+    res.status(500).json({ error: err.message || 'Database error' });
   }
 });
 
