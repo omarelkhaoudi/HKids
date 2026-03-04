@@ -1,6 +1,7 @@
 import express from 'express';
 import { getDatabase } from '../database/init.js';
 import { verifyToken } from './auth.js';
+import { asyncHandler } from '../middleware/errorHandler.js';
 
 const router = express.Router();
 
@@ -71,8 +72,8 @@ router.put('/:id', verifyToken, async (req, res) => {
   }
 });
 
-// Delete category (admin only)
-router.delete('/:id', verifyToken, async (req, res, next) => {
+// Delete category (admin only) - wrapped with asyncHandler to catch all errors
+router.delete('/:id', verifyToken, asyncHandler(async (req, res) => {
   let pool;
   try {
     console.log('=== DELETE CATEGORY REQUEST ===');
@@ -230,7 +231,7 @@ router.delete('/:id', verifyToken, async (req, res, next) => {
       error: errorMessage
     });
   }
-});
+}));
 
 export default router;
 
