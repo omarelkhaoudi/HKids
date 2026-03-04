@@ -626,12 +626,11 @@ function Home({ darkMode, setDarkMode }) {
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
             {[
-              { label: t.age3to5, age: '3', desc: t.firstSteps, image: '/enfant3ans.webp' },
-              { label: t.age5to8, age: '5', desc: t.shortStories, image: encodeURI('/enfant 5 8ans.webp') },
-              { label: t.age8to10, age: '8', desc: t.adventures, image: '/enfant10ans.webp' },
-              { label: t.age10plus, age: '10', desc: t.novels, image: '/enfant12.webp' }
+              { label: t.age3to5, age: '3-5', desc: t.firstSteps, image: '/enfant3ans.webp' },
+              { label: t.age6to8, age: '6-8', desc: t.shortStories, image: encodeURI('/enfant 5 8ans.webp') },
+              { label: t.age9to12, age: '9-12', desc: t.adventures, image: '/enfant10ans.webp' }
             ].map((item, i) => (
               <motion.button
                 key={i}
