@@ -58,12 +58,39 @@ function CategoryManagement() {
   const handleDelete = async (id) => {
     if (!confirm('Are you sure you want to delete this category?')) return;
     
+    // Check if user is authenticated
+    const token = localStorage.getItem('token');
+    if (!token) {
+      alert('You must be logged in to delete categories. Please log in again.');
+      return;
+    }
+    
     try {
-      await categoriesAPI.delete(id);
+      const response = await categoriesAPI.delete(id);
+      console.log('Delete response:', response);
       loadCategories();
     } catch (error) {
       console.error('Error deleting category:', error);
-      const errorMessage = error.response?.data?.error || error.message || 'Error deleting category';
+      console.error('Error response:', error.response);
+      console.error('Error status:', error.response?.status);
+      console.error('Error data:', error.response?.data);
+      
+      let errorMessage = 'Error deleting category';
+      if (error.response?.data?.error) {
+        errorMessage = error.response.data.error;
+      } else if (error.response?.status === 401) {
+        errorMessage = 'Authentication failed. Please log in again.';
+        // Clear token and redirect to login
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        window.location.href = '/admin/login';
+        return;
+      } else if (error.response?.status === 403) {
+        errorMessage = 'You do not have permission to delete categories.';
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
       alert(errorMessage);
     }
   };
