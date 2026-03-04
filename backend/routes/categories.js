@@ -75,6 +75,19 @@ router.put('/:id', verifyToken, async (req, res) => {
 router.delete('/:id', verifyToken, async (req, res) => {
   try {
     const pool = getPool();
+    
+    // Check if category is being used by any books
+    const booksCheck = await pool.query(
+      'SELECT COUNT(*) as count FROM books WHERE category_id = $1',
+      [req.params.id]
+    );
+    
+    if (parseInt(booksCheck.rows[0].count) > 0) {
+      return res.status(400).json({ 
+        error: 'Cannot delete category: it is being used by one or more books. Please remove or reassign books first.' 
+      });
+    }
+    
     const result = await pool.query(
       'DELETE FROM categories WHERE id = $1',
       [req.params.id]
@@ -87,6 +100,14 @@ router.delete('/:id', verifyToken, async (req, res) => {
     res.json({ message: 'Category deleted successfully' });
   } catch (err) {
     console.error('Error deleting category:', err);
+    
+    // Check for foreign key constraint violation
+    if (err.code === '23503' || err.message.includes('foreign key constraint')) {
+      return res.status(400).json({ 
+        error: 'Cannot delete category: it is being used by one or more books. Please remove or reassign books first.' 
+      });
+    }
+    
     res.status(500).json({ error: 'Database error' });
   }
 });

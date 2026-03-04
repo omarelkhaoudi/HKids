@@ -63,7 +63,8 @@ function CategoryManagement() {
       loadCategories();
     } catch (error) {
       console.error('Error deleting category:', error);
-      alert('Error deleting category');
+      const errorMessage = error.response?.data?.error || error.message || 'Error deleting category';
+      alert(errorMessage);
     }
   };
 
