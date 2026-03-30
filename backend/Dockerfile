@@ -1,27 +1,15 @@
-# Backend Dockerfile for Fly.io
-FROM node:18-alpine
-
+# Étape 1 : Build
+FROM node:20-alpine AS builder
 WORKDIR /app
-
-# Copy package files
 COPY package*.json ./
-
-# Install dependencies (including dev dependencies for build if needed)
-RUN npm ci
-
-# Copy application code
+RUN npm ci --production
 COPY . .
 
-# Create necessary directories
-RUN mkdir -p uploads/books data
-
-# Expose port
-EXPOSE 3000
-
-# Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
-  CMD node -e "require('http').get('http://localhost:3000/api/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"
-
-# Start server
+# Étape 2 : Runtime
+FROM node:20-alpine AS runtime
+WORKDIR /app
+COPY --from=builder /app /app
+RUN mkdir -p /app/uploads_data
+ENV PORT=8080
+EXPOSE 8080
 CMD ["node", "server.js"]
-
