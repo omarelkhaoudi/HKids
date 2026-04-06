@@ -38,31 +38,27 @@ app.get('/', (req, res) => {
 
 app.use(cors({
   origin: (origin, callback) => {
-    // Si pas d'origine (requête same-origin), autoriser
-    if (!origin) {
-      callback(null, true);
-      return;
-    }
+    // Autoriser les requêtes sans origin (ex: Postman, same-origin)
+    if (!origin) return callback(null, true);
 
-    const allowedOrigin = normalizeOrigin(config.corsOrigin);
-    const normalizedRequestOrigin = normalizeOrigin(origin);
+    const normalizedOrigin = origin.endsWith('/') ? origin.slice(0, -1) : origin;
 
-    // En production, vérifier l'origine exacte
     if (config.nodeEnv === 'production') {
-      if (normalizedRequestOrigin === allowedOrigin) {
-        callback(null, true);
+      // En prod, on autorise uniquement les origines listées
+      if (allowedOrigins.map(o => o.replace(/\/$/, '')).includes(normalizedOrigin)) {
+        return callback(null, true);
       } else {
-        console.log(`⚠️  CORS: Origine rejetée. Reçue: ${normalizedRequestOrigin}, Attendue: ${allowedOrigin}`);
-        callback(null, false);
+        console.warn(`⚠️ CORS rejetée: ${normalizedOrigin}`);
+        return callback(new Error('Not allowed by CORS'));
       }
     } else {
-      // En développement, accepter toutes les origines
-      callback(null, true);
+      // En dev, on accepte toutes les origines
+      return callback(null, true);
     }
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization'],
 }));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
