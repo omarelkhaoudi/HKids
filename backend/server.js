@@ -109,16 +109,35 @@ app.use('/uploads', (req, res, next) => {
       const uploadsDir = path.join(__dirname, 'uploads', 'books');
       const files = fs.readdirSync(uploadsDir);
       
-      // Extract the timestamp prefix from the requested filename
+      // Extract timestamp prefix from requested filename
       const requestedPrefix = filename.split('-')[0];
       const fileExtension = filename.split('.').pop();
       
-      // Look for a file with the same timestamp prefix and extension
-      const matchingFile = files.find(file => {
+      // Look for a file with same timestamp prefix and extension
+      let matchingFile = files.find(file => {
         const filePrefix = file.split('-')[0];
         const fileExt = file.split('.').pop();
         return filePrefix === requestedPrefix && fileExt === fileExtension;
       });
+      
+      // If no exact match, try to find closest timestamp match
+      if (!matchingFile) {
+        const requestedTimestamp = parseInt(requestedPrefix);
+        const pdfFiles = files.filter(file => file.endsWith(`.${fileExtension}`));
+        
+        // Find the file with closest timestamp
+        matchingFile = pdfFiles.reduce((closest, file) => {
+          const fileTimestamp = parseInt(file.split('-')[0]);
+          const closestTimestamp = parseInt(closest.split('-')[0]);
+          
+          const fileDiff = Math.abs(fileTimestamp - requestedTimestamp);
+          const closestDiff = Math.abs(closestTimestamp - requestedTimestamp);
+          
+          return fileDiff < closestDiff ? file : closest;
+        });
+        
+        console.log(`🔧 No exact match, using closest timestamp: ${filename} → ${matchingFile}`);
+      }
       
       if (matchingFile) {
         const correctedPath = `/uploads/books/${matchingFile}`;
