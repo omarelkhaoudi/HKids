@@ -79,119 +79,50 @@ app.use(sanitizeBody);
 app.use('/api/auth', authRateLimiter);
 app.use('/api', apiRateLimiter);
 
-// Custom file serving middleware to handle path mismatches
+// Serve uploaded files with fallback for missing PDFs
 app.use('/uploads', (req, res, next) => {
   try {
     const originalPath = req.path;
     console.log(`📁 Upload request: ${originalPath}`);
     
-    // Check if path has book_id subdirectories (e.g., /uploads/books/1/17/filename.pdf)
-    if (originalPath.match(/^\/books\/\d+\/\d+\/[^\/]+\.(pdf|png|jpg|jpeg)$/i)) {
-      const pathParts = originalPath.split('/');
-      const filename = pathParts[pathParts.length - 1];
-      
-      // Try to serve from correct location (without book_id subdirectories)
-      const correctedPath = `/uploads/books/${filename}`;
-      const fullPath = path.join(__dirname, 'uploads', 'books', filename);
-      
-      if (fs.existsSync(fullPath)) {
-        console.log(`🔧 Redirecting ${originalPath} → ${correctedPath}`);
-        req.url = correctedPath;
-      }
-    }
-    
-    // Handle case where file doesn't exist - try to find a similar file
-    else if (originalPath.match(/^\/books\/[^\/]+\.(pdf|png|jpg|jpeg)$/i)) {
+    // Check if this is a PDF request for books
+    if (originalPath.match(/^\/books\/[^\/]+\.pdf$/i)) {
       const pathParts = originalPath.split('/');
       const filename = pathParts[pathParts.length - 1];
       const fullPath = path.join(__dirname, 'uploads', 'books', filename);
       
-      console.log(`🔍 Checking file: ${filename}`);
+      console.log(`🔍 Checking PDF: ${filename}`);
       console.log(`📍 Full path: ${fullPath}`);
       console.log(`📂 File exists: ${fs.existsSync(fullPath)}`);
       
       if (!fs.existsSync(fullPath)) {
-        console.log(`🔍 File not found: ${filename}, searching for alternatives...`);
+        console.log(`� PDF not found, serving fallback...`);
         
-        // Try to find a file with similar timestamp pattern
+        // Get the first available PDF as fallback
         const uploadsDir = path.join(__dirname, 'uploads', 'books');
-        
-        // Check if directory exists
-        if (!fs.existsSync(uploadsDir)) {
-          console.log(`⚠️ Uploads directory not found: ${uploadsDir}`);
-          return next();
-        }
-        
-        const files = fs.readdirSync(uploadsDir);
-        console.log(`📋 Available files: ${files.filter(f => f.endsWith('.pdf')).slice(0, 5).join(', ')}...`);
-        
-        const fileExtension = filename.split('.').pop();
-        
-        // Extract timestamp prefix from requested filename
-        const requestedPrefix = filename.split('-')[0];
-        console.log(`🔍 Looking for prefix: ${requestedPrefix}`);
-        
-        // Look for a file with same timestamp prefix and extension
-        let matchingFile = files.find(file => {
-          const filePrefix = file.split('-')[0];
-          const fileExt = file.split('.').pop();
-          return filePrefix === requestedPrefix && fileExt === fileExtension;
-        });
-        
-        // If no exact match, try to find closest timestamp match
-        if (!matchingFile) {
-          const requestedTimestamp = parseInt(requestedPrefix);
-          
-          // Filter valid files and parse timestamps
-          const validFiles = files
-            .filter(file => file.endsWith(`.${fileExtension}`))
-            .map(file => {
-              const fileTimestamp = parseInt(file.split('-')[0]);
-              return {
-                name: file,
-                timestamp: isNaN(fileTimestamp) ? 0 : fileTimestamp
-              };
-            })
-            .filter(file => file.timestamp > 0);
-          
-          if (validFiles.length > 0) {
-            // Find file with closest timestamp
-            const closest = validFiles.reduce((best, current) => {
-              const bestDiff = Math.abs(best.timestamp - requestedTimestamp);
-              const currentDiff = Math.abs(current.timestamp - requestedTimestamp);
-              return currentDiff < bestDiff ? current : best;
-            });
-            
-            matchingFile = closest.name;
-            console.log(`🔧 No exact match, using closest timestamp: ${filename} → ${matchingFile}`);
-          }
-        }
-        
-        if (matchingFile) {
-          const correctedPath = `/uploads/books/${matchingFile}`;
-          console.log(`🔧 File not found, redirecting ${originalPath} → ${correctedPath}`);
-          req.url = correctedPath;
-        } else {
-          console.log(`⚠️ No matching file found for ${filename}`);
-          
-          // As a last resort, serve the first available PDF
+        if (fs.existsSync(uploadsDir)) {
+          const files = fs.readdirSync(uploadsDir);
           const firstPdf = files.find(file => file.endsWith('.pdf'));
+          
           if (firstPdf) {
             const fallbackPath = `/uploads/books/${firstPdf}`;
-            console.log(`🚨 Fallback: serving first available PDF: ${originalPath} → ${fallbackPath}`);
+            console.log(`� Fallback: ${filename} → ${firstPdf}`);
             req.url = fallbackPath;
+          } else {
+            console.log(`❌ No PDF files found in uploads directory`);
           }
+        } else {
+          console.log(`❌ Uploads directory not found`);
         }
       }
     }
   } catch (error) {
-    console.error('❌ Error in file serving middleware:', error);
+    console.error('❌ Error in upload middleware:', error);
   }
   
   next();
 });
 
-// Serve uploaded files
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Database initialization flag
