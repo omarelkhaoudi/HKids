@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { API_URL } from '../config/api.js';
+import { buildApiUrl } from '../config/api.js';
 
 export const booksAPI = {
   getPublishedBooks: (filters = {}) => {
@@ -7,20 +7,20 @@ export const booksAPI = {
     if (filters.age_group) params.append('age_group', filters.age_group);
     if (filters.category_id) params.append('category_id', filters.category_id);
     
-    return axios.get(`${API_URL}/books/published?${params}`);
+    return axios.get(`${buildApiUrl('/books/published')}?${params}`);
   },
 
   getBook: (id) => {
-    return axios.get(`${API_URL}/books/${id}`);
+    return axios.get(buildApiUrl(`/books/${id}`));
   },
 
   getAllBooks: () => {
-    return axios.get(`${API_URL}/books`);
+    return axios.get(buildApiUrl('/books'));
   },
 
   createBook: (formData) => {
     const token = localStorage.getItem('token');
-    return axios.post(`${API_URL}/books`, formData, {
+    return axios.post(buildApiUrl('/books'), formData, {
       headers: { 
         'Content-Type': 'multipart/form-data',
         ...(token && { 'Authorization': `Bearer ${token}` })
@@ -30,7 +30,7 @@ export const booksAPI = {
 
   updateBook: (id, formData) => {
     const token = localStorage.getItem('token');
-    return axios.put(`${API_URL}/books/${id}`, formData, {
+    return axios.put(buildApiUrl(`/books/${id}`), formData, {
       headers: { 
         'Content-Type': 'multipart/form-data',
         ...(token && { 'Authorization': `Bearer ${token}` })
@@ -39,18 +39,18 @@ export const booksAPI = {
   },
 
   deleteBook: (id) => {
-    return axios.delete(`${API_URL}/books/${id}`);
+    return axios.delete(buildApiUrl(`/books/${id}`));
   }
 };
 
 export const categoriesAPI = {
   getAll: () => {
-    return axios.get(`${API_URL}/categories`);
+    return axios.get(buildApiUrl('/categories'));
   },
 
   create: (data) => {
     const token = localStorage.getItem('token');
-    return axios.post(`${API_URL}/categories`, data, {
+    return axios.post(buildApiUrl('/categories'), data, {
       headers: {
         'Content-Type': 'application/json',
         ...(token && { 'Authorization': `Bearer ${token}` })
@@ -60,7 +60,7 @@ export const categoriesAPI = {
 
   update: (id, data) => {
     const token = localStorage.getItem('token');
-    return axios.put(`${API_URL}/categories/${id}`, data, {
+    return axios.put(buildApiUrl(`/categories/${id}`), data, {
       headers: {
         'Content-Type': 'application/json',
         ...(token && { 'Authorization': `Bearer ${token}` })
@@ -70,7 +70,7 @@ export const categoriesAPI = {
 
   delete: (id) => {
     const token = localStorage.getItem('token');
-    return axios.delete(`${API_URL}/categories/${id}`, {
+    return axios.delete(buildApiUrl(`/categories/${id}`), {
       headers: {
         ...(token && { 'Authorization': `Bearer ${token}` })
       }

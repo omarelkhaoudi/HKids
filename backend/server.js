@@ -32,6 +32,10 @@ const normalizeOrigin = (origin) => {
   return origin.endsWith('/') ? origin.slice(0, -1) : origin;
 };
 
+app.get('/', (req, res) => {
+  res.send('✅ HKids backend is running!');
+});
+
 app.use(cors({
   origin: (origin, callback) => {
     // Si pas d'origine (requête same-origin), autoriser
