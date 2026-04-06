@@ -4,6 +4,7 @@ import config from './config/env.js';
 import express from 'express';
 import cors from 'cors';
 import path from 'path';
+import fs from 'fs-extra';
 import { fileURLToPath } from 'url';
 import { initDatabase } from './database/init.js';
 import booksRouter from './routes/books.js';
@@ -77,6 +78,28 @@ app.use(sanitizeBody);
 // Rate limiting
 app.use('/api/auth', authRateLimiter);
 app.use('/api', apiRateLimiter);
+
+// Custom file serving middleware to handle path mismatches
+app.use('/uploads', (req, res, next) => {
+  const originalPath = req.path;
+  
+  // Check if path has book_id subdirectories (e.g., /uploads/books/1/17/filename.pdf)
+  if (originalPath.match(/^\/books\/\d+\/\d+\/[^\/]+\.(pdf|png|jpg|jpeg)$/i)) {
+    const pathParts = originalPath.split('/');
+    const filename = pathParts[pathParts.length - 1];
+    
+    // Try to serve from the correct location (without book_id subdirectories)
+    const correctedPath = `/uploads/books/${filename}`;
+    const fullPath = path.join(__dirname, 'uploads', 'books', filename);
+    
+    if (fs.existsSync(fullPath)) {
+      console.log(`🔧 Redirecting ${originalPath} → ${correctedPath}`);
+      req.url = correctedPath;
+    }
+  }
+  
+  next();
+});
 
 // Serve uploaded files
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
