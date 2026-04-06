@@ -45,6 +45,11 @@ app.use(cors({
 
     if (config.nodeEnv === 'production') {
       // En prod, on autorise uniquement les origines listées
+      const allowedOrigins = [
+        'https://h-kids.vercel.app',
+        config.corsOrigin
+      ].filter(Boolean);
+      
       if (allowedOrigins.map(o => o.replace(/\/$/, '')).includes(normalizedOrigin)) {
         return callback(null, true);
       } else {
