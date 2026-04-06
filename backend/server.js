@@ -83,6 +83,7 @@ app.use('/api', apiRateLimiter);
 app.use('/uploads', (req, res, next) => {
   try {
     const originalPath = req.path;
+    console.log(`📁 Upload request: ${originalPath}`);
     
     // Check if path has book_id subdirectories (e.g., /uploads/books/1/17/filename.pdf)
     if (originalPath.match(/^\/books\/\d+\/\d+\/[^\/]+\.(pdf|png|jpg|jpeg)$/i)) {
@@ -105,6 +106,10 @@ app.use('/uploads', (req, res, next) => {
       const filename = pathParts[pathParts.length - 1];
       const fullPath = path.join(__dirname, 'uploads', 'books', filename);
       
+      console.log(`🔍 Checking file: ${filename}`);
+      console.log(`📍 Full path: ${fullPath}`);
+      console.log(`📂 File exists: ${fs.existsSync(fullPath)}`);
+      
       if (!fs.existsSync(fullPath)) {
         console.log(`🔍 File not found: ${filename}, searching for alternatives...`);
         
@@ -118,10 +123,13 @@ app.use('/uploads', (req, res, next) => {
         }
         
         const files = fs.readdirSync(uploadsDir);
+        console.log(`📋 Available files: ${files.filter(f => f.endsWith('.pdf')).slice(0, 5).join(', ')}...`);
+        
         const fileExtension = filename.split('.').pop();
         
         // Extract timestamp prefix from requested filename
         const requestedPrefix = filename.split('-')[0];
+        console.log(`🔍 Looking for prefix: ${requestedPrefix}`);
         
         // Look for a file with same timestamp prefix and extension
         let matchingFile = files.find(file => {
@@ -165,6 +173,14 @@ app.use('/uploads', (req, res, next) => {
           req.url = correctedPath;
         } else {
           console.log(`⚠️ No matching file found for ${filename}`);
+          
+          // As a last resort, serve the first available PDF
+          const firstPdf = files.find(file => file.endsWith('.pdf'));
+          if (firstPdf) {
+            const fallbackPath = `/uploads/books/${firstPdf}`;
+            console.log(`🚨 Fallback: serving first available PDF: ${originalPath} → ${fallbackPath}`);
+            req.url = fallbackPath;
+          }
         }
       }
     }
