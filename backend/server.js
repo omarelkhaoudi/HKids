@@ -85,31 +85,32 @@ app.use('/uploads', (req, res, next) => {
     const originalPath = req.path;
     console.log(`📁 Upload request: ${originalPath}`);
     
-    // Check if this is a PDF request for books
-    if (originalPath.match(/^\/books\/[^\/]+\.pdf$/i)) {
+    // Check if this is a file request for books (PDF, PNG, JPG, etc.)
+    if (originalPath.match(/^\/books\/[^\/]+\.(pdf|png|jpg|jpeg)$/i)) {
       const pathParts = originalPath.split('/');
       const filename = pathParts[pathParts.length - 1];
       const fullPath = path.join(__dirname, 'uploads', 'books', filename);
       
-      console.log(`🔍 Checking PDF: ${filename}`);
+      console.log(`🔍 Checking file: ${filename}`);
       console.log(`📍 Full path: ${fullPath}`);
       console.log(`📂 File exists: ${fs.existsSync(fullPath)}`);
       
       if (!fs.existsSync(fullPath)) {
-        console.log(`� PDF not found, serving fallback...`);
+        console.log(`🚨 File not found, serving fallback...`);
         
-        // Get the first available PDF as fallback
+        // Get the first available file with same extension as fallback
         const uploadsDir = path.join(__dirname, 'uploads', 'books');
         if (fs.existsSync(uploadsDir)) {
           const files = fs.readdirSync(uploadsDir);
-          const firstPdf = files.find(file => file.endsWith('.pdf'));
+          const fileExtension = filename.split('.').pop().toLowerCase();
+          const firstFile = files.find(file => file.toLowerCase().endsWith(`.${fileExtension}`));
           
-          if (firstPdf) {
-            const fallbackPath = `/uploads/books/${firstPdf}`;
-            console.log(`� Fallback: ${filename} → ${firstPdf}`);
+          if (firstFile) {
+            const fallbackPath = `/uploads/books/${firstFile}`;
+            console.log(`🔄 Fallback: ${filename} → ${firstFile}`);
             req.url = fallbackPath;
           } else {
-            console.log(`❌ No PDF files found in uploads directory`);
+            console.log(`❌ No ${fileExtension} files found in uploads directory`);
           }
         } else {
           console.log(`❌ Uploads directory not found`);
