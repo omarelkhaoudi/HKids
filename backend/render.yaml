@@ -11,6 +11,8 @@ services:
         value: production
       - key: PORT
         value: 3000
-      # Les autres variables (DB_*, JWT_SECRET, CORS_ORIGIN) doivent être ajoutées manuellement dans le Dashboard Render
+      - key: CORS_ORIGIN
+        value: https://h-kids.vercel.app
+      # Les autres variables (DB_*, JWT_SECRET) doivent être ajoutées manuellement dans le Dashboard Render
       # car elles contiennent des valeurs sensibles
 
