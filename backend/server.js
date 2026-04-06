@@ -98,6 +98,38 @@ app.use('/uploads', (req, res, next) => {
     }
   }
   
+  // Handle case where file doesn't exist - try to find a similar file
+  else if (originalPath.match(/^\/books\/[^\/]+\.(pdf|png|jpg|jpeg)$/i)) {
+    const pathParts = originalPath.split('/');
+    const filename = pathParts[pathParts.length - 1];
+    const fullPath = path.join(__dirname, 'uploads', 'books', filename);
+    
+    if (!fs.existsSync(fullPath)) {
+      // Try to find a file with similar timestamp pattern
+      const uploadsDir = path.join(__dirname, 'uploads', 'books');
+      const files = fs.readdirSync(uploadsDir);
+      
+      // Extract the timestamp prefix from the requested filename
+      const requestedPrefix = filename.split('-')[0];
+      const fileExtension = filename.split('.').pop();
+      
+      // Look for a file with the same timestamp prefix and extension
+      const matchingFile = files.find(file => {
+        const filePrefix = file.split('-')[0];
+        const fileExt = file.split('.').pop();
+        return filePrefix === requestedPrefix && fileExt === fileExtension;
+      });
+      
+      if (matchingFile) {
+        const correctedPath = `/uploads/books/${matchingFile}`;
+        console.log(`🔧 File not found, redirecting ${originalPath} → ${correctedPath}`);
+        req.url = correctedPath;
+      } else {
+        console.log(`⚠️  No matching file found for ${filename}`);
+      }
+    }
+  }
+  
   next();
 });
 
