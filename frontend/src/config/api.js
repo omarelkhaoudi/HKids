@@ -2,13 +2,15 @@
 
 export const API_URL = import.meta.env.VITE_API_URL?.replace(/\/+$/, '') || 'https://hkids.onrender.com';
 
-// ❌ On supprime complètement le /api
+// ✅ On restore le /api prefix car les routes backend sont sous /api/
 const API_BASE = API_URL;
 
 export function buildApiUrl(path) {
   if (!path) return API_BASE;
   const sanitizedPath = path.startsWith('/') ? path : `/${path}`;
-  return `${API_BASE}${sanitizedPath}`;
+  // Add /api prefix if not already present
+  const apiPath = sanitizedPath.startsWith('/api') ? sanitizedPath : `/api${sanitizedPath}`;
+  return `${API_BASE}${apiPath}`;
 }
 
 export async function loginRequest(username, password) {
