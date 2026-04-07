@@ -98,19 +98,28 @@ app.use('/uploads', (req, res, next) => {
       if (!fs.existsSync(fullPath)) {
         console.log(`🚨 File not found, serving fallback...`);
         
-        // Get the first available file with same extension as fallback
+        // Get the first available file as fallback (any file type)
         const uploadsDir = path.join(__dirname, 'uploads', 'books');
         if (fs.existsSync(uploadsDir)) {
           const files = fs.readdirSync(uploadsDir);
+          console.log(`📋 Available files: ${files.slice(0, 5).join(', ')}...`);
+          
+          // Try to find file with same extension first
           const fileExtension = filename.split('.').pop().toLowerCase();
-          const firstFile = files.find(file => file.toLowerCase().endsWith(`.${fileExtension}`));
+          let firstFile = files.find(file => file.toLowerCase().endsWith(`.${fileExtension}`));
+          
+          // If no file with same extension, get any available file
+          if (!firstFile && files.length > 0) {
+            firstFile = files[0];
+            console.log(`⚠️ No ${fileExtension} files found, using first available file`);
+          }
           
           if (firstFile) {
             const fallbackPath = `/uploads/books/${firstFile}`;
             console.log(`🔄 Fallback: ${filename} → ${firstFile}`);
             req.url = fallbackPath;
           } else {
-            console.log(`❌ No ${fileExtension} files found in uploads directory`);
+            console.log(`❌ No files found in uploads directory`);
           }
         } else {
           console.log(`❌ Uploads directory not found`);
