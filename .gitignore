@@ -19,8 +19,8 @@ build/
 backend/data/
 
 # Uploads (keep structure, ignore files)
-backend/uploads/books/*
-!backend/uploads/books/.gitkeep
+# backend/uploads/books/*
+# !backend/uploads/books/.gitkeep
 backend/uploads/covers/*
 !backend/uploads/covers/.gitkeep
 
