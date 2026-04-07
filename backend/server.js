@@ -79,7 +79,7 @@ app.use(sanitizeBody);
 app.use('/api/auth', authRateLimiter);
 app.use('/api', apiRateLimiter);
 
-// Serve uploaded files with fallback for missing PDFs
+// Serve uploaded files with fallback for missing files (PDF, PNG, JPG, etc.)
 app.use('/uploads', (req, res, next) => {
   try {
     const originalPath = req.path;
