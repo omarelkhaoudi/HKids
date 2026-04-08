@@ -180,6 +180,24 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+// Uploads status (useful when Render Shell is unavailable)
+app.get('/api/uploads-status', (req, res) => {
+  try {
+    const booksDir = path.join(__dirname, 'uploads', 'books');
+    const booksDirExists = fs.existsSync(booksDir);
+    const booksFileCount = booksDirExists ? fs.readdirSync(booksDir).length : 0;
+
+    res.json({
+      booksDirExists,
+      booksFileCount
+    });
+  } catch (err) {
+    res.status(500).json({
+      error: 'uploads_status_failed'
+    });
+  }
+});
+
 // Reset rate limit endpoint (available in all environments)
 // This helps users who hit rate limits during testing
 app.post('/api/reset-rate-limit', (req, res) => {
