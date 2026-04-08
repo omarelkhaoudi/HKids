@@ -51,7 +51,7 @@ export const config = {
   databaseUrl: process.env.DATABASE_URL,
   
   // CORS
-  corsOrigin: process.env.CORS_ORIGIN || 'https://h-kids.vercel.app',
+  corsOrigin: process.env.CORS_ORIGIN || 'https://hkids.vercel.app',
   
   // File Upload
   maxFileSize: parseInt(process.env.MAX_FILE_SIZE || '5242880', 10), // 5MB

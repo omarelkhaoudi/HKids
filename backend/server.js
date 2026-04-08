@@ -48,6 +48,7 @@ app.use(cors({
       // En prod, on autorise uniquement les origines listées
       const allowedOrigins = [
         'https://h-kids.vercel.app',
+        'https://hkids.vercel.app',
         config.corsOrigin
       ].filter(Boolean);
       
