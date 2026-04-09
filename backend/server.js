@@ -115,7 +115,8 @@ app.use('/uploads', (req, res, next) => {
     console.log(`📁 Upload request: ${originalPath}`);
     
     // Check if this is a file request for books (PDF, PNG, JPG, etc.)
-    if (originalPath.match(/^\/books\/[^\/]+\.(pdf|png|jpg|jpeg)$/i)) {
+    if (originalPath.match(/^\/books\/[^\/]+\.(pdf|png|jpg|jpeg)$/i) || 
+        originalPath.match(/^\/uploads\/books\/[^\/]+\.(pdf|png|jpg|jpeg)$/i)) {
       const pathParts = originalPath.split('/');
       const filename = pathParts[pathParts.length - 1];
       const fullPath = path.join(__dirname, 'uploads', 'books', filename);
