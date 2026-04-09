@@ -1,6 +1,10 @@
 // IMPORTANT: Charger les variables d'environnement EN PREMIER
 import config from './config/env.js';
 
+import dotenv from 'dotenv';
+dotenv.config();
+
+
 import express from 'express';
 import cors from 'cors';
 import path from 'path';
@@ -35,6 +39,30 @@ const normalizeOrigin = (origin) => {
 
 app.get('/', (req, res) => {
   res.send('✅ HKids backend is running!');
+});
+
+app.get('/api/test-supabase', async (req, res) => {
+  try {
+    const { data, error } = await supabase.from('users').select('*').limit(5);
+
+    if (error) {
+      return res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+
+    res.json({
+      success: true,
+      data
+    });
+
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      error: err.message
+    });
+  }
 });
 
 app.use(cors({
