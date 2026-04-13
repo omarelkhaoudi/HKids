@@ -109,60 +109,58 @@ app.use('/api/auth', authRateLimiter);
 app.use('/api', apiRateLimiter);
 
 // Serve uploaded files with fallback for missing files (PDF, PNG, JPG, etc.)
-app.use('/uploads', (req, res, next) => {
+// Mount specific book file handler BEFORE static to handle fallbacks
+app.get('/uploads/books/:filename', (req, res, next) => {
   try {
-    const originalPath = req.path;
-    console.log(`📁 Upload request: ${originalPath}`);
+    const filename = req.params.filename;
+    const fullPath = path.join(__dirname, 'uploads', 'books', filename);
     
-    // Check if this is a file request for books (PDF, PNG, JPG, etc.)
-    if (originalPath.match(/^\/books\/[^\/]+\.(pdf|png|jpg|jpeg)$/i) || 
-        originalPath.match(/^\/uploads\/books\/[^\/]+\.(pdf|png|jpg|jpeg)$/i)) {
-      const pathParts = originalPath.split('/');
-      const filename = pathParts[pathParts.length - 1];
-      const fullPath = path.join(__dirname, 'uploads', 'books', filename);
-      
-      console.log(`🔍 Checking file: ${filename}`);
-      console.log(`📍 Full path: ${fullPath}`);
-      console.log(`📂 File exists: ${fs.existsSync(fullPath)}`);
-      
-      if (!fs.existsSync(fullPath)) {
-        console.log(`🚨 File not found, serving fallback...`);
-        
-        // Get the first available file as fallback (any file type)
-        const uploadsDir = path.join(__dirname, 'uploads', 'books');
-        if (fs.existsSync(uploadsDir)) {
-          const files = fs.readdirSync(uploadsDir);
-          console.log(`📋 Available files: ${files.slice(0, 5).join(', ')}...`);
-          
-          // Try to find file with same extension first
-          const fileExtension = filename.split('.').pop().toLowerCase();
-          let firstFile = files.find(file => file.toLowerCase().endsWith(`.${fileExtension}`));
-          
-          // If no file with same extension, get any available file
-          if (!firstFile && files.length > 0) {
-            firstFile = files[0];
-            console.log(`⚠️ No ${fileExtension} files found, using first available file`);
-          }
-          
-          if (firstFile) {
-            const fallbackPath = `/uploads/books/${firstFile}`;
-            console.log(`🔄 Fallback: ${filename} → ${firstFile}`);
-            req.url = fallbackPath;
-          } else {
-            console.log(`❌ No files found in uploads directory`);
-          }
-        } else {
-          console.log(`❌ Uploads directory not found`);
-        }
-      }
+    console.log(`� Book file request: ${filename}`);
+    console.log(`📂 File exists: ${fs.existsSync(fullPath)}`);
+    
+    // If file exists, serve it directly
+    if (fs.existsSync(fullPath)) {
+      return res.sendFile(fullPath);
     }
+    
+    // File not found - serve fallback
+    console.log(`🚨 File not found: ${filename}, looking for fallback...`);
+    
+    const uploadsDir = path.join(__dirname, 'uploads', 'books');
+    if (!fs.existsSync(uploadsDir)) {
+      console.log(`❌ Uploads directory not found`);
+      return res.status(404).json({ error: 'Uploads directory not found' });
+    }
+    
+    const files = fs.readdirSync(uploadsDir);
+    console.log(`📋 Available files: ${files.slice(0, 5).join(', ')}...`);
+    
+    if (files.length === 0) {
+      console.log(`❌ No files found in uploads directory`);
+      return res.status(404).json({ error: 'No files available' });
+    }
+    
+    // Try to find file with same extension first
+    const fileExtension = filename.split('.').pop().toLowerCase();
+    let fallbackFile = files.find(file => file.toLowerCase().endsWith(`.${fileExtension}`));
+    
+    // If no file with same extension, get first available file
+    if (!fallbackFile) {
+      fallbackFile = files[0];
+      console.log(`⚠️ No ${fileExtension} files found, using: ${fallbackFile}`);
+    }
+    
+    console.log(`🔄 Fallback: ${filename} → ${fallbackFile}`);
+    const fallbackPath = path.join(__dirname, 'uploads', 'books', fallbackFile);
+    return res.sendFile(fallbackPath);
+    
   } catch (error) {
-    console.error('❌ Error in upload middleware:', error);
+    console.error('❌ Error serving book file:', error);
+    return res.status(500).json({ error: 'Server error' });
   }
-  
-  next();
 });
 
+// Static files for other uploads (non-books)
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Database initialization flag
