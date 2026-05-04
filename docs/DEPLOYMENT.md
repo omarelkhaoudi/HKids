@@ -271,7 +271,7 @@ JWT_SECRET=your-secret-key-change-this
 
 ### Migration vers PostgreSQL
 
-1. **Installer PostgreSQL**
+1. **Installer PostgreSQL** (optionnel si vous utilisez Neon)
 
 2. **Créer la base de données:**
 ```sql
@@ -292,6 +292,13 @@ const { Pool } = pg;
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL
 });
+```
+
+5. **Configurer Neon**
+
+Si vous utilisez Neon, remplacez `DATABASE_URL` par votre URL Neon complète, par exemple :
+```env
+DATABASE_URL=postgresql://user:password@xxxxxx.neon.tech/dbname?sslmode=require
 ```
 
 ## Sécurité en Production
