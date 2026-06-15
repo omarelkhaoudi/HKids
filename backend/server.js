@@ -11,6 +11,7 @@ import path from 'path';
 import fs from 'fs-extra';
 import { fileURLToPath } from 'url';
 import { initDatabase } from './database/init.js';
+import supabase from './config/supabase.js';
 import booksRouter from './routes/books.js';
 import authRouter from './routes/auth.js';
 import categoriesRouter from './routes/categories.js';
@@ -43,6 +44,13 @@ app.get('/', (req, res) => {
 
 app.get('/api/test-supabase', async (req, res) => {
   try {
+    if (!supabase) {
+      return res.status(503).json({
+        success: false,
+        error: 'Supabase is not configured'
+      });
+    }
+
     const { data, error } = await supabase.from('users').select('*').limit(5);
 
     if (error) {
@@ -108,9 +116,32 @@ app.use(sanitizeBody);
 app.use('/api/auth', authRateLimiter);
 app.use('/api', apiRateLimiter);
 
-// Serve uploaded files with fallback for missing files (PDF, PNG, JPG, etc.)
-// Mount specific book file handler BEFORE static to handle fallbacks
-app.get('/uploads/books/:filename', (req, res, next) => {
+// Serve book uploads without fallback. If a file is missing, returning 404 is
+// required so the reader never displays unrelated old content.
+app.get('/uploads/books/:filename', (req, res) => {
+  try {
+    const filename = req.params.filename;
+    const fullPath = path.join(__dirname, 'uploads', 'books', filename);
+
+    console.log('Book ID:', req.query.book_id || null);
+    console.log('[uploads] Book file request:', filename);
+    console.log('[uploads] File exists:', fs.existsSync(fullPath));
+
+    if (fs.existsSync(fullPath)) {
+      return res.sendFile(fullPath);
+    }
+
+    console.warn('[uploads] File not found:', filename);
+    return res.status(404).json({ error: 'Book file not found' });
+  } catch (error) {
+    console.error('[uploads] Error serving book file:', error);
+    return res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Legacy fallback kept disabled: serving another book file for a missing path
+// corrupts the reader experience and is unsafe in serverless production.
+app.get('/__disabled_upload_fallback/books/:filename', (req, res, next) => {
   try {
     const filename = req.params.filename;
     const fullPath = path.join(__dirname, 'uploads', 'books', filename);

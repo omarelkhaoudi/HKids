@@ -360,7 +360,11 @@ function BookReader() {
   const loadBook = async () => {
     try {
       setLoading(true);
+      console.log("Book ID:", id);
       const response = await booksAPI.getBook(id);
+      console.log("API response:", response.data);
+      console.log("Book loaded:", response.data);
+      console.log("Story loaded:", response.data);
       setBook(response.data);
       
       const pageParam = searchParams.get('page');

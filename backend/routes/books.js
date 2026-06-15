@@ -4,6 +4,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs-extra';
 import jwt from 'jsonwebtoken';
+import supabase from '../config/supabase.js';
 import { getDatabase } from '../database/init.js';
 import { verifyToken } from './auth.js';
 
@@ -12,7 +13,13 @@ const __dirname = path.dirname(__filename);
 
 const router = express.Router();
 
-// Helper function to get database pool safely
+router.use((req, res, next) => {
+  res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.set('Pragma', 'no-cache');
+  res.set('Expires', '0');
+  next();
+});
+
 function getPool() {
   try {
     return getDatabase();
@@ -22,92 +29,167 @@ function getPool() {
   }
 }
 
-// Créer le répertoire d'upload une seule fois au démarrage
 const uploadDir = path.join(__dirname, '../uploads/books');
 fs.ensureDirSync(uploadDir);
 
-// Configure multer for file uploads
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    // Le répertoire existe déjà, pas besoin de le recréer
-    cb(null, uploadDir);
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, uniqueSuffix + path.extname(file.originalname));
+const storage = multer.memoryStorage();
+const useSupabaseStorage = Boolean(process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_KEY);
+const supabaseBucket = process.env.SUPABASE_BUCKET || 'hkids-books';
+
+function slugify(value) {
+  const slug = String(value || '')
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+
+  return slug || 'livre';
+}
+
+function getStoredFilename(file) {
+  const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+  return uniqueSuffix + path.extname(file.originalname);
+}
+
+async function persistUploadedFile(file) {
+  if (!file) return null;
+
+  const filename = getStoredFilename(file);
+
+  if (useSupabaseStorage) {
+    const objectPath = `books/${filename}`;
+    const { error } = await supabase.storage
+      .from(supabaseBucket)
+      .upload(objectPath, file.buffer, {
+        contentType: file.mimetype,
+        upsert: false,
+      });
+
+    if (error) {
+      console.error('[books] Supabase upload failed:', error);
+      throw new Error(`Supabase upload failed: ${error.message}`);
+    }
+
+    const { data } = supabase.storage.from(supabaseBucket).getPublicUrl(objectPath);
+    return data.publicUrl;
   }
-});
+
+  const fullPath = path.join(uploadDir, filename);
+  await fs.writeFile(fullPath, file.buffer);
+  return `/uploads/books/${filename}`;
+}
+
+async function removeStoredFile(filePath) {
+  if (!filePath) return;
+
+  if (filePath.startsWith('http://') || filePath.startsWith('https://')) {
+    if (!useSupabaseStorage) return;
+    try {
+      const url = new URL(filePath);
+      const marker = `/storage/v1/object/public/${supabaseBucket}/`;
+      const markerIndex = url.pathname.indexOf(marker);
+      if (markerIndex === -1) return;
+      const objectPath = decodeURIComponent(url.pathname.slice(markerIndex + marker.length));
+      await supabase.storage.from(supabaseBucket).remove([objectPath]);
+    } catch (error) {
+      console.warn('[books] Could not remove remote file:', error.message);
+    }
+    return;
+  }
+
+  if (!filePath.startsWith('/uploads/books/')) return;
+  const localPath = path.join(__dirname, '..', filePath);
+  await fs.unlink(localPath).catch(() => {});
+}
+
+async function getUniqueSlug(client, title, existingBookId = null) {
+  const baseSlug = slugify(title);
+  let candidate = baseSlug;
+  let suffix = 2;
+
+  while (true) {
+    const params = [candidate];
+    let query = 'SELECT id FROM books WHERE slug = $1';
+    if (existingBookId) {
+      params.push(existingBookId);
+      query += ' AND id <> $2';
+    }
+
+    const result = await client.query(query, params);
+    if (result.rowCount === 0) return candidate;
+
+    candidate = `${baseSlug}-${suffix}`;
+    suffix += 1;
+  }
+}
 
 const upload = multer({
-  storage: storage,
-  limits: { fileSize: 50 * 1024 * 1024 }, // 50MB limit
+  storage,
+  limits: { fileSize: 50 * 1024 * 1024, files: 51 },
   fileFilter: (req, file, cb) => {
     const allowedExtensions = /\.(jpeg|jpg|png|gif|pdf)$/i;
     const allowedMimeTypes = /^(image\/(jpeg|jpg|png|gif)|application\/pdf)$/;
-    
+
     const extname = allowedExtensions.test(path.extname(file.originalname));
     const mimetype = allowedMimeTypes.test(file.mimetype);
-    
+
     if (extname && mimetype) {
       cb(null, true);
     } else {
       cb(new Error(`File type not allowed. Only images (JPEG, PNG, GIF) and PDFs are allowed. Received: ${file.mimetype}`));
     }
-  }
+  },
 });
 
-// Wrapper to handle multer errors
 const handleMulterUpload = (uploadMiddleware) => {
   return (req, res, next) => {
     uploadMiddleware(req, res, (err) => {
-      if (err) {
-        console.error('Multer error:', err);
-        if (err instanceof multer.MulterError) {
-          if (err.code === 'LIMIT_FILE_SIZE') {
-            return res.status(400).json({ error: 'File too large. Maximum size is 50MB.' });
-          }
-          if (err.code === 'LIMIT_FILE_COUNT') {
-            return res.status(400).json({ error: 'Too many files. Maximum is 50 pages.' });
-          }
-          if (err.code === 'LIMIT_UNEXPECTED_FILE') {
-            return res.status(400).json({ error: 'Unexpected file field. Expected: cover or pages.' });
-          }
-          return res.status(400).json({ error: `Upload error: ${err.message}` });
+      if (!err) return next();
+
+      console.error('Multer error:', err);
+      if (err instanceof multer.MulterError) {
+        if (err.code === 'LIMIT_FILE_SIZE') {
+          return res.status(400).json({ error: 'File too large. Maximum size is 50MB.' });
         }
-        // Handle fileFilter errors
-        if (err.message && err.message.includes('File type not allowed')) {
-          return res.status(400).json({ error: err.message });
+        if (err.code === 'LIMIT_FILE_COUNT') {
+          return res.status(400).json({ error: 'Too many files. Maximum is 50 pages plus one cover.' });
         }
-        return res.status(400).json({ error: err.message || 'File upload error' });
+        if (err.code === 'LIMIT_UNEXPECTED_FILE') {
+          return res.status(400).json({ error: 'Unexpected file field. Expected: cover or pages.' });
+        }
+        return res.status(400).json({ error: `Upload error: ${err.message}` });
       }
-      next();
+
+      if (err.message && err.message.includes('File type not allowed')) {
+        return res.status(400).json({ error: err.message });
+      }
+
+      return res.status(400).json({ error: err.message || 'File upload error' });
     });
   };
 };
 
-// Get all published books (public or filtered by parental approvals for kids)
 router.get('/published', async (req, res) => {
   const { age_group, category_id } = req.query;
-  
-  // Check if user is authenticated and is a kid
+
   const token = req.headers.authorization?.split(' ')[1];
   let kidProfileId = null;
-  
+
   if (token) {
     try {
       const JWT_SECRET = process.env.JWT_SECRET || 'hkids-secret-key-change-in-production';
       const decoded = jwt.verify(token, JWT_SECRET);
-      
       if (decoded.role === 'kid' && decoded.kid_profile_id) {
         kidProfileId = decoded.kid_profile_id;
       }
     } catch (err) {
-      // Invalid token, continue as public user
+      // Invalid token, continue as public user.
     }
   }
 
   let query = `
-    SELECT b.*, c.name as category_name 
+    SELECT b.*, c.name as category_name
     FROM books b
     LEFT JOIN categories c ON b.category_id = c.id
     WHERE b.is_published = TRUE
@@ -115,10 +197,9 @@ router.get('/published', async (req, res) => {
   const params = [];
   let index = 1;
 
-  // If user is a kid, filter by approved categories
   if (kidProfileId) {
     query += ` AND b.category_id IN (
-      SELECT category_id FROM parent_approvals 
+      SELECT category_id FROM parent_approvals
       WHERE kid_profile_id = $${index} AND approved = TRUE
     )`;
     params.push(kidProfileId);
@@ -142,6 +223,7 @@ router.get('/published', async (req, res) => {
   try {
     const pool = getPool();
     const result = await pool.query(query, params);
+    console.log('API response:', { route: 'GET /books/published', count: result.rowCount });
     res.json(result.rows);
   } catch (err) {
     console.error('Error fetching published books:', err);
@@ -149,45 +231,56 @@ router.get('/published', async (req, res) => {
   }
 });
 
-// Get single book (public)
 router.get('/:id', async (req, res) => {
   try {
+    console.log('Book ID:', req.params.id);
     const pool = getPool();
     const bookResult = await pool.query(
-      `SELECT b.*, c.name as category_name 
+      `SELECT b.*, c.name as category_name
        FROM books b
        LEFT JOIN categories c ON b.category_id = c.id
-       WHERE b.id = $1`,
+       WHERE b.id = $1 OR b.slug = $1`,
       [req.params.id]
     );
 
     const book = bookResult.rows[0];
+    console.log('Book loaded:', book);
     if (!book) {
       return res.status(404).json({ error: 'Book not found' });
     }
 
     const pagesResult = await pool.query(
       'SELECT * FROM book_pages WHERE book_id = $1 ORDER BY page_number',
-      [req.params.id]
+      [book.id]
     );
 
-    res.json({ ...book, pages: pagesResult.rows });
+    const story = { ...book, pages: pagesResult.rows };
+    console.log('Story loaded:', story);
+    console.log('API response:', {
+      route: 'GET /books/:id',
+      id: book.id,
+      slug: book.slug,
+      page_count: book.page_count,
+      pages_loaded: pagesResult.rowCount,
+    });
+
+    res.json(story);
   } catch (err) {
     console.error('Error fetching book:', err);
     res.status(500).json({ error: 'Database error' });
   }
 });
 
-// Get all books (admin only)
 router.get('/', verifyToken, async (req, res) => {
   try {
     const pool = getPool();
     const result = await pool.query(
-      `SELECT b.*, c.name as category_name 
+      `SELECT b.*, c.name as category_name
        FROM books b
        LEFT JOIN categories c ON b.category_id = c.id
        ORDER BY b.created_at DESC`
     );
+    console.log('API response:', { route: 'GET /books', count: result.rowCount });
     res.json(result.rows);
   } catch (err) {
     console.error('Error fetching books:', err);
@@ -195,130 +288,171 @@ router.get('/', verifyToken, async (req, res) => {
   }
 });
 
-// Create book (admin only)
 router.post('/', verifyToken, handleMulterUpload(upload.fields([
   { name: 'cover', maxCount: 1 },
-  { name: 'pages', maxCount: 50 }
+  { name: 'pages', maxCount: 50 },
 ])), async (req, res) => {
+  const persistedFiles = [];
+
   try {
     const { title, author, description, category_id, age_group_min, age_group_max, is_published } = req.body;
-    
+
     if (!title) {
       return res.status(400).json({ error: 'Title is required' });
     }
 
-    const coverImage = req.files?.cover?.[0]?.filename;
+    const coverFile = req.files?.cover?.[0] || null;
     const pageFiles = req.files?.pages || [];
 
-    console.log(`📚 Création d'un livre: "${title}" (${pageFiles.length} pages)`);
+    if (pageFiles.length === 0) {
+      return res.status(400).json({ error: 'At least one page file is required.' });
+    }
+
+    console.log('[books] Creating book:', { title, pages: pageFiles.length, storage: useSupabaseStorage ? 'supabase' : 'local' });
+
+    const coverPath = await persistUploadedFile(coverFile);
+    if (coverPath) persistedFiles.push(coverPath);
+
+    const pagePaths = [];
+    for (const file of pageFiles) {
+      const pagePath = await persistUploadedFile(file);
+      persistedFiles.push(pagePath);
+      pagePaths.push(pagePath);
+    }
 
     const pool = getPool();
     const client = await pool.connect();
     try {
       await client.query('BEGIN');
 
+      const slug = await getUniqueSlug(client, title);
       const insertBook = await client.query(
-        `INSERT INTO books (title, author, description, cover_image, category_id, age_group_min, age_group_max, is_published, file_path)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-         RETURNING id`,
+        `INSERT INTO books (title, slug, author, description, cover_image, category_id, age_group_min, age_group_max, is_published, file_path, page_count)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+         RETURNING *`,
         [
           title,
+          slug,
           author || null,
           description || null,
-          coverImage ? `/uploads/books/${coverImage}` : null,
+          coverPath,
           category_id || null,
           age_group_min || 0,
           age_group_max || 12,
           is_published === 'true' || is_published === true,
-          'uploaded',
+          pagePaths[0] || 'uploaded',
+          pagePaths.length,
         ]
       );
 
-      const bookId = insertBook.rows[0].id;
+      const book = insertBook.rows[0];
+      const pageValues = pagePaths.map((pagePath, index) => [book.id, index + 1, pagePath, null]);
+      const valuesPlaceholders = pageValues.map((_, i) => {
+        const base = i * 4;
+        return `($${base + 1}, $${base + 2}, $${base + 3}, $${base + 4})`;
+      }).join(', ');
 
-      // Commit immédiatement après la création du livre pour répondre rapidement
+      await client.query(
+        `INSERT INTO book_pages (book_id, page_number, image_path, content) VALUES ${valuesPlaceholders}`,
+        pageValues.flat()
+      );
+
       await client.query('COMMIT');
-      client.release();
 
-      // Répondre immédiatement au client (non-bloquant)
-      res.status(201).json({ 
-        id: bookId, 
+      console.log('Book loaded:', book);
+      console.log('Story loaded:', { ...book, pages: pageValues });
+      console.log('API response:', { route: 'POST /books', id: book.id, slug: book.slug, pages: pageValues.length });
+
+      res.status(201).json({
+        ...book,
+        pages: pageValues.map(([book_id, page_number, image_path, content]) => ({ book_id, page_number, image_path, content })),
         message: 'Book created successfully',
-        processing: pageFiles.length > 0 ? 'Pages are being processed in the background' : null
       });
-
-      // Traiter les pages de manière asynchrone (sans bloquer la réponse)
-      if (pageFiles.length > 0) {
-        // Utiliser setImmediate pour traiter en arrière-plan
-        setImmediate(async () => {
-          const pool = getPool();
-          const asyncClient = await pool.connect();
-          try {
-            await asyncClient.query('BEGIN');
-            
-            // Optimisation: insertion en lot (batch insert)
-            const pageValues = pageFiles.map((file, index) => {
-              const pagePath = `/uploads/books/${file.filename}`;
-              return [bookId, index + 1, pagePath];
-            });
-
-            // Construction d'une seule requête SQL avec VALUES multiples
-            const valuesPlaceholders = pageValues.map((_, i) => {
-              const base = i * 3;
-              return `($${base + 1}, $${base + 2}, $${base + 3})`;
-            }).join(', ');
-
-            const flatValues = pageValues.flat();
-            await asyncClient.query(
-              `INSERT INTO book_pages (book_id, page_number, image_path) VALUES ${valuesPlaceholders}`,
-              flatValues
-            );
-
-            // Mise à jour du nombre de pages
-            await asyncClient.query(
-              'UPDATE books SET page_count = $1 WHERE id = $2',
-              [pageFiles.length, bookId]
-            );
-            
-            await asyncClient.query('COMMIT');
-            console.log(`✅ ${pageFiles.length} pages insérées avec succès pour le livre ${bookId}!`);
-          } catch (err) {
-            await asyncClient.query('ROLLBACK');
-            console.error(`❌ Erreur lors de l'insertion des pages pour le livre ${bookId}:`, err);
-          } finally {
-            asyncClient.release();
-          }
-        });
-      }
     } catch (err) {
-      if (client) {
-        try {
-          await client.query('ROLLBACK');
-        } catch (rollbackErr) {
-          console.error('Error during rollback:', rollbackErr);
-        }
-        client.release();
-      }
-      console.error('Error saving book:', err);
-      res.status(500).json({ error: 'Database error' });
+      await client.query('ROLLBACK');
+      throw err;
+    } finally {
+      client.release();
     }
-  } catch (error) {
-    res.status(500).json({ error: error.message });
+  } catch (err) {
+    await Promise.all(persistedFiles.map(removeStoredFile));
+    console.error('Error saving book:', err);
+    res.status(500).json({ error: err.message || 'Database error' });
   }
 });
 
-// Update book (admin only)
 router.put('/:id', verifyToken, handleMulterUpload(upload.fields([
-  { name: 'cover', maxCount: 1 }
+  { name: 'cover', maxCount: 1 },
 ])), async (req, res) => {
   const { title, author, description, category_id, age_group_min, age_group_max, is_published } = req.body;
+  let newCoverPath = null;
 
-  console.log(`📝 Mise à jour du livre ID: ${req.params.id}`);
-  console.log(`📋 Données reçues:`, { title, author, category_id, is_published });
-  if (req.files?.cover) {
-    console.log(`🖼️  Nouvelle image de couverture: ${req.files.cover[0].filename}`);
+  console.log('[books] Updating book:', { id: req.params.id, title, category_id, is_published });
+
+  try {
+    const pool = getPool();
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
+
+      const bookResult = await client.query('SELECT * FROM books WHERE id = $1', [req.params.id]);
+      const book = bookResult.rows[0];
+      if (!book) {
+        await client.query('ROLLBACK');
+        return res.status(404).json({ error: 'Book not found' });
+      }
+
+      const coverFile = req.files?.cover?.[0] || null;
+      newCoverPath = coverFile ? await persistUploadedFile(coverFile) : null;
+      const coverPath = newCoverPath || book.cover_image;
+      const nextTitle = title || book.title;
+      const slug = title && title !== book.title
+        ? await getUniqueSlug(client, nextTitle, book.id)
+        : (book.slug || await getUniqueSlug(client, nextTitle, book.id));
+
+      const updateResult = await client.query(
+        `UPDATE books
+         SET title = $1, slug = $2, author = $3, description = $4, cover_image = $5,
+             category_id = $6, age_group_min = $7, age_group_max = $8,
+             is_published = $9, updated_at = NOW()
+         WHERE id = $10
+         RETURNING *`,
+        [
+          nextTitle,
+          slug,
+          author !== undefined ? author : book.author,
+          description !== undefined ? description : book.description,
+          coverPath,
+          category_id || book.category_id,
+          age_group_min !== undefined ? age_group_min : book.age_group_min,
+          age_group_max !== undefined ? age_group_max : book.age_group_max,
+          is_published !== undefined
+            ? (is_published === 'true' || is_published === true)
+            : book.is_published,
+          req.params.id,
+        ]
+      );
+
+      await client.query('COMMIT');
+      if (newCoverPath && book.cover_image) await removeStoredFile(book.cover_image);
+
+      console.log('Book loaded:', updateResult.rows[0]);
+      console.log('API response:', { route: 'PUT /books/:id', id: req.params.id });
+      res.json({ message: 'Book updated successfully', book: updateResult.rows[0] });
+    } catch (err) {
+      await client.query('ROLLBACK');
+      if (newCoverPath) await removeStoredFile(newCoverPath);
+      throw err;
+    } finally {
+      client.release();
+    }
+  } catch (err) {
+    console.error('Error updating book:', err);
+    res.status(500).json({ error: err.message || 'Database error' });
   }
+});
 
+router.delete('/:id', verifyToken, async (req, res) => {
   try {
     const pool = getPool();
     const bookResult = await pool.query('SELECT * FROM books WHERE id = $1', [req.params.id]);
@@ -328,66 +462,18 @@ router.put('/:id', verifyToken, handleMulterUpload(upload.fields([
       return res.status(404).json({ error: 'Book not found' });
     }
 
-    const coverImage = req.files?.cover?.[0]?.filename;
-    const coverPath = coverImage ? `/uploads/books/${coverImage}` : book.cover_image;
+    const pagesResult = await pool.query('SELECT image_path FROM book_pages WHERE book_id = $1', [req.params.id]);
+    await pool.query('DELETE FROM books WHERE id = $1', [req.params.id]);
 
-    await pool.query(
-      `UPDATE books 
-       SET title = $1, author = $2, description = $3, cover_image = $4,
-           category_id = $5, age_group_min = $6, age_group_max = $7,
-           is_published = $8, updated_at = NOW()
-       WHERE id = $9`,
-      [
-        title || book.title,
-        author !== undefined ? author : book.author,
-        description !== undefined ? description : book.description,
-        coverPath,
-        category_id || book.category_id,
-        age_group_min !== undefined ? age_group_min : book.age_group_min,
-        age_group_max !== undefined ? age_group_max : book.age_group_max,
-        is_published !== undefined
-          ? (is_published === 'true' || is_published === true)
-          : book.is_published,
-        req.params.id,
-      ]
-    );
+    await removeStoredFile(book.cover_image);
+    await Promise.all(pagesResult.rows.map((page) => removeStoredFile(page.image_path)));
 
-    console.log(`✅ Livre mis à jour avec succès: ID ${req.params.id}`);
-    res.json({ message: 'Book updated successfully' });
+    console.log('API response:', { route: 'DELETE /books/:id', id: req.params.id });
+    res.json({ message: 'Book deleted successfully' });
   } catch (err) {
-    console.error('❌ Error updating book:', err);
-    console.error('   Error details:', err.message);
-    console.error('   Stack:', err.stack);
-    res.status(500).json({ error: err.message || 'Database error' });
+    console.error('Error deleting book:', err);
+    res.status(500).json({ error: 'Database error' });
   }
 });
 
-// Delete book (admin only)
-router.delete('/:id', verifyToken, (req, res) => {
-  (async () => {
-    try {
-      const pool = getPool();
-      const bookResult = await pool.query('SELECT * FROM books WHERE id = $1', [req.params.id]);
-      const book = bookResult.rows[0];
-
-      if (!book) {
-        return res.status(404).json({ error: 'Book not found' });
-      }
-
-      await pool.query('DELETE FROM books WHERE id = $1', [req.params.id]);
-
-      if (book.cover_image) {
-        const coverPath = path.join(__dirname, '..', book.cover_image);
-        fs.unlink(coverPath).catch(() => {});
-      }
-
-      res.json({ message: 'Book deleted successfully' });
-    } catch (err) {
-      console.error('Error deleting book:', err);
-      res.status(500).json({ error: 'Database error' });
-    }
-  })();
-});
-
 export default router;
-
