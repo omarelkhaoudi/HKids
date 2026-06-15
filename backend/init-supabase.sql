@@ -22,6 +22,7 @@ CREATE TABLE IF NOT EXISTS categories (
 CREATE TABLE IF NOT EXISTS books (
   id SERIAL PRIMARY KEY,
   title TEXT NOT NULL,
+  slug TEXT,
   author TEXT,
   description TEXT,
   cover_image TEXT,
@@ -43,6 +44,22 @@ CREATE TABLE IF NOT EXISTS book_pages (
   image_path TEXT,
   content TEXT
 );
+
+ALTER TABLE books ADD COLUMN IF NOT EXISTS slug TEXT;
+
+UPDATE books
+SET slug = CONCAT(
+  regexp_replace(
+    regexp_replace(lower(title), '[^a-z0-9]+', '-', 'g'),
+    '(^-|-$)', '', 'g'
+  ),
+  '-',
+  id
+)
+WHERE slug IS NULL OR slug = '';
+
+CREATE UNIQUE INDEX IF NOT EXISTS books_slug_unique ON books(slug);
+CREATE UNIQUE INDEX IF NOT EXISTS book_pages_book_page_unique ON book_pages(book_id, page_number);
 
 -- Kids profiles table
 CREATE TABLE IF NOT EXISTS kids_profiles (

@@ -1,21 +1,28 @@
 import axios from 'axios';
 import { buildApiUrl } from '../config/api.js';
 
+const noCacheConfig = {
+  headers: {
+    'Cache-Control': 'no-cache',
+    Pragma: 'no-cache',
+  },
+};
+
 export const booksAPI = {
   getPublishedBooks: (filters = {}) => {
     const params = new URLSearchParams();
     if (filters.age_group) params.append('age_group', filters.age_group);
     if (filters.category_id) params.append('category_id', filters.category_id);
     
-    return axios.get(`${buildApiUrl('/books/published')}?${params}`);
+    return axios.get(`${buildApiUrl('/books/published')}?${params}`, noCacheConfig);
   },
 
   getBook: (id) => {
-    return axios.get(buildApiUrl(`/books/${id}`));
+    return axios.get(buildApiUrl(`/books/${id}`), noCacheConfig);
   },
 
   getAllBooks: () => {
-    return axios.get(buildApiUrl('/books'));
+    return axios.get(buildApiUrl('/books'), noCacheConfig);
   },
 
   createBook: (formData) => {

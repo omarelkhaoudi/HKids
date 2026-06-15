@@ -72,6 +72,7 @@ export async function initDatabase() {
       `CREATE TABLE IF NOT EXISTS books (
         id SERIAL PRIMARY KEY,
         title TEXT NOT NULL,
+        slug TEXT,
         author TEXT,
         description TEXT,
         cover_image TEXT,
@@ -112,6 +113,22 @@ export async function initDatabase() {
     ];
 
     for (const tableQuery of tables) await client.query(tableQuery);
+
+    await client.query(`ALTER TABLE books ADD COLUMN IF NOT EXISTS slug TEXT`);
+    await client.query(`
+      UPDATE books
+      SET slug = CONCAT(
+        regexp_replace(
+          regexp_replace(lower(title), '[^a-z0-9]+', '-', 'g'),
+          '(^-|-$)', '', 'g'
+        ),
+        '-',
+        id
+      )
+      WHERE slug IS NULL OR slug = ''
+    `);
+    await client.query(`CREATE UNIQUE INDEX IF NOT EXISTS books_slug_unique ON books(slug)`);
+    await client.query(`CREATE UNIQUE INDEX IF NOT EXISTS book_pages_book_page_unique ON book_pages(book_id, page_number)`);
 
     // Insérer admin par défaut
     const defaultPassword = bcrypt.hashSync('admin123', 10);
