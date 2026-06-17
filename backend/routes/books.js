@@ -235,12 +235,13 @@ router.get('/:id', async (req, res) => {
   try {
     console.log('Book ID:', req.params.id);
     const pool = getPool();
+    const isNumericId = /^\d+$/.test(req.params.id);
     const bookResult = await pool.query(
       `SELECT b.*, c.name as category_name
        FROM books b
        LEFT JOIN categories c ON b.category_id = c.id
-       WHERE b.id = $1 OR b.slug = $1`,
-      [req.params.id]
+       WHERE ${isNumericId ? 'b.id = $1' : 'b.slug = $1'}`,
+      [isNumericId ? Number(req.params.id) : req.params.id]
     );
 
     const book = bookResult.rows[0];
