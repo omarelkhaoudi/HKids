@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { booksAPI, categoriesAPI } from '../../api/books';
 import { API_URL } from '../../config/api';
+import { getImageUrl } from '../../utils/imageUrl';
 import { BookIcon, PublishIcon, UnpublishIcon, XIcon, LightBulbIcon, TrashIcon, StarIcon } from '../Icons';
 
 // Helper: base URL for images (backend origin, without /api)
@@ -170,14 +171,7 @@ function BookManagement() {
       age_group_max: book.age_group_max || 12,
       is_published: book.is_published === true || book.is_published === 1
     });
-    // Set cover preview to existing image (normalize any stored URL)
-    const normalizedPath = normalizeImagePath(book.cover_image);
-    if (normalizedPath) {
-      const imageUrl = `${getImageBaseUrl()}${normalizedPath}`;
-      setCoverPreview(imageUrl);
-    } else {
-      setCoverPreview(null);
-    }
+    setCoverPreview(book.cover_image ? getImageUrl(book.cover_image) : null);
     setCoverFile(null);
     setShowModal(true);
   };
@@ -247,13 +241,7 @@ function BookManagement() {
       setCoverFile(null);
       // If editing, restore the original cover image preview (normalized)
       if (editingBook && editingBook.cover_image) {
-        const normalizedPath = normalizeImagePath(editingBook.cover_image);
-        if (normalizedPath) {
-          const imageUrl = `${getImageBaseUrl()}${normalizedPath}`;
-          setCoverPreview(imageUrl);
-        } else {
-          setCoverPreview(null);
-        }
+        setCoverPreview(getImageUrl(editingBook.cover_image));
       } else {
         setCoverPreview(null);
       }
@@ -399,8 +387,8 @@ function BookManagement() {
                 >
                   <td className="px-6 py-4 whitespace-nowrap">
                     {(() => {
-                      const normalizedPath = normalizeImagePath(book.cover_image);
-                      if (!normalizedPath) {
+                      const imageUrl = book.cover_image ? getImageUrl(book.cover_image) : null;
+                      if (!imageUrl) {
                         return (
                           <div className="w-16 h-20 bg-neutral-200 rounded flex items-center justify-center">
                             <BookIcon className="w-8 h-8 text-neutral-400" />
@@ -408,7 +396,6 @@ function BookManagement() {
                         );
                       }
 
-                      const imageUrl = `${getImageBaseUrl()}${normalizedPath}`;
                       return (
                         <img
                           src={imageUrl}
