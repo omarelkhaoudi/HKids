@@ -170,16 +170,24 @@ function StoriesGallery() {
     loadBooks();
   }, []);
 
+  const decorativeStars = [
+    { top: '8%', left: '7%', size: 'w-5 h-5', opacity: 'opacity-40' },
+    { top: '16%', right: '13%', size: 'w-7 h-7', opacity: 'opacity-50' },
+    { top: '34%', left: '4%', size: 'w-6 h-6', opacity: 'opacity-35' },
+    { top: '58%', right: '5%', size: 'w-5 h-5', opacity: 'opacity-40' },
+    { bottom: '10%', left: '12%', size: 'w-7 h-7', opacity: 'opacity-45' },
+  ];
+
   return (
-    <div className="min-h-screen bg-white">
-      <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-orange-100">
+    <div className="min-h-screen bg-gradient-to-br from-white via-red-50/30 to-pink-50/30">
+      <header className="sticky top-0 z-40 shadow-md bg-neutral-900/95 backdrop-blur-md">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between gap-4">
           <Link to="/" className="flex items-center">
             <Logo size="default" />
           </Link>
           <Link
             to="/"
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-neutral-900 text-white font-bold hover:bg-neutral-800 transition-colors"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white text-neutral-900 font-bold hover:bg-red-50 transition-colors shadow-sm"
           >
             <ChevronLeftIcon className="w-4 h-4" />
             Accueil
@@ -187,29 +195,48 @@ function StoriesGallery() {
         </div>
       </header>
 
-      <main className="py-12 md:py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <div className="text-center mb-12">
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-orange-50 text-orange-600 rounded-full text-sm font-bold mb-4 border border-orange-100">
-              <StarIcon className="w-4 h-4" />
-              Collection HKids
-            </div>
-            <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-neutral-900 mb-4">
-              Toutes les histoires HKids
-            </h1>
-            <p className="text-base sm:text-lg text-neutral-600 max-w-2xl mx-auto">
-              Parcourez les livres disponibles, ajoutez vos favoris et choisissez une histoire adaptee a l'age de votre enfant.
-            </p>
-          </div>
+      <main className="relative overflow-hidden">
+        {decorativeStars.map(({ size, opacity, ...position }, index) => (
+          <StarIcon
+            key={index}
+            className={`pointer-events-none absolute z-0 text-yellow-300 ${size} ${opacity}`}
+            style={position}
+          />
+        ))}
 
+        <section className="relative z-10 py-10 md:py-14">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6">
+            <div className="rounded-[2rem] bg-gradient-to-br from-red-50 via-pink-50 to-orange-50 border-4 border-white shadow-xl px-5 py-10 md:px-10 md:py-12 text-center">
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/80 text-orange-600 rounded-full text-sm font-bold mb-4 border border-orange-100 shadow-sm">
+                <StarIcon className="w-4 h-4" />
+                Collection HKids
+              </div>
+              <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-neutral-900 mb-4">
+                Toutes les histoires HKids
+              </h1>
+              <p className="text-base sm:text-lg text-neutral-600 max-w-2xl mx-auto leading-relaxed">
+                Parcourez les livres disponibles, ajoutez vos favoris et choisissez une histoire adaptee a l'age de votre enfant.
+              </p>
+              {!isAuthenticated && (
+                <div className="mt-6 inline-flex items-center gap-2 rounded-full bg-white/90 px-4 py-2 text-sm font-bold text-neutral-800 shadow-sm border border-orange-100">
+                  <LockIcon className="w-4 h-4 text-orange-500" />
+                  Connectez-vous pour lire les histoires.
+                </div>
+              )}
+            </div>
+          </div>
+        </section>
+
+        <section className="relative z-10 pb-14 md:pb-20">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6">
           {loading ? (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-10 sm:gap-x-6 lg:gap-x-8">
               {Array.from({ length: 8 }).map((_, index) => (
-                <div key={index} className="aspect-[4/5] rounded-lg bg-orange-50 animate-pulse" />
+                <div key={index} className="aspect-[4/5] rounded-lg bg-white/80 border-2 border-dashed border-orange-200 animate-pulse" />
               ))}
             </div>
           ) : books.length === 0 ? (
-            <div className="text-center py-20">
+            <div className="text-center py-20 rounded-[2rem] bg-white/80 border border-orange-100 shadow-sm">
               <BookIcon className="w-16 h-16 text-orange-300 mx-auto mb-4" />
               <p className="text-lg font-bold text-neutral-700">Aucune histoire disponible.</p>
             </div>
@@ -229,7 +256,8 @@ function StoriesGallery() {
               ))}
             </div>
           )}
-        </div>
+          </div>
+        </section>
       </main>
     </div>
   );
