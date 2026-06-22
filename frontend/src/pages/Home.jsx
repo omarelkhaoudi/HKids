@@ -648,22 +648,35 @@ function Home({ darkMode, setDarkMode }) {
                   className="min-w-0"
                 >
                   <Link to={`/book-details/${book.id}`} className="group block text-center">
-                    <div className="relative aspect-[4/5] rounded-lg border-2 border-dashed border-orange-400 bg-gradient-to-br from-orange-50 via-white to-pink-50 p-3 sm:p-4 flex items-center justify-center overflow-hidden transition-all duration-300 group-hover:border-pink-500 group-hover:shadow-xl">
-                      {book.cover_image ? (
-                        <img
-                          src={getImageUrl(book.cover_image)}
-                          alt={book.title}
-                          className="max-h-full max-w-full object-contain drop-shadow-xl transition-transform duration-300 group-hover:scale-105"
-                          loading="lazy"
-                          onError={(e) => {
-                            e.currentTarget.style.display = 'none';
-                            const fallback = e.currentTarget.nextElementSibling;
-                            if (fallback) fallback.classList.remove('hidden');
-                          }}
-                        />
-                      ) : null}
-                      <div className={`${book.cover_image ? 'hidden' : 'flex'} absolute inset-3 items-center justify-center rounded-md bg-white/70`}>
-                        <BookIcon className="w-12 h-12 sm:w-16 sm:h-16 text-orange-300" />
+                    <div className="relative aspect-[4/5] rounded-lg border-2 border-dashed border-orange-400 bg-gradient-to-br from-orange-50 via-white to-pink-50 p-3 sm:p-4 flex items-center justify-center overflow-hidden transition-all duration-300 group-hover:border-pink-500 group-hover:shadow-xl [perspective:900px]">
+                      <div className="relative w-[72%] max-w-[190px] aspect-[3/4] [transform-style:preserve-3d] transition-transform duration-300 [transform:rotateY(-18deg)_rotateZ(-1deg)] group-hover:[transform:rotateY(-10deg)_rotateZ(0deg)_translateY(-4px)]">
+                        <div className="absolute -right-[13%] top-[3%] h-[94%] w-[16%] rounded-r-md bg-gradient-to-r from-neutral-200 via-white to-neutral-300 shadow-md [transform:rotateY(72deg)_translateZ(1px)] origin-left">
+                          <div className="absolute inset-y-2 left-1/3 w-px bg-neutral-300/80"></div>
+                          <div className="absolute inset-y-3 right-1/3 w-px bg-neutral-200/80"></div>
+                        </div>
+                        <div className="absolute -right-[8%] top-[5%] h-[90%] w-[10%] rounded-r-sm bg-gradient-to-r from-white via-neutral-100 to-neutral-300 [transform:translateZ(-9px)]"></div>
+                        <div className="absolute inset-0 rounded-md bg-gradient-to-br from-neutral-900/10 to-neutral-900/25 [transform:translateZ(-14px)]"></div>
+                        <div className="relative z-10 h-full w-full overflow-hidden rounded-md bg-white shadow-2xl ring-1 ring-black/10 [transform:translateZ(12px)]">
+                          {book.cover_image ? (
+                            <img
+                              src={getImageUrl(book.cover_image)}
+                              alt={book.title}
+                              className="h-full w-full object-cover"
+                              loading="lazy"
+                              onError={(e) => {
+                                e.currentTarget.style.display = 'none';
+                                const fallback = e.currentTarget.nextElementSibling;
+                                if (fallback) fallback.classList.remove('hidden');
+                              }}
+                            />
+                          ) : null}
+                          <div className={`${book.cover_image ? 'hidden' : 'flex'} absolute inset-0 items-center justify-center bg-gradient-to-br from-orange-100 to-pink-100`}>
+                            <BookIcon className="w-12 h-12 sm:w-16 sm:h-16 text-orange-300" />
+                          </div>
+                          <div className="pointer-events-none absolute inset-y-0 left-0 w-[14%] bg-gradient-to-r from-black/20 via-black/5 to-transparent"></div>
+                          <div className="pointer-events-none absolute inset-0 bg-gradient-to-tr from-white/0 via-white/10 to-white/35"></div>
+                        </div>
+                        <div className="absolute -bottom-5 left-[9%] h-5 w-[92%] rounded-full bg-black/18 blur-md [transform:rotateX(75deg)]"></div>
                       </div>
                     </div>
 
