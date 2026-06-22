@@ -810,8 +810,19 @@ function Home({ darkMode, setDarkMode }) {
             </p>
           </motion.div>
 
+            <div className="mt-8 text-center">
+              <Link
+                to="/stories"
+                className="inline-flex items-center justify-center gap-3 px-8 py-4 rounded-full bg-gradient-to-r from-orange-500 to-pink-500 text-white font-bold text-lg shadow-lg hover:shadow-xl transition-all"
+              >
+                <BookIcon className="w-6 h-6" />
+                Voir toutes les histoires
+                <ChevronRightIcon className="w-5 h-5" />
+              </Link>
+            </div>
+
         {/* Grille de livres */}
-        {loading ? (
+        {false && (loading ? (
           <motion.div 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -1062,7 +1073,7 @@ function Home({ darkMode, setDarkMode }) {
             )}
             </motion.div>
           </AnimatePresence>
-        )}
+        ))}
         </div>
       </section>
 

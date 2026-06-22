@@ -11,6 +11,7 @@ import KidsLibrary from './pages/KidsLibrary';
 import Favorites from './pages/Favorites';
 import History from './pages/History';
 import FeatureDetails from './pages/FeatureDetails';
+import StoriesGallery from './pages/StoriesGallery';
 import { AuthProvider } from './context/AuthContext';
 import { LanguageProvider } from './context/LanguageContext';
 import { ToastProvider } from './components/ToastProvider';
@@ -47,6 +48,7 @@ function App() {
                 <Route path="/book-details/:id" element={<BookDetails />} />
                 <Route path="/favorites" element={<Favorites />} />
                 <Route path="/history" element={<History />} />
+                <Route path="/stories" element={<StoriesGallery />} />
                 <Route path="/features/:featureId" element={<FeatureDetails />} />
                 <Route path="/admin/login" element={<AdminLogin />} />
                 <Route path="/admin/signup" element={<SignUp />} />
