@@ -890,14 +890,9 @@ function Home({ darkMode, setDarkMode }) {
                     to={`/book-details/${book.id}`}
                     className="block h-full"
                   >
-                    <div className="book-card-enhanced bg-white rounded-2xl overflow-hidden group h-full flex flex-col relative hover:shadow-xl transition-all duration-300 border border-neutral-200">
+                    <div className="group h-full min-w-0 text-center">
                       {/* Section colorée en haut */}
-                      <div 
-                        className="relative px-6 py-8 text-white flex-shrink-0"
-                        style={{ 
-                          background: `linear-gradient(135deg, ${getCategoryColor(book.category_name, index)} 0%, ${getCategoryColor(book.category_name, index)}dd 100%)`
-                        }}
-                      >
+                      <div className="relative aspect-[4/5] rounded-lg border-2 border-dashed border-orange-400 bg-gradient-to-br from-orange-50 via-white to-pink-50 p-3 sm:p-4 flex items-center justify-center overflow-hidden transition-all duration-300 group-hover:border-pink-500 group-hover:shadow-xl [perspective:900px]">
                         {/* Bouton favori */}
                         <motion.button
                           onClick={(e) => {
@@ -913,49 +908,81 @@ function Home({ darkMode, setDarkMode }) {
                             }
                             setFavoritesUpdate(prev => prev + 1);
                           }}
-                          className="absolute top-4 right-4 z-20 p-2 bg-white/20 hover:bg-white/30 rounded-full backdrop-blur-sm transition-all"
+                          className="absolute top-3 right-3 z-30 p-2.5 bg-white/85 hover:bg-white text-orange-500 rounded-full shadow-md backdrop-blur-sm transition-all"
                           title={storage.isFavorite(book.id) ? t.removeFromFavorites : t.addToFavorites}
                           whileHover={{ scale: 1.1 }}
                           whileTap={{ scale: 0.9 }}
                         >
                           <HeartIcon 
-                            className={`w-5 h-5 ${storage.isFavorite(book.id) ? 'text-white' : 'text-white/80'}`}
+                            className={`w-5 h-5 ${storage.isFavorite(book.id) ? 'text-red-500' : 'text-orange-400'}`}
                             filled={storage.isFavorite(book.id)}
                           />
                         </motion.button>
                         
                         {/* Titre */}
-                        <h3 className="font-bold text-xl mb-2 line-clamp-2 leading-tight pr-12">
-                          {book.title}
-                        </h3>
+                        <div className="relative w-[72%] max-w-[190px] aspect-[3/4] [transform-style:preserve-3d] transition-transform duration-300 [transform:rotateY(-18deg)_rotateZ(-1deg)] group-hover:[transform:rotateY(-10deg)_rotateZ(0deg)_translateY(-4px)]">
+                          <div className="absolute -right-[13%] top-[3%] h-[94%] w-[16%] rounded-r-md bg-gradient-to-r from-neutral-200 via-white to-neutral-300 shadow-md [transform:rotateY(72deg)_translateZ(1px)] origin-left">
+                            <div className="absolute inset-y-2 left-1/3 w-px bg-neutral-300/80"></div>
+                            <div className="absolute inset-y-3 right-1/3 w-px bg-neutral-200/80"></div>
+                          </div>
+                          <div className="absolute -right-[8%] top-[5%] h-[90%] w-[10%] rounded-r-sm bg-gradient-to-r from-white via-neutral-100 to-neutral-300 [transform:translateZ(-9px)]"></div>
+                          <div className="absolute inset-0 rounded-md bg-gradient-to-br from-neutral-900/10 to-neutral-900/25 [transform:translateZ(-14px)]"></div>
+                          <div className="relative z-10 h-full w-full overflow-hidden rounded-md bg-white shadow-2xl ring-1 ring-black/10 [transform:translateZ(12px)]">
+                            {book.cover_image ? (
+                              <img
+                                src={getImageUrl(book.cover_image)}
+                                alt={book.title}
+                                className="h-full w-full object-cover"
+                                loading="lazy"
+                                onError={(e) => {
+                                  e.currentTarget.style.display = 'none';
+                                  const fallback = e.currentTarget.nextElementSibling;
+                                  if (fallback) fallback.classList.remove('hidden');
+                                }}
+                              />
+                            ) : null}
+                            <div className={`${book.cover_image ? 'hidden' : 'flex'} absolute inset-0 items-center justify-center bg-gradient-to-br from-orange-100 to-pink-100`}>
+                              <BookIcon className="w-12 h-12 sm:w-16 sm:h-16 text-orange-300" />
+                            </div>
+                            <div className="pointer-events-none absolute inset-y-0 left-0 w-[14%] bg-gradient-to-r from-black/20 via-black/5 to-transparent"></div>
+                            <div className="pointer-events-none absolute inset-0 bg-gradient-to-tr from-white/0 via-white/10 to-white/35"></div>
+                          </div>
+                          <div className="absolute -bottom-5 left-[9%] h-5 w-[92%] rounded-full bg-black/18 blur-md [transform:rotateX(75deg)]"></div>
+                        </div>
                         
                         {/* Genre/Catégorie */}
                         {book.category_name && (
-                          <p className="font-bold text-base opacity-95">
+                          <p className="hidden">
                             {book.category_name}
                           </p>
                         )}
                       </div>
                     
                       {/* Section blanche en bas */}
-                      <div className="p-6 flex-1 flex flex-col bg-white min-h-[180px]">
-                        <h3 className="font-bold text-lg text-neutral-900 mb-2 line-clamp-2 leading-tight">
+                      <div className="mt-4 px-1">
+                        <h3 className="text-base sm:text-lg font-bold text-neutral-900 leading-snug line-clamp-2 group-hover:text-orange-600 transition-colors">
                           {book.title}
                         </h3>
-                        {book.author && (
-                          <p className="text-sm text-neutral-600 mb-4">{t.by} {book.author}</p>
+                        {book.category_name && (
+                          <p className="mt-1 text-xs sm:text-sm font-semibold text-neutral-500 truncate">
+                            {book.category_name}
+                          </p>
                         )}
-                        <div className="flex items-center gap-2 flex-wrap mt-auto pt-2">
+                        <div className="mt-3 flex items-center justify-center gap-2 flex-wrap">
                           {book.age_group_min !== undefined && book.age_group_max !== undefined && (
-                            <span className="inline-block px-3 py-1.5 text-xs font-medium bg-neutral-100 text-neutral-700 rounded-lg">
+                            <span className="inline-flex items-center px-3 py-1.5 text-xs font-semibold bg-orange-50 text-orange-700 rounded-full border border-orange-100">
                               {book.age_group_min}-{book.age_group_max} {t.years}
                             </span>
                           )}
                           {book.page_count > 0 && (
-                            <span className="inline-block px-3 py-1.5 text-xs font-medium bg-neutral-100 text-neutral-700 rounded-lg">
+                            <span className="inline-flex items-center px-3 py-1.5 text-xs font-semibold bg-neutral-100 text-neutral-700 rounded-full">
                               {book.page_count} {book.page_count === 1 ? t.page : t.pages}
                             </span>
                           )}
+                        </div>
+                        <div className="mt-3 inline-flex items-center justify-center gap-1.5 text-orange-500 font-bold text-sm">
+                          <BookIcon className="w-4 h-4" />
+                          <span>Lire</span>
                         </div>
                       </div>
                     </div>
