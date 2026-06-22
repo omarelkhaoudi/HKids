@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { booksAPI, categoriesAPI } from '../api/books';
 import { storage } from '../utils/storage';
@@ -22,6 +22,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { translations } from '../utils/translations';
 
 function Home({ darkMode, setDarkMode }) {
+  const navigate = useNavigate();
   const { language } = useLanguage();
   const t = translations[language];
   const [books, setBooks] = useState([]);
@@ -473,9 +474,7 @@ function Home({ darkMode, setDarkMode }) {
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: 0.3 + i * 0.1 }}
                         className={`flex items-center gap-4 p-4 rounded-xl bg-gradient-to-r from-neutral-50 to-white border border-neutral-200 shadow-sm hover:shadow-md transition-shadow ${isBooksLink ? 'cursor-pointer' : ''}`}
-                        onClick={isBooksLink ? () => {
-                          document.getElementById('books-section')?.scrollIntoView({ behavior: 'smooth' });
-                        } : undefined}
+                        onClick={isBooksLink ? () => navigate('/stories') : undefined}
                         whileHover={isBooksLink ? { scale: 1.02 } : {}}
                         whileTap={isBooksLink ? { scale: 0.98 } : {}}
                       >
