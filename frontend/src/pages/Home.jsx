@@ -210,6 +210,7 @@ function Home({ darkMode, setDarkMode }) {
   // Petites statistiques pour la hero section
   const totalBooks = allBooks?.length || 0;
   const totalCategories = categories?.length || 0;
+  const storyPreviewBooks = (allBooks || []).slice(0, 8);
 
   return (
     <div className="min-h-screen bg-white">
@@ -604,6 +605,99 @@ function Home({ darkMode, setDarkMode }) {
                 </Link>
               </motion.div>
             )}
+          </div>
+        </section>
+      )}
+
+      {/* Section 1.55: Apercu des histoires HKids */}
+      {storyPreviewBooks.length > 0 && (
+        <section className="bg-white py-14 md:py-20 overflow-hidden">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+              className="text-center mb-10 md:mb-14"
+            >
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-orange-50 text-orange-600 rounded-full text-sm font-bold mb-4 border border-orange-100">
+                <SparklesIcon className="w-4 h-4" />
+                Collection HKids
+              </div>
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-neutral-900 mb-4">
+                Un apercu des histoires disponibles
+              </h2>
+              <p className="text-base sm:text-lg text-neutral-600 max-w-2xl mx-auto leading-relaxed">
+                Quelques livres de la bibliotheque pour donner aux enfants une idee des aventures qu'ils peuvent commencer a lire.
+              </p>
+            </motion.div>
+
+            <motion.div
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true }}
+              variants={containerVariants}
+              className="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-9 sm:gap-x-6 lg:gap-x-8"
+            >
+              {storyPreviewBooks.map((book) => (
+                <motion.div
+                  key={book.id}
+                  variants={itemVariants}
+                  whileHover={{ y: -8 }}
+                  transition={{ duration: 0.25 }}
+                  className="min-w-0"
+                >
+                  <Link to={`/book-details/${book.id}`} className="group block text-center">
+                    <div className="relative aspect-[4/5] rounded-lg border-2 border-dashed border-orange-400 bg-gradient-to-br from-orange-50 via-white to-pink-50 p-3 sm:p-4 flex items-center justify-center overflow-hidden transition-all duration-300 group-hover:border-pink-500 group-hover:shadow-xl">
+                      {book.cover_image ? (
+                        <img
+                          src={getImageUrl(book.cover_image)}
+                          alt={book.title}
+                          className="max-h-full max-w-full object-contain drop-shadow-xl transition-transform duration-300 group-hover:scale-105"
+                          loading="lazy"
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none';
+                            const fallback = e.currentTarget.nextElementSibling;
+                            if (fallback) fallback.classList.remove('hidden');
+                          }}
+                        />
+                      ) : null}
+                      <div className={`${book.cover_image ? 'hidden' : 'flex'} absolute inset-3 items-center justify-center rounded-md bg-white/70`}>
+                        <BookIcon className="w-12 h-12 sm:w-16 sm:h-16 text-orange-300" />
+                      </div>
+                    </div>
+
+                    <div className="mt-4 px-1">
+                      <h3 className="text-sm sm:text-base md:text-lg font-bold text-neutral-900 leading-snug line-clamp-2 group-hover:text-orange-600 transition-colors">
+                        {book.title}
+                      </h3>
+                      {book.category_name && (
+                        <p className="mt-1 text-xs sm:text-sm font-medium text-neutral-500 truncate">
+                          {book.category_name}
+                        </p>
+                      )}
+                      <div className="mt-3 inline-flex items-center justify-center gap-1.5 text-orange-500 font-bold text-sm">
+                        <BookIcon className="w-4 h-4" />
+                        <span>Lire</span>
+                      </div>
+                    </div>
+                  </Link>
+                </motion.div>
+              ))}
+            </motion.div>
+
+            <div className="mt-12 text-center">
+              <motion.button
+                type="button"
+                onClick={() => document.getElementById('books-section')?.scrollIntoView({ behavior: 'smooth' })}
+                whileHover={{ scale: 1.04, y: -2 }}
+                whileTap={{ scale: 0.96 }}
+                className="inline-flex items-center justify-center gap-2 px-7 py-3 rounded-full bg-gradient-to-r from-orange-500 to-pink-500 text-white font-bold shadow-lg hover:shadow-xl transition-all"
+              >
+                Voir toute la bibliotheque
+                <ChevronRightIcon className="w-5 h-5" />
+              </motion.button>
+            </div>
           </div>
         </section>
       )}
