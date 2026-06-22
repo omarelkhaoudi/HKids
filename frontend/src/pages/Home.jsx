@@ -549,24 +549,33 @@ function Home({ darkMode, setDarkMode }) {
                 <Link to={`/book-details/${allBooks[0].id}`}>
                   <div className="bg-gradient-to-br from-red-50 via-pink-50 to-orange-50 rounded-3xl p-8 md:p-12 shadow-2xl border-4 border-white hover:shadow-3xl transition-all group">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
-                      <div className="relative">
+                      <div className="relative flex justify-center [perspective:1000px]">
                         <div className="absolute inset-0 bg-gradient-to-tr from-red-500/20 via-pink-500/20 to-orange-500/20 blur-2xl rounded-3xl"></div>
-                        <div className="relative bg-white rounded-2xl p-6 shadow-xl">
-                          {allBooks[0].cover_image && !imageError ? (
-                            <div className="w-full min-h-[400px] flex items-center justify-center rounded-xl overflow-hidden bg-gradient-to-br from-red-50 to-pink-50">
+                        <div className="relative w-[72%] max-w-[300px] aspect-[3/4] [transform-style:preserve-3d] transition-transform duration-300 [transform:rotateY(-18deg)_rotateZ(-1deg)] group-hover:[transform:rotateY(-14deg)_rotateZ(-0.5deg)_translateY(-3px)]">
+                          <div className="absolute -right-[13%] top-[3%] h-[94%] w-[16%] rounded-r-md bg-gradient-to-r from-neutral-200 via-white to-neutral-300 shadow-lg [transform:rotateY(72deg)_translateZ(1px)] origin-left">
+                            <div className="absolute inset-y-3 left-1/3 w-px bg-neutral-300/80"></div>
+                            <div className="absolute inset-y-4 right-1/3 w-px bg-neutral-200/80"></div>
+                          </div>
+                          <div className="absolute -right-[8%] top-[5%] h-[90%] w-[10%] rounded-r-sm bg-gradient-to-r from-white via-neutral-100 to-neutral-300 [transform:translateZ(-10px)]"></div>
+                          <div className="absolute inset-0 rounded-md bg-gradient-to-br from-neutral-900/10 to-neutral-900/25 [transform:translateZ(-16px)]"></div>
+                          <div className="relative z-10 h-full w-full overflow-hidden rounded-md bg-white shadow-2xl ring-1 ring-black/10 [transform:translateZ(14px)]">
+                            {allBooks[0].cover_image && !imageError ? (
                               <img
                                 src={getImageUrl(allBooks[0].cover_image)}
                                 alt={allBooks[0].title}
-                                className="w-full h-auto max-h-[500px] object-contain rounded-xl group-hover:scale-105 transition-transform duration-300"
+                                className="h-full w-full object-cover"
                                 onError={() => setImageError(true)}
                                 onLoad={() => setImageError(false)}
                               />
-                            </div>
-                          ) : (
-                            <div className="w-full h-64 flex items-center justify-center bg-gradient-to-br from-red-100 to-pink-100 rounded-xl">
-                              <BookIcon className="w-32 h-32 text-red-400" />
-                            </div>
-                          )}
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-red-100 to-pink-100">
+                                <BookIcon className="w-24 h-24 text-red-400" />
+                              </div>
+                            )}
+                            <div className="pointer-events-none absolute inset-y-0 left-0 w-[14%] bg-gradient-to-r from-black/20 via-black/5 to-transparent"></div>
+                            <div className="pointer-events-none absolute inset-0 bg-gradient-to-tr from-white/0 via-white/10 to-white/35"></div>
+                          </div>
+                          <div className="absolute -bottom-6 left-[9%] h-6 w-[92%] rounded-full bg-black/20 blur-lg [transform:rotateX(75deg)]"></div>
                         </div>
                       </div>
                       <div className="space-y-4">
