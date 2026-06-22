@@ -700,16 +700,16 @@ function Home({ darkMode, setDarkMode }) {
             </motion.div>
 
             <div className="mt-12 text-center">
-              <motion.button
-                type="button"
-                onClick={() => document.getElementById('books-section')?.scrollIntoView({ behavior: 'smooth' })}
-                whileHover={{ scale: 1.04, y: -2 }}
-                whileTap={{ scale: 0.96 }}
-                className="inline-flex items-center justify-center gap-2 px-7 py-3 rounded-full bg-gradient-to-r from-orange-500 to-pink-500 text-white font-bold shadow-lg hover:shadow-xl transition-all"
-              >
-                Voir toute la bibliotheque
-                <ChevronRightIcon className="w-5 h-5" />
-              </motion.button>
+              <Link to="/stories" className="inline-flex">
+                <motion.span
+                  whileHover={{ scale: 1.04, y: -2 }}
+                  whileTap={{ scale: 0.96 }}
+                  className="inline-flex items-center justify-center gap-2 px-7 py-3 rounded-full bg-gradient-to-r from-orange-500 to-pink-500 text-white font-bold shadow-lg hover:shadow-xl transition-all"
+                >
+                  Voir toute la bibliotheque
+                  <ChevronRightIcon className="w-5 h-5" />
+                </motion.span>
+              </Link>
             </div>
           </div>
         </section>
