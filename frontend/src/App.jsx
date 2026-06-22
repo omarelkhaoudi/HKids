@@ -70,7 +70,7 @@ function App() {
                 <Route path="/book-details/:id" element={<RequireAuth><BookDetails /></RequireAuth>} />
                 <Route path="/favorites" element={<RequireAuth><Favorites /></RequireAuth>} />
                 <Route path="/history" element={<RequireAuth><History /></RequireAuth>} />
-                <Route path="/stories" element={<RequireAuth><StoriesGallery /></RequireAuth>} />
+                <Route path="/stories" element={<StoriesGallery />} />
                 <Route path="/features/:featureId" element={<FeatureDetails />} />
                 <Route path="/admin/login" element={<AdminLogin />} />
                 <Route path="/admin/signup" element={<SignUp />} />
