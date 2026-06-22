@@ -643,13 +643,13 @@ function Home({ darkMode, setDarkMode }) {
                 <motion.div
                   key={book.id}
                   variants={itemVariants}
-                  whileHover={{ y: -8 }}
+                  whileHover={{ y: -3 }}
                   transition={{ duration: 0.25 }}
                   className="min-w-0"
                 >
                   <Link to={`/book-details/${book.id}`} className="group block text-center">
-                    <div className="relative aspect-[4/5] rounded-lg border-2 border-dashed border-orange-400 bg-gradient-to-br from-orange-50 via-white to-pink-50 p-3 sm:p-4 flex items-center justify-center overflow-hidden transition-all duration-300 group-hover:border-pink-500 group-hover:shadow-xl [perspective:900px]">
-                      <div className="relative w-[72%] max-w-[190px] aspect-[3/4] [transform-style:preserve-3d] transition-transform duration-300 [transform:rotateY(-18deg)_rotateZ(-1deg)] group-hover:[transform:rotateY(-10deg)_rotateZ(0deg)_translateY(-4px)]">
+                    <div className="relative aspect-[4/5] rounded-lg border-2 border-dashed border-orange-400 bg-gradient-to-br from-orange-50 via-white to-pink-50 p-3 sm:p-4 flex items-center justify-center overflow-hidden transition-all duration-300 group-hover:border-pink-500 group-hover:shadow-md [perspective:900px]">
+                      <div className="relative w-[72%] max-w-[190px] aspect-[3/4] [transform-style:preserve-3d] transition-transform duration-300 [transform:rotateY(-18deg)_rotateZ(-1deg)] group-hover:[transform:rotateY(-15deg)_rotateZ(-0.5deg)_translateY(-1px)]">
                         <div className="absolute -right-[13%] top-[3%] h-[94%] w-[16%] rounded-r-md bg-gradient-to-r from-neutral-200 via-white to-neutral-300 shadow-md [transform:rotateY(72deg)_translateZ(1px)] origin-left">
                           <div className="absolute inset-y-2 left-1/3 w-px bg-neutral-300/80"></div>
                           <div className="absolute inset-y-3 right-1/3 w-px bg-neutral-200/80"></div>
@@ -878,8 +878,8 @@ function Home({ darkMode, setDarkMode }) {
                     stiffness: 100
                   }}
                   whileHover={{ 
-                    y: -8, 
-                    scale: 1.02,
+                    y: -3, 
+                    scale: 1.005,
                     transition: { duration: 0.2 }
                   }}
                   whileTap={{ scale: 0.98 }}
@@ -892,7 +892,7 @@ function Home({ darkMode, setDarkMode }) {
                   >
                     <div className="group h-full min-w-0 text-center">
                       {/* Section colorée en haut */}
-                      <div className="relative aspect-[4/5] rounded-lg border-2 border-dashed border-orange-400 bg-gradient-to-br from-orange-50 via-white to-pink-50 p-3 sm:p-4 flex items-center justify-center overflow-hidden transition-all duration-300 group-hover:border-pink-500 group-hover:shadow-xl [perspective:900px]">
+                      <div className="relative aspect-[4/5] rounded-lg border-2 border-dashed border-orange-400 bg-gradient-to-br from-orange-50 via-white to-pink-50 p-3 sm:p-4 flex items-center justify-center overflow-hidden transition-all duration-300 group-hover:border-pink-500 group-hover:shadow-md [perspective:900px]">
                         {/* Bouton favori */}
                         <motion.button
                           onClick={(e) => {
@@ -920,7 +920,7 @@ function Home({ darkMode, setDarkMode }) {
                         </motion.button>
                         
                         {/* Titre */}
-                        <div className="relative w-[72%] max-w-[190px] aspect-[3/4] [transform-style:preserve-3d] transition-transform duration-300 [transform:rotateY(-18deg)_rotateZ(-1deg)] group-hover:[transform:rotateY(-10deg)_rotateZ(0deg)_translateY(-4px)]">
+                        <div className="relative w-[72%] max-w-[190px] aspect-[3/4] [transform-style:preserve-3d] transition-transform duration-300 [transform:rotateY(-18deg)_rotateZ(-1deg)] group-hover:[transform:rotateY(-15deg)_rotateZ(-0.5deg)_translateY(-1px)]">
                           <div className="absolute -right-[13%] top-[3%] h-[94%] w-[16%] rounded-r-md bg-gradient-to-r from-neutral-200 via-white to-neutral-300 shadow-md [transform:rotateY(72deg)_translateZ(1px)] origin-left">
                             <div className="absolute inset-y-2 left-1/3 w-px bg-neutral-300/80"></div>
                             <div className="absolute inset-y-3 right-1/3 w-px bg-neutral-200/80"></div>
