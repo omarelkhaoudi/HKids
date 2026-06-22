@@ -1,14 +1,15 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { booksAPI } from '../api/books';
 import { storage } from '../utils/storage';
 import { getImageUrl } from '../utils/imageUrl';
 import { useToast } from '../components/ToastProvider';
-import { BookIcon, ChevronLeftIcon, HeartIcon, StarIcon } from '../components/Icons';
+import { useAuth } from '../context/AuthContext';
+import { BookIcon, ChevronLeftIcon, HeartIcon, LockIcon, StarIcon } from '../components/Icons';
 import { Logo } from '../components/Logo';
 
-function StoryBookCard({ book, index, showToast, onFavoriteChange }) {
+function StoryBookCard({ book, index, isAuthenticated, showToast, onFavoriteChange, onOpenBook, onRequireAuth }) {
   const isFavorite = storage.isFavorite(book.id);
 
   return (
@@ -19,12 +20,27 @@ function StoryBookCard({ book, index, showToast, onFavoriteChange }) {
       whileHover={{ y: -3, scale: 1.005 }}
       className="min-w-0"
     >
-      <Link to={`/book-details/${book.id}`} className="group block text-center">
+      <div
+        role="button"
+        tabIndex={0}
+        onClick={() => onOpenBook(book.id)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            onOpenBook(book.id);
+          }
+        }}
+        className="group block text-center cursor-pointer"
+      >
         <div className="relative aspect-[4/5] rounded-lg border-2 border-dashed border-orange-400 bg-gradient-to-br from-orange-50 via-white to-pink-50 p-3 sm:p-4 flex items-center justify-center overflow-hidden transition-all duration-300 group-hover:border-pink-500 group-hover:shadow-md [perspective:900px]">
           <motion.button
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
+              if (!isAuthenticated) {
+                onRequireAuth();
+                return;
+              }
               if (isFavorite) {
                 storage.removeFavorite(book.id);
                 showToast('Livre retire des favoris', 'info', 2000);
@@ -43,6 +59,12 @@ function StoryBookCard({ book, index, showToast, onFavoriteChange }) {
               filled={isFavorite}
             />
           </motion.button>
+          {!isAuthenticated && (
+            <div className="absolute top-3 left-3 z-30 inline-flex items-center gap-1.5 rounded-full bg-white/90 px-3 py-1.5 text-xs font-bold text-neutral-800 shadow-md backdrop-blur-sm">
+              <LockIcon className="w-3.5 h-3.5 text-orange-500" />
+              Prive
+            </div>
+          )}
 
           <div className="relative w-[72%] max-w-[190px] aspect-[3/4] [transform-style:preserve-3d] transition-transform duration-300 [transform:rotateY(-18deg)_rotateZ(-1deg)] group-hover:[transform:rotateY(-15deg)_rotateZ(-0.5deg)_translateY(-1px)]">
             <div className="absolute -right-[13%] top-[3%] h-[94%] w-[16%] rounded-r-md bg-gradient-to-r from-neutral-200 via-white to-neutral-300 shadow-md [transform:rotateY(72deg)_translateZ(1px)] origin-left">
@@ -97,11 +119,15 @@ function StoryBookCard({ book, index, showToast, onFavoriteChange }) {
             )}
           </div>
           <div className="mt-3 inline-flex items-center justify-center gap-1.5 text-orange-500 font-bold text-sm">
-            <BookIcon className="w-4 h-4" />
-            <span>Lire</span>
+            {isAuthenticated ? (
+              <BookIcon className="w-4 h-4" />
+            ) : (
+              <LockIcon className="w-4 h-4" />
+            )}
+            <span>{isAuthenticated ? 'Lire' : 'Connexion pour lire'}</span>
           </div>
         </div>
-      </Link>
+      </div>
     </motion.div>
   );
 }
@@ -111,6 +137,22 @@ function StoriesGallery() {
   const [loading, setLoading] = useState(true);
   const [favoritesVersion, setFavoritesVersion] = useState(0);
   const { showToast } = useToast();
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const isAuthenticated = Boolean(user || localStorage.getItem('token'));
+
+  const requireAuth = () => {
+    showToast('Connectez-vous pour acceder aux histoires.', 'info', 2500);
+    navigate('/admin/login');
+  };
+
+  const openBook = (bookId) => {
+    if (!isAuthenticated) {
+      requireAuth();
+      return;
+    }
+    navigate(`/book-details/${bookId}`);
+  };
 
   useEffect(() => {
     const loadBooks = async () => {
@@ -178,8 +220,11 @@ function StoriesGallery() {
                   key={`${book.id}-${favoritesVersion}`}
                   book={book}
                   index={index}
+                  isAuthenticated={isAuthenticated}
                   showToast={showToast}
                   onFavoriteChange={() => setFavoritesVersion((value) => value + 1)}
+                  onOpenBook={openBook}
+                  onRequireAuth={requireAuth}
                 />
               ))}
             </div>
