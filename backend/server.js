@@ -477,13 +477,8 @@ if (!process.env.VERCEL) {
       process.exit(1);
     });
 } else {
-  // For Vercel: initialize DB in background (non-blocking)
-  initDatabase()
-    .then(() => {
-      console.log('✅ Database initialized for Vercel');
-      dbInitialized = true;
-    })
-    .catch((err) => console.error('⚠️  Database init warning:', err.message));
+  console.log('Skipping automatic database initialization on Vercel');
+  dbInitialized = true;
 }
 
 // Export app for Vercel serverless functions
