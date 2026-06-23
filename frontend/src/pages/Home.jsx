@@ -723,83 +723,6 @@ function Home({ darkMode, setDarkMode }) {
         </section>
       )}
 
-      {/* Section 1.6: Navigation par âge - Inspiré de freechildrenstories.com */}
-      <section className="bg-gradient-to-r from-red-50 via-pink-50 to-orange-50 py-12 md:py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-            className="text-center mb-12"
-          >
-            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-neutral-900 mb-3 sm:mb-4">
-              {t.browseByAge}
-            </h2>
-            <p className="text-lg text-neutral-600 max-w-2xl mx-auto">
-              {t.ageDescription}
-            </p>
-          </motion.div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
-            {[
-              { label: t.age3to5, age: '3-5', desc: t.firstSteps, image: '/enfant3ans.webp' },
-              { label: t.age6to8, age: '6-8', desc: t.shortStories, image: encodeURI('/enfant 5 8ans.webp') },
-              { label: t.age9to12, age: '9-12', desc: t.adventures, image: '/enfant10ans.webp' }
-            ].map((item, i) => (
-              <motion.button
-                key={i}
-                onClick={() => {
-                  setSelectedAge(item.age);
-                  document.getElementById('books-section')?.scrollIntoView({ behavior: 'smooth' });
-                }}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1, duration: 0.5 }}
-                whileHover={{ scale: 1.05, y: -5 }}
-                whileTap={{ scale: 0.95 }}
-                className="p-6 rounded-2xl bg-gradient-to-br from-red-500 via-pink-500 to-orange-500 text-white shadow-lg hover:shadow-xl transition-all text-center border-2 border-white/20 relative overflow-hidden group"
-              >
-                {/* Image de fond avec overlay */}
-                <div className="absolute inset-0 opacity-20 group-hover:opacity-30 transition-opacity">
-                  <img 
-                    src={item.image} 
-                    alt={item.label}
-                    className="w-full h-full object-cover"
-                    loading="lazy"
-                    onError={(e) => {
-                      // Si l'image n'existe pas, masquer l'image
-                      e.target.style.display = 'none';
-                    }}
-                  />
-                </div>
-                <div className="relative z-10">
-                  {/* Image principale centrée */}
-                  <div className="w-24 h-24 mx-auto mb-3 rounded-full overflow-hidden border-4 border-white/30 shadow-lg bg-white/10">
-                    <img 
-                      src={item.image} 
-                      alt={item.label}
-                      className="w-full h-full object-cover"
-                      loading="lazy"
-                      onError={(e) => {
-                        // Si l'image n'existe pas, afficher l'icône
-                        e.target.style.display = 'none';
-                        const icon = e.target.nextElementSibling;
-                        if (icon) icon.style.display = 'block';
-                      }}
-                    />
-                    <ChildIcon className="w-full h-full p-4 hidden" style={{ display: 'none' }} />
-                  </div>
-                  <h3 className="text-xl font-bold mb-2">{item.label}</h3>
-                  <p className="text-sm opacity-90">{item.desc}</p>
-                </div>
-              </motion.button>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* Section 2: Bibliothèque */}
       <section id="books-section" className="bg-gradient-to-br from-white via-red-50/30 to-pink-50/30 py-8 md:py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 w-full">
@@ -1082,6 +1005,83 @@ function Home({ darkMode, setDarkMode }) {
             </motion.div>
           </AnimatePresence>
         ))}
+        </div>
+      </section>
+
+      {/* Section 2.5: Navigation par âge - Inspiré de freechildrenstories.com */}
+      <section className="bg-gradient-to-r from-red-50 via-pink-50 to-orange-50 py-12 md:py-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-12"
+          >
+            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-neutral-900 mb-3 sm:mb-4">
+              {t.browseByAge}
+            </h2>
+            <p className="text-lg text-neutral-600 max-w-2xl mx-auto">
+              {t.ageDescription}
+            </p>
+          </motion.div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
+            {[
+              { label: t.age3to5, age: '3-5', desc: t.firstSteps, image: '/enfant3ans.webp' },
+              { label: t.age6to8, age: '6-8', desc: t.shortStories, image: encodeURI('/enfant 5 8ans.webp') },
+              { label: t.age9to12, age: '9-12', desc: t.adventures, image: '/enfant10ans.webp' }
+            ].map((item, i) => (
+              <motion.button
+                key={i}
+                onClick={() => {
+                  setSelectedAge(item.age);
+                  document.getElementById('books-section')?.scrollIntoView({ behavior: 'smooth' });
+                }}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1, duration: 0.5 }}
+                whileHover={{ scale: 1.05, y: -5 }}
+                whileTap={{ scale: 0.95 }}
+                className="p-6 rounded-2xl bg-gradient-to-br from-red-500 via-pink-500 to-orange-500 text-white shadow-lg hover:shadow-xl transition-all text-center border-2 border-white/20 relative overflow-hidden group"
+              >
+                {/* Image de fond avec overlay */}
+                <div className="absolute inset-0 opacity-20 group-hover:opacity-30 transition-opacity">
+                  <img 
+                    src={item.image} 
+                    alt={item.label}
+                    className="w-full h-full object-cover"
+                    loading="lazy"
+                    onError={(e) => {
+                      // Si l'image n'existe pas, masquer l'image
+                      e.target.style.display = 'none';
+                    }}
+                  />
+                </div>
+                <div className="relative z-10">
+                  {/* Image principale centrée */}
+                  <div className="w-24 h-24 mx-auto mb-3 rounded-full overflow-hidden border-4 border-white/30 shadow-lg bg-white/10">
+                    <img 
+                      src={item.image} 
+                      alt={item.label}
+                      className="w-full h-full object-cover"
+                      loading="lazy"
+                      onError={(e) => {
+                        // Si l'image n'existe pas, afficher l'icône
+                        e.target.style.display = 'none';
+                        const icon = e.target.nextElementSibling;
+                        if (icon) icon.style.display = 'block';
+                      }}
+                    />
+                    <ChildIcon className="w-full h-full p-4 hidden" style={{ display: 'none' }} />
+                  </div>
+                  <h3 className="text-xl font-bold mb-2">{item.label}</h3>
+                  <p className="text-sm opacity-90">{item.desc}</p>
+                </div>
+              </motion.button>
+            ))}
+          </div>
         </div>
       </section>
 
