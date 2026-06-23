@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { BookIcon, GlobeIcon, TrophyIcon } from './Icons';
 
@@ -90,11 +91,15 @@ function LibraryMenu({ categories, onCategorySelect, onAgeSelect, selectedCatego
                       <span className="hidden sm:inline">Catalogue anglais</span>
                       <span className="sm:hidden">EN</span>
                     </button>
-                    <button className="flex h-14 items-center justify-center gap-2 rounded-xl border border-neutral-200 bg-white px-3 text-sm font-semibold text-neutral-700 shadow-sm transition-colors hover:bg-neutral-50">
+                    <Link
+                      to="/abonnements"
+                      onClick={() => setIsOpen(false)}
+                      className="flex h-14 items-center justify-center gap-2 rounded-xl border border-neutral-200 bg-white px-3 text-sm font-semibold text-neutral-700 shadow-sm transition-colors hover:bg-neutral-50"
+                    >
                       <TrophyIcon className="w-3 h-3 sm:w-4 sm:h-4" />
                       <span className="hidden sm:inline">Prix</span>
                       <span className="sm:hidden">🏆</span>
-                    </button>
+                    </Link>
                   </div>
                 </div>
 

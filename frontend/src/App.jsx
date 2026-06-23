@@ -12,6 +12,7 @@ import Favorites from './pages/Favorites';
 import History from './pages/History';
 import FeatureDetails from './pages/FeatureDetails';
 import StoriesGallery from './pages/StoriesGallery';
+import Subscriptions from './pages/Subscriptions';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { LanguageProvider } from './context/LanguageContext';
 import { ToastProvider } from './components/ToastProvider';
@@ -71,6 +72,7 @@ function App() {
                 <Route path="/favorites" element={<RequireAuth><Favorites /></RequireAuth>} />
                 <Route path="/history" element={<RequireAuth><History /></RequireAuth>} />
                 <Route path="/stories" element={<StoriesGallery />} />
+                <Route path="/abonnements" element={<Subscriptions />} />
                 <Route path="/features/:featureId" element={<FeatureDetails />} />
                 <Route path="/admin/login" element={<AdminLogin />} />
                 <Route path="/admin/signup" element={<SignUp />} />

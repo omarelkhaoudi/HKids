@@ -16,6 +16,7 @@ import booksRouter from './routes/books.js';
 import authRouter from './routes/auth.js';
 import categoriesRouter from './routes/categories.js';
 import parentalRouter from './routes/parental.js';
+import subscriptionsRouter from './routes/subscriptions.js';
 import { errorHandler, notFound } from './middleware/errorHandler.js';
 import { requestLogger } from './middleware/logger.js';
 import { apiRateLimiter, authRateLimiter, resetRateLimit } from './middleware/rateLimiter.js';
@@ -202,6 +203,7 @@ app.use('/api/auth', authRouter);
 app.use('/api/books', booksRouter);
 app.use('/api/categories', categoriesRouter);
 app.use('/api/parental', parentalRouter);
+app.use('/api/subscriptions', subscriptionsRouter);
 
 // Log available routes for debugging
 console.log('📋 Available auth routes:');

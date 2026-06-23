@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { createWorker } from 'tesseract.js';
 import * as pdfjsLib from 'pdfjs-dist';
 import { booksAPI } from '../api/books';
+import { subscriptionsAPI } from '../api/subscriptions';
 import { storage } from '../utils/storage';
 import { getFileUrl } from '../utils/fileUrl';
 import { useToast } from '../components/ToastProvider';
@@ -361,6 +362,7 @@ function BookReader() {
     try {
       setLoading(true);
       console.log("Book ID:", id);
+      await subscriptionsAPI.unlockBook(id);
       const response = await booksAPI.getBook(id);
       console.log("API response:", response.data);
       console.log("Book loaded:", response.data);
@@ -374,6 +376,17 @@ function BookReader() {
       storage.addToHistory(id, response.data.title, savedPage || 0);
     } catch (error) {
       console.error('Error loading book:', error);
+      const status = error.response?.status;
+      if (status === 402 || status === 403) {
+        showToast(
+          status === 402
+            ? 'Choisissez un abonnement pour lire ce livre.'
+            : 'Votre quota de livres du mois est atteint.',
+          'info',
+          2500
+        );
+        navigate('/abonnements');
+      }
     } finally {
       setLoading(false);
     }
