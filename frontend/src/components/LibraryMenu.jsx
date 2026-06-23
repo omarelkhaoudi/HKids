@@ -79,19 +79,19 @@ function LibraryMenu({ categories, onCategorySelect, onAgeSelect, selectedCatego
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.2 }}
-              className="absolute top-full left-0 sm:left-1/2 sm:transform sm:-translate-x-1/2 mt-2 w-[calc(100vw-2rem)] sm:w-auto sm:min-w-[300px] sm:max-w-md bg-white rounded-2xl shadow-2xl z-50 overflow-hidden border border-neutral-200 mx-2 sm:mx-0"
+              className="absolute top-full left-0 sm:left-1/2 sm:transform sm:-translate-x-1/2 mt-2 w-[calc(100vw-2rem)] sm:w-[420px] bg-white rounded-2xl shadow-2xl z-50 overflow-hidden border border-neutral-200 mx-2 sm:mx-0"
             >
               {/* Header avec titre et boutons d'âge */}
               <div className="bg-gradient-to-r from-red-50 via-pink-50 to-orange-50 p-4 sm:p-6 border-b border-neutral-200">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-3">
-                  <h2 className="text-xl sm:text-2xl font-bold text-neutral-900">Bibliothèque</h2>
-                  <div className="flex items-center gap-2 sm:gap-4 flex-wrap">
-                    <button className="flex items-center gap-1 sm:gap-2 px-2 sm:px-4 py-1.5 sm:py-2 bg-white rounded-lg hover:bg-neutral-50 transition-colors text-xs sm:text-sm font-medium text-neutral-700 border border-neutral-200">
+                <div className="mb-5 space-y-4">
+                  <h2 className="text-2xl font-bold text-neutral-900">Bibliothèque</h2>
+                  <div className="grid grid-cols-2 gap-3">
+                    <button className="flex h-14 items-center justify-center gap-2 rounded-xl border border-neutral-200 bg-white px-3 text-sm font-semibold text-neutral-700 shadow-sm transition-colors hover:bg-neutral-50">
                       <GlobeIcon className="w-3 h-3 sm:w-4 sm:h-4" />
                       <span className="hidden sm:inline">Catalogue anglais</span>
                       <span className="sm:hidden">EN</span>
                     </button>
-                    <button className="flex items-center gap-1 sm:gap-2 px-2 sm:px-4 py-1.5 sm:py-2 bg-white rounded-lg hover:bg-neutral-50 transition-colors text-xs sm:text-sm font-medium text-neutral-700 border border-neutral-200">
+                    <button className="flex h-14 items-center justify-center gap-2 rounded-xl border border-neutral-200 bg-white px-3 text-sm font-semibold text-neutral-700 shadow-sm transition-colors hover:bg-neutral-50">
                       <TrophyIcon className="w-3 h-3 sm:w-4 sm:h-4" />
                       <span className="hidden sm:inline">Prix</span>
                       <span className="sm:hidden">🏆</span>
@@ -100,7 +100,7 @@ function LibraryMenu({ categories, onCategorySelect, onAgeSelect, selectedCatego
                 </div>
 
                 {/* Boutons d'âge */}
-                <div className="flex flex-wrap gap-2 sm:gap-3">
+                <div className="grid grid-cols-3 gap-3">
                   {ageButtons.map((ageBtn) => {
                     // Comparer avec la plage complète (ex: "3-5") ou juste le premier nombre pour compatibilité
                     const isSelected = selectedAge === ageBtn.age || selectedAge === ageBtn.age.split('-')[0];
@@ -108,7 +108,7 @@ function LibraryMenu({ categories, onCategorySelect, onAgeSelect, selectedCatego
                       <button
                         key={ageBtn.age}
                         onClick={() => handleAgeClick(ageBtn.age)}
-                        className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-white font-semibold text-xs sm:text-sm transition-all flex-1 sm:flex-none ${
+                        className={`h-11 rounded-xl px-3 text-sm font-bold text-white transition-all ${
                           isSelected ? ageBtn.color + ' ring-2 ring-offset-2 ring-offset-white ring-neutral-900' : ageBtn.color
                         }`}
                       >
