@@ -197,8 +197,34 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Database initialization flag
 let dbInitialized = false;
+let dbInitializationPromise = null;
+
+async function ensureDatabaseInitialized(req, res, next) {
+  try {
+    if (dbInitialized) return next();
+
+    if (!dbInitializationPromise) {
+      dbInitializationPromise = initDatabase()
+        .then(() => {
+          console.log('✅ Database initialization completed');
+          dbInitialized = true;
+        })
+        .catch((err) => {
+          dbInitializationPromise = null;
+          throw err;
+        });
+    }
+
+    await dbInitializationPromise;
+    return next();
+  } catch (err) {
+    console.error('❌ Database initialization failed:', err);
+    return res.status(500).json({ error: 'Database initialization failed' });
+  }
+}
 
 // Routes
+app.use('/api', ensureDatabaseInitialized);
 app.use('/api/auth', authRouter);
 app.use('/api/books', booksRouter);
 app.use('/api/categories', categoriesRouter);
@@ -479,8 +505,7 @@ if (!process.env.VERCEL) {
       process.exit(1);
     });
 } else {
-  console.log('Skipping automatic database initialization on Vercel');
-  dbInitialized = true;
+  console.log('Database initialization will run on the first Vercel API request');
 }
 
 // Export app for Vercel serverless functions
