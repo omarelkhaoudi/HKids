@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { subscriptionsAPI } from '../api/subscriptions';
 import { useAuth } from '../context/AuthContext';
@@ -52,31 +52,69 @@ function Subscriptions() {
   const { user } = useAuth();
   const { showToast } = useToast();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const isAuthenticated = Boolean(user || localStorage.getItem('token'));
 
   useEffect(() => {
     const loadSubscriptions = async () => {
       try {
         setLoading(true);
-        const plansResponse = await subscriptionsAPI.getPlans();
-        if (Array.isArray(plansResponse.data) && plansResponse.data.length > 0) {
-          setPlans(plansResponse.data);
+        try {
+          const plansResponse = await subscriptionsAPI.getPlans();
+          if (Array.isArray(plansResponse.data) && plansResponse.data.length > 0) {
+            setPlans(plansResponse.data);
+          }
+        } catch (error) {
+          console.error('Error loading subscription plans:', error);
         }
 
         if (isAuthenticated) {
-          const subscriptionResponse = await subscriptionsAPI.getCurrentSubscription();
-          setCurrentSubscription(subscriptionResponse.data.subscription);
+          try {
+            const subscriptionResponse = await subscriptionsAPI.getCurrentSubscription();
+            setCurrentSubscription(subscriptionResponse.data.subscription);
+          } catch (error) {
+            console.error('Error loading current subscription:', error);
+          }
         }
       } catch (error) {
         console.error('Error loading subscriptions:', error);
-        showToast('Impossible de charger les abonnements pour le moment.', 'info', 2500);
       } finally {
         setLoading(false);
       }
     };
 
     loadSubscriptions();
-  }, [isAuthenticated, showToast]);
+  }, [isAuthenticated]);
+
+  useEffect(() => {
+    const checkoutStatus = searchParams.get('checkout');
+    const sessionId = searchParams.get('session_id');
+
+    if (!isAuthenticated || checkoutStatus !== 'success' || !sessionId) {
+      if (checkoutStatus === 'cancelled') {
+        showToast('Paiement annulé. Vous pouvez choisir une formule quand vous voulez.', 'info', 3000);
+        setSearchParams({});
+      }
+      return;
+    }
+
+    const confirmCheckout = async () => {
+      try {
+        setLoading(true);
+        const response = await subscriptionsAPI.confirmCheckout(sessionId);
+        setCurrentSubscription(response.data.subscription);
+        showToast('Paiement confirmé, abonnement activé.', 'success', 3500);
+      } catch (error) {
+        console.error('Error confirming checkout:', error);
+        showToast("Paiement reçu, mais confirmation HKids impossible pour le moment.", 'error', 4000);
+      } finally {
+        setLoading(false);
+        setSearchParams({});
+      }
+    };
+
+    confirmCheckout();
+  }, [isAuthenticated, searchParams, setSearchParams, showToast]);
 
   const handleSubscribe = async (planCode) => {
     if (!isAuthenticated) {
@@ -87,12 +125,19 @@ function Subscriptions() {
 
     try {
       setSubscribingPlan(planCode);
-      const response = await subscriptionsAPI.subscribe(planCode);
-      setCurrentSubscription(response.data.subscription);
-      showToast('Abonnement activé avec succès.', 'success', 2500);
+      const response = await subscriptionsAPI.createCheckoutSession(planCode);
+      if (response.data.checkout_url) {
+        window.location.href = response.data.checkout_url;
+        return;
+      }
+      throw new Error('Stripe checkout URL missing');
     } catch (error) {
       console.error('Error subscribing:', error);
-      showToast("L'abonnement n'a pas pu être activé.", 'error', 2500);
+      if (error.response?.data?.setup_required) {
+        showToast('Stripe doit être configuré sur le serveur avant le paiement.', 'error', 4500);
+      } else {
+        showToast("Le paiement n'a pas pu démarrer.", 'error', 3000);
+      }
     } finally {
       setSubscribingPlan('');
     }

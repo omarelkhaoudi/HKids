@@ -3,6 +3,8 @@ import { getDatabase } from '../database/init.js';
 import { verifyToken } from './auth.js';
 
 const router = express.Router();
+const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
+const frontendUrl = (process.env.FRONTEND_URL || process.env.CORS_ORIGIN || 'https://hkids.vercel.app').replace(/\/+$/, '');
 
 function getPool() {
   try {
@@ -26,6 +28,77 @@ function normalizePlan(row) {
     is_featured: Boolean(row.is_featured),
     is_active: Boolean(row.is_active),
   };
+}
+
+function appendStripeParams(params, value, prefix) {
+  if (Array.isArray(value)) {
+    value.forEach((item, index) => appendStripeParams(params, item, `${prefix}[${index}]`));
+    return;
+  }
+
+  if (value && typeof value === 'object') {
+    Object.entries(value).forEach(([key, nestedValue]) => {
+      appendStripeParams(params, nestedValue, prefix ? `${prefix}[${key}]` : key);
+    });
+    return;
+  }
+
+  if (value !== undefined && value !== null) {
+    params.append(prefix, String(value));
+  }
+}
+
+async function stripeRequest(path, options = {}) {
+  if (!stripeSecretKey) {
+    const error = new Error('Stripe is not configured');
+    error.statusCode = 503;
+    throw error;
+  }
+
+  const response = await fetch(`https://api.stripe.com/v1${path}`, {
+    ...options,
+    headers: {
+      Authorization: `Bearer ${stripeSecretKey}`,
+      ...(options.headers || {}),
+    },
+  });
+
+  const data = await response.json();
+  if (!response.ok) {
+    const error = new Error(data.error?.message || 'Stripe request failed');
+    error.statusCode = response.status;
+    error.stripe = data.error;
+    throw error;
+  }
+
+  return data;
+}
+
+async function activateSubscription(client, userId, plan, provider = null, providerSubscriptionId = null) {
+  await client.query(
+    `UPDATE user_subscriptions
+     SET status = 'replaced', updated_at = NOW()
+     WHERE user_id = $1 AND status IN ('trialing', 'active')`,
+    [userId]
+  );
+
+  const subscriptionResult = await client.query(
+    `INSERT INTO user_subscriptions (
+      user_id,
+      plan_id,
+      status,
+      started_at,
+      current_period_start,
+      current_period_end,
+      provider,
+      provider_subscription_id
+    )
+    VALUES ($1, $2, 'active', NOW(), NOW(), NOW() + INTERVAL '1 month', $3, $4)
+    RETURNING *`,
+    [userId, plan.id, provider, providerSubscriptionId]
+  );
+
+  return subscriptionResult.rows[0];
 }
 
 router.get('/plans', async (req, res) => {
@@ -244,33 +317,14 @@ router.post('/subscribe', verifyToken, async (req, res) => {
       return res.status(404).json({ error: 'Subscription plan not found' });
     }
 
-    await client.query(
-      `UPDATE user_subscriptions
-       SET status = 'replaced', updated_at = NOW()
-       WHERE user_id = $1 AND status IN ('trialing', 'active')`,
-      [req.user.id]
-    );
-
-    const subscriptionResult = await client.query(
-      `INSERT INTO user_subscriptions (
-        user_id,
-        plan_id,
-        status,
-        started_at,
-        current_period_start,
-        current_period_end
-      )
-      VALUES ($1, $2, 'active', NOW(), NOW(), NOW() + INTERVAL '1 month')
-      RETURNING *`,
-      [req.user.id, plan.id]
-    );
+    const subscription = await activateSubscription(client, req.user.id, plan, 'manual', null);
 
     await client.query('COMMIT');
 
     res.status(201).json({
       message: 'Subscription activated',
       subscription: {
-        ...subscriptionResult.rows[0],
+        ...subscription,
         plan: normalizePlan(plan),
       },
     });
@@ -278,6 +332,180 @@ router.post('/subscribe', verifyToken, async (req, res) => {
     await client.query('ROLLBACK');
     console.error('Error creating subscription:', err);
     res.status(500).json({ error: 'Database error' });
+  } finally {
+    client.release();
+  }
+});
+
+router.post('/create-checkout-session', verifyToken, async (req, res) => {
+  const { plan_code } = req.body;
+
+  if (!plan_code) {
+    return res.status(400).json({ error: 'plan_code is required' });
+  }
+
+  try {
+    const pool = getPool();
+    const planResult = await pool.query(
+      `SELECT *
+       FROM subscription_plans
+       WHERE code = $1 AND is_active = TRUE
+       LIMIT 1`,
+      [plan_code]
+    );
+
+    const plan = planResult.rows[0];
+    if (!plan) {
+      return res.status(404).json({ error: 'Subscription plan not found' });
+    }
+
+    if (!stripeSecretKey) {
+      return res.status(503).json({
+        error: 'Stripe is not configured',
+        setup_required: true,
+        required_env: ['STRIPE_SECRET_KEY', 'FRONTEND_URL'],
+      });
+    }
+
+    const params = new URLSearchParams();
+    const payload = {
+      mode: 'subscription',
+      client_reference_id: String(req.user.id),
+      success_url: `${frontendUrl}/abonnements?checkout=success&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${frontendUrl}/abonnements?checkout=cancelled`,
+      line_items: [
+        {
+          quantity: 1,
+          price_data: {
+            currency: String(plan.currency || 'EUR').toLowerCase(),
+            unit_amount: plan.monthly_price_cents,
+            recurring: { interval: 'month' },
+            product_data: {
+              name: plan.name,
+              description: plan.description || `${plan.book_limit} livre(s) par mois`,
+            },
+          },
+        },
+      ],
+      metadata: {
+        user_id: req.user.id,
+        plan_code: plan.code,
+      },
+      subscription_data: {
+        metadata: {
+          user_id: req.user.id,
+          plan_code: plan.code,
+        },
+      },
+    };
+
+    appendStripeParams(params, payload);
+
+    const session = await stripeRequest('/checkout/sessions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: params,
+    });
+
+    res.json({
+      checkout_url: session.url,
+      session_id: session.id,
+    });
+  } catch (err) {
+    console.error('Error creating Stripe checkout session:', err);
+    res.status(err.statusCode || 500).json({
+      error: err.message || 'Stripe checkout error',
+      setup_required: err.statusCode === 503,
+    });
+  }
+});
+
+router.post('/confirm-checkout', verifyToken, async (req, res) => {
+  const { session_id } = req.body;
+
+  if (!session_id) {
+    return res.status(400).json({ error: 'session_id is required' });
+  }
+
+  const client = await getPool().connect();
+  try {
+    const session = await stripeRequest(`/checkout/sessions/${encodeURIComponent(session_id)}`);
+
+    if (session.client_reference_id !== String(req.user.id) && session.metadata?.user_id !== String(req.user.id)) {
+      return res.status(403).json({ error: 'Checkout session does not belong to this user' });
+    }
+
+    if (session.status !== 'complete' || session.payment_status !== 'paid') {
+      return res.status(402).json({ error: 'Checkout session is not paid yet' });
+    }
+
+    const planCode = session.metadata?.plan_code;
+    if (!planCode) {
+      return res.status(400).json({ error: 'Missing plan metadata on checkout session' });
+    }
+
+    await client.query('BEGIN');
+
+    const planResult = await client.query(
+      `SELECT *
+       FROM subscription_plans
+       WHERE code = $1 AND is_active = TRUE
+       LIMIT 1`,
+      [planCode]
+    );
+
+    const plan = planResult.rows[0];
+    if (!plan) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({ error: 'Subscription plan not found' });
+    }
+
+    const providerSubscriptionId = session.subscription || session.id;
+    const existingSubscription = await client.query(
+      `SELECT *
+       FROM user_subscriptions
+       WHERE user_id = $1
+         AND provider = 'stripe'
+         AND provider_subscription_id = $2
+       LIMIT 1`,
+      [req.user.id, providerSubscriptionId]
+    );
+
+    if (existingSubscription.rows[0]) {
+      await client.query('COMMIT');
+      return res.json({
+        message: 'Stripe subscription already confirmed',
+        subscription: {
+          ...existingSubscription.rows[0],
+          plan: normalizePlan(plan),
+        },
+      });
+    }
+
+    const subscription = await activateSubscription(
+      client,
+      req.user.id,
+      plan,
+      'stripe',
+      providerSubscriptionId
+    );
+
+    await client.query('COMMIT');
+
+    res.json({
+      message: 'Stripe subscription confirmed',
+      subscription: {
+        ...subscription,
+        plan: normalizePlan(plan),
+      },
+    });
+  } catch (err) {
+    await client.query('ROLLBACK');
+    console.error('Error confirming Stripe checkout:', err);
+    res.status(err.statusCode || 500).json({
+      error: err.message || 'Stripe confirmation error',
+      setup_required: err.statusCode === 503,
+    });
   } finally {
     client.release();
   }
