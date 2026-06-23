@@ -7,7 +7,7 @@ import { booksAPI } from '../api/books';
 import { storage } from '../utils/storage';
 import { getFileUrl } from '../utils/fileUrl';
 import { useToast } from '../components/ToastProvider';
-import { ChevronLeftIcon, ChevronRightIcon, HomeIcon, BookIcon, StarIcon, PlayIcon, PauseIcon, VolumeIcon, XIcon } from '../components/Icons';
+import { ChevronLeftIcon, ChevronRightIcon, HomeIcon, BookIcon, StarIcon, PlayIcon, PauseIcon, VolumeIcon, XIcon, SettingsIcon } from '../components/Icons';
 import ReadingAidPanel from '../components/ReadingAidPanel';
 
 // Configuration de pdfjs-dist
@@ -1086,14 +1086,14 @@ function BookReader() {
             )}
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center justify-end gap-4">
             {/* Bouton lecture audio */}
             <motion.button
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
               onClick={toggleAudio}
               disabled={isExtracting || (!currentPageData?.content && !currentPageData?.image_path)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-full font-semibold transition-colors backdrop-blur-sm ${
+              className={`flex h-10 items-center gap-2 px-4 py-2 rounded-full font-semibold transition-colors backdrop-blur-sm ${
                 isPlaying
                   ? 'bg-red-500 hover:bg-red-600 text-white'
                   : isExtracting
@@ -1122,10 +1122,11 @@ function BookReader() {
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
               onClick={() => setShowReadingAid(true)}
-              className="flex items-center gap-2 bg-white/20 hover:bg-white/30 px-4 py-2 rounded-full font-semibold transition-colors backdrop-blur-sm"
-              title="Aide à la lecture"
+              className="flex h-10 items-center gap-2 bg-white/20 hover:bg-white/30 px-4 py-2 rounded-full font-semibold transition-colors backdrop-blur-sm"
+              title="Personnaliser la lecture"
             >
-              <span className="hidden sm:inline">Aide</span>
+              <SettingsIcon className="w-5 h-5" />
+              <span className="hidden sm:inline">Personnaliser</span>
             </motion.button>
             <div className="text-right">
               <div className="text-lg font-bold mb-2">
