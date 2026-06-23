@@ -1128,8 +1128,8 @@ function BookReader() {
               <SettingsIcon className="w-5 h-5" />
               <span className="hidden sm:inline">Personnaliser</span>
             </motion.button>
-            <div className="text-right">
-              <div className="text-lg font-bold mb-2">
+            <div className="flex h-10 shrink-0 items-center gap-3">
+              <div className="min-w-16 text-center text-lg font-bold leading-none">
                 {currentPage + 1} / {totalPages}
               </div>
               <div className="w-32 h-3 bg-white/30 rounded-full overflow-hidden shadow-inner">
