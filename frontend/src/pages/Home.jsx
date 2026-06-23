@@ -618,7 +618,7 @@ function Home({ darkMode, setDarkMode }) {
       )}
 
       {/* Section 2: Bibliothèque */}
-      <section id="books-section" className="bg-gradient-to-br from-white via-red-50/30 to-pink-50/30 py-8 md:py-12">
+      <section className="hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 w-full">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -903,7 +903,7 @@ function Home({ darkMode, setDarkMode }) {
       </section>
 
       {/* Section 2.5: Navigation par âge - Inspiré de freechildrenstories.com */}
-      <section className="bg-gradient-to-r from-red-50 via-pink-50 to-orange-50 py-12 md:py-16">
+      <section id="books-section" className="bg-gradient-to-r from-red-50 via-pink-50 to-orange-50 py-12 md:py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
