@@ -1,5 +1,4 @@
 import { useState, useRef, useEffect } from 'react';
-import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { BookIcon, GlobeIcon, TrophyIcon } from './Icons';
 
@@ -119,17 +118,6 @@ function LibraryMenu({ categories, onCategorySelect, onAgeSelect, selectedCatego
                 </div>
               </div>
 
-              {/* Contenu : Seulement le lien Accueil */}
-              <div className="p-4 sm:p-6">
-                <Link
-                  to="/"
-                  onClick={() => setIsOpen(false)}
-                  className="flex items-center gap-2 p-3 rounded-lg hover:bg-neutral-50 transition-colors font-semibold text-neutral-900 text-sm sm:text-base"
-                >
-                  <BookIcon className="w-4 h-4 sm:w-5 sm:h-5" />
-                  <span>Accueil</span>
-                </Link>
-              </div>
             </motion.div>
           </>
         )}
