@@ -192,6 +192,13 @@ function StoriesGallery() {
             <ChevronLeftIcon className="w-4 h-4" />
             Accueil
           </Link>
+          <Link
+            to="/abonnements"
+            className="hidden sm:inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-gradient-to-r from-orange-500 to-pink-500 text-white font-bold hover:shadow-lg transition-all"
+          >
+            <BookIcon className="w-4 h-4" />
+            Abonnements
+          </Link>
         </div>
       </header>
 
@@ -217,6 +224,12 @@ function StoriesGallery() {
               <p className="text-base sm:text-lg text-neutral-600 max-w-2xl mx-auto leading-relaxed">
                 Parcourez les livres disponibles, ajoutez vos favoris et choisissez une histoire adaptee a l'age de votre enfant.
               </p>
+              <Link
+                to="/abonnements"
+                className="mt-6 inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-orange-500 to-pink-500 px-6 py-3 text-white font-bold shadow-lg hover:shadow-xl transition-all"
+              >
+                Voir les abonnements mensuels
+              </Link>
               {!isAuthenticated && (
                 <div className="mt-6 inline-flex items-center gap-2 rounded-full bg-white/90 px-4 py-2 text-sm font-bold text-neutral-800 shadow-sm border border-orange-100">
                   <LockIcon className="w-4 h-4 text-orange-500" />

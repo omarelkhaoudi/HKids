@@ -109,6 +109,43 @@ export async function initDatabase() {
         created_at TIMESTAMPTZ DEFAULT NOW(),
         updated_at TIMESTAMPTZ DEFAULT NOW(),
         UNIQUE(kid_profile_id, category_id)
+      );`,
+      `CREATE TABLE IF NOT EXISTS subscription_plans (
+        id SERIAL PRIMARY KEY,
+        code TEXT UNIQUE NOT NULL,
+        name TEXT NOT NULL,
+        description TEXT,
+        monthly_price_cents INTEGER NOT NULL,
+        currency TEXT NOT NULL DEFAULT 'EUR',
+        book_limit INTEGER NOT NULL,
+        is_featured BOOLEAN DEFAULT FALSE,
+        is_active BOOLEAN DEFAULT TRUE,
+        created_at TIMESTAMPTZ DEFAULT NOW(),
+        updated_at TIMESTAMPTZ DEFAULT NOW()
+      );`,
+      `CREATE TABLE IF NOT EXISTS user_subscriptions (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        plan_id INTEGER NOT NULL REFERENCES subscription_plans(id),
+        status TEXT NOT NULL DEFAULT 'active',
+        started_at TIMESTAMPTZ DEFAULT NOW(),
+        current_period_start TIMESTAMPTZ DEFAULT NOW(),
+        current_period_end TIMESTAMPTZ DEFAULT (NOW() + INTERVAL '1 month'),
+        cancel_at_period_end BOOLEAN DEFAULT FALSE,
+        provider TEXT,
+        provider_subscription_id TEXT,
+        created_at TIMESTAMPTZ DEFAULT NOW(),
+        updated_at TIMESTAMPTZ DEFAULT NOW()
+      );`,
+      `CREATE TABLE IF NOT EXISTS subscription_book_unlocks (
+        id SERIAL PRIMARY KEY,
+        subscription_id INTEGER NOT NULL REFERENCES user_subscriptions(id) ON DELETE CASCADE,
+        user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        book_id INTEGER NOT NULL REFERENCES books(id) ON DELETE CASCADE,
+        period_start TIMESTAMPTZ NOT NULL,
+        period_end TIMESTAMPTZ NOT NULL,
+        unlocked_at TIMESTAMPTZ DEFAULT NOW(),
+        UNIQUE(subscription_id, book_id, period_start)
       );`
     ];
 
@@ -129,6 +166,25 @@ export async function initDatabase() {
     `);
     await client.query(`CREATE UNIQUE INDEX IF NOT EXISTS books_slug_unique ON books(slug)`);
     await client.query(`CREATE UNIQUE INDEX IF NOT EXISTS book_pages_book_page_unique ON book_pages(book_id, page_number)`);
+    await client.query(`CREATE INDEX IF NOT EXISTS user_subscriptions_user_status_idx ON user_subscriptions(user_id, status)`);
+    await client.query(`CREATE INDEX IF NOT EXISTS subscription_book_unlocks_user_period_idx ON subscription_book_unlocks(user_id, period_start, period_end)`);
+
+    await client.query(`
+      INSERT INTO subscription_plans (code, name, description, monthly_price_cents, currency, book_limit, is_featured)
+      VALUES
+        ('one_book_monthly', 'Formule Découverte', 'Un livre au choix chaque mois pour commencer en douceur.', 299, 'EUR', 1, FALSE),
+        ('two_books_monthly', 'Formule Lecture', 'Deux livres par mois pour garder un rythme régulier.', 499, 'EUR', 2, TRUE),
+        ('three_books_monthly', 'Formule Passion', 'Trois livres par mois pour les petits lecteurs très curieux.', 699, 'EUR', 3, FALSE)
+      ON CONFLICT (code) DO UPDATE SET
+        name = EXCLUDED.name,
+        description = EXCLUDED.description,
+        monthly_price_cents = EXCLUDED.monthly_price_cents,
+        currency = EXCLUDED.currency,
+        book_limit = EXCLUDED.book_limit,
+        is_featured = EXCLUDED.is_featured,
+        is_active = TRUE,
+        updated_at = NOW()
+    `);
 
     // Insérer admin par défaut
     const defaultPassword = bcrypt.hashSync('admin123', 10);
