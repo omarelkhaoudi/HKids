@@ -217,25 +217,36 @@ function BookDetails() {
               <div className="relative">
                 <div className="absolute inset-0 bg-gradient-to-br from-red-500/20 via-pink-500/20 to-orange-500/20 blur-2xl rounded-3xl"></div>
                 <motion.div
-                  whileHover={{ scale: 1.05, rotateY: 5 }}
+                  whileHover={{ scale: 1.04, y: -4 }}
                   transition={{ type: 'spring', stiffness: 300 }}
-                  className="relative bg-white rounded-3xl p-6 shadow-2xl border-4 border-white"
+                  className="relative w-[300px] sm:w-[360px] md:w-[420px] rounded-3xl border-4 border-white bg-gradient-to-br from-red-50 via-pink-50 to-orange-50 p-8 sm:p-10 shadow-2xl [perspective:1200px]"
                 >
-                  {book.cover_image && !imageError ? (
-                    <div className="w-full max-w-sm min-h-[400px] flex items-center justify-center rounded-2xl overflow-hidden bg-gradient-to-br from-red-50 to-pink-50">
-                      <img
-                        src={getImageUrl(book.cover_image)}
-                        alt={book.title}
-                        className="w-full h-auto max-h-[500px] object-contain rounded-2xl shadow-xl"
-                        onError={() => setImageError(true)}
-                        onLoad={() => setImageError(false)}
-                      />
+                  <div className="relative mx-auto w-[78%] max-w-[300px] aspect-[3/4] [transform-style:preserve-3d] [transform:rotateY(-18deg)_rotateZ(-1deg)] transition-transform duration-300 hover:[transform:rotateY(-14deg)_rotateZ(-0.5deg)_translateY(-2px)]">
+                    <div className="absolute -right-[14%] top-[3%] h-[94%] w-[17%] rounded-r-lg bg-gradient-to-r from-neutral-200 via-white to-neutral-300 shadow-lg [transform:rotateY(72deg)_translateZ(1px)] origin-left">
+                      <div className="absolute inset-y-4 left-1/3 w-px bg-neutral-300/80"></div>
+                      <div className="absolute inset-y-5 right-1/3 w-px bg-neutral-200/80"></div>
                     </div>
-                  ) : (
-                    <div className="w-full max-w-sm h-96 flex items-center justify-center bg-gradient-to-br from-red-100 to-pink-100 rounded-2xl">
-                      <BookIcon className="w-32 h-32 text-red-400" />
+                    <div className="absolute -right-[8%] top-[5%] h-[90%] w-[10%] rounded-r-md bg-gradient-to-r from-white via-neutral-100 to-neutral-300 [transform:translateZ(-12px)]"></div>
+                    <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-neutral-900/10 to-neutral-900/25 [transform:translateZ(-18px)]"></div>
+                    <div className="relative z-10 h-full w-full overflow-hidden rounded-xl bg-white shadow-2xl ring-1 ring-black/10 [transform:translateZ(16px)]">
+                      {book.cover_image && !imageError ? (
+                        <img
+                          src={getImageUrl(book.cover_image)}
+                          alt={book.title}
+                          className="h-full w-full object-cover"
+                          onError={() => setImageError(true)}
+                          onLoad={() => setImageError(false)}
+                        />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-red-100 to-pink-100">
+                          <BookIcon className="w-28 h-28 text-red-400" />
+                        </div>
+                      )}
+                      <div className="pointer-events-none absolute inset-y-0 left-0 w-[14%] bg-gradient-to-r from-black/20 via-black/5 to-transparent"></div>
+                      <div className="pointer-events-none absolute inset-0 bg-gradient-to-tr from-white/0 via-white/10 to-white/35"></div>
                     </div>
-                  )}
+                    <div className="absolute -bottom-7 left-[9%] h-7 w-[95%] rounded-full bg-black/20 blur-xl [transform:rotateX(75deg)]"></div>
+                  </div>
                 </motion.div>
               </div>
             </motion.div>
