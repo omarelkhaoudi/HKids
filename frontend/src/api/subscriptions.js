@@ -19,6 +19,18 @@ export const subscriptionsAPI = {
     { headers: authHeaders() }
   ),
 
+  createCheckoutSession: (planCode) => axios.post(
+    buildApiUrl('/subscriptions/create-checkout-session'),
+    { plan_code: planCode },
+    { headers: authHeaders() }
+  ),
+
+  confirmCheckout: (sessionId) => axios.post(
+    buildApiUrl('/subscriptions/confirm-checkout'),
+    { session_id: sessionId },
+    { headers: authHeaders() }
+  ),
+
   unlockBook: (bookId) => axios.post(
     buildApiUrl('/subscriptions/unlock-book'),
     { book_id: bookId },
