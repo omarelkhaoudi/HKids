@@ -1079,21 +1079,21 @@ function BookReader() {
             <span>Accueil</span>
           </motion.button>
           
-          <div className="text-center flex-1 mx-4">
+          <div className="text-center flex-1 min-w-0 mx-4">
             <h1 className="text-xl md:text-2xl font-bold drop-shadow-lg">{book.title}</h1>
             {book.author && (
               <p className="text-sm md:text-base opacity-90 mt-1">par {book.author}</p>
             )}
           </div>
 
-          <div className="flex items-center justify-end gap-4">
+          <div className="flex shrink-0 flex-nowrap items-center justify-end gap-4">
             {/* Bouton lecture audio */}
             <motion.button
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
               onClick={toggleAudio}
               disabled={isExtracting || (!currentPageData?.content && !currentPageData?.image_path)}
-              className={`flex h-10 items-center gap-2 px-4 py-2 rounded-full font-semibold transition-colors backdrop-blur-sm ${
+              className={`flex h-10 shrink-0 items-center gap-2 whitespace-nowrap px-4 py-2 rounded-full font-semibold transition-colors backdrop-blur-sm ${
                 isPlaying
                   ? 'bg-red-500 hover:bg-red-600 text-white'
                   : isExtracting
@@ -1122,7 +1122,7 @@ function BookReader() {
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
               onClick={() => setShowReadingAid(true)}
-              className="flex h-10 items-center gap-2 bg-white/20 hover:bg-white/30 px-4 py-2 rounded-full font-semibold transition-colors backdrop-blur-sm"
+              className="flex h-10 shrink-0 items-center gap-2 whitespace-nowrap bg-white/20 hover:bg-white/30 px-4 py-2 rounded-full font-semibold transition-colors backdrop-blur-sm"
               title="Personnaliser la lecture"
             >
               <SettingsIcon className="w-5 h-5" />
