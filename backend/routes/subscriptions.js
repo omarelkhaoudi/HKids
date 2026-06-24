@@ -189,10 +189,10 @@ router.post('/unlock-book', verifyToken, async (req, res) => {
        FROM user_subscriptions us
        JOIN subscription_plans sp ON sp.id = us.plan_id
        WHERE us.user_id = $1
-         AND us.status = 'active'
          AND us.current_period_start <= NOW()
          AND us.current_period_end > NOW()
-       ORDER BY us.created_at DESC
+         AND us.status IN ('trialing', 'active')
+       ORDER BY CASE WHEN us.status = 'active' THEN 0 ELSE 1 END, us.created_at DESC
        LIMIT 1`,
       [req.user.id]
     );
@@ -331,6 +331,86 @@ router.post('/subscribe', verifyToken, async (req, res) => {
   } catch (err) {
     await client.query('ROLLBACK');
     console.error('Error creating subscription:', err);
+    res.status(500).json({ error: 'Database error' });
+  } finally {
+    client.release();
+  }
+});
+
+router.post('/start-trial', verifyToken, async (req, res) => {
+  const client = await getPool().connect();
+  try {
+    await client.query('BEGIN');
+
+    const existingTrial = await client.query(
+      `SELECT id
+       FROM user_subscriptions
+       WHERE user_id = $1
+         AND provider = 'trial'
+       LIMIT 1`,
+      [req.user.id]
+    );
+
+    if (existingTrial.rows[0]) {
+      await client.query('ROLLBACK');
+      return res.status(409).json({ error: 'Trial already used' });
+    }
+
+    const activeSubscription = await client.query(
+      `SELECT id
+       FROM user_subscriptions
+       WHERE user_id = $1
+         AND status IN ('trialing', 'active')
+         AND current_period_end > NOW()
+       LIMIT 1`,
+      [req.user.id]
+    );
+
+    if (activeSubscription.rows[0]) {
+      await client.query('ROLLBACK');
+      return res.status(409).json({ error: 'User already has an active subscription' });
+    }
+
+    const planResult = await client.query(
+      `SELECT *
+       FROM subscription_plans
+       WHERE code = 'one_book_monthly' AND is_active = TRUE
+       LIMIT 1`
+    );
+
+    const plan = planResult.rows[0];
+    if (!plan) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({ error: 'Trial plan not found' });
+    }
+
+    const subscriptionResult = await client.query(
+      `INSERT INTO user_subscriptions (
+        user_id,
+        plan_id,
+        status,
+        started_at,
+        current_period_start,
+        current_period_end,
+        provider
+      )
+      VALUES ($1, $2, 'trialing', NOW(), NOW(), NOW() + INTERVAL '7 days', 'trial')
+      RETURNING *`,
+      [req.user.id, plan.id]
+    );
+
+    await client.query('COMMIT');
+
+    res.status(201).json({
+      message: 'Trial started',
+      subscription: {
+        ...subscriptionResult.rows[0],
+        plan: normalizePlan(plan),
+      },
+    });
+  } catch (err) {
+    await client.query('ROLLBACK');
+    console.error('Error starting trial:', err);
     res.status(500).json({ error: 'Database error' });
   } finally {
     client.release();

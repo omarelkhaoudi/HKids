@@ -31,6 +31,12 @@ export const subscriptionsAPI = {
     { headers: authHeaders() }
   ),
 
+  startTrial: () => axios.post(
+    buildApiUrl('/subscriptions/start-trial'),
+    {},
+    { headers: authHeaders() }
+  ),
+
   unlockBook: (bookId) => axios.post(
     buildApiUrl('/subscriptions/unlock-book'),
     { book_id: bookId },
