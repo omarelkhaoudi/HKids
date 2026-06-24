@@ -108,6 +108,7 @@ router.get('/plans', async (req, res) => {
       `SELECT *
        FROM subscription_plans
        WHERE is_active = TRUE
+         AND code <> 'trial_3_books_7_days'
        ORDER BY book_limit ASC`
     );
 
@@ -374,7 +375,7 @@ router.post('/start-trial', verifyToken, async (req, res) => {
     const planResult = await client.query(
       `SELECT *
        FROM subscription_plans
-       WHERE code = 'one_book_monthly' AND is_active = TRUE
+       WHERE code = 'trial_3_books_7_days' AND is_active = TRUE
        LIMIT 1`
     );
 
