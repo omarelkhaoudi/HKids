@@ -110,10 +110,25 @@ router.post('/subscribe', async (req, res) => {
       [email, token]
     );
 
-    await sendConfirmationEmail(email, token);
+    let emailSent = true;
+    let setupRequired = false;
 
-    res.status(202).json({
-      message: 'Confirmation email sent',
+    try {
+      await sendConfirmationEmail(email, token);
+    } catch (emailError) {
+      if (!emailError.setupRequired) {
+        throw emailError;
+      }
+
+      emailSent = false;
+      setupRequired = true;
+      console.warn('Newsletter email service is not configured. Subscriber was saved without sending confirmation email.');
+    }
+
+    res.status(emailSent ? 202 : 200).json({
+      message: emailSent ? 'Confirmation email sent' : 'Subscription saved; email service is not configured',
+      email_sent: emailSent,
+      setup_required: setupRequired,
     });
   } catch (err) {
     console.error('Error subscribing to newsletter:', err);

@@ -94,9 +94,14 @@ function Home({ darkMode, setDarkMode }) {
 
     try {
       setNewsletterLoading(true);
-      await newsletterAPI.subscribe(email);
-      setNewsletterStatus('success');
+      const response = await newsletterAPI.subscribe(email);
+      const emailSent = response.data?.email_sent !== false;
+      setNewsletterStatus(emailSent ? 'success' : 'saved');
       setNewsletterEmail('');
+      if (!emailSent) {
+        showToast('Merci ! Votre inscription est enregistrée.', 'success', 3500);
+        return;
+      }
       showToast('Merci ! Vérifiez votre boîte mail pour confirmer votre inscription.', 'success', 3500);
     } catch (error) {
       console.error('Newsletter subscription error:', error);
@@ -1672,6 +1677,12 @@ function Home({ darkMode, setDarkMode }) {
                 <p className="mt-5 flex items-center justify-center gap-2 text-left text-neutral-700">
                   <span className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-green-600 text-[10px] font-bold text-white">✓</span>
                   Merci de votre inscription. Vérifiez votre boîte mail pour confirmer.
+                </p>
+              )}
+              {newsletterStatus === 'saved' && (
+                <p className="mt-5 flex items-center justify-center gap-2 text-left text-neutral-700">
+                  <span className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-green-600 text-[10px] font-bold text-white">✓</span>
+                  Merci de votre inscription.
                 </p>
               )}
               {newsletterStatus === 'error' && (
