@@ -146,6 +146,14 @@ export async function initDatabase() {
         period_end TIMESTAMPTZ NOT NULL,
         unlocked_at TIMESTAMPTZ DEFAULT NOW(),
         UNIQUE(subscription_id, book_id, period_start)
+      );`,
+      `CREATE TABLE IF NOT EXISTS newsletter_subscribers (
+        id SERIAL PRIMARY KEY,
+        email TEXT UNIQUE NOT NULL,
+        confirmation_token TEXT UNIQUE NOT NULL,
+        confirmed_at TIMESTAMPTZ,
+        created_at TIMESTAMPTZ DEFAULT NOW(),
+        updated_at TIMESTAMPTZ DEFAULT NOW()
       );`
     ];
 
@@ -168,6 +176,7 @@ export async function initDatabase() {
     await client.query(`CREATE UNIQUE INDEX IF NOT EXISTS book_pages_book_page_unique ON book_pages(book_id, page_number)`);
     await client.query(`CREATE INDEX IF NOT EXISTS user_subscriptions_user_status_idx ON user_subscriptions(user_id, status)`);
     await client.query(`CREATE INDEX IF NOT EXISTS subscription_book_unlocks_user_period_idx ON subscription_book_unlocks(user_id, period_start, period_end)`);
+    await client.query(`CREATE INDEX IF NOT EXISTS newsletter_subscribers_token_idx ON newsletter_subscribers(confirmation_token)`);
 
     await client.query(`
       INSERT INTO subscription_plans (code, name, description, monthly_price_cents, currency, book_limit, is_featured)
