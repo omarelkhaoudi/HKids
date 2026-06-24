@@ -1,6 +1,10 @@
 // src/config/api.js
 
-export const API_URL = import.meta.env.VITE_API_URL?.replace(/\/+$/, '') || 'https://hkids.onrender.com';
+const defaultApiUrl = import.meta.env.DEV
+  ? 'http://localhost:3001'
+  : globalThis.location?.origin;
+
+export const API_URL = import.meta.env.VITE_API_URL?.replace(/\/+$/, '') || defaultApiUrl;
 
 // ✅ On restore le /api prefix car les routes backend sont sous /api/
 const API_BASE = API_URL;
