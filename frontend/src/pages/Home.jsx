@@ -99,7 +99,7 @@ function Home({ darkMode, setDarkMode }) {
       setNewsletterStatus(emailSent ? 'success' : 'saved');
       setNewsletterEmail('');
       if (!emailSent) {
-        showToast('Merci ! Votre inscription est enregistrée.', 'success', 3500);
+        showToast("Inscription enregistree, mais l'e-mail n'est pas encore envoye.", 'info', 4500);
         return;
       }
       showToast('Merci ! Vérifiez votre boîte mail pour confirmer votre inscription.', 'success', 3500);
@@ -1680,9 +1680,8 @@ function Home({ darkMode, setDarkMode }) {
                 </p>
               )}
               {newsletterStatus === 'saved' && (
-                <p className="mt-5 flex items-center justify-center gap-2 text-left text-neutral-700">
-                  <span className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-green-600 text-[10px] font-bold text-white">✓</span>
-                  Merci de votre inscription.
+                <p className="mt-5 text-center text-sm font-semibold text-neutral-700">
+                  Inscription enregistree. L'envoi d'e-mail doit encore etre active.
                 </p>
               )}
               {newsletterStatus === 'error' && (
