@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { booksAPI, categoriesAPI } from '../api/books';
+import { newsletterAPI } from '../api/newsletter';
 import { storage } from '../utils/storage';
 import { useToast } from '../components/ToastProvider';
 import { BookGridSkeleton } from '../components/SkeletonLoader';
@@ -37,6 +38,9 @@ function Home({ darkMode, setDarkMode }) {
   const [favoritesUpdate, setFavoritesUpdate] = useState(0); // Pour forcer le re-render
   const [imageError, setImageError] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [newsletterEmail, setNewsletterEmail] = useState('');
+  const [newsletterStatus, setNewsletterStatus] = useState('');
+  const [newsletterLoading, setNewsletterLoading] = useState(false);
   const { showToast } = useToast();
 
   // Fonction pour obtenir une couleur basée sur la catégorie
@@ -77,6 +81,35 @@ function Home({ darkMode, setDarkMode }) {
   useEffect(() => {
     filterAndSortBooks(allBooks);
   }, [searchQuery, allBooks, sortBy, selectedCategory, selectedAge]);
+
+  const handleNewsletterSubmit = async (event) => {
+    event.preventDefault();
+    const email = newsletterEmail.trim();
+
+    if (!email) {
+      setNewsletterStatus('error');
+      showToast('Veuillez saisir votre adresse e-mail.', 'info', 2500);
+      return;
+    }
+
+    try {
+      setNewsletterLoading(true);
+      await newsletterAPI.subscribe(email);
+      setNewsletterStatus('success');
+      setNewsletterEmail('');
+      showToast('Merci ! Vérifiez votre boîte mail pour confirmer votre inscription.', 'success', 3500);
+    } catch (error) {
+      console.error('Newsletter subscription error:', error);
+      setNewsletterStatus('error');
+      if (error.response?.data?.setup_required) {
+        showToast("Le service d'e-mail doit être configuré sur le serveur.", 'error', 3500);
+      } else {
+        showToast("Impossible d'envoyer l'e-mail d'inscription.", 'error', 3000);
+      }
+    } finally {
+      setNewsletterLoading(false);
+    }
+  };
 
   // Reset image error when book changes
   useEffect(() => {
@@ -1593,6 +1626,62 @@ function Home({ darkMode, setDarkMode }) {
             </motion.div>
           </AnimatePresence>
         )}
+      </section>
+
+      {/* Newsletter */}
+      <section className="bg-white py-16 md:py-20">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+          >
+            <h2 className="text-2xl md:text-3xl font-extrabold text-neutral-900">
+              Abonnez-vous à nos e-mails pour découvrir les dernières nouveautés.
+            </h2>
+            <p className="mt-6 text-lg md:text-xl text-neutral-700">
+              Soyez le premier à découvrir nos nouvelles collections et offres exclusives.
+            </p>
+
+            <form onSubmit={handleNewsletterSubmit} className="mt-7 mx-auto max-w-xl">
+              <div className="flex items-center border border-neutral-500 bg-white">
+                <input
+                  type="email"
+                  value={newsletterEmail}
+                  onChange={(event) => {
+                    setNewsletterEmail(event.target.value);
+                    if (newsletterStatus) setNewsletterStatus('');
+                  }}
+                  placeholder="E-mail"
+                  className="min-w-0 flex-1 px-6 py-4 text-lg tracking-widest text-neutral-900 outline-none placeholder:text-neutral-700"
+                  aria-label="Adresse e-mail"
+                  disabled={newsletterLoading}
+                />
+                <button
+                  type="submit"
+                  disabled={newsletterLoading}
+                  className="shrink-0 px-5 py-4 text-2xl text-neutral-700 transition-colors hover:text-neutral-950 disabled:opacity-50"
+                  aria-label="S'inscrire aux e-mails"
+                >
+                  →
+                </button>
+              </div>
+
+              {newsletterStatus === 'success' && (
+                <p className="mt-5 flex items-center justify-center gap-2 text-left text-neutral-700">
+                  <span className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-green-600 text-[10px] font-bold text-white">✓</span>
+                  Merci de votre inscription. Vérifiez votre boîte mail pour confirmer.
+                </p>
+              )}
+              {newsletterStatus === 'error' && (
+                <p className="mt-5 text-center text-sm font-semibold text-red-600">
+                  Une erreur est survenue. Veuillez réessayer.
+                </p>
+              )}
+            </form>
+          </motion.div>
+        </div>
       </section>
 
       {/* Footer */}
