@@ -9,13 +9,16 @@ function cleanUrl(url) {
 }
 
 function getNewsletterConfig() {
+  const fromEmail =
+    process.env.NEWSLETTER_FROM_EMAIL ||
+    process.env.RESEND_FROM_EMAIL ||
+    process.env.EMAIL_FROM ||
+    'HKids <onboarding@resend.dev>';
+
   return {
     resendApiKey: process.env.RESEND_API_KEY || process.env.RESEND_KEY || '',
-    fromEmail:
-      process.env.NEWSLETTER_FROM_EMAIL ||
-      process.env.RESEND_FROM_EMAIL ||
-      process.env.EMAIL_FROM ||
-      'HKids <onboarding@resend.dev>',
+    fromEmail,
+    usesTestSender: fromEmail.includes('onboarding@resend.dev'),
     frontendUrl: cleanUrl(process.env.FRONTEND_URL || process.env.CORS_ORIGIN || 'https://h-kids.vercel.app'),
     backendUrl: cleanUrl(
       process.env.BACKEND_URL ||
@@ -24,6 +27,19 @@ function getNewsletterConfig() {
     ),
   };
 }
+
+router.get('/status', (req, res) => {
+  const { resendApiKey, fromEmail, usesTestSender, frontendUrl, backendUrl } = getNewsletterConfig();
+
+  res.json({
+    resend_configured: Boolean(resendApiKey),
+    from_email: fromEmail,
+    uses_test_sender: usesTestSender,
+    frontend_url: frontendUrl,
+    backend_url: backendUrl,
+    ready_to_send: Boolean(resendApiKey) && !usesTestSender,
+  });
+});
 
 function getPool() {
   try {
@@ -39,10 +55,17 @@ function isValidEmail(email) {
 }
 
 async function sendConfirmationEmail(email, token) {
-  const { resendApiKey, fromEmail, frontendUrl, backendUrl } = getNewsletterConfig();
+  const { resendApiKey, fromEmail, frontendUrl, backendUrl, usesTestSender } = getNewsletterConfig();
 
   if (!resendApiKey) {
     const error = new Error('RESEND_API_KEY is missing on the backend');
+    error.statusCode = 503;
+    error.setupRequired = true;
+    throw error;
+  }
+
+  if (usesTestSender) {
+    const error = new Error('NEWSLETTER_FROM_EMAIL must use a verified Resend domain');
     error.statusCode = 503;
     error.setupRequired = true;
     throw error;
@@ -112,9 +135,10 @@ router.post('/subscribe', async (req, res) => {
 
     let emailSent = true;
     let setupRequired = false;
+    let emailResult = null;
 
     try {
-      await sendConfirmationEmail(email, token);
+      emailResult = await sendConfirmationEmail(email, token);
     } catch (emailError) {
       if (!emailError.setupRequired) {
         throw emailError;
@@ -129,6 +153,7 @@ router.post('/subscribe', async (req, res) => {
       message: emailSent ? 'Confirmation email sent' : 'Subscription saved; email service is not configured',
       email_sent: emailSent,
       setup_required: setupRequired,
+      resend_id: emailSent ? emailResult?.id : null,
     });
   } catch (err) {
     console.error('Error subscribing to newsletter:', err);
