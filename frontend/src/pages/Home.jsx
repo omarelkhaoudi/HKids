@@ -102,7 +102,7 @@ function Home({ darkMode, setDarkMode }) {
       console.error('Newsletter subscription error:', error);
       setNewsletterStatus('error');
       if (error.response?.data?.setup_required) {
-        showToast("Le service d'e-mail doit être configuré sur le serveur.", 'error', 3500);
+        showToast("L'inscription par e-mail est en cours de configuration.", 'error', 3500);
       } else {
         showToast("Impossible d'envoyer l'e-mail d'inscription.", 'error', 3000);
       }

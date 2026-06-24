@@ -3,10 +3,27 @@ import express from 'express';
 import { getDatabase } from '../database/init.js';
 
 const router = express.Router();
-const resendApiKey = process.env.RESEND_API_KEY;
-const newsletterFromEmail = process.env.NEWSLETTER_FROM_EMAIL || 'HKids <onboarding@resend.dev>';
-const frontendUrl = (process.env.FRONTEND_URL || process.env.CORS_ORIGIN || 'https://hkids.vercel.app').replace(/\/+$/, '');
-const backendUrl = (process.env.BACKEND_URL || process.env.VERCEL_URL && `https://${process.env.VERCEL_URL}` || '').replace(/\/+$/, '');
+
+function cleanUrl(url) {
+  return String(url || '').replace(/\/+$/, '');
+}
+
+function getNewsletterConfig() {
+  return {
+    resendApiKey: process.env.RESEND_API_KEY || process.env.RESEND_KEY || '',
+    fromEmail:
+      process.env.NEWSLETTER_FROM_EMAIL ||
+      process.env.RESEND_FROM_EMAIL ||
+      process.env.EMAIL_FROM ||
+      'HKids <onboarding@resend.dev>',
+    frontendUrl: cleanUrl(process.env.FRONTEND_URL || process.env.CORS_ORIGIN || 'https://h-kids.vercel.app'),
+    backendUrl: cleanUrl(
+      process.env.BACKEND_URL ||
+      process.env.API_URL ||
+      (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : '')
+    ),
+  };
+}
 
 function getPool() {
   try {
@@ -22,9 +39,12 @@ function isValidEmail(email) {
 }
 
 async function sendConfirmationEmail(email, token) {
+  const { resendApiKey, fromEmail, frontendUrl, backendUrl } = getNewsletterConfig();
+
   if (!resendApiKey) {
-    const error = new Error('Resend is not configured');
+    const error = new Error('RESEND_API_KEY is missing on the backend');
     error.statusCode = 503;
+    error.setupRequired = true;
     throw error;
   }
 
@@ -39,7 +59,7 @@ async function sendConfirmationEmail(email, token) {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      from: newsletterFromEmail,
+      from: fromEmail,
       to: [email],
       subject: 'Confirmez que vous souhaitez recevoir du marketing par e-mail',
       html: `
@@ -62,6 +82,7 @@ async function sendConfirmationEmail(email, token) {
   if (!response.ok) {
     const error = new Error(data.message || 'Email provider request failed');
     error.statusCode = response.status;
+    error.providerResponse = data;
     throw error;
   }
 
@@ -97,13 +118,16 @@ router.post('/subscribe', async (req, res) => {
   } catch (err) {
     console.error('Error subscribing to newsletter:', err);
     res.status(err.statusCode || 500).json({
-      error: err.message || 'Newsletter subscription failed',
-      setup_required: err.statusCode === 503,
+      error: err.setupRequired
+        ? "Le service d'e-mail n'est pas configuré sur le backend"
+        : err.message || 'Newsletter subscription failed',
+      setup_required: Boolean(err.setupRequired),
     });
   }
 });
 
 router.get('/confirm', async (req, res) => {
+  const { frontendUrl } = getNewsletterConfig();
   const token = String(req.query.token || '');
 
   if (!token) {
