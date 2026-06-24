@@ -49,11 +49,21 @@ function Subscriptions() {
   const [currentSubscription, setCurrentSubscription] = useState(null);
   const [loading, setLoading] = useState(true);
   const [subscribingPlan, setSubscribingPlan] = useState('');
+  const [startingTrial, setStartingTrial] = useState(false);
   const { user } = useAuth();
   const { showToast } = useToast();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const isAuthenticated = Boolean(user || localStorage.getItem('token'));
+  const subscriptionEndsAt = currentSubscription?.current_period_end
+    ? new Date(currentSubscription.current_period_end)
+    : null;
+  const hasUsableSubscription = Boolean(
+    currentSubscription &&
+    ['trialing', 'active'].includes(currentSubscription.status) &&
+    subscriptionEndsAt &&
+    subscriptionEndsAt > new Date()
+  );
 
   useEffect(() => {
     const loadSubscriptions = async () => {
@@ -143,6 +153,30 @@ function Subscriptions() {
     }
   };
 
+  const handleStartTrial = async () => {
+    if (!isAuthenticated) {
+      showToast("Connectez-vous pour démarrer l'essai gratuit.", 'info', 2500);
+      navigate('/admin/login');
+      return;
+    }
+
+    try {
+      setStartingTrial(true);
+      const response = await subscriptionsAPI.startTrial();
+      setCurrentSubscription(response.data.subscription);
+      showToast('Essai gratuit activé : 1 livre offert pendant 7 jours.', 'success', 3500);
+    } catch (error) {
+      console.error('Error starting trial:', error);
+      if (error.response?.status === 409) {
+        showToast("L'essai gratuit a déjà été utilisé sur ce compte.", 'info', 3500);
+      } else {
+        showToast("Impossible de démarrer l'essai gratuit.", 'error', 3000);
+      }
+    } finally {
+      setStartingTrial(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-white via-red-50/30 to-pink-50/30">
       <header className="sticky top-0 z-40 shadow-md bg-neutral-900/95 backdrop-blur-md">
@@ -191,9 +225,39 @@ function Subscriptions() {
             </div>
           )}
 
+          <motion.div
+            initial={{ opacity: 0, y: 18 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mt-10 rounded-3xl bg-neutral-900 text-white p-6 md:p-8 shadow-2xl flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6"
+          >
+            <div>
+              <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-sm font-bold text-orange-200">
+                <StarIcon className="w-4 h-4" />
+                Essai gratuit
+              </div>
+              <h2 className="mt-4 text-3xl font-extrabold">Essayez HKids gratuitement</h2>
+              <p className="mt-2 text-neutral-300 max-w-2xl">
+                7 jours pour découvrir le lecteur, avec 1 livre offert. Aucun paiement Stripe nécessaire pour démarrer.
+              </p>
+            </div>
+            <button
+              onClick={handleStartTrial}
+              disabled={startingTrial || loading || hasUsableSubscription}
+              className="shrink-0 rounded-full bg-white px-7 py-4 font-extrabold text-neutral-900 shadow-lg transition-colors hover:bg-orange-50 disabled:cursor-default disabled:opacity-70"
+            >
+              {hasUsableSubscription && currentSubscription?.status === 'trialing'
+                ? 'Essai gratuit actif'
+                : hasUsableSubscription && currentSubscription?.status === 'active'
+                ? 'Abonnement actif'
+                : startingTrial
+                ? 'Activation...'
+                : "Commencer l'essai gratuit"}
+            </button>
+          </motion.div>
+
           <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch">
             {plans.map((plan, index) => {
-              const isCurrent = currentSubscription?.plan?.code === plan.code && currentSubscription?.status === 'active';
+              const isCurrent = currentSubscription?.plan?.code === plan.code && hasUsableSubscription;
               const isBusy = subscribingPlan === plan.code;
 
               return (
@@ -250,7 +314,13 @@ function Subscriptions() {
                           : 'bg-gradient-to-r from-orange-500 to-pink-500 text-white hover:shadow-xl'
                       } disabled:opacity-70`}
                     >
-                      {isCurrent ? 'Abonnement actif' : isBusy ? 'Activation...' : "Choisir cette formule"}
+                      {isCurrent && currentSubscription?.status === 'trialing'
+                        ? 'Essai gratuit actif'
+                        : isCurrent
+                        ? 'Abonnement actif'
+                        : isBusy
+                        ? 'Redirection Stripe...'
+                        : "Choisir cette formule"}
                     </button>
                   </div>
                 </motion.article>
@@ -259,9 +329,9 @@ function Subscriptions() {
           </div>
 
           <div className="mt-10 rounded-3xl bg-neutral-900 text-white p-6 md:p-8 shadow-xl">
-            <h2 className="text-2xl font-extrabold mb-3">Prêt pour le paiement en ligne</h2>
+            <h2 className="text-2xl font-extrabold mb-3">Paiement sécurisé avec Stripe</h2>
             <p className="text-neutral-300 leading-relaxed">
-              Cette version active l'abonnement dans HKids. Pour encaisser automatiquement les paiements mensuels, on branchera ensuite Stripe ou PayPal sur les mêmes formules sans changer l'expérience utilisateur.
+              Les formules payantes passent par Stripe Checkout. L'essai gratuit permet de tester HKids avant de choisir un abonnement mensuel.
             </p>
           </div>
         </section>
