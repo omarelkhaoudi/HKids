@@ -164,7 +164,7 @@ function Subscriptions() {
       setStartingTrial(true);
       const response = await subscriptionsAPI.startTrial();
       setCurrentSubscription(response.data.subscription);
-      showToast('Essai gratuit activé : 1 livre offert pendant 7 jours.', 'success', 3500);
+      showToast('Essai gratuit activé : 3 livres offerts pendant 7 jours.', 'success', 3500);
     } catch (error) {
       console.error('Error starting trial:', error);
       if (error.response?.status === 409) {
@@ -237,7 +237,7 @@ function Subscriptions() {
               </div>
               <h2 className="mt-4 text-3xl font-extrabold">Essayez HKids gratuitement</h2>
               <p className="mt-2 text-neutral-300 max-w-2xl">
-                7 jours pour découvrir le lecteur, avec 1 livre offert. Aucun paiement Stripe nécessaire pour démarrer.
+                7 jours pour découvrir le lecteur, avec 3 livres offerts. Aucun paiement Stripe nécessaire pour démarrer.
               </p>
             </div>
             <button

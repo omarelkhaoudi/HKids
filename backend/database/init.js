@@ -174,7 +174,8 @@ export async function initDatabase() {
       VALUES
         ('one_book_monthly', 'Formule Découverte', 'Un livre au choix chaque mois pour commencer en douceur.', 299, 'EUR', 1, FALSE),
         ('two_books_monthly', 'Formule Lecture', 'Deux livres par mois pour garder un rythme régulier.', 499, 'EUR', 2, TRUE),
-        ('three_books_monthly', 'Formule Passion', 'Trois livres par mois pour les petits lecteurs très curieux.', 699, 'EUR', 3, FALSE)
+        ('three_books_monthly', 'Formule Passion', 'Trois livres par mois pour les petits lecteurs très curieux.', 699, 'EUR', 3, FALSE),
+        ('trial_3_books_7_days', 'Essai gratuit', 'Trois livres offerts pendant 7 jours pour découvrir HKids.', 0, 'EUR', 3, FALSE)
       ON CONFLICT (code) DO UPDATE SET
         name = EXCLUDED.name,
         description = EXCLUDED.description,
