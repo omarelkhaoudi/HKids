@@ -19,6 +19,7 @@ function getNewsletterConfig() {
     resendApiKey: process.env.RESEND_API_KEY || process.env.RESEND_KEY || '',
     fromEmail,
     usesTestSender: fromEmail.includes('onboarding@resend.dev'),
+    allowTestSender: process.env.ALLOW_RESEND_TEST_SENDER === 'true',
     frontendUrl: cleanUrl(process.env.FRONTEND_URL || process.env.CORS_ORIGIN || 'https://h-kids.vercel.app'),
     backendUrl: cleanUrl(
       process.env.BACKEND_URL ||
@@ -29,15 +30,16 @@ function getNewsletterConfig() {
 }
 
 router.get('/status', (req, res) => {
-  const { resendApiKey, fromEmail, usesTestSender, frontendUrl, backendUrl } = getNewsletterConfig();
+  const { resendApiKey, fromEmail, usesTestSender, allowTestSender, frontendUrl, backendUrl } = getNewsletterConfig();
 
   res.json({
     resend_configured: Boolean(resendApiKey),
     from_email: fromEmail,
     uses_test_sender: usesTestSender,
+    test_sender_allowed: allowTestSender,
     frontend_url: frontendUrl,
     backend_url: backendUrl,
-    ready_to_send: Boolean(resendApiKey) && !usesTestSender,
+    ready_to_send: Boolean(resendApiKey) && (!usesTestSender || allowTestSender),
   });
 });
 
@@ -55,7 +57,7 @@ function isValidEmail(email) {
 }
 
 async function sendConfirmationEmail(email, token) {
-  const { resendApiKey, fromEmail, frontendUrl, backendUrl, usesTestSender } = getNewsletterConfig();
+  const { resendApiKey, fromEmail, frontendUrl, backendUrl, usesTestSender, allowTestSender } = getNewsletterConfig();
 
   if (!resendApiKey) {
     const error = new Error('RESEND_API_KEY is missing on the backend');
@@ -64,7 +66,7 @@ async function sendConfirmationEmail(email, token) {
     throw error;
   }
 
-  if (usesTestSender) {
+  if (usesTestSender && !allowTestSender) {
     const error = new Error('NEWSLETTER_FROM_EMAIL must use a verified Resend domain');
     error.statusCode = 503;
     error.setupRequired = true;
