@@ -76,6 +76,7 @@ async function sendConfirmationEmail(email, token) {
   const confirmationUrl = backendUrl
     ? `${backendUrl}/api/newsletter/confirm?token=${encodeURIComponent(token)}`
     : `${frontendUrl}/api/newsletter/confirm?token=${encodeURIComponent(token)}`;
+  const logoUrl = `${frontendUrl}/HKidsimg.webp`;
 
   const response = await fetch('https://api.resend.com/emails', {
     method: 'POST',
@@ -98,6 +99,41 @@ async function sendConfirmationEmail(email, token) {
           <a href="${confirmationUrl}" style="display: block; text-align: center; background: #6ab7a8; color: white; text-decoration: none; font-size: 20px; padding: 18px 24px; border-radius: 6px;">
             Inscription
           </a>
+        </div>
+      `,
+      subject: 'Bienvenue chez HKids - confirmez votre inscription',
+      text: `Bienvenue chez HKids ! Confirmez votre inscription pour recevoir nos nouveautes, nos histoires et nos offres speciales : ${confirmationUrl}`,
+      html: `
+        <div style="margin:0; padding:0; background:#fff7f4; font-family:Arial, Helvetica, sans-serif; color:#171717;">
+          <div style="max-width:680px; margin:0 auto; padding:28px 16px;">
+            <div style="background:#1f1f1f; border-radius:24px 24px 0 0; padding:22px 26px;">
+              <img src="${logoUrl}" alt="HKids" width="64" height="64" style="display:inline-block; width:64px; height:64px; border-radius:18px; border:3px solid #ff5f8f; vertical-align:middle; object-fit:cover;">
+              <span style="display:inline-block; margin-left:14px; color:#ffffff; font-size:28px; font-weight:800; vertical-align:middle;">HKids</span>
+            </div>
+            <div style="background:#ffffff; border-radius:0 0 24px 24px; padding:38px 30px 34px; border:1px solid #ffe1db; border-top:0; box-shadow:0 18px 45px rgba(31,31,31,0.10);">
+              <div style="display:inline-block; padding:9px 14px; border-radius:999px; background:#fff0e9; color:#ff5a1f; font-size:14px; font-weight:800; margin-bottom:20px;">
+                Bienvenue dans la bibliotheque HKids
+              </div>
+              <h1 style="margin:0 0 16px; font-size:34px; line-height:1.15; font-weight:900; color:#151515;">
+                Confirmez votre inscription
+              </h1>
+              <p style="margin:0 0 14px; color:#4b5563; font-size:18px; line-height:1.65;">
+                Merci de rejoindre HKids. Confirmez votre adresse e-mail pour recevoir nos nouvelles histoires, les sorties de livres et les petites surprises preparees pour les enfants.
+              </p>
+              <p style="margin:0 0 28px; color:#6b7280; font-size:15px; line-height:1.6;">
+                Si vous n'avez pas demande cette inscription, vous pouvez simplement ignorer cet e-mail.
+              </p>
+              <a href="${confirmationUrl}" style="display:block; text-align:center; color:#ffffff; text-decoration:none; font-size:18px; font-weight:800; padding:17px 22px; border-radius:999px; background:linear-gradient(90deg,#ef233c,#e83e8c,#fb5607); box-shadow:0 14px 28px rgba(232,62,140,0.28);">
+                Confirmer mon inscription
+              </a>
+              <div style="margin-top:30px; padding:18px; border-radius:18px; background:#fff8ed; color:#7c4a03; font-size:14px; line-height:1.55;">
+                HKids aide les enfants a decouvrir le plaisir de lire avec des histoires simples, colorees et adaptees a leur age.
+              </div>
+            </div>
+            <p style="margin:18px 0 0; text-align:center; color:#9ca3af; font-size:12px;">
+              HKids - Bibliotheque numerique pour enfants
+            </p>
+          </div>
         </div>
       `,
     }),
