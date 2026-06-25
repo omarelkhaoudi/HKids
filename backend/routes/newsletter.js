@@ -8,6 +8,15 @@ function cleanUrl(url) {
   return String(url || '').replace(/\/+$/, '');
 }
 
+function getPublicBackendUrl() {
+  return cleanUrl(
+    process.env.PUBLIC_BACKEND_URL ||
+    process.env.BACKEND_URL ||
+    process.env.API_URL ||
+    'https://h-kids-dfu3.vercel.app'
+  );
+}
+
 function getNewsletterConfig() {
   const fromEmail =
     process.env.NEWSLETTER_FROM_EMAIL ||
@@ -21,11 +30,7 @@ function getNewsletterConfig() {
     usesTestSender: fromEmail.includes('onboarding@resend.dev'),
     allowTestSender: process.env.ALLOW_RESEND_TEST_SENDER === 'true',
     frontendUrl: cleanUrl(process.env.FRONTEND_URL || process.env.CORS_ORIGIN || 'https://h-kids.vercel.app'),
-    backendUrl: cleanUrl(
-      process.env.BACKEND_URL ||
-      process.env.API_URL ||
-      (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : '')
-    ),
+    backendUrl: getPublicBackendUrl(),
   };
 }
 
