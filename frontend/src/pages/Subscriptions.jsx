@@ -50,7 +50,7 @@ function Subscriptions() {
   const [loading, setLoading] = useState(true);
   const [subscribingPlan, setSubscribingPlan] = useState('');
   const [startingTrial, setStartingTrial] = useState(false);
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const { showToast } = useToast();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -64,6 +64,12 @@ function Subscriptions() {
     subscriptionEndsAt &&
     subscriptionEndsAt > new Date()
   );
+
+  const handleExpiredSession = () => {
+    logout();
+    showToast('Votre session a expiré. Connectez-vous à nouveau.', 'info', 3500);
+    navigate('/admin/login');
+  };
 
   useEffect(() => {
     const loadSubscriptions = async () => {
@@ -84,6 +90,9 @@ function Subscriptions() {
             setCurrentSubscription(subscriptionResponse.data.subscription);
           } catch (error) {
             console.error('Error loading current subscription:', error);
+            if (error.response?.status === 401) {
+              handleExpiredSession();
+            }
           }
         }
       } catch (error) {
@@ -116,7 +125,11 @@ function Subscriptions() {
         showToast('Paiement confirmé, abonnement activé.', 'success', 3500);
       } catch (error) {
         console.error('Error confirming checkout:', error);
-        showToast("Paiement reçu, mais confirmation HKids impossible pour le moment.", 'error', 4000);
+        if (error.response?.status === 401) {
+          handleExpiredSession();
+        } else {
+          showToast("Paiement reçu, mais confirmation HKids impossible pour le moment.", 'error', 4000);
+        }
       } finally {
         setLoading(false);
         setSearchParams({});
@@ -143,8 +156,12 @@ function Subscriptions() {
       throw new Error('Stripe checkout URL missing');
     } catch (error) {
       console.error('Error subscribing:', error);
-      if (error.response?.data?.setup_required) {
+      if (error.response?.status === 401) {
+        handleExpiredSession();
+      } else if (error.response?.data?.setup_required) {
         showToast('Stripe doit être configuré sur le serveur avant le paiement.', 'error', 4500);
+      } else if (error.response?.data?.error) {
+        showToast(error.response.data.error, 'error', 3500);
       } else {
         showToast("Le paiement n'a pas pu démarrer.", 'error', 3000);
       }
@@ -167,7 +184,9 @@ function Subscriptions() {
       showToast('Essai gratuit activé : 3 livres offerts pendant 7 jours.', 'success', 3500);
     } catch (error) {
       console.error('Error starting trial:', error);
-      if (error.response?.status === 409) {
+      if (error.response?.status === 401) {
+        handleExpiredSession();
+      } else if (error.response?.status === 409) {
         const message = error.response?.data?.error === 'User already has an active subscription'
           ? 'Vous avez déjà un abonnement ou un essai actif.'
           : "L'essai gratuit a déjà été utilisé sur ce compte.";
