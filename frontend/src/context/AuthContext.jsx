@@ -22,7 +22,28 @@ export function AuthProvider({ children }) {
         setUser(JSON.parse(userData));
       }
     }
+
+    const interceptorId = axios.interceptors.response.use(
+      (response) => response,
+      (error) => {
+        if (
+          error.response?.status === 401 &&
+          ['Invalid or expired token', 'No token provided'].includes(error.response?.data?.error)
+        ) {
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          delete axios.defaults.headers.common['Authorization'];
+          setUser(null);
+        }
+        return Promise.reject(error);
+      }
+    );
+
     setLoading(false);
+
+    return () => {
+      axios.interceptors.response.eject(interceptorId);
+    };
   }, []);
 
   const login = async (username, password) => {

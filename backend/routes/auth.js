@@ -5,6 +5,7 @@ import { getDatabase } from '../database/init.js';
 
 const router = express.Router();
 const JWT_SECRET = process.env.JWT_SECRET || 'hkids-secret-key-change-in-production';
+const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '30d';
 
 // Helper function to get database pool safely
 function getPool() {
@@ -103,7 +104,7 @@ router.post('/login', async (req, res) => {
         kid_profile_id: user.kid_profile_id || null
       },
       JWT_SECRET,
-      { expiresIn: '24h' }
+      { expiresIn: JWT_EXPIRES_IN }
     );
 
     console.log(`✅ Successful login for user: ${user.username}`);
