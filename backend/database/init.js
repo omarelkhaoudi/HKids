@@ -160,6 +160,21 @@ export async function initDatabase() {
     for (const tableQuery of tables) await client.query(tableQuery);
 
     await client.query(`ALTER TABLE books ADD COLUMN IF NOT EXISTS slug TEXT`);
+    await client.query(`ALTER TABLE subscription_plans ADD COLUMN IF NOT EXISTS description TEXT`);
+    await client.query(`ALTER TABLE subscription_plans ADD COLUMN IF NOT EXISTS monthly_price_cents INTEGER NOT NULL DEFAULT 0`);
+    await client.query(`ALTER TABLE subscription_plans ADD COLUMN IF NOT EXISTS currency TEXT NOT NULL DEFAULT 'EUR'`);
+    await client.query(`ALTER TABLE subscription_plans ADD COLUMN IF NOT EXISTS book_limit INTEGER NOT NULL DEFAULT 1`);
+    await client.query(`ALTER TABLE subscription_plans ADD COLUMN IF NOT EXISTS is_featured BOOLEAN DEFAULT FALSE`);
+    await client.query(`ALTER TABLE subscription_plans ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT TRUE`);
+    await client.query(`ALTER TABLE subscription_plans ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW()`);
+    await client.query(`ALTER TABLE user_subscriptions ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'active'`);
+    await client.query(`ALTER TABLE user_subscriptions ADD COLUMN IF NOT EXISTS started_at TIMESTAMPTZ DEFAULT NOW()`);
+    await client.query(`ALTER TABLE user_subscriptions ADD COLUMN IF NOT EXISTS current_period_start TIMESTAMPTZ DEFAULT NOW()`);
+    await client.query(`ALTER TABLE user_subscriptions ADD COLUMN IF NOT EXISTS current_period_end TIMESTAMPTZ DEFAULT (NOW() + INTERVAL '1 month')`);
+    await client.query(`ALTER TABLE user_subscriptions ADD COLUMN IF NOT EXISTS cancel_at_period_end BOOLEAN DEFAULT FALSE`);
+    await client.query(`ALTER TABLE user_subscriptions ADD COLUMN IF NOT EXISTS provider TEXT`);
+    await client.query(`ALTER TABLE user_subscriptions ADD COLUMN IF NOT EXISTS provider_subscription_id TEXT`);
+    await client.query(`ALTER TABLE user_subscriptions ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW()`);
     await client.query(`
       UPDATE books
       SET slug = CONCAT(

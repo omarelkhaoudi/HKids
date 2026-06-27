@@ -373,10 +373,18 @@ router.post('/start-trial', verifyToken, async (req, res) => {
     }
 
     const planResult = await client.query(
-      `SELECT *
-       FROM subscription_plans
-       WHERE code = 'trial_3_books_7_days' AND is_active = TRUE
-       LIMIT 1`
+      `INSERT INTO subscription_plans (code, name, description, monthly_price_cents, currency, book_limit, is_featured, is_active)
+       VALUES ('trial_3_books_7_days', 'Essai gratuit', 'Trois livres offerts pendant 7 jours pour découvrir HKids.', 0, 'EUR', 3, FALSE, TRUE)
+       ON CONFLICT (code) DO UPDATE SET
+         name = EXCLUDED.name,
+         description = EXCLUDED.description,
+         monthly_price_cents = EXCLUDED.monthly_price_cents,
+         currency = EXCLUDED.currency,
+         book_limit = EXCLUDED.book_limit,
+         is_featured = EXCLUDED.is_featured,
+         is_active = TRUE,
+         updated_at = NOW()
+       RETURNING *`
     );
 
     const plan = planResult.rows[0];

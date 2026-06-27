@@ -168,7 +168,12 @@ function Subscriptions() {
     } catch (error) {
       console.error('Error starting trial:', error);
       if (error.response?.status === 409) {
-        showToast("L'essai gratuit a déjà été utilisé sur ce compte.", 'info', 3500);
+        const message = error.response?.data?.error === 'User already has an active subscription'
+          ? 'Vous avez déjà un abonnement ou un essai actif.'
+          : "L'essai gratuit a déjà été utilisé sur ce compte.";
+        showToast(message, 'info', 3500);
+      } else if (error.response?.data?.error) {
+        showToast(error.response.data.error, 'error', 3500);
       } else {
         showToast("Impossible de démarrer l'essai gratuit.", 'error', 3000);
       }
