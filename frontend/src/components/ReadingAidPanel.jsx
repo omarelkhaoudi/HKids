@@ -2,8 +2,17 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { XIcon } from './Icons';
 
-function ReadingAidPanel({ isOpen, onClose, settings, onSettingsChange }) {
-  const [activeTab, setActiveTab] = useState('font');
+function ReadingAidPanel({
+  isOpen,
+  onClose,
+  settings,
+  onSettingsChange,
+  voiceProfiles = [],
+  selectedVoiceProfile = 'woman',
+  onVoiceProfileChange = () => {},
+  availableVoices = [],
+}) {
+  const [activeTab, setActiveTab] = useState('other');
 
   const fontOptions = [
     { name: 'Par défaut', value: 'system', class: 'font-sans' },
@@ -202,6 +211,44 @@ function ReadingAidPanel({ isOpen, onClose, settings, onSettingsChange }) {
             {/* Other Tab */}
             {activeTab === 'other' && (
               <div className="space-y-6">
+                <div>
+                  <h3 className="text-lg font-bold text-neutral-900 mb-2">
+                    Choisir qui raconte l'histoire
+                  </h3>
+                  <p className="mb-4 text-sm text-neutral-600">
+                    HKids adapte la synthese vocale disponible sur votre appareil avec un style de narration different.
+                  </p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {voiceProfiles.map((profile) => (
+                      <button
+                        key={profile.id}
+                        type="button"
+                        onClick={() => onVoiceProfileChange(profile.id)}
+                        className={`p-4 rounded-2xl border-2 text-left transition-all ${
+                          selectedVoiceProfile === profile.id
+                            ? 'border-pink-500 bg-pink-50 shadow-md'
+                            : 'border-neutral-200 hover:border-pink-200'
+                        }`}
+                      >
+                        <div className="flex items-start gap-3">
+                          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-orange-100 to-pink-100 text-sm font-black text-pink-600">
+                            {profile.icon}
+                          </span>
+                          <span>
+                            <span className="block font-extrabold text-neutral-900">{profile.label}</span>
+                            <span className="mt-1 block text-sm text-neutral-600">{profile.description}</span>
+                          </span>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                  <p className="mt-3 text-xs text-neutral-500">
+                    {availableVoices.length > 0
+                      ? `${availableVoices.length} voix disponibles sur cet appareil.`
+                      : "Les voix disponibles dependent du navigateur et de l'appareil."}
+                  </p>
+                </div>
+
                 <div>
                   <h3 className="text-lg font-bold text-neutral-900 mb-4">
                     Options supplémentaires

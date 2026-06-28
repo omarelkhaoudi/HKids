@@ -17,6 +17,66 @@ if (typeof window !== 'undefined') {
   pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@5.4.624/build/pdf.worker.min.mjs';
 }
 
+const voiceProfiles = [
+  {
+    id: 'woman',
+    label: 'Femme',
+    description: 'Une voix douce et claire pour raconter calmement.',
+    icon: 'F',
+    preferredGender: 'female',
+    rate: 0.95,
+    pitch: 1.05,
+  },
+  {
+    id: 'man',
+    label: 'Homme',
+    description: 'Une voix posee, profonde et rassurante.',
+    icon: 'H',
+    preferredGender: 'male',
+    rate: 0.92,
+    pitch: 0.85,
+  },
+  {
+    id: 'girl',
+    label: 'Petite fille',
+    description: 'Une voix plus legere et expressive.',
+    icon: 'PF',
+    preferredGender: 'female',
+    rate: 1.02,
+    pitch: 1.35,
+  },
+  {
+    id: 'boy',
+    label: 'Petit garcon',
+    description: 'Une voix vive avec un ton enfantin.',
+    icon: 'PG',
+    preferredGender: 'male',
+    rate: 1.0,
+    pitch: 1.22,
+  },
+];
+
+const femaleVoiceHints = ['amelie', 'amélie', 'denise', 'audrey', 'marie', 'hortense', 'sylvie', 'celine', 'céline', 'lea', 'léa', 'female', 'woman'];
+const maleVoiceHints = ['henri', 'thomas', 'paul', 'claude', 'daniel', 'male', 'man'];
+
+function pickNarrationVoice(voices, profile) {
+  const frenchVoices = voices.filter((voice) =>
+    voice.lang?.toLowerCase().startsWith('fr') ||
+    voice.name?.toLowerCase().includes('french') ||
+    voice.name?.toLowerCase().includes('francais') ||
+    voice.name?.toLowerCase().includes('français')
+  );
+  const candidates = frenchVoices.length > 0 ? frenchVoices : voices;
+  const hints = profile.preferredGender === 'male' ? maleVoiceHints : femaleVoiceHints;
+
+  return (
+    candidates.find((voice) => hints.some((hint) => voice.name.toLowerCase().includes(hint))) ||
+    candidates.find((voice) => voice.localService) ||
+    candidates[0] ||
+    null
+  );
+}
+
 // Composant pour afficher une page PDF
 function PDFPageViewer({ pdfUrl, pageNumber, onLoad, onPdfLoaded }) {
   const [imageUrl, setImageUrl] = useState(null);
@@ -253,6 +313,8 @@ function BookReader() {
   });
   const [isPlaying, setIsPlaying] = useState(false);
   const [speechRate, setSpeechRate] = useState(1.0);
+  const [selectedVoiceProfile, setSelectedVoiceProfile] = useState('woman');
+  const [availableVoices, setAvailableVoices] = useState([]);
   const [speechUtterance, setSpeechUtterance] = useState(null);
   const [extractedTexts, setExtractedTexts] = useState({}); // Cache pour les textes extraits par OCR/PDF
   const [isExtracting, setIsExtracting] = useState(false);
@@ -614,21 +676,23 @@ function BookReader() {
       }
 
       const utterance = new SpeechSynthesisUtterance(textToRead.trim());
+      const selectedProfile = voiceProfiles.find((profile) => profile.id === selectedVoiceProfile) || voiceProfiles[0];
+      const narrationVoice = pickNarrationVoice(voices, selectedProfile);
       
       // Configuration de la voix (essayer de trouver une voix française)
       const frenchVoice = voices.find(voice => 
         voice.lang.startsWith('fr') || voice.name.toLowerCase().includes('french')
       );
       
-      if (frenchVoice) {
-        utterance.voice = frenchVoice;
+      if (narrationVoice) {
+        utterance.voice = narrationVoice;
         utterance.lang = 'fr-FR';
       } else {
         utterance.lang = 'fr-FR';
       }
 
-      utterance.rate = speechRate;
-      utterance.pitch = 1.0;
+      utterance.rate = Math.min(1.4, Math.max(0.65, speechRate * selectedProfile.rate));
+      utterance.pitch = selectedProfile.pitch;
       utterance.volume = 1.0;
 
       utterance.onstart = () => {
@@ -751,6 +815,7 @@ function BookReader() {
       // Les voix peuvent ne pas être chargées immédiatement
       const loadVoices = () => {
         const voices = window.speechSynthesis.getVoices();
+        setAvailableVoices(voices);
         if (voices.length > 0) {
           console.log('Voix disponibles:', voices.map(v => `${v.name} (${v.lang})`));
         }
@@ -1164,6 +1229,10 @@ function BookReader() {
         onClose={() => setShowReadingAid(false)}
         settings={readingSettings}
         onSettingsChange={setReadingSettings}
+        voiceProfiles={voiceProfiles}
+        selectedVoiceProfile={selectedVoiceProfile}
+        onVoiceProfileChange={setSelectedVoiceProfile}
+        availableVoices={availableVoices}
       />
 
       {/* Zone de lecture principale */}
