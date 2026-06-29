@@ -5,6 +5,8 @@ import BookReader from './pages/BookReader';
 import BookDetails from './pages/BookDetails';
 import AdminLogin from './pages/AdminLogin';
 import SignUp from './pages/SignUp';
+import ParentLogin from './pages/ParentLogin';
+import ParentSignUp from './pages/ParentSignUp';
 import AdminDashboard from './pages/AdminDashboard';
 import ParentDashboard from './pages/ParentDashboard';
 import KidsLibrary from './pages/KidsLibrary';
@@ -57,7 +59,8 @@ function RequireRole({ roles, children }) {
   }
 
   if (!user) {
-    return <Navigate to="/admin/login" replace />;
+    const loginPath = roles.includes('parent') ? '/parent/login' : '/admin/login';
+    return <Navigate to={loginPath} replace />;
   }
 
   if (!roles.includes(user.role)) {
@@ -101,8 +104,10 @@ function App() {
                 <Route path="/features/:featureId" element={<FeatureDetails />} />
                 <Route path="/admin/login" element={<AdminLogin />} />
                 <Route path="/admin/signup" element={<SignUp />} />
+                <Route path="/parent/login" element={<ParentLogin />} />
+                <Route path="/parent/signup" element={<ParentSignUp />} />
                 <Route path="/admin/*" element={<AdminDashboard />} />
-                <Route path="/parent/*" element={<ParentDashboard />} />
+                <Route path="/parent/*" element={<RequireRole roles={['parent', 'admin']}><ParentDashboard /></RequireRole>} />
                 <Route path="/kids" element={<RequireRole roles={['kid']}><KidsLibrary /></RequireRole>} />
               </Routes>
               <ScrollToTop />
