@@ -61,6 +61,14 @@ export const parentalAPI = {
 
   getKidActivity: (kidId) => {
     return axios.get(buildApiUrl(`/parental/kids/${kidId}/activity`), { headers: getAuthHeaders() });
+  },
+
+  saveReadingGoal: (kidId, data) => {
+    return axios.put(buildApiUrl(`/parental/kids/${kidId}/reading-goal`), data, { headers: getAuthHeaders() });
+  },
+
+  clearReadingGoal: (kidId) => {
+    return axios.delete(buildApiUrl(`/parental/kids/${kidId}/reading-goal`), { headers: getAuthHeaders() });
   }
 };
 

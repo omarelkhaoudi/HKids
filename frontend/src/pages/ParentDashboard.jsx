@@ -21,12 +21,18 @@ function ParentDashboard() {
   const [approvals, setApprovals] = useState([]);
   const [kidActivity, setKidActivity] = useState(null);
   const [activityLoading, setActivityLoading] = useState(false);
+  const [goalSaving, setGoalSaving] = useState(false);
   const [loading, setLoading] = useState(true);
   const [showKidModal, setShowKidModal] = useState(false);
   const [showAccountModal, setShowAccountModal] = useState(false);
   const [editingKid, setEditingKid] = useState(null);
   const [kidForm, setKidForm] = useState({ name: '', age: '', avatar: '' });
   const [accountForm, setAccountForm] = useState({ username: '', password: '' });
+  const [goalForm, setGoalForm] = useState({
+    goal_type: 'minutes',
+    target_value: 20,
+    period: 'weekly'
+  });
 
   useEffect(() => {
     if (!user) {
@@ -87,6 +93,15 @@ function ParentDashboard() {
       setActivityLoading(true);
       const res = await parentalAPI.getKidActivity(kidId);
       setKidActivity(res.data);
+      if (res.data?.goal) {
+        setGoalForm({
+          goal_type: res.data.goal.goal_type || 'minutes',
+          target_value: res.data.goal.target_value || 20,
+          period: res.data.goal.period || 'weekly'
+        });
+      } else {
+        setGoalForm({ goal_type: 'minutes', target_value: 20, period: 'weekly' });
+      }
     } catch (error) {
       console.error('Error loading kid activity:', error);
       setKidActivity(null);
@@ -171,6 +186,38 @@ function ParentDashboard() {
   const handleLogout = () => {
     logout();
     navigate('/admin/login');
+  };
+
+  const handleSaveGoal = async () => {
+    if (!selectedKid) return;
+
+    try {
+      setGoalSaving(true);
+      await parentalAPI.saveReadingGoal(selectedKid.id, goalForm);
+      showToast('Objectif de lecture enregistre', 'success');
+      await loadKidActivity(selectedKid.id);
+    } catch (error) {
+      console.error('Error saving reading goal:', error);
+      showToast("Erreur lors de l'enregistrement de l'objectif", 'error');
+    } finally {
+      setGoalSaving(false);
+    }
+  };
+
+  const handleClearGoal = async () => {
+    if (!selectedKid) return;
+
+    try {
+      setGoalSaving(true);
+      await parentalAPI.clearReadingGoal(selectedKid.id);
+      showToast('Objectif desactive', 'success');
+      await loadKidActivity(selectedKid.id);
+    } catch (error) {
+      console.error('Error clearing reading goal:', error);
+      showToast("Erreur lors de la desactivation de l'objectif", 'error');
+    } finally {
+      setGoalSaving(false);
+    }
   };
 
   const formatDuration = (seconds = 0) => {
@@ -352,6 +399,124 @@ function ParentDashboard() {
                           </span>
                         </div>
                       </div>
+
+                      <div className="rounded-xl border-2 border-red-100 dark:border-red-900/40 bg-gradient-to-br from-white to-red-50/40 dark:from-neutral-800 dark:to-red-950/20 p-4 mb-6">
+                        <div className="flex flex-col lg:flex-row lg:items-end gap-3">
+                          <div className="flex-1">
+                            <h3 className="font-bold text-neutral-900 dark:text-neutral-100 mb-1">
+                              Objectif de lecture
+                            </h3>
+                            <p className="text-sm text-neutral-500 mb-3">
+                              Fixez un objectif motivant pour accompagner {selectedKid.name}.
+                            </p>
+                            {kidActivity?.goal ? (
+                              <div className="mb-4">
+                                <div className="flex items-center justify-between text-sm mb-2">
+                                  <span className="font-semibold text-neutral-700 dark:text-neutral-200">
+                                    {kidActivity.goal.progress_value || 0} / {kidActivity.goal.target_value}
+                                    {kidActivity.goal.goal_type === 'minutes' ? ' min' : ''}
+                                  </span>
+                                  <span className={`font-bold ${kidActivity.goal.achieved ? 'text-green-600' : 'text-red-600'}`}>
+                                    {kidActivity.goal.achieved ? 'Objectif atteint' : `${kidActivity.goal.progress_percent || 0}%`}
+                                  </span>
+                                </div>
+                                <div className="h-3 rounded-full bg-neutral-200 dark:bg-neutral-700 overflow-hidden">
+                                  <div
+                                    className={`h-full rounded-full ${kidActivity.goal.achieved ? 'bg-green-500' : 'bg-red-500'}`}
+                                    style={{ width: `${Math.min(100, kidActivity.goal.progress_percent || 0)}%` }}
+                                  />
+                                </div>
+                              </div>
+                            ) : (
+                              <p className="mb-4 text-sm font-medium text-neutral-500">Aucun objectif actif.</p>
+                            )}
+                          </div>
+
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 lg:w-[520px]">
+                            <select
+                              value={goalForm.goal_type}
+                              onChange={(event) => setGoalForm({ ...goalForm, goal_type: event.target.value })}
+                              className="px-3 py-2 rounded-lg border border-neutral-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-white"
+                            >
+                              <option value="minutes">Minutes lues</option>
+                              <option value="completed_books">Livres termines</option>
+                              <option value="sessions">Sessions</option>
+                            </select>
+                            <input
+                              type="number"
+                              min="1"
+                              max="999"
+                              value={goalForm.target_value}
+                              onChange={(event) => setGoalForm({ ...goalForm, target_value: event.target.value })}
+                              className="px-3 py-2 rounded-lg border border-neutral-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-white"
+                            />
+                            <select
+                              value={goalForm.period}
+                              onChange={(event) => setGoalForm({ ...goalForm, period: event.target.value })}
+                              className="px-3 py-2 rounded-lg border border-neutral-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-white"
+                            >
+                              <option value="daily">Par jour</option>
+                              <option value="weekly">Par semaine</option>
+                              <option value="monthly">Par mois</option>
+                            </select>
+                          </div>
+                        </div>
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          <button
+                            onClick={handleSaveGoal}
+                            disabled={goalSaving}
+                            className="px-4 py-2 rounded-lg bg-red-500 text-white font-semibold hover:bg-red-600 disabled:opacity-60"
+                          >
+                            {goalSaving ? 'Enregistrement...' : 'Enregistrer objectif'}
+                          </button>
+                          {kidActivity?.goal && (
+                            <button
+                              onClick={handleClearGoal}
+                              disabled={goalSaving}
+                              className="px-4 py-2 rounded-lg bg-neutral-100 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-200 font-semibold hover:bg-neutral-200 dark:hover:bg-neutral-600 disabled:opacity-60"
+                            >
+                              Desactiver
+                            </button>
+                          )}
+                        </div>
+                      </div>
+
+                      {kidActivity?.badges?.length > 0 && (
+                        <div className="mb-6">
+                          <h3 className="font-bold text-neutral-900 dark:text-neutral-100 mb-3">
+                            Badges de motivation
+                          </h3>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            {kidActivity.badges.map((badge) => (
+                              <div
+                                key={badge.id}
+                                className={`rounded-xl border-2 p-4 ${
+                                  badge.earned
+                                    ? 'border-yellow-300 bg-yellow-50 dark:bg-yellow-900/20'
+                                    : 'border-neutral-200 bg-neutral-50 dark:border-neutral-700 dark:bg-neutral-700/60 opacity-70'
+                                }`}
+                              >
+                                <div className="flex items-start gap-3">
+                                  <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${
+                                    badge.earned
+                                      ? 'bg-yellow-400 text-white'
+                                      : 'bg-neutral-200 text-neutral-500 dark:bg-neutral-600 dark:text-neutral-300'
+                                  }`}>
+                                    {badge.earned ? <CheckIcon className="w-5 h-5" /> : <LockIcon className="w-5 h-5" />}
+                                  </span>
+                                  <div>
+                                    <p className="font-bold text-neutral-900 dark:text-neutral-100">{badge.label}</p>
+                                    <p className="text-sm text-neutral-600 dark:text-neutral-300">{badge.description}</p>
+                                    <p className={`mt-1 text-xs font-bold ${badge.earned ? 'text-yellow-700 dark:text-yellow-300' : 'text-neutral-500'}`}>
+                                      {badge.earned ? 'Gagne' : 'A debloquer'}
+                                    </p>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
 
                       {kidActivity?.progress?.length > 0 ? (
                         <div className="space-y-3">
