@@ -23,6 +23,56 @@ function verifyParent(req, res, next) {
   next();
 }
 
+function getGoalWindow(period) {
+  if (period === 'daily') {
+    return "date_trunc('day', NOW())";
+  }
+  if (period === 'monthly') {
+    return "date_trunc('month', NOW())";
+  }
+  return "date_trunc('week', NOW())";
+}
+
+function buildBadges(summary, progressRows) {
+  const totalMinutes = Math.floor(Number(summary.total_time_seconds || 0) / 60);
+  const totalSessions = Number(summary.total_sessions || 0);
+  const completedBooks = Number(summary.completed_books || 0);
+  const activeBooks = progressRows.length;
+
+  return [
+    {
+      id: 'first_steps',
+      label: 'Premier pas',
+      description: 'Premiere session de lecture terminee',
+      earned: totalSessions >= 1
+    },
+    {
+      id: 'ten_minutes',
+      label: '10 minutes de lecture',
+      description: 'A lu au moins 10 minutes au total',
+      earned: totalMinutes >= 10
+    },
+    {
+      id: 'first_book',
+      label: 'Premier livre termine',
+      description: 'A termine son premier livre',
+      earned: completedBooks >= 1
+    },
+    {
+      id: 'regular_reader',
+      label: 'Lecteur regulier',
+      description: 'A realise au moins 5 sessions',
+      earned: totalSessions >= 5
+    },
+    {
+      id: 'explorer',
+      label: 'Explorateur',
+      description: 'A commence au moins 3 livres differents',
+      earned: activeBooks >= 3
+    }
+  ];
+}
+
 // Get all kids profiles for the logged-in parent
 router.get('/kids', verifyToken, verifyParent, async (req, res) => {
   try {
@@ -435,7 +485,7 @@ router.get('/kids/:id/activity', verifyToken, verifyParent, async (req, res) => 
       return res.status(404).json({ error: 'Kid profile not found' });
     }
 
-    const [summaryResult, progressResult, sessionsResult] = await Promise.all([
+    const [summaryResult, progressResult, sessionsResult, goalResult] = await Promise.all([
       pool.query(
         `SELECT
           COALESCE(SUM(duration_seconds), 0)::int AS total_time_seconds,
@@ -468,21 +518,160 @@ router.get('/kids/:id/activity', verifyToken, verifyParent, async (req, res) => 
         ORDER BY krs.created_at DESC
         LIMIT 10`,
         [req.params.id]
+      ),
+      pool.query(
+        `SELECT *
+         FROM kid_reading_goals
+         WHERE kid_profile_id = $1 AND active = TRUE
+         ORDER BY updated_at DESC
+         LIMIT 1`,
+        [req.params.id]
       )
     ]);
 
     const completedBooks = progressResult.rows.filter((item) => item.completed).length;
+    const summary = {
+      ...summaryResult.rows[0],
+      completed_books: completedBooks
+    };
+    const activeGoal = goalResult.rows[0] || null;
+    let goal = null;
+
+    if (activeGoal) {
+      const windowStart = getGoalWindow(activeGoal.period);
+      let progressValue = 0;
+
+      if (activeGoal.goal_type === 'completed_books') {
+        const goalProgress = await pool.query(
+          `SELECT COUNT(*)::int AS value
+           FROM kid_reading_progress
+           WHERE kid_profile_id = $1
+             AND completed = TRUE
+             AND completed_at >= ${windowStart}`,
+          [req.params.id]
+        );
+        progressValue = Number(goalProgress.rows[0]?.value || 0);
+      } else if (activeGoal.goal_type === 'sessions') {
+        const goalProgress = await pool.query(
+          `SELECT COUNT(*)::int AS value
+           FROM kid_reading_sessions
+           WHERE kid_profile_id = $1
+             AND created_at >= ${windowStart}`,
+          [req.params.id]
+        );
+        progressValue = Number(goalProgress.rows[0]?.value || 0);
+      } else {
+        const goalProgress = await pool.query(
+          `SELECT COALESCE(SUM(duration_seconds), 0)::int AS value
+           FROM kid_reading_sessions
+           WHERE kid_profile_id = $1
+             AND created_at >= ${windowStart}`,
+          [req.params.id]
+        );
+        progressValue = Math.floor(Number(goalProgress.rows[0]?.value || 0) / 60);
+      }
+
+      goal = {
+        ...activeGoal,
+        progress_value: progressValue,
+        progress_percent: Math.min(100, Math.round((progressValue / Number(activeGoal.target_value || 1)) * 100)),
+        achieved: progressValue >= Number(activeGoal.target_value || 1)
+      };
+    }
 
     res.json({
-      summary: {
-        ...summaryResult.rows[0],
-        completed_books: completedBooks
-      },
+      summary,
+      goal,
+      badges: buildBadges(summary, progressResult.rows),
       progress: progressResult.rows,
       recent_sessions: sessionsResult.rows
     });
   } catch (err) {
     console.error('Error fetching reading activity:', err);
+    res.status(500).json({ error: 'Database error' });
+  }
+});
+
+// Create or replace the active reading goal for one child
+router.put('/kids/:id/reading-goal', verifyToken, verifyParent, async (req, res) => {
+  try {
+    const { goal_type = 'minutes', target_value = 10, period = 'weekly' } = req.body;
+    const allowedGoalTypes = ['minutes', 'completed_books', 'sessions'];
+    const allowedPeriods = ['daily', 'weekly', 'monthly'];
+
+    if (!allowedGoalTypes.includes(goal_type)) {
+      return res.status(400).json({ error: 'Invalid goal_type' });
+    }
+
+    if (!allowedPeriods.includes(period)) {
+      return res.status(400).json({ error: 'Invalid period' });
+    }
+
+    const safeTarget = Math.max(1, Math.min(999, Number.parseInt(target_value, 10) || 1));
+    const pool = getPool();
+    const client = await pool.connect();
+
+    try {
+      await client.query('BEGIN');
+
+      const kidCheck = await client.query(
+        'SELECT * FROM kids_profiles WHERE id = $1 AND parent_id = $2',
+        [req.params.id, req.user.id]
+      );
+
+      if (kidCheck.rows.length === 0) {
+        await client.query('ROLLBACK');
+        return res.status(404).json({ error: 'Kid profile not found' });
+      }
+
+      await client.query(
+        'UPDATE kid_reading_goals SET active = FALSE, updated_at = NOW() WHERE kid_profile_id = $1 AND active = TRUE',
+        [req.params.id]
+      );
+
+      const result = await client.query(
+        `INSERT INTO kid_reading_goals (kid_profile_id, goal_type, target_value, period, active, updated_at)
+         VALUES ($1, $2, $3, $4, TRUE, NOW())
+         RETURNING *`,
+        [req.params.id, goal_type, safeTarget, period]
+      );
+
+      await client.query('COMMIT');
+      res.status(201).json(result.rows[0]);
+    } catch (err) {
+      await client.query('ROLLBACK');
+      throw err;
+    } finally {
+      client.release();
+    }
+  } catch (err) {
+    console.error('Error saving reading goal:', err);
+    res.status(500).json({ error: 'Database error' });
+  }
+});
+
+// Disable the active reading goal for one child
+router.delete('/kids/:id/reading-goal', verifyToken, verifyParent, async (req, res) => {
+  try {
+    const pool = getPool();
+
+    const kidCheck = await pool.query(
+      'SELECT * FROM kids_profiles WHERE id = $1 AND parent_id = $2',
+      [req.params.id, req.user.id]
+    );
+
+    if (kidCheck.rows.length === 0) {
+      return res.status(404).json({ error: 'Kid profile not found' });
+    }
+
+    await pool.query(
+      'UPDATE kid_reading_goals SET active = FALSE, updated_at = NOW() WHERE kid_profile_id = $1 AND active = TRUE',
+      [req.params.id]
+    );
+
+    res.json({ message: 'Reading goal disabled' });
+  } catch (err) {
+    console.error('Error disabling reading goal:', err);
     res.status(500).json({ error: 'Database error' });
   }
 });
