@@ -5,9 +5,11 @@ import { createWorker } from 'tesseract.js';
 import * as pdfjsLib from 'pdfjs-dist';
 import { booksAPI } from '../api/books';
 import { subscriptionsAPI } from '../api/subscriptions';
+import { parentalAPI } from '../api/parental';
 import { storage } from '../utils/storage';
 import { getFileUrl } from '../utils/fileUrl';
 import { useToast } from '../components/ToastProvider';
+import { useAuth } from '../context/AuthContext';
 import { ChevronLeftIcon, ChevronRightIcon, HomeIcon, BookIcon, StarIcon, PlayIcon, PauseIcon, VolumeIcon, XIcon, SettingsIcon } from '../components/Icons';
 import ReadingAidPanel from '../components/ReadingAidPanel';
 
@@ -390,6 +392,28 @@ function BookReader() {
   const [isFullscreen, setIsFullscreen] = useState(false); // Mode plein écran
   const workerRef = useRef(null);
   const { showToast } = useToast();
+  const { user } = useAuth();
+
+  const recordKidReadingProgress = (durationSeconds = 0, finished = false, pageOverride = currentPage) => {
+    if (user?.role !== 'kid' || !book?.id) return;
+
+    const firstPageData = book.pages?.[0];
+    const isPDFBook = firstPageData?.image_path?.toLowerCase().endsWith('.pdf');
+    const firstPageUrl = firstPageData?.image_path ? getFileUrl(firstPageData.image_path) : null;
+    const effectiveTotalPages = (isPDFBook && pdfTotalPages && currentPdfUrl === firstPageUrl)
+      ? pdfTotalPages
+      : (book.pages?.length || book.page_count || 0);
+
+    parentalAPI.recordReadingProgress({
+      book_id: book.id,
+      current_page: pageOverride,
+      total_pages: effectiveTotalPages,
+      duration_seconds: durationSeconds,
+      completed: finished
+    }).catch((error) => {
+      console.warn('Impossible de synchroniser la progression enfant:', error);
+    });
+  };
 
   useEffect(() => {
     loadBook();
@@ -472,6 +496,7 @@ function BookReader() {
   useEffect(() => {
     if (book && currentPage >= 0) {
       storage.addToHistory(book.id, book.title, currentPage);
+      recordKidReadingProgress(0, false, currentPage);
     }
     // Arrêter la lecture audio quand on change de page
     if (window.speechSynthesis && window.speechSynthesis.speaking) {
@@ -496,6 +521,7 @@ function BookReader() {
       const finished = totalPages > 0 ? currentPage >= totalPages - 1 : false;
 
       storage.addReadingSession(book.id, book.title, durationSeconds, finished);
+      recordKidReadingProgress(durationSeconds, finished, currentPage);
 
       // Nettoyer la synthèse vocale
       if (window.speechSynthesis && window.speechSynthesis.speaking) {

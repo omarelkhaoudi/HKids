@@ -42,6 +42,31 @@ function RequireAuth({ children }) {
   return children;
 }
 
+function RequireRole({ roles, children }) {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <div className="text-center">
+          <div className="inline-block rounded-full h-12 w-12 border-4 border-red-500 border-t-transparent animate-spin mb-4"></div>
+          <p className="text-neutral-600 font-semibold">Chargement...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <Navigate to="/admin/login" replace />;
+  }
+
+  if (!roles.includes(user.role)) {
+    return <Navigate to="/" replace />;
+  }
+
+  return children;
+}
+
 function App() {
   const [darkMode, setDarkMode] = useState(false);
 
@@ -78,7 +103,7 @@ function App() {
                 <Route path="/admin/signup" element={<SignUp />} />
                 <Route path="/admin/*" element={<AdminDashboard />} />
                 <Route path="/parent/*" element={<ParentDashboard />} />
-                <Route path="/kids" element={<KidsLibrary />} />
+                <Route path="/kids" element={<RequireRole roles={['kid']}><KidsLibrary /></RequireRole>} />
               </Routes>
               <ScrollToTop />
             </div>

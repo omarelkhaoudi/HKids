@@ -326,6 +326,167 @@ router.post('/kids/:id/create-account', verifyToken, verifyParent, async (req, r
   }
 });
 
+// Record reading progress from a kid account
+router.post('/reading-progress', verifyToken, async (req, res) => {
+  try {
+    if (req.user.role !== 'kid' || !req.user.kid_profile_id) {
+      return res.status(403).json({ error: 'Access denied. Kid account required.' });
+    }
+
+    const {
+      book_id,
+      current_page = 0,
+      total_pages = 0,
+      duration_seconds = 0,
+      completed = false
+    } = req.body;
+
+    if (!book_id) {
+      return res.status(400).json({ error: 'book_id is required' });
+    }
+
+    const safeCurrentPage = Math.max(0, Number.parseInt(current_page, 10) || 0);
+    const safeTotalPages = Math.max(0, Number.parseInt(total_pages, 10) || 0);
+    const safeDuration = Math.max(0, Number.parseInt(duration_seconds, 10) || 0);
+    const isCompleted = completed === true || completed === 'true';
+    const progressPercent = safeTotalPages > 0
+      ? Math.min(100, Math.round(((safeCurrentPage + 1) / safeTotalPages) * 100))
+      : 0;
+
+    const pool = getPool();
+    const bookCheck = await pool.query(
+      'SELECT id FROM books WHERE id = $1 AND is_published = TRUE',
+      [book_id]
+    );
+
+    if (bookCheck.rows.length === 0) {
+      return res.status(404).json({ error: 'Book not found' });
+    }
+
+    const progressResult = await pool.query(
+      `INSERT INTO kid_reading_progress (
+        kid_profile_id,
+        book_id,
+        current_page,
+        total_pages,
+        progress_percent,
+        completed,
+        last_read_at,
+        completed_at,
+        updated_at
+      )
+      VALUES ($1, $2, $3, $4, $5, $6, NOW(), CASE WHEN $6 THEN NOW() ELSE NULL END, NOW())
+      ON CONFLICT (kid_profile_id, book_id)
+      DO UPDATE SET
+        current_page = GREATEST(kid_reading_progress.current_page, EXCLUDED.current_page),
+        total_pages = EXCLUDED.total_pages,
+        progress_percent = GREATEST(kid_reading_progress.progress_percent, EXCLUDED.progress_percent),
+        completed = kid_reading_progress.completed OR EXCLUDED.completed,
+        last_read_at = NOW(),
+        completed_at = CASE
+          WHEN kid_reading_progress.completed_at IS NOT NULL THEN kid_reading_progress.completed_at
+          WHEN EXCLUDED.completed THEN NOW()
+          ELSE NULL
+        END,
+        updated_at = NOW()
+      RETURNING *`,
+      [
+        req.user.kid_profile_id,
+        book_id,
+        safeCurrentPage,
+        safeTotalPages,
+        progressPercent,
+        isCompleted
+      ]
+    );
+
+    if (safeDuration > 0) {
+      await pool.query(
+        `INSERT INTO kid_reading_sessions (
+          kid_profile_id,
+          book_id,
+          duration_seconds,
+          page_reached,
+          completed
+        )
+        VALUES ($1, $2, $3, $4, $5)`,
+        [req.user.kid_profile_id, book_id, safeDuration, safeCurrentPage, isCompleted]
+      );
+    }
+
+    res.status(201).json(progressResult.rows[0]);
+  } catch (err) {
+    console.error('Error recording reading progress:', err);
+    res.status(500).json({ error: 'Database error' });
+  }
+});
+
+// Get reading activity for one child
+router.get('/kids/:id/activity', verifyToken, verifyParent, async (req, res) => {
+  try {
+    const pool = getPool();
+
+    const kidCheck = await pool.query(
+      'SELECT * FROM kids_profiles WHERE id = $1 AND parent_id = $2',
+      [req.params.id, req.user.id]
+    );
+
+    if (kidCheck.rows.length === 0) {
+      return res.status(404).json({ error: 'Kid profile not found' });
+    }
+
+    const [summaryResult, progressResult, sessionsResult] = await Promise.all([
+      pool.query(
+        `SELECT
+          COALESCE(SUM(duration_seconds), 0)::int AS total_time_seconds,
+          COUNT(*)::int AS total_sessions,
+          COALESCE(SUM(CASE WHEN completed THEN 1 ELSE 0 END), 0)::int AS completed_sessions
+        FROM kid_reading_sessions
+        WHERE kid_profile_id = $1`,
+        [req.params.id]
+      ),
+      pool.query(
+        `SELECT
+          krp.*,
+          b.title AS book_title,
+          b.cover_image,
+          b.page_count
+        FROM kid_reading_progress krp
+        JOIN books b ON b.id = krp.book_id
+        WHERE krp.kid_profile_id = $1
+        ORDER BY krp.last_read_at DESC
+        LIMIT 8`,
+        [req.params.id]
+      ),
+      pool.query(
+        `SELECT
+          krs.*,
+          b.title AS book_title
+        FROM kid_reading_sessions krs
+        JOIN books b ON b.id = krs.book_id
+        WHERE krs.kid_profile_id = $1
+        ORDER BY krs.created_at DESC
+        LIMIT 10`,
+        [req.params.id]
+      )
+    ]);
+
+    const completedBooks = progressResult.rows.filter((item) => item.completed).length;
+
+    res.json({
+      summary: {
+        ...summaryResult.rows[0],
+        completed_books: completedBooks
+      },
+      progress: progressResult.rows,
+      recent_sessions: sessionsResult.rows
+    });
+  } catch (err) {
+    console.error('Error fetching reading activity:', err);
+    res.status(500).json({ error: 'Database error' });
+  }
+});
+
 // Get books approved for a kid (used by kids interface)
 router.get('/kids/:id/books', verifyToken, async (req, res) => {
   try {
