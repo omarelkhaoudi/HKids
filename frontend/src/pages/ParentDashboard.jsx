@@ -19,6 +19,8 @@ function ParentDashboard() {
   const [categories, setCategories] = useState([]);
   const [selectedKid, setSelectedKid] = useState(null);
   const [approvals, setApprovals] = useState([]);
+  const [kidActivity, setKidActivity] = useState(null);
+  const [activityLoading, setActivityLoading] = useState(false);
   const [loading, setLoading] = useState(true);
   const [showKidModal, setShowKidModal] = useState(false);
   const [showAccountModal, setShowAccountModal] = useState(false);
@@ -80,9 +82,24 @@ function ParentDashboard() {
     }
   };
 
+  const loadKidActivity = async (kidId) => {
+    try {
+      setActivityLoading(true);
+      const res = await parentalAPI.getKidActivity(kidId);
+      setKidActivity(res.data);
+    } catch (error) {
+      console.error('Error loading kid activity:', error);
+      setKidActivity(null);
+      showToast('Erreur lors du chargement du suivi de lecture', 'error');
+    } finally {
+      setActivityLoading(false);
+    }
+  };
+
   const handleSelectKid = (kid) => {
     setSelectedKid(kid);
     loadApprovals(kid.id);
+    loadKidActivity(kid.id);
   };
 
   const handleToggleApproval = async (categoryId, approved) => {
@@ -130,6 +147,7 @@ function ParentDashboard() {
       if (selectedKid?.id === kidId) {
         setSelectedKid(null);
         setApprovals([]);
+        setKidActivity(null);
       }
       loadData();
     } catch (error) {
@@ -153,6 +171,24 @@ function ParentDashboard() {
   const handleLogout = () => {
     logout();
     navigate('/admin/login');
+  };
+
+  const formatDuration = (seconds = 0) => {
+    const totalMinutes = Math.floor(Number(seconds || 0) / 60);
+    if (totalMinutes < 1) return '0 min';
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
+    return hours > 0 ? `${hours}h ${minutes}min` : `${minutes} min`;
+  };
+
+  const formatDate = (value) => {
+    if (!value) return 'Jamais';
+    return new Date(value).toLocaleDateString('fr-FR', {
+      day: '2-digit',
+      month: 'short',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
   };
 
   if (loading) {
@@ -273,7 +309,86 @@ function ParentDashboard() {
           {/* Approvals Panel */}
           <div className="lg:col-span-2">
             {selectedKid ? (
-              <div className="bg-white dark:bg-neutral-800 rounded-xl shadow-lg p-6">
+              <div className="space-y-6">
+                <div className="bg-white dark:bg-neutral-800 rounded-xl shadow-lg p-6">
+                  <div className="flex items-center justify-between mb-6">
+                    <div>
+                      <h2 className="text-xl font-bold text-neutral-800 dark:text-neutral-200">
+                        Suivi de lecture de {selectedKid.name}
+                      </h2>
+                      <p className="text-sm text-neutral-500 mt-1">
+                        Consultez son activite, sa progression et ses livres termines.
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => loadKidActivity(selectedKid.id)}
+                      className="px-4 py-2 bg-neutral-100 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-200 rounded-lg hover:bg-neutral-200 dark:hover:bg-neutral-600 transition-colors"
+                    >
+                      Actualiser
+                    </button>
+                  </div>
+
+                  {activityLoading ? (
+                    <p className="text-neutral-500 text-center py-8">Chargement du suivi...</p>
+                  ) : (
+                    <>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
+                        <div className="rounded-lg bg-red-50 dark:bg-red-900/20 p-4">
+                          <span className="block text-sm text-neutral-500">Temps lu</span>
+                          <span className="text-2xl font-bold text-red-600">
+                            {formatDuration(kidActivity?.summary?.total_time_seconds)}
+                          </span>
+                        </div>
+                        <div className="rounded-lg bg-green-50 dark:bg-green-900/20 p-4">
+                          <span className="block text-sm text-neutral-500">Sessions</span>
+                          <span className="text-2xl font-bold text-green-600">
+                            {kidActivity?.summary?.total_sessions || 0}
+                          </span>
+                        </div>
+                        <div className="rounded-lg bg-blue-50 dark:bg-blue-900/20 p-4">
+                          <span className="block text-sm text-neutral-500">Livres termines</span>
+                          <span className="text-2xl font-bold text-blue-600">
+                            {kidActivity?.summary?.completed_books || 0}
+                          </span>
+                        </div>
+                      </div>
+
+                      {kidActivity?.progress?.length > 0 ? (
+                        <div className="space-y-3">
+                          {kidActivity.progress.map((item) => (
+                            <div key={item.id} className="p-4 rounded-lg bg-neutral-50 dark:bg-neutral-700">
+                              <div className="flex items-center justify-between gap-3 mb-2">
+                                <div>
+                                  <p className="font-semibold text-neutral-800 dark:text-neutral-200">
+                                    {item.book_title}
+                                  </p>
+                                  <p className="text-xs text-neutral-500">
+                                    Derniere lecture: {formatDate(item.last_read_at)}
+                                  </p>
+                                </div>
+                                <span className="text-sm font-bold text-red-600">
+                                  {item.progress_percent || 0}%
+                                </span>
+                              </div>
+                              <div className="h-2 rounded-full bg-neutral-200 dark:bg-neutral-600 overflow-hidden">
+                                <div
+                                  className="h-full rounded-full bg-red-500"
+                                  style={{ width: `${Math.min(100, item.progress_percent || 0)}%` }}
+                                />
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-neutral-500 text-center py-6">
+                          Aucune lecture enregistree pour le moment.
+                        </p>
+                      )}
+                    </>
+                  )}
+                </div>
+
+                <div className="bg-white dark:bg-neutral-800 rounded-xl shadow-lg p-6">
                 <div className="flex items-center justify-between mb-6">
                   <div>
                     <h2 className="text-xl font-bold text-neutral-800 dark:text-neutral-200">
@@ -333,6 +448,7 @@ function ParentDashboard() {
                     ))
                   )}
                 </div>
+              </div>
               </div>
             ) : (
               <div className="bg-white dark:bg-neutral-800 rounded-xl shadow-lg p-6 flex items-center justify-center h-full">

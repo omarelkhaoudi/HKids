@@ -154,11 +154,35 @@ export async function initDatabase() {
         confirmed_at TIMESTAMPTZ,
         created_at TIMESTAMPTZ DEFAULT NOW(),
         updated_at TIMESTAMPTZ DEFAULT NOW()
+      );`,
+      `CREATE TABLE IF NOT EXISTS kid_reading_progress (
+        id SERIAL PRIMARY KEY,
+        kid_profile_id INTEGER NOT NULL REFERENCES kids_profiles(id) ON DELETE CASCADE,
+        book_id INTEGER NOT NULL REFERENCES books(id) ON DELETE CASCADE,
+        current_page INTEGER NOT NULL DEFAULT 0,
+        total_pages INTEGER NOT NULL DEFAULT 0,
+        progress_percent INTEGER NOT NULL DEFAULT 0,
+        completed BOOLEAN DEFAULT FALSE,
+        last_read_at TIMESTAMPTZ DEFAULT NOW(),
+        completed_at TIMESTAMPTZ,
+        created_at TIMESTAMPTZ DEFAULT NOW(),
+        updated_at TIMESTAMPTZ DEFAULT NOW(),
+        UNIQUE(kid_profile_id, book_id)
+      );`,
+      `CREATE TABLE IF NOT EXISTS kid_reading_sessions (
+        id SERIAL PRIMARY KEY,
+        kid_profile_id INTEGER NOT NULL REFERENCES kids_profiles(id) ON DELETE CASCADE,
+        book_id INTEGER NOT NULL REFERENCES books(id) ON DELETE CASCADE,
+        duration_seconds INTEGER NOT NULL DEFAULT 0,
+        page_reached INTEGER NOT NULL DEFAULT 0,
+        completed BOOLEAN DEFAULT FALSE,
+        created_at TIMESTAMPTZ DEFAULT NOW()
       );`
     ];
 
     for (const tableQuery of tables) await client.query(tableQuery);
 
+    await client.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS kid_profile_id INTEGER REFERENCES kids_profiles(id) ON DELETE SET NULL`);
     await client.query(`ALTER TABLE books ADD COLUMN IF NOT EXISTS slug TEXT`);
     await client.query(`ALTER TABLE subscription_plans ADD COLUMN IF NOT EXISTS description TEXT`);
     await client.query(`ALTER TABLE subscription_plans ADD COLUMN IF NOT EXISTS monthly_price_cents INTEGER NOT NULL DEFAULT 0`);
@@ -192,6 +216,8 @@ export async function initDatabase() {
     await client.query(`CREATE INDEX IF NOT EXISTS user_subscriptions_user_status_idx ON user_subscriptions(user_id, status)`);
     await client.query(`CREATE INDEX IF NOT EXISTS subscription_book_unlocks_user_period_idx ON subscription_book_unlocks(user_id, period_start, period_end)`);
     await client.query(`CREATE INDEX IF NOT EXISTS newsletter_subscribers_token_idx ON newsletter_subscribers(confirmation_token)`);
+    await client.query(`CREATE INDEX IF NOT EXISTS kid_reading_progress_kid_idx ON kid_reading_progress(kid_profile_id, last_read_at DESC)`);
+    await client.query(`CREATE INDEX IF NOT EXISTS kid_reading_sessions_kid_idx ON kid_reading_sessions(kid_profile_id, created_at DESC)`);
 
     await client.query(`
       INSERT INTO subscription_plans (code, name, description, monthly_price_cents, currency, book_limit, is_featured)

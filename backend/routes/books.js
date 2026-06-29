@@ -250,6 +250,31 @@ router.get('/:id', async (req, res) => {
       return res.status(404).json({ error: 'Book not found' });
     }
 
+    const token = req.headers.authorization?.split(' ')[1];
+    if (token) {
+      try {
+        const JWT_SECRET = process.env.JWT_SECRET || 'hkids-secret-key-change-in-production';
+        const decoded = jwt.verify(token, JWT_SECRET);
+        if (decoded.role === 'kid' && decoded.kid_profile_id) {
+          const approvalResult = await pool.query(
+            `SELECT 1
+             FROM parent_approvals
+             WHERE kid_profile_id = $1
+               AND category_id = $2
+               AND approved = TRUE
+             LIMIT 1`,
+            [decoded.kid_profile_id, book.category_id]
+          );
+
+          if (approvalResult.rows.length === 0) {
+            return res.status(403).json({ error: 'This book is not approved for this child' });
+          }
+        }
+      } catch (err) {
+        return res.status(401).json({ error: 'Invalid or expired token' });
+      }
+    }
+
     const pagesResult = await pool.query(
       'SELECT * FROM book_pages WHERE book_id = $1 ORDER BY page_number',
       [book.id]
