@@ -12,7 +12,7 @@ function ReadingAidPanel({
   onVoiceProfileChange = () => {},
   availableVoices = [],
 }) {
-  const [activeTab, setActiveTab] = useState('other');
+  const [activeTab, setActiveTab] = useState('voice');
 
   const fontOptions = [
     { name: 'Par défaut', value: 'system', class: 'font-sans' },
@@ -72,6 +72,7 @@ function ReadingAidPanel({
           {/* Tabs */}
           <div className="flex border-b border-neutral-200">
             {[
+              { id: 'voice', label: 'Voix', icon: 'AI' },
               { id: 'font', label: 'Police', icon: '🔤' },
               { id: 'size', label: 'Taille', icon: '📏' },
               { id: 'color', label: 'Couleurs', icon: '🎨' },
@@ -94,6 +95,59 @@ function ReadingAidPanel({
 
           {/* Content */}
           <div className="flex-1 overflow-y-auto p-6">
+            {/* Voice Tab */}
+            {activeTab === 'voice' && (
+              <div className="space-y-5">
+                <div>
+                  <h3 className="text-lg font-bold text-neutral-900 mb-2">
+                    Choisir qui raconte l'histoire
+                  </h3>
+                  <p className="mb-4 text-sm text-neutral-600">
+                    Appuyez sur une voix pour entendre un apercu immediat, puis lancez Ecouter pour lire la page avec ce narrateur.
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {voiceProfiles.map((profile) => (
+                    <button
+                      key={profile.id}
+                      type="button"
+                      onClick={() => onVoiceProfileChange(profile.id)}
+                      className={`p-4 rounded-2xl border-2 text-left transition-all ${
+                        selectedVoiceProfile === profile.id
+                          ? 'border-pink-500 bg-pink-50 shadow-md'
+                          : 'border-neutral-200 hover:border-pink-200'
+                      }`}
+                    >
+                      <div className="flex items-start gap-3">
+                        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-orange-100 to-pink-100 text-sm font-black text-pink-600">
+                          {profile.icon}
+                        </span>
+                        <span className="min-w-0">
+                          <span className="flex items-center gap-2 font-extrabold text-neutral-900">
+                            {profile.label}
+                            {selectedVoiceProfile === profile.id && (
+                              <span className="rounded-full bg-pink-500 px-2 py-0.5 text-xs font-bold text-white">
+                                Actif
+                              </span>
+                            )}
+                          </span>
+                          <span className="mt-1 block text-sm text-neutral-600">{profile.description}</span>
+                          <span className="mt-2 block text-xs font-semibold text-pink-600">Cliquer pour ecouter</span>
+                        </span>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+
+                <p className="text-xs text-neutral-500">
+                  {availableVoices.length > 0
+                    ? `${availableVoices.length} voix disponibles sur cet appareil.`
+                    : "Les voix disponibles dependent du navigateur et de l'appareil."}
+                </p>
+              </div>
+            )}
+
             {/* Font Tab */}
             {activeTab === 'font' && (
               <div className="space-y-4">
@@ -211,44 +265,6 @@ function ReadingAidPanel({
             {/* Other Tab */}
             {activeTab === 'other' && (
               <div className="space-y-6">
-                <div>
-                  <h3 className="text-lg font-bold text-neutral-900 mb-2">
-                    Choisir qui raconte l'histoire
-                  </h3>
-                  <p className="mb-4 text-sm text-neutral-600">
-                    HKids adapte la synthese vocale disponible sur votre appareil avec un style de narration different.
-                  </p>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {voiceProfiles.map((profile) => (
-                      <button
-                        key={profile.id}
-                        type="button"
-                        onClick={() => onVoiceProfileChange(profile.id)}
-                        className={`p-4 rounded-2xl border-2 text-left transition-all ${
-                          selectedVoiceProfile === profile.id
-                            ? 'border-pink-500 bg-pink-50 shadow-md'
-                            : 'border-neutral-200 hover:border-pink-200'
-                        }`}
-                      >
-                        <div className="flex items-start gap-3">
-                          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-orange-100 to-pink-100 text-sm font-black text-pink-600">
-                            {profile.icon}
-                          </span>
-                          <span>
-                            <span className="block font-extrabold text-neutral-900">{profile.label}</span>
-                            <span className="mt-1 block text-sm text-neutral-600">{profile.description}</span>
-                          </span>
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                  <p className="mt-3 text-xs text-neutral-500">
-                    {availableVoices.length > 0
-                      ? `${availableVoices.length} voix disponibles sur cet appareil.`
-                      : "Les voix disponibles dependent du navigateur et de l'appareil."}
-                  </p>
-                </div>
-
                 <div>
                   <h3 className="text-lg font-bold text-neutral-900 mb-4">
                     Options supplémentaires

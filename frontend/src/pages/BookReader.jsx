@@ -24,6 +24,7 @@ const voiceProfiles = [
     description: 'Une voix douce et claire pour raconter calmement.',
     icon: 'F',
     preferredGender: 'female',
+    sampleText: 'Bonjour, je vais lire cette histoire avec une voix de femme.',
     rate: 0.95,
     pitch: 1.05,
   },
@@ -33,6 +34,7 @@ const voiceProfiles = [
     description: 'Une voix posee, profonde et rassurante.',
     icon: 'H',
     preferredGender: 'male',
+    sampleText: 'Bonjour, je vais lire cette histoire avec une voix d homme.',
     rate: 0.92,
     pitch: 0.85,
   },
@@ -42,6 +44,7 @@ const voiceProfiles = [
     description: 'Une voix plus legere et expressive.',
     icon: 'PF',
     preferredGender: 'female',
+    sampleText: 'Bonjour, je vais lire cette histoire avec une voix de petite fille.',
     rate: 1.02,
     pitch: 1.35,
   },
@@ -51,6 +54,7 @@ const voiceProfiles = [
     description: 'Une voix vive avec un ton enfantin.',
     icon: 'PG',
     preferredGender: 'male',
+    sampleText: 'Bonjour, je vais lire cette histoire avec une voix de petit garcon.',
     rate: 1.0,
     pitch: 1.22,
   },
@@ -58,6 +62,7 @@ const voiceProfiles = [
 
 const femaleVoiceHints = ['amelie', 'amélie', 'denise', 'audrey', 'marie', 'hortense', 'sylvie', 'celine', 'céline', 'lea', 'léa', 'female', 'woman'];
 const maleVoiceHints = ['henri', 'thomas', 'paul', 'claude', 'daniel', 'male', 'man'];
+const NARRATION_PROFILE_STORAGE_KEY = 'hkids_narration_voice_profile';
 
 function pickNarrationVoice(voices, profile) {
   const frenchVoices = voices.filter((voice) =>
@@ -75,6 +80,62 @@ function pickNarrationVoice(voices, profile) {
     candidates[0] ||
     null
   );
+}
+
+function applyNarrationProfile(utterance, voices, profile, baseRate = 1) {
+  const narrationVoice = pickNarrationVoice(voices, profile);
+
+  if (narrationVoice) {
+    utterance.voice = narrationVoice;
+  }
+
+  utterance.lang = narrationVoice?.lang?.toLowerCase().startsWith('fr') ? narrationVoice.lang : 'fr-FR';
+  utterance.rate = Math.min(1.4, Math.max(0.65, baseRate * profile.rate));
+  utterance.pitch = profile.pitch;
+  utterance.volume = 1.0;
+
+  return narrationVoice;
+}
+
+function waitForSpeechVoices() {
+  return new Promise((resolve) => {
+    if (!window.speechSynthesis) {
+      resolve([]);
+      return;
+    }
+
+    const voices = window.speechSynthesis.getVoices();
+    if (voices.length > 0) {
+      resolve(voices);
+      return;
+    }
+
+    let timeoutId;
+    const oldHandler = window.speechSynthesis.onvoiceschanged;
+    const checkVoices = () => {
+      if (!window.speechSynthesis) {
+        resolve([]);
+        return;
+      }
+
+      const loadedVoices = window.speechSynthesis.getVoices();
+      if (loadedVoices.length > 0) {
+        if (window.speechSynthesis.onvoiceschanged === checkVoices) {
+          window.speechSynthesis.onvoiceschanged = oldHandler;
+        }
+        if (timeoutId) clearTimeout(timeoutId);
+        resolve(loadedVoices);
+      }
+    };
+
+    window.speechSynthesis.onvoiceschanged = checkVoices;
+    timeoutId = setTimeout(() => {
+      if (window.speechSynthesis?.onvoiceschanged === checkVoices) {
+        window.speechSynthesis.onvoiceschanged = oldHandler;
+      }
+      resolve(window.speechSynthesis?.getVoices() || []);
+    }, 2000);
+  });
 }
 
 // Composant pour afficher une page PDF
@@ -313,7 +374,11 @@ function BookReader() {
   });
   const [isPlaying, setIsPlaying] = useState(false);
   const [speechRate, setSpeechRate] = useState(1.0);
-  const [selectedVoiceProfile, setSelectedVoiceProfile] = useState('woman');
+  const [selectedVoiceProfile, setSelectedVoiceProfile] = useState(() => {
+    if (typeof window === 'undefined') return 'woman';
+    const savedProfile = window.localStorage.getItem(NARRATION_PROFILE_STORAGE_KEY);
+    return voiceProfiles.some((profile) => profile.id === savedProfile) ? savedProfile : 'woman';
+  });
   const [availableVoices, setAvailableVoices] = useState([]);
   const [speechUtterance, setSpeechUtterance] = useState(null);
   const [extractedTexts, setExtractedTexts] = useState({}); // Cache pour les textes extraits par OCR/PDF
@@ -361,6 +426,47 @@ function BookReader() {
     setIsPlaying(false);
     setSpeechUtterance(null);
     return Promise.resolve();
+  };
+
+  const handleVoiceProfileChange = async (profileId, shouldPreview = true) => {
+    const selectedProfile = voiceProfiles.find((profile) => profile.id === profileId) || voiceProfiles[0];
+    setSelectedVoiceProfile(selectedProfile.id);
+
+    try {
+      window.localStorage.setItem(NARRATION_PROFILE_STORAGE_KEY, selectedProfile.id);
+    } catch (error) {
+      console.warn('Impossible de sauvegarder le profil vocal:', error);
+    }
+
+    if (!shouldPreview || !('speechSynthesis' in window)) return;
+
+    await stopAudio();
+    const voices = await waitForSpeechVoices();
+
+    if (voices.length === 0) {
+      showToast('Aucune voix disponible pour la lecture audio', 'error', 3000);
+      return;
+    }
+
+    const previewUtterance = new SpeechSynthesisUtterance(selectedProfile.sampleText);
+    applyNarrationProfile(previewUtterance, voices, selectedProfile, speechRate);
+
+    previewUtterance.onstart = () => {
+      setIsPlaying(true);
+    };
+
+    previewUtterance.onend = () => {
+      setIsPlaying(false);
+      setSpeechUtterance(null);
+    };
+
+    previewUtterance.onerror = () => {
+      setIsPlaying(false);
+      setSpeechUtterance(null);
+    };
+
+    setSpeechUtterance(previewUtterance);
+    window.speechSynthesis.speak(previewUtterance);
   };
 
   useEffect(() => {
@@ -668,7 +774,7 @@ function BookReader() {
         });
       };
 
-      const voices = await waitForVoices();
+      const voices = await waitForSpeechVoices();
       
       if (voices.length === 0) {
         showToast('Aucune voix disponible pour la lecture audio', 'error', 3000);
@@ -694,6 +800,7 @@ function BookReader() {
       utterance.rate = Math.min(1.4, Math.max(0.65, speechRate * selectedProfile.rate));
       utterance.pitch = selectedProfile.pitch;
       utterance.volume = 1.0;
+      applyNarrationProfile(utterance, voices, selectedProfile, speechRate);
 
       utterance.onstart = () => {
         setIsPlaying(true);
@@ -986,6 +1093,7 @@ function BookReader() {
   const isFirstPage = currentPage === 0;
   const isLastPage = currentPage === totalPages - 1;
   const progress = ((currentPage + 1) / totalPages) * 100;
+  const selectedNarrationProfile = voiceProfiles.find((profile) => profile.id === selectedVoiceProfile) || voiceProfiles[0];
 
   return (
     <>
@@ -1205,6 +1313,9 @@ function BookReader() {
             >
               <SettingsIcon className="w-5 h-5" />
               <span className="hidden sm:inline">Personnaliser</span>
+              <span className="hidden lg:inline rounded-full bg-white/20 px-2 py-0.5 text-xs font-bold">
+                {selectedNarrationProfile.label}
+              </span>
             </motion.button>
             <div className="flex h-10 shrink-0 items-center gap-3">
               <div className="min-w-16 text-center text-lg font-bold leading-none">
@@ -1231,7 +1342,7 @@ function BookReader() {
         onSettingsChange={setReadingSettings}
         voiceProfiles={voiceProfiles}
         selectedVoiceProfile={selectedVoiceProfile}
-        onVoiceProfileChange={setSelectedVoiceProfile}
+        onVoiceProfileChange={handleVoiceProfileChange}
         availableVoices={availableVoices}
       />
 
