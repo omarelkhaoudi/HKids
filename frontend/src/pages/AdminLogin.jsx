@@ -36,8 +36,9 @@ function StarParticles({ count = 20 }) {
   );
 }
 
-function AdminLogin() {
-  const [username, setUsername] = useState('admin');
+function AdminLogin({ audience = 'admin' }) {
+  const isParentLogin = audience === 'parent';
+  const [username, setUsername] = useState(isParentLogin ? '' : 'admin');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -70,7 +71,15 @@ function AdminLogin() {
       const result = await login(username.trim(), password);
       
       if (result.success) {
-        navigate('/admin');
+        const userData = localStorage.getItem('user');
+        const loggedUser = userData ? JSON.parse(userData) : null;
+        if (loggedUser?.role === 'parent') {
+          navigate('/parent');
+        } else if (loggedUser?.role === 'kid') {
+          navigate('/kids');
+        } else {
+          navigate('/admin');
+        }
       } else {
         // Translate error messages to French
         let errorMessage = result.error || 'Échec de la connexion';
