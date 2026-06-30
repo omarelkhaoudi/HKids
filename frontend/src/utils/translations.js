@@ -4,7 +4,7 @@ export const translations = {
     library: 'Library',
     favorites: 'Favorites',
     history: 'History',
-    admin: 'Admin',
+    admin: 'Login',
     
     // Home page
     heroTitle1: 'Give',
@@ -179,7 +179,7 @@ export const translations = {
     library: 'Bibliothèque',
     favorites: 'Favoris',
     history: 'Historique',
-    admin: 'Admin',
+    admin: 'Login',
     
     // Home page
     heroTitle1: 'Donner',
