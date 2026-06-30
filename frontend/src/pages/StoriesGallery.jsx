@@ -143,7 +143,7 @@ function StoriesGallery() {
 
   const requireAuth = () => {
     showToast('Connectez-vous pour acceder aux histoires.', 'info', 2500);
-    navigate('/admin/login');
+    navigate('/parent/login');
   };
 
   const openBook = (bookId) => {
