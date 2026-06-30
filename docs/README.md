@@ -22,7 +22,7 @@ HKids est une plateforme de lecture numérique pour enfants construite avec:
 
 - **Frontend**: React 18 + Vite + Tailwind CSS
 - **Backend**: Node.js + Express
-- **Base de données**: SQLite (migration PostgreSQL possible)
+- **Base de données**: PostgreSQL
 - **Authentification**: JWT
 - **Stockage**: Système de fichiers local (cloud storage en production)
 

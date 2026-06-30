@@ -29,9 +29,10 @@ HKids is a child-friendly digital reading platform built with a modern, modular 
 ┌─────────────────────────────────────────────────────────────┐
 │                    Data Layer                                │
 │  ┌──────────────────┐         ┌──────────────────┐         │
-│  │   SQLite DB      │         │  File System     │         │
+│  │   PostgreSQL     │         │ Supabase/Local   │         │
 │  │  (Books, Users,  │         │  (Images, PDFs)  │         │
-│  │   Categories)    │         │                  │         │
+│  │   Categories,    │         │                  │         │
+│  │   Tracking)      │         │                  │         │
 │  └──────────────────┘         └──────────────────┘         │
 └─────────────────────────────────────────────────────────────┘
 ```
@@ -83,17 +84,15 @@ HKids is a child-friendly digital reading platform built with a modern, modular 
   - Scalable architecture
   - RESTful API design
 
-**SQLite**
+**PostgreSQL**
 - **Rationale**: 
-  - Zero-configuration database
-  - Perfect for POC and small-to-medium deployments
-  - File-based, easy backup
-  - Can easily migrate to PostgreSQL for production
+  - Reliable relational database for books, users, approvals, subscriptions, and reading tracking
+  - Strong concurrency and production-ready deployment options
+  - Works locally and with managed providers such as Supabase, Render, or Neon
 - **Benefits**:
-  - No separate database server needed
-  - Lightweight
   - ACID compliant
-  - Easy to upgrade
+  - Scalable and maintainable schema
+  - Good fit for role-based access and parent/child relationships
 
 **Multer**
 - **Rationale**: File upload handling middleware
@@ -117,8 +116,9 @@ HKids is a child-friendly digital reading platform built with a modern, modular 
 - id (INTEGER PRIMARY KEY)
 - username (TEXT UNIQUE)
 - password (TEXT - hashed)
-- role (TEXT - default 'admin')
-- created_at (DATETIME)
+- role (TEXT - admin, parent, kid)
+- kid_profile_id (INTEGER - optional FK)
+- created_at (TIMESTAMPTZ)
 ```
 
 ### Categories Table
@@ -155,10 +155,20 @@ HKids is a child-friendly digital reading platform built with a modern, modular 
 - content (TEXT)
 ```
 
+### Parent/Kid Tracking Tables
+```sql
+- kids_profiles: child profiles linked to parent users
+- parent_approvals: category approvals per child
+- kid_reading_progress: current page, progress percent, completion state
+- kid_reading_sessions: reading duration and completed sessions
+- kid_reading_goals: active parent-defined reading goals
+```
+
 ## API Endpoints
 
 ### Authentication
 - `POST /api/auth/login` - Admin login
+- `POST /api/auth/signup` - Create admin, parent, or kid account
 
 ### Books
 - `GET /api/books/published` - Get published books (public)
@@ -174,6 +184,13 @@ HKids is a child-friendly digital reading platform built with a modern, modular 
 - `PUT /api/categories/:id` - Update category (admin)
 - `DELETE /api/categories/:id` - Delete category (admin)
 
+### Parent Controls
+- `GET /api/parental/kids` - List child profiles
+- `POST /api/parental/kids` - Create child profile
+- `PUT /api/parental/kids/:id/approvals/bulk` - Control approved categories
+- `GET /api/parental/kids/:id/activity` - View progress, sessions, goals, and badges
+- `PUT /api/parental/kids/:id/reading-goal` - Set reading goal
+
 ## Security Considerations
 
 1. **Authentication**: JWT tokens for admin access
@@ -185,13 +202,13 @@ HKids is a child-friendly digital reading platform built with a modern, modular 
 ## Scalability & Performance
 
 ### Current (POC)
-- SQLite for simplicity
-- File-based storage for uploads
-- Single-threaded Node.js (sufficient for POC)
+- PostgreSQL for relational data
+- Supabase Storage or local uploads for books and covers
+- Single Node.js API instance (sufficient for POC)
 
 ### Production Recommendations
-1. **Database**: Migrate to PostgreSQL for better concurrency
-2. **File Storage**: Use cloud storage (AWS S3, Cloudinary)
+1. **Database**: Use a managed PostgreSQL provider with backups
+2. **File Storage**: Use Supabase Storage, AWS S3, or Cloudinary
 3. **Caching**: Redis for session management and frequently accessed data
 4. **CDN**: Serve static assets and images via CDN
 5. **Load Balancing**: Multiple Node.js instances behind a load balancer
@@ -203,15 +220,15 @@ The solution is designed to be hardware-agnostic:
 
 1. **Web-based**: Runs in any modern browser
 2. **Responsive Design**: Works on tablets, dedicated devices, desktops
-3. **Touch-friendly**: Large buttons, swipe gestures (can be added)
+3. **Touch-friendly**: Large buttons and swipe gestures
 4. **Offline Capability**: Can be enhanced with Service Workers for offline reading
 
 ## Deployment Options
 
 ### Development
 - Local development with hot reload
-- SQLite database file
-- Local file storage
+- PostgreSQL database
+- Local file storage or Supabase Storage
 
 ### Production
 1. **Traditional Server**: Node.js on Linux server
@@ -221,13 +238,11 @@ The solution is designed to be hardware-agnostic:
 
 ## Future Enhancements
 
-1. **Audio Narration**: Text-to-speech or pre-recorded audio
-2. **Parental Dashboard**: Reading progress tracking
-3. **Offline Mode**: Service Workers for offline reading
-4. **Multi-language Support**: i18n implementation
-5. **Reading Analytics**: Track reading time, completion rates
-6. **Interactive Elements**: Touch interactions, animations
-7. **Search Functionality**: Full-text search for books
+1. **Offline Mode**: Service Workers for offline reading
+2. **Advanced Analytics**: Cohorts, recommendations, and reading trends
+3. **Pre-recorded Narration**: Optional professional audio tracks per book
+4. **Search Functionality**: Full-text search for books
+5. **Device Packaging**: Kiosk/PWA mode for dedicated reading devices
 
 ## File Structure
 

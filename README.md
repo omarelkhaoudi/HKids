@@ -137,18 +137,11 @@ Default admin credentials:
 
 ## Documentation
 
-### Quick Start
-- **[docs/guides/QUICK_START.md](./docs/guides/QUICK_START.md)** - Guide de démarrage rapide
-- **[docs/guides/SETUP.md](./docs/guides/SETUP.md)** - Guide de configuration détaillé
-
 ### Technical Documentation
 - **[docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md)** - Architecture technique
 - **[docs/STACK_JUSTIFICATION.md](./docs/STACK_JUSTIFICATION.md)** - Justification du stack
 - **[docs/API_DOCUMENTATION.md](./docs/API_DOCUMENTATION.md)** - Documentation API
 - **[docs/DEPLOYMENT.md](./docs/DEPLOYMENT.md)** - Guide de déploiement
-
-### Troubleshooting
-- **[docs/troubleshooting/RESTART_BACKEND.md](./docs/troubleshooting/RESTART_BACKEND.md)** - Redémarrer le backend
 
 ## ✅ Project Status
 
