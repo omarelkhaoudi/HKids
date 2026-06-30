@@ -141,7 +141,7 @@ function waitForSpeechVoices() {
 }
 
 // Composant pour afficher une page PDF
-function PDFPageViewer({ pdfUrl, pageNumber, onLoad, onPdfLoaded }) {
+function PDFPageViewer({ pdfUrl, pageNumber, onLoad, onPdfLoaded, imageClassName = 'max-w-full max-h-full object-contain' }) {
   const [imageUrl, setImageUrl] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -272,7 +272,7 @@ function PDFPageViewer({ pdfUrl, pageNumber, onLoad, onPdfLoaded }) {
     <motion.img
       src={imageUrl}
       alt={`Page ${pageNumber}`}
-      className="max-w-full max-h-full object-contain"
+      className={imageClassName}
       initial={{ scale: 0.9 }}
       animate={{ scale: 1 }}
       transition={{ delay: 0.2, duration: 0.3 }}
@@ -1137,7 +1137,7 @@ function BookReader() {
               initial={{ scale: 0.8 }}
               animate={{ scale: 1 }}
               exit={{ scale: 0.8 }}
-              className="relative w-full h-full flex items-center justify-center p-4"
+              className="relative w-full h-full overflow-y-auto px-4 py-24 md:px-8"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Bouton fermer */}
@@ -1224,11 +1224,12 @@ function BookReader() {
                 
                 if (isPDF) {
                   return (
-                    <div className="w-full h-full flex items-center justify-center">
+                    <div className="mx-auto flex min-h-full w-full justify-center">
                       <PDFPageViewer 
                         key={`pdf-fullscreen-${fileUrl}-${currentPage}`}
                         pdfUrl={fileUrl} 
                         pageNumber={currentPage + 1}
+                        imageClassName="h-auto w-full max-w-3xl object-contain shadow-2xl"
                         onPdfLoaded={(numPages) => {
                           if (numPages && numPages > 0) {
                             setPdfTotalPages(numPages);
@@ -1244,7 +1245,7 @@ function BookReader() {
                   <motion.img
                     src={fileUrl}
                     alt={`Page ${currentPage + 1}`}
-                    className="max-w-full max-h-full object-contain"
+                    className="mx-auto h-auto max-w-full object-contain shadow-2xl"
                     initial={{ scale: 0.9 }}
                     animate={{ scale: 1 }}
                     transition={{ delay: 0.2, duration: 0.3 }}
@@ -1266,7 +1267,7 @@ function BookReader() {
       </AnimatePresence>
 
       <div 
-        className="min-h-screen bg-gradient-to-br from-purple-100 via-pink-50 to-orange-100 flex flex-col relative overflow-hidden"
+        className="h-screen bg-gradient-to-br from-purple-100 via-pink-50 to-orange-100 flex flex-col relative overflow-hidden"
         onTouchStart={onTouchStart}
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
@@ -1373,8 +1374,8 @@ function BookReader() {
       />
 
       {/* Zone de lecture principale */}
-      <div className="flex-1 flex items-center justify-center p-4 md:p-8 overflow-hidden relative">
-        <div className="relative max-w-6xl w-full h-full flex items-center">
+      <div className="relative min-h-0 flex-1 overflow-y-auto p-4 md:p-8">
+        <div className="relative mx-auto flex min-h-full w-full max-w-6xl items-center">
           
           {/* Bouton précédent - Grand et coloré */}
           <motion.button
@@ -1393,7 +1394,7 @@ function BookReader() {
 
           {/* Livre avec effet 3D */}
           <motion.div 
-            className="flex-1 mx-16 md:mx-32"
+            className="flex-1 mx-16 md:mx-32 py-6"
             style={{ perspective: '1000px' }}
           >
             <motion.div
@@ -1424,7 +1425,7 @@ function BookReader() {
                     duration: 0.4,
                     ease: "easeInOut"
                   }}
-                  className="aspect-[4/3] flex items-center justify-center rounded-2xl overflow-hidden shadow-inner relative"
+                  className="flex min-h-[60vh] items-center justify-center rounded-2xl overflow-hidden shadow-inner relative"
                   style={{
                     backgroundColor: readingSettings.backgroundColor,
                     color: readingSettings.textColor
@@ -1447,6 +1448,7 @@ function BookReader() {
                             key={`pdf-${fileUrl}-${currentPage}`}
                             pdfUrl={fileUrl} 
                             pageNumber={currentPage + 1}
+                            imageClassName="h-auto w-full max-w-full object-contain"
                             onPdfLoaded={(numPages) => {
                               // Mettre à jour le nombre total de pages si c'est un PDF
                               if (numPages && numPages > 0) {
