@@ -573,13 +573,17 @@ function BookReader() {
       const status = error.response?.status;
       if (status === 402 || status === 403) {
         showToast(
-          status === 402
+          user?.role === 'kid'
+            ? status === 402
+              ? 'Demande a ton parent d activer une formule pour lire ce livre.'
+              : 'La limite de livres du mois est atteinte. Demande a ton parent.'
+            : status === 402
             ? 'Choisissez un abonnement pour lire ce livre.'
             : 'Votre quota de livres du mois est atteint.',
           'info',
-          2500
+          3000
         );
-        navigate('/abonnements');
+        navigate(user?.role === 'kid' ? '/kids' : '/abonnements');
       }
     } finally {
       setLoading(false);

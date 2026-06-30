@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { booksAPI } from '../api/books';
 import { subscriptionsAPI } from '../api/subscriptions';
+import { useAuth } from '../context/AuthContext';
 import { storage } from '../utils/storage';
 import { useToast } from '../components/ToastProvider';
 import { getImageUrl } from '../utils/imageUrl';
@@ -21,6 +22,8 @@ function BookDetails() {
   const [relatedBooks, setRelatedBooks] = useState([]);
   const [imageError, setImageError] = useState(false);
   const { showToast } = useToast();
+  const { user } = useAuth();
+  const isKidAccount = user?.role === 'kid';
 
   useEffect(() => {
     loadBook();
@@ -73,20 +76,38 @@ function BookDetails() {
     setIsFavorite(!isFavorite);
   };
 
+  const handleSubscriptionBlock = (status, context = 'start') => {
+    if (status === 402) {
+      showToast(
+        isKidAccount
+          ? 'Demande a ton parent d activer une formule pour lire ce livre.'
+          : context === 'continue'
+          ? 'Choisissez un abonnement pour continuer la lecture.'
+          : 'Choisissez un abonnement pour lire ce livre.',
+        'info',
+        3000
+      );
+    } else if (status === 403) {
+      showToast(
+        isKidAccount
+          ? 'La limite de livres du mois est atteinte. Demande a ton parent.'
+          : 'Votre quota de livres du mois est atteint.',
+        'info',
+        3000
+      );
+    } else {
+      showToast("Impossible de debloquer ce livre pour le moment.", 'error', 2500);
+    }
+
+    navigate(isKidAccount ? '/kids' : '/abonnements');
+  };
+
   const startReading = async () => {
     try {
       await subscriptionsAPI.unlockBook(id);
       navigate(`/book/${id}`);
     } catch (error) {
-      const status = error.response?.status;
-      if (status === 402) {
-        showToast('Choisissez un abonnement pour lire ce livre.', 'info', 2500);
-      } else if (status === 403) {
-        showToast('Votre quota de livres du mois est atteint.', 'info', 2500);
-      } else {
-        showToast("Impossible de débloquer ce livre pour le moment.", 'error', 2500);
-      }
-      navigate('/abonnements');
+      handleSubscriptionBlock(error.response?.status);
     }
   };
 
@@ -96,15 +117,7 @@ function BookDetails() {
       await subscriptionsAPI.unlockBook(id);
       navigate(`/book/${id}?page=${lastPage}`);
     } catch (error) {
-      const status = error.response?.status;
-      if (status === 402) {
-        showToast('Choisissez un abonnement pour continuer la lecture.', 'info', 2500);
-      } else if (status === 403) {
-        showToast('Votre quota de livres du mois est atteint.', 'info', 2500);
-      } else {
-        showToast("Impossible de débloquer ce livre pour le moment.", 'error', 2500);
-      }
-      navigate('/abonnements');
+      handleSubscriptionBlock(error.response?.status, 'continue');
     }
   };
 
@@ -385,15 +398,23 @@ function BookDetails() {
                   className="rounded-2xl bg-neutral-900 text-white p-5 shadow-xl flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
                 >
                   <div>
-                    <p className="text-sm font-bold text-orange-200 uppercase tracking-wide">Abonnement mensuel</p>
-                    <p className="mt-1 text-lg font-bold">Débloquez 1, 2 ou 3 livres par mois selon votre formule.</p>
+                    <p className="text-sm font-bold text-orange-200 uppercase tracking-wide">
+                      {isKidAccount ? 'Acces gere par tes parents' : 'Abonnement mensuel'}
+                    </p>
+                    <p className="mt-1 text-lg font-bold">
+                      {isKidAccount
+                        ? 'Si ce livre est bloque, demande a ton parent de choisir une formule.'
+                        : 'Debloquez 1, 2 ou 3 livres par mois selon votre formule.'}
+                    </p>
                   </div>
-                  <Link
-                    to="/abonnements"
-                    className="shrink-0 inline-flex items-center justify-center gap-2 rounded-full bg-white px-5 py-3 font-bold text-neutral-900 hover:bg-orange-50 transition-colors"
-                  >
-                    Voir les formules
-                  </Link>
+                  {!isKidAccount && (
+                    <Link
+                      to="/abonnements"
+                      className="shrink-0 inline-flex items-center justify-center gap-2 rounded-full bg-white px-5 py-3 font-bold text-neutral-900 hover:bg-orange-50 transition-colors"
+                    >
+                      Voir les formules
+                    </Link>
+                  )}
                 </motion.div>
 
                 {/* Boutons d'action */}

@@ -55,6 +55,7 @@ function Subscriptions() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const isAuthenticated = Boolean(user || localStorage.getItem('token'));
+  const isKidAccount = user?.role === 'kid';
   const subscriptionEndsAt = currentSubscription?.current_period_end
     ? new Date(currentSubscription.current_period_end)
     : null;
@@ -146,6 +147,11 @@ function Subscriptions() {
       return;
     }
 
+    if (isKidAccount) {
+      showToast("Demande a ton parent de choisir une formule pour toi.", 'info', 3500);
+      return;
+    }
+
     try {
       setSubscribingPlan(planCode);
       const response = await subscriptionsAPI.createCheckoutSession(planCode);
@@ -158,6 +164,8 @@ function Subscriptions() {
       console.error('Error subscribing:', error);
       if (error.response?.status === 401) {
         handleExpiredSession();
+      } else if (error.response?.data?.parent_required) {
+        showToast("Le paiement doit etre fait par un compte parent.", 'info', 3500);
       } else if (error.response?.data?.setup_required) {
         showToast('Stripe doit être configuré sur le serveur avant le paiement.', 'error', 4500);
       } else if (error.response?.data?.error) {
@@ -177,6 +185,11 @@ function Subscriptions() {
       return;
     }
 
+    if (isKidAccount) {
+      showToast("Demande a ton parent d'activer l'essai gratuit.", 'info', 3500);
+      return;
+    }
+
     try {
       setStartingTrial(true);
       const response = await subscriptionsAPI.startTrial();
@@ -186,6 +199,8 @@ function Subscriptions() {
       console.error('Error starting trial:', error);
       if (error.response?.status === 401) {
         handleExpiredSession();
+      } else if (error.response?.data?.parent_required) {
+        showToast("L'essai doit etre active par un compte parent.", 'info', 3500);
       } else if (error.response?.status === 409) {
         const message = error.response?.data?.error === 'User already has an active subscription'
           ? 'Vous avez déjà un abonnement ou un essai actif.'
@@ -235,10 +250,12 @@ function Subscriptions() {
               Abonnements mensuels
             </div>
             <h1 className="text-4xl md:text-6xl font-extrabold text-neutral-900 leading-tight">
-              Choisissez le rythme de lecture de votre enfant
+              {isKidAccount ? 'Un parent choisit tes livres' : 'Choisissez le rythme de lecture de votre enfant'}
             </h1>
             <p className="mt-5 text-lg text-neutral-600 leading-relaxed">
-              Des formules simples, pensées pour débloquer 1, 2 ou 3 livres par mois selon l'envie et l'âge de votre enfant.
+              {isKidAccount
+                ? "Les abonnements et les paiements sont geres par ton parent. Tu peux lire les livres qu'il autorise."
+                : "Des formules simples, pensées pour débloquer 1, 2 ou 3 livres par mois selon l'envie et l'âge de votre enfant."}
             </p>
           </motion.div>
 
@@ -246,6 +263,21 @@ function Subscriptions() {
             <div className="mt-8 mx-auto max-w-2xl rounded-2xl bg-white/90 border border-orange-100 p-4 text-center text-neutral-700 shadow-sm">
               <LockIcon className="inline-block w-5 h-5 text-orange-500 mr-2" />
               Connectez-vous pour activer une formule. Les offres restent visibles pour vous aider à choisir.
+            </div>
+          )}
+
+          {isKidAccount && (
+            <div className="mt-8 mx-auto max-w-2xl rounded-2xl bg-white/90 border border-orange-100 p-5 text-center text-neutral-700 shadow-sm">
+              <LockIcon className="inline-block w-5 h-5 text-orange-500 mr-2" />
+              Les paiements sont reserves aux parents. Si un livre est bloque, demande a ton parent d'activer une formule depuis son espace.
+              <div className="mt-4">
+                <Link
+                  to="/kids"
+                  className="inline-flex items-center justify-center rounded-full bg-neutral-900 px-5 py-2.5 text-sm font-bold text-white hover:bg-neutral-800"
+                >
+                  Retour a mes livres
+                </Link>
+              </div>
             </div>
           )}
 
@@ -266,13 +298,15 @@ function Subscriptions() {
             </div>
             <button
               onClick={handleStartTrial}
-              disabled={startingTrial || loading || hasUsableSubscription}
+              disabled={isKidAccount || startingTrial || loading || hasUsableSubscription}
               className="shrink-0 rounded-full bg-white px-7 py-4 font-extrabold text-neutral-900 shadow-lg transition-colors hover:bg-orange-50 disabled:cursor-default disabled:opacity-70"
             >
               {hasUsableSubscription && currentSubscription?.status === 'trialing'
                 ? 'Essai gratuit actif'
                 : hasUsableSubscription && currentSubscription?.status === 'active'
                 ? 'Abonnement actif'
+                : isKidAccount
+                ? 'Reserve aux parents'
                 : startingTrial
                 ? 'Activation...'
                 : "Commencer l'essai gratuit"}
@@ -331,7 +365,7 @@ function Subscriptions() {
 
                     <button
                       onClick={() => handleSubscribe(plan.code)}
-                      disabled={isBusy || isCurrent || loading}
+                      disabled={isKidAccount || isBusy || isCurrent || loading}
                       className={`mt-8 w-full rounded-full px-6 py-4 font-bold shadow-lg transition-all ${
                         isCurrent
                           ? 'bg-green-100 text-green-700 cursor-default'
@@ -342,6 +376,8 @@ function Subscriptions() {
                         ? 'Essai gratuit actif'
                         : isCurrent
                         ? 'Abonnement actif'
+                        : isKidAccount
+                        ? 'Demander a un parent'
                         : isBusy
                         ? 'Redirection Stripe...'
                         : "Choisir cette formule"}
@@ -355,7 +391,7 @@ function Subscriptions() {
           <div className="mt-10 rounded-3xl bg-neutral-900 text-white p-6 md:p-8 shadow-xl">
             <h2 className="text-2xl font-extrabold mb-3">Paiement sécurisé avec Stripe</h2>
             <p className="text-neutral-300 leading-relaxed">
-              Les formules payantes passent par Stripe Checkout. L'essai gratuit permet de tester HKids avant de choisir un abonnement mensuel.
+              Les formules payantes passent par Stripe Checkout et doivent etre activees par un parent ou un adulte responsable. L'essai gratuit permet de tester HKids avant de choisir un abonnement mensuel.
             </p>
           </div>
         </section>

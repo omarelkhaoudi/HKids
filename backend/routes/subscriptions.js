@@ -101,6 +101,35 @@ async function activateSubscription(client, userId, plan, provider = null, provi
   return subscriptionResult.rows[0];
 }
 
+async function getBillingUserId(pool, user) {
+  if (user.role !== 'kid') {
+    return user.id;
+  }
+
+  if (!user.kid_profile_id) {
+    return null;
+  }
+
+  const kidResult = await pool.query(
+    'SELECT parent_id FROM kids_profiles WHERE id = $1 LIMIT 1',
+    [user.kid_profile_id]
+  );
+
+  return kidResult.rows[0]?.parent_id || null;
+}
+
+function rejectKidPayment(req, res) {
+  if (req.user.role === 'kid') {
+    res.status(403).json({
+      error: 'A parent account is required for payments',
+      parent_required: true,
+    });
+    return true;
+  }
+
+  return false;
+}
+
 router.get('/plans', async (req, res) => {
   try {
     const pool = getPool();
@@ -122,6 +151,12 @@ router.get('/plans', async (req, res) => {
 router.get('/me', verifyToken, async (req, res) => {
   try {
     const pool = getPool();
+    const billingUserId = await getBillingUserId(pool, req.user);
+
+    if (!billingUserId) {
+      return res.json({ subscription: null, billing_owner: null });
+    }
+
     const result = await pool.query(
       `SELECT us.*, sp.code, sp.name, sp.description, sp.monthly_price_cents, sp.currency, sp.book_limit, sp.is_featured, sp.is_active AS plan_active
        FROM user_subscriptions us
@@ -129,7 +164,7 @@ router.get('/me', verifyToken, async (req, res) => {
        WHERE us.user_id = $1
        ORDER BY us.created_at DESC
        LIMIT 1`,
-      [req.user.id]
+      [billingUserId]
     );
 
     const subscription = result.rows[0];
@@ -146,6 +181,7 @@ router.get('/me', verifyToken, async (req, res) => {
     );
 
     res.json({
+      billing_owner: billingUserId === req.user.id ? 'self' : 'parent',
       subscription: {
         id: subscription.id,
         status: subscription.status,
@@ -183,6 +219,12 @@ router.post('/unlock-book', verifyToken, async (req, res) => {
 
   const client = await getPool().connect();
   try {
+    const billingUserId = await getBillingUserId(client, req.user);
+
+    if (!billingUserId) {
+      return res.status(403).json({ error: 'Parent account required', parent_required: true });
+    }
+
     await client.query('BEGIN');
 
     const subscriptionResult = await client.query(
@@ -195,7 +237,7 @@ router.post('/unlock-book', verifyToken, async (req, res) => {
          AND us.status IN ('trialing', 'active')
        ORDER BY CASE WHEN us.status = 'active' THEN 0 ELSE 1 END, us.created_at DESC
        LIMIT 1`,
-      [req.user.id]
+      [billingUserId]
     );
 
     const subscription = subscriptionResult.rows[0];
@@ -294,6 +336,8 @@ router.post('/unlock-book', verifyToken, async (req, res) => {
 });
 
 router.post('/subscribe', verifyToken, async (req, res) => {
+  if (rejectKidPayment(req, res)) return;
+
   const { plan_code } = req.body;
 
   if (!plan_code) {
@@ -339,6 +383,8 @@ router.post('/subscribe', verifyToken, async (req, res) => {
 });
 
 router.post('/start-trial', verifyToken, async (req, res) => {
+  if (rejectKidPayment(req, res)) return;
+
   const client = await getPool().connect();
   try {
     await client.query('BEGIN');
@@ -427,6 +473,8 @@ router.post('/start-trial', verifyToken, async (req, res) => {
 });
 
 router.post('/create-checkout-session', verifyToken, async (req, res) => {
+  if (rejectKidPayment(req, res)) return;
+
   const { plan_code } = req.body;
 
   if (!plan_code) {
@@ -510,6 +558,8 @@ router.post('/create-checkout-session', verifyToken, async (req, res) => {
 });
 
 router.post('/confirm-checkout', verifyToken, async (req, res) => {
+  if (rejectKidPayment(req, res)) return;
+
   const { session_id } = req.body;
 
   if (!session_id) {
