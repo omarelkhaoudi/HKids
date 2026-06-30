@@ -29,7 +29,7 @@ function KidsLibrary() {
 
   useEffect(() => {
     if (!user || user.role !== 'kid') {
-      navigate('/admin/login');
+      navigate('/parent/login');
       return;
     }
     loadData();
@@ -72,7 +72,7 @@ function KidsLibrary() {
 
   const handleLogout = () => {
     logout();
-    navigate('/admin/login');
+    navigate('/parent/login');
   };
 
   const toggleFavorite = (bookId) => {

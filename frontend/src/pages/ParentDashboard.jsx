@@ -36,7 +36,7 @@ function ParentDashboard() {
 
   useEffect(() => {
     if (!user) {
-      navigate('/admin/login');
+      navigate('/parent/login');
       return;
     }
     if (user.role !== 'parent' && user.role !== 'admin') {
@@ -185,7 +185,7 @@ function ParentDashboard() {
 
   const handleLogout = () => {
     logout();
-    navigate('/admin/login');
+    navigate('/parent/login');
   };
 
   const handleSaveGoal = async () => {

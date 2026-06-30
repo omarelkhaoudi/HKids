@@ -30,8 +30,13 @@ function ParentLogin() {
     const userData = localStorage.getItem('user');
     const user = userData ? JSON.parse(userData) : null;
 
+    if (user?.role === 'kid') {
+      navigate('/kids');
+      return;
+    }
+
     if (user?.role !== 'parent' && user?.role !== 'admin') {
-      setError("Ce compte n'a pas acces a l'espace parent.");
+      setError("Ce compte n'a pas acces a HKids.");
       return;
     }
 
@@ -51,16 +56,16 @@ function ParentLogin() {
         <div className="hidden lg:block">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-red-500 to-pink-500 text-white mb-5 shadow-lg">
             <span className="h-2 w-2 rounded-full bg-white" />
-            <span className="text-xs font-semibold uppercase tracking-wide">Espace securise parent</span>
+            <span className="text-xs font-semibold uppercase tracking-wide">Espace securise HKids</span>
           </div>
           <h1 className="text-5xl font-extrabold tracking-tight mb-4 text-neutral-900">
-            Suivez la lecture
+            Connectez-vous
             <span className="block bg-gradient-to-r from-red-600 via-pink-600 to-orange-600 bg-clip-text text-transparent">
-              de vos enfants.
+              a votre espace.
             </span>
           </h1>
           <p className="text-lg text-neutral-700 max-w-xl leading-relaxed">
-            Consultez leur progression, le temps de lecture, les livres termines, et choisissez les categories accessibles.
+            Parents et enfants retrouvent ici leur espace de lecture, le suivi et les livres autorises.
           </p>
         </div>
 
@@ -73,8 +78,8 @@ function ParentLogin() {
             <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-red-500 to-pink-500 shadow-lg mb-5">
               <Logo size="large" showText={false} />
             </div>
-            <h2 className="text-3xl font-bold text-neutral-900 mb-2">HKids Parent</h2>
-            <p className="text-sm text-neutral-600">Connectez-vous pour suivre et accompagner vos enfants.</p>
+            <h2 className="text-3xl font-bold text-neutral-900 mb-2">Connexion HKids</h2>
+            <p className="text-sm text-neutral-600">Connectez-vous pour acceder a votre espace.</p>
           </div>
 
           {error && (

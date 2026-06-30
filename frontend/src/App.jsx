@@ -38,7 +38,7 @@ function RequireAuth({ children }) {
   }
 
   if (!user && !hasToken) {
-    return <Navigate to="/admin/login" replace />;
+    return <Navigate to="/parent/login" replace />;
   }
 
   return children;

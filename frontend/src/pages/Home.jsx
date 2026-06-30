@@ -289,7 +289,7 @@ function Home({ darkMode, setDarkMode }) {
               <span>{t.history}</span>
             </Link>
             <Link 
-              to="/admin/login" 
+              to="/parent/login" 
               className="btn-nav flex items-center gap-2 text-neutral-100 hover:text-white hover:bg-neutral-800/80"
             >
               <LockIcon className="w-4 h-4" />
@@ -354,7 +354,7 @@ function Home({ darkMode, setDarkMode }) {
                   <span>{t.history}</span>
                 </Link>
                 <Link 
-                  to="/admin/login" 
+                  to="/parent/login" 
                   onClick={() => setMobileMenuOpen(false)}
                   className="flex items-center gap-3 px-4 py-3 text-neutral-100 hover:text-white hover:bg-neutral-700/50 rounded-lg transition-colors"
                 >

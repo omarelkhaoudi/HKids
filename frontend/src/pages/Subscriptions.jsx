@@ -68,7 +68,7 @@ function Subscriptions() {
   const handleExpiredSession = () => {
     logout();
     showToast('Votre session a expiré. Connectez-vous à nouveau.', 'info', 3500);
-    navigate('/admin/login');
+    navigate('/parent/login');
   };
 
   useEffect(() => {
@@ -142,7 +142,7 @@ function Subscriptions() {
   const handleSubscribe = async (planCode) => {
     if (!isAuthenticated) {
       showToast('Connectez-vous pour choisir un abonnement.', 'info', 2500);
-      navigate('/admin/login');
+      navigate('/parent/login');
       return;
     }
 
@@ -173,7 +173,7 @@ function Subscriptions() {
   const handleStartTrial = async () => {
     if (!isAuthenticated) {
       showToast("Connectez-vous pour démarrer l'essai gratuit.", 'info', 2500);
-      navigate('/admin/login');
+      navigate('/parent/login');
       return;
     }
 
