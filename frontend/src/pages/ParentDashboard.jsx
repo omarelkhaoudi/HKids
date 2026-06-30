@@ -26,6 +26,7 @@ function ParentDashboard() {
   const [showKidModal, setShowKidModal] = useState(false);
   const [showAccountModal, setShowAccountModal] = useState(false);
   const [editingKid, setEditingKid] = useState(null);
+  const [activeSection, setActiveSection] = useState('overview');
   const [kidForm, setKidForm] = useState({ name: '', age: '', avatar: '' });
   const [accountForm, setAccountForm] = useState({ username: '', password: '' });
   const [goalForm, setGoalForm] = useState({
@@ -53,8 +54,17 @@ function ParentDashboard() {
         parentalAPI.getKids(),
         categoriesAPI.getAll()
       ]);
-      setKids(kidsRes.data);
-      setCategories(categoriesRes.data);
+      const kidsData = kidsRes.data || [];
+      const categoriesData = categoriesRes.data || [];
+      setKids(kidsData);
+      setCategories(categoriesData);
+
+      if (!selectedKid && kidsData.length > 0) {
+        setSelectedKid(kidsData[0]);
+        setActiveSection('overview');
+        loadApprovals(kidsData[0].id, categoriesData);
+        loadKidActivity(kidsData[0].id);
+      }
     } catch (error) {
       console.error('Error loading data:', error);
       showToast('Erreur lors du chargement des données', 'error');
@@ -63,7 +73,7 @@ function ParentDashboard() {
     }
   };
 
-  const loadApprovals = async (kidId) => {
+  const loadApprovals = async (kidId, availableCategories = categories) => {
     try {
       const res = await parentalAPI.getApprovals(kidId);
       const approvalsData = res.data;
@@ -75,7 +85,7 @@ function ParentDashboard() {
       });
 
       // Create approvals array for all categories
-      const allApprovals = categories.map(cat => ({
+      const allApprovals = availableCategories.map(cat => ({
         category_id: cat.id,
         category_name: cat.name,
         approved: approvalsMap.get(cat.id) || false
@@ -113,6 +123,7 @@ function ParentDashboard() {
 
   const handleSelectKid = (kid) => {
     setSelectedKid(kid);
+    setActiveSection('overview');
     loadApprovals(kid.id);
     loadKidActivity(kid.id);
   };
@@ -238,6 +249,15 @@ function ParentDashboard() {
     });
   };
 
+  const approvedCount = approvals.filter((approval) => approval.approved).length;
+  const totalCategories = approvals.length || categories.length || 0;
+  const parentSections = [
+    { id: 'overview', label: "Vue d'ensemble" },
+    { id: 'account', label: 'Compte enfant' },
+    { id: 'access', label: 'Acces aux livres' },
+    { id: 'reading', label: 'Suivi' }
+  ];
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-neutral-50 to-neutral-100 dark:from-neutral-900 dark:to-neutral-800 flex items-center justify-center">
@@ -258,9 +278,14 @@ function ParentDashboard() {
             <Link to="/">
               <Logo size="default" showText={true} />
             </Link>
-            <h1 className="text-2xl font-bold text-neutral-800 dark:text-neutral-200">
-              Tableau de bord Parent
-            </h1>
+            <div>
+              <h1 className="text-2xl font-bold text-neutral-800 dark:text-neutral-200">
+                Espace parent
+              </h1>
+              <p className="text-sm text-neutral-500">
+                Payer, autoriser et suivre la lecture de votre enfant.
+              </p>
+            </div>
           </div>
           <button
             onClick={handleLogout}
@@ -357,6 +382,158 @@ function ParentDashboard() {
           <div className="lg:col-span-2">
             {selectedKid ? (
               <div className="space-y-6">
+                <div className="rounded-2xl bg-gradient-to-br from-red-500 via-pink-500 to-orange-500 p-6 text-white shadow-xl">
+                  <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+                    <div>
+                      <p className="text-sm font-bold uppercase tracking-wide text-white/80">
+                        Espace de {selectedKid.name}
+                      </p>
+                      <h2 className="mt-2 text-2xl font-bold">
+                        Le parent gere, l'enfant lit simplement.
+                      </h2>
+                      <p className="mt-2 max-w-2xl text-sm text-white/85">
+                        Le paiement, le compte enfant et les categories autorisees restent ici. Cote enfant, il ne voit que les livres disponibles.
+                      </p>
+                    </div>
+                    <Link
+                      to="/abonnements"
+                      className="inline-flex items-center justify-center rounded-xl bg-white px-5 py-3 font-bold text-red-600 shadow-lg transition hover:bg-red-50"
+                    >
+                      Gerer l'abonnement
+                    </Link>
+                  </div>
+
+                  <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
+                    <div className="rounded-xl bg-white/15 p-4 backdrop-blur">
+                      <span className="block text-sm text-white/80">Temps lu</span>
+                      <span className="text-2xl font-bold">
+                        {formatDuration(kidActivity?.summary?.total_time_seconds)}
+                      </span>
+                    </div>
+                    <div className="rounded-xl bg-white/15 p-4 backdrop-blur">
+                      <span className="block text-sm text-white/80">Livres termines</span>
+                      <span className="text-2xl font-bold">
+                        {kidActivity?.summary?.completed_books || 0}
+                      </span>
+                    </div>
+                    <div className="rounded-xl bg-white/15 p-4 backdrop-blur">
+                      <span className="block text-sm text-white/80">Acces autorises</span>
+                      <span className="text-2xl font-bold">
+                        {approvedCount}/{totalCategories}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+                  <button
+                    onClick={() => setActiveSection('account')}
+                    className="rounded-xl border border-red-100 bg-white p-4 text-left shadow-sm transition hover:border-red-300 hover:shadow-md dark:border-neutral-700 dark:bg-neutral-800"
+                  >
+                    <span className="block text-sm font-bold text-red-600">1. Compte enfant</span>
+                    <span className="mt-1 block text-sm text-neutral-600 dark:text-neutral-300">
+                      Creer l'identifiant que l'enfant utilisera pour lire.
+                    </span>
+                  </button>
+                  <button
+                    onClick={() => setActiveSection('access')}
+                    className="rounded-xl border border-red-100 bg-white p-4 text-left shadow-sm transition hover:border-red-300 hover:shadow-md dark:border-neutral-700 dark:bg-neutral-800"
+                  >
+                    <span className="block text-sm font-bold text-red-600">2. Acces aux livres</span>
+                    <span className="mt-1 block text-sm text-neutral-600 dark:text-neutral-300">
+                      Choisir les categories visibles pour {selectedKid.name}.
+                    </span>
+                  </button>
+                  <button
+                    onClick={() => setActiveSection('reading')}
+                    className="rounded-xl border border-red-100 bg-white p-4 text-left shadow-sm transition hover:border-red-300 hover:shadow-md dark:border-neutral-700 dark:bg-neutral-800"
+                  >
+                    <span className="block text-sm font-bold text-red-600">3. Suivi de lecture</span>
+                    <span className="mt-1 block text-sm text-neutral-600 dark:text-neutral-300">
+                      Voir les progres apres les sessions de lecture.
+                    </span>
+                  </button>
+                </div>
+
+                <div className="flex flex-wrap gap-2 rounded-2xl bg-white p-2 shadow-lg dark:bg-neutral-800">
+                  {parentSections.map((section) => (
+                    <button
+                      key={section.id}
+                      onClick={() => setActiveSection(section.id)}
+                      className={`rounded-xl px-4 py-2 text-sm font-bold transition ${
+                        activeSection === section.id
+                          ? 'bg-red-500 text-white shadow'
+                          : 'text-neutral-600 hover:bg-neutral-100 dark:text-neutral-300 dark:hover:bg-neutral-700'
+                      }`}
+                    >
+                      {section.label}
+                    </button>
+                  ))}
+                </div>
+
+                {activeSection === 'overview' && (
+                  <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+                    <div className="rounded-xl bg-white p-6 shadow-lg dark:bg-neutral-800">
+                      <h2 className="text-xl font-bold text-neutral-800 dark:text-neutral-200">
+                        Parcours parent logique
+                      </h2>
+                      <div className="mt-5 space-y-4">
+                        {[
+                          ['Payer cote parent', "L'enfant ne voit jamais le paiement."],
+                          ['Creer le compte enfant', 'Un acces simple et limite a son profil.'],
+                          ['Autoriser les categories', 'Le contenu visible reste valide par le parent.'],
+                          ['Suivre sans interrompre', 'Le parent consulte les progres quand il veut.']
+                        ].map(([title, text], index) => (
+                          <div key={title} className="flex gap-3">
+                            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-red-100 font-bold text-red-600">
+                              {index + 1}
+                            </span>
+                            <div>
+                              <p className="font-bold text-neutral-900 dark:text-neutral-100">{title}</p>
+                              <p className="text-sm text-neutral-600 dark:text-neutral-300">{text}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="rounded-xl bg-white p-6 shadow-lg dark:bg-neutral-800">
+                      <h2 className="text-xl font-bold text-neutral-800 dark:text-neutral-200">
+                        Resume de {selectedKid.name}
+                      </h2>
+                      <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                        <div className="rounded-lg bg-neutral-50 p-4 dark:bg-neutral-700">
+                          <span className="block text-sm text-neutral-500">Age</span>
+                          <span className="text-xl font-bold text-neutral-900 dark:text-neutral-100">
+                            {selectedKid.age ? `${selectedKid.age} ans` : 'Non renseigne'}
+                          </span>
+                        </div>
+                        <div className="rounded-lg bg-neutral-50 p-4 dark:bg-neutral-700">
+                          <span className="block text-sm text-neutral-500">Sessions</span>
+                          <span className="text-xl font-bold text-neutral-900 dark:text-neutral-100">
+                            {kidActivity?.summary?.total_sessions || 0}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="mt-5 flex flex-wrap gap-2">
+                        <button
+                          onClick={() => setActiveSection('account')}
+                          className="rounded-lg bg-red-500 px-4 py-2 font-bold text-white hover:bg-red-600"
+                        >
+                          Configurer le compte
+                        </button>
+                        <button
+                          onClick={() => setActiveSection('access')}
+                          className="rounded-lg bg-neutral-100 px-4 py-2 font-bold text-neutral-700 hover:bg-neutral-200 dark:bg-neutral-700 dark:text-neutral-200"
+                        >
+                          Gerer les acces
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {activeSection === 'reading' && (
                 <div className="bg-white dark:bg-neutral-800 rounded-xl shadow-lg p-6">
                   <div className="flex items-center justify-between mb-6">
                     <div>
@@ -552,7 +729,9 @@ function ParentDashboard() {
                     </>
                   )}
                 </div>
+                )}
 
+                {activeSection === 'access' && (
                 <div className="bg-white dark:bg-neutral-800 rounded-xl shadow-lg p-6">
                 <div className="flex items-center justify-between mb-6">
                   <div>
@@ -564,13 +743,11 @@ function ParentDashboard() {
                     </p>
                   </div>
                   <button
-                    onClick={() => {
-                      setShowAccountModal(true);
-                    }}
-                    className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
+                    onClick={() => setActiveSection('account')}
+                    className="flex items-center gap-2 px-4 py-2 bg-neutral-100 text-neutral-700 rounded-lg hover:bg-neutral-200 transition-colors dark:bg-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-600"
                   >
                     <LockIcon className="w-5 h-5" />
-                    <span>Créer un compte</span>
+                    <span>Compte enfant</span>
                   </button>
                 </div>
 
@@ -614,6 +791,65 @@ function ParentDashboard() {
                   )}
                 </div>
               </div>
+              )}
+
+              {activeSection === 'account' && (
+                <div className="rounded-xl bg-white p-6 shadow-lg dark:bg-neutral-800">
+                  <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                    <div>
+                      <h2 className="text-xl font-bold text-neutral-800 dark:text-neutral-200">
+                        Compte enfant de {selectedKid.name}
+                      </h2>
+                      <p className="mt-1 text-sm text-neutral-500">
+                        Ce compte sert uniquement a lire les livres autorises. Le paiement et les reglages restent dans l'espace parent.
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => setShowAccountModal(true)}
+                      className="inline-flex items-center justify-center gap-2 rounded-lg bg-green-500 px-4 py-2 font-bold text-white transition hover:bg-green-600"
+                    >
+                      <LockIcon className="h-5 w-5" />
+                      Creer un compte enfant
+                    </button>
+                  </div>
+
+                  <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-3">
+                    <div className="rounded-xl bg-green-50 p-4 dark:bg-green-900/20">
+                      <p className="font-bold text-green-700 dark:text-green-300">Connexion simple</p>
+                      <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-300">
+                        Un identifiant enfant, sans carte bancaire ni espace paiement.
+                      </p>
+                    </div>
+                    <div className="rounded-xl bg-blue-50 p-4 dark:bg-blue-900/20">
+                      <p className="font-bold text-blue-700 dark:text-blue-300">Acces limite</p>
+                      <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-300">
+                        Les livres visibles suivent les categories approuvees par le parent.
+                      </p>
+                    </div>
+                    <div className="rounded-xl bg-red-50 p-4 dark:bg-red-900/20">
+                      <p className="font-bold text-red-700 dark:text-red-300">Parent responsable</p>
+                      <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-300">
+                        L'abonnement et les decisions restent cote adulte.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="mt-6 flex flex-wrap gap-2">
+                    <button
+                      onClick={() => setActiveSection('access')}
+                      className="rounded-lg bg-neutral-100 px-4 py-2 font-bold text-neutral-700 hover:bg-neutral-200 dark:bg-neutral-700 dark:text-neutral-200"
+                    >
+                      Choisir les categories
+                    </button>
+                    <Link
+                      to="/abonnements"
+                      className="rounded-lg bg-red-500 px-4 py-2 font-bold text-white hover:bg-red-600"
+                    >
+                      Gerer l'abonnement parent
+                    </Link>
+                  </div>
+                </div>
+              )}
               </div>
             ) : (
               <div className="bg-white dark:bg-neutral-800 rounded-xl shadow-lg p-6 flex items-center justify-center h-full">
