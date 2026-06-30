@@ -88,6 +88,7 @@ function ParentDashboard() {
       const allApprovals = availableCategories.map(cat => ({
         category_id: cat.id,
         category_name: cat.name,
+        category_description: cat.description || '',
         approved: approvalsMap.get(cat.id) || false
       }));
 
@@ -257,6 +258,78 @@ function ParentDashboard() {
     { id: 'access', label: 'Acces aux livres' },
     { id: 'reading', label: 'Suivi' }
   ];
+
+  const getCategoryGuidance = (approval) => {
+    const name = (approval.category_name || '').toLowerCase();
+    const guides = [
+      {
+        match: ['educational', 'education'],
+        description: 'Histoires utiles pour apprendre, decouvrir des notions simples et renforcer la curiosite.',
+        advice: 'Tres adapte',
+        tone: 'green'
+      },
+      {
+        match: ['animals', 'animal'],
+        description: 'Recits autour des animaux, de la nature et de l empathie. Souvent rassurant pour les jeunes enfants.',
+        advice: 'Tres adapte',
+        tone: 'green'
+      },
+      {
+        match: ['fairy tales', 'fairy', 'conte'],
+        description: 'Contes imaginaires avec morale, magie et personnages symboliques. A verifier si l histoire est douce.',
+        advice: 'Bon avec selection',
+        tone: 'blue'
+      },
+      {
+        match: ['adventure', 'aventure'],
+        description: 'Histoires dynamiques avec exploration, courage et petits defis. Peut etre excellent si le ton reste calme.',
+        advice: 'A accompagner',
+        tone: 'amber'
+      },
+      {
+        match: ['comedy', 'humour'],
+        description: 'Lectures legeres et amusantes qui motivent l enfant a lire sans pression.',
+        advice: 'Tres adapte',
+        tone: 'green'
+      },
+      {
+        match: ['fantasy', 'fantaisie'],
+        description: 'Univers imaginaires avec magie ou personnages fictifs. Bien pour l imagination, a filtrer selon l age.',
+        advice: 'A verifier',
+        tone: 'amber'
+      },
+      {
+        match: ['fiction'],
+        description: 'Histoires inventees variees. Le niveau depend du theme, du vocabulaire et de la duree du livre.',
+        advice: 'Selon le livre',
+        tone: 'blue'
+      },
+      {
+        match: ['mystery', 'mystere'],
+        description: 'Enquetes et enigmes. Interessant pour reflechir, mais certains sujets peuvent etre moins rassurants.',
+        advice: 'A verifier',
+        tone: 'amber'
+      },
+      {
+        match: ['science'],
+        description: 'Contenus de decouverte pour comprendre le monde avec des mots simples.',
+        advice: 'Tres adapte',
+        tone: 'green'
+      }
+    ];
+    const guide = guides.find((item) => item.match.some((keyword) => name.includes(keyword)));
+    return {
+      description: approval.category_description || guide?.description || 'Categorie generale. Le parent peut l autoriser apres avoir verifie que les livres correspondent a l age et au niveau de l enfant.',
+      advice: guide?.advice || 'A verifier',
+      tone: guide?.tone || 'amber'
+    };
+  };
+
+  const guidanceToneClasses = {
+    green: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
+    blue: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
+    amber: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300'
+  };
 
   if (loading) {
     return (
@@ -757,21 +830,34 @@ function ParentDashboard() {
                       Chargement des catégories...
                     </p>
                   ) : (
-                    approvals.map(approval => (
+                    approvals.map(approval => {
+                      const guidance = getCategoryGuidance(approval);
+
+                      return (
                       <motion.div
                         key={approval.category_id}
-                        className="flex items-center justify-between p-4 bg-neutral-50 dark:bg-neutral-700 rounded-lg"
+                        className="flex flex-col gap-4 p-4 bg-neutral-50 dark:bg-neutral-700 rounded-lg sm:flex-row sm:items-center sm:justify-between"
                         whileHover={{ scale: 1.01 }}
                       >
-                        <div className="flex items-center gap-3">
-                          <BookIcon className="w-5 h-5 text-red-500" />
-                          <span className="font-medium text-neutral-800 dark:text-neutral-200">
-                            {approval.category_name}
-                          </span>
+                        <div className="flex items-start gap-3">
+                          <BookIcon className="mt-1 w-5 h-5 shrink-0 text-red-500" />
+                          <div>
+                            <div className="flex flex-wrap items-center gap-2">
+                              <span className="font-semibold text-neutral-900 dark:text-neutral-100">
+                                {approval.category_name}
+                              </span>
+                              <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${guidanceToneClasses[guidance.tone]}`}>
+                                {guidance.advice}
+                              </span>
+                            </div>
+                            <p className="mt-1 max-w-2xl text-sm leading-relaxed text-neutral-600 dark:text-neutral-300">
+                              {guidance.description}
+                            </p>
+                          </div>
                         </div>
                         <button
                           onClick={() => handleToggleApproval(approval.category_id, !approval.approved)}
-                          className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                          className={`shrink-0 px-4 py-2 rounded-lg font-medium transition-colors ${
                             approval.approved
                               ? 'bg-green-500 text-white hover:bg-green-600'
                               : 'bg-neutral-300 dark:bg-neutral-600 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-400'
@@ -787,7 +873,8 @@ function ParentDashboard() {
                           )}
                         </button>
                       </motion.div>
-                    ))
+                      );
+                    })
                   )}
                 </div>
               </div>
