@@ -1,6 +1,8 @@
 # Dependencies
 node_modules/
-package-lock.json
+/package-lock.json
+!backend/package-lock.json
+!frontend/package-lock.json
 
 # Environment variables
 .env
@@ -18,7 +20,7 @@ build/
 *.sqlite3
 backend/data/
 
-# Uploads (keep structure, ignore files)
+# Uploads
 # backend/uploads/books/*
 # !backend/uploads/books/.gitkeep
 backend/uploads/covers/*
