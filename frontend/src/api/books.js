@@ -13,6 +13,9 @@ export const booksAPI = {
     const params = new URLSearchParams();
     if (filters.age_group) params.append('age_group', filters.age_group);
     if (filters.category_id) params.append('category_id', filters.category_id);
+    if (filters.theme) params.append('theme', filters.theme);
+    if (filters.language) params.append('language', filters.language);
+    if (filters.content_type) params.append('content_type', filters.content_type);
     
     return axios.get(`${buildApiUrl('/books/published')}?${params}`, noCacheConfig);
   },

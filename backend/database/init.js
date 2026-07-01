@@ -77,6 +77,11 @@ export async function initDatabase() {
         description TEXT,
         cover_image TEXT,
         file_path TEXT NOT NULL,
+        content_type TEXT NOT NULL DEFAULT 'story',
+        language TEXT NOT NULL DEFAULT 'fr',
+        theme TEXT,
+        audio_url TEXT,
+        duration_seconds INTEGER DEFAULT 0,
         category_id INTEGER REFERENCES categories(id) ON DELETE SET NULL,
         age_group_min INTEGER DEFAULT 0,
         age_group_max INTEGER DEFAULT 12,
@@ -98,6 +103,9 @@ export async function initDatabase() {
         name TEXT NOT NULL,
         avatar TEXT,
         age INTEGER,
+        photo_url TEXT,
+        preferred_language TEXT NOT NULL DEFAULT 'fr',
+        interests TEXT[] DEFAULT '{}',
         created_at TIMESTAMPTZ DEFAULT NOW(),
         updated_at TIMESTAMPTZ DEFAULT NOW()
       );`,
@@ -194,6 +202,14 @@ export async function initDatabase() {
 
     await client.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS kid_profile_id INTEGER REFERENCES kids_profiles(id) ON DELETE SET NULL`);
     await client.query(`ALTER TABLE books ADD COLUMN IF NOT EXISTS slug TEXT`);
+    await client.query(`ALTER TABLE books ADD COLUMN IF NOT EXISTS content_type TEXT NOT NULL DEFAULT 'story'`);
+    await client.query(`ALTER TABLE books ADD COLUMN IF NOT EXISTS language TEXT NOT NULL DEFAULT 'fr'`);
+    await client.query(`ALTER TABLE books ADD COLUMN IF NOT EXISTS theme TEXT`);
+    await client.query(`ALTER TABLE books ADD COLUMN IF NOT EXISTS audio_url TEXT`);
+    await client.query(`ALTER TABLE books ADD COLUMN IF NOT EXISTS duration_seconds INTEGER DEFAULT 0`);
+    await client.query(`ALTER TABLE kids_profiles ADD COLUMN IF NOT EXISTS photo_url TEXT`);
+    await client.query(`ALTER TABLE kids_profiles ADD COLUMN IF NOT EXISTS preferred_language TEXT NOT NULL DEFAULT 'fr'`);
+    await client.query(`ALTER TABLE kids_profiles ADD COLUMN IF NOT EXISTS interests TEXT[] DEFAULT '{}'`);
     await client.query(`ALTER TABLE subscription_plans ADD COLUMN IF NOT EXISTS description TEXT`);
     await client.query(`ALTER TABLE subscription_plans ADD COLUMN IF NOT EXISTS monthly_price_cents INTEGER NOT NULL DEFAULT 0`);
     await client.query(`ALTER TABLE subscription_plans ADD COLUMN IF NOT EXISTS currency TEXT NOT NULL DEFAULT 'EUR'`);
@@ -222,6 +238,7 @@ export async function initDatabase() {
       WHERE slug IS NULL OR slug = ''
     `);
     await client.query(`CREATE UNIQUE INDEX IF NOT EXISTS books_slug_unique ON books(slug)`);
+    await client.query(`CREATE INDEX IF NOT EXISTS books_theme_language_idx ON books(theme, language, content_type)`);
     await client.query(`CREATE UNIQUE INDEX IF NOT EXISTS book_pages_book_page_unique ON book_pages(book_id, page_number)`);
     await client.query(`CREATE INDEX IF NOT EXISTS user_subscriptions_user_status_idx ON user_subscriptions(user_id, status)`);
     await client.query(`CREATE INDEX IF NOT EXISTS subscription_book_unlocks_user_period_idx ON subscription_book_unlocks(user_id, period_start, period_end)`);

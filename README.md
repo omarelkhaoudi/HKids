@@ -138,22 +138,28 @@ Default admin credentials:
 ## Documentation
 
 ### Technical Documentation
+- **[docs/LE_LIT_QUI_LIT_GAP_ANALYSIS.md](./docs/LE_LIT_QUI_LIT_GAP_ANALYSIS.md)** - Analyse du nouveau cahier des charges Le Lit Qui Lit
 - **[docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md)** - Architecture technique
 - **[docs/STACK_JUSTIFICATION.md](./docs/STACK_JUSTIFICATION.md)** - Justification du stack
 - **[docs/API_DOCUMENTATION.md](./docs/API_DOCUMENTATION.md)** - Documentation API
 - **[docs/DEPLOYMENT.md](./docs/DEPLOYMENT.md)** - Guide de déploiement
 
-## ✅ Project Status
+## Project Status
 
-**✅ COMPLETE - 100% of requirements implemented**
+**POC lecture avance - nouvelle roadmap produit a cadrer**
 
-All required deliverables have been completed:
+Le projet couvre deja une base importante de lecture numerique, d'administration, de profils parents/enfants, de controle par categories, de suivi de lecture et d'abonnements. Le nouveau cahier des charges "Le Lit Qui Lit" ajoute des exigences majeures qui ne sont pas encore terminees: audio, assistant vocal IA, clonage vocal parental, mode hors connexion, contenus multilingues structures, consentement vocal et experience enfant non lectrice.
+
+Voir l'analyse detaillee: [docs/LE_LIT_QUI_LIT_GAP_ANALYSIS.md](./docs/LE_LIT_QUI_LIT_GAP_ANALYSIS.md).
+
+Base POC deja implementee:
 - ✅ Functional POC with immersive reading interface
 - ✅ Content management back-office
 - ✅ Complete technical documentation
 - ✅ Stack justification
-- ✅ All functional requirements met
-- ✅ All technical constraints satisfied
+- ✅ Parent/kid/admin roles
+- ✅ Parent controls by categories
+- ✅ Reading progress and subscription foundation
 
 ## Features Implemented
 

@@ -4,6 +4,9 @@ Cette section contient toute la documentation technique du projet HKids.
 
 ## Documents Disponibles
 
+### 0. [Analyse Cahier des Charges - Le Lit Qui Lit](./LE_LIT_QUI_LIT_GAP_ANALYSIS.md)
+Analyse du nouveau cahier des charges, ecarts avec le repo actuel, MVP recommande, risques et questions a poser.
+
 ### 1. [Architecture Technique](./ARCHITECTURE.md)
 Description complète de l'architecture du système, des composants, et de la structure technique.
 
@@ -33,7 +36,7 @@ HKids est une plateforme de lecture numérique pour enfants construite avec:
 - ✅ Interface de lecture immersive avec animations
 - ✅ Système de gestion de contenu complet
 - ✅ Sécurisé avec authentification JWT
-- ✅ Prêt pour la production avec recommandations d'amélioration
+- ⚠ Base POC solide, mais le nouveau MVP "Le Lit Qui Lit" demande encore audio, IA vocale, clonage vocal, offline et consentement avance
 
 ## Démarrage Rapide
 

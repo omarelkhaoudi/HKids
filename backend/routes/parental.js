@@ -73,6 +73,25 @@ function buildBadges(summary, progressRows) {
   ];
 }
 
+function normalizeInterests(interests) {
+  if (Array.isArray(interests)) {
+    return interests
+      .map((interest) => String(interest).trim())
+      .filter(Boolean)
+      .slice(0, 12);
+  }
+
+  if (typeof interests === 'string') {
+    return interests
+      .split(',')
+      .map((interest) => interest.trim())
+      .filter(Boolean)
+      .slice(0, 12);
+  }
+
+  return [];
+}
+
 // Get all kids profiles for the logged-in parent
 router.get('/kids', verifyToken, verifyParent, async (req, res) => {
   try {
@@ -91,7 +110,7 @@ router.get('/kids', verifyToken, verifyParent, async (req, res) => {
 // Create a new kid profile
 router.post('/kids', verifyToken, verifyParent, async (req, res) => {
   try {
-    const { name, avatar, age } = req.body;
+    const { name, avatar, age, photo_url, preferred_language, interests } = req.body;
     
     if (!name) {
       return res.status(400).json({ error: 'Name is required' });
@@ -99,8 +118,20 @@ router.post('/kids', verifyToken, verifyParent, async (req, res) => {
 
     const pool = getPool();
     const result = await pool.query(
-      'INSERT INTO kids_profiles (parent_id, name, avatar, age) VALUES ($1, $2, $3, $4) RETURNING *',
-      [req.user.id, name, avatar || null, age || null]
+      `INSERT INTO kids_profiles (
+        parent_id, name, avatar, age, photo_url, preferred_language, interests
+      )
+      VALUES ($1, $2, $3, $4, $5, $6, $7)
+      RETURNING *`,
+      [
+        req.user.id,
+        name,
+        avatar || null,
+        age || null,
+        photo_url || null,
+        preferred_language || 'fr',
+        normalizeInterests(interests)
+      ]
     );
 
     res.status(201).json(result.rows[0]);
@@ -113,7 +144,7 @@ router.post('/kids', verifyToken, verifyParent, async (req, res) => {
 // Update a kid profile
 router.put('/kids/:id', verifyToken, verifyParent, async (req, res) => {
   try {
-    const { name, avatar, age } = req.body;
+    const { name, avatar, age, photo_url, preferred_language, interests } = req.body;
     const pool = getPool();
     
     // Verify the kid profile belongs to the parent
@@ -127,8 +158,26 @@ router.put('/kids/:id', verifyToken, verifyParent, async (req, res) => {
     }
 
     const result = await pool.query(
-      'UPDATE kids_profiles SET name = $1, avatar = $2, age = $3, updated_at = NOW() WHERE id = $4 AND parent_id = $5 RETURNING *',
-      [name, avatar || null, age || null, req.params.id, req.user.id]
+      `UPDATE kids_profiles
+       SET name = $1,
+           avatar = $2,
+           age = $3,
+           photo_url = $4,
+           preferred_language = $5,
+           interests = $6,
+           updated_at = NOW()
+       WHERE id = $7 AND parent_id = $8
+       RETURNING *`,
+      [
+        name,
+        avatar || null,
+        age || null,
+        photo_url || null,
+        preferred_language || 'fr',
+        normalizeInterests(interests),
+        req.params.id,
+        req.user.id
+      ]
     );
 
     res.json(result.rows[0]);
