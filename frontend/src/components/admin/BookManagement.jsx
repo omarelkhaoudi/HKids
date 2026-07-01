@@ -67,6 +67,11 @@ function BookManagement() {
     category_id: '',
     age_group_min: 0,
     age_group_max: 12,
+    content_type: 'story',
+    language: 'fr',
+    theme: '',
+    audio_url: '',
+    duration_seconds: 0,
     is_published: false
   });
   const [coverFile, setCoverFile] = useState(null);
@@ -169,6 +174,11 @@ function BookManagement() {
       category_id: book.category_id || '',
       age_group_min: book.age_group_min || 0,
       age_group_max: book.age_group_max || 12,
+      content_type: book.content_type || 'story',
+      language: book.language || 'fr',
+      theme: book.theme || '',
+      audio_url: book.audio_url || '',
+      duration_seconds: book.duration_seconds || 0,
       is_published: book.is_published === true || book.is_published === 1
     });
     setCoverPreview(book.cover_image ? getImageUrl(book.cover_image) : null);
@@ -200,6 +210,11 @@ function BookManagement() {
       formData.append('category_id', book.category_id || '');
       formData.append('age_group_min', book.age_group_min);
       formData.append('age_group_max', book.age_group_max);
+      formData.append('content_type', book.content_type || 'story');
+      formData.append('language', book.language || 'fr');
+      formData.append('theme', book.theme || '');
+      formData.append('audio_url', book.audio_url || '');
+      formData.append('duration_seconds', book.duration_seconds || 0);
       // FormData convertit les booléens en strings, donc on envoie explicitement 'true' ou 'false'
       formData.append('is_published', newPublishedStatus ? 'true' : 'false');
       
@@ -219,6 +234,11 @@ function BookManagement() {
       category_id: '',
       age_group_min: 0,
       age_group_max: 12,
+      content_type: 'story',
+      language: 'fr',
+      theme: '',
+      audio_url: '',
+      duration_seconds: 0,
       is_published: false
     });
     setCoverFile(null);
@@ -371,6 +391,8 @@ function BookManagement() {
                 <th className="px-6 py-3 text-left text-xs font-medium text-red-700 uppercase">Title</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-red-700 uppercase">Author</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-red-700 uppercase">Category</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-red-700 uppercase">Theme</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-red-700 uppercase">Langue</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-red-700 uppercase">Age Group</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-red-700 uppercase">Status</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-red-700 uppercase">Actions</th>
@@ -417,6 +439,12 @@ function BookManagement() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-gray-500">{book.category_name || '-'}</div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm text-gray-500">{book.theme || '-'}</div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm text-gray-500">{(book.language || 'fr').toUpperCase()}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-gray-500">
@@ -590,6 +618,87 @@ function BookManagement() {
                         placeholder="Max"
                       />
                     </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-red-700 mb-1">
+                      Type de contenu
+                    </label>
+                    <select
+                      value={formData.content_type}
+                      onChange={(e) => setFormData({ ...formData, content_type: e.target.value })}
+                      className="w-full px-4 py-2.5 border-2 border-red-200 rounded-xl focus:ring-4 focus:ring-red-500/20 focus:border-red-400 transition-all bg-white"
+                    >
+                      <option value="story">Histoire</option>
+                      <option value="audio_story">Histoire audio</option>
+                      <option value="educational">Educatif</option>
+                      <option value="song">Comptine</option>
+                      <option value="quiz">Quiz</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-red-700 mb-1">
+                      Langue
+                    </label>
+                    <select
+                      value={formData.language}
+                      onChange={(e) => setFormData({ ...formData, language: e.target.value })}
+                      className="w-full px-4 py-2.5 border-2 border-red-200 rounded-xl focus:ring-4 focus:ring-red-500/20 focus:border-red-400 transition-all bg-white"
+                    >
+                      <option value="fr">Francais</option>
+                      <option value="ar">Arabe</option>
+                      <option value="en">Anglais</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-red-700 mb-1">
+                      Univers visuel
+                    </label>
+                    <select
+                      value={formData.theme}
+                      onChange={(e) => setFormData({ ...formData, theme: e.target.value })}
+                      className="w-full px-4 py-2.5 border-2 border-red-200 rounded-xl focus:ring-4 focus:ring-red-500/20 focus:border-red-400 transition-all bg-white"
+                    >
+                      <option value="">General</option>
+                      <option value="dinosaurs">Dinosaures</option>
+                      <option value="space">Espace</option>
+                      <option value="animals">Animaux</option>
+                      <option value="princesses">Princesses</option>
+                      <option value="jobs">Metiers</option>
+                      <option value="world">Decouverte du monde</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-red-700 mb-1">
+                      URL audio
+                    </label>
+                    <input
+                      type="url"
+                      value={formData.audio_url}
+                      onChange={(e) => setFormData({ ...formData, audio_url: e.target.value })}
+                      className="w-full px-4 py-2.5 border-2 border-red-200 rounded-xl focus:ring-4 focus:ring-red-500/20 focus:border-red-400 transition-all bg-white"
+                      placeholder="https://..."
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-red-700 mb-1">
+                      Duree audio (sec)
+                    </label>
+                    <input
+                      type="number"
+                      value={formData.duration_seconds}
+                      onChange={(e) => setFormData({ ...formData, duration_seconds: parseInt(e.target.value, 10) || 0 })}
+                      min="0"
+                      className="w-full px-4 py-2.5 border-2 border-red-200 rounded-xl focus:ring-4 focus:ring-red-500/20 focus:border-red-400 transition-all bg-white"
+                    />
                   </div>
                 </div>
 

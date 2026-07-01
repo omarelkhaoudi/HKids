@@ -1,30 +1,123 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
-import { booksAPI, categoriesAPI } from '../api/books';
+import { motion } from 'framer-motion';
+import { booksAPI } from '../api/books';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../components/ToastProvider';
 import { BookGridSkeleton } from '../components/SkeletonLoader';
 import { getImageUrl } from '../utils/imageUrl';
 import { storage } from '../utils/storage';
-import { 
-  BookIcon, SearchIcon, HeartIcon, HistoryIcon, 
-  LogOutIcon, UserIcon
+import {
+  AudioIcon,
+  BookIcon,
+  HeartIcon,
+  HistoryIcon,
+  LogOutIcon,
+  PauseIcon,
+  PlayIcon,
+  SearchIcon,
+  SparklesIcon,
 } from '../components/Icons';
 import { Logo } from '../components/Logo';
-import { useLanguage } from '../context/LanguageContext';
-import { translations } from '../utils/translations';
+
+const themes = [
+  {
+    id: 'all',
+    label: 'Tous',
+    pictogram: '★',
+    gradient: 'from-sky-500 to-emerald-400',
+    match: [],
+  },
+  {
+    id: 'dinosaurs',
+    label: 'Dinosaures',
+    pictogram: 'D',
+    gradient: 'from-lime-500 to-green-600',
+    match: ['dinosaur', 'dinosaure', 'dino'],
+  },
+  {
+    id: 'space',
+    label: 'Espace',
+    pictogram: 'R',
+    gradient: 'from-indigo-500 to-cyan-500',
+    match: ['space', 'espace', 'rocket', 'planete', 'planet'],
+  },
+  {
+    id: 'animals',
+    label: 'Animaux',
+    pictogram: 'A',
+    gradient: 'from-amber-400 to-orange-500',
+    match: ['animal', 'animaux', 'nature'],
+  },
+  {
+    id: 'princesses',
+    label: 'Princesses',
+    pictogram: 'P',
+    gradient: 'from-pink-500 to-rose-500',
+    match: ['princess', 'princesse', 'fairy', 'conte'],
+  },
+  {
+    id: 'jobs',
+    label: 'Metiers',
+    pictogram: 'M',
+    gradient: 'from-blue-500 to-teal-500',
+    match: ['job', 'metier', 'doctor', 'pompier', 'teacher'],
+  },
+  {
+    id: 'world',
+    label: 'Monde',
+    pictogram: 'G',
+    gradient: 'from-violet-500 to-fuchsia-500',
+    match: ['world', 'monde', 'culture', 'voyage', 'science'],
+  },
+];
+
+const languages = [
+  { id: 'all', label: 'Toutes' },
+  { id: 'fr', label: 'FR' },
+  { id: 'ar', label: 'AR' },
+  { id: 'en', label: 'EN' },
+];
+
+function inferTheme(book) {
+  if (book.theme) return book.theme;
+
+  const searchable = [
+    book.title,
+    book.description,
+    book.category_name,
+    book.author,
+  ]
+    .filter(Boolean)
+    .join(' ')
+    .toLowerCase();
+
+  const matchedTheme = themes.find((theme) =>
+    theme.id !== 'all' && theme.match.some((keyword) => searchable.includes(keyword))
+  );
+
+  return matchedTheme?.id || 'all';
+}
+
+function formatDuration(seconds = 0) {
+  const safeSeconds = Math.max(0, Number(seconds || 0));
+  if (!safeSeconds) return null;
+  const minutes = Math.floor(safeSeconds / 60);
+  const rest = safeSeconds % 60;
+  return `${minutes}:${String(rest).padStart(2, '0')}`;
+}
 
 function KidsLibrary() {
-  const { language } = useLanguage();
-  const t = translations[language];
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const { showToast } = useToast();
+  const audioRef = useRef(null);
   const [books, setBooks] = useState([]);
-  const [allBooks, setAllBooks] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedTheme, setSelectedTheme] = useState('all');
+  const [selectedLanguage, setSelectedLanguage] = useState('all');
   const [loading, setLoading] = useState(true);
+  const [playingBookId, setPlayingBookId] = useState(null);
   const [readingStats, setReadingStats] = useState(() => storage.getReadingStats());
 
   useEffect(() => {
@@ -32,17 +125,23 @@ function KidsLibrary() {
       navigate('/parent/login');
       return;
     }
+
     loadData();
     setReadingStats(storage.getReadingStats());
+
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+    };
   }, [user, navigate]);
 
   const loadData = async () => {
     try {
       setLoading(true);
-      // The API will automatically filter by approved categories when user is a kid
       const booksRes = await booksAPI.getPublishedBooks();
-      setAllBooks(booksRes.data);
-      filterBooks(booksRes.data);
+      setBooks(booksRes.data || []);
     } catch (error) {
       console.error('Error loading data:', error);
       showToast('Erreur lors du chargement des livres', 'error');
@@ -51,24 +150,25 @@ function KidsLibrary() {
     }
   };
 
-  const filterBooks = (booksToFilter) => {
-    let filtered = [...booksToFilter];
+  const visibleBooks = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
 
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(book =>
-        book.title?.toLowerCase().includes(query) ||
-        book.author?.toLowerCase().includes(query) ||
-        book.description?.toLowerCase().includes(query)
-      );
-    }
+    return books.filter((book) => {
+      const bookTheme = inferTheme(book);
+      const bookLanguage = book.language || 'fr';
+      const matchesTheme = selectedTheme === 'all' || bookTheme === selectedTheme;
+      const matchesLanguage = selectedLanguage === 'all' || bookLanguage === selectedLanguage;
+      const matchesSearch = !query || [book.title, book.author, book.description, book.category_name]
+        .filter(Boolean)
+        .some((value) => value.toLowerCase().includes(query));
 
-    setBooks(filtered);
-  };
+      return matchesTheme && matchesLanguage && matchesSearch;
+    });
+  }, [books, searchQuery, selectedLanguage, selectedTheme]);
 
-  useEffect(() => {
-    filterBooks(allBooks);
-  }, [searchQuery, allBooks]);
+  const featuredBooks = visibleBooks.slice(0, 4);
+  const completedBooks = readingStats.completedBookIds?.length || 0;
+  const totalMinutes = Math.floor((readingStats.totalTimeSeconds || 0) / 60);
 
   const handleLogout = () => {
     logout();
@@ -76,282 +176,309 @@ function KidsLibrary() {
   };
 
   const toggleFavorite = (bookId) => {
-    const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
-    const index = favorites.indexOf(bookId);
-    
-    if (index > -1) {
-      favorites.splice(index, 1);
-      showToast('Retiré des favoris', 'info');
+    if (storage.isFavorite(bookId)) {
+      storage.removeFavorite(bookId);
+      showToast('Retire des favoris', 'info');
     } else {
-      favorites.push(bookId);
-      showToast('Ajouté aux favoris', 'success');
+      storage.addFavorite(bookId);
+      showToast('Ajoute aux favoris', 'success');
     }
-    
-    localStorage.setItem('favorites', JSON.stringify(favorites));
-    loadData();
+    setBooks((current) => [...current]);
   };
 
-  const isFavorite = (bookId) => {
-    const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
-    return favorites.includes(bookId);
-  };
-
-  const completedBooks = readingStats.completedBookIds?.length || 0;
-  const totalSessions = readingStats.totalSessions || 0;
-  const totalMinutes = Math.floor((readingStats.totalTimeSeconds || 0) / 60);
-  const totalHours = Math.floor(totalMinutes / 60);
-  const remainingMinutes = totalMinutes % 60;
-
-  const formatTime = () => {
-    if (totalHours > 0) {
-      return `${totalHours}h ${remainingMinutes}min`;
+  const toggleAudio = (book) => {
+    if (!book.audio_url) {
+      showToast('Audio pas encore disponible pour cette histoire', 'info');
+      return;
     }
-    return `${totalMinutes} min`;
-  };
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-        delayChildren: 0
-      }
+    if (playingBookId === book.id && audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current = null;
+      setPlayingBookId(null);
+      return;
     }
-  };
 
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { 
-      opacity: 1, 
-      y: 0,
-      transition: {
-        duration: 0.3
-      }
+    if (audioRef.current) {
+      audioRef.current.pause();
     }
+
+    const nextAudio = new Audio(book.audio_url);
+    audioRef.current = nextAudio;
+    setPlayingBookId(book.id);
+    nextAudio.onended = () => setPlayingBookId(null);
+    nextAudio.onerror = () => {
+      setPlayingBookId(null);
+      showToast("Impossible de lire l'audio", 'error');
+    };
+    nextAudio.play().catch(() => {
+      setPlayingBookId(null);
+      showToast("Le navigateur a bloque la lecture audio", 'error');
+    });
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-red-50 via-pink-50 to-purple-50 dark:from-neutral-900 dark:via-neutral-800 dark:to-neutral-900">
-      {/* Header */}
-      <motion.header 
-        initial={{ y: -100, opacity: 0 }}
+    <div className="min-h-screen bg-[#f7f3ea] text-neutral-900">
+      <motion.header
+        initial={{ y: -80, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.5 }}
-        className="sticky top-0 z-50 shadow-md bg-gradient-to-r from-red-500 to-pink-500 backdrop-blur-md"
+        className="sticky top-0 z-50 border-b border-white/60 bg-white/90 px-4 py-3 shadow-sm backdrop-blur"
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex justify-between items-center gap-3">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-3">
           <Logo size="default" showText={true} />
-          
-          <div className="flex items-center gap-3">
-            <Link 
-              to="/favorites" 
-              className="p-2 text-white hover:bg-white/20 rounded-lg transition-colors"
+
+          <div className="flex items-center gap-2">
+            <Link
+              to="/favorites"
+              className="grid h-12 w-12 place-items-center rounded-full bg-rose-100 text-rose-600 transition hover:bg-rose-200"
+              title="Favoris"
             >
-              <HeartIcon className="w-6 h-6" />
+              <HeartIcon className="h-6 w-6" />
             </Link>
-            <Link 
-              to="/history" 
-              className="p-2 text-white hover:bg-white/20 rounded-lg transition-colors"
+            <Link
+              to="/history"
+              className="grid h-12 w-12 place-items-center rounded-full bg-sky-100 text-sky-700 transition hover:bg-sky-200"
+              title="Historique"
             >
-              <HistoryIcon className="w-6 h-6" />
+              <HistoryIcon className="h-6 w-6" />
             </Link>
             <button
               onClick={handleLogout}
-              className="p-2 text-white hover:bg-white/20 rounded-lg transition-colors"
+              className="grid h-12 w-12 place-items-center rounded-full bg-neutral-100 text-neutral-700 transition hover:bg-neutral-200"
+              title="Deconnexion"
             >
-              <LogOutIcon className="w-6 h-6" />
+              <LogOutIcon className="h-6 w-6" />
             </button>
           </div>
         </div>
       </motion.header>
 
-      {/* Hero Section */}
-      <motion.section
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-        className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12"
-      >
-        <div className="text-center mb-8">
-          <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-neutral-800 dark:text-neutral-100 mb-4">
-            Ma Bibliothèque
-          </h1>
-          <p className="text-lg sm:text-xl text-neutral-600 dark:text-neutral-400">
-            Bienvenue {user?.username || 'Enfant'} ! Voici tes livres approuvés.
-          </p>
-        </div>
+      <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+        <section className="mb-6 grid gap-4 lg:grid-cols-[1.3fr_0.7fr]">
+          <div className="rounded-[2rem] bg-gradient-to-br from-cyan-500 via-emerald-400 to-yellow-300 p-6 text-white shadow-xl">
+            <div className="flex min-h-56 flex-col justify-between gap-6">
+              <div>
+                <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/20 px-4 py-2 text-sm font-bold backdrop-blur">
+                  <SparklesIcon className="h-5 w-5" />
+                  Le Lit Qui Lit
+                </div>
+                <h1 className="max-w-2xl text-4xl font-black leading-tight sm:text-5xl">
+                  Choisis une image, ecoute une histoire.
+                </h1>
+              </div>
 
-        {/* Quick actions + stats */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-4xl mx-auto mb-4">
-          <button
-            onClick={() => {
-              const el = document.getElementById('kids-books-grid');
-              if (el) el.scrollIntoView({ behavior: 'smooth' });
-            }}
-            className="flex flex-col items-center justify-center gap-2 px-4 py-4 rounded-2xl bg-white/90 shadow-lg border-2 border-red-200 hover:border-red-400 hover:shadow-xl transition-all"
-          >
-            <BookIcon className="w-8 h-8 text-red-500" />
-            <span className="text-base font-bold text-neutral-800">Lire un livre</span>
-            <span className="text-xs text-neutral-500">Choisis un livre et commence à lire</span>
-          </button>
-          <Link
-            to="/favorites"
-            className="flex flex-col items-center justify-center gap-2 px-4 py-4 rounded-2xl bg-white/90 shadow-lg border-2 border-pink-200 hover:border-pink-400 hover:shadow-xl transition-all"
-          >
-            <HeartIcon className="w-8 h-8 text-pink-500" />
-            <span className="text-base font-bold text-neutral-800">Mes favoris</span>
-            <span className="text-xs text-neutral-500">Retrouve tes histoires préférées</span>
-          </Link>
-          <Link
-            to="/history"
-            className="flex flex-col items-center justify-center gap-2 px-4 py-4 rounded-2xl bg-white/90 shadow-lg border-2 border-purple-200 hover:border-purple-400 hover:shadow-xl transition-all"
-          >
-            <HistoryIcon className="w-8 h-8 text-purple-500" />
-            <span className="text-base font-bold text-neutral-800">Mon histoire</span>
-            <span className="text-xs text-neutral-500">Vois ce que tu as déjà lu</span>
-          </Link>
-        </div>
-
-        {/* Reading stats */}
-        {(completedBooks > 0 || totalSessions > 0) && (
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-4xl mx-auto">
-            <div className="bg-white/90 rounded-2xl p-4 shadow-md border border-green-100 flex flex-col items-center">
-              <span className="text-xs text-green-600 font-semibold mb-1">Livres terminés</span>
-              <span className="text-2xl font-bold text-green-700">{completedBooks}</span>
-            </div>
-            <div className="bg-white/90 rounded-2xl p-4 shadow-md border border-blue-100 flex flex-col items-center">
-              <span className="text-xs text-blue-600 font-semibold mb-1">Temps de lecture</span>
-              <span className="text-2xl font-bold text-blue-700">{formatTime()}</span>
-            </div>
-            <div className="bg-white/90 rounded-2xl p-4 shadow-md border border-orange-100 flex flex-col items-center">
-              <span className="text-xs text-orange-600 font-semibold mb-1">Sessions</span>
-              <span className="text-2xl font-bold text-orange-700">{totalSessions}</span>
+              <div className="grid max-w-xl grid-cols-3 gap-3">
+                <div className="rounded-2xl bg-white/20 p-4 backdrop-blur">
+                  <span className="block text-sm font-bold text-white/80">Livres</span>
+                  <span className="text-3xl font-black">{books.length}</span>
+                </div>
+                <div className="rounded-2xl bg-white/20 p-4 backdrop-blur">
+                  <span className="block text-sm font-bold text-white/80">Termines</span>
+                  <span className="text-3xl font-black">{completedBooks}</span>
+                </div>
+                <div className="rounded-2xl bg-white/20 p-4 backdrop-blur">
+                  <span className="block text-sm font-bold text-white/80">Minutes</span>
+                  <span className="text-3xl font-black">{totalMinutes}</span>
+                </div>
+              </div>
             </div>
           </div>
-        )}
 
-        {/* Search Bar */}
-        <div className="max-w-2xl mx-auto mb-8">
-          <div className="relative">
-            <SearchIcon className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-neutral-400" />
+          <div className="rounded-[2rem] bg-white p-5 shadow-lg">
+            <div className="mb-4 flex items-center gap-3">
+              <div className="grid h-12 w-12 place-items-center rounded-2xl bg-indigo-100 text-indigo-600">
+                <SearchIcon className="h-6 w-6" />
+              </div>
+              <div>
+                <p className="text-sm font-bold uppercase text-neutral-500">Recherche parentale</p>
+                <p className="text-sm text-neutral-600">Utile si un adulte accompagne.</p>
+              </div>
+            </div>
             <input
               type="text"
-              placeholder="Rechercher un livre..."
+              placeholder="Titre, theme, auteur..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-12 pr-4 py-3 rounded-xl border-2 border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-800 dark:text-neutral-200 focus:border-red-500 focus:outline-none shadow-lg"
+              className="mb-4 w-full rounded-2xl border-2 border-neutral-200 bg-neutral-50 px-4 py-3 text-base font-semibold outline-none transition focus:border-cyan-500 focus:bg-white"
             />
+            <div className="grid grid-cols-4 gap-2">
+              {languages.map((language) => (
+                <button
+                  key={language.id}
+                  onClick={() => setSelectedLanguage(language.id)}
+                  className={`rounded-2xl px-3 py-3 text-sm font-black transition ${
+                    selectedLanguage === language.id
+                      ? 'bg-neutral-900 text-white'
+                      : 'bg-neutral-100 text-neutral-700 hover:bg-neutral-200'
+                  }`}
+                >
+                  {language.label}
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
-      </motion.section>
+        </section>
 
-      {/* Books Grid */}
-      <section id="kids-books-grid" className="max-w-7xl mx-auto px-4 sm:px-6 pb-12">
+        <section className="mb-8">
+          <div className="mb-4 flex items-center justify-between gap-4">
+            <h2 className="text-2xl font-black text-neutral-900">Univers</h2>
+            <span className="rounded-full bg-white px-4 py-2 text-sm font-bold text-neutral-600 shadow-sm">
+              {visibleBooks.length} contenus
+            </span>
+          </div>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-7">
+            {themes.map((theme) => (
+              <motion.button
+                key={theme.id}
+                whileHover={{ y: -3 }}
+                whileTap={{ scale: 0.97 }}
+                onClick={() => setSelectedTheme(theme.id)}
+                className={`min-h-32 rounded-[1.75rem] bg-gradient-to-br ${theme.gradient} p-4 text-left text-white shadow-lg transition ${
+                  selectedTheme === theme.id ? 'ring-4 ring-neutral-900 ring-offset-4' : 'hover:shadow-xl'
+                }`}
+              >
+                <span className="mb-3 grid h-14 w-14 place-items-center rounded-2xl bg-white/25 text-3xl font-black backdrop-blur">
+                  {theme.pictogram}
+                </span>
+                <span className="block text-lg font-black leading-tight">{theme.label}</span>
+              </motion.button>
+            ))}
+          </div>
+        </section>
+
         {loading ? (
           <BookGridSkeleton />
-        ) : books.length === 0 ? (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="text-center py-16"
-          >
-            <BookIcon className="w-24 h-24 text-neutral-400 mx-auto mb-4" />
-            <h3 className="text-2xl font-bold text-neutral-700 dark:text-neutral-300 mb-2">
-              {searchQuery ? 'Aucun livre trouvé' : 'Aucun livre approuvé'}
-            </h3>
-            <p className="text-neutral-500 dark:text-neutral-400">
-              {searchQuery 
-                ? 'Essayez une autre recherche'
-                : 'Demande à tes parents d\'approuver des catégories de livres pour toi !'
-              }
+        ) : visibleBooks.length === 0 ? (
+          <div className="rounded-[2rem] bg-white p-12 text-center shadow-lg">
+            <BookIcon className="mx-auto mb-4 h-16 w-16 text-neutral-400" />
+            <h3 className="mb-2 text-2xl font-black text-neutral-800">Aucun contenu disponible</h3>
+            <p className="text-neutral-500">
+              Demande a ton parent d'autoriser plus de contenus.
             </p>
-          </motion.div>
+          </div>
         ) : (
-          <motion.div
-            variants={containerVariants}
-            initial="hidden"
-            animate="visible"
-            className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 sm:gap-6"
-          >
-            {books.map((book) => {
-              const coverImageUrl = getImageUrl(book.cover_image);
-              const favorite = isFavorite(book.id);
+          <>
+            {featuredBooks.length > 0 && (
+              <section className="mb-8">
+                <h2 className="mb-4 text-2xl font-black text-neutral-900">A ecouter maintenant</h2>
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                  {featuredBooks.map((book) => (
+                    <BookCard
+                      key={book.id}
+                      book={book}
+                      large
+                      playing={playingBookId === book.id}
+                      onToggleAudio={toggleAudio}
+                      onToggleFavorite={toggleFavorite}
+                    />
+                  ))}
+                </div>
+              </section>
+            )}
 
-              return (
-                <motion.div
-                  key={book.id}
-                  variants={itemVariants}
-                  className="group relative"
-                >
-                  <Link to={`/book/${book.id}`}>
-                    <div className="relative aspect-[3/4] rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 bg-gradient-to-br from-neutral-100 to-neutral-200 dark:from-neutral-700 dark:to-neutral-800">
-                      {coverImageUrl ? (
-                        <img
-                          src={coverImageUrl}
-                          alt={book.title}
-                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                          onError={(e) => {
-                            e.target.style.display = 'none';
-                            e.target.nextSibling.style.display = 'flex';
-                          }}
-                        />
-                      ) : null}
-                      <div
-                        className={`w-full h-full flex items-center justify-center ${
-                          coverImageUrl ? 'hidden' : 'flex'
-                        }`}
-                      >
-                        <BookIcon className="w-16 h-16 text-neutral-400" />
-                      </div>
-                      
-                      {/* Favorite Button */}
-                      <button
-                        onClick={(e) => {
-                          e.preventDefault();
-                          toggleFavorite(book.id);
-                        }}
-                        className="absolute top-2 right-2 p-2 bg-white/90 dark:bg-neutral-800/90 rounded-full hover:bg-white dark:hover:bg-neutral-700 transition-colors z-10"
-                      >
-                        <HeartIcon
-                          className={`w-5 h-5 ${
-                            favorite
-                              ? 'text-red-500 fill-current'
-                              : 'text-neutral-400'
-                          }`}
-                        />
-                      </button>
-
-                      {/* Category Badge */}
-                      {book.category_name && (
-                        <div className="absolute bottom-2 left-2 right-2">
-                          <span className="inline-block px-2 py-1 bg-red-500 text-white text-xs font-semibold rounded-full">
-                            {book.category_name}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                  </Link>
-                  
-                  <div className="mt-2">
-                    <h3 className="font-semibold text-sm sm:text-base text-neutral-800 dark:text-neutral-200 line-clamp-2 group-hover:text-red-500 transition-colors">
-                      {book.title}
-                    </h3>
-                    {book.author && (
-                      <p className="text-xs sm:text-sm text-neutral-500 dark:text-neutral-400 mt-1">
-                        {book.author}
-                      </p>
-                    )}
-                  </div>
-                </motion.div>
-              );
-            })}
-          </motion.div>
+            <section>
+              <h2 className="mb-4 text-2xl font-black text-neutral-900">Toutes les histoires</h2>
+              <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6">
+                {visibleBooks.map((book) => (
+                  <BookCard
+                    key={book.id}
+                    book={book}
+                    playing={playingBookId === book.id}
+                    onToggleAudio={toggleAudio}
+                    onToggleFavorite={toggleFavorite}
+                  />
+                ))}
+              </div>
+            </section>
+          </>
         )}
-      </section>
+      </main>
     </div>
   );
 }
 
-export default KidsLibrary;
+function BookCard({ book, large = false, playing, onToggleAudio, onToggleFavorite }) {
+  const coverImageUrl = getImageUrl(book.cover_image);
+  const favorite = storage.isFavorite(book.id);
+  const duration = formatDuration(book.duration_seconds);
+  const hasAudio = Boolean(book.audio_url);
 
+  return (
+    <motion.article
+      layout
+      whileHover={{ y: -4 }}
+      className="group overflow-hidden rounded-[1.5rem] bg-white shadow-lg transition hover:shadow-xl"
+    >
+      <Link to={`/book/${book.id}`} className="block">
+        <div className={`relative bg-neutral-100 ${large ? 'aspect-[4/3]' : 'aspect-[3/4]'}`}>
+          {coverImageUrl ? (
+            <img
+              src={coverImageUrl}
+              alt={book.title}
+              className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
+            />
+          ) : (
+            <div className="grid h-full w-full place-items-center bg-gradient-to-br from-cyan-100 to-emerald-100">
+              <BookIcon className="h-16 w-16 text-cyan-700" />
+            </div>
+          )}
+          <div className="absolute left-3 top-3 rounded-full bg-white/90 px-3 py-1 text-xs font-black text-neutral-800 shadow-sm">
+            {(book.language || 'fr').toUpperCase()}
+          </div>
+          {hasAudio && (
+            <div className="absolute bottom-3 left-3 inline-flex items-center gap-1 rounded-full bg-neutral-900/80 px-3 py-1 text-xs font-black text-white backdrop-blur">
+              <AudioIcon className="h-4 w-4" />
+              {duration || 'Audio'}
+            </div>
+          )}
+        </div>
+      </Link>
+
+      <div className="p-4">
+        <h3 className={`${large ? 'text-lg' : 'text-sm'} mb-1 line-clamp-2 font-black text-neutral-900`}>
+          {book.title}
+        </h3>
+        <p className="mb-3 line-clamp-1 text-xs font-semibold text-neutral-500">
+          {book.category_name || book.content_type || 'Histoire'}
+        </p>
+
+        <div className="grid grid-cols-3 gap-2">
+          <Link
+            to={`/book/${book.id}`}
+            className="col-span-2 inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-cyan-600 px-3 text-sm font-black text-white transition hover:bg-cyan-700"
+          >
+            <BookIcon className="h-5 w-5" />
+            Lire
+          </Link>
+          <button
+            onClick={() => onToggleAudio(book)}
+            className={`grid h-11 place-items-center rounded-2xl transition ${
+              hasAudio
+                ? playing
+                  ? 'bg-amber-500 text-white hover:bg-amber-600'
+                  : 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'
+                : 'bg-neutral-100 text-neutral-400'
+            }`}
+            title={hasAudio ? 'Ecouter' : 'Audio indisponible'}
+          >
+            {playing ? <PauseIcon className="h-5 w-5" /> : <PlayIcon className="h-5 w-5" />}
+          </button>
+        </div>
+
+        <button
+          onClick={() => onToggleFavorite(book.id)}
+          className={`mt-2 inline-flex h-10 w-full items-center justify-center gap-2 rounded-2xl text-sm font-black transition ${
+            favorite
+              ? 'bg-rose-100 text-rose-600 hover:bg-rose-200'
+              : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
+          }`}
+        >
+          <HeartIcon className="h-5 w-5" filled={favorite} />
+          Favori
+        </button>
+      </div>
+    </motion.article>
+  );
+}
+
+export default KidsLibrary;

@@ -27,7 +27,15 @@ function ParentDashboard() {
   const [showAccountModal, setShowAccountModal] = useState(false);
   const [editingKid, setEditingKid] = useState(null);
   const [activeSection, setActiveSection] = useState('overview');
-  const [kidForm, setKidForm] = useState({ name: '', age: '', avatar: '' });
+  const emptyKidForm = {
+    name: '',
+    age: '',
+    avatar: '',
+    photo_url: '',
+    preferred_language: 'fr',
+    interests: ''
+  };
+  const [kidForm, setKidForm] = useState(emptyKidForm);
   const [accountForm, setAccountForm] = useState({ username: '', password: '' });
   const [goalForm, setGoalForm] = useState({
     goal_type: 'minutes',
@@ -157,7 +165,7 @@ function ParentDashboard() {
       }
       setShowKidModal(false);
       setEditingKid(null);
-      setKidForm({ name: '', age: '', avatar: '' });
+      setKidForm(emptyKidForm);
       loadData();
     } catch (error) {
       console.error('Error saving kid:', error);
@@ -380,7 +388,7 @@ function ParentDashboard() {
                 <button
                   onClick={() => {
                     setEditingKid(null);
-                    setKidForm({ name: '', age: '', avatar: '' });
+                    setKidForm(emptyKidForm);
                     setShowKidModal(true);
                   }}
                   className="p-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
@@ -426,7 +434,14 @@ function ParentDashboard() {
                             onClick={(e) => {
                               e.stopPropagation();
                               setEditingKid(kid);
-                              setKidForm({ name: kid.name, age: kid.age || '', avatar: kid.avatar || '' });
+                              setKidForm({
+                                name: kid.name,
+                                age: kid.age || '',
+                                avatar: kid.avatar || '',
+                                photo_url: kid.photo_url || '',
+                                preferred_language: kid.preferred_language || 'fr',
+                                interests: Array.isArray(kid.interests) ? kid.interests.join(', ') : ''
+                              });
                               setShowKidModal(true);
                             }}
                             className="p-1 text-blue-500 hover:bg-blue-50 rounded"
@@ -1006,6 +1021,44 @@ function ParentDashboard() {
                     placeholder="Âge"
                     min="0"
                     max="18"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+                    Photo ou avatar
+                  </label>
+                  <input
+                    type="url"
+                    value={kidForm.photo_url}
+                    onChange={(e) => setKidForm({ ...kidForm, photo_url: e.target.value })}
+                    className="w-full px-4 py-2 border border-neutral-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-neutral-700 dark:text-white"
+                    placeholder="https://..."
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+                    Langue preferee
+                  </label>
+                  <select
+                    value={kidForm.preferred_language}
+                    onChange={(e) => setKidForm({ ...kidForm, preferred_language: e.target.value })}
+                    className="w-full px-4 py-2 border border-neutral-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-neutral-700 dark:text-white"
+                  >
+                    <option value="fr">Francais</option>
+                    <option value="ar">Arabe</option>
+                    <option value="en">Anglais</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+                    Centres d'interet
+                  </label>
+                  <input
+                    type="text"
+                    value={kidForm.interests}
+                    onChange={(e) => setKidForm({ ...kidForm, interests: e.target.value })}
+                    className="w-full px-4 py-2 border border-neutral-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-neutral-700 dark:text-white"
+                    placeholder="dinosaures, espace, animaux..."
                   />
                 </div>
                 <div className="flex gap-3">

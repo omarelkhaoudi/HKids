@@ -171,7 +171,7 @@ const handleMulterUpload = (uploadMiddleware) => {
 };
 
 router.get('/published', async (req, res) => {
-  const { age_group, category_id } = req.query;
+  const { age_group, category_id, theme, language, content_type } = req.query;
 
   const token = req.headers.authorization?.split(' ')[1];
   let kidProfileId = null;
@@ -215,6 +215,24 @@ router.get('/published', async (req, res) => {
   if (category_id) {
     query += ` AND b.category_id = $${index}`;
     params.push(category_id);
+    index += 1;
+  }
+
+  if (theme) {
+    query += ` AND b.theme = $${index}`;
+    params.push(theme);
+    index += 1;
+  }
+
+  if (language) {
+    query += ` AND b.language = $${index}`;
+    params.push(language);
+    index += 1;
+  }
+
+  if (content_type) {
+    query += ` AND b.content_type = $${index}`;
+    params.push(content_type);
     index += 1;
   }
 
@@ -321,7 +339,20 @@ router.post('/', verifyToken, handleMulterUpload(upload.fields([
   const persistedFiles = [];
 
   try {
-    const { title, author, description, category_id, age_group_min, age_group_max, is_published } = req.body;
+    const {
+      title,
+      author,
+      description,
+      category_id,
+      age_group_min,
+      age_group_max,
+      is_published,
+      content_type = 'story',
+      language = 'fr',
+      theme,
+      audio_url,
+      duration_seconds
+    } = req.body;
 
     if (!title) {
       return res.status(400).json({ error: 'Title is required' });
@@ -353,8 +384,12 @@ router.post('/', verifyToken, handleMulterUpload(upload.fields([
 
       const slug = await getUniqueSlug(client, title);
       const insertBook = await client.query(
-        `INSERT INTO books (title, slug, author, description, cover_image, category_id, age_group_min, age_group_max, is_published, file_path, page_count)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+        `INSERT INTO books (
+          title, slug, author, description, cover_image, category_id,
+          age_group_min, age_group_max, is_published, file_path, page_count,
+          content_type, language, theme, audio_url, duration_seconds
+        )
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
          RETURNING *`,
         [
           title,
@@ -368,6 +403,11 @@ router.post('/', verifyToken, handleMulterUpload(upload.fields([
           is_published === 'true' || is_published === true,
           pagePaths[0] || 'uploaded',
           pagePaths.length,
+          content_type || 'story',
+          language || 'fr',
+          theme || null,
+          audio_url || null,
+          Math.max(0, Number.parseInt(duration_seconds, 10) || 0),
         ]
       );
 
@@ -410,7 +450,20 @@ router.post('/', verifyToken, handleMulterUpload(upload.fields([
 router.put('/:id', verifyToken, handleMulterUpload(upload.fields([
   { name: 'cover', maxCount: 1 },
 ])), async (req, res) => {
-  const { title, author, description, category_id, age_group_min, age_group_max, is_published } = req.body;
+  const {
+    title,
+    author,
+    description,
+    category_id,
+    age_group_min,
+    age_group_max,
+    is_published,
+    content_type,
+    language,
+    theme,
+    audio_url,
+    duration_seconds
+  } = req.body;
   let newCoverPath = null;
 
   console.log('[books] Updating book:', { id: req.params.id, title, category_id, is_published });
@@ -440,8 +493,9 @@ router.put('/:id', verifyToken, handleMulterUpload(upload.fields([
         `UPDATE books
          SET title = $1, slug = $2, author = $3, description = $4, cover_image = $5,
              category_id = $6, age_group_min = $7, age_group_max = $8,
-             is_published = $9, updated_at = NOW()
-         WHERE id = $10
+             is_published = $9, content_type = $10, language = $11, theme = $12,
+             audio_url = $13, duration_seconds = $14, updated_at = NOW()
+         WHERE id = $15
          RETURNING *`,
         [
           nextTitle,
@@ -455,6 +509,13 @@ router.put('/:id', verifyToken, handleMulterUpload(upload.fields([
           is_published !== undefined
             ? (is_published === 'true' || is_published === true)
             : book.is_published,
+          content_type !== undefined ? (content_type || 'story') : book.content_type,
+          language !== undefined ? (language || 'fr') : book.language,
+          theme !== undefined ? (theme || null) : book.theme,
+          audio_url !== undefined ? (audio_url || null) : book.audio_url,
+          duration_seconds !== undefined
+            ? Math.max(0, Number.parseInt(duration_seconds, 10) || 0)
+            : (book.duration_seconds || 0),
           req.params.id,
         ]
       );
