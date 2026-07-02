@@ -6,11 +6,13 @@ import { parentalAPI } from '../api/parental';
 import { categoriesAPI } from '../api/books';
 import { useToast } from '../components/ToastProvider';
 import { CONTENT_LANGUAGES, CONTENT_THEMES } from '../constants/contentOptions';
+import { buildKidPayload, createEmptyKidForm, kidToForm } from '../utils/kidProfiles';
 import { 
   UserIcon, LogOutIcon, PlusIcon, XIcon, CheckIcon, 
   ChildIcon, LockIcon, EditIcon, TrashIcon, BookIcon
 } from '../components/Icons';
 import { Logo } from '../components/Logo';
+import { KidAvatar } from '../components/parent/KidAvatar';
 
 const bedtimeLanguages = CONTENT_LANGUAGES.map((language) => ({
   id: language.id,
@@ -40,14 +42,7 @@ function ParentDashboard() {
   const [showAccountModal, setShowAccountModal] = useState(false);
   const [editingKid, setEditingKid] = useState(null);
   const [activeSection, setActiveSection] = useState('overview');
-  const emptyKidForm = {
-    name: '',
-    age: '',
-    avatar: '',
-    photo_url: '',
-    preferred_language: 'fr',
-    interests: ''
-  };
+  const emptyKidForm = createEmptyKidForm();
   const [kidForm, setKidForm] = useState(emptyKidForm);
   const [accountForm, setAccountForm] = useState({ username: '', password: '' });
   const [goalForm, setGoalForm] = useState({
@@ -196,12 +191,19 @@ function ParentDashboard() {
   };
 
   const handleSaveKid = async () => {
+    const payload = buildKidPayload(kidForm);
+
+    if (!payload.name) {
+      showToast('Le prenom est obligatoire', 'error');
+      return;
+    }
+
     try {
       if (editingKid) {
-        await parentalAPI.updateKid(editingKid.id, kidForm);
+        await parentalAPI.updateKid(editingKid.id, payload);
         showToast('Profil enfant mis à jour', 'success');
       } else {
-        await parentalAPI.createKid(kidForm);
+        await parentalAPI.createKid(payload);
         showToast('Profil enfant créé', 'success');
       }
       setShowKidModal(false);
@@ -460,16 +462,24 @@ function ParentDashboard() {
                 <h2 className="text-xl font-bold text-neutral-800 dark:text-neutral-200">
                   Profils Enfants
                 </h2>
-                <button
-                  onClick={() => {
-                    setEditingKid(null);
-                    setKidForm(emptyKidForm);
-                    setShowKidModal(true);
-                  }}
-                  className="p-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
-                >
-                  <PlusIcon className="w-5 h-5" />
-                </button>
+                <div className="flex items-center gap-2">
+                  <Link
+                    to="/parent/profiles"
+                    className="rounded-lg bg-neutral-100 px-3 py-2 text-sm font-bold text-neutral-700 transition hover:bg-neutral-200 dark:bg-neutral-700 dark:text-neutral-100 dark:hover:bg-neutral-600"
+                  >
+                    Gerer
+                  </Link>
+                  <button
+                    onClick={() => {
+                      setEditingKid(null);
+                      setKidForm(emptyKidForm);
+                      setShowKidModal(true);
+                    }}
+                    className="p-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+                  >
+                    <PlusIcon className="w-5 h-5" />
+                  </button>
+                </div>
               </div>
 
               <div className="space-y-3">
@@ -492,9 +502,7 @@ function ParentDashboard() {
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                          <div className="w-12 h-12 rounded-full bg-red-500 flex items-center justify-center text-white text-xl font-bold">
-                            {kid.name.charAt(0).toUpperCase()}
-                          </div>
+                          <KidAvatar kid={kid} size="sm" />
                           <div>
                             <p className="font-semibold text-neutral-800 dark:text-neutral-200">
                               {kid.name}
@@ -509,14 +517,7 @@ function ParentDashboard() {
                             onClick={(e) => {
                               e.stopPropagation();
                               setEditingKid(kid);
-                              setKidForm({
-                                name: kid.name,
-                                age: kid.age || '',
-                                avatar: kid.avatar || '',
-                                photo_url: kid.photo_url || '',
-                                preferred_language: kid.preferred_language || 'fr',
-                                interests: Array.isArray(kid.interests) ? kid.interests.join(', ') : ''
-                              });
+                              setKidForm(kidToForm(kid));
                               setShowKidModal(true);
                             }}
                             className="p-1 text-blue-500 hover:bg-blue-50 rounded"
@@ -1216,8 +1217,26 @@ function ParentDashboard() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+                    Date de naissance
+                  </label>
+                  <input
+                    type="date"
+                    value={kidForm.date_of_birth}
+                    onChange={(e) => setKidForm({ ...kidForm, date_of_birth: e.target.value })}
+                    className="w-full px-4 py-2 border border-neutral-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-neutral-700 dark:text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
                     Photo ou avatar
                   </label>
+                  <input
+                    type="text"
+                    value={kidForm.avatar}
+                    onChange={(e) => setKidForm({ ...kidForm, avatar: e.target.value })}
+                    className="mb-3 w-full px-4 py-2 border border-neutral-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-neutral-700 dark:text-white"
+                    placeholder="Initiale ou petit nom"
+                  />
                   <input
                     type="url"
                     value={kidForm.photo_url}
@@ -1235,9 +1254,9 @@ function ParentDashboard() {
                     onChange={(e) => setKidForm({ ...kidForm, preferred_language: e.target.value })}
                     className="w-full px-4 py-2 border border-neutral-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-neutral-700 dark:text-white"
                   >
-                    <option value="fr">Francais</option>
-                    <option value="ar">Arabe</option>
-                    <option value="en">Anglais</option>
+                    {CONTENT_LANGUAGES.map((language) => (
+                      <option key={language.id} value={language.id}>{language.label}</option>
+                    ))}
                   </select>
                 </div>
                 <div>
