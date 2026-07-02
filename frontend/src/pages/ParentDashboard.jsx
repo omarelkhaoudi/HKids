@@ -11,6 +11,21 @@ import {
 } from '../components/Icons';
 import { Logo } from '../components/Logo';
 
+const bedtimeLanguages = [
+  { id: 'fr', label: 'FR' },
+  { id: 'ar', label: 'AR' },
+  { id: 'en', label: 'EN' }
+];
+
+const bedtimeThemes = [
+  { id: 'dinosaurs', label: 'Dinosaures' },
+  { id: 'space', label: 'Espace' },
+  { id: 'animals', label: 'Animaux' },
+  { id: 'princesses', label: 'Princesses' },
+  { id: 'jobs', label: 'Metiers' },
+  { id: 'world', label: 'Monde' }
+];
+
 function ParentDashboard() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -22,6 +37,8 @@ function ParentDashboard() {
   const [kidActivity, setKidActivity] = useState(null);
   const [activityLoading, setActivityLoading] = useState(false);
   const [goalSaving, setGoalSaving] = useState(false);
+  const [rulesLoading, setRulesLoading] = useState(false);
+  const [rulesSaving, setRulesSaving] = useState(false);
   const [loading, setLoading] = useState(true);
   const [showKidModal, setShowKidModal] = useState(false);
   const [showAccountModal, setShowAccountModal] = useState(false);
@@ -41,6 +58,13 @@ function ParentDashboard() {
     goal_type: 'minutes',
     target_value: 20,
     period: 'weekly'
+  });
+  const [rulesForm, setRulesForm] = useState({
+    daily_screen_time_minutes: 30,
+    quiet_start_time: '19:00',
+    quiet_end_time: '21:00',
+    allowed_languages: [],
+    allowed_themes: []
   });
 
   useEffect(() => {
@@ -72,6 +96,7 @@ function ParentDashboard() {
         setActiveSection('overview');
         loadApprovals(kidsData[0].id, categoriesData);
         loadKidActivity(kidsData[0].id);
+        loadRules(kidsData[0].id);
       }
     } catch (error) {
       console.error('Error loading data:', error);
@@ -130,11 +155,31 @@ function ParentDashboard() {
     }
   };
 
+  const loadRules = async (kidId) => {
+    try {
+      setRulesLoading(true);
+      const res = await parentalAPI.getRules(kidId);
+      setRulesForm({
+        daily_screen_time_minutes: res.data?.daily_screen_time_minutes ?? 30,
+        quiet_start_time: res.data?.quiet_start_time || '19:00',
+        quiet_end_time: res.data?.quiet_end_time || '21:00',
+        allowed_languages: res.data?.allowed_languages || [],
+        allowed_themes: res.data?.allowed_themes || []
+      });
+    } catch (error) {
+      console.error('Error loading parental rules:', error);
+      showToast('Erreur lors du chargement des regles', 'error');
+    } finally {
+      setRulesLoading(false);
+    }
+  };
+
   const handleSelectKid = (kid) => {
     setSelectedKid(kid);
     setActiveSection('overview');
     loadApprovals(kid.id);
     loadKidActivity(kid.id);
+    loadRules(kid.id);
   };
 
   const handleToggleApproval = async (categoryId, approved) => {
@@ -240,6 +285,39 @@ function ParentDashboard() {
     }
   };
 
+  const toggleRuleValue = (field, value) => {
+    setRulesForm((current) => {
+      const values = current[field] || [];
+      const nextValues = values.includes(value)
+        ? values.filter((item) => item !== value)
+        : [...values, value];
+
+      return { ...current, [field]: nextValues };
+    });
+  };
+
+  const handleSaveRules = async () => {
+    if (!selectedKid) return;
+
+    try {
+      setRulesSaving(true);
+      const res = await parentalAPI.saveRules(selectedKid.id, rulesForm);
+      setRulesForm({
+        daily_screen_time_minutes: res.data?.daily_screen_time_minutes ?? rulesForm.daily_screen_time_minutes,
+        quiet_start_time: res.data?.quiet_start_time || rulesForm.quiet_start_time,
+        quiet_end_time: res.data?.quiet_end_time || rulesForm.quiet_end_time,
+        allowed_languages: res.data?.allowed_languages || [],
+        allowed_themes: res.data?.allowed_themes || []
+      });
+      showToast('Regles du coucher enregistrees', 'success');
+    } catch (error) {
+      console.error('Error saving parental rules:', error);
+      showToast("Erreur lors de l'enregistrement des regles", 'error');
+    } finally {
+      setRulesSaving(false);
+    }
+  };
+
   const formatDuration = (seconds = 0) => {
     const totalMinutes = Math.floor(Number(seconds || 0) / 60);
     if (totalMinutes < 1) return '0 min';
@@ -264,6 +342,7 @@ function ParentDashboard() {
     { id: 'overview', label: "Vue d'ensemble" },
     { id: 'account', label: 'Compte enfant' },
     { id: 'access', label: 'Acces aux livres' },
+    { id: 'rules', label: 'Regles' },
     { id: 'reading', label: 'Suivi' }
   ];
 
@@ -618,6 +697,122 @@ function ParentDashboard() {
                         </button>
                       </div>
                     </div>
+                  </div>
+                )}
+
+                {activeSection === 'rules' && (
+                  <div className="rounded-xl bg-white p-6 shadow-lg dark:bg-neutral-800">
+                    <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                      <div>
+                        <h2 className="text-xl font-bold text-neutral-800 dark:text-neutral-200">
+                          Regles du coucher de {selectedKid.name}
+                        </h2>
+                        <p className="mt-1 text-sm text-neutral-500">
+                          Duree, horaires, langues et univers autorises.
+                        </p>
+                      </div>
+                      <button
+                        onClick={handleSaveRules}
+                        disabled={rulesSaving || rulesLoading}
+                        className="rounded-lg bg-red-500 px-4 py-2 font-bold text-white transition hover:bg-red-600 disabled:opacity-60"
+                      >
+                        {rulesSaving ? 'Enregistrement...' : 'Enregistrer'}
+                      </button>
+                    </div>
+
+                    {rulesLoading ? (
+                      <p className="py-8 text-center text-neutral-500">Chargement des regles...</p>
+                    ) : (
+                      <div className="space-y-6">
+                        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                          <div>
+                            <label className="mb-2 block text-sm font-bold text-neutral-700 dark:text-neutral-200">
+                              Duree quotidienne
+                            </label>
+                            <div className="flex items-center gap-2">
+                              <input
+                                type="number"
+                                min="0"
+                                max="240"
+                                value={rulesForm.daily_screen_time_minutes}
+                                onChange={(event) => setRulesForm({
+                                  ...rulesForm,
+                                  daily_screen_time_minutes: event.target.value
+                                })}
+                                className="w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-600 dark:bg-neutral-700 dark:text-white"
+                              />
+                              <span className="text-sm font-bold text-neutral-500">min</span>
+                            </div>
+                          </div>
+                          <div>
+                            <label className="mb-2 block text-sm font-bold text-neutral-700 dark:text-neutral-200">
+                              Heure debut
+                            </label>
+                            <input
+                              type="time"
+                              value={rulesForm.quiet_start_time}
+                              onChange={(event) => setRulesForm({ ...rulesForm, quiet_start_time: event.target.value })}
+                              className="w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-600 dark:bg-neutral-700 dark:text-white"
+                            />
+                          </div>
+                          <div>
+                            <label className="mb-2 block text-sm font-bold text-neutral-700 dark:text-neutral-200">
+                              Heure fin
+                            </label>
+                            <input
+                              type="time"
+                              value={rulesForm.quiet_end_time}
+                              onChange={(event) => setRulesForm({ ...rulesForm, quiet_end_time: event.target.value })}
+                              className="w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-600 dark:bg-neutral-700 dark:text-white"
+                            />
+                          </div>
+                        </div>
+
+                        <div>
+                          <h3 className="mb-3 font-bold text-neutral-900 dark:text-neutral-100">Langues autorisees</h3>
+                          <div className="flex flex-wrap gap-2">
+                            {bedtimeLanguages.map((language) => {
+                              const active = rulesForm.allowed_languages.includes(language.id);
+                              return (
+                                <button
+                                  key={language.id}
+                                  onClick={() => toggleRuleValue('allowed_languages', language.id)}
+                                  className={`rounded-full px-4 py-2 text-sm font-bold transition ${
+                                    active
+                                      ? 'bg-green-500 text-white'
+                                      : 'bg-neutral-100 text-neutral-700 hover:bg-neutral-200 dark:bg-neutral-700 dark:text-neutral-200'
+                                  }`}
+                                >
+                                  {language.label}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+
+                        <div>
+                          <h3 className="mb-3 font-bold text-neutral-900 dark:text-neutral-100">Univers autorises</h3>
+                          <div className="grid grid-cols-2 gap-2 md:grid-cols-3">
+                            {bedtimeThemes.map((theme) => {
+                              const active = rulesForm.allowed_themes.includes(theme.id);
+                              return (
+                                <button
+                                  key={theme.id}
+                                  onClick={() => toggleRuleValue('allowed_themes', theme.id)}
+                                  className={`rounded-xl px-4 py-3 text-left text-sm font-bold transition ${
+                                    active
+                                      ? 'bg-red-500 text-white'
+                                      : 'bg-neutral-100 text-neutral-700 hover:bg-neutral-200 dark:bg-neutral-700 dark:text-neutral-200'
+                                  }`}
+                                >
+                                  {theme.label}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
 

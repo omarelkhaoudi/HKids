@@ -6,6 +6,7 @@ import { useAuth } from '../context/AuthContext';
 import { useToast } from '../components/ToastProvider';
 import { BookGridSkeleton } from '../components/SkeletonLoader';
 import { getImageUrl } from '../utils/imageUrl';
+import { getFileUrl } from '../utils/fileUrl';
 import { storage } from '../utils/storage';
 import {
   AudioIcon,
@@ -203,7 +204,7 @@ function KidsLibrary() {
       audioRef.current.pause();
     }
 
-    const nextAudio = new Audio(book.audio_url);
+    const nextAudio = new Audio(getFileUrl(book.audio_url));
     audioRef.current = nextAudio;
     setPlayingBookId(book.id);
     nextAudio.onended = () => setPlayingBookId(null);
@@ -425,10 +426,15 @@ function BookCard({ book, large = false, playing, onToggleAudio, onToggleFavorit
           <div className="absolute left-3 top-3 rounded-full bg-white/90 px-3 py-1 text-xs font-black text-neutral-800 shadow-sm">
             {(book.language || 'fr').toUpperCase()}
           </div>
+          <div className={`absolute bottom-3 left-3 inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-black backdrop-blur ${
+            hasAudio ? 'bg-neutral-900/80 text-white' : 'bg-white/90 text-amber-700'
+          }`}>
+            <AudioIcon className="h-4 w-4" />
+            {hasAudio ? (duration || 'Audio') : 'Sans audio'}
+          </div>
           {hasAudio && (
-            <div className="absolute bottom-3 left-3 inline-flex items-center gap-1 rounded-full bg-neutral-900/80 px-3 py-1 text-xs font-black text-white backdrop-blur">
+            <div className="absolute bottom-3 right-3 grid h-12 w-12 place-items-center rounded-full bg-emerald-500 text-white shadow-lg">
               <AudioIcon className="h-4 w-4" />
-              {duration || 'Audio'}
             </div>
           )}
         </div>
@@ -442,28 +448,28 @@ function BookCard({ book, large = false, playing, onToggleAudio, onToggleFavorit
           {book.category_name || book.content_type || 'Histoire'}
         </p>
 
-        <div className="grid grid-cols-3 gap-2">
-          <Link
-            to={`/book/${book.id}`}
-            className="col-span-2 inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-cyan-600 px-3 text-sm font-black text-white transition hover:bg-cyan-700"
-          >
-            <BookIcon className="h-5 w-5" />
-            Lire
-          </Link>
-          <button
-            onClick={() => onToggleAudio(book)}
-            className={`grid h-11 place-items-center rounded-2xl transition ${
-              hasAudio
-                ? playing
-                  ? 'bg-amber-500 text-white hover:bg-amber-600'
-                  : 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'
-                : 'bg-neutral-100 text-neutral-400'
-            }`}
-            title={hasAudio ? 'Ecouter' : 'Audio indisponible'}
-          >
-            {playing ? <PauseIcon className="h-5 w-5" /> : <PlayIcon className="h-5 w-5" />}
-          </button>
-        </div>
+        <button
+          onClick={() => onToggleAudio(book)}
+          className={`mb-2 inline-flex h-14 w-full items-center justify-center gap-2 rounded-2xl text-base font-black transition ${
+            hasAudio
+              ? playing
+                ? 'bg-amber-500 text-white hover:bg-amber-600'
+                : 'bg-emerald-500 text-white hover:bg-emerald-600'
+              : 'bg-neutral-100 text-neutral-400'
+          }`}
+          title={hasAudio ? 'Ecouter' : 'Audio indisponible'}
+        >
+          {playing ? <PauseIcon className="h-6 w-6" /> : <PlayIcon className="h-6 w-6" />}
+          {hasAudio ? 'Ecouter' : 'Audio manquant'}
+        </button>
+
+        <Link
+          to={`/book/${book.id}`}
+          className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-2xl bg-cyan-100 px-3 text-sm font-black text-cyan-800 transition hover:bg-cyan-200"
+        >
+          <BookIcon className="h-5 w-5" />
+          Lire
+        </Link>
 
         <button
           onClick={() => onToggleFavorite(book.id)}

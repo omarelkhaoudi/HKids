@@ -8,6 +8,16 @@ const noCacheConfig = {
   },
 };
 
+const noCacheAuthConfig = () => {
+  const token = localStorage.getItem('token');
+  return {
+    headers: {
+      ...noCacheConfig.headers,
+      ...(token && { Authorization: `Bearer ${token}` }),
+    },
+  };
+};
+
 export const booksAPI = {
   getPublishedBooks: (filters = {}) => {
     const params = new URLSearchParams();
@@ -17,11 +27,11 @@ export const booksAPI = {
     if (filters.language) params.append('language', filters.language);
     if (filters.content_type) params.append('content_type', filters.content_type);
     
-    return axios.get(`${buildApiUrl('/books/published')}?${params}`, noCacheConfig);
+    return axios.get(`${buildApiUrl('/books/published')}?${params}`, noCacheAuthConfig());
   },
 
   getBook: (id) => {
-    return axios.get(buildApiUrl(`/books/${id}`), noCacheConfig);
+    return axios.get(buildApiUrl(`/books/${id}`), noCacheAuthConfig());
   },
 
   getAllBooks: () => {

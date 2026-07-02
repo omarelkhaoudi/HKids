@@ -7,6 +7,9 @@ Cette section contient toute la documentation technique du projet HKids.
 ### 0. [Analyse Cahier des Charges - Le Lit Qui Lit](./LE_LIT_QUI_LIT_GAP_ANALYSIS.md)
 Analyse du nouveau cahier des charges, ecarts avec le repo actuel, MVP recommande, risques et questions a poser.
 
+### 0.1. [Feuille de Route Step by Step - Le Lit Qui Lit](./LE_LIT_QUI_LIT_STEP_BY_STEP_ROADMAP.md)
+Plan d'execution fichier par fichier pour transformer le POC HKids en MVP Le Lit Qui Lit.
+
 ### 1. [Architecture Technique](./ARCHITECTURE.md)
 Description complète de l'architecture du système, des composants, et de la structure technique.
 
