@@ -4,7 +4,7 @@ import { booksAPI, categoriesAPI } from '../../api/books';
 import { API_URL } from '../../config/api';
 import { getImageUrl } from '../../utils/imageUrl';
 import { CONTENT_LANGUAGES, CONTENT_THEMES, CONTENT_TYPE_OPTIONS } from '../../constants/contentOptions';
-import { AudioIcon, BookIcon, PublishIcon, UnpublishIcon, XIcon, LightBulbIcon, TrashIcon } from '../Icons';
+import { AudioIcon, BookIcon, PublishIcon, UnpublishIcon, XIcon, LightBulbIcon, TrashIcon, EditIcon } from '../Icons';
 
 // Helper: base URL for images (backend origin, without /api)
 const getImageBaseUrl = () => {
@@ -453,14 +453,34 @@ function BookManagement() {
                       {(book.is_published === true || book.is_published === 1) ? 'Published' : 'Draft'}
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <div className="flex items-center gap-2">
+                  <td className="px-6 py-4 text-sm font-medium">
+                    <div className="flex min-w-[150px] flex-col items-stretch gap-2">
+                      <motion.button
+                        onClick={() => handleEdit(book)}
+                        whileHover={{ scale: 1.03 }}
+                        whileTap={{ scale: 0.97 }}
+                        className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-red-200 bg-white px-3 py-1.5 text-xs font-semibold text-red-700 shadow-sm transition-colors hover:bg-red-50 hover:text-red-800"
+                        title="Modifier le livre"
+                      >
+                        <EditIcon className="w-3 h-3" />
+                        <span>Modifier</span>
+                      </motion.button>
+                      <motion.button
+                        onClick={() => handleDelete(book.id)}
+                        whileHover={{ scale: 1.03 }}
+                        whileTap={{ scale: 0.97 }}
+                        className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-700 shadow-sm transition-colors hover:bg-red-100 hover:text-red-900"
+                        title="Supprimer le livre"
+                      >
+                        <TrashIcon className="w-3 h-3" />
+                        <span>Supprimer</span>
+                      </motion.button>
                       {!(book.is_published === true || book.is_published === 1) && (
                         <motion.button
                           onClick={() => handleTogglePublish(book)}
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
-                          className="px-3 py-1.5 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg hover:from-green-600 hover:to-green-700 text-xs font-medium flex items-center gap-1 transition-all shadow-sm"
+                          whileHover={{ scale: 1.03 }}
+                          whileTap={{ scale: 0.97 }}
+                          className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-gradient-to-r from-green-500 to-green-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition-all hover:from-green-600 hover:to-green-700"
                           title="Publier le livre"
                         >
                           <PublishIcon className="w-3 h-3" />
@@ -470,31 +490,15 @@ function BookManagement() {
                       {(book.is_published === true || book.is_published === 1) && (
                         <motion.button
                           onClick={() => handleTogglePublish(book)}
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
-                          className="px-3 py-1.5 bg-gradient-to-r from-gray-500 to-gray-600 text-white rounded-lg hover:from-gray-600 hover:to-gray-700 text-xs font-medium flex items-center gap-1 transition-all shadow-sm"
+                          whileHover={{ scale: 1.03 }}
+                          whileTap={{ scale: 0.97 }}
+                          className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-gradient-to-r from-gray-500 to-gray-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition-all hover:from-gray-600 hover:to-gray-700"
                           title="Dépublier le livre"
                         >
                           <UnpublishIcon className="w-3 h-3" />
                           <span>Dépublier</span>
                         </motion.button>
                       )}
-                      <motion.button
-                        onClick={() => handleEdit(book)}
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        className="text-red-600 hover:text-red-800 font-medium transition-colors"
-                      >
-                        Edit
-                      </motion.button>
-                      <motion.button
-                        onClick={() => handleDelete(book.id)}
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        className="text-red-600 hover:text-red-800 font-medium transition-colors"
-                      >
-                        Delete
-                      </motion.button>
                     </div>
                   </td>
                 </motion.tr>
