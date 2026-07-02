@@ -8,6 +8,7 @@ import { BookGridSkeleton } from '../components/SkeletonLoader';
 import { getImageUrl } from '../utils/imageUrl';
 import { getFileUrl } from '../utils/fileUrl';
 import { storage } from '../utils/storage';
+import { LANGUAGE_FILTERS } from '../constants/contentOptions';
 import {
   AudioIcon,
   BookIcon,
@@ -73,12 +74,7 @@ const themes = [
   },
 ];
 
-const languages = [
-  { id: 'all', label: 'Toutes' },
-  { id: 'fr', label: 'FR' },
-  { id: 'ar', label: 'AR' },
-  { id: 'en', label: 'EN' },
-];
+const languages = LANGUAGE_FILTERS;
 
 function inferTheme(book) {
   if (book.theme) return book.theme;
