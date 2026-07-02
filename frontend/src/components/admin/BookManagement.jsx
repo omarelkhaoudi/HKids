@@ -46,11 +46,26 @@ function BookManagement() {
     content_type: 'story',
     language: 'fr',
     theme: '',
+    subcategory_id: '',
+    tags: '',
     audio_url: '',
     duration_seconds: 0,
     is_premium: false,
+    is_recommended: false,
+    is_popular: false,
+    is_new: false,
+    publish_at: '',
     is_published: false
   });
+  const [filters, setFilters] = useState({
+    search: '',
+    status: 'all',
+    access: 'all',
+    language: 'all',
+    category_id: 'all',
+    flag: 'all',
+  });
+  const [selectedBook, setSelectedBook] = useState(null);
   const [coverFile, setCoverFile] = useState(null);
   const [coverPreview, setCoverPreview] = useState(null);
   const [audioFile, setAudioFile] = useState(null);
@@ -154,9 +169,15 @@ function BookManagement() {
       content_type: book.content_type || 'story',
       language: book.language || 'fr',
       theme: book.theme || '',
+      subcategory_id: book.subcategory_id || '',
+      tags: Array.isArray(book.tags) ? book.tags.join(', ') : book.tags || '',
       audio_url: book.audio_url || '',
       duration_seconds: book.duration_seconds || 0,
       is_premium: book.is_premium === true || book.is_premium === 1,
+      is_recommended: book.is_recommended === true || book.is_recommended === 1,
+      is_popular: book.is_popular === true || book.is_popular === 1,
+      is_new: book.is_new === true || book.is_new === 1,
+      publish_at: book.publish_at ? new Date(book.publish_at).toISOString().slice(0, 16) : '',
       is_published: book.is_published === true || book.is_published === 1
     });
     setCoverPreview(book.cover_image ? getImageUrl(book.cover_image) : null);
@@ -192,9 +213,15 @@ function BookManagement() {
       formData.append('content_type', book.content_type || 'story');
       formData.append('language', book.language || 'fr');
       formData.append('theme', book.theme || '');
+      formData.append('subcategory_id', book.subcategory_id || '');
+      formData.append('tags', Array.isArray(book.tags) ? book.tags.join(', ') : book.tags || '');
       formData.append('audio_url', book.audio_url || '');
       formData.append('duration_seconds', book.duration_seconds || 0);
       formData.append('is_premium', (book.is_premium === true || book.is_premium === 1) ? 'true' : 'false');
+      formData.append('is_recommended', (book.is_recommended === true || book.is_recommended === 1) ? 'true' : 'false');
+      formData.append('is_popular', (book.is_popular === true || book.is_popular === 1) ? 'true' : 'false');
+      formData.append('is_new', (book.is_new === true || book.is_new === 1) ? 'true' : 'false');
+      formData.append('publish_at', book.publish_at || '');
       // FormData convertit les booléens en strings, donc on envoie explicitement 'true' ou 'false'
       formData.append('is_published', newPublishedStatus ? 'true' : 'false');
       
@@ -217,9 +244,15 @@ function BookManagement() {
       content_type: 'story',
       language: 'fr',
       theme: '',
+      subcategory_id: '',
+      tags: '',
       audio_url: '',
       duration_seconds: 0,
       is_premium: false,
+      is_recommended: false,
+      is_popular: false,
+      is_new: false,
+      publish_at: '',
       is_published: false
     });
     setCoverFile(null);
@@ -249,6 +282,43 @@ function BookManagement() {
       }
     }
   };
+
+  const parentCategories = categories.filter((category) => !category.parent_id);
+  const subcategories = categories.filter((category) => category.parent_id);
+  const availableSubcategories = formData.category_id
+    ? subcategories.filter((category) => String(category.parent_id) === String(formData.category_id))
+    : subcategories;
+  const filteredBooks = books.filter((book) => {
+    const query = filters.search.trim().toLowerCase();
+    const tags = Array.isArray(book.tags) ? book.tags.join(' ') : book.tags || '';
+    const searchable = [
+      book.title,
+      book.author,
+      book.description,
+      book.category_name,
+      book.subcategory_name,
+      book.language,
+      book.theme,
+      tags,
+    ].join(' ').toLowerCase();
+    const matchesSearch = !query || searchable.includes(query);
+    const isPublished = book.is_published === true || book.is_published === 1;
+    const isPremium = book.is_premium === true || book.is_premium === 1;
+    const matchesStatus = filters.status === 'all'
+      || (filters.status === 'published' && isPublished)
+      || (filters.status === 'draft' && !isPublished);
+    const matchesAccess = filters.access === 'all'
+      || (filters.access === 'premium' && isPremium)
+      || (filters.access === 'free' && !isPremium);
+    const matchesLanguage = filters.language === 'all' || book.language === filters.language;
+    const matchesCategory = filters.category_id === 'all' || String(book.category_id || '') === String(filters.category_id);
+    const matchesFlag = filters.flag === 'all'
+      || (filters.flag === 'recommended' && (book.is_recommended === true || book.is_recommended === 1))
+      || (filters.flag === 'popular' && (book.is_popular === true || book.is_popular === 1))
+      || (filters.flag === 'new' && (book.is_new === true || book.is_new === 1));
+
+    return matchesSearch && matchesStatus && matchesAccess && matchesLanguage && matchesCategory && matchesFlag;
+  });
 
   return (
     <div className="relative z-10">
@@ -354,6 +424,72 @@ function BookManagement() {
       </motion.div>
 
       <div className="px-8 pb-8">
+        <div className="mb-6 rounded-2xl border border-red-100 bg-white/90 p-5 shadow-lg">
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-3 xl:grid-cols-6">
+            <input
+              type="search"
+              value={filters.search}
+              onChange={(e) => setFilters({ ...filters, search: e.target.value })}
+              placeholder="Rechercher titre, tag, auteur..."
+              className="rounded-xl border-2 border-red-100 px-4 py-2 text-sm focus:border-red-400 focus:outline-none md:col-span-2"
+            />
+            <select
+              value={filters.status}
+              onChange={(e) => setFilters({ ...filters, status: e.target.value })}
+              className="rounded-xl border-2 border-red-100 px-3 py-2 text-sm focus:border-red-400 focus:outline-none"
+            >
+              <option value="all">Tous statuts</option>
+              <option value="published">Publie</option>
+              <option value="draft">Brouillon</option>
+            </select>
+            <select
+              value={filters.access}
+              onChange={(e) => setFilters({ ...filters, access: e.target.value })}
+              className="rounded-xl border-2 border-red-100 px-3 py-2 text-sm focus:border-red-400 focus:outline-none"
+            >
+              <option value="all">Gratuit/Premium</option>
+              <option value="free">Gratuit</option>
+              <option value="premium">Premium</option>
+            </select>
+            <select
+              value={filters.language}
+              onChange={(e) => setFilters({ ...filters, language: e.target.value })}
+              className="rounded-xl border-2 border-red-100 px-3 py-2 text-sm focus:border-red-400 focus:outline-none"
+            >
+              <option value="all">Toutes langues</option>
+              {CONTENT_LANGUAGES.map((language) => (
+                <option key={language.id} value={language.id}>{language.label}</option>
+              ))}
+            </select>
+            <select
+              value={filters.flag}
+              onChange={(e) => setFilters({ ...filters, flag: e.target.value })}
+              className="rounded-xl border-2 border-red-100 px-3 py-2 text-sm focus:border-red-400 focus:outline-none"
+            >
+              <option value="all">Tous indicateurs</option>
+              <option value="recommended">Recommande</option>
+              <option value="popular">Populaire</option>
+              <option value="new">Nouveau</option>
+            </select>
+          </div>
+          <div className="mt-3 flex flex-wrap items-center gap-3">
+            <select
+              value={filters.category_id}
+              onChange={(e) => setFilters({ ...filters, category_id: e.target.value })}
+              className="rounded-xl border-2 border-red-100 px-3 py-2 text-sm focus:border-red-400 focus:outline-none"
+            >
+              <option value="all">Toutes categories</option>
+              {categories.map((category) => (
+                <option key={category.id} value={category.id}>
+                  {category.parent_name ? `${category.parent_name} / ${category.name}` : category.name}
+                </option>
+              ))}
+            </select>
+            <span className="text-sm font-bold text-neutral-500">
+              {filteredBooks.length} contenu{filteredBooks.length > 1 ? 's' : ''} affiche{filteredBooks.length > 1 ? 's' : ''}
+            </span>
+          </div>
+        </div>
 
       {loading ? (
         <div className="text-center py-12">
@@ -382,7 +518,7 @@ function BookManagement() {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-red-100">
-              {books.map((book, index) => (
+              {filteredBooks.map((book, index) => (
                 <motion.tr
                   key={book.id}
                   initial={{ opacity: 0, x: -20 }}
@@ -416,12 +552,29 @@ function BookManagement() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm font-medium text-gray-900">{book.title}</div>
+                    <div className="mt-2 flex flex-wrap gap-1">
+                      {(book.is_premium === true || book.is_premium === 1) && (
+                        <span className="rounded-full bg-purple-100 px-2 py-0.5 text-[11px] font-bold text-purple-700">Premium</span>
+                      )}
+                      {(book.is_recommended === true || book.is_recommended === 1) && (
+                        <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[11px] font-bold text-blue-700">Recommande</span>
+                      )}
+                      {(book.is_popular === true || book.is_popular === 1) && (
+                        <span className="rounded-full bg-orange-100 px-2 py-0.5 text-[11px] font-bold text-orange-700">Populaire</span>
+                      )}
+                      {(book.is_new === true || book.is_new === 1) && (
+                        <span className="rounded-full bg-green-100 px-2 py-0.5 text-[11px] font-bold text-green-700">Nouveau</span>
+                      )}
+                    </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-gray-500">{book.author || '-'}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-gray-500">{book.category_name || '-'}</div>
+                    {book.subcategory_name && (
+                      <div className="text-xs font-medium text-gray-400">{book.subcategory_name}</div>
+                    )}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-gray-500">{book.theme || '-'}</div>
@@ -455,6 +608,17 @@ function BookManagement() {
                   </td>
                   <td className="px-6 py-4 text-sm font-medium">
                     <div className="flex min-w-[150px] flex-col items-stretch gap-2">
+                      <motion.button
+                        type="button"
+                        onClick={() => setSelectedBook(book)}
+                        whileHover={{ scale: 1.03 }}
+                        whileTap={{ scale: 0.97 }}
+                        className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-700 shadow-sm transition-colors hover:bg-blue-100"
+                        title="Voir la fiche complete"
+                      >
+                        <BookIcon className="w-3 h-3" />
+                        <span>Fiche</span>
+                      </motion.button>
                       <motion.button
                         onClick={() => handleEdit(book)}
                         whileHover={{ scale: 1.03 }}
@@ -508,6 +672,82 @@ function BookManagement() {
         </motion.div>
       )}
       </div>
+
+      {selectedBook && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-2xl border-2 border-red-200 bg-white p-6 shadow-2xl">
+            <div className="mb-5 flex items-start justify-between gap-4">
+              <div>
+                <p className="text-sm font-bold uppercase tracking-wide text-red-600">Fiche contenu</p>
+                <h3 className="mt-1 text-2xl font-black text-neutral-900">{selectedBook.title}</h3>
+                <p className="mt-1 text-sm text-neutral-500">{selectedBook.author || 'Auteur non renseigne'}</p>
+              </div>
+              <button
+                onClick={() => setSelectedBook(null)}
+                className="rounded-lg p-2 text-neutral-400 transition hover:bg-red-50 hover:text-red-600"
+              >
+                <XIcon className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+              <div className="rounded-xl bg-red-50 p-4">
+                <p className="text-xs font-bold uppercase text-red-600">Statut</p>
+                <p className="mt-1 font-black text-neutral-900">
+                  {(selectedBook.is_published === true || selectedBook.is_published === 1) ? 'Publie' : 'Brouillon'}
+                </p>
+              </div>
+              <div className="rounded-xl bg-neutral-50 p-4">
+                <p className="text-xs font-bold uppercase text-neutral-500">Acces</p>
+                <p className="mt-1 font-black text-neutral-900">
+                  {(selectedBook.is_premium === true || selectedBook.is_premium === 1) ? 'Premium' : 'Gratuit'}
+                </p>
+              </div>
+              <div className="rounded-xl bg-neutral-50 p-4">
+                <p className="text-xs font-bold uppercase text-neutral-500">Publication</p>
+                <p className="mt-1 font-black text-neutral-900">
+                  {selectedBook.publish_at ? new Date(selectedBook.publish_at).toLocaleString('fr-FR') : 'Immediate'}
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2">
+              <div className="rounded-xl border border-neutral-200 p-4">
+                <p className="text-sm font-bold text-neutral-700">Classification</p>
+                <div className="mt-3 space-y-2 text-sm text-neutral-600">
+                  <p>Categorie: <strong>{selectedBook.category_name || '-'}</strong></p>
+                  <p>Sous-categorie: <strong>{selectedBook.subcategory_name || '-'}</strong></p>
+                  <p>Langue: <strong>{(selectedBook.language || 'fr').toUpperCase()}</strong></p>
+                  <p>Age: <strong>{selectedBook.age_group_min}-{selectedBook.age_group_max} ans</strong></p>
+                </div>
+              </div>
+              <div className="rounded-xl border border-neutral-200 p-4">
+                <p className="text-sm font-bold text-neutral-700">Indicateurs</p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {[
+                    [(selectedBook.is_recommended === true || selectedBook.is_recommended === 1), 'Recommande'],
+                    [(selectedBook.is_popular === true || selectedBook.is_popular === 1), 'Populaire'],
+                    [(selectedBook.is_new === true || selectedBook.is_new === 1), 'Nouveau'],
+                    [Boolean(selectedBook.audio_url), 'Audio pret'],
+                  ].filter(([active]) => active).map(([, label]) => (
+                    <span key={label} className="rounded-full bg-red-100 px-3 py-1 text-xs font-bold text-red-700">{label}</span>
+                  ))}
+                </div>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {(Array.isArray(selectedBook.tags) ? selectedBook.tags : []).map((tag) => (
+                    <span key={tag} className="rounded-full bg-neutral-100 px-3 py-1 text-xs font-bold text-neutral-600">{tag}</span>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-5 rounded-xl bg-neutral-50 p-4">
+              <p className="text-sm font-bold text-neutral-700">Description</p>
+              <p className="mt-2 text-sm leading-relaxed text-neutral-600">{selectedBook.description || 'Aucune description.'}</p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Modal */}
       {showModal && (
@@ -581,11 +821,11 @@ function BookManagement() {
                     </label>
                     <select
                       value={formData.category_id}
-                      onChange={(e) => setFormData({ ...formData, category_id: e.target.value })}
+                      onChange={(e) => setFormData({ ...formData, category_id: e.target.value, subcategory_id: '' })}
                       className="w-full px-4 py-2.5 border-2 border-red-200 rounded-xl focus:ring-4 focus:ring-red-500/20 focus:border-red-400 transition-all bg-white"
                     >
                       <option value="">None</option>
-                      {categories.map(cat => (
+                      {parentCategories.map(cat => (
                         <option key={cat.id} value={cat.id}>{cat.name}</option>
                       ))}
                     </select>
@@ -615,6 +855,37 @@ function BookManagement() {
                         placeholder="Max"
                       />
                     </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-red-700 mb-1">
+                      Sous-categorie
+                    </label>
+                    <select
+                      value={formData.subcategory_id}
+                      onChange={(e) => setFormData({ ...formData, subcategory_id: e.target.value })}
+                      className="w-full px-4 py-2.5 border-2 border-red-200 rounded-xl focus:ring-4 focus:ring-red-500/20 focus:border-red-400 transition-all bg-white"
+                    >
+                      <option value="">Aucune</option>
+                      {availableSubcategories.map((cat) => (
+                        <option key={cat.id} value={cat.id}>{cat.name}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-red-700 mb-1">
+                      Tags
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.tags}
+                      onChange={(e) => setFormData({ ...formData, tags: e.target.value })}
+                      className="w-full px-4 py-2.5 border-2 border-red-200 rounded-xl focus:ring-4 focus:ring-red-500/20 focus:border-red-400 transition-all bg-white"
+                      placeholder="sommeil, aventure, calme..."
+                    />
                   </div>
                 </div>
 
@@ -869,6 +1140,18 @@ function BookManagement() {
                   </div>
                 )}
 
+                <div>
+                  <label className="block text-sm font-medium text-red-700 mb-1">
+                    Planification de publication
+                  </label>
+                  <input
+                    type="datetime-local"
+                    value={formData.publish_at}
+                    onChange={(e) => setFormData({ ...formData, publish_at: e.target.value })}
+                    className="w-full px-4 py-2.5 border-2 border-red-200 rounded-xl focus:ring-4 focus:ring-red-500/20 focus:border-red-400 transition-all bg-white"
+                  />
+                </div>
+
                 <div className="flex flex-wrap gap-4">
                   <div className="flex items-center">
                     <input
@@ -892,6 +1175,42 @@ function BookManagement() {
                     />
                     <label htmlFor="is_premium" className="text-sm font-medium text-gray-700">
                       Premium
+                    </label>
+                  </div>
+                  <div className="flex items-center">
+                    <input
+                      type="checkbox"
+                      id="is_recommended"
+                      checked={formData.is_recommended}
+                      onChange={(e) => setFormData({ ...formData, is_recommended: e.target.checked })}
+                      className="mr-2"
+                    />
+                    <label htmlFor="is_recommended" className="text-sm font-medium text-gray-700">
+                      Recommande
+                    </label>
+                  </div>
+                  <div className="flex items-center">
+                    <input
+                      type="checkbox"
+                      id="is_popular"
+                      checked={formData.is_popular}
+                      onChange={(e) => setFormData({ ...formData, is_popular: e.target.checked })}
+                      className="mr-2"
+                    />
+                    <label htmlFor="is_popular" className="text-sm font-medium text-gray-700">
+                      Populaire
+                    </label>
+                  </div>
+                  <div className="flex items-center">
+                    <input
+                      type="checkbox"
+                      id="is_new"
+                      checked={formData.is_new}
+                      onChange={(e) => setFormData({ ...formData, is_new: e.target.checked })}
+                      className="mr-2"
+                    />
+                    <label htmlFor="is_new" className="text-sm font-medium text-gray-700">
+                      Nouveau
                     </label>
                   </div>
                 </div>

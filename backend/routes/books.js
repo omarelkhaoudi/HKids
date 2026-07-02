@@ -125,6 +125,29 @@ async function getUniqueSlug(client, title, existingBookId = null) {
   }
 }
 
+function normalizeTags(value) {
+  const items = Array.isArray(value)
+    ? value
+    : typeof value === 'string'
+    ? value.split(',')
+    : [];
+
+  return items
+    .map((item) => String(item).trim().toLowerCase())
+    .filter((item, index, self) => item && self.indexOf(item) === index)
+    .slice(0, 20);
+}
+
+function normalizePublishAt(value) {
+  if (!value) return null;
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date.toISOString();
+}
+
+function isTruthy(value) {
+  return value === true || value === 'true' || value === 1 || value === '1';
+}
+
 const upload = multer({
   storage,
   limits: { fileSize: 50 * 1024 * 1024, files: 52 },
@@ -190,10 +213,12 @@ router.get('/published', async (req, res) => {
   }
 
   let query = `
-    SELECT b.*, c.name as category_name
+    SELECT b.*, c.name as category_name, sc.name as subcategory_name
     FROM books b
     LEFT JOIN categories c ON b.category_id = c.id
+    LEFT JOIN categories sc ON b.subcategory_id = sc.id
     WHERE b.is_published = TRUE
+      AND (b.publish_at IS NULL OR b.publish_at <= NOW())
   `;
   const params = [];
   let index = 1;
@@ -322,9 +347,10 @@ router.get('/:id', async (req, res) => {
     const pool = getPool();
     const isNumericId = /^\d+$/.test(req.params.id);
     const bookResult = await pool.query(
-      `SELECT b.*, c.name as category_name
+      `SELECT b.*, c.name as category_name, sc.name as subcategory_name
        FROM books b
        LEFT JOIN categories c ON b.category_id = c.id
+       LEFT JOIN categories sc ON b.subcategory_id = sc.id
        WHERE ${isNumericId ? 'b.id = $1' : 'b.slug = $1'}`,
       [isNumericId ? Number(req.params.id) : req.params.id]
     );
@@ -423,9 +449,10 @@ router.get('/', verifyToken, adminOnly, async (req, res) => {
   try {
     const pool = getPool();
     const result = await pool.query(
-      `SELECT b.*, c.name as category_name
+      `SELECT b.*, c.name as category_name, sc.name as subcategory_name
        FROM books b
        LEFT JOIN categories c ON b.category_id = c.id
+       LEFT JOIN categories sc ON b.subcategory_id = sc.id
        ORDER BY b.created_at DESC`
     );
     console.log('API response:', { route: 'GET /books', count: result.rowCount });
@@ -455,9 +482,15 @@ router.post('/', verifyToken, adminOnly, handleMulterUpload(upload.fields([
       content_type = 'story',
       language = 'fr',
       theme,
+      subcategory_id,
+      tags,
       audio_url,
       duration_seconds,
-      is_premium
+      is_premium,
+      is_recommended,
+      is_popular,
+      is_new,
+      publish_at
     } = req.body;
 
     if (!title) {
@@ -497,9 +530,10 @@ router.post('/', verifyToken, adminOnly, handleMulterUpload(upload.fields([
         `INSERT INTO books (
           title, slug, author, description, cover_image, category_id,
           age_group_min, age_group_max, is_published, file_path, page_count,
-          content_type, language, theme, audio_url, duration_seconds, is_premium
+          content_type, language, theme, subcategory_id, tags, audio_url,
+          duration_seconds, is_premium, is_recommended, is_popular, is_new, publish_at
         )
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22)
          RETURNING *`,
         [
           title,
@@ -516,9 +550,15 @@ router.post('/', verifyToken, adminOnly, handleMulterUpload(upload.fields([
           content_type || 'story',
           language || 'fr',
           theme || null,
+          subcategory_id || null,
+          normalizeTags(tags),
           audioPath || audio_url || null,
           Math.max(0, Number.parseInt(duration_seconds, 10) || 0),
-          is_premium === 'true' || is_premium === true,
+          isTruthy(is_premium),
+          isTruthy(is_recommended),
+          isTruthy(is_popular),
+          isTruthy(is_new),
+          normalizePublishAt(publish_at),
         ]
       );
 
@@ -573,9 +613,15 @@ router.put('/:id', verifyToken, adminOnly, handleMulterUpload(upload.fields([
     content_type,
     language,
     theme,
+    subcategory_id,
+    tags,
     audio_url,
     duration_seconds,
-    is_premium
+    is_premium,
+    is_recommended,
+    is_popular,
+    is_new,
+    publish_at
   } = req.body;
   let newCoverPath = null;
   let newAudioPath = null;
@@ -611,8 +657,10 @@ router.put('/:id', verifyToken, adminOnly, handleMulterUpload(upload.fields([
          SET title = $1, slug = $2, author = $3, description = $4, cover_image = $5,
              category_id = $6, age_group_min = $7, age_group_max = $8,
              is_published = $9, content_type = $10, language = $11, theme = $12,
-             audio_url = $13, duration_seconds = $14, is_premium = $15, updated_at = NOW()
-         WHERE id = $16
+             audio_url = $13, duration_seconds = $14, is_premium = $15,
+             subcategory_id = $16, tags = $17, is_recommended = $18,
+             is_popular = $19, is_new = $20, publish_at = $21, updated_at = NOW()
+         WHERE id = $22
          RETURNING *`,
         [
           nextTitle,
@@ -634,8 +682,14 @@ router.put('/:id', verifyToken, adminOnly, handleMulterUpload(upload.fields([
             ? Math.max(0, Number.parseInt(duration_seconds, 10) || 0)
             : (book.duration_seconds || 0),
           is_premium !== undefined
-            ? (is_premium === 'true' || is_premium === true)
+            ? isTruthy(is_premium)
             : (book.is_premium || false),
+          subcategory_id !== undefined ? (subcategory_id || null) : book.subcategory_id,
+          tags !== undefined ? normalizeTags(tags) : (book.tags || []),
+          is_recommended !== undefined ? isTruthy(is_recommended) : (book.is_recommended || false),
+          is_popular !== undefined ? isTruthy(is_popular) : (book.is_popular || false),
+          is_new !== undefined ? isTruthy(is_new) : (book.is_new || false),
+          publish_at !== undefined ? normalizePublishAt(publish_at) : book.publish_at,
           req.params.id,
         ]
       );
