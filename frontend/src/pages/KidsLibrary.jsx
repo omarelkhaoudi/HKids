@@ -19,6 +19,7 @@ import {
   PlayIcon,
   SearchIcon,
   SparklesIcon,
+  HomeIcon,
 } from '../components/Icons';
 import { Logo } from '../components/Logo';
 
@@ -225,6 +226,13 @@ function KidsLibrary() {
           <Logo size="default" showText={true} />
 
           <div className="flex items-center gap-2">
+            <Link
+              to="/kids"
+              className="grid h-12 w-12 place-items-center rounded-full bg-emerald-100 text-emerald-700 transition hover:bg-emerald-200"
+              title="Accueil"
+            >
+              <HomeIcon className="h-6 w-6" />
+            </Link>
             <Link
               to="/favorites"
               className="grid h-12 w-12 place-items-center rounded-full bg-rose-100 text-rose-600 transition hover:bg-rose-200"

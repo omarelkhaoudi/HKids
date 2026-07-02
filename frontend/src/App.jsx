@@ -10,7 +10,9 @@ import ParentSignUp from './pages/ParentSignUp';
 import AdminDashboard from './pages/AdminDashboard';
 import ParentDashboard from './pages/ParentDashboard';
 import ParentKidsProfiles from './pages/ParentKidsProfiles';
+import KidsHome from './pages/KidsHome';
 import KidsLibrary from './pages/KidsLibrary';
+import KidsCategoryPage from './pages/KidsCategoryPage';
 import Favorites from './pages/Favorites';
 import History from './pages/History';
 import FeatureDetails from './pages/FeatureDetails';
@@ -110,7 +112,9 @@ function App() {
                 <Route path="/admin/*" element={<AdminDashboard />} />
                 <Route path="/parent/profiles" element={<RequireRole roles={['parent', 'admin']}><ParentKidsProfiles /></RequireRole>} />
                 <Route path="/parent/*" element={<RequireRole roles={['parent', 'admin']}><ParentDashboard /></RequireRole>} />
-                <Route path="/kids" element={<RequireRole roles={['kid']}><KidsLibrary /></RequireRole>} />
+                <Route path="/kids" element={<RequireRole roles={['kid']}><KidsHome /></RequireRole>} />
+                <Route path="/kids/library" element={<RequireRole roles={['kid']}><KidsLibrary /></RequireRole>} />
+                <Route path="/kids/category/:categoryId" element={<RequireRole roles={['kid']}><KidsCategoryPage /></RequireRole>} />
               </Routes>
               <ScrollToTop />
             </div>
