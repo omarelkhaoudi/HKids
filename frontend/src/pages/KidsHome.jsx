@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import { KID_CATEGORIES } from '../constants/kidCategories';
 import { KidCategoryCard } from '../components/kids/KidCategoryCard';
+import { VoiceAssistant } from '../components/kids/VoiceAssistant';
 import { Logo } from '../components/Logo';
 import { AudioIcon, BookIcon, LogOutIcon, SparklesIcon } from '../components/Icons';
 
@@ -90,6 +91,7 @@ function KidsHome() {
           </motion.div>
         </main>
       </div>
+      <VoiceAssistant />
     </div>
   );
 }

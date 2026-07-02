@@ -10,6 +10,7 @@ import { storage } from '../utils/storage';
 import { LANGUAGE_FILTERS } from '../constants/contentOptions';
 import { useAudioPlayer } from '../hooks/useAudioPlayer';
 import { AudioPlayer } from '../components/audio/AudioPlayer';
+import { VoiceAssistant } from '../components/kids/VoiceAssistant';
 import {
   AudioIcon,
   BookIcon,
@@ -408,6 +409,7 @@ function KidsLibrary() {
         }}
         onClose={audioPlayer.stop}
       />
+      <VoiceAssistant />
     </div>
   );
 }
