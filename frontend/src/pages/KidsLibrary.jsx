@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { booksAPI } from '../api/books';
@@ -6,9 +6,10 @@ import { useAuth } from '../context/AuthContext';
 import { useToast } from '../components/ToastProvider';
 import { BookGridSkeleton } from '../components/SkeletonLoader';
 import { getImageUrl } from '../utils/imageUrl';
-import { getFileUrl } from '../utils/fileUrl';
 import { storage } from '../utils/storage';
 import { LANGUAGE_FILTERS } from '../constants/contentOptions';
+import { useAudioPlayer } from '../hooks/useAudioPlayer';
+import { AudioPlayer } from '../components/audio/AudioPlayer';
 import {
   AudioIcon,
   BookIcon,
@@ -109,14 +110,13 @@ function KidsLibrary() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const { showToast } = useToast();
-  const audioRef = useRef(null);
   const [books, setBooks] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTheme, setSelectedTheme] = useState('all');
   const [selectedLanguage, setSelectedLanguage] = useState('all');
   const [loading, setLoading] = useState(true);
-  const [playingBookId, setPlayingBookId] = useState(null);
   const [readingStats, setReadingStats] = useState(() => storage.getReadingStats());
+  const audioPlayer = useAudioPlayer();
 
   useEffect(() => {
     if (!user || user.role !== 'kid') {
@@ -127,12 +127,6 @@ function KidsLibrary() {
     loadData();
     setReadingStats(storage.getReadingStats());
 
-    return () => {
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current = null;
-      }
-    };
   }, [user, navigate]);
 
   const loadData = async () => {
@@ -184,35 +178,17 @@ function KidsLibrary() {
     setBooks((current) => [...current]);
   };
 
-  const toggleAudio = (book) => {
+  const toggleAudio = async (book) => {
     if (!book.audio_url) {
       showToast('Audio pas encore disponible pour cette histoire', 'info');
       return;
     }
 
-    if (playingBookId === book.id && audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current = null;
-      setPlayingBookId(null);
-      return;
+    const wasPlayingCurrent = audioPlayer.activeBook?.id === book.id && audioPlayer.playing;
+    await audioPlayer.toggle(book);
+    if (!wasPlayingCurrent) {
+      storage.addToHistory(book.id, book.title, 0);
     }
-
-    if (audioRef.current) {
-      audioRef.current.pause();
-    }
-
-    const nextAudio = new Audio(getFileUrl(book.audio_url));
-    audioRef.current = nextAudio;
-    setPlayingBookId(book.id);
-    nextAudio.onended = () => setPlayingBookId(null);
-    nextAudio.onerror = () => {
-      setPlayingBookId(null);
-      showToast("Impossible de lire l'audio", 'error');
-    };
-    nextAudio.play().catch(() => {
-      setPlayingBookId(null);
-      showToast("Le navigateur a bloque la lecture audio", 'error');
-    });
   };
 
   return (
@@ -265,7 +241,7 @@ function KidsLibrary() {
         </div>
       </motion.header>
 
-      <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+      <main className="mx-auto max-w-7xl px-4 py-6 pb-36 sm:px-6 lg:px-8">
         <section className="mb-6 grid gap-4 lg:grid-cols-[1.3fr_0.7fr]">
           <div className="rounded-[2rem] bg-gradient-to-br from-cyan-500 via-emerald-400 to-yellow-300 p-6 text-white shadow-xl">
             <div className="flex min-h-56 flex-col justify-between gap-6">
@@ -379,7 +355,7 @@ function KidsLibrary() {
                       key={book.id}
                       book={book}
                       large
-                      playing={playingBookId === book.id}
+                      playing={audioPlayer.activeBook?.id === book.id && audioPlayer.playing}
                       onToggleAudio={toggleAudio}
                       onToggleFavorite={toggleFavorite}
                     />
@@ -395,7 +371,7 @@ function KidsLibrary() {
                   <BookCard
                     key={book.id}
                     book={book}
-                    playing={playingBookId === book.id}
+                    playing={audioPlayer.activeBook?.id === book.id && audioPlayer.playing}
                     onToggleAudio={toggleAudio}
                     onToggleFavorite={toggleFavorite}
                   />
@@ -405,6 +381,33 @@ function KidsLibrary() {
           </>
         )}
       </main>
+
+      <AudioPlayer
+        book={audioPlayer.activeBook}
+        playing={audioPlayer.playing}
+        loading={audioPlayer.loading}
+        currentTime={audioPlayer.currentTime}
+        duration={audioPlayer.duration}
+        volume={audioPlayer.volume}
+        favorite={audioPlayer.activeBook ? storage.isFavorite(audioPlayer.activeBook.id) : false}
+        error={audioPlayer.error}
+        onTogglePlay={() => {
+          if (audioPlayer.playing) {
+            audioPlayer.pause();
+          } else if (audioPlayer.activeBook) {
+            audioPlayer.play(audioPlayer.activeBook);
+          }
+        }}
+        onSeekBy={audioPlayer.seekBy}
+        onSeekTo={audioPlayer.seekTo}
+        onVolumeChange={audioPlayer.setVolume}
+        onToggleFavorite={() => {
+          if (audioPlayer.activeBook) {
+            toggleFavorite(audioPlayer.activeBook.id);
+          }
+        }}
+        onClose={audioPlayer.stop}
+      />
     </div>
   );
 }
