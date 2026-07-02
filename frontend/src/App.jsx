@@ -112,9 +112,9 @@ function App() {
                 <Route path="/admin/*" element={<AdminDashboard />} />
                 <Route path="/parent/profiles" element={<RequireRole roles={['parent', 'admin']}><ParentKidsProfiles /></RequireRole>} />
                 <Route path="/parent/*" element={<RequireRole roles={['parent', 'admin']}><ParentDashboard /></RequireRole>} />
-                <Route path="/kids" element={<RequireRole roles={['kid']}><KidsHome /></RequireRole>} />
+                <Route path="/kids" element={<RequireAuth><KidsHome /></RequireAuth>} />
                 <Route path="/kids/library" element={<RequireRole roles={['kid']}><KidsLibrary /></RequireRole>} />
-                <Route path="/kids/category/:categoryId" element={<RequireRole roles={['kid']}><KidsCategoryPage /></RequireRole>} />
+                <Route path="/kids/category/:categoryId" element={<RequireAuth><KidsCategoryPage /></RequireAuth>} />
               </Routes>
               <ScrollToTop />
             </div>
