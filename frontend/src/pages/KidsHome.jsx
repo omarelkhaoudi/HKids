@@ -43,7 +43,7 @@ function KidsHome() {
               </h1>
             </div>
             <Link
-              to="/kids/library"
+              to="/content-library"
               className="inline-flex min-h-16 items-center justify-center gap-3 rounded-2xl bg-white px-6 py-4 text-xl font-black text-red-600 shadow-lg transition hover:bg-red-50"
             >
               <AudioIcon className="h-7 w-7" />
@@ -56,7 +56,7 @@ function KidsHome() {
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-2xl font-black text-neutral-900">Univers</h2>
             <Link
-              to="/kids/library"
+              to="/content-library"
               className="inline-flex items-center gap-2 rounded-2xl bg-neutral-900 px-4 py-3 text-sm font-black text-white shadow-md transition hover:bg-neutral-800"
             >
               <BookIcon className="h-5 w-5" />

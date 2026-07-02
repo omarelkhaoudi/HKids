@@ -48,6 +48,7 @@ function BookManagement() {
     theme: '',
     audio_url: '',
     duration_seconds: 0,
+    is_premium: false,
     is_published: false
   });
   const [coverFile, setCoverFile] = useState(null);
@@ -155,6 +156,7 @@ function BookManagement() {
       theme: book.theme || '',
       audio_url: book.audio_url || '',
       duration_seconds: book.duration_seconds || 0,
+      is_premium: book.is_premium === true || book.is_premium === 1,
       is_published: book.is_published === true || book.is_published === 1
     });
     setCoverPreview(book.cover_image ? getImageUrl(book.cover_image) : null);
@@ -192,6 +194,7 @@ function BookManagement() {
       formData.append('theme', book.theme || '');
       formData.append('audio_url', book.audio_url || '');
       formData.append('duration_seconds', book.duration_seconds || 0);
+      formData.append('is_premium', (book.is_premium === true || book.is_premium === 1) ? 'true' : 'false');
       // FormData convertit les booléens en strings, donc on envoie explicitement 'true' ou 'false'
       formData.append('is_published', newPublishedStatus ? 'true' : 'false');
       
@@ -216,6 +219,7 @@ function BookManagement() {
       theme: '',
       audio_url: '',
       duration_seconds: 0,
+      is_premium: false,
       is_published: false
     });
     setCoverFile(null);
@@ -861,17 +865,31 @@ function BookManagement() {
                   </div>
                 )}
 
-                <div className="flex items-center">
-                  <input
-                    type="checkbox"
-                    id="is_published"
-                    checked={formData.is_published}
-                    onChange={(e) => setFormData({ ...formData, is_published: e.target.checked })}
-                    className="mr-2"
-                  />
-                  <label htmlFor="is_published" className="text-sm font-medium text-gray-700">
-                    Publish immediately
-                  </label>
+                <div className="flex flex-wrap gap-4">
+                  <div className="flex items-center">
+                    <input
+                      type="checkbox"
+                      id="is_published"
+                      checked={formData.is_published}
+                      onChange={(e) => setFormData({ ...formData, is_published: e.target.checked })}
+                      className="mr-2"
+                    />
+                    <label htmlFor="is_published" className="text-sm font-medium text-gray-700">
+                      Publish immediately
+                    </label>
+                  </div>
+                  <div className="flex items-center">
+                    <input
+                      type="checkbox"
+                      id="is_premium"
+                      checked={formData.is_premium}
+                      onChange={(e) => setFormData({ ...formData, is_premium: e.target.checked })}
+                      className="mr-2"
+                    />
+                    <label htmlFor="is_premium" className="text-sm font-medium text-gray-700">
+                      Premium
+                    </label>
+                  </div>
                 </div>
 
                 <div className="flex gap-4 pt-4">

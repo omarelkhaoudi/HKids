@@ -455,7 +455,8 @@ router.post('/', verifyToken, handleMulterUpload(upload.fields([
       language = 'fr',
       theme,
       audio_url,
-      duration_seconds
+      duration_seconds,
+      is_premium
     } = req.body;
 
     if (!title) {
@@ -495,9 +496,9 @@ router.post('/', verifyToken, handleMulterUpload(upload.fields([
         `INSERT INTO books (
           title, slug, author, description, cover_image, category_id,
           age_group_min, age_group_max, is_published, file_path, page_count,
-          content_type, language, theme, audio_url, duration_seconds
+          content_type, language, theme, audio_url, duration_seconds, is_premium
         )
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
          RETURNING *`,
         [
           title,
@@ -516,6 +517,7 @@ router.post('/', verifyToken, handleMulterUpload(upload.fields([
           theme || null,
           audioPath || audio_url || null,
           Math.max(0, Number.parseInt(duration_seconds, 10) || 0),
+          is_premium === 'true' || is_premium === true,
         ]
       );
 
@@ -571,7 +573,8 @@ router.put('/:id', verifyToken, handleMulterUpload(upload.fields([
     language,
     theme,
     audio_url,
-    duration_seconds
+    duration_seconds,
+    is_premium
   } = req.body;
   let newCoverPath = null;
   let newAudioPath = null;
@@ -607,8 +610,8 @@ router.put('/:id', verifyToken, handleMulterUpload(upload.fields([
          SET title = $1, slug = $2, author = $3, description = $4, cover_image = $5,
              category_id = $6, age_group_min = $7, age_group_max = $8,
              is_published = $9, content_type = $10, language = $11, theme = $12,
-             audio_url = $13, duration_seconds = $14, updated_at = NOW()
-         WHERE id = $15
+             audio_url = $13, duration_seconds = $14, is_premium = $15, updated_at = NOW()
+         WHERE id = $16
          RETURNING *`,
         [
           nextTitle,
@@ -629,6 +632,9 @@ router.put('/:id', verifyToken, handleMulterUpload(upload.fields([
           duration_seconds !== undefined
             ? Math.max(0, Number.parseInt(duration_seconds, 10) || 0)
             : (book.duration_seconds || 0),
+          is_premium !== undefined
+            ? (is_premium === 'true' || is_premium === true)
+            : (book.is_premium || false),
           req.params.id,
         ]
       );
