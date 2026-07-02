@@ -92,6 +92,50 @@ function normalizeInterests(interests) {
   return [];
 }
 
+const allowedLanguages = ['fr', 'ar', 'en'];
+const allowedThemes = ['dinosaurs', 'space', 'animals', 'princesses', 'jobs', 'world'];
+
+function normalizeAllowedList(value, allowedValues) {
+  const items = Array.isArray(value)
+    ? value
+    : typeof value === 'string'
+    ? value.split(',')
+    : [];
+
+  return items
+    .map((item) => String(item).trim())
+    .filter((item, index, self) => item && allowedValues.includes(item) && self.indexOf(item) === index);
+}
+
+function normalizeTime(value) {
+  if (!value) return null;
+  const trimmed = String(value).trim();
+  return /^\d{2}:\d{2}$/.test(trimmed) ? trimmed : null;
+}
+
+function normalizeRules(row) {
+  if (!row) {
+    return {
+      daily_screen_time_minutes: 30,
+      quiet_start_time: '',
+      quiet_end_time: '',
+      allowed_languages: [],
+      allowed_themes: []
+    };
+  }
+
+  return {
+    id: row.id,
+    kid_profile_id: row.kid_profile_id,
+    daily_screen_time_minutes: Number(row.daily_screen_time_minutes || 30),
+    quiet_start_time: row.quiet_start_time ? String(row.quiet_start_time).slice(0, 5) : '',
+    quiet_end_time: row.quiet_end_time ? String(row.quiet_end_time).slice(0, 5) : '',
+    allowed_languages: row.allowed_languages || [],
+    allowed_themes: row.allowed_themes || [],
+    updated_at: row.updated_at
+  };
+}
+
 // Get all kids profiles for the logged-in parent
 router.get('/kids', verifyToken, verifyParent, async (req, res) => {
   try {
@@ -343,6 +387,100 @@ router.put('/kids/:id/approvals/bulk', verifyToken, verifyParent, async (req, re
     }
   } catch (err) {
     console.error('Error bulk updating approvals:', err);
+    res.status(500).json({ error: 'Database error' });
+  }
+});
+
+// Get bedtime and content rules for a kid
+router.get('/kids/:id/rules', verifyToken, verifyParent, async (req, res) => {
+  try {
+    const pool = getPool();
+
+    const kidCheck = await pool.query(
+      'SELECT * FROM kids_profiles WHERE id = $1 AND parent_id = $2',
+      [req.params.id, req.user.id]
+    );
+
+    if (kidCheck.rows.length === 0) {
+      return res.status(404).json({ error: 'Kid profile not found' });
+    }
+
+    const result = await pool.query(
+      'SELECT * FROM parental_rules WHERE kid_profile_id = $1 LIMIT 1',
+      [req.params.id]
+    );
+
+    res.json(normalizeRules(result.rows[0]));
+  } catch (err) {
+    console.error('Error fetching parental rules:', err);
+    res.status(500).json({ error: 'Database error' });
+  }
+});
+
+// Create or update bedtime and content rules for a kid
+router.put('/kids/:id/rules', verifyToken, verifyParent, async (req, res) => {
+  try {
+    const {
+      daily_screen_time_minutes = 30,
+      quiet_start_time,
+      quiet_end_time,
+      allowed_languages,
+      allowed_themes
+    } = req.body;
+
+    const safeDailyMinutes = Math.max(
+      0,
+      Math.min(240, Number.parseInt(daily_screen_time_minutes, 10) || 0)
+    );
+    const normalizedLanguages = normalizeAllowedList(allowed_languages, allowedLanguages);
+    const normalizedThemes = normalizeAllowedList(allowed_themes, allowedThemes);
+    const startTime = normalizeTime(quiet_start_time);
+    const endTime = normalizeTime(quiet_end_time);
+
+    const pool = getPool();
+
+    const kidCheck = await pool.query(
+      'SELECT * FROM kids_profiles WHERE id = $1 AND parent_id = $2',
+      [req.params.id, req.user.id]
+    );
+
+    if (kidCheck.rows.length === 0) {
+      return res.status(404).json({ error: 'Kid profile not found' });
+    }
+
+    const result = await pool.query(
+      `INSERT INTO parental_rules (
+        kid_profile_id,
+        daily_screen_time_minutes,
+        quiet_start_time,
+        quiet_end_time,
+        allowed_languages,
+        allowed_themes,
+        updated_at
+      )
+      VALUES ($1, $2, $3, $4, $5, $6, NOW())
+      ON CONFLICT (kid_profile_id)
+      DO UPDATE SET
+        daily_screen_time_minutes = EXCLUDED.daily_screen_time_minutes,
+        quiet_start_time = EXCLUDED.quiet_start_time,
+        quiet_end_time = EXCLUDED.quiet_end_time,
+        allowed_languages = EXCLUDED.allowed_languages,
+        allowed_themes = EXCLUDED.allowed_themes,
+        updated_at = NOW()
+      RETURNING *`,
+      [
+        req.params.id,
+        safeDailyMinutes,
+        startTime,
+        endTime,
+        normalizedLanguages,
+        normalizedThemes
+      ]
+    );
+
+    res.json(normalizeRules(result.rows[0]));
+  } catch (err) {
+    console.error('Error saving parental rules:', err);
     res.status(500).json({ error: 'Database error' });
   }
 });

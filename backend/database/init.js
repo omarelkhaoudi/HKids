@@ -118,6 +118,18 @@ export async function initDatabase() {
         updated_at TIMESTAMPTZ DEFAULT NOW(),
         UNIQUE(kid_profile_id, category_id)
       );`,
+      `CREATE TABLE IF NOT EXISTS parental_rules (
+        id SERIAL PRIMARY KEY,
+        kid_profile_id INTEGER NOT NULL REFERENCES kids_profiles(id) ON DELETE CASCADE,
+        daily_screen_time_minutes INTEGER NOT NULL DEFAULT 30,
+        quiet_start_time TIME,
+        quiet_end_time TIME,
+        allowed_languages TEXT[] DEFAULT '{}',
+        allowed_themes TEXT[] DEFAULT '{}',
+        created_at TIMESTAMPTZ DEFAULT NOW(),
+        updated_at TIMESTAMPTZ DEFAULT NOW(),
+        UNIQUE(kid_profile_id)
+      );`,
       `CREATE TABLE IF NOT EXISTS subscription_plans (
         id SERIAL PRIMARY KEY,
         code TEXT UNIQUE NOT NULL,
@@ -210,6 +222,12 @@ export async function initDatabase() {
     await client.query(`ALTER TABLE kids_profiles ADD COLUMN IF NOT EXISTS photo_url TEXT`);
     await client.query(`ALTER TABLE kids_profiles ADD COLUMN IF NOT EXISTS preferred_language TEXT NOT NULL DEFAULT 'fr'`);
     await client.query(`ALTER TABLE kids_profiles ADD COLUMN IF NOT EXISTS interests TEXT[] DEFAULT '{}'`);
+    await client.query(`ALTER TABLE parental_rules ADD COLUMN IF NOT EXISTS daily_screen_time_minutes INTEGER NOT NULL DEFAULT 30`);
+    await client.query(`ALTER TABLE parental_rules ADD COLUMN IF NOT EXISTS quiet_start_time TIME`);
+    await client.query(`ALTER TABLE parental_rules ADD COLUMN IF NOT EXISTS quiet_end_time TIME`);
+    await client.query(`ALTER TABLE parental_rules ADD COLUMN IF NOT EXISTS allowed_languages TEXT[] DEFAULT '{}'`);
+    await client.query(`ALTER TABLE parental_rules ADD COLUMN IF NOT EXISTS allowed_themes TEXT[] DEFAULT '{}'`);
+    await client.query(`ALTER TABLE parental_rules ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW()`);
     await client.query(`ALTER TABLE subscription_plans ADD COLUMN IF NOT EXISTS description TEXT`);
     await client.query(`ALTER TABLE subscription_plans ADD COLUMN IF NOT EXISTS monthly_price_cents INTEGER NOT NULL DEFAULT 0`);
     await client.query(`ALTER TABLE subscription_plans ADD COLUMN IF NOT EXISTS currency TEXT NOT NULL DEFAULT 'EUR'`);
@@ -246,6 +264,7 @@ export async function initDatabase() {
     await client.query(`CREATE INDEX IF NOT EXISTS kid_reading_progress_kid_idx ON kid_reading_progress(kid_profile_id, last_read_at DESC)`);
     await client.query(`CREATE INDEX IF NOT EXISTS kid_reading_sessions_kid_idx ON kid_reading_sessions(kid_profile_id, created_at DESC)`);
     await client.query(`CREATE INDEX IF NOT EXISTS kid_reading_goals_kid_active_idx ON kid_reading_goals(kid_profile_id, active, updated_at DESC)`);
+    await client.query(`CREATE INDEX IF NOT EXISTS parental_rules_kid_idx ON parental_rules(kid_profile_id)`);
 
     await client.query(`
       INSERT INTO subscription_plans (code, name, description, monthly_price_cents, currency, book_limit, is_featured)

@@ -126,10 +126,10 @@ async function getUniqueSlug(client, title, existingBookId = null) {
 
 const upload = multer({
   storage,
-  limits: { fileSize: 50 * 1024 * 1024, files: 51 },
+  limits: { fileSize: 50 * 1024 * 1024, files: 52 },
   fileFilter: (req, file, cb) => {
-    const allowedExtensions = /\.(jpeg|jpg|png|gif|pdf)$/i;
-    const allowedMimeTypes = /^(image\/(jpeg|jpg|png|gif)|application\/pdf)$/;
+    const allowedExtensions = /\.(jpeg|jpg|png|gif|pdf|mp3|wav|m4a|ogg)$/i;
+    const allowedMimeTypes = /^(image\/(jpeg|jpg|png|gif)|application\/pdf|audio\/(mpeg|mp3|wav|wave|x-wav|mp4|m4a|ogg|x-m4a)|video\/mp4|application\/ogg)$/;
 
     const extname = allowedExtensions.test(path.extname(file.originalname));
     const mimetype = allowedMimeTypes.test(file.mimetype);
@@ -137,7 +137,7 @@ const upload = multer({
     if (extname && mimetype) {
       cb(null, true);
     } else {
-      cb(new Error(`File type not allowed. Only images (JPEG, PNG, GIF) and PDFs are allowed. Received: ${file.mimetype}`));
+      cb(new Error(`File type not allowed. Only images (JPEG, PNG, GIF), PDFs, and audio files (MP3, WAV, M4A, OGG) are allowed. Received: ${file.mimetype}`));
     }
   },
 });
@@ -153,10 +153,10 @@ const handleMulterUpload = (uploadMiddleware) => {
           return res.status(400).json({ error: 'File too large. Maximum size is 50MB.' });
         }
         if (err.code === 'LIMIT_FILE_COUNT') {
-          return res.status(400).json({ error: 'Too many files. Maximum is 50 pages plus one cover.' });
+          return res.status(400).json({ error: 'Too many files. Maximum is 50 pages plus one cover and one audio file.' });
         }
         if (err.code === 'LIMIT_UNEXPECTED_FILE') {
-          return res.status(400).json({ error: 'Unexpected file field. Expected: cover or pages.' });
+          return res.status(400).json({ error: 'Unexpected file field. Expected: cover, pages, or audio.' });
         }
         return res.status(400).json({ error: `Upload error: ${err.message}` });
       }
@@ -201,6 +201,72 @@ router.get('/published', async (req, res) => {
     query += ` AND b.category_id IN (
       SELECT category_id FROM parent_approvals
       WHERE kid_profile_id = $${index} AND approved = TRUE
+    )`;
+    params.push(kidProfileId);
+    index += 1;
+
+    query += ` AND (
+      NOT EXISTS (
+        SELECT 1 FROM parental_rules pr
+        WHERE pr.kid_profile_id = $${index}
+          AND cardinality(pr.allowed_languages) > 0
+      )
+      OR b.language = ANY(COALESCE((
+        SELECT pr.allowed_languages FROM parental_rules pr
+        WHERE pr.kid_profile_id = $${index}
+        LIMIT 1
+      ), ARRAY[]::text[]))
+    )`;
+    params.push(kidProfileId);
+    index += 1;
+
+    query += ` AND (
+      NOT EXISTS (
+        SELECT 1 FROM parental_rules pr
+        WHERE pr.kid_profile_id = $${index}
+          AND cardinality(pr.allowed_themes) > 0
+      )
+      OR b.theme = ANY(COALESCE((
+        SELECT pr.allowed_themes FROM parental_rules pr
+        WHERE pr.kid_profile_id = $${index}
+        LIMIT 1
+      ), ARRAY[]::text[]))
+    )`;
+    params.push(kidProfileId);
+    index += 1;
+
+    query += ` AND (
+      NOT EXISTS (
+        SELECT 1 FROM parental_rules pr
+        WHERE pr.kid_profile_id = $${index}
+          AND pr.quiet_start_time IS NOT NULL
+          AND pr.quiet_end_time IS NOT NULL
+      )
+      OR EXISTS (
+        SELECT 1 FROM parental_rules pr
+        WHERE pr.kid_profile_id = $${index}
+          AND (
+            (pr.quiet_start_time <= pr.quiet_end_time AND CURRENT_TIME BETWEEN pr.quiet_start_time AND pr.quiet_end_time)
+            OR
+            (pr.quiet_start_time > pr.quiet_end_time AND (CURRENT_TIME >= pr.quiet_start_time OR CURRENT_TIME <= pr.quiet_end_time))
+          )
+      )
+    )`;
+    params.push(kidProfileId);
+    index += 1;
+
+    query += ` AND (
+      NOT EXISTS (
+        SELECT 1 FROM parental_rules pr
+        WHERE pr.kid_profile_id = $${index}
+          AND pr.daily_screen_time_minutes > 0
+          AND (
+            SELECT COALESCE(SUM(krs.duration_seconds), 0)
+            FROM kid_reading_sessions krs
+            WHERE krs.kid_profile_id = pr.kid_profile_id
+              AND krs.created_at >= date_trunc('day', NOW())
+          ) >= pr.daily_screen_time_minutes * 60
+      )
     )`;
     params.push(kidProfileId);
     index += 1;
@@ -287,6 +353,43 @@ router.get('/:id', async (req, res) => {
           if (approvalResult.rows.length === 0) {
             return res.status(403).json({ error: 'This book is not approved for this child' });
           }
+
+          const rulesResult = await pool.query(
+            `SELECT 1
+             FROM parental_rules pr
+             WHERE pr.kid_profile_id = $1
+               AND (
+                 (cardinality(pr.allowed_languages) > 0 AND NOT ($2 = ANY(pr.allowed_languages)))
+                 OR
+                 (cardinality(pr.allowed_themes) > 0 AND NOT ($3 = ANY(pr.allowed_themes)))
+                 OR
+                 (
+                   pr.quiet_start_time IS NOT NULL
+                   AND pr.quiet_end_time IS NOT NULL
+                   AND NOT (
+                     (pr.quiet_start_time <= pr.quiet_end_time AND CURRENT_TIME BETWEEN pr.quiet_start_time AND pr.quiet_end_time)
+                     OR
+                     (pr.quiet_start_time > pr.quiet_end_time AND (CURRENT_TIME >= pr.quiet_start_time OR CURRENT_TIME <= pr.quiet_end_time))
+                   )
+                 )
+                 OR
+                 (
+                   pr.daily_screen_time_minutes > 0
+                   AND (
+                     SELECT COALESCE(SUM(krs.duration_seconds), 0)
+                     FROM kid_reading_sessions krs
+                     WHERE krs.kid_profile_id = pr.kid_profile_id
+                       AND krs.created_at >= date_trunc('day', NOW())
+                   ) >= pr.daily_screen_time_minutes * 60
+                 )
+               )
+             LIMIT 1`,
+            [decoded.kid_profile_id, book.language || 'fr', book.theme || '']
+          );
+
+          if (rulesResult.rows.length > 0) {
+            return res.status(403).json({ error: 'This book is outside parental rules' });
+          }
         }
       } catch (err) {
         return res.status(401).json({ error: 'Invalid or expired token' });
@@ -335,6 +438,7 @@ router.get('/', verifyToken, async (req, res) => {
 router.post('/', verifyToken, handleMulterUpload(upload.fields([
   { name: 'cover', maxCount: 1 },
   { name: 'pages', maxCount: 50 },
+  { name: 'audio', maxCount: 1 },
 ])), async (req, res) => {
   const persistedFiles = [];
 
@@ -360,6 +464,7 @@ router.post('/', verifyToken, handleMulterUpload(upload.fields([
 
     const coverFile = req.files?.cover?.[0] || null;
     const pageFiles = req.files?.pages || [];
+    const audioFile = req.files?.audio?.[0] || null;
 
     if (pageFiles.length === 0) {
       return res.status(400).json({ error: 'At least one page file is required.' });
@@ -369,6 +474,9 @@ router.post('/', verifyToken, handleMulterUpload(upload.fields([
 
     const coverPath = await persistUploadedFile(coverFile);
     if (coverPath) persistedFiles.push(coverPath);
+
+    const audioPath = await persistUploadedFile(audioFile);
+    if (audioPath) persistedFiles.push(audioPath);
 
     const pagePaths = [];
     for (const file of pageFiles) {
@@ -406,7 +514,7 @@ router.post('/', verifyToken, handleMulterUpload(upload.fields([
           content_type || 'story',
           language || 'fr',
           theme || null,
-          audio_url || null,
+          audioPath || audio_url || null,
           Math.max(0, Number.parseInt(duration_seconds, 10) || 0),
         ]
       );
@@ -449,6 +557,7 @@ router.post('/', verifyToken, handleMulterUpload(upload.fields([
 
 router.put('/:id', verifyToken, handleMulterUpload(upload.fields([
   { name: 'cover', maxCount: 1 },
+  { name: 'audio', maxCount: 1 },
 ])), async (req, res) => {
   const {
     title,
@@ -465,6 +574,7 @@ router.put('/:id', verifyToken, handleMulterUpload(upload.fields([
     duration_seconds
   } = req.body;
   let newCoverPath = null;
+  let newAudioPath = null;
 
   console.log('[books] Updating book:', { id: req.params.id, title, category_id, is_published });
 
@@ -482,8 +592,11 @@ router.put('/:id', verifyToken, handleMulterUpload(upload.fields([
       }
 
       const coverFile = req.files?.cover?.[0] || null;
+      const audioFile = req.files?.audio?.[0] || null;
       newCoverPath = coverFile ? await persistUploadedFile(coverFile) : null;
+      newAudioPath = audioFile ? await persistUploadedFile(audioFile) : null;
       const coverPath = newCoverPath || book.cover_image;
+      const audioPath = newAudioPath || (audio_url !== undefined ? (audio_url || null) : book.audio_url);
       const nextTitle = title || book.title;
       const slug = title && title !== book.title
         ? await getUniqueSlug(client, nextTitle, book.id)
@@ -512,7 +625,7 @@ router.put('/:id', verifyToken, handleMulterUpload(upload.fields([
           content_type !== undefined ? (content_type || 'story') : book.content_type,
           language !== undefined ? (language || 'fr') : book.language,
           theme !== undefined ? (theme || null) : book.theme,
-          audio_url !== undefined ? (audio_url || null) : book.audio_url,
+          audioPath,
           duration_seconds !== undefined
             ? Math.max(0, Number.parseInt(duration_seconds, 10) || 0)
             : (book.duration_seconds || 0),
@@ -522,6 +635,7 @@ router.put('/:id', verifyToken, handleMulterUpload(upload.fields([
 
       await client.query('COMMIT');
       if (newCoverPath && book.cover_image) await removeStoredFile(book.cover_image);
+      if (newAudioPath && book.audio_url) await removeStoredFile(book.audio_url);
 
       console.log('Book loaded:', updateResult.rows[0]);
       console.log('API response:', { route: 'PUT /books/:id', id: req.params.id });
@@ -529,6 +643,7 @@ router.put('/:id', verifyToken, handleMulterUpload(upload.fields([
     } catch (err) {
       await client.query('ROLLBACK');
       if (newCoverPath) await removeStoredFile(newCoverPath);
+      if (newAudioPath) await removeStoredFile(newAudioPath);
       throw err;
     } finally {
       client.release();
@@ -553,6 +668,7 @@ router.delete('/:id', verifyToken, async (req, res) => {
     await pool.query('DELETE FROM books WHERE id = $1', [req.params.id]);
 
     await removeStoredFile(book.cover_image);
+    await removeStoredFile(book.audio_url);
     await Promise.all(pagesResult.rows.map((page) => removeStoredFile(page.image_path)));
 
     console.log('API response:', { route: 'DELETE /books/:id', id: req.params.id });

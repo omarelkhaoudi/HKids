@@ -139,6 +139,7 @@ Default admin credentials:
 
 ### Technical Documentation
 - **[docs/LE_LIT_QUI_LIT_GAP_ANALYSIS.md](./docs/LE_LIT_QUI_LIT_GAP_ANALYSIS.md)** - Analyse du nouveau cahier des charges Le Lit Qui Lit
+- **[docs/LE_LIT_QUI_LIT_STEP_BY_STEP_ROADMAP.md](./docs/LE_LIT_QUI_LIT_STEP_BY_STEP_ROADMAP.md)** - Feuille de route fichier par fichier pour le MVP Le Lit Qui Lit
 - **[docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md)** - Architecture technique
 - **[docs/STACK_JUSTIFICATION.md](./docs/STACK_JUSTIFICATION.md)** - Justification du stack
 - **[docs/API_DOCUMENTATION.md](./docs/API_DOCUMENTATION.md)** - Documentation API

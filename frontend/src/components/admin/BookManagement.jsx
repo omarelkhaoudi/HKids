@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { booksAPI, categoriesAPI } from '../../api/books';
 import { API_URL } from '../../config/api';
 import { getImageUrl } from '../../utils/imageUrl';
-import { BookIcon, PublishIcon, UnpublishIcon, XIcon, LightBulbIcon, TrashIcon, StarIcon } from '../Icons';
+import { AudioIcon, BookIcon, PublishIcon, UnpublishIcon, XIcon, LightBulbIcon, TrashIcon, StarIcon } from '../Icons';
 
 // Helper: base URL for images (backend origin, without /api)
 const getImageBaseUrl = () => {
@@ -76,6 +76,7 @@ function BookManagement() {
   });
   const [coverFile, setCoverFile] = useState(null);
   const [coverPreview, setCoverPreview] = useState(null);
+  const [audioFile, setAudioFile] = useState(null);
   const [pageFiles, setPageFiles] = useState([]);
 
   useEffect(() => {
@@ -127,6 +128,10 @@ function BookManagement() {
       
       if (coverFile) {
         data.append('cover', coverFile);
+      }
+
+      if (audioFile) {
+        data.append('audio', audioFile);
       }
       
       // Ajouter toutes les pages
@@ -183,6 +188,7 @@ function BookManagement() {
     });
     setCoverPreview(book.cover_image ? getImageUrl(book.cover_image) : null);
     setCoverFile(null);
+    setAudioFile(null);
     setShowModal(true);
   };
 
@@ -243,6 +249,7 @@ function BookManagement() {
     });
     setCoverFile(null);
     setCoverPreview(null);
+    setAudioFile(null);
     setPageFiles([]);
     setEditingBook(null);
   };
@@ -393,6 +400,7 @@ function BookManagement() {
                 <th className="px-6 py-3 text-left text-xs font-medium text-red-700 uppercase">Category</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-red-700 uppercase">Theme</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-red-700 uppercase">Langue</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-red-700 uppercase">Audio</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-red-700 uppercase">Age Group</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-red-700 uppercase">Status</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-red-700 uppercase">Actions</th>
@@ -445,6 +453,16 @@ function BookManagement() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-gray-500">{(book.language || 'fr').toUpperCase()}</div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold ${
+                      book.audio_url
+                        ? 'bg-green-100 text-green-700 border border-green-200'
+                        : 'bg-amber-100 text-amber-700 border border-amber-200'
+                    }`}>
+                      <AudioIcon className="w-3.5 h-3.5" />
+                      {book.audio_url ? 'Pret' : 'Manquant'}
+                    </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-gray-500">
@@ -677,7 +695,7 @@ function BookManagement() {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="md:col-span-2">
                     <label className="block text-sm font-medium text-red-700 mb-1">
-                      URL audio
+                      URL audio existante
                     </label>
                     <input
                       type="url"
@@ -699,6 +717,34 @@ function BookManagement() {
                       min="0"
                       className="w-full px-4 py-2.5 border-2 border-red-200 rounded-xl focus:ring-4 focus:ring-red-500/20 focus:border-red-400 transition-all bg-white"
                     />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-red-700 mb-1">
+                    Fichier audio
+                  </label>
+                  <input
+                    type="file"
+                    accept="audio/mpeg,audio/mp3,audio/wav,audio/x-wav,audio/mp4,audio/m4a,audio/x-m4a,audio/ogg,.mp3,.wav,.m4a,.ogg"
+                    onChange={(e) => setAudioFile(e.target.files?.[0] || null)}
+                    className="w-full px-4 py-2.5 border-2 border-red-200 rounded-xl focus:ring-4 focus:ring-red-500/20 focus:border-red-400 transition-all bg-white mb-2"
+                  />
+                  <div className={`rounded-xl border-2 p-3 text-sm ${
+                    audioFile || formData.audio_url
+                      ? 'border-green-200 bg-green-50 text-green-800'
+                      : 'border-amber-200 bg-amber-50 text-amber-800'
+                  }`}>
+                    <div className="flex items-center gap-2 font-bold">
+                      <AudioIcon className="w-5 h-5" />
+                      <span>{audioFile || formData.audio_url ? 'Pret a ecouter' : 'Audio manquant'}</span>
+                    </div>
+                    {audioFile && (
+                      <p className="mt-1 text-xs">{audioFile.name}</p>
+                    )}
+                    {!audioFile && formData.audio_url && (
+                      <p className="mt-1 break-all text-xs">{formData.audio_url}</p>
+                    )}
                   </div>
                 </div>
 
