@@ -1,6 +1,7 @@
 import express from 'express';
 import { getDatabase } from '../database/init.js';
 import { verifyToken } from './auth.js';
+import { adminOnly } from '../middleware/adminOnly.js';
 import { asyncHandler } from '../middleware/errorHandler.js';
 
 const router = express.Router();
@@ -30,7 +31,7 @@ router.get('/', async (req, res) => {
 });
 
 // Create category (admin only)
-router.post('/', verifyToken, async (req, res) => {
+router.post('/', verifyToken, adminOnly, async (req, res) => {
   const { name, description } = req.body;
   
   if (!name) {
@@ -51,7 +52,7 @@ router.post('/', verifyToken, async (req, res) => {
 });
 
 // Update category (admin only)
-router.put('/:id', verifyToken, async (req, res) => {
+router.put('/:id', verifyToken, adminOnly, async (req, res) => {
   const { name, description } = req.body;
 
   try {
@@ -73,7 +74,7 @@ router.put('/:id', verifyToken, async (req, res) => {
 });
 
 // Delete category (admin only) - wrapped with asyncHandler to catch all errors
-router.delete('/:id', verifyToken, asyncHandler(async (req, res) => {
+router.delete('/:id', verifyToken, adminOnly, asyncHandler(async (req, res) => {
   let pool;
   try {
     console.log('=== DELETE CATEGORY REQUEST ===');
