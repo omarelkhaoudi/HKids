@@ -21,7 +21,10 @@ router.get('/', async (req, res) => {
   try {
     const pool = getPool();
     const result = await pool.query(
-      'SELECT * FROM categories ORDER BY name'
+      `SELECT c.*, parent.name AS parent_name
+       FROM categories c
+       LEFT JOIN categories parent ON parent.id = c.parent_id
+       ORDER BY COALESCE(parent.name, c.name), c.parent_id NULLS FIRST, c.name`
     );
     res.json(result.rows);
   } catch (err) {
@@ -32,7 +35,7 @@ router.get('/', async (req, res) => {
 
 // Create category (admin only)
 router.post('/', verifyToken, adminOnly, async (req, res) => {
-  const { name, description } = req.body;
+  const { name, description, parent_id } = req.body;
   
   if (!name) {
     return res.status(400).json({ error: 'Category name is required' });
@@ -41,8 +44,10 @@ router.post('/', verifyToken, adminOnly, async (req, res) => {
   try {
     const pool = getPool();
     const result = await pool.query(
-      'INSERT INTO categories (name, description) VALUES ($1, $2) RETURNING id, name, description',
-      [name, description || null]
+      `INSERT INTO categories (name, description, parent_id)
+       VALUES ($1, $2, $3)
+       RETURNING id, name, description, parent_id`,
+      [name, description || null, parent_id || null]
     );
     res.status(201).json(result.rows[0]);
   } catch (err) {
@@ -53,13 +58,17 @@ router.post('/', verifyToken, adminOnly, async (req, res) => {
 
 // Update category (admin only)
 router.put('/:id', verifyToken, adminOnly, async (req, res) => {
-  const { name, description } = req.body;
+  const { name, description, parent_id } = req.body;
 
   try {
     const pool = getPool();
+    if (parent_id && String(parent_id) === String(req.params.id)) {
+      return res.status(400).json({ error: 'A category cannot be its own parent' });
+    }
+
     const result = await pool.query(
-      'UPDATE categories SET name = $1, description = $2 WHERE id = $3 RETURNING id',
-      [name, description, req.params.id]
+      'UPDATE categories SET name = $1, description = $2, parent_id = $3 WHERE id = $4 RETURNING id',
+      [name, description, parent_id || null, req.params.id]
     );
 
     if (result.rowCount === 0) {

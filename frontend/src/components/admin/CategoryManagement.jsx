@@ -9,7 +9,8 @@ function CategoryManagement() {
   const [editingCategory, setEditingCategory] = useState(null);
   const [formData, setFormData] = useState({
     name: '',
-    description: ''
+    description: '',
+    parent_id: ''
   });
 
   useEffect(() => {
@@ -50,7 +51,8 @@ function CategoryManagement() {
     setEditingCategory(category);
     setFormData({
       name: category.name || '',
-      description: category.description || ''
+      description: category.description || '',
+      parent_id: category.parent_id || ''
     });
     setShowModal(true);
   };
@@ -117,7 +119,7 @@ function CategoryManagement() {
   };
 
   const resetForm = () => {
-    setFormData({ name: '', description: '' });
+    setFormData({ name: '', description: '', parent_id: '' });
     setEditingCategory(null);
   };
 
@@ -146,6 +148,7 @@ function CategoryManagement() {
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Parent</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Description</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
               </tr>
@@ -155,6 +158,9 @@ function CategoryManagement() {
                 <tr key={category.id}>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm font-medium text-gray-900">{category.name}</div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm text-gray-500">{category.parent_name || 'Categorie principale'}</div>
                   </td>
                   <td className="px-6 py-4">
                     <div className="text-sm text-gray-500">{category.description || '-'}</div>
@@ -224,6 +230,24 @@ function CategoryManagement() {
                     rows={3}
                     className="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-neutral-900 focus:border-neutral-900"
                   />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Categorie parente
+                  </label>
+                  <select
+                    value={formData.parent_id}
+                    onChange={(e) => setFormData({ ...formData, parent_id: e.target.value })}
+                    className="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-neutral-900 focus:border-neutral-900"
+                  >
+                    <option value="">Categorie principale</option>
+                    {categories
+                      .filter((category) => !editingCategory || category.id !== editingCategory.id)
+                      .map((category) => (
+                        <option key={category.id} value={category.id}>{category.name}</option>
+                      ))}
+                  </select>
                 </div>
 
                 <div className="flex gap-4 pt-4">

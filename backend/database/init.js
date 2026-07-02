@@ -67,6 +67,7 @@ export async function initDatabase() {
         id SERIAL PRIMARY KEY,
         name TEXT UNIQUE NOT NULL,
         description TEXT,
+        parent_id INTEGER REFERENCES categories(id) ON DELETE SET NULL,
         created_at TIMESTAMPTZ DEFAULT NOW()
       );`,
       `CREATE TABLE IF NOT EXISTS books (
@@ -80,6 +81,8 @@ export async function initDatabase() {
         content_type TEXT NOT NULL DEFAULT 'story',
         language TEXT NOT NULL DEFAULT 'fr',
         theme TEXT,
+        subcategory_id INTEGER REFERENCES categories(id) ON DELETE SET NULL,
+        tags TEXT[] DEFAULT '{}',
         audio_url TEXT,
         duration_seconds INTEGER DEFAULT 0,
         category_id INTEGER REFERENCES categories(id) ON DELETE SET NULL,
@@ -88,6 +91,10 @@ export async function initDatabase() {
         page_count INTEGER DEFAULT 0,
         is_published BOOLEAN DEFAULT FALSE,
         is_premium BOOLEAN DEFAULT FALSE,
+        is_recommended BOOLEAN DEFAULT FALSE,
+        is_popular BOOLEAN DEFAULT FALSE,
+        is_new BOOLEAN DEFAULT FALSE,
+        publish_at TIMESTAMPTZ,
         created_at TIMESTAMPTZ DEFAULT NOW(),
         updated_at TIMESTAMPTZ DEFAULT NOW()
       );`,
@@ -219,9 +226,16 @@ export async function initDatabase() {
     await client.query(`ALTER TABLE books ADD COLUMN IF NOT EXISTS content_type TEXT NOT NULL DEFAULT 'story'`);
     await client.query(`ALTER TABLE books ADD COLUMN IF NOT EXISTS language TEXT NOT NULL DEFAULT 'fr'`);
     await client.query(`ALTER TABLE books ADD COLUMN IF NOT EXISTS theme TEXT`);
+    await client.query(`ALTER TABLE books ADD COLUMN IF NOT EXISTS subcategory_id INTEGER REFERENCES categories(id) ON DELETE SET NULL`);
+    await client.query(`ALTER TABLE books ADD COLUMN IF NOT EXISTS tags TEXT[] DEFAULT '{}'`);
     await client.query(`ALTER TABLE books ADD COLUMN IF NOT EXISTS audio_url TEXT`);
     await client.query(`ALTER TABLE books ADD COLUMN IF NOT EXISTS duration_seconds INTEGER DEFAULT 0`);
     await client.query(`ALTER TABLE books ADD COLUMN IF NOT EXISTS is_premium BOOLEAN DEFAULT FALSE`);
+    await client.query(`ALTER TABLE books ADD COLUMN IF NOT EXISTS is_recommended BOOLEAN DEFAULT FALSE`);
+    await client.query(`ALTER TABLE books ADD COLUMN IF NOT EXISTS is_popular BOOLEAN DEFAULT FALSE`);
+    await client.query(`ALTER TABLE books ADD COLUMN IF NOT EXISTS is_new BOOLEAN DEFAULT FALSE`);
+    await client.query(`ALTER TABLE books ADD COLUMN IF NOT EXISTS publish_at TIMESTAMPTZ`);
+    await client.query(`ALTER TABLE categories ADD COLUMN IF NOT EXISTS parent_id INTEGER REFERENCES categories(id) ON DELETE SET NULL`);
     await client.query(`ALTER TABLE kids_profiles ADD COLUMN IF NOT EXISTS photo_url TEXT`);
     await client.query(`ALTER TABLE kids_profiles ADD COLUMN IF NOT EXISTS date_of_birth DATE`);
     await client.query(`ALTER TABLE kids_profiles ADD COLUMN IF NOT EXISTS preferred_language TEXT NOT NULL DEFAULT 'fr'`);
@@ -261,6 +275,9 @@ export async function initDatabase() {
     `);
     await client.query(`CREATE UNIQUE INDEX IF NOT EXISTS books_slug_unique ON books(slug)`);
     await client.query(`CREATE INDEX IF NOT EXISTS books_theme_language_idx ON books(theme, language, content_type)`);
+    await client.query(`CREATE INDEX IF NOT EXISTS books_tags_idx ON books USING GIN(tags)`);
+    await client.query(`CREATE INDEX IF NOT EXISTS books_cms_filters_idx ON books(is_published, is_premium, is_recommended, is_popular, is_new, publish_at)`);
+    await client.query(`CREATE INDEX IF NOT EXISTS categories_parent_idx ON categories(parent_id)`);
     await client.query(`CREATE UNIQUE INDEX IF NOT EXISTS book_pages_book_page_unique ON book_pages(book_id, page_number)`);
     await client.query(`CREATE INDEX IF NOT EXISTS user_subscriptions_user_status_idx ON user_subscriptions(user_id, status)`);
     await client.query(`CREATE INDEX IF NOT EXISTS subscription_book_unlocks_user_period_idx ON subscription_book_unlocks(user_id, period_start, period_end)`);
