@@ -500,7 +500,7 @@ function BookManagement() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
-          className="bg-white/80 backdrop-blur-lg rounded-2xl shadow-xl border border-red-200/50 overflow-hidden"
+          className="bg-white/80 backdrop-blur-lg rounded-2xl shadow-xl border border-red-200/50 overflow-x-auto"
         >
           <table className="min-w-full divide-y divide-red-100">
             <thead className="bg-gradient-to-r from-red-50 to-pink-50">
@@ -550,8 +550,13 @@ function BookManagement() {
                       );
                     })()}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900">{book.title}</div>
+                  <td className="w-[340px] max-w-[340px] px-6 py-4">
+                    <div
+                      className="max-w-[292px] truncate text-sm font-medium text-gray-900"
+                      title={book.title}
+                    >
+                      {book.title}
+                    </div>
                     <div className="mt-2 flex flex-wrap gap-1">
                       {(book.is_premium === true || book.is_premium === 1) && (
                         <span className="rounded-full bg-purple-100 px-2 py-0.5 text-[11px] font-bold text-purple-700">Premium</span>
