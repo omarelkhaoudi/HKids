@@ -1,16 +1,21 @@
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
+  AudioIcon,
   BookIcon,
   CheckIcon,
   ClockIcon,
   GlobeIcon,
   HeartIcon,
   LockIcon,
+  PauseIcon,
+  PlayIcon,
   TagIcon,
 } from '../Icons';
 
-export function ContentCard({ content }) {
+export function ContentCard({ content, playing = false, onToggleAudio }) {
+  const hasAudio = Boolean(content.audio_url);
+
   return (
     <motion.article
       whileHover={{ y: -3 }}
@@ -79,6 +84,28 @@ export function ContentCard({ content }) {
           </div>
         </div>
       </Link>
+
+      {onToggleAudio && (
+        <div className="px-4 pb-4">
+          <button
+            onClick={() => onToggleAudio(content)}
+            className={`inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl text-sm font-black transition ${
+              hasAudio
+                ? playing
+                  ? 'bg-amber-500 text-white hover:bg-amber-600'
+                  : 'bg-emerald-500 text-white hover:bg-emerald-600'
+                : 'bg-neutral-100 text-neutral-400 dark:bg-neutral-700'
+            }`}
+            title={hasAudio ? 'Ecouter' : 'Audio indisponible'}
+          >
+            <AudioIcon className="h-5 w-5" />
+            {hasAudio ? (
+              playing ? <PauseIcon className="h-5 w-5" /> : <PlayIcon className="h-5 w-5" />
+            ) : null}
+            <span>{hasAudio ? 'Ecouter' : 'Audio manquant'}</span>
+          </button>
+        </div>
+      )}
     </motion.article>
   );
 }

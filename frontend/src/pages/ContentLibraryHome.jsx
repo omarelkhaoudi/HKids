@@ -5,9 +5,12 @@ import { booksAPI } from '../api/books';
 import { ContentCategoryCard } from '../components/content/ContentCategoryCard';
 import { ContentFilters } from '../components/content/ContentFilters';
 import { ContentCard } from '../components/content/ContentCard';
+import { AudioPlayer } from '../components/audio/AudioPlayer';
 import { Logo } from '../components/Logo';
 import { CONTENT_LIBRARY_CATEGORIES } from '../constants/contentLibrary';
 import { filterContentItems, normalizeContentItem } from '../utils/contentLibrary';
+import { useAudioPlayer } from '../hooks/useAudioPlayer';
+import { storage } from '../utils/storage';
 
 const defaultFilters = {
   search: '',
@@ -20,6 +23,7 @@ function ContentLibraryHome() {
   const [contents, setContents] = useState([]);
   const [filters, setFilters] = useState(defaultFilters);
   const [loading, setLoading] = useState(true);
+  const audioPlayer = useAudioPlayer();
 
   useEffect(() => {
     loadContents();
@@ -53,9 +57,15 @@ function ContentLibraryHome() {
     [contents, filters, selectedCategory]
   );
 
+  const toggleAudio = (content) => {
+    if (!content.audio_url) return;
+    audioPlayer.toggle(content);
+    storage.addToHistory(content.id, content.title, 0);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-neutral-50 to-red-50/40 dark:from-neutral-900 dark:to-neutral-800">
-      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl px-4 py-8 pb-36 sm:px-6 lg:px-8">
         <header className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <Link to="/">
             <Logo size="default" showText={true} />
@@ -116,12 +126,48 @@ function ContentLibraryHome() {
               className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4"
             >
               {visibleContents.map((content) => (
-                <ContentCard key={content.id} content={content} />
+                <ContentCard
+                  key={content.id}
+                  content={content}
+                  playing={audioPlayer.activeBook?.id === content.id && audioPlayer.playing}
+                  onToggleAudio={toggleAudio}
+                />
               ))}
             </motion.div>
           )}
         </section>
       </div>
+
+      <AudioPlayer
+        book={audioPlayer.activeBook}
+        playing={audioPlayer.playing}
+        loading={audioPlayer.loading}
+        currentTime={audioPlayer.currentTime}
+        duration={audioPlayer.duration}
+        volume={audioPlayer.volume}
+        favorite={audioPlayer.activeBook ? storage.isFavorite(audioPlayer.activeBook.id) : false}
+        error={audioPlayer.error}
+        onTogglePlay={() => {
+          if (audioPlayer.playing) {
+            audioPlayer.pause();
+          } else if (audioPlayer.activeBook) {
+            audioPlayer.play(audioPlayer.activeBook);
+          }
+        }}
+        onSeekBy={audioPlayer.seekBy}
+        onSeekTo={audioPlayer.seekTo}
+        onVolumeChange={audioPlayer.setVolume}
+        onToggleFavorite={() => {
+          if (!audioPlayer.activeBook) return;
+          if (storage.isFavorite(audioPlayer.activeBook.id)) {
+            storage.removeFavorite(audioPlayer.activeBook.id);
+          } else {
+            storage.addFavorite(audioPlayer.activeBook.id);
+          }
+          setContents((current) => [...current]);
+        }}
+        onClose={audioPlayer.stop}
+      />
     </div>
   );
 }

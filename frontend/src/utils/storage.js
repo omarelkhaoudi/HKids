@@ -65,6 +65,39 @@ export const storage = {
     return downloaded.includes(contentId);
   },
 
+  // Historique d'ecoute audio
+  getListeningHistory: () => {
+    try {
+      const history = localStorage.getItem('hkids_listening_history');
+      return history ? JSON.parse(history) : [];
+    } catch {
+      return [];
+    }
+  },
+
+  addListeningHistory: (entry) => {
+    try {
+      const history = storage.getListeningHistory();
+      const now = new Date().toISOString();
+      const safeEntry = {
+        bookId: entry.bookId,
+        bookTitle: entry.bookTitle,
+        audioUrl: entry.audioUrl || null,
+        listenedSeconds: Math.max(0, Math.floor(entry.listenedSeconds || 0)),
+        currentTime: Math.max(0, Math.floor(entry.currentTime || 0)),
+        duration: Math.max(0, Math.floor(entry.duration || 0)),
+        completed: Boolean(entry.completed),
+        offlineReady: Boolean(entry.offlineReady),
+        listenedAt: now,
+      };
+
+      const filtered = history.filter((item) => item.bookId !== safeEntry.bookId);
+      localStorage.setItem('hkids_listening_history', JSON.stringify([safeEntry, ...filtered].slice(0, 50)));
+    } catch (error) {
+      console.error('Error adding listening history:', error);
+    }
+  },
+
   // Historique de lecture
   getReadingHistory: () => {
     try {
