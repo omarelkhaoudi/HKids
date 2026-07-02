@@ -7,6 +7,7 @@ import jwt from 'jsonwebtoken';
 import supabase from '../config/supabase.js';
 import { getDatabase } from '../database/init.js';
 import { verifyToken } from './auth.js';
+import { adminOnly } from '../middleware/adminOnly.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -418,7 +419,7 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-router.get('/', verifyToken, async (req, res) => {
+router.get('/', verifyToken, adminOnly, async (req, res) => {
   try {
     const pool = getPool();
     const result = await pool.query(
@@ -435,7 +436,7 @@ router.get('/', verifyToken, async (req, res) => {
   }
 });
 
-router.post('/', verifyToken, handleMulterUpload(upload.fields([
+router.post('/', verifyToken, adminOnly, handleMulterUpload(upload.fields([
   { name: 'cover', maxCount: 1 },
   { name: 'pages', maxCount: 50 },
   { name: 'audio', maxCount: 1 },
@@ -557,7 +558,7 @@ router.post('/', verifyToken, handleMulterUpload(upload.fields([
   }
 });
 
-router.put('/:id', verifyToken, handleMulterUpload(upload.fields([
+router.put('/:id', verifyToken, adminOnly, handleMulterUpload(upload.fields([
   { name: 'cover', maxCount: 1 },
   { name: 'audio', maxCount: 1 },
 ])), async (req, res) => {
@@ -660,7 +661,7 @@ router.put('/:id', verifyToken, handleMulterUpload(upload.fields([
   }
 });
 
-router.delete('/:id', verifyToken, async (req, res) => {
+router.delete('/:id', verifyToken, adminOnly, async (req, res) => {
   try {
     const pool = getPool();
     const bookResult = await pool.query('SELECT * FROM books WHERE id = $1', [req.params.id]);

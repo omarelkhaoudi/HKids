@@ -35,7 +35,7 @@ export const booksAPI = {
   },
 
   getAllBooks: () => {
-    return axios.get(buildApiUrl('/books'), noCacheConfig);
+    return axios.get(buildApiUrl('/books'), noCacheAuthConfig());
   },
 
   createBook: (formData) => {
@@ -59,7 +59,12 @@ export const booksAPI = {
   },
 
   deleteBook: (id) => {
-    return axios.delete(buildApiUrl(`/books/${id}`));
+    const token = localStorage.getItem('token');
+    return axios.delete(buildApiUrl(`/books/${id}`), {
+      headers: {
+        ...(token && { 'Authorization': `Bearer ${token}` })
+      }
+    });
   }
 };
 

@@ -3,7 +3,11 @@ import { motion } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import BookManagement from '../components/admin/BookManagement';
 import CategoryManagement from '../components/admin/CategoryManagement';
-import { BookIcon, TagIcon, UserIcon, LogOutIcon } from '../components/Icons';
+import AdminOverview from '../components/admin/AdminOverview';
+import AdminUsers from '../components/admin/AdminUsers';
+import AdminStatistics from '../components/admin/AdminStatistics';
+import AdminSubscriptions from '../components/admin/AdminSubscriptions';
+import { BookIcon, TagIcon, UserIcon, LogOutIcon, HomeIcon, HistoryIcon, CheckIcon } from '../components/Icons';
 import { Logo } from '../components/Logo';
 
 function AdminDashboard() {
@@ -21,6 +25,14 @@ function AdminDashboard() {
   };
 
   const isActive = (path) => location.pathname === path;
+  const navItems = [
+    { to: '/admin', label: 'Tableau de bord', icon: HomeIcon, end: true },
+    { to: '/admin/contents', label: 'Contenus', icon: BookIcon },
+    { to: '/admin/categories', label: 'Categories', icon: TagIcon },
+    { to: '/admin/users', label: 'Utilisateurs', icon: UserIcon },
+    { to: '/admin/subscriptions', label: 'Abonnements', icon: CheckIcon },
+    { to: '/admin/statistics', label: 'Statistiques', icon: HistoryIcon },
+  ];
 
   // Composant pour les étoiles animées
   const StarParticles = ({ count = 15 }) => {
@@ -81,29 +93,25 @@ function AdminDashboard() {
           </motion.div>
 
           <nav className="space-y-1.5 flex-1 text-sm">
-            <Link
-              to="/admin"
-              end
-              className={`group flex items-center gap-3 px-4 py-2.5 rounded-xl font-medium transition-all ${
-                isActive('/admin')
-                  ? 'bg-gradient-to-r from-red-500 to-pink-500 text-white shadow-lg'
-                  : 'text-neutral-700 hover:bg-red-50/50 hover:border-red-200 border border-transparent'
-              }`}
-            >
-              <BookIcon className="w-5 h-5" />
-              <span>Livres</span>
-            </Link>
-            <Link
-              to="/admin/categories"
-              className={`group flex items-center gap-3 px-4 py-2.5 rounded-xl font-medium transition-all ${
-                isActive('/admin/categories')
-                  ? 'bg-gradient-to-r from-red-500 to-pink-500 text-white shadow-lg'
-                  : 'text-neutral-700 hover:bg-red-50/50 hover:border-red-200 border border-transparent'
-              }`}
-            >
-              <TagIcon className="w-5 h-5" />
-              <span>Catégories</span>
-            </Link>
+            {navItems.map((item) => {
+              const Icon = item.icon;
+              const active = item.end ? isActive(item.to) : location.pathname.startsWith(item.to);
+
+              return (
+                <Link
+                  key={item.to}
+                  to={item.to}
+                  className={`group flex items-center gap-3 px-4 py-2.5 rounded-xl font-medium transition-all ${
+                    active
+                      ? 'bg-gradient-to-r from-red-500 to-pink-500 text-white shadow-lg'
+                      : 'text-neutral-700 hover:bg-red-50/50 hover:border-red-200 border border-transparent'
+                  }`}
+                >
+                  <Icon className="w-5 h-5" />
+                  <span>{item.label}</span>
+                </Link>
+              );
+            })}
           </nav>
 
           <div className="border-t border-neutral-200 pt-5 mt-4 text-xs">
@@ -152,8 +160,13 @@ function AdminDashboard() {
 
         <div className="relative z-10">
           <Routes>
-            <Route index element={<BookManagement />} />
+            <Route index element={<AdminOverview />} />
+            <Route path="contents" element={<BookManagement />} />
             <Route path="categories" element={<CategoryManagement />} />
+            <Route path="users" element={<AdminUsers />} />
+            <Route path="subscriptions" element={<AdminSubscriptions />} />
+            <Route path="statistics" element={<AdminStatistics />} />
+            <Route path="*" element={<Navigate to="/admin" replace />} />
           </Routes>
         </div>
       </motion.main>
