@@ -9,7 +9,8 @@ import { CONTENT_LANGUAGES, CONTENT_THEMES } from '../constants/contentOptions';
 import { buildKidPayload, createEmptyKidForm, kidToForm } from '../utils/kidProfiles';
 import { 
   UserIcon, LogOutIcon, PlusIcon, XIcon, CheckIcon, 
-  ChildIcon, LockIcon, EditIcon, TrashIcon, BookIcon
+  ChildIcon, LockIcon, EditIcon, TrashIcon, BookIcon,
+  HistoryIcon, MicrophoneIcon, AudioIcon, ClockIcon
 } from '../components/Icons';
 import { Logo } from '../components/Logo';
 import { KidAvatar } from '../components/parent/KidAvatar';
@@ -336,12 +337,48 @@ function ParentDashboard() {
 
   const approvedCount = approvals.filter((approval) => approval.approved).length;
   const totalCategories = approvals.length || categories.length || 0;
+  const latestActivityDate = kidActivity?.recent_sessions?.[0]?.created_at
+    || kidActivity?.progress?.[0]?.last_read_at
+    || null;
+  const parentSummaryCards = [
+    {
+      label: 'Enfants',
+      value: kids.length,
+      detail: kids.length === 1 ? 'profil actif' : 'profils actifs',
+      icon: ChildIcon,
+      tone: 'bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-300'
+    },
+    {
+      label: 'Derniere activite',
+      value: latestActivityDate ? formatDate(latestActivityDate) : 'Aucune',
+      detail: selectedKid ? selectedKid.name : 'Selectionnez un enfant',
+      icon: HistoryIcon,
+      tone: 'bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-300'
+    },
+    {
+      label: "Temps d'ecoute",
+      value: formatDuration(kidActivity?.summary?.total_time_seconds),
+      detail: selectedKid ? `suivi de ${selectedKid.name}` : 'pas encore de suivi',
+      icon: AudioIcon,
+      tone: 'bg-green-50 text-green-600 dark:bg-green-900/20 dark:text-green-300'
+    },
+    {
+      label: 'Regle quotidienne',
+      value: `${rulesForm.daily_screen_time_minutes || 0} min`,
+      detail: `${rulesForm.quiet_start_time || '--:--'} - ${rulesForm.quiet_end_time || '--:--'}`,
+      icon: ClockIcon,
+      tone: 'bg-amber-50 text-amber-600 dark:bg-amber-900/20 dark:text-amber-300'
+    }
+  ];
   const parentSections = [
     { id: 'overview', label: "Vue d'ensemble" },
     { id: 'account', label: 'Compte enfant' },
     { id: 'access', label: 'Acces aux livres' },
     { id: 'rules', label: 'Regles' },
-    { id: 'reading', label: 'Suivi' }
+    { id: 'reading', label: 'Suivi' },
+    { id: 'subscription', label: 'Abonnement' },
+    { id: 'voice', label: 'Voix' },
+    { id: 'notifications', label: 'Notifications' }
   ];
 
   const getCategoryGuidance = (approval) => {
@@ -452,6 +489,29 @@ function ParentDashboard() {
             <LogOutIcon className="w-5 h-5" />
             <span>Déconnexion</span>
           </button>
+        </div>
+
+        <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+          {parentSummaryCards.map((card) => {
+            const Icon = card.icon;
+
+            return (
+              <div key={card.label} className="rounded-xl bg-white p-4 shadow-lg dark:bg-neutral-800">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-bold text-neutral-500">{card.label}</p>
+                    <p className="mt-2 text-2xl font-bold text-neutral-900 dark:text-neutral-100">
+                      {card.value}
+                    </p>
+                    <p className="mt-1 text-xs font-medium text-neutral-500">{card.detail}</p>
+                  </div>
+                  <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${card.tone}`}>
+                    <Icon className="h-5 w-5" />
+                  </span>
+                </div>
+              </div>
+            );
+          })}
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -589,7 +649,7 @@ function ParentDashboard() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+                <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
                   <button
                     onClick={() => setActiveSection('account')}
                     className="rounded-xl border border-red-100 bg-white p-4 text-left shadow-sm transition hover:border-red-300 hover:shadow-md dark:border-neutral-700 dark:bg-neutral-800"
@@ -615,6 +675,33 @@ function ParentDashboard() {
                     <span className="block text-sm font-bold text-red-600">3. Suivi de lecture</span>
                     <span className="mt-1 block text-sm text-neutral-600 dark:text-neutral-300">
                       Voir les progres apres les sessions de lecture.
+                    </span>
+                  </button>
+                  <button
+                    onClick={() => setActiveSection('rules')}
+                    className="rounded-xl border border-red-100 bg-white p-4 text-left shadow-sm transition hover:border-red-300 hover:shadow-md dark:border-neutral-700 dark:bg-neutral-800"
+                  >
+                    <span className="block text-sm font-bold text-red-600">4. Controle parental</span>
+                    <span className="mt-1 block text-sm text-neutral-600 dark:text-neutral-300">
+                      Regler duree, horaires, langues et univers autorises.
+                    </span>
+                  </button>
+                  <button
+                    onClick={() => setActiveSection('subscription')}
+                    className="rounded-xl border border-red-100 bg-white p-4 text-left shadow-sm transition hover:border-red-300 hover:shadow-md dark:border-neutral-700 dark:bg-neutral-800"
+                  >
+                    <span className="block text-sm font-bold text-red-600">5. Abonnement</span>
+                    <span className="mt-1 block text-sm text-neutral-600 dark:text-neutral-300">
+                      Preparer la formule familiale et les limites de livres.
+                    </span>
+                  </button>
+                  <button
+                    onClick={() => setActiveSection('notifications')}
+                    className="rounded-xl border border-red-100 bg-white p-4 text-left shadow-sm transition hover:border-red-300 hover:shadow-md dark:border-neutral-700 dark:bg-neutral-800"
+                  >
+                    <span className="block text-sm font-bold text-red-600">6. Notifications</span>
+                    <span className="mt-1 block text-sm text-neutral-600 dark:text-neutral-300">
+                      Preparer les rappels de coucher et alertes parentales.
                     </span>
                   </button>
                 </div>
@@ -762,6 +849,40 @@ function ParentDashboard() {
                               onChange={(event) => setRulesForm({ ...rulesForm, quiet_end_time: event.target.value })}
                               className="w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-600 dark:bg-neutral-700 dark:text-white"
                             />
+                          </div>
+                        </div>
+
+                        <div className="rounded-xl border border-red-100 bg-red-50/60 p-4 dark:border-red-900/40 dark:bg-red-950/20">
+                          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                            <div>
+                              <h3 className="font-bold text-neutral-900 dark:text-neutral-100">Contenus autorises</h3>
+                              <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-300">
+                                {approvedCount} categorie{approvedCount > 1 ? 's' : ''} autorisee{approvedCount > 1 ? 's' : ''} sur {totalCategories || 0}.
+                              </p>
+                            </div>
+                            <button
+                              onClick={() => setActiveSection('access')}
+                              className="rounded-lg bg-white px-4 py-2 text-sm font-bold text-red-600 shadow-sm transition hover:bg-red-100 dark:bg-neutral-800 dark:hover:bg-neutral-700"
+                            >
+                              Modifier les contenus
+                            </button>
+                          </div>
+                          <div className="mt-3 flex flex-wrap gap-2">
+                            {approvals.filter((approval) => approval.approved).length > 0 ? (
+                              approvals
+                                .filter((approval) => approval.approved)
+                                .slice(0, 6)
+                                .map((approval) => (
+                                  <span
+                                    key={approval.category_id}
+                                    className="rounded-full bg-white px-3 py-1 text-xs font-bold text-neutral-700 shadow-sm dark:bg-neutral-700 dark:text-neutral-100"
+                                  >
+                                    {approval.category_name}
+                                  </span>
+                                ))
+                            ) : (
+                              <span className="text-sm font-medium text-neutral-500">Aucune categorie autorisee.</span>
+                            )}
                           </div>
                         </div>
 
@@ -1006,9 +1127,157 @@ function ParentDashboard() {
                           Aucune lecture enregistree pour le moment.
                         </p>
                       )}
+
+                      <div className="mt-6">
+                        <div className="mb-3 flex items-center gap-2">
+                          <HistoryIcon className="h-5 w-5 text-red-500" />
+                          <h3 className="font-bold text-neutral-900 dark:text-neutral-100">
+                            Historique recent
+                          </h3>
+                        </div>
+                        {kidActivity?.recent_sessions?.length > 0 ? (
+                          <div className="divide-y divide-neutral-200 overflow-hidden rounded-xl border border-neutral-200 dark:divide-neutral-700 dark:border-neutral-700">
+                            {kidActivity.recent_sessions.map((session) => (
+                              <div
+                                key={session.id}
+                                className="flex flex-col gap-2 bg-white p-4 dark:bg-neutral-800 sm:flex-row sm:items-center sm:justify-between"
+                              >
+                                <div>
+                                  <p className="font-semibold text-neutral-800 dark:text-neutral-100">
+                                    {session.book_title}
+                                  </p>
+                                  <p className="text-xs text-neutral-500">
+                                    {formatDate(session.created_at)}
+                                  </p>
+                                </div>
+                                <div className="flex flex-wrap gap-2 text-xs font-bold">
+                                  <span className="rounded-full bg-red-50 px-3 py-1 text-red-600 dark:bg-red-900/20 dark:text-red-300">
+                                    {formatDuration(session.duration_seconds)}
+                                  </span>
+                                  {session.completed && (
+                                    <span className="rounded-full bg-green-50 px-3 py-1 text-green-600 dark:bg-green-900/20 dark:text-green-300">
+                                      Termine
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="rounded-xl bg-neutral-50 p-4 text-sm text-neutral-500 dark:bg-neutral-700">
+                            Aucune session recente.
+                          </p>
+                        )}
+                      </div>
                     </>
                   )}
                 </div>
+                )}
+
+                {activeSection === 'subscription' && (
+                  <div className="rounded-xl bg-white p-6 shadow-lg dark:bg-neutral-800">
+                    <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                      <div>
+                        <h2 className="text-xl font-bold text-neutral-800 dark:text-neutral-200">
+                          Abonnement familial
+                        </h2>
+                        <p className="mt-1 text-sm text-neutral-500">
+                          Le parent garde la gestion du paiement et des limites de livres.
+                        </p>
+                      </div>
+                      <Link
+                        to="/abonnements"
+                        className="inline-flex items-center justify-center rounded-lg bg-red-500 px-4 py-2 font-bold text-white transition hover:bg-red-600"
+                      >
+                        Gerer l'abonnement
+                      </Link>
+                    </div>
+
+                    <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-3">
+                      <div className="rounded-xl bg-red-50 p-4 dark:bg-red-900/20">
+                        <p className="font-bold text-red-700 dark:text-red-300">Compte parent</p>
+                        <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-300">
+                          La facturation reste separee de l'espace enfant.
+                        </p>
+                      </div>
+                      <div className="rounded-xl bg-green-50 p-4 dark:bg-green-900/20">
+                        <p className="font-bold text-green-700 dark:text-green-300">Acces controle</p>
+                        <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-300">
+                          Les livres disponibles suivent l'abonnement et les autorisations parentales.
+                        </p>
+                      </div>
+                      <div className="rounded-xl bg-blue-50 p-4 dark:bg-blue-900/20">
+                        <p className="font-bold text-blue-700 dark:text-blue-300">Evolution MVP</p>
+                        <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-300">
+                          Cette zone pourra afficher le plan actif, les limites et le renouvellement.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {activeSection === 'voice' && (
+                  <div className="rounded-xl bg-white p-6 shadow-lg dark:bg-neutral-800">
+                    <div className="flex items-start gap-4">
+                      <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-purple-50 text-purple-600 dark:bg-purple-900/20 dark:text-purple-300">
+                        <MicrophoneIcon className="h-6 w-6" />
+                      </span>
+                      <div>
+                        <h2 className="text-xl font-bold text-neutral-800 dark:text-neutral-200">
+                          Clonage vocal
+                        </h2>
+                        <p className="mt-1 text-sm text-neutral-500">
+                          Section preparee pour enregistrer ou connecter plus tard une voix parentale.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-3">
+                      {[
+                        ['Consentement parent', 'Ajouter une validation explicite avant toute creation de voix.'],
+                        ['Echantillons audio', 'Prevoir un flux securise pour importer ou enregistrer les extraits.'],
+                        ['Voix par enfant', 'Associer une voix autorisee a un profil enfant precis.']
+                      ].map(([title, text]) => (
+                        <div key={title} className="rounded-xl bg-neutral-50 p-4 dark:bg-neutral-700">
+                          <p className="font-bold text-neutral-900 dark:text-neutral-100">{title}</p>
+                          <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-300">{text}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {activeSection === 'notifications' && (
+                  <div className="rounded-xl bg-white p-6 shadow-lg dark:bg-neutral-800">
+                    <div className="flex items-start gap-4">
+                      <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-amber-50 text-amber-600 dark:bg-amber-900/20 dark:text-amber-300">
+                        <ClockIcon className="h-6 w-6" />
+                      </span>
+                      <div>
+                        <h2 className="text-xl font-bold text-neutral-800 dark:text-neutral-200">
+                          Notifications parentales
+                        </h2>
+                        <p className="mt-1 text-sm text-neutral-500">
+                          Rappels de coucher, fin de temps autorise et resume d'activite.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="mt-6 space-y-3">
+                      {[
+                        ['Rappel du coucher', rulesForm.quiet_start_time ? `A partir de ${rulesForm.quiet_start_time}` : 'Horaire a configurer'],
+                        ['Limite quotidienne', `${rulesForm.daily_screen_time_minutes || 0} minutes par jour`],
+                        ['Resume enfant', latestActivityDate ? `Derniere activite ${formatDate(latestActivityDate)}` : 'Aucune activite recente']
+                      ].map(([title, value]) => (
+                        <div key={title} className="flex flex-col gap-2 rounded-xl bg-neutral-50 p-4 dark:bg-neutral-700 sm:flex-row sm:items-center sm:justify-between">
+                          <p className="font-bold text-neutral-900 dark:text-neutral-100">{title}</p>
+                          <span className="rounded-full bg-white px-3 py-1 text-xs font-bold text-neutral-600 shadow-sm dark:bg-neutral-800 dark:text-neutral-200">
+                            {value}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 )}
 
                 {activeSection === 'access' && (
