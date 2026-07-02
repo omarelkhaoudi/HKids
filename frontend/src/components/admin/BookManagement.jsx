@@ -3,7 +3,8 @@ import { motion } from 'framer-motion';
 import { booksAPI, categoriesAPI } from '../../api/books';
 import { API_URL } from '../../config/api';
 import { getImageUrl } from '../../utils/imageUrl';
-import { AudioIcon, BookIcon, PublishIcon, UnpublishIcon, XIcon, LightBulbIcon, TrashIcon, StarIcon } from '../Icons';
+import { CONTENT_LANGUAGES, CONTENT_THEMES, CONTENT_TYPE_OPTIONS } from '../../constants/contentOptions';
+import { AudioIcon, BookIcon, PublishIcon, UnpublishIcon, XIcon, LightBulbIcon, TrashIcon } from '../Icons';
 
 // Helper: base URL for images (backend origin, without /api)
 const getImageBaseUrl = () => {
@@ -26,31 +27,6 @@ const getImageBaseUrl = () => {
 
   // 4) Fallback
   return 'http://localhost:3000';
-};
-
-// Helper: normalize image path stored in DB (can be relative or full URL)
-const normalizeImagePath = (rawPath) => {
-  if (!rawPath) return null;
-
-  let path = rawPath;
-
-  try {
-    // If full URL, keep only pathname+search (drop protocol+host)
-    if (rawPath.startsWith('http://') || rawPath.startsWith('https://')) {
-      const urlObj = new URL(rawPath);
-      path = urlObj.pathname + urlObj.search;
-    }
-  } catch {
-    // If URL parsing fails, keep original string
-    path = rawPath;
-  }
-
-  // Ensure leading slash
-  if (!path.startsWith('/')) {
-    path = `/${path}`;
-  }
-
-  return path;
 };
 
 function BookManagement() {
@@ -80,11 +56,6 @@ function BookManagement() {
   const [pageFiles, setPageFiles] = useState([]);
 
   useEffect(() => {
-    // Log the image base URL on component mount for debugging
-    console.log('[BookManagement] Component mounted');
-    console.log('[BookManagement] API_URL:', API_URL);
-    console.log('[BookManagement] VITE_API_URL env:', import.meta.env.VITE_API_URL);
-    console.log('[BookManagement] Image base URL will be:', getImageBaseUrl());
     loadData();
   }, []);
 
@@ -649,11 +620,9 @@ function BookManagement() {
                       onChange={(e) => setFormData({ ...formData, content_type: e.target.value })}
                       className="w-full px-4 py-2.5 border-2 border-red-200 rounded-xl focus:ring-4 focus:ring-red-500/20 focus:border-red-400 transition-all bg-white"
                     >
-                      <option value="story">Histoire</option>
-                      <option value="audio_story">Histoire audio</option>
-                      <option value="educational">Educatif</option>
-                      <option value="song">Comptine</option>
-                      <option value="quiz">Quiz</option>
+                      {CONTENT_TYPE_OPTIONS.map((option) => (
+                        <option key={option.id} value={option.id}>{option.label}</option>
+                      ))}
                     </select>
                   </div>
 
@@ -666,9 +635,9 @@ function BookManagement() {
                       onChange={(e) => setFormData({ ...formData, language: e.target.value })}
                       className="w-full px-4 py-2.5 border-2 border-red-200 rounded-xl focus:ring-4 focus:ring-red-500/20 focus:border-red-400 transition-all bg-white"
                     >
-                      <option value="fr">Francais</option>
-                      <option value="ar">Arabe</option>
-                      <option value="en">Anglais</option>
+                      {CONTENT_LANGUAGES.map((language) => (
+                        <option key={language.id} value={language.id}>{language.label}</option>
+                      ))}
                     </select>
                   </div>
 
@@ -682,12 +651,9 @@ function BookManagement() {
                       className="w-full px-4 py-2.5 border-2 border-red-200 rounded-xl focus:ring-4 focus:ring-red-500/20 focus:border-red-400 transition-all bg-white"
                     >
                       <option value="">General</option>
-                      <option value="dinosaurs">Dinosaures</option>
-                      <option value="space">Espace</option>
-                      <option value="animals">Animaux</option>
-                      <option value="princesses">Princesses</option>
-                      <option value="jobs">Metiers</option>
-                      <option value="world">Decouverte du monde</option>
+                      {CONTENT_THEMES.map((theme) => (
+                        <option key={theme.id} value={theme.id}>{theme.label}</option>
+                      ))}
                     </select>
                   </div>
                 </div>
@@ -865,8 +831,7 @@ function BookManagement() {
                               type="button"
                               onClick={() => {
                                 // Réorganiser: déplacer vers le haut
-                                const newFiles = [...pageFiles];
-                                if (newFiles.length > 1) {
+                                if (pageFiles.length > 1) {
                                   // Permettre de réorganiser (optionnel)
                                 }
                               }}

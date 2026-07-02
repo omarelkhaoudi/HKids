@@ -5,26 +5,22 @@ import { useAuth } from '../context/AuthContext';
 import { parentalAPI } from '../api/parental';
 import { categoriesAPI } from '../api/books';
 import { useToast } from '../components/ToastProvider';
+import { CONTENT_LANGUAGES, CONTENT_THEMES } from '../constants/contentOptions';
 import { 
   UserIcon, LogOutIcon, PlusIcon, XIcon, CheckIcon, 
   ChildIcon, LockIcon, EditIcon, TrashIcon, BookIcon
 } from '../components/Icons';
 import { Logo } from '../components/Logo';
 
-const bedtimeLanguages = [
-  { id: 'fr', label: 'FR' },
-  { id: 'ar', label: 'AR' },
-  { id: 'en', label: 'EN' }
-];
+const bedtimeLanguages = CONTENT_LANGUAGES.map((language) => ({
+  id: language.id,
+  label: language.shortLabel,
+}));
 
-const bedtimeThemes = [
-  { id: 'dinosaurs', label: 'Dinosaures' },
-  { id: 'space', label: 'Espace' },
-  { id: 'animals', label: 'Animaux' },
-  { id: 'princesses', label: 'Princesses' },
-  { id: 'jobs', label: 'Metiers' },
-  { id: 'world', label: 'Monde' }
-];
+const bedtimeThemes = CONTENT_THEMES.map((theme) => ({
+  id: theme.id,
+  label: theme.libraryLabel || theme.label,
+}));
 
 function ParentDashboard() {
   const { user, logout } = useAuth();
