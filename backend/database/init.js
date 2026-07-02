@@ -103,6 +103,7 @@ export async function initDatabase() {
         name TEXT NOT NULL,
         avatar TEXT,
         age INTEGER,
+        date_of_birth DATE,
         photo_url TEXT,
         preferred_language TEXT NOT NULL DEFAULT 'fr',
         interests TEXT[] DEFAULT '{}',
@@ -220,6 +221,7 @@ export async function initDatabase() {
     await client.query(`ALTER TABLE books ADD COLUMN IF NOT EXISTS audio_url TEXT`);
     await client.query(`ALTER TABLE books ADD COLUMN IF NOT EXISTS duration_seconds INTEGER DEFAULT 0`);
     await client.query(`ALTER TABLE kids_profiles ADD COLUMN IF NOT EXISTS photo_url TEXT`);
+    await client.query(`ALTER TABLE kids_profiles ADD COLUMN IF NOT EXISTS date_of_birth DATE`);
     await client.query(`ALTER TABLE kids_profiles ADD COLUMN IF NOT EXISTS preferred_language TEXT NOT NULL DEFAULT 'fr'`);
     await client.query(`ALTER TABLE kids_profiles ADD COLUMN IF NOT EXISTS interests TEXT[] DEFAULT '{}'`);
     await client.query(`ALTER TABLE parental_rules ADD COLUMN IF NOT EXISTS daily_screen_time_minutes INTEGER NOT NULL DEFAULT 30`);

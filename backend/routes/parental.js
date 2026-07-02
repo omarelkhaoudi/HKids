@@ -92,6 +92,25 @@ function normalizeInterests(interests) {
   return [];
 }
 
+function normalizeBirthDate(value) {
+  if (!value) return null;
+  const trimmed = String(value).trim();
+
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
+    return null;
+  }
+
+  const date = new Date(`${trimmed}T00:00:00.000Z`);
+  return Number.isNaN(date.getTime()) ? null : trimmed;
+}
+
+function normalizeAge(value) {
+  if (value === undefined || value === null || value === '') return null;
+  const age = Number.parseInt(value, 10);
+  if (Number.isNaN(age)) return null;
+  return Math.max(0, Math.min(18, age));
+}
+
 const allowedLanguages = ['fr', 'ar', 'en'];
 const allowedThemes = ['dinosaurs', 'space', 'animals', 'princesses', 'jobs', 'world'];
 
@@ -154,7 +173,7 @@ router.get('/kids', verifyToken, verifyParent, async (req, res) => {
 // Create a new kid profile
 router.post('/kids', verifyToken, verifyParent, async (req, res) => {
   try {
-    const { name, avatar, age, photo_url, preferred_language, interests } = req.body;
+    const { name, avatar, age, date_of_birth, photo_url, preferred_language, interests } = req.body;
     
     if (!name) {
       return res.status(400).json({ error: 'Name is required' });
@@ -163,15 +182,16 @@ router.post('/kids', verifyToken, verifyParent, async (req, res) => {
     const pool = getPool();
     const result = await pool.query(
       `INSERT INTO kids_profiles (
-        parent_id, name, avatar, age, photo_url, preferred_language, interests
+        parent_id, name, avatar, age, date_of_birth, photo_url, preferred_language, interests
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
       RETURNING *`,
       [
         req.user.id,
-        name,
+        String(name).trim(),
         avatar || null,
-        age || null,
+        normalizeAge(age),
+        normalizeBirthDate(date_of_birth),
         photo_url || null,
         preferred_language || 'fr',
         normalizeInterests(interests)
@@ -188,8 +208,12 @@ router.post('/kids', verifyToken, verifyParent, async (req, res) => {
 // Update a kid profile
 router.put('/kids/:id', verifyToken, verifyParent, async (req, res) => {
   try {
-    const { name, avatar, age, photo_url, preferred_language, interests } = req.body;
+    const { name, avatar, age, date_of_birth, photo_url, preferred_language, interests } = req.body;
     const pool = getPool();
+
+    if (!name) {
+      return res.status(400).json({ error: 'Name is required' });
+    }
     
     // Verify the kid profile belongs to the parent
     const kidCheck = await pool.query(
@@ -206,16 +230,18 @@ router.put('/kids/:id', verifyToken, verifyParent, async (req, res) => {
        SET name = $1,
            avatar = $2,
            age = $3,
-           photo_url = $4,
-           preferred_language = $5,
-           interests = $6,
+           date_of_birth = $4,
+           photo_url = $5,
+           preferred_language = $6,
+           interests = $7,
            updated_at = NOW()
-       WHERE id = $7 AND parent_id = $8
+       WHERE id = $8 AND parent_id = $9
        RETURNING *`,
       [
-        name,
+        String(name).trim(),
         avatar || null,
-        age || null,
+        normalizeAge(age),
+        normalizeBirthDate(date_of_birth),
         photo_url || null,
         preferred_language || 'fr',
         normalizeInterests(interests),
