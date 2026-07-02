@@ -38,6 +38,33 @@ export const storage = {
     return favorites.includes(bookId);
   },
 
+  // Contenus telecharges (etat prepare pour la future logique offline)
+  getDownloadedContent: () => {
+    try {
+      const downloaded = localStorage.getItem('hkids_downloaded_content');
+      return downloaded ? JSON.parse(downloaded) : [];
+    } catch {
+      return [];
+    }
+  },
+
+  markDownloaded: (contentId) => {
+    try {
+      const downloaded = storage.getDownloadedContent();
+      if (!downloaded.includes(contentId)) {
+        downloaded.push(contentId);
+        localStorage.setItem('hkids_downloaded_content', JSON.stringify(downloaded));
+      }
+    } catch (error) {
+      console.error('Error marking downloaded content:', error);
+    }
+  },
+
+  isDownloaded: (contentId) => {
+    const downloaded = storage.getDownloadedContent();
+    return downloaded.includes(contentId);
+  },
+
   // Historique de lecture
   getReadingHistory: () => {
     try {

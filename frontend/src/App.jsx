@@ -13,6 +13,8 @@ import ParentKidsProfiles from './pages/ParentKidsProfiles';
 import KidsHome from './pages/KidsHome';
 import KidsLibrary from './pages/KidsLibrary';
 import KidsCategoryPage from './pages/KidsCategoryPage';
+import ContentLibraryHome from './pages/ContentLibraryHome';
+import ContentCategoryContents from './pages/ContentCategoryContents';
 import Favorites from './pages/Favorites';
 import History from './pages/History';
 import FeatureDetails from './pages/FeatureDetails';
@@ -103,6 +105,8 @@ function App() {
                 <Route path="/favorites" element={<RequireAuth><Favorites /></RequireAuth>} />
                 <Route path="/history" element={<RequireAuth><History /></RequireAuth>} />
                 <Route path="/stories" element={<StoriesGallery />} />
+                <Route path="/content-library" element={<RequireAuth><ContentLibraryHome /></RequireAuth>} />
+                <Route path="/content-library/:categoryId" element={<RequireAuth><ContentCategoryContents /></RequireAuth>} />
                 <Route path="/abonnements" element={<Subscriptions />} />
                 <Route path="/features/:featureId" element={<FeatureDetails />} />
                 <Route path="/admin/login" element={<AdminLogin />} />

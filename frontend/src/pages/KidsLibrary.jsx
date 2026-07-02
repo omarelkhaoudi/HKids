@@ -234,6 +234,13 @@ function KidsLibrary() {
               <HomeIcon className="h-6 w-6" />
             </Link>
             <Link
+              to="/content-library"
+              className="grid h-12 w-12 place-items-center rounded-full bg-yellow-100 text-yellow-700 transition hover:bg-yellow-200"
+              title="Contenus"
+            >
+              <BookIcon className="h-6 w-6" />
+            </Link>
+            <Link
               to="/favorites"
               className="grid h-12 w-12 place-items-center rounded-full bg-rose-100 text-rose-600 transition hover:bg-rose-200"
               title="Favoris"

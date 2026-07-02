@@ -87,6 +87,7 @@ export async function initDatabase() {
         age_group_max INTEGER DEFAULT 12,
         page_count INTEGER DEFAULT 0,
         is_published BOOLEAN DEFAULT FALSE,
+        is_premium BOOLEAN DEFAULT FALSE,
         created_at TIMESTAMPTZ DEFAULT NOW(),
         updated_at TIMESTAMPTZ DEFAULT NOW()
       );`,
@@ -220,6 +221,7 @@ export async function initDatabase() {
     await client.query(`ALTER TABLE books ADD COLUMN IF NOT EXISTS theme TEXT`);
     await client.query(`ALTER TABLE books ADD COLUMN IF NOT EXISTS audio_url TEXT`);
     await client.query(`ALTER TABLE books ADD COLUMN IF NOT EXISTS duration_seconds INTEGER DEFAULT 0`);
+    await client.query(`ALTER TABLE books ADD COLUMN IF NOT EXISTS is_premium BOOLEAN DEFAULT FALSE`);
     await client.query(`ALTER TABLE kids_profiles ADD COLUMN IF NOT EXISTS photo_url TEXT`);
     await client.query(`ALTER TABLE kids_profiles ADD COLUMN IF NOT EXISTS date_of_birth DATE`);
     await client.query(`ALTER TABLE kids_profiles ADD COLUMN IF NOT EXISTS preferred_language TEXT NOT NULL DEFAULT 'fr'`);
