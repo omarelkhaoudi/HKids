@@ -19,6 +19,7 @@ import parentalRouter from './routes/parental.js';
 import subscriptionsRouter from './routes/subscriptions.js';
 import newsletterRouter from './routes/newsletter.js';
 import adminRouter from './routes/admin.js';
+import aiRouter from './routes/ai.js';
 import { errorHandler, notFound } from './middleware/errorHandler.js';
 import { requestLogger } from './middleware/logger.js';
 import { apiRateLimiter, authRateLimiter, resetRateLimit } from './middleware/rateLimiter.js';
@@ -234,6 +235,7 @@ app.use('/api/parental', parentalRouter);
 app.use('/api/subscriptions', subscriptionsRouter);
 app.use('/api/newsletter', newsletterRouter);
 app.use('/api/admin', adminRouter);
+app.use('/api/ai', aiRouter);
 
 // Log available routes for debugging
 console.log('📋 Available auth routes:');
