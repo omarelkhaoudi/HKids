@@ -10,6 +10,7 @@ import ParentSignUp from './pages/ParentSignUp';
 import AdminDashboard from './pages/AdminDashboard';
 import ParentDashboard from './pages/ParentDashboard';
 import ParentKidsProfiles from './pages/ParentKidsProfiles';
+import FamilyVoices from './pages/FamilyVoices';
 import KidsHome from './pages/KidsHome';
 import KidsLibrary from './pages/KidsLibrary';
 import KidsCategoryPage from './pages/KidsCategoryPage';
@@ -117,6 +118,7 @@ function App() {
                 <Route path="/parent/signup" element={<ParentSignUp />} />
                 <Route path="/admin/*" element={<AdminDashboard />} />
                 <Route path="/parent/profiles" element={<RequireRole roles={['parent', 'admin']}><ParentKidsProfiles /></RequireRole>} />
+                <Route path="/parent/voices" element={<RequireRole roles={['parent', 'admin']}><FamilyVoices /></RequireRole>} />
                 <Route path="/parent/*" element={<RequireRole roles={['parent', 'admin']}><ParentDashboard /></RequireRole>} />
                 <Route path="/kids" element={<RequireAuth><KidsHome /></RequireAuth>} />
                 <Route path="/kids/library" element={<RequireRole roles={['kid']}><KidsLibrary /></RequireRole>} />

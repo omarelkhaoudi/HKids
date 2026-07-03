@@ -245,6 +245,46 @@ export async function initDatabase() {
         source_story_id INTEGER REFERENCES generated_stories(id) ON DELETE SET NULL,
         version_number INTEGER NOT NULL DEFAULT 1,
         created_at TIMESTAMPTZ DEFAULT NOW()
+      );`,
+      `CREATE TABLE IF NOT EXISTS voice_profiles (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        name TEXT NOT NULL,
+        relation TEXT NOT NULL,
+        language TEXT NOT NULL DEFAULT 'fr',
+        status TEXT NOT NULL DEFAULT 'draft',
+        provider TEXT NOT NULL DEFAULT 'mock',
+        provider_voice_id TEXT,
+        sample_audio_path TEXT,
+        preview_audio_path TEXT,
+        consent_given BOOLEAN NOT NULL DEFAULT FALSE,
+        consent_at TIMESTAMPTZ,
+        quality_score INTEGER NOT NULL DEFAULT 0,
+        quality_status TEXT NOT NULL DEFAULT 'pending',
+        quality_notes TEXT,
+        created_at TIMESTAMPTZ DEFAULT NOW(),
+        updated_at TIMESTAMPTZ DEFAULT NOW(),
+        deleted_at TIMESTAMPTZ
+      );`,
+      `CREATE TABLE IF NOT EXISTS voice_messages (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        voice_profile_id INTEGER REFERENCES voice_profiles(id) ON DELETE SET NULL,
+        title TEXT NOT NULL,
+        message_text TEXT,
+        language TEXT NOT NULL DEFAULT 'fr',
+        audio_path TEXT,
+        duration_seconds INTEGER NOT NULL DEFAULT 0,
+        created_at TIMESTAMPTZ DEFAULT NOW(),
+        deleted_at TIMESTAMPTZ
+      );`,
+      `CREATE TABLE IF NOT EXISTS voice_audit_logs (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+        voice_profile_id INTEGER REFERENCES voice_profiles(id) ON DELETE SET NULL,
+        action TEXT NOT NULL,
+        metadata JSONB DEFAULT '{}'::jsonb,
+        created_at TIMESTAMPTZ DEFAULT NOW()
       );`
     ];
 
@@ -300,6 +340,17 @@ export async function initDatabase() {
     await client.query(`ALTER TABLE generated_stories ADD COLUMN IF NOT EXISTS source_story_id INTEGER REFERENCES generated_stories(id) ON DELETE SET NULL`);
     await client.query(`ALTER TABLE generated_stories ADD COLUMN IF NOT EXISTS version_number INTEGER NOT NULL DEFAULT 1`);
     await client.query(`ALTER TABLE generated_stories ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW()`);
+    await client.query(`ALTER TABLE voice_profiles ADD COLUMN IF NOT EXISTS provider TEXT NOT NULL DEFAULT 'mock'`);
+    await client.query(`ALTER TABLE voice_profiles ADD COLUMN IF NOT EXISTS provider_voice_id TEXT`);
+    await client.query(`ALTER TABLE voice_profiles ADD COLUMN IF NOT EXISTS preview_audio_path TEXT`);
+    await client.query(`ALTER TABLE voice_profiles ADD COLUMN IF NOT EXISTS consent_given BOOLEAN NOT NULL DEFAULT FALSE`);
+    await client.query(`ALTER TABLE voice_profiles ADD COLUMN IF NOT EXISTS consent_at TIMESTAMPTZ`);
+    await client.query(`ALTER TABLE voice_profiles ADD COLUMN IF NOT EXISTS quality_score INTEGER NOT NULL DEFAULT 0`);
+    await client.query(`ALTER TABLE voice_profiles ADD COLUMN IF NOT EXISTS quality_status TEXT NOT NULL DEFAULT 'pending'`);
+    await client.query(`ALTER TABLE voice_profiles ADD COLUMN IF NOT EXISTS quality_notes TEXT`);
+    await client.query(`ALTER TABLE voice_profiles ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ`);
+    await client.query(`ALTER TABLE voice_messages ADD COLUMN IF NOT EXISTS duration_seconds INTEGER NOT NULL DEFAULT 0`);
+    await client.query(`ALTER TABLE voice_messages ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ`);
     await client.query(`ALTER TABLE subscription_plans ADD COLUMN IF NOT EXISTS description TEXT`);
     await client.query(`ALTER TABLE subscription_plans ADD COLUMN IF NOT EXISTS monthly_price_cents INTEGER NOT NULL DEFAULT 0`);
     await client.query(`ALTER TABLE subscription_plans ADD COLUMN IF NOT EXISTS currency TEXT NOT NULL DEFAULT 'EUR'`);
@@ -343,6 +394,9 @@ export async function initDatabase() {
     await client.query(`CREATE INDEX IF NOT EXISTS generated_stories_kid_created_idx ON generated_stories(kid_profile_id, created_at DESC)`);
     await client.query(`CREATE INDEX IF NOT EXISTS generated_stories_kid_saved_idx ON generated_stories(kid_profile_id, saved, created_at DESC)`);
     await client.query(`CREATE INDEX IF NOT EXISTS generated_stories_kid_favorite_idx ON generated_stories(kid_profile_id, favorite, created_at DESC)`);
+    await client.query(`CREATE INDEX IF NOT EXISTS voice_profiles_user_idx ON voice_profiles(user_id, deleted_at, created_at DESC)`);
+    await client.query(`CREATE INDEX IF NOT EXISTS voice_messages_user_idx ON voice_messages(user_id, deleted_at, created_at DESC)`);
+    await client.query(`CREATE INDEX IF NOT EXISTS voice_audit_logs_profile_idx ON voice_audit_logs(voice_profile_id, created_at DESC)`);
     await client.query(`CREATE INDEX IF NOT EXISTS generated_stories_source_idx ON generated_stories(source_story_id, version_number)`);
 
     await client.query(`

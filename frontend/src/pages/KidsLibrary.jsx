@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { booksAPI } from '../api/books';
 import { recommendationsAPI } from '../api/recommendations';
+import { voicesAPI } from '../api/voices';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../components/ToastProvider';
 import { BookGridSkeleton } from '../components/SkeletonLoader';
@@ -127,6 +128,8 @@ function KidsLibrary() {
   const [selectedLanguage, setSelectedLanguage] = useState('all');
   const [loading, setLoading] = useState(true);
   const [recommendationSections, setRecommendationSections] = useState([]);
+  const [voiceProfiles, setVoiceProfiles] = useState([]);
+  const [selectedVoiceId, setSelectedVoiceId] = useState(() => localStorage.getItem('hkids_selected_voice_id') || '');
   const [readingStats, setReadingStats] = useState(() => storage.getReadingStats());
   const audioPlayer = useAudioPlayer();
 
@@ -144,15 +147,20 @@ function KidsLibrary() {
   const loadData = async () => {
     try {
       setLoading(true);
-      const [booksRes, recommendationsRes] = await Promise.all([
+      const [booksRes, recommendationsRes, voicesRes] = await Promise.all([
         booksAPI.getPublishedBooks(),
         recommendationsAPI.getForKid(getRecommendationContext()).catch((error) => {
           console.warn('Recommendations unavailable:', error);
           return { data: { sections: [] } };
         }),
+        voicesAPI.getAvailableVoices().catch((error) => {
+          console.warn('Family voices unavailable:', error);
+          return { data: [] };
+        }),
       ]);
       setBooks(booksRes.data || []);
       setRecommendationSections(recommendationsRes.data?.sections || []);
+      setVoiceProfiles(voicesRes.data || []);
     } catch (error) {
       console.error('Error loading data:', error);
       showToast('Erreur lors du chargement des livres', 'error');
@@ -217,6 +225,21 @@ function KidsLibrary() {
     await audioPlayer.toggle(book);
     if (!wasPlayingCurrent) {
       storage.addToHistory(book.id, book.title, 0);
+      if (selectedVoiceId) {
+        const selectedVoice = voiceProfiles.find((voice) => String(voice.id) === String(selectedVoiceId));
+        if (selectedVoice) {
+          showToast(`Lecture associee a la voix de ${selectedVoice.name}`, 'info', 2000);
+        }
+      }
+    }
+  };
+
+  const handleVoiceChange = (voiceId) => {
+    setSelectedVoiceId(voiceId);
+    if (voiceId) {
+      localStorage.setItem('hkids_selected_voice_id', voiceId);
+    } else {
+      localStorage.removeItem('hkids_selected_voice_id');
     }
   };
 
@@ -451,6 +474,9 @@ function KidsLibrary() {
           }
         }}
         onClose={audioPlayer.stop}
+        voiceProfiles={voiceProfiles}
+        selectedVoiceId={selectedVoiceId}
+        onVoiceChange={handleVoiceChange}
       />
       <VoiceAssistant />
     </div>

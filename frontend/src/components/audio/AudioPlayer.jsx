@@ -31,6 +31,9 @@ export function AudioPlayer({
   onVolumeChange,
   onToggleFavorite,
   onClose,
+  voiceProfiles = [],
+  selectedVoiceId = '',
+  onVoiceChange,
 }) {
   if (!book) return null;
 
@@ -99,6 +102,22 @@ export function AudioPlayer({
         </div>
 
         <div className="flex items-center justify-between gap-3 lg:justify-end">
+          {voiceProfiles.length > 0 && (
+            <select
+              value={selectedVoiceId}
+              onChange={(event) => onVoiceChange?.(event.target.value)}
+              className="h-11 max-w-40 rounded-full border border-neutral-200 bg-white px-3 text-xs font-black text-neutral-700 outline-none dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100"
+              aria-label="Voix de narration"
+              title="Voix de narration"
+            >
+              <option value="">Voix originale</option>
+              {voiceProfiles.map((voice) => (
+                <option key={voice.id} value={voice.id}>
+                  {voice.name}
+                </option>
+              ))}
+            </select>
+          )}
           <div className="flex min-w-32 items-center gap-2">
             <VolumeIcon className="h-5 w-5 text-neutral-500 dark:text-neutral-300" />
             <input

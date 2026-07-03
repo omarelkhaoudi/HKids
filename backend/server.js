@@ -22,6 +22,7 @@ import adminRouter from './routes/admin.js';
 import aiRouter from './routes/ai.js';
 import generatedStoriesRouter from './routes/generatedStories.js';
 import recommendationsRouter from './routes/recommendations.js';
+import voicesRouter from './routes/voices.js';
 import { errorHandler, notFound } from './middleware/errorHandler.js';
 import { requestLogger } from './middleware/logger.js';
 import { apiRateLimiter, authRateLimiter, resetRateLimit } from './middleware/rateLimiter.js';
@@ -240,6 +241,7 @@ app.use('/api/admin', adminRouter);
 app.use('/api/ai', aiRouter);
 app.use('/api/generated-stories', generatedStoriesRouter);
 app.use('/api/recommendations', recommendationsRouter);
+app.use('/api/voices', voicesRouter);
 
 // Log available routes for debugging
 console.log('📋 Available auth routes:');

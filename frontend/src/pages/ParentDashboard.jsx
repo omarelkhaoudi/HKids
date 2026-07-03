@@ -1227,16 +1227,22 @@ function ParentDashboard() {
                           Clonage vocal
                         </h2>
                         <p className="mt-1 text-sm text-neutral-500">
-                          Section preparee pour enregistrer ou connecter plus tard une voix parentale.
+                          Enregistrez les voix familiales, gerez le consentement et preparez les apercus audio.
                         </p>
+                        <Link
+                          to="/parent/voices"
+                          className="mt-4 inline-flex rounded-xl bg-purple-600 px-4 py-3 text-sm font-bold text-white transition hover:bg-purple-700"
+                        >
+                          Ouvrir Voix de la famille
+                        </Link>
                       </div>
                     </div>
 
                     <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-3">
                       {[
-                        ['Consentement parent', 'Ajouter une validation explicite avant toute creation de voix.'],
-                        ['Echantillons audio', 'Prevoir un flux securise pour importer ou enregistrer les extraits.'],
-                        ['Voix par enfant', 'Associer une voix autorisee a un profil enfant precis.']
+                        ['Consentement parent', 'Validation explicite avant toute creation de voix.'],
+                        ['Echantillons audio', 'Flux securise pour importer ou enregistrer les extraits.'],
+                        ['Messages courts', 'Creer des mots personnalises pour accompagner les histoires.']
                       ].map(([title, text]) => (
                         <div key={title} className="rounded-xl bg-neutral-50 p-4 dark:bg-neutral-700">
                           <p className="font-bold text-neutral-900 dark:text-neutral-100">{title}</p>
