@@ -318,8 +318,8 @@ function KidsAIStories() {
             )}
           </div>
 
-          <form onSubmit={handleSearchSubmit} className="grid gap-3 lg:grid-cols-[minmax(220px,1.2fr)_180px_150px_150px] xl:grid-cols-[minmax(260px,1.2fr)_180px_150px_150px_150px_170px_150px_auto]">
-            <label className="relative block">
+          <form onSubmit={handleSearchSubmit} className="grid grid-cols-1 items-end gap-3 md:grid-cols-2 xl:grid-cols-4">
+            <label className="relative block min-w-0 md:col-span-2">
               <SearchIcon className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-neutral-400" />
               <input
                 value={filters.search}
@@ -331,7 +331,7 @@ function KidsAIStories() {
             <select
               value={selectedKidProfileId}
               onChange={(event) => setSelectedKidProfileId(event.target.value)}
-              className="h-12 rounded-xl border-2 border-neutral-100 px-3 text-sm font-bold outline-none focus:border-blue-300"
+              className="h-12 w-full min-w-0 rounded-xl border-2 border-neutral-100 px-3 text-sm font-bold outline-none focus:border-blue-300"
             >
               {kidProfiles.map((kid) => (
                 <option key={kid.id} value={kid.id}>{kid.name}{kid.age ? ` - ${kid.age} ans` : ''}</option>
@@ -340,7 +340,7 @@ function KidsAIStories() {
             <select
               value={filters.theme}
               onChange={(event) => updateFilter('theme', event.target.value)}
-              className="h-12 rounded-xl border-2 border-neutral-100 px-3 text-sm font-bold outline-none focus:border-blue-300"
+              className="h-12 w-full min-w-0 rounded-xl border-2 border-neutral-100 px-3 text-sm font-bold outline-none focus:border-blue-300"
             >
               <option value="">Tous themes</option>
               {themes.map((theme) => <option key={theme} value={theme}>{theme}</option>)}
@@ -348,7 +348,7 @@ function KidsAIStories() {
             <select
               value={filters.language}
               onChange={(event) => updateFilter('language', event.target.value)}
-              className="h-12 rounded-xl border-2 border-neutral-100 px-3 text-sm font-bold outline-none focus:border-blue-300"
+              className="h-12 w-full min-w-0 rounded-xl border-2 border-neutral-100 px-3 text-sm font-bold outline-none focus:border-blue-300"
             >
               <option value="">Toutes langues</option>
               {languages.map((language) => (
@@ -358,7 +358,7 @@ function KidsAIStories() {
             <select
               value={filters.age_level}
               onChange={(event) => updateFilter('age_level', event.target.value)}
-              className="h-12 rounded-xl border-2 border-neutral-100 px-3 text-sm font-bold outline-none focus:border-blue-300"
+              className="h-12 w-full min-w-0 rounded-xl border-2 border-neutral-100 px-3 text-sm font-bold outline-none focus:border-blue-300"
             >
               <option value="">Tous ages</option>
               {ageLevels.map((ageLevel) => <option key={ageLevel} value={ageLevel}>{ageLevel}</option>)}
@@ -366,7 +366,7 @@ function KidsAIStories() {
             <select
               value={filters.educational_value}
               onChange={(event) => updateFilter('educational_value', event.target.value)}
-              className="h-12 rounded-xl border-2 border-neutral-100 px-3 text-sm font-bold outline-none focus:border-blue-300"
+              className="h-12 w-full min-w-0 rounded-xl border-2 border-neutral-100 px-3 text-sm font-bold outline-none focus:border-blue-300"
             >
               <option value="">Toutes valeurs</option>
               {educationalValues.map((value) => <option key={value} value={value}>{value}</option>)}
@@ -375,7 +375,7 @@ function KidsAIStories() {
               value={filters.saved}
               onChange={(event) => updateFilter('saved', event.target.value)}
               disabled={activeCollection === 'library'}
-              className="h-12 rounded-xl border-2 border-neutral-100 px-3 text-sm font-bold outline-none focus:border-blue-300"
+              className="h-12 w-full min-w-0 rounded-xl border-2 border-neutral-100 px-3 text-sm font-bold outline-none focus:border-blue-300 disabled:bg-neutral-50 disabled:text-neutral-400"
             >
               <option value="">Tous statuts</option>
               <option value="true">Sauvees</option>
@@ -384,17 +384,17 @@ function KidsAIStories() {
             <select
               value={filters.favorite}
               onChange={(event) => updateFilter('favorite', event.target.value)}
-              className="h-12 rounded-xl border-2 border-neutral-100 px-3 text-sm font-bold outline-none focus:border-blue-300"
+              className="h-12 w-full min-w-0 rounded-xl border-2 border-neutral-100 px-3 text-sm font-bold outline-none focus:border-blue-300"
             >
               <option value="">Tous favoris</option>
               <option value="true">Favoris</option>
               <option value="false">Non favoris</option>
             </select>
-            <div className="flex gap-2">
-              <button type="submit" className="h-12 rounded-xl bg-neutral-900 px-4 text-sm font-black text-white">
+            <div className="flex w-full gap-2 md:col-span-2 xl:col-span-4">
+              <button type="submit" className="h-12 min-w-28 rounded-xl bg-neutral-900 px-4 text-sm font-black text-white">
                 Filtrer
               </button>
-              <button type="button" onClick={handleResetFilters} className="h-12 rounded-xl bg-neutral-100 px-4 text-sm font-black text-neutral-700">
+              <button type="button" onClick={handleResetFilters} className="h-12 min-w-24 rounded-xl bg-neutral-100 px-4 text-sm font-black text-neutral-700">
                 Reset
               </button>
             </div>
