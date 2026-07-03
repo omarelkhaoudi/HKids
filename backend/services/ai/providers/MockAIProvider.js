@@ -18,6 +18,19 @@ export class MockAIProvider extends AIProvider {
     return this.voiceProvider.respond({ transcript, user, messages });
   }
 
+  async transcribeAudio({ audioBuffer, mimeType, language }) {
+    return {
+      transcript: 'Je veux une histoire courte',
+      language: language || 'fr-FR',
+      provider_metadata: {
+        provider: this.name,
+        model: 'mock-stt-v1',
+        mime_type: mimeType,
+        audio_bytes: audioBuffer?.length || 0
+      }
+    };
+  }
+
   async recommendContent({ contents = [] }) {
     return {
       recommendations: contents.slice(0, 6),

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { aiAPI } from '../../api/ai';
 import { MicrophoneIcon, SparklesIcon, XIcon } from '../Icons';
-import { isMicrophoneSupported, isSpeechRecognitionSupported, recordAndTranscribe } from '../../services/ai/browserSpeechRecognition';
+import { isAudioRecordingSupported, recordAudioClip } from '../../services/ai/browserSpeechRecognition';
 import { speakText, stopSpeaking } from '../../services/ai/browserTextToSpeech';
 
 const initialMessages = [
@@ -12,15 +12,13 @@ const initialMessages = [
   },
 ];
 
-function isExpectedVoiceRecognitionError(error) {
+function isExpectedVoiceRecordingError(error) {
   const message = String(error?.message || error?.response?.data?.error || '').toLowerCase();
   return (
-    message.includes('reconnaissance vocale') ||
     message.includes('micro') ||
-    message.includes('rien entendu') ||
-    message.includes('reconnu les mots') ||
-    message.includes('voix') ||
-    message.includes('audio')
+    message.includes('audio') ||
+    message.includes('enregistrement') ||
+    message.includes('transcription')
   );
 }
 
@@ -35,7 +33,7 @@ export function VoiceAssistant({ language = 'fr-FR' }) {
   const [voiceUnavailable, setVoiceUnavailable] = useState(false);
 
   const canUseVoice = useMemo(() => (
-    isMicrophoneSupported() && isSpeechRecognitionSupported()
+    isAudioRecordingSupported()
   ), []);
 
   useEffect(() => () => stopSpeaking(), []);
@@ -67,20 +65,22 @@ export function VoiceAssistant({ language = 'fr-FR' }) {
 
     if (!canUseVoice || voiceUnavailable) {
       setVoiceUnavailable(true);
-      setError("La reconnaissance vocale n est pas disponible ici. Ecris ta demande.");
+      setError("Le micro n est pas disponible ici. Ecris ta demande.");
       return;
     }
 
     try {
       setListening(true);
-      const result = await recordAndTranscribe({
-        language,
+      const result = await recordAudioClip({
         onRecordingStart: () => setTranscriptPreview(''),
-        onTranscript: setTranscriptPreview,
       });
+      const transcription = await aiAPI.transcribeVoice({
+        audioBlob: result.audioBlob,
+        language
+      });
+      const transcript = String(transcription.data?.transcript || '').trim();
       setListening(false);
-
-      const transcript = result.transcript.trim();
+      setTranscriptPreview(transcript);
       if (!transcript) {
         setError("Je n ai pas bien entendu. Recommence doucement ou ecris ta demande.");
         return;
@@ -91,7 +91,7 @@ export function VoiceAssistant({ language = 'fr-FR' }) {
       setListening(false);
       setThinking(false);
       const message = err.response?.data?.error || err.message || 'Erreur reseau avec l assistant.';
-      if (isExpectedVoiceRecognitionError(err)) {
+      if (isExpectedVoiceRecordingError(err)) {
         setVoiceUnavailable(true);
       } else {
         console.warn('Voice assistant error:', err);
@@ -127,7 +127,7 @@ export function VoiceAssistant({ language = 'fr-FR' }) {
         onClick={() => {
           if (voiceUnavailable || !canUseVoice) {
             setOpen(true);
-            setError("La reconnaissance vocale n est pas disponible ici. Ecris ta demande.");
+            setError("Le micro n est pas disponible ici. Ecris ta demande.");
             return;
           }
           handleAsk();
@@ -160,7 +160,7 @@ export function VoiceAssistant({ language = 'fr-FR' }) {
                   <div>
                     <p className="text-lg font-black">Assistant vocal</p>
                     <p className="text-xs font-bold text-white/80">
-                      {listening ? 'Je t ecoute...' : thinking ? 'Je reflechis...' : voiceUnavailable ? 'Texte disponible' : 'Pret'}
+                      {listening ? 'J enregistre...' : thinking ? 'Je reflechis...' : voiceUnavailable ? 'Texte disponible' : 'Pret'}
                     </p>
                   </div>
                 </div>
@@ -233,7 +233,7 @@ export function VoiceAssistant({ language = 'fr-FR' }) {
                 className="inline-flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-neutral-900 text-base font-black text-white transition hover:bg-neutral-800 disabled:opacity-60"
               >
                 <MicrophoneIcon className="h-6 w-6" />
-                {listening ? 'Ecoute...' : thinking ? 'Patiente...' : voiceUnavailable || !canUseVoice ? 'Micro indisponible' : 'Parler'}
+                {listening ? 'Enregistrement...' : thinking ? 'Patiente...' : voiceUnavailable || !canUseVoice ? 'Micro indisponible' : 'Parler'}
               </button>
             </div>
           </motion.aside>
