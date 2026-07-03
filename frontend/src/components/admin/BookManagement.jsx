@@ -293,16 +293,15 @@ function BookManagement() {
     'Title',
     'Author',
     'Category',
-    'Theme',
     'Langue',
     'Audio',
     'Age Group',
     'Status',
     'Actions',
   ];
-  const tableColumnWidths = ['96px', '380px', '110px', '140px', '100px', '100px', '130px', '130px', '135px', '190px'];
-  const tableHeaderClass = 'px-6 py-5 text-left text-xs font-bold uppercase text-red-700';
-  const tableCellClass = 'px-6 py-5 align-middle';
+  const tableColumnWidths = ['88px', '360px', '100px', '140px', '80px', '120px', '120px', '120px', '170px'];
+  const tableHeaderClass = 'px-5 py-5 text-left text-xs font-bold uppercase text-red-700';
+  const tableCellClass = 'px-5 py-5 align-middle';
   const filteredBooks = books.filter((book) => {
     const query = filters.search.trim().toLowerCase();
     const tags = Array.isArray(book.tags) ? book.tags.join(' ') : book.tags || '';
@@ -517,7 +516,7 @@ function BookManagement() {
           transition={{ duration: 0.4 }}
           className="overflow-x-auto rounded-2xl border border-red-200/70 bg-white/95 shadow-xl"
         >
-          <table className="w-full min-w-[1511px] table-fixed border-collapse">
+          <table className="w-full min-w-[1298px] table-fixed border-collapse">
             <colgroup>
               {tableColumnWidths.map((width, index) => (
                 <col key={`${width}-${index}`} style={{ width }} />
@@ -537,14 +536,14 @@ function BookManagement() {
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: index * 0.05, duration: 0.3 }}
-                  className="h-[196px] transition-colors hover:bg-red-50/50"
+                  className="h-[176px] transition-colors hover:bg-red-50/50"
                 >
                   <td className={tableCellClass}>
                     {(() => {
                       const imageUrl = book.cover_image ? getImageUrl(book.cover_image) : null;
                       if (!imageUrl) {
                         return (
-                          <div className="flex h-[92px] w-11 items-center justify-center rounded bg-neutral-200">
+                          <div className="flex h-[84px] w-10 items-center justify-center rounded bg-neutral-200">
                             <BookIcon className="h-6 w-6 text-neutral-400" />
                           </div>
                         );
@@ -554,7 +553,7 @@ function BookManagement() {
                         <img
                           src={imageUrl}
                           alt={book.title}
-                          className="h-[92px] w-11 rounded object-cover"
+                          className="h-[84px] w-10 rounded object-cover"
                           onError={(e) => {
                             console.error(`[Book ${book.id}] Failed to load image from:`, imageUrl);
                             e.target.style.display = 'none';
@@ -593,9 +592,6 @@ function BookManagement() {
                     {book.subcategory_name && (
                       <div className="mt-1 truncate text-xs font-medium text-gray-400" title={book.subcategory_name}>{book.subcategory_name}</div>
                     )}
-                  </td>
-                  <td className={tableCellClass}>
-                    <div className="truncate text-sm text-gray-500" title={book.theme || '-'}>{book.theme || '-'}</div>
                   </td>
                   <td className={tableCellClass}>
                     <div className="text-sm text-gray-500">{(book.language || 'fr').toUpperCase()}</div>
