@@ -22,6 +22,40 @@ import LanguageSelector from '../components/LanguageSelector';
 import { useLanguage } from '../context/LanguageContext';
 import { translations } from '../utils/translations';
 
+const HOME_DATA_CACHE_KEY = 'hkids_home_data_cache_v1';
+const HOME_DATA_CACHE_TTL_MS = 10 * 60 * 1000;
+const FALLBACK_BOOK_COUNT = 12;
+
+const readHomeDataCache = () => {
+  try {
+    const rawCache = localStorage.getItem(HOME_DATA_CACHE_KEY);
+    if (!rawCache) return null;
+
+    const cache = JSON.parse(rawCache);
+    if (!cache?.cachedAt || Date.now() - cache.cachedAt > HOME_DATA_CACHE_TTL_MS) {
+      return null;
+    }
+
+    return {
+      books: Array.isArray(cache.books) ? cache.books : [],
+      categories: Array.isArray(cache.categories) ? cache.categories : [],
+    };
+  } catch (error) {
+    return null;
+  }
+};
+
+const writeHomeDataCache = (books, categories) => {
+  try {
+    localStorage.setItem(
+      HOME_DATA_CACHE_KEY,
+      JSON.stringify({ books, categories, cachedAt: Date.now() })
+    );
+  } catch (error) {
+    // Optional cache only; API data stays the source of truth.
+  }
+};
+
 function Home({ darkMode, setDarkMode }) {
   const navigate = useNavigate();
   const { language } = useLanguage();
@@ -74,9 +108,8 @@ function Home({ darkMode, setDarkMode }) {
   };
 
   useEffect(() => {
-    console.log('Home component mounted, loading data...');
     loadData();
-  }, [selectedCategory, selectedAge]);
+  }, []);
 
   useEffect(() => {
     filterAndSortBooks(allBooks);
@@ -190,8 +223,19 @@ function Home({ darkMode, setDarkMode }) {
   };
 
   const loadData = async () => {
+    const cachedData = readHomeDataCache();
+
+    if (cachedData?.books?.length || cachedData?.categories?.length) {
+      setAllBooks(cachedData.books);
+      filterAndSortBooks(cachedData.books);
+      setCategories(cachedData.categories);
+      setLoading(false);
+    }
+
     try {
-      setLoading(true);
+      if (!cachedData) {
+        setLoading(true);
+      }
       // Convertir la plage d'âge en un seul nombre pour l'API (prendre le milieu de la plage)
       let ageGroupForAPI = undefined;
       if (selectedAge) {
@@ -214,8 +258,10 @@ function Home({ darkMode, setDarkMode }) {
       // Filtrer par recherche si nécessaire
       filterAndSortBooks(booksRes.data);
       setCategories(categoriesRes.data);
-      console.log('Books loaded:', booksRes.data);
-      console.log('Books count:', booksRes.data?.length || 0);
+      writeHomeDataCache(
+        Array.isArray(booksRes.data) ? booksRes.data : [],
+        Array.isArray(categoriesRes.data) ? categoriesRes.data : []
+      );
     } catch (error) {
       console.error('Error loading data:', error);
       console.error('Error details:', error.response?.data);
@@ -247,7 +293,7 @@ function Home({ darkMode, setDarkMode }) {
   };
 
   // Petites statistiques pour la hero section
-  const totalBooks = allBooks?.length || 0;
+  const totalBooks = allBooks?.length || (loading ? FALLBACK_BOOK_COUNT : 0);
   const totalCategories = categories?.length || 0;
   const storyPreviewBooks = (allBooks || []).slice(0, 8);
 
