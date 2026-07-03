@@ -52,9 +52,8 @@ export function VoiceAssistant({ language = 'fr-FR' }) {
 
     try {
       await speakText(replyText, { language });
-    } catch (speechError) {
-      console.warn('TTS unavailable:', speechError);
-      setError(speechError.message);
+    } catch {
+      // Text is already displayed; audio playback is a progressive enhancement.
     }
   };
 
