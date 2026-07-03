@@ -2,16 +2,33 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { generatedStoriesAPI } from '../api/generatedStories';
 import { speakText, stopSpeaking } from '../services/ai/browserTextToSpeech';
-import { AudioIcon, BookIcon, ChevronLeftIcon, ClockIcon, HeartIcon, RefreshIcon, SearchIcon, SparklesIcon, TrashIcon } from '../components/Icons';
+import { AudioIcon, BookIcon, ChevronLeftIcon, ClockIcon, HeartIcon, HistoryIcon, RefreshIcon, SearchIcon, SparklesIcon, TrashIcon } from '../components/Icons';
 import { Logo } from '../components/Logo';
 
 const filtersInitialState = {
   search: '',
   theme: '',
   language: '',
+  age_level: '',
+  educational_value: '',
   saved: '',
   favorite: ''
 };
+
+const collectionTabs = [
+  {
+    id: 'library',
+    label: 'Bibliotheque',
+    description: 'Histoires sauvegardees',
+    icon: BookIcon
+  },
+  {
+    id: 'history',
+    label: 'Historique',
+    description: 'Toutes les generations',
+    icon: HistoryIcon
+  }
+];
 
 function getErrorMessage(error) {
   return error.response?.data?.error || error.message || 'Action impossible pour le moment.';
@@ -29,6 +46,7 @@ function KidsAIStories() {
   const [stories, setStories] = useState([]);
   const [selectedStory, setSelectedStory] = useState(null);
   const [filters, setFilters] = useState(filtersInitialState);
+  const [activeCollection, setActiveCollection] = useState('library');
   const [loading, setLoading] = useState(true);
   const [busyStoryId, setBusyStoryId] = useState(null);
   const [speaking, setSpeaking] = useState(false);
@@ -38,22 +56,39 @@ function KidsAIStories() {
   const themes = useMemo(() => (
     Array.from(new Set(stories.map((story) => story.theme).filter(Boolean))).sort()
   ), [stories]);
+  const languages = useMemo(() => (
+    Array.from(new Set(stories.map((story) => story.language).filter(Boolean))).sort()
+  ), [stories]);
+  const ageLevels = useMemo(() => (
+    Array.from(new Set(stories.map((story) => story.age_level).filter(Boolean))).sort()
+  ), [stories]);
+  const educationalValues = useMemo(() => (
+    Array.from(new Set(stories.map((story) => story.educational_value).filter(Boolean))).sort()
+  ), [stories]);
+  const favoriteStoriesCount = stories.filter((story) => story.favorite).length;
 
   const updateFilter = (key, value) => {
     setFilters((current) => ({ ...current, [key]: value }));
   };
 
-  const loadStories = async (kidProfileId = selectedKidProfileId, nextFilters = filters) => {
+  const loadStories = async (
+    kidProfileId = selectedKidProfileId,
+    nextFilters = filters,
+    collection = activeCollection
+  ) => {
     if (!kidProfileId) return;
     setLoading(true);
     setError('');
     try {
+      const savedFilter = collection === 'library' ? 'true' : nextFilters.saved;
       const response = await generatedStoriesAPI.getHistory({
         kid_profile_id: kidProfileId,
         search: nextFilters.search,
         theme: nextFilters.theme,
         language: nextFilters.language,
-        saved: nextFilters.saved,
+        age_level: nextFilters.age_level,
+        educational_value: nextFilters.educational_value,
+        saved: savedFilter,
         favorite: nextFilters.favorite,
         limit: 100
       });
@@ -93,17 +128,23 @@ function KidsAIStories() {
   }, []);
 
   useEffect(() => {
-    if (selectedKidProfileId) loadStories(selectedKidProfileId, filters);
+    if (selectedKidProfileId) loadStories(selectedKidProfileId, filters, activeCollection);
   }, [selectedKidProfileId]);
 
   const handleSearchSubmit = (event) => {
     event.preventDefault();
-    loadStories(selectedKidProfileId, filters);
+    loadStories(selectedKidProfileId, filters, activeCollection);
   };
 
   const handleResetFilters = () => {
     setFilters(filtersInitialState);
-    loadStories(selectedKidProfileId, filtersInitialState);
+    loadStories(selectedKidProfileId, filtersInitialState, activeCollection);
+  };
+
+  const handleCollectionChange = (collection) => {
+    setActiveCollection(collection);
+    setSelectedStory(null);
+    loadStories(selectedKidProfileId, filters, collection);
   };
 
   const patchStory = (nextStory) => {
@@ -224,8 +265,60 @@ function KidsAIStories() {
           </div>
         </section>
 
+        <section className="mb-6 grid gap-3 md:grid-cols-2">
+          {collectionTabs.map((tab) => {
+            const Icon = tab.icon;
+            const active = activeCollection === tab.id;
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => handleCollectionChange(tab.id)}
+                className={`flex min-h-24 items-center justify-between gap-4 rounded-2xl border-2 p-5 text-left shadow-sm transition ${
+                  active
+                    ? 'border-blue-400 bg-blue-600 text-white shadow-lg'
+                    : 'border-neutral-100 bg-white text-neutral-800 hover:border-blue-200'
+                }`}
+              >
+                <span className="flex items-center gap-4">
+                  <span className={`grid h-12 w-12 place-items-center rounded-2xl ${active ? 'bg-white/20' : 'bg-blue-50 text-blue-600'}`}>
+                    <Icon className="h-6 w-6" />
+                  </span>
+                  <span>
+                    <span className="block text-xl font-black">{tab.label}</span>
+                    <span className={`mt-1 block text-sm font-bold ${active ? 'text-white/80' : 'text-neutral-500'}`}>
+                      {tab.description}
+                    </span>
+                  </span>
+                </span>
+                {active && (
+                  <span className="rounded-full bg-white px-3 py-1 text-sm font-black text-blue-700">
+                    {stories.length}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </section>
+
         <section className="mb-6 rounded-2xl border border-blue-100 bg-white p-4 shadow-lg">
-          <form onSubmit={handleSearchSubmit} className="grid gap-3 lg:grid-cols-[1.2fr_180px_150px_150px_150px_auto]">
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h2 className="text-xl font-black text-neutral-900">
+                {activeCollection === 'library' ? 'Filtres de la bibliotheque' : 'Filtres de l historique'}
+              </h2>
+              <p className="mt-1 text-sm font-bold text-neutral-500">
+                {stories.length} histoire{stories.length > 1 ? 's' : ''} affichee{stories.length > 1 ? 's' : ''} - {favoriteStoriesCount} favori{favoriteStoriesCount > 1 ? 's' : ''}
+              </p>
+            </div>
+            {activeCollection === 'library' && (
+              <span className="rounded-full bg-green-50 px-3 py-2 text-xs font-black text-green-700">
+                Sauvegardees uniquement
+              </span>
+            )}
+          </div>
+
+          <form onSubmit={handleSearchSubmit} className="grid gap-3 lg:grid-cols-[minmax(220px,1.2fr)_180px_150px_150px] xl:grid-cols-[minmax(260px,1.2fr)_180px_150px_150px_150px_170px_150px_auto]">
             <label className="relative block">
               <SearchIcon className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-neutral-400" />
               <input
@@ -253,8 +346,35 @@ function KidsAIStories() {
               {themes.map((theme) => <option key={theme} value={theme}>{theme}</option>)}
             </select>
             <select
+              value={filters.language}
+              onChange={(event) => updateFilter('language', event.target.value)}
+              className="h-12 rounded-xl border-2 border-neutral-100 px-3 text-sm font-bold outline-none focus:border-blue-300"
+            >
+              <option value="">Toutes langues</option>
+              {languages.map((language) => (
+                <option key={language} value={language}>{language.toUpperCase()}</option>
+              ))}
+            </select>
+            <select
+              value={filters.age_level}
+              onChange={(event) => updateFilter('age_level', event.target.value)}
+              className="h-12 rounded-xl border-2 border-neutral-100 px-3 text-sm font-bold outline-none focus:border-blue-300"
+            >
+              <option value="">Tous ages</option>
+              {ageLevels.map((ageLevel) => <option key={ageLevel} value={ageLevel}>{ageLevel}</option>)}
+            </select>
+            <select
+              value={filters.educational_value}
+              onChange={(event) => updateFilter('educational_value', event.target.value)}
+              className="h-12 rounded-xl border-2 border-neutral-100 px-3 text-sm font-bold outline-none focus:border-blue-300"
+            >
+              <option value="">Toutes valeurs</option>
+              {educationalValues.map((value) => <option key={value} value={value}>{value}</option>)}
+            </select>
+            <select
               value={filters.saved}
               onChange={(event) => updateFilter('saved', event.target.value)}
+              disabled={activeCollection === 'library'}
               className="h-12 rounded-xl border-2 border-neutral-100 px-3 text-sm font-bold outline-none focus:border-blue-300"
             >
               <option value="">Tous statuts</option>
