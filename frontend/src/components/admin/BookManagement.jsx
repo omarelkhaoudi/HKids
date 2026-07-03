@@ -299,7 +299,7 @@ function BookManagement() {
     'Status',
     'Actions',
   ];
-  const tableColumnWidths = ['88px', '360px', '100px', '140px', '80px', '120px', '120px', '120px', '170px'];
+  const tableColumnWidths = ['130px', '330px', '100px', '140px', '80px', '120px', '120px', '120px', '170px'];
   const tableHeaderClass = 'px-5 py-5 text-left text-xs font-bold uppercase text-red-700';
   const tableCellClass = 'px-5 py-5 align-middle';
   const filteredBooks = books.filter((book) => {
@@ -516,7 +516,7 @@ function BookManagement() {
           transition={{ duration: 0.4 }}
           className="overflow-x-auto rounded-2xl border border-red-200/70 bg-white/95 shadow-xl"
         >
-          <table className="w-full min-w-[1298px] table-fixed border-collapse">
+          <table className="w-full min-w-[1310px] table-fixed border-collapse">
             <colgroup>
               {tableColumnWidths.map((width, index) => (
                 <col key={`${width}-${index}`} style={{ width }} />
@@ -536,29 +536,38 @@ function BookManagement() {
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: index * 0.05, duration: 0.3 }}
-                  className="h-[176px] transition-colors hover:bg-red-50/50"
+                  className="h-[190px] transition-colors hover:bg-red-50/50"
                 >
                   <td className={tableCellClass}>
                     {(() => {
                       const imageUrl = book.cover_image ? getImageUrl(book.cover_image) : null;
                       if (!imageUrl) {
                         return (
-                          <div className="flex h-[84px] w-10 items-center justify-center rounded bg-neutral-200">
-                            <BookIcon className="h-6 w-6 text-neutral-400" />
+                          <div className="relative h-[112px] w-[76px]">
+                            <div className="absolute left-2 top-2 h-[104px] w-[58px] rounded-r-lg bg-neutral-200 shadow-[8px_8px_18px_rgba(15,23,42,0.16)]" />
+                            <div className="absolute left-[62px] top-3 h-[100px] w-3 rounded-r-md border border-neutral-200 bg-gradient-to-r from-white to-neutral-200" />
+                            <div className="absolute left-0 top-0 flex h-[104px] w-[66px] items-center justify-center rounded-lg border border-neutral-200 bg-neutral-100 shadow-[0_14px_24px_rgba(15,23,42,0.16)]">
+                              <BookIcon className="h-7 w-7 text-neutral-400" />
+                            </div>
                           </div>
                         );
                       }
 
                       return (
-                        <img
-                          src={imageUrl}
-                          alt={book.title}
-                          className="h-[84px] w-10 rounded object-cover"
-                          onError={(e) => {
-                            console.error(`[Book ${book.id}] Failed to load image from:`, imageUrl);
-                            e.target.style.display = 'none';
-                          }}
-                        />
+                        <div className="relative h-[112px] w-[76px]">
+                          <div className="absolute left-2 top-2 h-[104px] w-[58px] rounded-r-lg bg-red-50 shadow-[8px_8px_18px_rgba(15,23,42,0.16)]" />
+                          <div className="absolute left-[62px] top-3 h-[100px] w-3 rounded-r-md border border-neutral-200 bg-gradient-to-r from-white via-neutral-100 to-neutral-300" />
+                          <img
+                            src={imageUrl}
+                            alt={book.title}
+                            className="absolute left-0 top-0 h-[104px] w-[66px] rounded-lg object-cover shadow-[0_14px_24px_rgba(15,23,42,0.18)]"
+                            onError={(e) => {
+                              console.error(`[Book ${book.id}] Failed to load image from:`, imageUrl);
+                              e.target.style.display = 'none';
+                            }}
+                          />
+                          <div className="pointer-events-none absolute left-0 top-0 h-[104px] w-[66px] rounded-lg bg-gradient-to-r from-black/10 via-transparent to-white/20" />
+                        </div>
                       );
                     })()}
                   </td>
