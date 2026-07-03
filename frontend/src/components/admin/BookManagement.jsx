@@ -288,6 +288,21 @@ function BookManagement() {
   const availableSubcategories = formData.category_id
     ? subcategories.filter((category) => String(category.parent_id) === String(formData.category_id))
     : subcategories;
+  const tableHeaders = [
+    'Cover',
+    'Title',
+    'Author',
+    'Category',
+    'Theme',
+    'Langue',
+    'Audio',
+    'Age Group',
+    'Status',
+    'Actions',
+  ];
+  const tableColumnWidths = ['96px', '380px', '110px', '140px', '100px', '100px', '130px', '130px', '135px', '190px'];
+  const tableHeaderClass = 'px-6 py-5 text-left text-xs font-bold uppercase text-red-700';
+  const tableCellClass = 'px-6 py-5 align-middle';
   const filteredBooks = books.filter((book) => {
     const query = filters.search.trim().toLowerCase();
     const tags = Array.isArray(book.tags) ? book.tags.join(' ') : book.tags || '';
@@ -500,39 +515,37 @@ function BookManagement() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
-          className="bg-white/80 backdrop-blur-lg rounded-2xl shadow-xl border border-red-200/50 overflow-x-auto"
+          className="overflow-x-auto rounded-2xl border border-red-200/70 bg-white/95 shadow-xl"
         >
-          <table className="min-w-full divide-y divide-red-100">
-            <thead className="bg-gradient-to-r from-red-50 to-pink-50">
+          <table className="w-full min-w-[1511px] table-fixed border-collapse">
+            <colgroup>
+              {tableColumnWidths.map((width, index) => (
+                <col key={`${width}-${index}`} style={{ width }} />
+              ))}
+            </colgroup>
+            <thead className="bg-red-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-red-700 uppercase">Cover</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-red-700 uppercase">Title</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-red-700 uppercase">Author</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-red-700 uppercase">Category</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-red-700 uppercase">Theme</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-red-700 uppercase">Langue</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-red-700 uppercase">Audio</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-red-700 uppercase">Age Group</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-red-700 uppercase">Status</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-red-700 uppercase">Actions</th>
+                {tableHeaders.map((header) => (
+                  <th key={header} className={tableHeaderClass}>{header}</th>
+                ))}
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-red-100">
+            <tbody className="divide-y divide-red-100 bg-white">
               {filteredBooks.map((book, index) => (
                 <motion.tr
                   key={book.id}
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: index * 0.05, duration: 0.3 }}
-                  className="hover:bg-red-50/50 transition-colors"
+                  className="h-[196px] transition-colors hover:bg-red-50/50"
                 >
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className={tableCellClass}>
                     {(() => {
                       const imageUrl = book.cover_image ? getImageUrl(book.cover_image) : null;
                       if (!imageUrl) {
                         return (
-                          <div className="w-16 h-20 bg-neutral-200 rounded flex items-center justify-center">
-                            <BookIcon className="w-8 h-8 text-neutral-400" />
+                          <div className="flex h-[92px] w-11 items-center justify-center rounded bg-neutral-200">
+                            <BookIcon className="h-6 w-6 text-neutral-400" />
                           </div>
                         );
                       }
@@ -541,7 +554,7 @@ function BookManagement() {
                         <img
                           src={imageUrl}
                           alt={book.title}
-                          className="w-16 h-20 object-cover rounded"
+                          className="h-[92px] w-11 rounded object-cover"
                           onError={(e) => {
                             console.error(`[Book ${book.id}] Failed to load image from:`, imageUrl);
                             e.target.style.display = 'none';
@@ -550,14 +563,14 @@ function BookManagement() {
                       );
                     })()}
                   </td>
-                  <td className="w-[340px] max-w-[340px] px-6 py-4">
+                  <td className={tableCellClass}>
                     <div
-                      className="max-w-[292px] truncate text-sm font-medium text-gray-900"
+                      className="truncate text-sm font-bold text-gray-900"
                       title={book.title}
                     >
                       {book.title}
                     </div>
-                    <div className="mt-2 flex flex-wrap gap-1">
+                    <div className="mt-2 flex max-w-full flex-wrap gap-1">
                       {(book.is_premium === true || book.is_premium === 1) && (
                         <span className="rounded-full bg-purple-100 px-2 py-0.5 text-[11px] font-bold text-purple-700">Premium</span>
                       )}
@@ -572,76 +585,76 @@ function BookManagement() {
                       )}
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-500">{book.author || '-'}</div>
+                  <td className={tableCellClass}>
+                    <div className="truncate text-sm text-gray-500" title={book.author || '-'}>{book.author || '-'}</div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-500">{book.category_name || '-'}</div>
+                  <td className={tableCellClass}>
+                    <div className="truncate text-sm text-gray-500" title={book.category_name || '-'}>{book.category_name || '-'}</div>
                     {book.subcategory_name && (
-                      <div className="text-xs font-medium text-gray-400">{book.subcategory_name}</div>
+                      <div className="mt-1 truncate text-xs font-medium text-gray-400" title={book.subcategory_name}>{book.subcategory_name}</div>
                     )}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-500">{book.theme || '-'}</div>
+                  <td className={tableCellClass}>
+                    <div className="truncate text-sm text-gray-500" title={book.theme || '-'}>{book.theme || '-'}</div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className={tableCellClass}>
                     <div className="text-sm text-gray-500">{(book.language || 'fr').toUpperCase()}</div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className={tableCellClass}>
                     <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold ${
                       book.audio_url
-                        ? 'bg-green-100 text-green-700 border border-green-200'
-                        : 'bg-amber-100 text-amber-700 border border-amber-200'
+                        ? 'border border-green-200 bg-green-100 text-green-700'
+                        : 'border border-amber-200 bg-amber-100 text-amber-700'
                     }`}>
-                      <AudioIcon className="w-3.5 h-3.5" />
+                      <AudioIcon className="h-3.5 w-3.5" />
                       {book.audio_url ? 'Pret' : 'Manquant'}
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className={tableCellClass}>
                     <div className="text-sm text-gray-500">
                       {book.age_group_min}-{book.age_group_max} years
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`px-3 py-1.5 text-xs rounded-full font-medium ${
+                  <td className={tableCellClass}>
+                    <span className={`inline-flex rounded-full px-3 py-1.5 text-xs font-medium ${
                       (book.is_published === true || book.is_published === 1)
-                        ? 'bg-green-100 text-green-800 border border-green-200'
-                        : 'bg-gray-100 text-gray-800 border border-gray-200'
+                        ? 'border border-green-200 bg-green-100 text-green-800'
+                        : 'border border-gray-200 bg-gray-100 text-gray-800'
                     }`}>
                       {(book.is_published === true || book.is_published === 1) ? 'Published' : 'Draft'}
                     </span>
                   </td>
-                  <td className="px-6 py-4 text-sm font-medium">
-                    <div className="flex min-w-[150px] flex-col items-stretch gap-2">
+                  <td className={tableCellClass}>
+                    <div className="flex w-full flex-col items-stretch gap-2 text-sm font-medium">
                       <motion.button
                         type="button"
                         onClick={() => setSelectedBook(book)}
                         whileHover={{ scale: 1.03 }}
                         whileTap={{ scale: 0.97 }}
-                        className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-700 shadow-sm transition-colors hover:bg-blue-100"
+                        className="inline-flex h-8 items-center justify-center gap-1.5 rounded-lg border border-blue-200 bg-blue-50 px-3 text-xs font-semibold text-blue-700 shadow-sm transition-colors hover:bg-blue-100"
                         title="Voir la fiche complete"
                       >
-                        <BookIcon className="w-3 h-3" />
+                        <BookIcon className="h-3 w-3" />
                         <span>Fiche</span>
                       </motion.button>
                       <motion.button
                         onClick={() => handleEdit(book)}
                         whileHover={{ scale: 1.03 }}
                         whileTap={{ scale: 0.97 }}
-                        className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-red-200 bg-white px-3 py-1.5 text-xs font-semibold text-red-700 shadow-sm transition-colors hover:bg-red-50 hover:text-red-800"
+                        className="inline-flex h-8 items-center justify-center gap-1.5 rounded-lg border border-red-200 bg-white px-3 text-xs font-semibold text-red-700 shadow-sm transition-colors hover:bg-red-50 hover:text-red-800"
                         title="Modifier le livre"
                       >
-                        <EditIcon className="w-3 h-3" />
+                        <EditIcon className="h-3 w-3" />
                         <span>Modifier</span>
                       </motion.button>
                       <motion.button
                         onClick={() => handleDelete(book.id)}
                         whileHover={{ scale: 1.03 }}
                         whileTap={{ scale: 0.97 }}
-                        className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-700 shadow-sm transition-colors hover:bg-red-100 hover:text-red-900"
+                        className="inline-flex h-8 items-center justify-center gap-1.5 rounded-lg border border-red-200 bg-red-50 px-3 text-xs font-semibold text-red-700 shadow-sm transition-colors hover:bg-red-100 hover:text-red-900"
                         title="Supprimer le livre"
                       >
-                        <TrashIcon className="w-3 h-3" />
+                        <TrashIcon className="h-3 w-3" />
                         <span>Supprimer</span>
                       </motion.button>
                       {!(book.is_published === true || book.is_published === 1) && (
@@ -649,10 +662,10 @@ function BookManagement() {
                           onClick={() => handleTogglePublish(book)}
                           whileHover={{ scale: 1.03 }}
                           whileTap={{ scale: 0.97 }}
-                          className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-gradient-to-r from-green-500 to-green-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition-all hover:from-green-600 hover:to-green-700"
+                          className="inline-flex h-8 items-center justify-center gap-1.5 rounded-lg bg-gradient-to-r from-green-500 to-green-600 px-3 text-xs font-semibold text-white shadow-sm transition-all hover:from-green-600 hover:to-green-700"
                           title="Publier le livre"
                         >
-                          <PublishIcon className="w-3 h-3" />
+                          <PublishIcon className="h-3 w-3" />
                           <span>Publier</span>
                         </motion.button>
                       )}
@@ -661,10 +674,10 @@ function BookManagement() {
                           onClick={() => handleTogglePublish(book)}
                           whileHover={{ scale: 1.03 }}
                           whileTap={{ scale: 0.97 }}
-                          className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-gradient-to-r from-gray-500 to-gray-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition-all hover:from-gray-600 hover:to-gray-700"
+                          className="inline-flex h-8 items-center justify-center gap-1.5 rounded-lg bg-gradient-to-r from-gray-500 to-gray-600 px-3 text-xs font-semibold text-white shadow-sm transition-all hover:from-gray-600 hover:to-gray-700"
                           title="Dépublier le livre"
                         >
-                          <UnpublishIcon className="w-3 h-3" />
+                          <UnpublishIcon className="h-3 w-3" />
                           <span>Dépublier</span>
                         </motion.button>
                       )}
