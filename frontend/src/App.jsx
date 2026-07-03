@@ -14,6 +14,7 @@ import KidsHome from './pages/KidsHome';
 import KidsLibrary from './pages/KidsLibrary';
 import KidsCategoryPage from './pages/KidsCategoryPage';
 import KidsStoryStudio from './pages/KidsStoryStudio';
+import KidsAIStories from './pages/KidsAIStories';
 import ContentLibraryHome from './pages/ContentLibraryHome';
 import ContentCategoryContents from './pages/ContentCategoryContents';
 import Favorites from './pages/Favorites';
@@ -121,6 +122,7 @@ function App() {
                 <Route path="/kids/library" element={<RequireRole roles={['kid']}><KidsLibrary /></RequireRole>} />
                 <Route path="/kids/story-studio" element={<RequireAuth><KidsStoryStudio /></RequireAuth>} />
                 <Route path="/kids/storystudio" element={<Navigate to="/kids/story-studio" replace />} />
+                <Route path="/kids/ai-stories" element={<RequireAuth><KidsAIStories /></RequireAuth>} />
                 <Route path="/kids/category/:categoryId" element={<RequireAuth><KidsCategoryPage /></RequireAuth>} />
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>

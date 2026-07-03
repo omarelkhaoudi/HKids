@@ -3,6 +3,7 @@ import { getDatabase } from '../database/init.js';
 import { verifyToken } from './auth.js';
 import { generatePersonalizedStory, normalizeStoryRequest, validateStoryRequest } from '../services/ai/storyGenerationService.js';
 import { aiErrorResponse } from '../services/ai/errors.js';
+import { buildGeneratedStoryWhereClause, mapGeneratedStory, normalizeStoryListFilters } from '../models/GeneratedStory.js';
 
 const router = express.Router();
 
@@ -40,36 +41,6 @@ async function getAuthorizedKid(pool, req, requestedKidProfileId = null) {
   }
 
   return null;
-}
-
-function mapStory(row) {
-  const storyText = row.story_text || '';
-
-  return {
-    id: row.id,
-    kid_profile_id: row.kid_profile_id,
-    title: row.title,
-    story_text: storyText,
-    story: storyText,
-    summary: row.summary || '',
-    language: row.language,
-    theme: row.theme,
-    age_level: row.age_level,
-    characters: row.characters || [],
-    estimated_duration_minutes: Number(row.estimated_duration_minutes || 5),
-    educational_value: row.educational_value,
-    age_at_generation: row.age_at_generation,
-    prompt_metadata: row.prompt_metadata || {},
-    generation_metadata: row.generation_metadata || {},
-    chapters: row.chapters || [],
-    interactive_choices: row.interactive_choices || [],
-    illustration_plan: row.illustration_plan || {},
-    narration_metadata: row.narration_metadata || {},
-    provider: row.provider,
-    saved: row.saved === true,
-    saved_at: row.saved_at,
-    created_at: row.created_at
-  };
 }
 
 function mapKidProfile(row) {
@@ -192,7 +163,7 @@ router.post('/generate', verifyToken, async (req, res) => {
       ]
     );
 
-    res.status(201).json(mapStory(result.rows[0]));
+    res.status(201).json(mapGeneratedStory(result.rows[0]));
   } catch (err) {
     if (err?.isAIError) {
       const { status, body } = aiErrorResponse(err);
@@ -213,18 +184,23 @@ router.get('/', verifyToken, async (req, res) => {
       return res.status(403).json({ error: 'Kid profile required or not authorized' });
     }
 
-    const savedOnly = req.query.saved === 'true';
+    const filters = normalizeStoryListFilters(req.query);
+    const { whereSql, values } = buildGeneratedStoryWhereClause({
+      kidProfileId: kid.id,
+      filters
+    });
+    values.push(filters.limit);
+
     const result = await pool.query(
       `SELECT *
        FROM generated_stories
-       WHERE kid_profile_id = $1
-         AND ($2::boolean = FALSE OR saved = TRUE)
+       WHERE ${whereSql}
        ORDER BY created_at DESC
-       LIMIT 30`,
-      [kid.id, savedOnly]
+       LIMIT $${values.length}`,
+      values
     );
 
-    res.json(result.rows.map(mapStory));
+    res.json(result.rows.map(mapGeneratedStory));
   } catch (err) {
     console.error('Error fetching generated stories:', err);
     res.status(500).json({ error: 'Could not load generated stories' });
@@ -246,7 +222,7 @@ router.get('/:id', verifyToken, async (req, res) => {
       return res.status(403).json({ error: 'Not authorized to read this story' });
     }
 
-    res.json(mapStory(story));
+    res.json(mapGeneratedStory(story));
   } catch (err) {
     console.error('Error fetching generated story:', err);
     res.status(500).json({ error: 'Could not load generated story' });
@@ -276,10 +252,172 @@ router.post('/:id/save', verifyToken, async (req, res) => {
       [req.params.id]
     );
 
-    res.json(mapStory(result.rows[0]));
+    res.json(mapGeneratedStory(result.rows[0]));
   } catch (err) {
     console.error('Error saving generated story:', err);
     res.status(500).json({ error: 'Could not save generated story' });
+  }
+});
+
+router.post('/:id/favorite', verifyToken, async (req, res) => {
+  try {
+    const pool = getPool();
+    const storyResult = await pool.query('SELECT * FROM generated_stories WHERE id = $1', [req.params.id]);
+    const story = storyResult.rows[0];
+
+    if (!story) {
+      return res.status(404).json({ error: 'Story not found' });
+    }
+
+    const kid = await getAuthorizedKid(pool, req, story.kid_profile_id);
+    if (!kid) {
+      return res.status(403).json({ error: 'Not authorized to favorite this story' });
+    }
+
+    const favorite = req.body?.favorite !== false;
+    const result = await pool.query(
+      `UPDATE generated_stories
+       SET favorite = $2, favorited_at = CASE WHEN $2 = TRUE THEN COALESCE(favorited_at, NOW()) ELSE NULL END
+       WHERE id = $1
+       RETURNING *`,
+      [req.params.id, favorite]
+    );
+
+    res.json(mapGeneratedStory(result.rows[0]));
+  } catch (err) {
+    console.error('Error updating generated story favorite:', err);
+    res.status(500).json({ error: 'Could not update favorite' });
+  }
+});
+
+router.post('/:id/version', verifyToken, async (req, res) => {
+  try {
+    const pool = getPool();
+    const storyResult = await pool.query('SELECT * FROM generated_stories WHERE id = $1', [req.params.id]);
+    const story = storyResult.rows[0];
+
+    if (!story) {
+      return res.status(404).json({ error: 'Story not found' });
+    }
+
+    const kid = await getAuthorizedKid(pool, req, story.kid_profile_id);
+    if (!kid) {
+      return res.status(403).json({ error: 'Not authorized to regenerate this story' });
+    }
+
+    const preferences = normalizeStoryRequest({
+      theme: req.body?.theme || story.theme,
+      characters: req.body?.characters || story.characters || [],
+      estimated_duration_minutes: req.body?.estimated_duration_minutes || story.estimated_duration_minutes,
+      educational_value: req.body?.educational_value || story.educational_value,
+      language: req.body?.language || story.language
+    }, kid);
+    const generated = await generatePersonalizedStory({ kid, preferences });
+
+    if (!generated.story_text) {
+      return res.status(502).json({ error: 'Story provider returned an empty story' });
+    }
+
+    const versionResult = await pool.query(
+      'SELECT COALESCE(MAX(version_number), 1)::int AS version_number FROM generated_stories WHERE id = $1 OR source_story_id = $1',
+      [story.source_story_id || story.id]
+    );
+    const nextVersionNumber = Number(versionResult.rows[0]?.version_number || 1) + 1;
+    const sourceStoryId = story.source_story_id || story.id;
+
+    const result = await pool.query(
+      `INSERT INTO generated_stories (
+        kid_profile_id,
+        user_id,
+        title,
+        story_text,
+        summary,
+        language,
+        theme,
+        age_level,
+        characters,
+        estimated_duration_minutes,
+        educational_value,
+        age_at_generation,
+        prompt_metadata,
+        generation_metadata,
+        chapters,
+        interactive_choices,
+        illustration_plan,
+        narration_metadata,
+        provider,
+        source_story_id,
+        version_number
+      )
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21)
+      RETURNING *`,
+      [
+        kid.id,
+        req.user.id,
+        generated.title,
+        generated.story_text,
+        generated.summary,
+        generated.preferences.language,
+        generated.theme,
+        generated.age_level,
+        generated.preferences.characters,
+        generated.estimated_duration_minutes,
+        generated.preferences.educational_value,
+        kid.age || null,
+        {
+          kid_name: kid.name,
+          kid_interests: kid.interests || [],
+          ...(generated.prompt_metadata || {}),
+          provider_metadata: generated.provider_metadata,
+          regenerated_from_story_id: story.id
+        },
+        {
+          ...(generated.generation_metadata || {}),
+          source_story_id: sourceStoryId,
+          version_number: nextVersionNumber
+        },
+        generated.chapters || [],
+        generated.interactive_choices || [],
+        generated.illustration_plan || {},
+        generated.narration_metadata || {},
+        generated.provider,
+        sourceStoryId,
+        nextVersionNumber
+      ]
+    );
+
+    res.status(201).json(mapGeneratedStory(result.rows[0]));
+  } catch (err) {
+    if (err?.isAIError) {
+      const { status, body } = aiErrorResponse(err);
+      return res.status(status).json(body);
+    }
+
+    console.error('Error regenerating generated story:', err);
+    res.status(500).json({ error: 'Could not create a new version' });
+  }
+});
+
+router.delete('/:id', verifyToken, async (req, res) => {
+  try {
+    const pool = getPool();
+    const storyResult = await pool.query('SELECT * FROM generated_stories WHERE id = $1', [req.params.id]);
+    const story = storyResult.rows[0];
+
+    if (!story) {
+      return res.status(404).json({ error: 'Story not found' });
+    }
+
+    const kid = await getAuthorizedKid(pool, req, story.kid_profile_id);
+    if (!kid) {
+      return res.status(403).json({ error: 'Not authorized to delete this story' });
+    }
+
+    await pool.query('DELETE FROM generated_stories WHERE id = $1', [req.params.id]);
+    res.json({ message: 'Generated story deleted successfully' });
+  } catch (err) {
+    console.error('Error deleting generated story:', err);
+    res.status(500).json({ error: 'Could not delete generated story' });
   }
 });
 

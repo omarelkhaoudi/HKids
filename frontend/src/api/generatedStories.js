@@ -32,5 +32,22 @@ export const generatedStoriesAPI = {
     buildApiUrl(`/generated-stories/${id}/save`),
     {},
     { headers: authHeaders(), timeout: 12000 }
+  ),
+
+  setFavorite: (id, favorite = true) => axios.post(
+    buildApiUrl(`/generated-stories/${id}/favorite`),
+    { favorite },
+    { headers: authHeaders(), timeout: 12000 }
+  ),
+
+  createVersion: (id, data = {}) => axios.post(
+    buildApiUrl(`/generated-stories/${id}/version`),
+    data,
+    { headers: authHeaders(), timeout: 25000 }
+  ),
+
+  delete: (id) => axios.delete(
+    buildApiUrl(`/generated-stories/${id}`),
+    { headers: authHeaders(), timeout: 12000 }
   )
 };

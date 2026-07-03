@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { generatedStoriesAPI } from '../api/generatedStories';
 import { useAuth } from '../context/AuthContext';
 import { speakText, stopSpeaking } from '../services/ai/browserTextToSpeech';
-import { AudioIcon, BookIcon, ChevronLeftIcon, CheckIcon, ClockIcon, SparklesIcon, StarIcon } from '../components/Icons';
+import { AudioIcon, BookIcon, CheckIcon, ClockIcon, SparklesIcon, StarIcon } from '../components/Icons';
 import { Logo } from '../components/Logo';
 
 const themeOptions = [
@@ -208,11 +208,11 @@ function KidsStoryStudio() {
             <Logo size="default" showText={true} />
           </Link>
           <Link
-            to="/kids"
+            to="/kids/ai-stories"
             className="inline-flex items-center gap-2 rounded-2xl bg-white px-4 py-3 text-sm font-black text-neutral-800 shadow-md"
           >
-            <ChevronLeftIcon className="h-5 w-5" />
-            <span>Retour</span>
+            <BookIcon className="h-5 w-5" />
+            <span>Mes histoires IA</span>
           </Link>
         </header>
 
