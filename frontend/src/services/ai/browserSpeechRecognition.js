@@ -15,7 +15,18 @@ export async function recordAndTranscribe({ language = 'fr-FR', onTranscript, on
     throw new Error("La reconnaissance vocale n est pas disponible dans ce navigateur.");
   }
 
-  const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+  let stream;
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+  } catch (error) {
+    if (error?.name === 'NotAllowedError' || error?.name === 'PermissionDeniedError') {
+      throw new Error('Autorisation du micro refusee. Autorise le micro puis reessaie.');
+    }
+    if (error?.name === 'NotFoundError' || error?.name === 'DevicesNotFoundError') {
+      throw new Error("Aucun micro n a ete trouve sur cet appareil.");
+    }
+    throw new Error("Impossible d acceder au micro pour le moment.");
+  }
   const chunks = [];
   let recorder = null;
 
@@ -63,9 +74,22 @@ export async function recordAndTranscribe({ language = 'fr-FR', onTranscript, on
       if (settled) return;
       settled = true;
       stopStream();
-      reject(new Error(event.error === 'not-allowed'
-        ? 'Autorisation du micro refusee.'
-        : 'Je n ai pas pu comprendre la voix.'));
+      const messages = {
+        'not-allowed': 'Autorisation du micro refusee. Autorise le micro puis reessaie.',
+        'service-not-allowed': "La reconnaissance vocale est bloquee par le navigateur.",
+        'audio-capture': "Je ne detecte pas de micro utilisable.",
+        'no-speech': "Je n ai rien entendu. Rapproche-toi du micro ou ecris ta demande.",
+        network: "La reconnaissance vocale du navigateur n est pas disponible. Tu peux ecrire ta demande.",
+        aborted: "L ecoute a ete arretee. Tu peux reessayer."
+      };
+      reject(new Error(messages[event.error] || 'Je n ai pas pu comprendre la voix. Tu peux reessayer ou ecrire ta demande.'));
+    };
+
+    recognition.onnomatch = () => {
+      if (settled) return;
+      settled = true;
+      stopStream();
+      reject(new Error("Je n ai pas reconnu les mots. Tu peux reessayer ou ecrire ta demande."));
     };
 
     recognition.onend = () => {
@@ -79,6 +103,13 @@ export async function recordAndTranscribe({ language = 'fr-FR', onTranscript, on
       });
     };
 
-    recognition.start();
+    try {
+      recognition.start();
+    } catch (error) {
+      if (settled) return;
+      settled = true;
+      stopStream();
+      reject(new Error("L assistant vocal n a pas pu demarrer. Tu peux ecrire ta demande."));
+    }
   });
 }
