@@ -12,6 +12,18 @@ const initialMessages = [
   },
 ];
 
+function isExpectedVoiceRecognitionError(error) {
+  const message = String(error?.message || error?.response?.data?.error || '').toLowerCase();
+  return (
+    message.includes('reconnaissance vocale') ||
+    message.includes('micro') ||
+    message.includes('rien entendu') ||
+    message.includes('reconnu les mots') ||
+    message.includes('voix') ||
+    message.includes('audio')
+  );
+}
+
 export function VoiceAssistant({ language = 'fr-FR' }) {
   const [open, setOpen] = useState(false);
   const [listening, setListening] = useState(false);
@@ -20,6 +32,7 @@ export function VoiceAssistant({ language = 'fr-FR' }) {
   const [manualText, setManualText] = useState('');
   const [messages, setMessages] = useState(initialMessages);
   const [error, setError] = useState('');
+  const [voiceUnavailable, setVoiceUnavailable] = useState(false);
 
   const canUseVoice = useMemo(() => (
     isMicrophoneSupported() && isSpeechRecognitionSupported()
@@ -52,8 +65,9 @@ export function VoiceAssistant({ language = 'fr-FR' }) {
     setError('');
     setTranscriptPreview('');
 
-    if (!canUseVoice) {
-      setError("Micro ou reconnaissance vocale indisponible sur ce navigateur.");
+    if (!canUseVoice || voiceUnavailable) {
+      setVoiceUnavailable(true);
+      setError("La reconnaissance vocale n est pas disponible ici. Ecris ta demande.");
       return;
     }
 
@@ -74,10 +88,15 @@ export function VoiceAssistant({ language = 'fr-FR' }) {
 
       await sendTranscriptToAssistant(transcript);
     } catch (err) {
-      console.warn('Voice assistant error:', err);
       setListening(false);
       setThinking(false);
-      setError(err.response?.data?.error || err.message || 'Erreur reseau avec l assistant.');
+      const message = err.response?.data?.error || err.message || 'Erreur reseau avec l assistant.';
+      if (isExpectedVoiceRecognitionError(err)) {
+        setVoiceUnavailable(true);
+      } else {
+        console.warn('Voice assistant error:', err);
+      }
+      setError(message);
     }
   };
 
@@ -105,7 +124,14 @@ export function VoiceAssistant({ language = 'fr-FR' }) {
       <motion.button
         whileHover={{ scale: 1.04 }}
         whileTap={{ scale: 0.95 }}
-        onClick={handleAsk}
+        onClick={() => {
+          if (voiceUnavailable || !canUseVoice) {
+            setOpen(true);
+            setError("La reconnaissance vocale n est pas disponible ici. Ecris ta demande.");
+            return;
+          }
+          handleAsk();
+        }}
         className={`fixed bottom-6 right-6 z-50 grid h-20 w-20 place-items-center rounded-full text-white shadow-2xl ${
           listening
             ? 'bg-gradient-to-br from-amber-400 to-orange-500'
@@ -134,7 +160,7 @@ export function VoiceAssistant({ language = 'fr-FR' }) {
                   <div>
                     <p className="text-lg font-black">Assistant vocal</p>
                     <p className="text-xs font-bold text-white/80">
-                      {listening ? 'Je t ecoute...' : thinking ? 'Je reflechis...' : 'Pret'}
+                      {listening ? 'Je t ecoute...' : thinking ? 'Je reflechis...' : voiceUnavailable ? 'Texte disponible' : 'Pret'}
                     </p>
                   </div>
                 </div>
@@ -203,11 +229,11 @@ export function VoiceAssistant({ language = 'fr-FR' }) {
               </form>
               <button
                 onClick={handleAsk}
-                disabled={listening || thinking}
+                disabled={listening || thinking || voiceUnavailable || !canUseVoice}
                 className="inline-flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-neutral-900 text-base font-black text-white transition hover:bg-neutral-800 disabled:opacity-60"
               >
                 <MicrophoneIcon className="h-6 w-6" />
-                {listening ? 'Ecoute...' : thinking ? 'Patiente...' : 'Parler'}
+                {listening ? 'Ecoute...' : thinking ? 'Patiente...' : voiceUnavailable || !canUseVoice ? 'Micro indisponible' : 'Parler'}
               </button>
             </div>
           </motion.aside>
