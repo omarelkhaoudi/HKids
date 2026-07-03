@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { booksAPI } from '../api/books';
+import { recommendationsAPI } from '../api/recommendations';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../components/ToastProvider';
 import { BookGridSkeleton } from '../components/SkeletonLoader';
@@ -107,6 +108,15 @@ function formatDuration(seconds = 0) {
   return `${minutes}:${String(rest).padStart(2, '0')}`;
 }
 
+function getRecommendationContext() {
+  return {
+    favorites: storage.getFavorites(),
+    readingHistory: storage.getReadingHistory(),
+    listeningHistory: storage.getListeningHistory(),
+    readingStats: storage.getReadingStats(),
+  };
+}
+
 function KidsLibrary() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -116,6 +126,7 @@ function KidsLibrary() {
   const [selectedTheme, setSelectedTheme] = useState('all');
   const [selectedLanguage, setSelectedLanguage] = useState('all');
   const [loading, setLoading] = useState(true);
+  const [recommendationSections, setRecommendationSections] = useState([]);
   const [readingStats, setReadingStats] = useState(() => storage.getReadingStats());
   const audioPlayer = useAudioPlayer();
 
@@ -133,8 +144,15 @@ function KidsLibrary() {
   const loadData = async () => {
     try {
       setLoading(true);
-      const booksRes = await booksAPI.getPublishedBooks();
+      const [booksRes, recommendationsRes] = await Promise.all([
+        booksAPI.getPublishedBooks(),
+        recommendationsAPI.getForKid(getRecommendationContext()).catch((error) => {
+          console.warn('Recommendations unavailable:', error);
+          return { data: { sections: [] } };
+        }),
+      ]);
       setBooks(booksRes.data || []);
+      setRecommendationSections(recommendationsRes.data?.sections || []);
     } catch (error) {
       console.error('Error loading data:', error);
       showToast('Erreur lors du chargement des livres', 'error');
@@ -177,6 +195,16 @@ function KidsLibrary() {
       showToast('Ajoute aux favoris', 'success');
     }
     setBooks((current) => [...current]);
+    loadRecommendations();
+  };
+
+  const loadRecommendations = async () => {
+    try {
+      const response = await recommendationsAPI.getForKid(getRecommendationContext());
+      setRecommendationSections(response.data?.sections || []);
+    } catch (error) {
+      console.warn('Recommendations refresh unavailable:', error);
+    }
   };
 
   const toggleAudio = async (book) => {
@@ -365,6 +393,21 @@ function KidsLibrary() {
               </section>
             )}
 
+            {recommendationSections.length > 0 && (
+              <section className="mb-8 space-y-8">
+                {recommendationSections.map((section) => (
+                  <RecommendationSection
+                    key={section.id}
+                    section={section}
+                    playingBookId={audioPlayer.activeBook?.id}
+                    playing={audioPlayer.playing}
+                    onToggleAudio={toggleAudio}
+                    onToggleFavorite={toggleFavorite}
+                  />
+                ))}
+              </section>
+            )}
+
             <section>
               <h2 className="mb-4 text-2xl font-black text-neutral-900">Toutes les histoires</h2>
               <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6">
@@ -411,6 +454,38 @@ function KidsLibrary() {
       />
       <VoiceAssistant />
     </div>
+  );
+}
+
+function RecommendationSection({ section, playingBookId, playing, onToggleAudio, onToggleFavorite }) {
+  const books = Array.isArray(section.items) ? section.items : [];
+  if (books.length === 0) return null;
+
+  return (
+    <section>
+      <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h2 className="text-2xl font-black text-neutral-900">{section.title}</h2>
+          {section.subtitle && (
+            <p className="mt-1 text-sm font-bold text-neutral-500">{section.subtitle}</p>
+          )}
+        </div>
+        <span className="rounded-full bg-white px-4 py-2 text-sm font-bold text-neutral-600 shadow-sm">
+          {books.length} choix
+        </span>
+      </div>
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
+        {books.map((book) => (
+          <BookCard
+            key={`${section.id}-${book.id}`}
+            book={book}
+            playing={playingBookId === book.id && playing}
+            onToggleAudio={onToggleAudio}
+            onToggleFavorite={onToggleFavorite}
+          />
+        ))}
+      </div>
+    </section>
   );
 }
 
