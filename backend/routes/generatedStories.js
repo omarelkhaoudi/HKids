@@ -2,6 +2,7 @@ import express from 'express';
 import { getDatabase } from '../database/init.js';
 import { verifyToken } from './auth.js';
 import { generatePersonalizedStory, normalizeStoryRequest } from '../services/ai/storyGenerationService.js';
+import { aiErrorResponse } from '../services/ai/errors.js';
 
 const router = express.Router();
 
@@ -159,8 +160,9 @@ router.post('/generate', verifyToken, async (req, res) => {
 
     res.status(201).json(mapStory(result.rows[0]));
   } catch (err) {
-    if (err.message === 'story_generation_timeout') {
-      return res.status(504).json({ error: 'Story generation timed out. Please try again.' });
+    if (err?.isAIError) {
+      const { status, body } = aiErrorResponse(err);
+      return res.status(status).json(body);
     }
 
     console.error('Error generating story:', err);
