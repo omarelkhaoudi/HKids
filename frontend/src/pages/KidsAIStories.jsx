@@ -146,7 +146,7 @@ function KidsAIStories() {
     setSelectedStory(null);
     loadStories(selectedKidProfileId, filters, collection);
   };
-
+  
   const patchStory = (nextStory) => {
     setStories((current) => current.map((story) => (story.id === nextStory.id ? nextStory : story)));
     setSelectedStory((current) => (current?.id === nextStory.id ? nextStory : current));
