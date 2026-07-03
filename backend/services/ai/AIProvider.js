@@ -13,6 +13,10 @@ export class AIProvider {
     throw new AIProviderMethodNotImplementedError('chat', { provider: this.name });
   }
 
+  async transcribeAudio() {
+    throw new AIProviderMethodNotImplementedError('transcribeAudio', { provider: this.name });
+  }
+
   async recommendContent() {
     throw new AIProviderMethodNotImplementedError('recommendContent', { provider: this.name });
   }

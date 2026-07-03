@@ -6,6 +6,83 @@ export function isMicrophoneSupported() {
   return Boolean(navigator.mediaDevices?.getUserMedia);
 }
 
+export function isAudioRecordingSupported() {
+  return isMicrophoneSupported() && Boolean(window.MediaRecorder);
+}
+
+function getSupportedMimeType() {
+  const candidates = [
+    'audio/webm;codecs=opus',
+    'audio/webm',
+    'audio/mp4',
+    'audio/ogg;codecs=opus'
+  ];
+
+  return candidates.find((type) => window.MediaRecorder?.isTypeSupported?.(type)) || '';
+}
+
+export async function recordAudioClip({ durationMs = 4200, onRecordingStart } = {}) {
+  if (!isAudioRecordingSupported()) {
+    throw new Error("L enregistrement audio n est pas disponible sur ce navigateur.");
+  }
+
+  let stream;
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+  } catch (error) {
+    if (error?.name === 'NotAllowedError' || error?.name === 'PermissionDeniedError') {
+      throw new Error('Autorisation du micro refusee. Autorise le micro puis reessaie.');
+    }
+    if (error?.name === 'NotFoundError' || error?.name === 'DevicesNotFoundError') {
+      throw new Error("Aucun micro n a ete trouve sur cet appareil.");
+    }
+    throw new Error("Impossible d acceder au micro pour le moment.");
+  }
+
+  const chunks = [];
+  const mimeType = getSupportedMimeType();
+  const recorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
+
+  return new Promise((resolve, reject) => {
+    let settled = false;
+    let stopTimer = null;
+
+    const cleanup = () => {
+      if (stopTimer) clearTimeout(stopTimer);
+      stream.getTracks().forEach((track) => track.stop());
+    };
+
+    recorder.ondataavailable = (event) => {
+      if (event.data?.size > 0) chunks.push(event.data);
+    };
+
+    recorder.onerror = () => {
+      if (settled) return;
+      settled = true;
+      cleanup();
+      reject(new Error("L enregistrement audio a echoue. Tu peux ecrire ta demande."));
+    };
+
+    recorder.onstop = () => {
+      if (settled) return;
+      settled = true;
+      cleanup();
+      const audioBlob = chunks.length > 0 ? new Blob(chunks, { type: recorder.mimeType || 'audio/webm' }) : null;
+      if (!audioBlob || audioBlob.size === 0) {
+        reject(new Error("Je n ai pas capte d audio. Reessaie ou ecris ta demande."));
+        return;
+      }
+      resolve({ audioBlob });
+    };
+
+    onRecordingStart?.();
+    recorder.start();
+    stopTimer = setTimeout(() => {
+      if (recorder.state !== 'inactive') recorder.stop();
+    }, durationMs);
+  });
+}
+
 export async function recordAndTranscribe({ language = 'fr-FR', onTranscript, onRecordingStart } = {}) {
   if (!isMicrophoneSupported()) {
     throw new Error("Le micro n est pas disponible sur cet appareil.");
