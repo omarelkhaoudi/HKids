@@ -57,12 +57,16 @@ function KidsStoryStudio() {
   });
   const [story, setStory] = useState(null);
   const [history, setHistory] = useState([]);
+  const [kidProfiles, setKidProfiles] = useState([]);
+  const [selectedKidProfileId, setSelectedKidProfileId] = useState('');
+  const [profilesLoading, setProfilesLoading] = useState(true);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [speaking, setSpeaking] = useState(false);
   const [error, setError] = useState('');
 
-  const canUseKidStudio = user?.role === 'kid';
+  const canUseStoryStudio = ['kid', 'parent', 'admin'].includes(user?.role);
+  const selectedKidProfile = kidProfiles.find((kid) => String(kid.id) === String(selectedKidProfileId));
 
   const characterPreview = useMemo(() => (
     form.characters
@@ -73,10 +77,36 @@ function KidsStoryStudio() {
   ), [form.characters]);
 
   useEffect(() => {
-    if (!canUseKidStudio) return;
+    if (!canUseStoryStudio) return undefined;
 
     let active = true;
-    generatedStoriesAPI.getHistory()
+    setProfilesLoading(true);
+    generatedStoriesAPI.getKidProfiles()
+      .then((response) => {
+        if (!active) return;
+        const profiles = response.data || [];
+        setKidProfiles(profiles);
+        setSelectedKidProfileId((current) => current || profiles[0]?.id || '');
+      })
+      .catch((err) => {
+        console.warn('Could not load kid profiles for story studio:', err);
+        if (active) setError(getErrorMessage(err));
+      })
+      .finally(() => {
+        if (active) setProfilesLoading(false);
+      });
+
+    return () => {
+      active = false;
+      stopSpeaking();
+    };
+  }, [canUseStoryStudio]);
+
+  useEffect(() => {
+    if (!canUseStoryStudio || !selectedKidProfileId) return undefined;
+
+    let active = true;
+    generatedStoriesAPI.getHistory({ kid_profile_id: selectedKidProfileId })
       .then((response) => {
         if (active) setHistory(response.data || []);
       })
@@ -88,20 +118,28 @@ function KidsStoryStudio() {
       active = false;
       stopSpeaking();
     };
-  }, [canUseKidStudio]);
+  }, [canUseStoryStudio, selectedKidProfileId]);
 
   const patchForm = (key, value) => {
     setForm((current) => ({ ...current, [key]: value }));
   };
 
   const handleGenerate = async () => {
+    if (!selectedKidProfileId) {
+      setError('Choisis un profil enfant avant de creer une histoire.');
+      return;
+    }
+
     setError('');
     setLoading(true);
     stopSpeaking();
     setSpeaking(false);
 
     try {
-      const response = await generatedStoriesAPI.generate(form);
+      const response = await generatedStoriesAPI.generate({
+        ...form,
+        kid_profile_id: selectedKidProfileId
+      });
       const nextStory = response.data;
       setStory(nextStory);
       setHistory((current) => [nextStory, ...current.filter((item) => item.id !== nextStory.id)].slice(0, 30));
@@ -146,11 +184,11 @@ function KidsStoryStudio() {
     }
   };
 
-  if (!canUseKidStudio) {
+  if (!canUseStoryStudio) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-rose-50 px-4">
         <div className="max-w-md rounded-2xl bg-white p-6 text-center shadow-xl">
-          <p className="mb-4 text-lg font-black text-neutral-900">Espace enfant requis</p>
+          <p className="mb-4 text-lg font-black text-neutral-900">Espace enfant ou parent requis</p>
           <button
             onClick={() => navigate('/kids')}
             className="rounded-xl bg-neutral-900 px-5 py-3 text-sm font-black text-white"
@@ -192,7 +230,7 @@ function KidsStoryStudio() {
             </div>
             <button
               onClick={handleGenerate}
-              disabled={loading}
+              disabled={loading || profilesLoading || !selectedKidProfileId}
               className="inline-flex min-h-16 items-center justify-center gap-3 rounded-2xl bg-white px-6 py-4 text-lg font-black text-red-600 shadow-lg transition hover:bg-red-50 disabled:opacity-60"
             >
               <SparklesIcon className="h-6 w-6" />
@@ -206,6 +244,40 @@ function KidsStoryStudio() {
             <h2 className="mb-4 text-xl font-black">Ingredients</h2>
 
             <div className="space-y-5">
+              <div>
+                <label className="mb-2 block text-sm font-black text-neutral-700">Enfant</label>
+                {profilesLoading ? (
+                  <div className="rounded-xl border-2 border-red-100 px-4 py-3 text-sm font-bold text-neutral-500">
+                    Chargement...
+                  </div>
+                ) : kidProfiles.length > 0 ? (
+                  <select
+                    value={selectedKidProfileId}
+                    onChange={(event) => {
+                      setSelectedKidProfileId(event.target.value);
+                      setStory(null);
+                      setHistory([]);
+                    }}
+                    className="w-full rounded-xl border-2 border-red-100 px-4 py-3 text-sm font-bold focus:border-red-400 focus:outline-none"
+                  >
+                    {kidProfiles.map((kid) => (
+                      <option key={kid.id} value={kid.id}>
+                        {kid.name}{kid.age ? ` - ${kid.age} ans` : ''}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <div className="rounded-xl border-2 border-amber-100 bg-amber-50 px-4 py-3 text-sm font-bold text-amber-800">
+                    Aucun profil enfant disponible.
+                  </div>
+                )}
+                {selectedKidProfile && (
+                  <p className="mt-2 text-xs font-bold text-neutral-500">
+                    Langue: {(selectedKidProfile.preferred_language || 'fr').toUpperCase()}
+                  </p>
+                )}
+              </div>
+
               <div>
                 <label className="mb-2 block text-sm font-black text-neutral-700">Theme</label>
                 <div className="grid grid-cols-2 gap-2">

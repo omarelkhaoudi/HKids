@@ -7,6 +7,11 @@ const authHeaders = () => {
 };
 
 export const generatedStoriesAPI = {
+  getKidProfiles: () => axios.get(
+    buildApiUrl('/generated-stories/kid-profiles'),
+    { headers: authHeaders(), timeout: 12000 }
+  ),
+
   generate: (data) => axios.post(
     buildApiUrl('/generated-stories/generate'),
     data,

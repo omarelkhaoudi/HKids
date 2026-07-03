@@ -61,6 +61,49 @@ function mapStory(row) {
   };
 }
 
+function mapKidProfile(row) {
+  return {
+    id: row.id,
+    parent_id: row.parent_id,
+    name: row.name,
+    avatar: row.avatar,
+    age: row.age,
+    preferred_language: row.preferred_language,
+    interests: row.interests || []
+  };
+}
+
+router.get('/kid-profiles', verifyToken, async (req, res) => {
+  try {
+    const pool = getPool();
+
+    if (req.user.role === 'kid') {
+      if (!req.user.kid_profile_id) return res.json([]);
+
+      const result = await pool.query('SELECT * FROM kids_profiles WHERE id = $1', [req.user.kid_profile_id]);
+      return res.json(result.rows.map(mapKidProfile));
+    }
+
+    if (req.user.role === 'parent') {
+      const result = await pool.query(
+        'SELECT * FROM kids_profiles WHERE parent_id = $1 ORDER BY created_at DESC',
+        [req.user.id]
+      );
+      return res.json(result.rows.map(mapKidProfile));
+    }
+
+    if (req.user.role === 'admin') {
+      const result = await pool.query('SELECT * FROM kids_profiles ORDER BY created_at DESC LIMIT 100');
+      return res.json(result.rows.map(mapKidProfile));
+    }
+
+    res.status(403).json({ error: 'Kid profile access denied' });
+  } catch (err) {
+    console.error('Error fetching story kid profiles:', err);
+    res.status(500).json({ error: 'Could not load kid profiles' });
+  }
+});
+
 router.post('/generate', verifyToken, async (req, res) => {
   try {
     const pool = getPool();
