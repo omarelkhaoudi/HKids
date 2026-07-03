@@ -23,6 +23,11 @@ export const generatedStoriesAPI = {
     { headers: authHeaders(), params, timeout: 12000 }
   ),
 
+  getById: (id) => axios.get(
+    buildApiUrl(`/generated-stories/${id}`),
+    { headers: authHeaders(), timeout: 12000 }
+  ),
+
   save: (id) => axios.post(
     buildApiUrl(`/generated-stories/${id}/save`),
     {},

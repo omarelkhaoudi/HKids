@@ -223,13 +223,20 @@ export async function initDatabase() {
         user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
         title TEXT NOT NULL,
         story_text TEXT NOT NULL,
+        summary TEXT,
         language TEXT NOT NULL DEFAULT 'fr',
         theme TEXT,
+        age_level TEXT,
         characters TEXT[] DEFAULT '{}',
         estimated_duration_minutes INTEGER NOT NULL DEFAULT 5,
         educational_value TEXT,
         age_at_generation INTEGER,
         prompt_metadata JSONB DEFAULT '{}'::jsonb,
+        generation_metadata JSONB DEFAULT '{}'::jsonb,
+        chapters JSONB DEFAULT '[]'::jsonb,
+        interactive_choices JSONB DEFAULT '[]'::jsonb,
+        illustration_plan JSONB DEFAULT '{}'::jsonb,
+        narration_metadata JSONB DEFAULT '{}'::jsonb,
         provider TEXT NOT NULL DEFAULT 'mock',
         saved BOOLEAN DEFAULT FALSE,
         saved_at TIMESTAMPTZ,
@@ -267,13 +274,20 @@ export async function initDatabase() {
     await client.query(`ALTER TABLE generated_stories ADD COLUMN IF NOT EXISTS user_id INTEGER REFERENCES users(id) ON DELETE SET NULL`);
     await client.query(`ALTER TABLE generated_stories ADD COLUMN IF NOT EXISTS title TEXT NOT NULL DEFAULT 'Histoire personnalisee'`);
     await client.query(`ALTER TABLE generated_stories ADD COLUMN IF NOT EXISTS story_text TEXT NOT NULL DEFAULT ''`);
+    await client.query(`ALTER TABLE generated_stories ADD COLUMN IF NOT EXISTS summary TEXT`);
     await client.query(`ALTER TABLE generated_stories ADD COLUMN IF NOT EXISTS language TEXT NOT NULL DEFAULT 'fr'`);
     await client.query(`ALTER TABLE generated_stories ADD COLUMN IF NOT EXISTS theme TEXT`);
+    await client.query(`ALTER TABLE generated_stories ADD COLUMN IF NOT EXISTS age_level TEXT`);
     await client.query(`ALTER TABLE generated_stories ADD COLUMN IF NOT EXISTS characters TEXT[] DEFAULT '{}'`);
     await client.query(`ALTER TABLE generated_stories ADD COLUMN IF NOT EXISTS estimated_duration_minutes INTEGER NOT NULL DEFAULT 5`);
     await client.query(`ALTER TABLE generated_stories ADD COLUMN IF NOT EXISTS educational_value TEXT`);
     await client.query(`ALTER TABLE generated_stories ADD COLUMN IF NOT EXISTS age_at_generation INTEGER`);
     await client.query(`ALTER TABLE generated_stories ADD COLUMN IF NOT EXISTS prompt_metadata JSONB DEFAULT '{}'::jsonb`);
+    await client.query(`ALTER TABLE generated_stories ADD COLUMN IF NOT EXISTS generation_metadata JSONB DEFAULT '{}'::jsonb`);
+    await client.query(`ALTER TABLE generated_stories ADD COLUMN IF NOT EXISTS chapters JSONB DEFAULT '[]'::jsonb`);
+    await client.query(`ALTER TABLE generated_stories ADD COLUMN IF NOT EXISTS interactive_choices JSONB DEFAULT '[]'::jsonb`);
+    await client.query(`ALTER TABLE generated_stories ADD COLUMN IF NOT EXISTS illustration_plan JSONB DEFAULT '{}'::jsonb`);
+    await client.query(`ALTER TABLE generated_stories ADD COLUMN IF NOT EXISTS narration_metadata JSONB DEFAULT '{}'::jsonb`);
     await client.query(`ALTER TABLE generated_stories ADD COLUMN IF NOT EXISTS provider TEXT NOT NULL DEFAULT 'mock'`);
     await client.query(`ALTER TABLE generated_stories ADD COLUMN IF NOT EXISTS saved BOOLEAN DEFAULT FALSE`);
     await client.query(`ALTER TABLE generated_stories ADD COLUMN IF NOT EXISTS saved_at TIMESTAMPTZ`);

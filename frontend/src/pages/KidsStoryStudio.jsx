@@ -381,8 +381,14 @@ function KidsStoryStudio() {
                           {story.estimated_duration_minutes} min
                         </span>
                         <span className="rounded-full bg-cyan-50 px-3 py-1 text-cyan-700">{story.theme}</span>
+                        {story.age_level && (
+                          <span className="rounded-full bg-violet-50 px-3 py-1 text-violet-700">{story.age_level}</span>
+                        )}
                         <span className="rounded-full bg-green-50 px-3 py-1 text-green-700">{story.educational_value}</span>
                       </div>
+                      {story.summary && (
+                        <p className="mt-3 max-w-2xl text-sm font-bold text-neutral-500">{story.summary}</p>
+                      )}
                     </div>
                     <div className="flex flex-wrap gap-2">
                       <button
@@ -433,7 +439,7 @@ function KidsStoryStudio() {
                           <span className="rounded-full bg-green-100 px-2 py-1 text-[11px] font-black text-green-700">Sauvee</span>
                         )}
                       </div>
-                      <p className="mt-2 line-clamp-2 text-sm font-bold text-neutral-500">{item.story_text}</p>
+                      <p className="mt-2 line-clamp-2 text-sm font-bold text-neutral-500">{item.summary || item.story_text}</p>
                     </button>
                   ))}
                 </div>
