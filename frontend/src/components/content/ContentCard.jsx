@@ -19,9 +19,9 @@ export function ContentCard({ content, playing = false, onToggleAudio }) {
   return (
     <motion.article
       whileHover={{ y: -3 }}
-      className="overflow-hidden rounded-xl bg-white shadow-md ring-1 ring-neutral-100 transition hover:shadow-lg dark:bg-neutral-800 dark:ring-neutral-700"
+      className="flex h-full flex-col overflow-hidden rounded-xl bg-white shadow-md ring-1 ring-neutral-100 transition hover:shadow-lg dark:bg-neutral-800 dark:ring-neutral-700"
     >
-      <Link to={`/book-details/${content.id}`} className="block">
+      <Link to={`/book-details/${content.id}`} className="flex flex-1 flex-col">
         <div className="relative aspect-[4/3] bg-neutral-100 dark:bg-neutral-700">
           {content.cover_url ? (
             <img
@@ -56,7 +56,7 @@ export function ContentCard({ content, playing = false, onToggleAudio }) {
           </span>
         </div>
 
-        <div className="p-4">
+        <div className="flex flex-1 flex-col p-4">
           <div className="mb-2 flex flex-wrap gap-2">
             <span className="inline-flex items-center gap-1 rounded-full bg-red-50 px-3 py-1 text-xs font-bold text-red-600 dark:bg-red-900/30 dark:text-red-200">
               <TagIcon className="h-3.5 w-3.5" />
@@ -75,7 +75,7 @@ export function ContentCard({ content, playing = false, onToggleAudio }) {
             {content.short_description}
           </p>
 
-          <div className="mt-4 flex flex-wrap items-center gap-2 text-sm font-bold text-neutral-500 dark:text-neutral-300">
+          <div className="mt-auto flex flex-wrap items-center gap-2 pt-4 text-sm font-bold text-neutral-500 dark:text-neutral-300">
             <span className="inline-flex items-center gap-1">
               <ClockIcon className="h-4 w-4" />
               {content.duration_label}
@@ -86,7 +86,7 @@ export function ContentCard({ content, playing = false, onToggleAudio }) {
       </Link>
 
       {onToggleAudio && (
-        <div className="px-4 pb-4">
+        <div className="mt-auto px-4 pb-4">
           <button
             onClick={() => onToggleAudio(content)}
             className={`inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl text-sm font-black transition ${
