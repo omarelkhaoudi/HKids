@@ -240,6 +240,10 @@ export async function initDatabase() {
         provider TEXT NOT NULL DEFAULT 'mock',
         saved BOOLEAN DEFAULT FALSE,
         saved_at TIMESTAMPTZ,
+        favorite BOOLEAN DEFAULT FALSE,
+        favorited_at TIMESTAMPTZ,
+        source_story_id INTEGER REFERENCES generated_stories(id) ON DELETE SET NULL,
+        version_number INTEGER NOT NULL DEFAULT 1,
         created_at TIMESTAMPTZ DEFAULT NOW()
       );`
     ];
@@ -291,6 +295,10 @@ export async function initDatabase() {
     await client.query(`ALTER TABLE generated_stories ADD COLUMN IF NOT EXISTS provider TEXT NOT NULL DEFAULT 'mock'`);
     await client.query(`ALTER TABLE generated_stories ADD COLUMN IF NOT EXISTS saved BOOLEAN DEFAULT FALSE`);
     await client.query(`ALTER TABLE generated_stories ADD COLUMN IF NOT EXISTS saved_at TIMESTAMPTZ`);
+    await client.query(`ALTER TABLE generated_stories ADD COLUMN IF NOT EXISTS favorite BOOLEAN DEFAULT FALSE`);
+    await client.query(`ALTER TABLE generated_stories ADD COLUMN IF NOT EXISTS favorited_at TIMESTAMPTZ`);
+    await client.query(`ALTER TABLE generated_stories ADD COLUMN IF NOT EXISTS source_story_id INTEGER REFERENCES generated_stories(id) ON DELETE SET NULL`);
+    await client.query(`ALTER TABLE generated_stories ADD COLUMN IF NOT EXISTS version_number INTEGER NOT NULL DEFAULT 1`);
     await client.query(`ALTER TABLE generated_stories ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW()`);
     await client.query(`ALTER TABLE subscription_plans ADD COLUMN IF NOT EXISTS description TEXT`);
     await client.query(`ALTER TABLE subscription_plans ADD COLUMN IF NOT EXISTS monthly_price_cents INTEGER NOT NULL DEFAULT 0`);
@@ -334,6 +342,8 @@ export async function initDatabase() {
     await client.query(`CREATE INDEX IF NOT EXISTS parental_rules_kid_idx ON parental_rules(kid_profile_id)`);
     await client.query(`CREATE INDEX IF NOT EXISTS generated_stories_kid_created_idx ON generated_stories(kid_profile_id, created_at DESC)`);
     await client.query(`CREATE INDEX IF NOT EXISTS generated_stories_kid_saved_idx ON generated_stories(kid_profile_id, saved, created_at DESC)`);
+    await client.query(`CREATE INDEX IF NOT EXISTS generated_stories_kid_favorite_idx ON generated_stories(kid_profile_id, favorite, created_at DESC)`);
+    await client.query(`CREATE INDEX IF NOT EXISTS generated_stories_source_idx ON generated_stories(source_story_id, version_number)`);
 
     await client.query(`
       INSERT INTO subscription_plans (code, name, description, monthly_price_cents, currency, book_limit, is_featured)

@@ -52,6 +52,13 @@ function KidsHome() {
                 <span>Creer</span>
               </Link>
               <Link
+                to="/kids/ai-stories"
+                className="inline-flex min-h-16 items-center justify-center gap-3 rounded-2xl bg-white px-6 py-4 text-xl font-black text-blue-600 shadow-lg transition hover:bg-blue-50"
+              >
+                <BookIcon className="h-7 w-7" />
+                <span>Mes IA</span>
+              </Link>
+              <Link
                 to="/content-library"
                 className="inline-flex min-h-16 items-center justify-center gap-3 rounded-2xl bg-white px-6 py-4 text-xl font-black text-red-600 shadow-lg transition hover:bg-red-50"
               >
