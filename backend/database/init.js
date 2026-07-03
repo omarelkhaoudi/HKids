@@ -216,6 +216,24 @@ export async function initDatabase() {
         active BOOLEAN DEFAULT TRUE,
         created_at TIMESTAMPTZ DEFAULT NOW(),
         updated_at TIMESTAMPTZ DEFAULT NOW()
+      );`,
+      `CREATE TABLE IF NOT EXISTS generated_stories (
+        id SERIAL PRIMARY KEY,
+        kid_profile_id INTEGER NOT NULL REFERENCES kids_profiles(id) ON DELETE CASCADE,
+        user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+        title TEXT NOT NULL,
+        story_text TEXT NOT NULL,
+        language TEXT NOT NULL DEFAULT 'fr',
+        theme TEXT,
+        characters TEXT[] DEFAULT '{}',
+        estimated_duration_minutes INTEGER NOT NULL DEFAULT 5,
+        educational_value TEXT,
+        age_at_generation INTEGER,
+        prompt_metadata JSONB DEFAULT '{}'::jsonb,
+        provider TEXT NOT NULL DEFAULT 'mock',
+        saved BOOLEAN DEFAULT FALSE,
+        saved_at TIMESTAMPTZ,
+        created_at TIMESTAMPTZ DEFAULT NOW()
       );`
     ];
 
@@ -246,6 +264,20 @@ export async function initDatabase() {
     await client.query(`ALTER TABLE parental_rules ADD COLUMN IF NOT EXISTS allowed_languages TEXT[] DEFAULT '{}'`);
     await client.query(`ALTER TABLE parental_rules ADD COLUMN IF NOT EXISTS allowed_themes TEXT[] DEFAULT '{}'`);
     await client.query(`ALTER TABLE parental_rules ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW()`);
+    await client.query(`ALTER TABLE generated_stories ADD COLUMN IF NOT EXISTS user_id INTEGER REFERENCES users(id) ON DELETE SET NULL`);
+    await client.query(`ALTER TABLE generated_stories ADD COLUMN IF NOT EXISTS title TEXT NOT NULL DEFAULT 'Histoire personnalisee'`);
+    await client.query(`ALTER TABLE generated_stories ADD COLUMN IF NOT EXISTS story_text TEXT NOT NULL DEFAULT ''`);
+    await client.query(`ALTER TABLE generated_stories ADD COLUMN IF NOT EXISTS language TEXT NOT NULL DEFAULT 'fr'`);
+    await client.query(`ALTER TABLE generated_stories ADD COLUMN IF NOT EXISTS theme TEXT`);
+    await client.query(`ALTER TABLE generated_stories ADD COLUMN IF NOT EXISTS characters TEXT[] DEFAULT '{}'`);
+    await client.query(`ALTER TABLE generated_stories ADD COLUMN IF NOT EXISTS estimated_duration_minutes INTEGER NOT NULL DEFAULT 5`);
+    await client.query(`ALTER TABLE generated_stories ADD COLUMN IF NOT EXISTS educational_value TEXT`);
+    await client.query(`ALTER TABLE generated_stories ADD COLUMN IF NOT EXISTS age_at_generation INTEGER`);
+    await client.query(`ALTER TABLE generated_stories ADD COLUMN IF NOT EXISTS prompt_metadata JSONB DEFAULT '{}'::jsonb`);
+    await client.query(`ALTER TABLE generated_stories ADD COLUMN IF NOT EXISTS provider TEXT NOT NULL DEFAULT 'mock'`);
+    await client.query(`ALTER TABLE generated_stories ADD COLUMN IF NOT EXISTS saved BOOLEAN DEFAULT FALSE`);
+    await client.query(`ALTER TABLE generated_stories ADD COLUMN IF NOT EXISTS saved_at TIMESTAMPTZ`);
+    await client.query(`ALTER TABLE generated_stories ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW()`);
     await client.query(`ALTER TABLE subscription_plans ADD COLUMN IF NOT EXISTS description TEXT`);
     await client.query(`ALTER TABLE subscription_plans ADD COLUMN IF NOT EXISTS monthly_price_cents INTEGER NOT NULL DEFAULT 0`);
     await client.query(`ALTER TABLE subscription_plans ADD COLUMN IF NOT EXISTS currency TEXT NOT NULL DEFAULT 'EUR'`);
@@ -286,6 +318,8 @@ export async function initDatabase() {
     await client.query(`CREATE INDEX IF NOT EXISTS kid_reading_sessions_kid_idx ON kid_reading_sessions(kid_profile_id, created_at DESC)`);
     await client.query(`CREATE INDEX IF NOT EXISTS kid_reading_goals_kid_active_idx ON kid_reading_goals(kid_profile_id, active, updated_at DESC)`);
     await client.query(`CREATE INDEX IF NOT EXISTS parental_rules_kid_idx ON parental_rules(kid_profile_id)`);
+    await client.query(`CREATE INDEX IF NOT EXISTS generated_stories_kid_created_idx ON generated_stories(kid_profile_id, created_at DESC)`);
+    await client.query(`CREATE INDEX IF NOT EXISTS generated_stories_kid_saved_idx ON generated_stories(kid_profile_id, saved, created_at DESC)`);
 
     await client.query(`
       INSERT INTO subscription_plans (code, name, description, monthly_price_cents, currency, book_limit, is_featured)

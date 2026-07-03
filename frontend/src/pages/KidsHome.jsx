@@ -43,13 +43,22 @@ function KidsHome() {
                 Choisis ton univers
               </h1>
             </div>
-            <Link
-              to="/content-library"
-              className="inline-flex min-h-16 items-center justify-center gap-3 rounded-2xl bg-white px-6 py-4 text-xl font-black text-red-600 shadow-lg transition hover:bg-red-50"
-            >
-              <AudioIcon className="h-7 w-7" />
-              <span>Histoires</span>
-            </Link>
+            <div className="flex flex-col gap-3 sm:flex-row">
+              <Link
+                to="/kids/story-studio"
+                className="inline-flex min-h-16 items-center justify-center gap-3 rounded-2xl bg-neutral-900 px-6 py-4 text-xl font-black text-white shadow-lg transition hover:bg-neutral-800"
+              >
+                <SparklesIcon className="h-7 w-7" />
+                <span>Creer</span>
+              </Link>
+              <Link
+                to="/content-library"
+                className="inline-flex min-h-16 items-center justify-center gap-3 rounded-2xl bg-white px-6 py-4 text-xl font-black text-red-600 shadow-lg transition hover:bg-red-50"
+              >
+                <AudioIcon className="h-7 w-7" />
+                <span>Histoires</span>
+              </Link>
+            </div>
           </div>
         </section>
 

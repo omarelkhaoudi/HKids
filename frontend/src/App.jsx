@@ -13,6 +13,7 @@ import ParentKidsProfiles from './pages/ParentKidsProfiles';
 import KidsHome from './pages/KidsHome';
 import KidsLibrary from './pages/KidsLibrary';
 import KidsCategoryPage from './pages/KidsCategoryPage';
+import KidsStoryStudio from './pages/KidsStoryStudio';
 import ContentLibraryHome from './pages/ContentLibraryHome';
 import ContentCategoryContents from './pages/ContentCategoryContents';
 import Favorites from './pages/Favorites';
@@ -118,6 +119,7 @@ function App() {
                 <Route path="/parent/*" element={<RequireRole roles={['parent', 'admin']}><ParentDashboard /></RequireRole>} />
                 <Route path="/kids" element={<RequireAuth><KidsHome /></RequireAuth>} />
                 <Route path="/kids/library" element={<RequireRole roles={['kid']}><KidsLibrary /></RequireRole>} />
+                <Route path="/kids/story-studio" element={<RequireRole roles={['kid']}><KidsStoryStudio /></RequireRole>} />
                 <Route path="/kids/category/:categoryId" element={<RequireAuth><KidsCategoryPage /></RequireAuth>} />
               </Routes>
               <ScrollToTop />
