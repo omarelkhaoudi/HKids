@@ -120,7 +120,9 @@ function App() {
                 <Route path="/kids" element={<RequireAuth><KidsHome /></RequireAuth>} />
                 <Route path="/kids/library" element={<RequireRole roles={['kid']}><KidsLibrary /></RequireRole>} />
                 <Route path="/kids/story-studio" element={<RequireRole roles={['kid']}><KidsStoryStudio /></RequireRole>} />
+                <Route path="/kids/storystudio" element={<Navigate to="/kids/story-studio" replace />} />
                 <Route path="/kids/category/:categoryId" element={<RequireAuth><KidsCategoryPage /></RequireAuth>} />
+                <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
               <ScrollToTop />
             </div>
