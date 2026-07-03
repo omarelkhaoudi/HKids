@@ -60,6 +60,24 @@ export const config = {
   // Rate Limiting
   rateLimitMax: parseInt(process.env.RATE_LIMIT_MAX || '100', 10),
   rateLimitWindow: parseInt(process.env.RATE_LIMIT_WINDOW || '900000', 10), // 15 minutes
+
+  // AI provider abstraction
+  ai: {
+    provider: process.env.AI_PROVIDER || 'mock',
+    timeoutMs: parseInt(process.env.AI_TIMEOUT_MS || '15000', 10),
+    openai: {
+      apiKey: process.env.OPENAI_API_KEY || '',
+      model: process.env.OPENAI_MODEL || ''
+    },
+    gemini: {
+      apiKey: process.env.GEMINI_API_KEY || '',
+      model: process.env.GEMINI_MODEL || ''
+    },
+    claude: {
+      apiKey: process.env.CLAUDE_API_KEY || '',
+      model: process.env.CLAUDE_MODEL || ''
+    }
+  },
 };
 
 export default config;

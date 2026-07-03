@@ -1,6 +1,7 @@
 import express from 'express';
 import { verifyToken } from './auth.js';
 import { getVoiceAssistantReply } from '../services/ai/voiceAssistantService.js';
+import { aiErrorResponse } from '../services/ai/errors.js';
 
 const router = express.Router();
 
@@ -23,6 +24,11 @@ router.post('/voice-assistant', verifyToken, async (req, res) => {
 
     res.json(reply);
   } catch (err) {
+    if (err?.isAIError) {
+      const { status, body } = aiErrorResponse(err);
+      return res.status(status).json(body);
+    }
+
     console.error('Error in voice assistant:', err);
     res.status(500).json({ error: 'AI assistant error' });
   }

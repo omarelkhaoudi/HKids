@@ -1,20 +1,12 @@
-import { MockStoryGenerationProvider } from './providers/mockStoryGenerationProvider.js';
+import { AIProviderFactory } from './AIProviderFactory.js';
+import { aiConfig } from './aiConfig.js';
+import { normalizeAIError, withAITimeout } from './errors.js';
 
 const allowedDurations = [2, 5, 8, 12, 15];
 const allowedLanguages = ['fr', 'en', 'ar'];
 const allowedValues = ['friendship', 'courage', 'respect', 'curiosity'];
 
-function createProvider() {
-  const provider = process.env.AI_STORY_PROVIDER || 'mock';
-
-  if (provider !== 'mock') {
-    console.warn(`[ai] Unknown story provider "${provider}", falling back to mock provider.`);
-  }
-
-  return new MockStoryGenerationProvider();
-}
-
-const provider = createProvider();
+const provider = AIProviderFactory.getProvider();
 
 function normalizeText(value, fallback = '') {
   return String(value || fallback).trim().slice(0, 120);
@@ -49,15 +41,6 @@ function normalizeEducationalValue(value) {
   return allowedValues.includes(value) ? value : 'curiosity';
 }
 
-function withTimeout(promise, timeoutMs) {
-  return Promise.race([
-    promise,
-    new Promise((_, reject) => {
-      setTimeout(() => reject(new Error('story_generation_timeout')), timeoutMs);
-    })
-  ]);
-}
-
 export function normalizeStoryRequest(body = {}, kid = {}) {
   return {
     theme: normalizeText(body.theme, 'aventure du soir'),
@@ -68,30 +51,53 @@ export function normalizeStoryRequest(body = {}, kid = {}) {
   };
 }
 
-export async function generatePersonalizedStory({ kid, preferences }) {
-  const timeoutMs = Math.max(3000, Number.parseInt(process.env.AI_STORY_TIMEOUT_MS || '15000', 10));
-  const normalizedPreferences = normalizeStoryRequest(preferences, kid);
-  const safeKid = {
-    id: kid.id,
-    name: normalizeText(kid.name, 'petit lecteur'),
-    age: kid.age === null || kid.age === undefined ? null : Number(kid.age),
-    preferred_language: normalizeLanguage(kid.preferred_language, normalizedPreferences.language),
-    interests: Array.isArray(kid.interests) ? kid.interests.slice(0, 12) : []
-  };
+export class StoryGenerationService {
+  constructor({ aiProvider = provider, timeoutMs = aiConfig.timeoutMs } = {}) {
+    this.aiProvider = aiProvider;
+    this.timeoutMs = timeoutMs;
+  }
 
-  const response = await withTimeout(
-    provider.generate({
-      kid: safeKid,
-      preferences: normalizedPreferences
-    }),
-    timeoutMs
-  );
+  async generatePersonalizedStory({ kid, preferences }) {
+    const normalizedPreferences = normalizeStoryRequest(preferences, kid);
+    const safeKid = {
+      id: kid.id,
+      name: normalizeText(kid.name, 'petit lecteur'),
+      age: kid.age === null || kid.age === undefined ? null : Number(kid.age),
+      preferred_language: normalizeLanguage(kid.preferred_language, normalizedPreferences.language),
+      interests: Array.isArray(kid.interests) ? kid.interests.slice(0, 12) : []
+    };
 
-  return {
-    title: normalizeText(response.title, 'Histoire personnalisee'),
-    story_text: String(response.story_text || '').trim(),
-    preferences: normalizedPreferences,
-    provider: process.env.AI_STORY_PROVIDER || 'mock',
-    provider_metadata: response.provider_metadata || {}
-  };
+    try {
+      const response = await withAITimeout(
+        this.aiProvider.generateStory({
+          kid: safeKid,
+          preferences: normalizedPreferences
+        }),
+        this.timeoutMs,
+        {
+          provider: this.aiProvider.name,
+          message: 'Story generation timed out. Please try again.'
+        }
+      );
+
+      return {
+        title: normalizeText(response.title, 'Histoire personnalisee'),
+        story_text: String(response.story_text || '').trim(),
+        preferences: normalizedPreferences,
+        provider: this.aiProvider.name,
+        provider_metadata: response.provider_metadata || {}
+      };
+    } catch (error) {
+      throw normalizeAIError(error, {
+        provider: this.aiProvider.name,
+        fallbackMessage: 'Story generation failed'
+      });
+    }
+  }
+}
+
+const storyGenerationService = new StoryGenerationService();
+
+export async function generatePersonalizedStory(input) {
+  return storyGenerationService.generatePersonalizedStory(input);
 }

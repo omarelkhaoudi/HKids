@@ -20,6 +20,7 @@ const COPY_PATTERNS = [
   'database',
   'routes',
   'middleware',
+  'services',
   'utils',
   'uploads',
   'package.json',
