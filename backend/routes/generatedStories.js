@@ -1,7 +1,7 @@
 import express from 'express';
 import { getDatabase } from '../database/init.js';
 import { verifyToken } from './auth.js';
-import { generatePersonalizedStory, normalizeStoryRequest } from '../services/ai/storyGenerationService.js';
+import { generatePersonalizedStory, normalizeStoryRequest, validateStoryRequest } from '../services/ai/storyGenerationService.js';
 import { aiErrorResponse } from '../services/ai/errors.js';
 
 const router = express.Router();
@@ -43,18 +43,28 @@ async function getAuthorizedKid(pool, req, requestedKidProfileId = null) {
 }
 
 function mapStory(row) {
+  const storyText = row.story_text || '';
+
   return {
     id: row.id,
     kid_profile_id: row.kid_profile_id,
     title: row.title,
-    story_text: row.story_text,
+    story_text: storyText,
+    story: storyText,
+    summary: row.summary || '',
     language: row.language,
     theme: row.theme,
+    age_level: row.age_level,
     characters: row.characters || [],
     estimated_duration_minutes: Number(row.estimated_duration_minutes || 5),
     educational_value: row.educational_value,
     age_at_generation: row.age_at_generation,
     prompt_metadata: row.prompt_metadata || {},
+    generation_metadata: row.generation_metadata || {},
+    chapters: row.chapters || [],
+    interactive_choices: row.interactive_choices || [],
+    illustration_plan: row.illustration_plan || {},
+    narration_metadata: row.narration_metadata || {},
     provider: row.provider,
     saved: row.saved === true,
     saved_at: row.saved_at,
@@ -114,6 +124,15 @@ router.post('/generate', verifyToken, async (req, res) => {
       return res.status(403).json({ error: 'Kid profile required or not authorized' });
     }
 
+    const validation = validateStoryRequest(req.body);
+    if (!validation.valid) {
+      return res.status(400).json({
+        error: 'Invalid story generation request',
+        code: 'VALIDATION_ERROR',
+        details: validation.errors
+      });
+    }
+
     const preferences = normalizeStoryRequest(req.body, kid);
     const generated = await generatePersonalizedStory({ kid, preferences });
 
@@ -127,33 +146,48 @@ router.post('/generate', verifyToken, async (req, res) => {
         user_id,
         title,
         story_text,
+        summary,
         language,
         theme,
+        age_level,
         characters,
         estimated_duration_minutes,
         educational_value,
         age_at_generation,
         prompt_metadata,
+        generation_metadata,
+        chapters,
+        interactive_choices,
+        illustration_plan,
+        narration_metadata,
         provider
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
       RETURNING *`,
       [
         kid.id,
         req.user.id,
         generated.title,
         generated.story_text,
+        generated.summary,
         generated.preferences.language,
-        generated.preferences.theme,
+        generated.theme,
+        generated.age_level,
         generated.preferences.characters,
-        generated.preferences.estimated_duration_minutes,
+        generated.estimated_duration_minutes,
         generated.preferences.educational_value,
         kid.age || null,
         {
           kid_name: kid.name,
           kid_interests: kid.interests || [],
+          ...(generated.prompt_metadata || {}),
           provider_metadata: generated.provider_metadata
         },
+        generated.generation_metadata || {},
+        generated.chapters || [],
+        generated.interactive_choices || [],
+        generated.illustration_plan || {},
+        generated.narration_metadata || {},
         generated.provider
       ]
     );
@@ -194,6 +228,28 @@ router.get('/', verifyToken, async (req, res) => {
   } catch (err) {
     console.error('Error fetching generated stories:', err);
     res.status(500).json({ error: 'Could not load generated stories' });
+  }
+});
+
+router.get('/:id', verifyToken, async (req, res) => {
+  try {
+    const pool = getPool();
+    const storyResult = await pool.query('SELECT * FROM generated_stories WHERE id = $1', [req.params.id]);
+    const story = storyResult.rows[0];
+
+    if (!story) {
+      return res.status(404).json({ error: 'Story not found' });
+    }
+
+    const kid = await getAuthorizedKid(pool, req, story.kid_profile_id);
+    if (!kid) {
+      return res.status(403).json({ error: 'Not authorized to read this story' });
+    }
+
+    res.json(mapStory(story));
+  } catch (err) {
+    console.error('Error fetching generated story:', err);
+    res.status(500).json({ error: 'Could not load generated story' });
   }
 });
 

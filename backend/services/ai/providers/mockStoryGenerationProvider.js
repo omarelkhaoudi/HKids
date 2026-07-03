@@ -41,8 +41,17 @@ function joinCharacters(characters, fallback) {
   return characters.slice(0, 4).join(', ');
 }
 
+function getAgeLevel(age) {
+  const parsedAge = Number.parseInt(age, 10);
+  if (Number.isNaN(parsedAge)) return 'age_unknown';
+  if (parsedAge <= 5) return 'early_childhood';
+  if (parsedAge <= 8) return 'first_reader';
+  if (parsedAge <= 12) return 'middle_grade';
+  return 'young_teen';
+}
+
 export class MockStoryGenerationProvider {
-  async generate({ kid, preferences }) {
+  async generate({ kid, preferences, prompt, outputSchema }) {
     const language = pickLanguage(kid.preferred_language || preferences.language);
     const name = kid.name || 'petit lecteur';
     const age = kid.age ? `${kid.age} ans` : 'son age';
@@ -84,9 +93,28 @@ export class MockStoryGenerationProvider {
     return {
       title,
       story_text: paragraphs.join('\n\n'),
+      summary: language === 'en'
+        ? `${name} discovers a gentle ${theme} adventure about ${preferences.educational_value}.`
+        : language === 'ar'
+        ? `${name} ÙŠØ¹ÙŠØ´ Ù…ØºØ§Ù…Ø±Ø© Ù‡Ø§Ø¯Ø¦Ø© Ø¹Ù† ${theme}.`
+        : `${name} vit une aventure douce autour de ${theme}.`,
+      estimated_duration_minutes: duration,
+      theme,
+      age_level: getAgeLevel(kid.age),
+      chapters: [],
+      interactive_choices: [],
+      illustration_plan: {
+        status: 'planned',
+        scenes: []
+      },
+      narration_metadata: {
+        status: 'standard_tts'
+      },
       provider_metadata: {
         provider: 'mock',
-        model: 'mock-story-v1'
+        model: 'mock-story-v1',
+        prompt_preview: String(prompt || '').slice(0, 240),
+        output_schema: outputSchema || null
       }
     };
   }
