@@ -17,6 +17,7 @@ export function VoiceAssistant({ language = 'fr-FR' }) {
   const [listening, setListening] = useState(false);
   const [thinking, setThinking] = useState(false);
   const [transcriptPreview, setTranscriptPreview] = useState('');
+  const [manualText, setManualText] = useState('');
   const [messages, setMessages] = useState(initialMessages);
   const [error, setError] = useState('');
 
@@ -28,6 +29,22 @@ export function VoiceAssistant({ language = 'fr-FR' }) {
 
   const addMessage = (role, text) => {
     setMessages((current) => [...current, { role, text }].slice(-8));
+  };
+
+  const sendTranscriptToAssistant = async (transcript) => {
+    addMessage('kid', transcript);
+    setThinking(true);
+    const response = await aiAPI.sendVoiceAssistantRequest(transcript);
+    const replyText = response.data?.reply_text || "Je n ai pas encore de reponse.";
+    addMessage('assistant', replyText);
+    setThinking(false);
+
+    try {
+      await speakText(replyText, { language });
+    } catch (speechError) {
+      console.warn('TTS unavailable:', speechError);
+      setError(speechError.message);
+    }
   };
 
   const handleAsk = async () => {
@@ -51,26 +68,33 @@ export function VoiceAssistant({ language = 'fr-FR' }) {
 
       const transcript = result.transcript.trim();
       if (!transcript) {
-        setError("Je n ai pas bien entendu. Recommence doucement.");
+        setError("Je n ai pas bien entendu. Recommence doucement ou ecris ta demande.");
         return;
       }
 
-      addMessage('kid', transcript);
-      setThinking(true);
-      const response = await aiAPI.sendVoiceAssistantRequest(transcript);
-      const replyText = response.data?.reply_text || "Je n ai pas encore de reponse.";
-      addMessage('assistant', replyText);
-      setThinking(false);
-
-      try {
-        await speakText(replyText, { language });
-      } catch (speechError) {
-        console.warn('TTS unavailable:', speechError);
-        setError(speechError.message);
-      }
+      await sendTranscriptToAssistant(transcript);
     } catch (err) {
-      console.error('Voice assistant error:', err);
+      console.warn('Voice assistant error:', err);
       setListening(false);
+      setThinking(false);
+      setError(err.response?.data?.error || err.message || 'Erreur reseau avec l assistant.');
+    }
+  };
+
+  const handleManualSubmit = async (event) => {
+    event.preventDefault();
+    const text = manualText.trim();
+    if (!text || thinking || listening) return;
+
+    setOpen(true);
+    setError('');
+    setManualText('');
+    setTranscriptPreview('');
+
+    try {
+      await sendTranscriptToAssistant(text);
+    } catch (err) {
+      console.warn('Voice assistant text fallback error:', err);
       setThinking(false);
       setError(err.response?.data?.error || err.message || 'Erreur reseau avec l assistant.');
     }
@@ -161,6 +185,22 @@ export function VoiceAssistant({ language = 'fr-FR' }) {
             </div>
 
             <div className="border-t border-neutral-100 p-4">
+              <form onSubmit={handleManualSubmit} className="mb-3 flex gap-2">
+                <input
+                  value={manualText}
+                  onChange={(event) => setManualText(event.target.value)}
+                  disabled={listening || thinking}
+                  className="min-w-0 flex-1 rounded-2xl border-2 border-neutral-100 px-4 py-3 text-sm font-bold text-neutral-900 outline-none transition focus:border-pink-300 disabled:opacity-60"
+                  placeholder="Ecris ta demande..."
+                />
+                <button
+                  type="submit"
+                  disabled={!manualText.trim() || listening || thinking}
+                  className="rounded-2xl bg-pink-500 px-4 py-3 text-sm font-black text-white transition hover:bg-pink-600 disabled:opacity-60"
+                >
+                  Envoyer
+                </button>
+              </form>
               <button
                 onClick={handleAsk}
                 disabled={listening || thinking}
