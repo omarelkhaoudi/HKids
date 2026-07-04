@@ -27,6 +27,8 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import { LanguageProvider } from './context/LanguageContext';
 import { ToastProvider } from './components/ToastProvider';
 import ErrorBoundary from './components/ErrorBoundary';
+import { OfflineStatusBanner } from './components/offline/OfflineStatusBanner';
+import { OfflineSyncBridge } from './components/offline/OfflineSyncBridge';
 import ScrollToTop from './components/ScrollToTop';
 import { storage } from './utils/storage';
 
@@ -129,6 +131,8 @@ function App() {
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
               <ScrollToTop />
+              <OfflineSyncBridge />
+              <OfflineStatusBanner />
             </div>
           </ToastProvider>
         </AuthProvider>

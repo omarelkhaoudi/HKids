@@ -11,11 +11,14 @@ import { getImageUrl } from '../utils/imageUrl';
 import { storage } from '../utils/storage';
 import { LANGUAGE_FILTERS } from '../constants/contentOptions';
 import { useAudioPlayer } from '../hooks/useAudioPlayer';
+import { useOfflineContent } from '../hooks/useOfflineContent';
+import { getDownloads, offlineContentIds } from '../services/offline/offlineContentService';
 import { AudioPlayer } from '../components/audio/AudioPlayer';
 import { VoiceAssistant } from '../components/kids/VoiceAssistant';
 import {
   AudioIcon,
   BookIcon,
+  DownloadIcon,
   HeartIcon,
   HistoryIcon,
   LogOutIcon,
@@ -132,6 +135,7 @@ function KidsLibrary() {
   const [selectedVoiceId, setSelectedVoiceId] = useState(() => localStorage.getItem('hkids_selected_voice_id') || '');
   const [readingStats, setReadingStats] = useState(() => storage.getReadingStats());
   const audioPlayer = useAudioPlayer();
+  const offlineContent = useOfflineContent();
 
   useEffect(() => {
     if (!user || user.role !== 'kid') {
@@ -163,7 +167,17 @@ function KidsLibrary() {
       setVoiceProfiles(voicesRes.data || []);
     } catch (error) {
       console.error('Error loading data:', error);
-      showToast('Erreur lors du chargement des livres', 'error');
+      if (!navigator.onLine) {
+        const downloads = await getDownloads();
+        const offlineBooks = downloads
+          .filter((item) => item.type === 'book' && item.status === 'downloaded')
+          .map((item) => item.payload);
+        setBooks(offlineBooks);
+        setRecommendationSections([]);
+        showToast('Mode hors connexion: livres telecharges charges', 'info');
+      } else {
+        showToast('Erreur lors du chargement des livres', 'error');
+      }
     } finally {
       setLoading(false);
     }
@@ -204,6 +218,36 @@ function KidsLibrary() {
     }
     setBooks((current) => [...current]);
     loadRecommendations();
+  };
+
+  const handleDownloadBook = async (book) => {
+    try {
+      await offlineContent.downloadBookContent(book);
+      storage.markDownloaded(book.id);
+      showToast('Contenu disponible hors connexion', 'success');
+    } catch (error) {
+      if (error.name === 'AbortError') {
+        showToast('Telechargement annule', 'info');
+        return;
+      }
+      console.error('Book download failed:', error);
+      showToast('Telechargement impossible pour le moment', 'error');
+    }
+  };
+
+  const handleRemoveDownload = async (book) => {
+    try {
+      await offlineContent.deleteDownload(offlineContentIds.book(book.id));
+      storage.unmarkDownloaded(book.id);
+      showToast('Contenu hors connexion supprime', 'info');
+    } catch (error) {
+      console.error('Download removal failed:', error);
+      showToast('Suppression impossible pour le moment', 'error');
+    }
+  };
+
+  const handleCancelDownload = (book) => {
+    offlineContent.cancelDownload(offlineContentIds.book(book.id));
   };
 
   const loadRecommendations = async () => {
@@ -410,6 +454,11 @@ function KidsLibrary() {
                       playing={audioPlayer.activeBook?.id === book.id && audioPlayer.playing}
                       onToggleAudio={toggleAudio}
                       onToggleFavorite={toggleFavorite}
+                      downloadStatus={offlineContent.getBookStatus(book.id)}
+                      downloadProgress={offlineContent.progressById[offlineContentIds.book(book.id)]}
+                      onDownload={handleDownloadBook}
+                      onRemoveDownload={handleRemoveDownload}
+                      onCancelDownload={handleCancelDownload}
                     />
                   ))}
                 </div>
@@ -426,6 +475,10 @@ function KidsLibrary() {
                     playing={audioPlayer.playing}
                     onToggleAudio={toggleAudio}
                     onToggleFavorite={toggleFavorite}
+                    offlineContent={offlineContent}
+                    onDownload={handleDownloadBook}
+                    onRemoveDownload={handleRemoveDownload}
+                    onCancelDownload={handleCancelDownload}
                   />
                 ))}
               </section>
@@ -441,6 +494,11 @@ function KidsLibrary() {
                     playing={audioPlayer.activeBook?.id === book.id && audioPlayer.playing}
                     onToggleAudio={toggleAudio}
                     onToggleFavorite={toggleFavorite}
+                    downloadStatus={offlineContent.getBookStatus(book.id)}
+                    downloadProgress={offlineContent.progressById[offlineContentIds.book(book.id)]}
+                    onDownload={handleDownloadBook}
+                    onRemoveDownload={handleRemoveDownload}
+                    onCancelDownload={handleCancelDownload}
                   />
                 ))}
               </div>
@@ -483,7 +541,7 @@ function KidsLibrary() {
   );
 }
 
-function RecommendationSection({ section, playingBookId, playing, onToggleAudio, onToggleFavorite }) {
+function RecommendationSection({ section, playingBookId, playing, onToggleAudio, onToggleFavorite, offlineContent, onDownload, onRemoveDownload, onCancelDownload }) {
   const books = Array.isArray(section.items) ? section.items : [];
   if (books.length === 0) return null;
 
@@ -508,6 +566,11 @@ function RecommendationSection({ section, playingBookId, playing, onToggleAudio,
             playing={playingBookId === book.id && playing}
             onToggleAudio={onToggleAudio}
             onToggleFavorite={onToggleFavorite}
+            downloadStatus={offlineContent.getBookStatus(book.id)}
+            downloadProgress={offlineContent.progressById[offlineContentIds.book(book.id)]}
+            onDownload={onDownload}
+            onRemoveDownload={onRemoveDownload}
+            onCancelDownload={onCancelDownload}
           />
         ))}
       </div>
@@ -515,11 +578,25 @@ function RecommendationSection({ section, playingBookId, playing, onToggleAudio,
   );
 }
 
-function BookCard({ book, large = false, playing, onToggleAudio, onToggleFavorite }) {
+function BookCard({
+  book,
+  large = false,
+  playing,
+  onToggleAudio,
+  onToggleFavorite,
+  downloadStatus,
+  downloadProgress,
+  onDownload,
+  onRemoveDownload,
+  onCancelDownload
+}) {
   const coverImageUrl = getImageUrl(book.cover_image);
   const favorite = storage.isFavorite(book.id);
   const duration = formatDuration(book.duration_seconds);
   const hasAudio = Boolean(book.audio_url);
+  const downloaded = downloadStatus?.status === 'downloaded';
+  const downloading = downloadStatus?.status === 'downloading' || Number(downloadProgress) > 0;
+  const progress = Math.max(0, Math.min(100, Number(downloadProgress || downloadStatus?.progress || 0)));
 
   return (
     <motion.article
@@ -552,6 +629,11 @@ function BookCard({ book, large = false, playing, onToggleAudio, onToggleFavorit
           {hasAudio && (
             <div className="absolute bottom-3 right-3 grid h-12 w-12 place-items-center rounded-full bg-emerald-500 text-white shadow-lg">
               <AudioIcon className="h-4 w-4" />
+            </div>
+          )}
+          {downloaded && (
+            <div className="absolute right-3 top-3 rounded-full bg-emerald-500 px-3 py-1 text-xs font-black text-white shadow-sm">
+              Telecharge
             </div>
           )}
         </div>
@@ -599,6 +681,36 @@ function BookCard({ book, large = false, playing, onToggleAudio, onToggleFavorit
           <HeartIcon className="h-5 w-5" filled={favorite} />
           Favori
         </button>
+
+        {downloading ? (
+          <div className="mt-2 rounded-2xl bg-blue-50 p-2">
+            <div className="mb-2 h-2 overflow-hidden rounded-full bg-blue-100">
+              <div className="h-full rounded-full bg-blue-500 transition-all" style={{ width: `${progress || 8}%` }} />
+            </div>
+            <button
+              onClick={() => onCancelDownload(book)}
+              className="inline-flex h-9 w-full items-center justify-center rounded-xl bg-white text-xs font-black text-blue-700"
+            >
+              Annuler
+            </button>
+          </div>
+        ) : downloaded ? (
+          <button
+            onClick={() => onRemoveDownload(book)}
+            className="mt-2 inline-flex h-10 w-full items-center justify-center gap-2 rounded-2xl bg-emerald-100 px-3 text-sm font-black text-emerald-700 transition hover:bg-emerald-200"
+          >
+            <DownloadIcon className="h-5 w-5" />
+            Retirer offline
+          </button>
+        ) : (
+          <button
+            onClick={() => onDownload(book)}
+            className="mt-2 inline-flex h-10 w-full items-center justify-center gap-2 rounded-2xl bg-neutral-100 px-3 text-sm font-black text-neutral-700 transition hover:bg-neutral-200"
+          >
+            <DownloadIcon className="h-5 w-5" />
+            Telecharger
+          </button>
+        )}
       </div>
     </motion.article>
   );

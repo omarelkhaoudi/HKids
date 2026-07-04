@@ -1,4 +1,13 @@
+import { queueOfflineMutation } from '../services/offline/offlineSyncService';
+
 // Utilitaires pour le stockage local (localStorage)
+
+function queueMutation(type, payload, conflictKey = null) {
+  if (navigator.onLine) return;
+  queueOfflineMutation(type, payload, conflictKey).catch((error) => {
+    console.warn('Could not queue offline mutation:', error);
+  });
+}
 
 export const storage = {
   // Favoris
@@ -17,6 +26,7 @@ export const storage = {
       if (!favorites.includes(bookId)) {
         favorites.push(bookId);
         localStorage.setItem('hkids_favorites', JSON.stringify(favorites));
+        queueMutation('favorite_add', { bookId, favorite: true }, `book:${bookId}:favorite`);
       }
     } catch (error) {
       console.error('Error adding favorite:', error);
@@ -28,6 +38,7 @@ export const storage = {
       const favorites = storage.getFavorites();
       const filtered = favorites.filter(id => id !== bookId);
       localStorage.setItem('hkids_favorites', JSON.stringify(filtered));
+      queueMutation('favorite_remove', { bookId, favorite: false }, `book:${bookId}:favorite`);
     } catch (error) {
       console.error('Error removing favorite:', error);
     }
@@ -57,6 +68,16 @@ export const storage = {
       }
     } catch (error) {
       console.error('Error marking downloaded content:', error);
+    }
+  },
+
+  unmarkDownloaded: (contentId) => {
+    try {
+      const downloaded = storage.getDownloadedContent();
+      const filtered = downloaded.filter(id => id !== contentId);
+      localStorage.setItem('hkids_downloaded_content', JSON.stringify(filtered));
+    } catch (error) {
+      console.error('Error unmarking downloaded content:', error);
     }
   },
 
@@ -93,6 +114,7 @@ export const storage = {
 
       const filtered = history.filter((item) => item.bookId !== safeEntry.bookId);
       localStorage.setItem('hkids_listening_history', JSON.stringify([safeEntry, ...filtered].slice(0, 50)));
+      queueMutation('listening_history', safeEntry, `book:${safeEntry.bookId}:listening`);
     } catch (error) {
       console.error('Error adding listening history:', error);
     }
@@ -129,6 +151,7 @@ export const storage = {
       // Garder seulement les 50 derniers
       const limited = history.slice(0, 50);
       localStorage.setItem('hkids_history', JSON.stringify(limited));
+      queueMutation('reading_history', historyItem, `book:${bookId}:history`);
     } catch (error) {
       console.error('Error adding to history:', error);
     }
@@ -193,6 +216,13 @@ export const storage = {
       stats.sessions = [session, ...(stats.sessions || [])].slice(0, 50);
 
       localStorage.setItem('hkids_reading_stats', JSON.stringify(stats));
+      queueMutation('reading_progress', {
+        book_id: bookId,
+        current_page: 0,
+        total_pages: 0,
+        duration_seconds: safeDuration,
+        completed: finished
+      }, `book:${bookId}:progress`);
     } catch (error) {
       console.error('Error adding reading session:', error);
     }

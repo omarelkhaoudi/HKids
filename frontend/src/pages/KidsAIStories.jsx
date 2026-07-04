@@ -2,7 +2,10 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { generatedStoriesAPI } from '../api/generatedStories';
 import { speakText, stopSpeaking } from '../services/ai/browserTextToSpeech';
-import { AudioIcon, BookIcon, ChevronLeftIcon, ClockIcon, HeartIcon, HistoryIcon, RefreshIcon, SearchIcon, SparklesIcon, TrashIcon } from '../components/Icons';
+import { useOfflineContent } from '../hooks/useOfflineContent';
+import { getDownloads, offlineContentIds } from '../services/offline/offlineContentService';
+import { queueOfflineMutation } from '../services/offline/offlineSyncService';
+import { AudioIcon, BookIcon, ChevronLeftIcon, ClockIcon, DownloadIcon, HeartIcon, HistoryIcon, RefreshIcon, SearchIcon, SparklesIcon, TrashIcon } from '../components/Icons';
 import { Logo } from '../components/Logo';
 
 const filtersInitialState = {
@@ -51,6 +54,7 @@ function KidsAIStories() {
   const [busyStoryId, setBusyStoryId] = useState(null);
   const [speaking, setSpeaking] = useState(false);
   const [error, setError] = useState('');
+  const offlineContent = useOfflineContent();
 
   const selectedKid = kidProfiles.find((kid) => String(kid.id) === String(selectedKidProfileId));
   const themes = useMemo(() => (
@@ -101,7 +105,17 @@ function KidsAIStories() {
         return nextStories[0] || null;
       });
     } catch (err) {
-      setError(getErrorMessage(err));
+      if (!navigator.onLine) {
+        const downloads = await getDownloads();
+        const offlineStories = downloads
+          .filter((item) => item.type === 'generated-story' && item.status === 'downloaded')
+          .map((item) => item.payload);
+        setStories(offlineStories);
+        setSelectedStory(offlineStories[0] || null);
+        setError('Mode hors connexion: histoires telechargees uniquement.');
+      } else {
+        setError(getErrorMessage(err));
+      }
     } finally {
       setLoading(false);
     }
@@ -175,6 +189,11 @@ function KidsAIStories() {
       const response = await generatedStoriesAPI.setFavorite(story.id, !story.favorite);
       patchStory(response.data);
     } catch (err) {
+      if (!navigator.onLine) {
+        queueOfflineMutation('generated_story_favorite', { storyId: story.id, favorite: !story.favorite }, `generated-story:${story.id}:favorite`);
+        patchStory({ ...story, favorite: !story.favorite });
+        return;
+      }
       setError(getErrorMessage(err));
     } finally {
       setBusyStoryId(null);
@@ -189,6 +208,11 @@ function KidsAIStories() {
       const response = await generatedStoriesAPI.save(story.id);
       patchStory(response.data);
     } catch (err) {
+      if (!navigator.onLine) {
+        queueOfflineMutation('generated_story_save', { storyId: story.id }, `generated-story:${story.id}:save`);
+        patchStory({ ...story, saved: true });
+        return;
+      }
       setError(getErrorMessage(err));
     } finally {
       setBusyStoryId(null);
@@ -220,6 +244,30 @@ function KidsAIStories() {
       const nextStories = stories.filter((item) => item.id !== story.id);
       setStories(nextStories);
       setSelectedStory((current) => (current?.id === story.id ? nextStories[0] || null : current));
+    } catch (err) {
+      setError(getErrorMessage(err));
+    } finally {
+      setBusyStoryId(null);
+    }
+  };
+
+  const handleDownloadStory = async (story) => {
+    setBusyStoryId(story.id);
+    setError('');
+    try {
+      await offlineContent.saveStoryContent(story);
+    } catch (err) {
+      setError(getErrorMessage(err));
+    } finally {
+      setBusyStoryId(null);
+    }
+  };
+
+  const handleRemoveStoryDownload = async (story) => {
+    setBusyStoryId(story.id);
+    setError('');
+    try {
+      await offlineContent.deleteDownload(offlineContentIds.generatedStory(story.id));
     } catch (err) {
       setError(getErrorMessage(err));
     } finally {
@@ -418,6 +466,10 @@ function KidsAIStories() {
                 <p className="mt-1 text-sm font-bold text-neutral-500">Cree ta premiere histoire personnalisee.</p>
               </div>
             ) : stories.map((story) => (
+              (() => {
+                const offlineRecord = offlineContent.getStoryStatus(story.id);
+                const offlineReady = offlineRecord?.status === 'downloaded';
+                return (
               <article
                 key={story.id}
                 className={`rounded-2xl border bg-white p-4 shadow-sm transition ${
@@ -455,8 +507,20 @@ function KidsAIStories() {
                   <button onClick={() => handleDelete(story)} disabled={busyStoryId === story.id} className="rounded-xl bg-red-50 px-3 py-2 text-xs font-black text-red-700 disabled:opacity-60">
                     Supprimer
                   </button>
+                  <button
+                    onClick={() => offlineReady ? handleRemoveStoryDownload(story) : handleDownloadStory(story)}
+                    disabled={busyStoryId === story.id}
+                    className={`col-span-2 inline-flex items-center justify-center gap-2 rounded-xl px-3 py-2 text-xs font-black disabled:opacity-60 ${
+                      offlineReady ? 'bg-emerald-50 text-emerald-700' : 'bg-neutral-100 text-neutral-700'
+                    }`}
+                  >
+                    <DownloadIcon className="h-4 w-4" />
+                    {offlineReady ? 'Telecharge - retirer' : 'Telecharger hors connexion'}
+                  </button>
                 </div>
               </article>
+                );
+              })()
             ))}
           </section>
 
@@ -498,6 +562,14 @@ function KidsAIStories() {
                     </button>
                     <button onClick={() => handleDelete(selectedStory)} disabled={busyStoryId === selectedStory.id} className="rounded-xl bg-red-50 px-4 py-3 text-sm font-black text-red-700 disabled:opacity-60" aria-label="Supprimer">
                       <TrashIcon className="h-5 w-5" />
+                    </button>
+                    <button
+                      onClick={() => offlineContent.getStoryStatus(selectedStory.id)?.status === 'downloaded' ? handleRemoveStoryDownload(selectedStory) : handleDownloadStory(selectedStory)}
+                      disabled={busyStoryId === selectedStory.id}
+                      className="inline-flex items-center gap-2 rounded-xl bg-emerald-50 px-4 py-3 text-sm font-black text-emerald-700 disabled:opacity-60"
+                    >
+                      <DownloadIcon className="h-5 w-5" />
+                      {offlineContent.getStoryStatus(selectedStory.id)?.status === 'downloaded' ? 'Retirer offline' : 'Telecharger'}
                     </button>
                   </div>
                 </div>
