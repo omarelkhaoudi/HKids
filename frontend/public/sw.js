@@ -50,6 +50,27 @@ async function networkFirst(request, cacheName, fallbackUrl = null) {
   }
 }
 
+async function navigationNetworkFirst(request) {
+  const cache = await caches.open(STATIC_CACHE);
+  try {
+    const response = await fetch(request);
+    if (response && response.ok) cache.put(request, response.clone());
+    return response;
+  } catch {
+    return await cache.match(request)
+      || await cache.match('/index.html')
+      || await cache.match('/')
+      || await caches.match('/offline.html')
+      || new Response('Offline page unavailable', {
+        status: 504,
+        statusText: 'Gateway Timeout',
+        headers: {
+          'Content-Type': 'text/plain; charset=utf-8'
+        }
+      });
+  }
+}
+
 async function staleWhileRevalidate(request, cacheName) {
   const cache = await caches.open(cacheName);
   const cached = await cache.match(request);
@@ -63,7 +84,14 @@ async function staleWhileRevalidate(request, cacheName) {
     })
     .catch(() => null);
 
-  return cached || refresh;
+  const response = cached || await refresh;
+  return response || new Response('Offline cache miss', {
+    status: 504,
+    statusText: 'Gateway Timeout',
+    headers: {
+      'Content-Type': 'text/plain; charset=utf-8'
+    }
+  });
 }
 
 self.addEventListener('install', (event) => {
@@ -93,7 +121,7 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(request.url);
 
   if (request.mode === 'navigate') {
-    event.respondWith(networkFirst(request, STATIC_CACHE, '/offline.html'));
+    event.respondWith(navigationNetworkFirst(request));
     return;
   }
 

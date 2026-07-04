@@ -12,15 +12,9 @@
   "icons": [
     {
       "src": "/HKidsimg.webp",
-      "sizes": "192x192",
+      "sizes": "570x570",
       "type": "image/webp",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "/HKidsimg.webp",
-      "sizes": "512x512",
-      "type": "image/webp",
-      "purpose": "any maskable"
+      "purpose": "any"
     }
   ]
 }
