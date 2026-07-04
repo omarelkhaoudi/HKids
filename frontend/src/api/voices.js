@@ -29,4 +29,9 @@ export const voicesAPI = {
     responseType: 'blob'
   }),
   deleteMessage: (id) => axios.delete(buildApiUrl(`/voices/messages/${id}`), { headers: authHeaders() }),
+  generateNarration: ({ book_id, voice_profile_id }) => axios.post(
+    buildApiUrl('/voices/narrations'),
+    { book_id, voice_profile_id },
+    { headers: authHeaders(), timeout: 30000 }
+  ),
 };
