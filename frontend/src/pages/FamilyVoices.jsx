@@ -3,7 +3,9 @@ import { Link, useNavigate } from 'react-router-dom';
 import { voicesAPI } from '../api/voices';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../components/ToastProvider';
-import { AudioIcon, CheckIcon, ChevronLeftIcon, EditIcon, MicrophoneIcon, PlusIcon, TrashIcon, XIcon } from '../components/Icons';
+import { useOfflineContent } from '../hooks/useOfflineContent';
+import { getDownloads, getOfflineBlobUrl, offlineContentIds, saveVoiceMessageOffline } from '../services/offline/offlineContentService';
+import { AudioIcon, CheckIcon, ChevronLeftIcon, DownloadIcon, EditIcon, MicrophoneIcon, PlusIcon, TrashIcon, XIcon } from '../components/Icons';
 import { Logo } from '../components/Logo';
 
 const emptyProfileForm = {
@@ -112,6 +114,7 @@ function FamilyVoices() {
   const [savingMessage, setSavingMessage] = useState(false);
   const profileRecorder = useAudioRecorder();
   const messageRecorder = useAudioRecorder();
+  const offlineContent = useOfflineContent();
 
   const activeProfiles = useMemo(() => profiles.filter((profile) => profile.status !== 'deleted'), [profiles]);
 
@@ -135,7 +138,17 @@ function FamilyVoices() {
       setMessages(messagesRes.data || []);
     } catch (error) {
       console.error('Error loading family voices:', error);
-      showToast('Impossible de charger les voix familiales', 'error');
+      if (!navigator.onLine) {
+        const downloads = await getDownloads();
+        setMessages(
+          downloads
+            .filter((item) => item.type === 'voice-message' && item.status === 'downloaded')
+            .map((item) => item.payload)
+        );
+        showToast('Mode hors connexion: messages telecharges charges', 'info');
+      } else {
+        showToast('Impossible de charger les voix familiales', 'error');
+      }
     } finally {
       setLoading(false);
     }
@@ -251,6 +264,41 @@ function FamilyVoices() {
     } catch (error) {
       console.error('Error deleting voice message:', error);
       showToast('Impossible de supprimer ce message', 'error');
+    }
+  };
+
+  const playMessage = async (message) => {
+    try {
+      const record = offlineContent.downloadsById[offlineContentIds.voiceMessage(message.id)];
+      const audioAssetKey = record?.assetKeys?.find((key) => key.endsWith(':audio'));
+      const offlineAudioUrl = audioAssetKey ? await getOfflineBlobUrl(audioAssetKey) : null;
+      const audioUrl = offlineAudioUrl || URL.createObjectURL((await voicesAPI.getMessageAudioBlob(message.id)).data);
+      const audio = new Audio(audioUrl);
+      audio.onended = () => URL.revokeObjectURL(audioUrl);
+      await audio.play();
+    } catch (error) {
+      showToast('Audio du message indisponible', 'info');
+    }
+  };
+
+  const downloadMessage = async (message) => {
+    try {
+      const audioBlob = message.has_audio ? (await voicesAPI.getMessageAudioBlob(message.id)).data : null;
+      await saveVoiceMessageOffline(message, audioBlob);
+      await offlineContent.refreshDownloads();
+      showToast('Message disponible hors connexion', 'success');
+    } catch (error) {
+      console.error('Voice message download failed:', error);
+      showToast('Telechargement du message impossible', 'error');
+    }
+  };
+
+  const removeMessageDownload = async (message) => {
+    try {
+      await offlineContent.deleteDownload(offlineContentIds.voiceMessage(message.id));
+      showToast('Message hors connexion supprime', 'info');
+    } catch (error) {
+      showToast('Suppression impossible', 'error');
     }
   };
 
@@ -454,7 +502,9 @@ function FamilyVoices() {
               <div className="space-y-3">
                 {messages.length === 0 ? (
                   <p className="rounded-xl bg-neutral-50 p-4 text-sm font-bold text-neutral-500">Aucun message pour le moment.</p>
-                ) : messages.map((message) => (
+                ) : messages.map((message) => {
+                  const offlineReady = offlineContent.downloadsById[offlineContentIds.voiceMessage(message.id)]?.status === 'downloaded';
+                  return (
                   <article key={message.id} className="rounded-xl border border-neutral-100 p-3">
                     <div className="flex items-start justify-between gap-3">
                       <div>
@@ -466,8 +516,30 @@ function FamilyVoices() {
                       </button>
                     </div>
                     {message.message_text && <p className="mt-2 text-sm font-bold text-neutral-600">{message.message_text}</p>}
+                    <div className="mt-3 grid grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => playMessage(message)}
+                        disabled={!message.has_audio}
+                        className="inline-flex items-center justify-center gap-2 rounded-xl bg-neutral-900 px-3 py-2 text-xs font-black text-white disabled:opacity-40"
+                      >
+                        <AudioIcon className="h-4 w-4" />
+                        Ecouter
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => offlineReady ? removeMessageDownload(message) : downloadMessage(message)}
+                        className={`inline-flex items-center justify-center gap-2 rounded-xl px-3 py-2 text-xs font-black ${
+                          offlineReady ? 'bg-emerald-50 text-emerald-700' : 'bg-neutral-100 text-neutral-700'
+                        }`}
+                      >
+                        <DownloadIcon className="h-4 w-4" />
+                        {offlineReady ? 'Retirer offline' : 'Telecharger'}
+                      </button>
+                    </div>
                   </article>
-                ))}
+                  );
+                })}
               </div>
             </section>
           </aside>

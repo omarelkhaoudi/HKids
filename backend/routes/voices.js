@@ -417,6 +417,25 @@ router.post('/messages', verifyToken, requireParent, upload.single('audio'), asy
   }
 });
 
+router.get('/messages/:id/audio', verifyToken, requireParent, async (req, res) => {
+  try {
+    const pool = getPool();
+    const result = await pool.query(
+      `SELECT audio_path FROM voice_messages
+       WHERE id = $1 AND user_id = $2 AND deleted_at IS NULL`,
+      [req.params.id, req.user.id]
+    );
+
+    const audioPath = result.rows[0]?.audio_path;
+    if (!audioPath) return res.status(404).json({ error: 'Message audio not found' });
+
+    res.redirect(audioPath);
+  } catch (err) {
+    console.error('Error loading voice message audio:', err);
+    res.status(500).json({ error: 'Could not load message audio' });
+  }
+});
+
 router.delete('/messages/:id', verifyToken, requireParent, async (req, res) => {
   try {
     const pool = getPool();
