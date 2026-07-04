@@ -2,8 +2,9 @@ import { Link, Navigate, useNavigate, useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import { getKidCategory } from '../constants/kidCategories';
-import { ChevronLeftIcon, LogOutIcon } from '../components/Icons';
+import { BookIcon, ChevronLeftIcon, LogOutIcon } from '../components/Icons';
 import { Logo } from '../components/Logo';
+import { VoiceAssistant } from '../components/kids/VoiceAssistant';
 
 function KidsCategoryPage() {
   const { categoryId } = useParams();
@@ -38,10 +39,11 @@ function KidsCategoryPage() {
 
         <Link
           to="/kids"
-          className="mb-5 inline-flex min-h-12 items-center gap-2 rounded-2xl bg-white px-4 py-3 font-black text-neutral-800 shadow-md transition hover:bg-neutral-50"
+          className="mb-5 inline-flex min-h-16 items-center gap-3 rounded-2xl bg-white px-5 py-4 font-black text-neutral-800 shadow-md transition hover:bg-neutral-50"
+          aria-label="Retour accueil"
         >
-          <ChevronLeftIcon className="h-6 w-6" />
-          <span>Retour</span>
+          <ChevronLeftIcon className="h-8 w-8" />
+          <span className="text-lg">Retour</span>
         </Link>
 
         <motion.main
@@ -50,15 +52,28 @@ function KidsCategoryPage() {
           className={`grid min-h-[55vh] place-items-center rounded-[2rem] bg-gradient-to-br ${category.gradient} p-8 text-center text-white shadow-xl ring-4 ${category.ring}`}
         >
           <div>
-            <div className="mx-auto mb-6 grid h-32 w-32 place-items-center rounded-[2rem] bg-white/25 text-7xl shadow-inner backdrop-blur">
+            <motion.div
+              animate={{ y: [0, -8, 0] }}
+              transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+              className="mx-auto mb-6 grid h-36 w-36 place-items-center rounded-[2rem] bg-white/25 text-8xl shadow-inner backdrop-blur"
+            >
               {category.pictogram}
-            </div>
+            </motion.div>
             <h1 className="text-5xl font-black leading-tight sm:text-6xl">
-              {category.label}
+              {category.shortLabel || category.label}
             </h1>
+            <Link
+              to="/kids/library"
+              className="mx-auto mt-8 inline-flex min-h-20 min-w-52 items-center justify-center gap-4 rounded-[1.75rem] bg-white px-8 text-2xl font-black text-neutral-900 shadow-xl transition hover:scale-105"
+              aria-label={`Voir les histoires ${category.label}`}
+            >
+              <BookIcon className="h-9 w-9" />
+              <span>Histoires</span>
+            </Link>
           </div>
         </motion.main>
       </div>
+      <VoiceAssistant />
     </div>
   );
 }
