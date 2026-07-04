@@ -4,13 +4,14 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import { parentalAPI } from '../api/parental';
 import { categoriesAPI } from '../api/books';
+import { learningAPI } from '../api/learning';
 import { useToast } from '../components/ToastProvider';
 import { CONTENT_LANGUAGES, CONTENT_THEMES } from '../constants/contentOptions';
 import { buildKidPayload, createEmptyKidForm, kidToForm } from '../utils/kidProfiles';
 import { 
   UserIcon, LogOutIcon, PlusIcon, XIcon, CheckIcon, 
   ChildIcon, LockIcon, EditIcon, TrashIcon, BookIcon,
-  HistoryIcon, MicrophoneIcon, AudioIcon, ClockIcon
+  HistoryIcon, MicrophoneIcon, AudioIcon, ClockIcon, BrainIcon, StarIcon
 } from '../components/Icons';
 import { Logo } from '../components/Logo';
 import { KidAvatar } from '../components/parent/KidAvatar';
@@ -34,6 +35,7 @@ function ParentDashboard() {
   const [selectedKid, setSelectedKid] = useState(null);
   const [approvals, setApprovals] = useState([]);
   const [kidActivity, setKidActivity] = useState(null);
+  const [learningActivity, setLearningActivity] = useState(null);
   const [activityLoading, setActivityLoading] = useState(false);
   const [goalSaving, setGoalSaving] = useState(false);
   const [rulesLoading, setRulesLoading] = useState(false);
@@ -88,6 +90,7 @@ function ParentDashboard() {
         setActiveSection('overview');
         loadApprovals(kidsData[0].id, categoriesData);
         loadKidActivity(kidsData[0].id);
+        loadLearningActivity(kidsData[0].id);
         loadRules(kidsData[0].id);
       }
     } catch (error) {
@@ -171,7 +174,18 @@ function ParentDashboard() {
     setActiveSection('overview');
     loadApprovals(kid.id);
     loadKidActivity(kid.id);
+    loadLearningActivity(kid.id);
     loadRules(kid.id);
+  };
+
+  const loadLearningActivity = async (kidId) => {
+    try {
+      const response = await learningAPI.getParentSummary(kidId);
+      setLearningActivity(response.data);
+    } catch (error) {
+      console.warn('Learning activity unavailable:', error);
+      setLearningActivity(null);
+    }
   };
 
   const handleToggleApproval = async (categoryId, approved) => {
@@ -368,6 +382,13 @@ function ParentDashboard() {
       detail: `${rulesForm.quiet_start_time || '--:--'} - ${rulesForm.quiet_end_time || '--:--'}`,
       icon: ClockIcon,
       tone: 'bg-amber-50 text-amber-600 dark:bg-amber-900/20 dark:text-amber-300'
+    },
+    {
+      label: 'Jeux educatifs',
+      value: learningActivity?.summary?.attempts || 0,
+      detail: `${learningActivity?.summary?.successes || 0} reussites`,
+      icon: BrainIcon,
+      tone: 'bg-violet-50 text-violet-600 dark:bg-violet-900/20 dark:text-violet-300'
     }
   ];
   const parentSections = [
@@ -376,6 +397,7 @@ function ParentDashboard() {
     { id: 'access', label: 'Acces aux livres' },
     { id: 'rules', label: 'Regles' },
     { id: 'reading', label: 'Suivi' },
+    { id: 'learning', label: 'Jeux' },
     { id: 'subscription', label: 'Abonnement' },
     { id: 'voice', label: 'Voix' },
     { id: 'notifications', label: 'Notifications' }
@@ -1172,6 +1194,106 @@ function ParentDashboard() {
                     </>
                   )}
                 </div>
+                )}
+
+                {activeSection === 'learning' && (
+                  <div className="rounded-xl bg-white p-6 shadow-lg dark:bg-neutral-800">
+                    <div className="mb-6 flex items-center justify-between">
+                      <div>
+                        <h2 className="text-xl font-bold text-neutral-800 dark:text-neutral-200">
+                          Jeux educatifs de {selectedKid.name}
+                        </h2>
+                        <p className="mt-1 text-sm text-neutral-500">
+                          Quiz realises, defis, temps passe et recompenses.
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => loadLearningActivity(selectedKid.id)}
+                        className="rounded-lg bg-neutral-100 px-4 py-2 font-semibold text-neutral-700 transition-colors hover:bg-neutral-200 dark:bg-neutral-700 dark:text-neutral-200"
+                      >
+                        Actualiser
+                      </button>
+                    </div>
+
+                    <div className="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-4">
+                      <div className="rounded-lg bg-violet-50 p-4 dark:bg-violet-900/20">
+                        <span className="block text-sm text-neutral-500">Quiz</span>
+                        <span className="text-2xl font-bold text-violet-600">{learningActivity?.summary?.attempts || 0}</span>
+                      </div>
+                      <div className="rounded-lg bg-green-50 p-4 dark:bg-green-900/20">
+                        <span className="block text-sm text-neutral-500">Reussites</span>
+                        <span className="text-2xl font-bold text-green-600">{learningActivity?.summary?.successes || 0}</span>
+                      </div>
+                      <div className="rounded-lg bg-blue-50 p-4 dark:bg-blue-900/20">
+                        <span className="block text-sm text-neutral-500">Score moyen</span>
+                        <span className="text-2xl font-bold text-blue-600">{learningActivity?.summary?.average_score || 0}%</span>
+                      </div>
+                      <div className="rounded-lg bg-amber-50 p-4 dark:bg-amber-900/20">
+                        <span className="block text-sm text-neutral-500">Temps</span>
+                        <span className="text-2xl font-bold text-amber-600">{formatDuration(learningActivity?.summary?.time_spent_seconds)}</span>
+                      </div>
+                    </div>
+
+                    <div className="grid gap-6 lg:grid-cols-2">
+                      <section>
+                        <h3 className="mb-3 font-bold text-neutral-900 dark:text-neutral-100">Defis</h3>
+                        <div className="space-y-3">
+                          {(learningActivity?.challenges || []).length > 0 ? learningActivity.challenges.map((challenge) => (
+                            <div key={challenge.id} className="rounded-xl bg-neutral-50 p-4 dark:bg-neutral-700">
+                              <div className="flex items-center justify-between gap-3">
+                                <p className="font-bold text-neutral-900 dark:text-neutral-100">{challenge.title}</p>
+                                <span className="text-2xl">{challenge.reward_icon || '🏅'}</span>
+                              </div>
+                              <div className="mt-3 h-3 overflow-hidden rounded-full bg-neutral-200 dark:bg-neutral-600">
+                                <div
+                                  className="h-full rounded-full bg-violet-500"
+                                  style={{ width: `${Math.min(100, (Number(challenge.progress_value || 0) / Math.max(1, Number(challenge.target_value || 1))) * 100)}%` }}
+                                />
+                              </div>
+                            </div>
+                          )) : (
+                            <p className="rounded-xl bg-neutral-50 p-4 text-sm text-neutral-500 dark:bg-neutral-700">Aucun defi commence.</p>
+                          )}
+                        </div>
+                      </section>
+
+                      <section>
+                        <h3 className="mb-3 font-bold text-neutral-900 dark:text-neutral-100">Recompenses</h3>
+                        <div className="grid grid-cols-2 gap-3">
+                          {(learningActivity?.rewards || []).length > 0 ? learningActivity.rewards.map((reward) => (
+                            <div key={reward.id} className="rounded-xl bg-yellow-50 p-4 dark:bg-yellow-900/20">
+                              <span className="text-3xl">{reward.icon || reward.payload?.icon || '⭐'}</span>
+                              <p className="mt-2 font-bold text-neutral-900 dark:text-neutral-100">{reward.name || reward.payload?.name || 'Recompense'}</p>
+                            </div>
+                          )) : (
+                            <p className="col-span-2 rounded-xl bg-neutral-50 p-4 text-sm text-neutral-500 dark:bg-neutral-700">Aucune recompense pour le moment.</p>
+                          )}
+                        </div>
+                      </section>
+                    </div>
+
+                    <section className="mt-6">
+                      <h3 className="mb-3 font-bold text-neutral-900 dark:text-neutral-100">Derniers quiz</h3>
+                      <div className="divide-y divide-neutral-200 overflow-hidden rounded-xl border border-neutral-200 dark:divide-neutral-700 dark:border-neutral-700">
+                        {(learningActivity?.recent_attempts || []).length > 0 ? learningActivity.recent_attempts.map((attempt) => (
+                          <div key={attempt.id} className="flex items-center justify-between gap-3 bg-white p-4 dark:bg-neutral-800">
+                            <div className="flex items-center gap-3">
+                              <span className="text-2xl">{attempt.category_pictogram || '⭐'}</span>
+                              <div>
+                                <p className="font-semibold text-neutral-900 dark:text-neutral-100">{attempt.title}</p>
+                                <p className="text-xs text-neutral-500">{formatDate(attempt.created_at)}</p>
+                              </div>
+                            </div>
+                            <span className={`rounded-full px-3 py-1 text-sm font-bold ${attempt.success ? 'bg-green-50 text-green-700' : 'bg-amber-50 text-amber-700'}`}>
+                              {attempt.score}/{attempt.max_score}
+                            </span>
+                          </div>
+                        )) : (
+                          <p className="bg-neutral-50 p-4 text-sm text-neutral-500 dark:bg-neutral-700">Aucun quiz realise.</p>
+                        )}
+                      </div>
+                    </section>
+                  </div>
                 )}
 
                 {activeSection === 'subscription' && (
