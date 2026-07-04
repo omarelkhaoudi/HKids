@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { learningAPI } from '../api/learning';
+import { generatedStoriesAPI } from '../api/generatedStories';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../components/ToastProvider';
 import { AudioIcon, BookIcon, ChevronLeftIcon, CheckIcon, HomeIcon, LogOutIcon, SparklesIcon, StarIcon } from '../components/Icons';
@@ -18,6 +19,8 @@ function KidsLearning() {
   const [answers, setAnswers] = useState({});
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [kidProfiles, setKidProfiles] = useState([]);
+  const [selectedKidProfileId, setSelectedKidProfileId] = useState('');
   const [startedAt, setStartedAt] = useState(Date.now());
 
   useEffect(() => {
@@ -25,12 +28,27 @@ function KidsLearning() {
     loadLearning();
   }, [user]);
 
+  useEffect(() => {
+    if (!user || user.role === 'kid') return;
+
+    generatedStoriesAPI.getKidProfiles()
+      .then((response) => {
+        const profiles = response.data || [];
+        setKidProfiles(profiles);
+        setSelectedKidProfileId((current) => current || String(profiles[0]?.id || ''));
+      })
+      .catch((error) => {
+        console.warn('Kid profiles unavailable for learning:', error);
+        setKidProfiles([]);
+      });
+  }, [user]);
+
   const loadLearning = async () => {
     try {
       setLoading(true);
       const [contentsRes, challengesRes] = await Promise.all([
         learningAPI.getContents(),
-        learningAPI.getChallenges().catch(() => ({ data: [] })),
+        learningAPI.getChallenges(selectedKidProfileId ? { kid_profile_id: selectedKidProfileId } : {}).catch(() => ({ data: [] })),
       ]);
       setContents(contentsRes.data || []);
       setChallenges(challengesRes.data || []);
@@ -41,6 +59,13 @@ function KidsLearning() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (!selectedKidProfileId) return;
+    learningAPI.getChallenges({ kid_profile_id: selectedKidProfileId })
+      .then((response) => setChallenges(response.data || []))
+      .catch((error) => console.warn('Learning challenges unavailable:', error));
+  }, [selectedKidProfileId]);
 
   const categories = useMemo(() => {
     const map = new Map();
@@ -77,7 +102,13 @@ function KidsLearning() {
 
   const submit = async () => {
     if (!selectedContent) return;
+    if (user?.role !== 'kid' && !selectedKidProfileId) {
+      showToast('Choisis un profil enfant pour enregistrer le score', 'info');
+      return;
+    }
+
     const payload = {
+      ...(selectedKidProfileId ? { kid_profile_id: selectedKidProfileId } : {}),
       answers: (selectedContent.questions || []).map((question) => ({
         question_id: question.id,
         answer: { value: answers[question.id] },
@@ -147,6 +178,31 @@ function KidsLearning() {
             </div>
           </div>
         </section>
+
+        {user?.role !== 'kid' && (
+          <section className="mb-6 rounded-[1.5rem] bg-white p-4 shadow-lg">
+            <label className="mb-2 block text-sm font-black text-neutral-600">
+              Profil enfant
+            </label>
+            {kidProfiles.length > 0 ? (
+              <select
+                value={selectedKidProfileId}
+                onChange={(event) => setSelectedKidProfileId(event.target.value)}
+                className="h-14 w-full rounded-2xl border-2 border-violet-100 px-4 text-base font-black outline-none focus:border-violet-400"
+              >
+                {kidProfiles.map((kid) => (
+                  <option key={kid.id} value={kid.id}>
+                    {kid.name}{kid.age ? ` - ${kid.age} ans` : ''}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <p className="rounded-2xl bg-amber-50 px-4 py-3 text-sm font-black text-amber-800">
+                Aucun profil enfant disponible pour enregistrer les scores.
+              </p>
+            )}
+          </section>
+        )}
 
         {selectedContent ? (
           <section className="rounded-[2rem] bg-white p-5 shadow-xl">
