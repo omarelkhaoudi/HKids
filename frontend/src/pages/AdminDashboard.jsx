@@ -7,7 +7,8 @@ import AdminOverview from '../components/admin/AdminOverview';
 import AdminUsers from '../components/admin/AdminUsers';
 import AdminStatistics from '../components/admin/AdminStatistics';
 import AdminSubscriptions from '../components/admin/AdminSubscriptions';
-import { BookIcon, TagIcon, UserIcon, LogOutIcon, HomeIcon, HistoryIcon, CheckIcon } from '../components/Icons';
+import LearningManagement from '../components/admin/LearningManagement';
+import { BookIcon, TagIcon, UserIcon, LogOutIcon, HomeIcon, HistoryIcon, CheckIcon, BrainIcon } from '../components/Icons';
 import { Logo } from '../components/Logo';
 
 function AdminDashboard() {
@@ -29,6 +30,7 @@ function AdminDashboard() {
     { to: '/admin', label: 'Tableau de bord', icon: HomeIcon, end: true },
     { to: '/admin/contents', label: 'Contenus', icon: BookIcon },
     { to: '/admin/categories', label: 'Categories', icon: TagIcon },
+    { to: '/admin/learning', label: 'Quiz & Jeux', icon: BrainIcon },
     { to: '/admin/users', label: 'Utilisateurs', icon: UserIcon },
     { to: '/admin/subscriptions', label: 'Abonnements', icon: CheckIcon },
     { to: '/admin/statistics', label: 'Statistiques', icon: HistoryIcon },
@@ -163,6 +165,7 @@ function AdminDashboard() {
             <Route index element={<AdminOverview />} />
             <Route path="contents" element={<BookManagement />} />
             <Route path="categories" element={<CategoryManagement />} />
+            <Route path="learning" element={<LearningManagement />} />
             <Route path="users" element={<AdminUsers />} />
             <Route path="subscriptions" element={<AdminSubscriptions />} />
             <Route path="statistics" element={<AdminStatistics />} />

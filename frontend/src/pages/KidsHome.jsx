@@ -5,7 +5,7 @@ import { KID_CATEGORIES } from '../constants/kidCategories';
 import { KidCategoryCard } from '../components/kids/KidCategoryCard';
 import { VoiceAssistant } from '../components/kids/VoiceAssistant';
 import { Logo } from '../components/Logo';
-import { AudioIcon, BookIcon, LogOutIcon, SparklesIcon } from '../components/Icons';
+import { AudioIcon, BookIcon, BrainIcon, LogOutIcon, SparklesIcon } from '../components/Icons';
 
 function KidsHome() {
   const { user, logout } = useAuth();
@@ -43,7 +43,7 @@ function KidsHome() {
                 Choisis
               </h1>
             </div>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
               <Link
                 to="/kids/story-studio"
                 aria-label="Creer une histoire"
@@ -67,6 +67,14 @@ function KidsHome() {
               >
                 <AudioIcon className="h-10 w-10" />
                 <span className="text-sm font-black">Audio</span>
+              </Link>
+              <Link
+                to="/kids/learning"
+                aria-label="Quiz et jeux"
+                className="grid min-h-24 min-w-24 place-items-center rounded-[1.75rem] bg-white p-4 text-violet-600 shadow-lg transition hover:bg-violet-50"
+              >
+                <BrainIcon className="h-10 w-10" />
+                <span className="text-sm font-black">Jeux</span>
               </Link>
             </div>
           </div>
