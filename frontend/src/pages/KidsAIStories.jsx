@@ -7,6 +7,7 @@ import { getDownloads, offlineContentIds } from '../services/offline/offlineCont
 import { queueOfflineMutation } from '../services/offline/offlineSyncService';
 import { AudioIcon, BookIcon, ChevronLeftIcon, ClockIcon, DownloadIcon, HeartIcon, HistoryIcon, RefreshIcon, SearchIcon, SparklesIcon, TrashIcon } from '../components/Icons';
 import { Logo } from '../components/Logo';
+import { VoiceAssistant } from '../components/kids/VoiceAssistant';
 
 const filtersInitialState = {
   search: '',
@@ -582,6 +583,7 @@ function KidsAIStories() {
           </section>
         </main>
       </div>
+      <VoiceAssistant />
     </div>
   );
 }

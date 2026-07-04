@@ -8,8 +8,14 @@ import { speakText, stopSpeaking } from '../../services/ai/browserTextToSpeech';
 const initialMessages = [
   {
     role: 'assistant',
-    text: 'Appuie sur le micro et demande une histoire.',
+    text: '🎙️ Appuie et parle.',
   },
+];
+
+const quickVoiceActions = [
+  { icon: '🎧', label: 'Audio', prompt: 'Je veux ecouter une histoire courte.' },
+  { icon: '🦖', label: 'Dino', prompt: 'Je veux une histoire de dinosaures.' },
+  { icon: '🚀', label: 'Fusee', prompt: 'Je veux une histoire dans l espace.' },
 ];
 
 function isExpectedVoiceRecordingError(error) {
@@ -118,6 +124,21 @@ export function VoiceAssistant({ language = 'fr-FR' }) {
     }
   };
 
+  const handleQuickAction = async (prompt) => {
+    if (thinking || listening) return;
+    setOpen(true);
+    setError('');
+    setTranscriptPreview('');
+
+    try {
+      await sendTranscriptToAssistant(prompt);
+    } catch (err) {
+      console.warn('Voice assistant quick action error:', err);
+      setThinking(false);
+      setError(err.response?.data?.error || err.message || 'Erreur reseau avec l assistant.');
+    }
+  };
+
   return (
     <>
       <motion.button
@@ -210,6 +231,22 @@ export function VoiceAssistant({ language = 'fr-FR' }) {
             </div>
 
             <div className="border-t border-neutral-100 p-4">
+              <div className="mb-3 grid grid-cols-3 gap-2">
+                {quickVoiceActions.map((action) => (
+                  <button
+                    key={action.label}
+                    type="button"
+                    onClick={() => handleQuickAction(action.prompt)}
+                    disabled={listening || thinking}
+                    className="grid min-h-20 place-items-center rounded-2xl bg-neutral-100 text-neutral-900 transition hover:bg-neutral-200 disabled:opacity-60"
+                    aria-label={action.prompt}
+                    title={action.label}
+                  >
+                    <span className="text-3xl" aria-hidden="true">{action.icon}</span>
+                    <span className="text-xs font-black">{action.label}</span>
+                  </button>
+                ))}
+              </div>
               <form onSubmit={handleManualSubmit} className="mb-3 flex gap-2">
                 <input
                   value={manualText}

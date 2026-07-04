@@ -39,31 +39,34 @@ function KidsHome() {
                 <SparklesIcon className="h-5 w-5" />
                 <span>{user?.username || 'Bienvenue'}</span>
               </div>
-              <h1 className="text-4xl font-black leading-tight sm:text-5xl">
-                Choisis ton univers
+              <h1 className="text-5xl font-black leading-tight sm:text-6xl">
+                Choisis
               </h1>
             </div>
-            <div className="flex flex-col gap-3 sm:flex-row">
+            <div className="grid grid-cols-3 gap-3">
               <Link
                 to="/kids/story-studio"
-                className="inline-flex min-h-16 items-center justify-center gap-3 rounded-2xl bg-neutral-900 px-6 py-4 text-xl font-black text-white shadow-lg transition hover:bg-neutral-800"
+                aria-label="Creer une histoire"
+                className="grid min-h-24 min-w-24 place-items-center rounded-[1.75rem] bg-neutral-900 p-4 text-white shadow-lg transition hover:bg-neutral-800"
               >
-                <SparklesIcon className="h-7 w-7" />
-                <span>Creer</span>
+                <SparklesIcon className="h-10 w-10" />
+                <span className="text-sm font-black">Creer</span>
               </Link>
               <Link
                 to="/kids/ai-stories"
-                className="inline-flex min-h-16 items-center justify-center gap-3 rounded-2xl bg-white px-6 py-4 text-xl font-black text-blue-600 shadow-lg transition hover:bg-blue-50"
+                aria-label="Mes histoires IA"
+                className="grid min-h-24 min-w-24 place-items-center rounded-[1.75rem] bg-white p-4 text-blue-600 shadow-lg transition hover:bg-blue-50"
               >
-                <BookIcon className="h-7 w-7" />
-                <span>Mes IA</span>
+                <BookIcon className="h-10 w-10" />
+                <span className="text-sm font-black">Mes IA</span>
               </Link>
               <Link
                 to="/content-library"
-                className="inline-flex min-h-16 items-center justify-center gap-3 rounded-2xl bg-white px-6 py-4 text-xl font-black text-red-600 shadow-lg transition hover:bg-red-50"
+                aria-label="Histoires a ecouter"
+                className="grid min-h-24 min-w-24 place-items-center rounded-[1.75rem] bg-white p-4 text-red-600 shadow-lg transition hover:bg-red-50"
               >
-                <AudioIcon className="h-7 w-7" />
-                <span>Histoires</span>
+                <AudioIcon className="h-10 w-10" />
+                <span className="text-sm font-black">Audio</span>
               </Link>
             </div>
           </div>
@@ -74,10 +77,10 @@ function KidsHome() {
             <h2 className="text-2xl font-black text-neutral-900">Univers</h2>
             <Link
               to="/content-library"
-              className="inline-flex items-center gap-2 rounded-2xl bg-neutral-900 px-4 py-3 text-sm font-black text-white shadow-md transition hover:bg-neutral-800"
+              aria-label="Ouvrir la bibliotheque"
+              className="grid h-16 w-16 place-items-center rounded-2xl bg-neutral-900 text-white shadow-md transition hover:bg-neutral-800"
             >
-              <BookIcon className="h-5 w-5" />
-              <span>Bibliotheque</span>
+              <BookIcon className="h-8 w-8" />
             </Link>
           </div>
 

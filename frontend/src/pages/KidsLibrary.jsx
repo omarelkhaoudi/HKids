@@ -10,6 +10,7 @@ import { BookGridSkeleton } from '../components/SkeletonLoader';
 import { getImageUrl } from '../utils/imageUrl';
 import { storage } from '../utils/storage';
 import { LANGUAGE_FILTERS } from '../constants/contentOptions';
+import { KID_CATEGORIES } from '../constants/kidCategories';
 import { useAudioPlayer } from '../hooks/useAudioPlayer';
 import { useOfflineContent } from '../hooks/useOfflineContent';
 import { getDownloads, offlineContentIds } from '../services/offline/offlineContentService';
@@ -83,6 +84,18 @@ const themes = [
 ];
 
 const languages = LANGUAGE_FILTERS;
+const childThemes = [
+  {
+    id: 'all',
+    label: 'Tous',
+    shortLabel: 'Tout',
+    pictogram: '⭐',
+    cue: 'Go',
+    gradient: 'from-sky-500 to-emerald-400',
+    match: [],
+  },
+  ...KID_CATEGORIES,
+];
 
 function inferTheme(book) {
   if (book.theme) return book.theme;
@@ -97,7 +110,7 @@ function inferTheme(book) {
     .join(' ')
     .toLowerCase();
 
-  const matchedTheme = themes.find((theme) =>
+  const matchedTheme = childThemes.find((theme) =>
     theme.id !== 'all' && theme.match.some((keyword) => searchable.includes(keyword))
   );
 
@@ -300,38 +313,38 @@ function KidsLibrary() {
           <div className="flex items-center gap-2">
             <Link
               to="/kids"
-              className="grid h-12 w-12 place-items-center rounded-full bg-emerald-100 text-emerald-700 transition hover:bg-emerald-200"
+              className="grid h-14 w-14 place-items-center rounded-full bg-emerald-100 text-emerald-700 transition hover:bg-emerald-200"
               title="Accueil"
             >
-              <HomeIcon className="h-6 w-6" />
+              <HomeIcon className="h-7 w-7" />
             </Link>
             <Link
               to="/content-library"
-              className="grid h-12 w-12 place-items-center rounded-full bg-yellow-100 text-yellow-700 transition hover:bg-yellow-200"
+              className="grid h-14 w-14 place-items-center rounded-full bg-yellow-100 text-yellow-700 transition hover:bg-yellow-200"
               title="Contenus"
             >
-              <BookIcon className="h-6 w-6" />
+              <BookIcon className="h-7 w-7" />
             </Link>
             <Link
               to="/favorites"
-              className="grid h-12 w-12 place-items-center rounded-full bg-rose-100 text-rose-600 transition hover:bg-rose-200"
+              className="grid h-14 w-14 place-items-center rounded-full bg-rose-100 text-rose-600 transition hover:bg-rose-200"
               title="Favoris"
             >
-              <HeartIcon className="h-6 w-6" />
+              <HeartIcon className="h-7 w-7" />
             </Link>
             <Link
               to="/history"
-              className="grid h-12 w-12 place-items-center rounded-full bg-sky-100 text-sky-700 transition hover:bg-sky-200"
+              className="grid h-14 w-14 place-items-center rounded-full bg-sky-100 text-sky-700 transition hover:bg-sky-200"
               title="Historique"
             >
-              <HistoryIcon className="h-6 w-6" />
+              <HistoryIcon className="h-7 w-7" />
             </Link>
             <button
               onClick={handleLogout}
-              className="grid h-12 w-12 place-items-center rounded-full bg-neutral-100 text-neutral-700 transition hover:bg-neutral-200"
+              className="grid h-14 w-14 place-items-center rounded-full bg-neutral-100 text-neutral-700 transition hover:bg-neutral-200"
               title="Deconnexion"
             >
-              <LogOutIcon className="h-6 w-6" />
+              <LogOutIcon className="h-7 w-7" />
             </button>
           </div>
         </div>
@@ -346,22 +359,22 @@ function KidsLibrary() {
                   <SparklesIcon className="h-5 w-5" />
                   Le Lit Qui Lit
                 </div>
-                <h1 className="max-w-2xl text-4xl font-black leading-tight sm:text-5xl">
-                  Choisis une image, ecoute une histoire.
+                <h1 className="max-w-2xl text-5xl font-black leading-tight sm:text-6xl">
+                  Touche. Ecoute.
                 </h1>
               </div>
 
               <div className="grid max-w-xl grid-cols-3 gap-3">
                 <div className="rounded-2xl bg-white/20 p-4 backdrop-blur">
-                  <span className="block text-sm font-bold text-white/80">Livres</span>
+                  <BookIcon className="mb-2 h-7 w-7" />
                   <span className="text-3xl font-black">{books.length}</span>
                 </div>
                 <div className="rounded-2xl bg-white/20 p-4 backdrop-blur">
-                  <span className="block text-sm font-bold text-white/80">Termines</span>
+                  <SparklesIcon className="mb-2 h-7 w-7" />
                   <span className="text-3xl font-black">{completedBooks}</span>
                 </div>
                 <div className="rounded-2xl bg-white/20 p-4 backdrop-blur">
-                  <span className="block text-sm font-bold text-white/80">Minutes</span>
+                  <AudioIcon className="mb-2 h-7 w-7" />
                   <span className="text-3xl font-black">{totalMinutes}</span>
                 </div>
               </div>
@@ -373,14 +386,11 @@ function KidsLibrary() {
               <div className="grid h-12 w-12 place-items-center rounded-2xl bg-indigo-100 text-indigo-600">
                 <SearchIcon className="h-6 w-6" />
               </div>
-              <div>
-                <p className="text-sm font-bold uppercase text-neutral-500">Recherche parentale</p>
-                <p className="text-sm text-neutral-600">Utile si un adulte accompagne.</p>
-              </div>
+              <p className="text-lg font-black text-neutral-900">Adulte</p>
             </div>
             <input
               type="text"
-              placeholder="Titre, theme, auteur..."
+              placeholder="Recherche..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="mb-4 w-full rounded-2xl border-2 border-neutral-200 bg-neutral-50 px-4 py-3 text-base font-semibold outline-none transition focus:border-cyan-500 focus:bg-white"
@@ -390,7 +400,7 @@ function KidsLibrary() {
                 <button
                   key={language.id}
                   onClick={() => setSelectedLanguage(language.id)}
-                  className={`rounded-2xl px-3 py-3 text-sm font-black transition ${
+                  className={`min-h-14 rounded-2xl px-3 py-3 text-sm font-black transition ${
                     selectedLanguage === language.id
                       ? 'bg-neutral-900 text-white'
                       : 'bg-neutral-100 text-neutral-700 hover:bg-neutral-200'
@@ -411,20 +421,24 @@ function KidsLibrary() {
             </span>
           </div>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-7">
-            {themes.map((theme) => (
+            {childThemes.map((theme) => (
               <motion.button
                 key={theme.id}
                 whileHover={{ y: -3 }}
                 whileTap={{ scale: 0.97 }}
                 onClick={() => setSelectedTheme(theme.id)}
-                className={`min-h-32 rounded-[1.75rem] bg-gradient-to-br ${theme.gradient} p-4 text-left text-white shadow-lg transition ${
+                aria-label={theme.label}
+                className={`min-h-36 rounded-[1.75rem] bg-gradient-to-br ${theme.gradient} p-4 text-left text-white shadow-lg transition ${
                   selectedTheme === theme.id ? 'ring-4 ring-neutral-900 ring-offset-4' : 'hover:shadow-xl'
                 }`}
               >
-                <span className="mb-3 grid h-14 w-14 place-items-center rounded-2xl bg-white/25 text-3xl font-black backdrop-blur">
+                <span className="mb-3 grid h-16 w-16 place-items-center rounded-2xl bg-white/25 text-4xl font-black backdrop-blur">
                   {theme.pictogram}
                 </span>
-                <span className="block text-lg font-black leading-tight">{theme.label}</span>
+                <span className="mb-1 inline-flex min-h-7 items-center rounded-full bg-white/20 px-2 text-xs font-black">
+                  {theme.cue}
+                </span>
+                <span className="block text-xl font-black leading-tight">{theme.shortLabel || theme.label}</span>
               </motion.button>
             ))}
           </div>
@@ -627,9 +641,14 @@ function BookCard({
             {hasAudio ? (duration || 'Audio') : 'Sans audio'}
           </div>
           {hasAudio && (
-            <div className="absolute bottom-3 right-3 grid h-12 w-12 place-items-center rounded-full bg-emerald-500 text-white shadow-lg">
-              <AudioIcon className="h-4 w-4" />
-            </div>
+            <motion.div
+              animate={{ scale: [1, 1.08, 1] }}
+              transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut' }}
+              className="absolute bottom-3 right-3 grid h-14 w-14 place-items-center rounded-full bg-emerald-500 text-white shadow-lg"
+              aria-hidden="true"
+            >
+              <PlayIcon className="h-6 w-6" />
+            </motion.div>
           )}
           {downloaded && (
             <div className="absolute right-3 top-3 rounded-full bg-emerald-500 px-3 py-1 text-xs font-black text-white shadow-sm">
@@ -649,7 +668,7 @@ function BookCard({
 
         <button
           onClick={() => onToggleAudio(book)}
-          className={`mb-2 inline-flex h-14 w-full items-center justify-center gap-2 rounded-2xl text-base font-black transition ${
+          className={`mb-2 inline-flex h-16 w-full items-center justify-center gap-3 rounded-[1.4rem] text-lg font-black transition ${
             hasAudio
               ? playing
                 ? 'bg-amber-500 text-white hover:bg-amber-600'
@@ -657,30 +676,35 @@ function BookCard({
               : 'bg-neutral-100 text-neutral-400'
           }`}
           title={hasAudio ? 'Ecouter' : 'Audio indisponible'}
+          aria-label={hasAudio ? `Ecouter ${book.title}` : 'Audio indisponible'}
         >
-          {playing ? <PauseIcon className="h-6 w-6" /> : <PlayIcon className="h-6 w-6" />}
-          {hasAudio ? 'Ecouter' : 'Audio manquant'}
+          {playing ? <PauseIcon className="h-8 w-8" /> : <PlayIcon className="h-8 w-8" />}
+          <span>{hasAudio ? 'Ecouter' : 'Audio'}</span>
         </button>
 
-        <Link
-          to={`/book/${book.id}`}
-          className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-2xl bg-cyan-100 px-3 text-sm font-black text-cyan-800 transition hover:bg-cyan-200"
-        >
-          <BookIcon className="h-5 w-5" />
-          Lire
-        </Link>
+        <div className="grid grid-cols-2 gap-2">
+          <Link
+            to={`/book/${book.id}`}
+            className="grid h-12 place-items-center rounded-2xl bg-cyan-100 px-3 text-cyan-800 transition hover:bg-cyan-200"
+            aria-label={`Ouvrir ${book.title}`}
+            title="Lire"
+          >
+            <BookIcon className="h-6 w-6" />
+          </Link>
 
-        <button
-          onClick={() => onToggleFavorite(book.id)}
-          className={`mt-2 inline-flex h-10 w-full items-center justify-center gap-2 rounded-2xl text-sm font-black transition ${
-            favorite
-              ? 'bg-rose-100 text-rose-600 hover:bg-rose-200'
-              : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
-          }`}
-        >
-          <HeartIcon className="h-5 w-5" filled={favorite} />
-          Favori
-        </button>
+          <button
+            onClick={() => onToggleFavorite(book.id)}
+            className={`grid h-12 place-items-center rounded-2xl transition ${
+              favorite
+                ? 'bg-rose-100 text-rose-600 hover:bg-rose-200'
+                : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
+            }`}
+            aria-label="Favori"
+            title="Favori"
+          >
+            <HeartIcon className="h-6 w-6" filled={favorite} />
+          </button>
+        </div>
 
         {downloading ? (
           <div className="mt-2 rounded-2xl bg-blue-50 p-2">
@@ -689,7 +713,7 @@ function BookCard({
             </div>
             <button
               onClick={() => onCancelDownload(book)}
-              className="inline-flex h-9 w-full items-center justify-center rounded-xl bg-white text-xs font-black text-blue-700"
+              className="inline-flex h-11 w-full items-center justify-center rounded-xl bg-white text-xs font-black text-blue-700"
             >
               Annuler
             </button>
@@ -697,18 +721,20 @@ function BookCard({
         ) : downloaded ? (
           <button
             onClick={() => onRemoveDownload(book)}
-            className="mt-2 inline-flex h-10 w-full items-center justify-center gap-2 rounded-2xl bg-emerald-100 px-3 text-sm font-black text-emerald-700 transition hover:bg-emerald-200"
+            className="mt-2 grid h-12 w-full place-items-center rounded-2xl bg-emerald-100 px-3 text-emerald-700 transition hover:bg-emerald-200"
+            aria-label="Retirer le telechargement"
+            title="Telecharge"
           >
-            <DownloadIcon className="h-5 w-5" />
-            Retirer offline
+            <DownloadIcon className="h-6 w-6" />
           </button>
         ) : (
           <button
             onClick={() => onDownload(book)}
-            className="mt-2 inline-flex h-10 w-full items-center justify-center gap-2 rounded-2xl bg-neutral-100 px-3 text-sm font-black text-neutral-700 transition hover:bg-neutral-200"
+            className="mt-2 grid h-12 w-full place-items-center rounded-2xl bg-neutral-100 px-3 text-neutral-700 transition hover:bg-neutral-200"
+            aria-label="Telecharger"
+            title="Telecharger"
           >
-            <DownloadIcon className="h-5 w-5" />
-            Telecharger
+            <DownloadIcon className="h-6 w-6" />
           </button>
         )}
       </div>

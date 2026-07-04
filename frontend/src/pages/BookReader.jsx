@@ -12,6 +12,7 @@ import { useToast } from '../components/ToastProvider';
 import { useAuth } from '../context/AuthContext';
 import { ChevronLeftIcon, ChevronRightIcon, HomeIcon, BookIcon, StarIcon, PlayIcon, PauseIcon, VolumeIcon, XIcon, SettingsIcon } from '../components/Icons';
 import ReadingAidPanel from '../components/ReadingAidPanel';
+import { VoiceAssistant } from '../components/kids/VoiceAssistant';
 
 // Configuration de pdfjs-dist
 if (typeof window !== 'undefined') {
@@ -1621,6 +1622,7 @@ function BookReader() {
           )}
         </div>
       </motion.footer>
+      <VoiceAssistant />
     </div>
     </>
   );

@@ -7,12 +7,12 @@ import { AudioIcon, BookIcon, CheckIcon, ClockIcon, SparklesIcon, StarIcon } fro
 import { Logo } from '../components/Logo';
 
 const themeOptions = [
-  { id: 'foret magique', label: 'Foret magique' },
-  { id: 'espace', label: 'Espace' },
-  { id: 'animaux', label: 'Animaux' },
-  { id: 'ocean', label: 'Ocean' },
-  { id: 'dinosaures', label: 'Dinosaures' },
-  { id: 'chateau', label: 'Chateau' }
+  { id: 'foret magique', label: 'Foret', pictogram: '🌳' },
+  { id: 'espace', label: 'Espace', pictogram: '🚀' },
+  { id: 'animaux', label: 'Animaux', pictogram: '🐻' },
+  { id: 'ocean', label: 'Ocean', pictogram: '🌊' },
+  { id: 'dinosaures', label: 'Dino', pictogram: '🦖' },
+  { id: 'chateau', label: 'Chateau', pictogram: '👸' }
 ];
 
 const valueOptions = [
@@ -223,18 +223,15 @@ function KidsStoryStudio() {
                 <SparklesIcon className="h-5 w-5" />
                 <span>Le Lit Qui Lit</span>
               </div>
-              <h1 className="text-4xl font-black leading-tight sm:text-5xl">Cree ton histoire</h1>
-              <p className="mt-3 max-w-2xl text-base font-bold text-white/85">
-                Choisis les ingredients, puis ecoute ton histoire personnalisee.
-              </p>
+              <h1 className="text-5xl font-black leading-tight sm:text-6xl">Cree</h1>
             </div>
             <button
               onClick={handleGenerate}
               disabled={loading || profilesLoading || !selectedKidProfileId}
-              className="inline-flex min-h-16 items-center justify-center gap-3 rounded-2xl bg-white px-6 py-4 text-lg font-black text-red-600 shadow-lg transition hover:bg-red-50 disabled:opacity-60"
+              className="inline-flex min-h-20 items-center justify-center gap-3 rounded-[1.75rem] bg-white px-8 py-4 text-2xl font-black text-red-600 shadow-lg transition hover:bg-red-50 disabled:opacity-60"
             >
-              <SparklesIcon className="h-6 w-6" />
-              <span>{loading ? 'Creation...' : 'Generer'}</span>
+              <SparklesIcon className="h-8 w-8" />
+              <span>{loading ? '...' : 'Go'}</span>
             </button>
           </div>
         </section>
@@ -286,13 +283,15 @@ function KidsStoryStudio() {
                       key={theme.id}
                       type="button"
                       onClick={() => patchForm('theme', theme.id)}
-                      className={`rounded-xl border px-3 py-3 text-sm font-black transition ${
+                      className={`grid min-h-24 place-items-center rounded-2xl border px-3 py-3 text-sm font-black transition ${
                         form.theme === theme.id
                           ? 'border-red-400 bg-red-50 text-red-700'
                           : 'border-neutral-200 bg-white text-neutral-700 hover:bg-neutral-50'
                       }`}
+                      aria-label={theme.label}
                     >
-                      {theme.label}
+                      <span className="text-3xl">{theme.pictogram}</span>
+                      <span>{theme.label}</span>
                     </button>
                   ))}
                 </div>
@@ -325,7 +324,7 @@ function KidsStoryStudio() {
                       key={duration}
                       type="button"
                       onClick={() => patchForm('estimated_duration_minutes', duration)}
-                      className={`rounded-xl border px-2 py-3 text-sm font-black transition ${
+                      className={`min-h-14 rounded-xl border px-2 py-3 text-sm font-black transition ${
                         Number(form.estimated_duration_minutes) === duration
                           ? 'border-red-400 bg-red-50 text-red-700'
                           : 'border-neutral-200 bg-white text-neutral-700 hover:bg-neutral-50'
