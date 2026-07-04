@@ -7,6 +7,7 @@ import { fileURLToPath } from 'url';
 import { getDatabase } from '../database/init.js';
 import { verifyToken } from './auth.js';
 import { VoiceCloneService } from '../services/ai/VoiceCloneService.js';
+import { aiErrorResponse } from '../services/ai/errors.js';
 
 const router = express.Router();
 const upload = multer({
@@ -23,6 +24,7 @@ const voiceCloneService = new VoiceCloneService();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const voiceStorageDir = path.join(__dirname, '..', 'uploads', 'voices');
+const narrationJobs = new Map();
 
 function getPool() {
   try {
@@ -101,6 +103,52 @@ async function logVoiceAction(pool, { userId, voiceProfileId = null, action, met
      VALUES ($1, $2, $3, $4)`,
     [userId, voiceProfileId, action, metadata]
   );
+}
+
+function sendAIError(res, error) {
+  const response = aiErrorResponse(error);
+  return res.status(response.status).json(response.body);
+}
+
+function createAudioUploadFromSynthesis(synthesis, filename = 'voice-audio.mp3') {
+  if (!synthesis?.audioBuffer) return null;
+  return {
+    originalname: filename,
+    mimetype: synthesis.mimeType || 'audio/mpeg',
+    buffer: synthesis.audioBuffer,
+  };
+}
+
+function hashNarration({ text, voiceProfileId, providerVoiceId }) {
+  return crypto
+    .createHash('sha256')
+    .update([text, voiceProfileId, providerVoiceId || 'mock'].join('|'))
+    .digest('hex');
+}
+
+async function getAccessibleBook(pool, req, bookId) {
+  const result = await pool.query(
+    `SELECT b.*
+     FROM books b
+     WHERE b.id = $1
+       AND (b.is_published = TRUE OR $2 = TRUE)`,
+    [bookId, ['parent', 'admin'].includes(req.user?.role)]
+  );
+  return result.rows[0] || null;
+}
+
+async function getBookNarrationText(pool, book) {
+  const pagesResult = await pool.query(
+    `SELECT content
+     FROM book_pages
+     WHERE book_id = $1 AND NULLIF(TRIM(content), '') IS NOT NULL
+     ORDER BY page_number ASC`,
+    [book.id]
+  );
+
+  const pageText = pagesResult.rows.map((row) => row.content).join('\n\n').trim();
+  const fallbackText = [book.title, book.description].filter(Boolean).join('\n\n').trim();
+  return (pageText || fallbackText).slice(0, 5000);
 }
 
 async function getOwnedVoiceProfile(pool, userId, profileId) {
@@ -208,6 +256,7 @@ router.post('/profiles', verifyToken, requireParent, upload.single('sample'), as
     });
     const clonePreparation = await voiceCloneService.prepareVoiceProfile({
       audioSample: req.file?.buffer || null,
+      mimeType: req.file?.mimetype,
       consent: consentGiven,
       metadata: { name, relation, language },
     });
@@ -271,17 +320,26 @@ router.put('/profiles/:id', verifyToken, requireParent, upload.single('sample'),
           quality_status: profile.quality_status,
           quality_notes: profile.quality_notes,
         };
+    const clonePreparation = req.file && quality.quality_status !== 'low'
+      ? await voiceCloneService.prepareVoiceProfile({
+          audioSample: req.file.buffer,
+          mimeType: req.file.mimetype,
+          consent: profile.consent_given,
+          metadata: { name, relation, language },
+        })
+      : null;
     const status = req.file
-      ? (quality.quality_status === 'low' ? 'needs_new_sample' : 'sample_received')
+      ? (quality.quality_status === 'low' ? 'needs_new_sample' : clonePreparation?.status || 'sample_received')
       : (req.body.status || profile.status);
 
     const result = await pool.query(
       `UPDATE voice_profiles
        SET name = $1, relation = $2, language = $3, sample_audio_path = $4,
            preview_audio_path = COALESCE($4, preview_audio_path),
-           status = $5, quality_score = $6, quality_status = $7,
-           quality_notes = $8, updated_at = NOW()
-       WHERE id = $9 AND user_id = $10 AND deleted_at IS NULL
+           status = $5, provider = $6, provider_voice_id = $7,
+           quality_score = $8, quality_status = $9,
+           quality_notes = $10, updated_at = NOW()
+       WHERE id = $11 AND user_id = $12 AND deleted_at IS NULL
        RETURNING *`,
       [
         name,
@@ -289,6 +347,8 @@ router.put('/profiles/:id', verifyToken, requireParent, upload.single('sample'),
         language,
         samplePath,
         status,
+        clonePreparation?.provider || profile.provider,
+        clonePreparation?.provider_voice_id || profile.provider_voice_id,
         quality.quality_score,
         quality.quality_status,
         quality.quality_notes,
@@ -301,6 +361,7 @@ router.put('/profiles/:id', verifyToken, requireParent, upload.single('sample'),
       userId: req.user.id,
       voiceProfileId: req.params.id,
       action: req.file ? 'voice_profile_sample_updated' : 'voice_profile_updated',
+      metadata: clonePreparation ? { provider: clonePreparation.provider, status } : {},
     });
 
     res.json(mapVoiceProfile(result.rows[0]));
@@ -316,6 +377,21 @@ router.delete('/profiles/:id', verifyToken, requireParent, async (req, res) => {
     const profile = await getOwnedVoiceProfile(pool, req.user.id, req.params.id);
     if (!profile) return res.status(404).json({ error: 'Voice profile not found' });
 
+    let providerDeletion = null;
+    if (profile.provider_voice_id) {
+      try {
+        providerDeletion = await voiceCloneService.deleteVoiceProfile({
+          providerVoiceId: profile.provider_voice_id,
+        });
+      } catch (error) {
+        console.warn('Provider voice deletion failed, continuing local deletion:', error);
+        providerDeletion = {
+          deleted: false,
+          reason: error?.code || error?.message || 'provider_deletion_failed',
+        };
+      }
+    }
+
     await pool.query(
       `UPDATE voice_profiles
        SET deleted_at = NOW(), status = 'deleted', sample_audio_path = NULL,
@@ -329,10 +405,16 @@ router.delete('/profiles/:id', verifyToken, requireParent, async (req, res) => {
        WHERE voice_profile_id = $1 AND user_id = $2`,
       [req.params.id, req.user.id]
     );
+    await pool.query(
+      `DELETE FROM voice_narrations
+       WHERE voice_profile_id = $1 AND user_id = $2`,
+      [req.params.id, req.user.id]
+    );
     await logVoiceAction(pool, {
       userId: req.user.id,
       voiceProfileId: req.params.id,
       action: 'voice_profile_permanently_deleted',
+      metadata: { provider_deletion: providerDeletion },
     });
 
     res.json({ message: 'Voice profile deleted permanently' });
@@ -376,16 +458,32 @@ router.post('/messages', verifyToken, requireParent, upload.single('audio'), asy
   try {
     const pool = getPool();
     const voiceProfileId = req.body.voice_profile_id || null;
+    let profile = null;
 
     if (voiceProfileId) {
-      const profile = await getOwnedVoiceProfile(pool, req.user.id, voiceProfileId);
+      profile = await getOwnedVoiceProfile(pool, req.user.id, voiceProfileId);
       if (!profile) return res.status(404).json({ error: 'Voice profile not found' });
     }
 
     const title = sanitizeText(req.body.title);
     if (!title) return res.status(400).json({ error: 'Message title is required' });
 
-    const audioPath = req.file ? await saveAudioFile(req.file, req.user.id, 'message') : null;
+    const messageText = sanitizeText(req.body.message_text);
+    let audioPath = req.file ? await saveAudioFile(req.file, req.user.id, 'message') : null;
+    let generatedWithProvider = false;
+
+    if (!audioPath && profile?.provider_voice_id && messageText) {
+      const synthesis = await voiceCloneService.synthesizeSpeech({
+        providerVoiceId: profile.provider_voice_id,
+        text: messageText,
+      });
+      const synthesizedFile = createAudioUploadFromSynthesis(synthesis, 'parent-message.mp3');
+      if (synthesizedFile) {
+        audioPath = await saveAudioFile(synthesizedFile, req.user.id, 'message');
+        generatedWithProvider = true;
+      }
+    }
+
     const result = await pool.query(
       `INSERT INTO voice_messages (
         user_id, voice_profile_id, title, message_text, language, audio_path, duration_seconds
@@ -396,7 +494,7 @@ router.post('/messages', verifyToken, requireParent, upload.single('audio'), asy
         req.user.id,
         voiceProfileId,
         title,
-        sanitizeText(req.body.message_text),
+        messageText,
         sanitizeText(req.body.language, 'fr').slice(0, 12),
         audioPath,
         Math.max(0, Number.parseInt(req.body.duration_seconds || '0', 10) || 0),
@@ -407,12 +505,17 @@ router.post('/messages', verifyToken, requireParent, upload.single('audio'), asy
       userId: req.user.id,
       voiceProfileId,
       action: 'voice_message_created',
-      metadata: { has_audio: Boolean(audioPath) },
+      metadata: {
+        has_audio: Boolean(audioPath),
+        generated_with_provider: generatedWithProvider,
+        provider: profile?.provider || null,
+      },
     });
 
     res.status(201).json(mapVoiceMessage(result.rows[0]));
   } catch (err) {
     console.error('Error creating voice message:', err);
+    if (err?.isAIError) return sendAIError(res, err);
     res.status(500).json({ error: 'Could not create voice message' });
   }
 });
@@ -459,6 +562,152 @@ router.delete('/messages/:id', verifyToken, requireParent, async (req, res) => {
   } catch (err) {
     console.error('Error deleting voice message:', err);
     res.status(500).json({ error: 'Could not delete voice message' });
+  }
+});
+
+router.post('/narrations', verifyToken, async (req, res) => {
+  try {
+    const pool = getPool();
+    const bookId = Number.parseInt(req.body.book_id, 10);
+    const voiceProfileId = req.body.voice_profile_id ? Number.parseInt(req.body.voice_profile_id, 10) : null;
+
+    if (!Number.isInteger(bookId) || bookId <= 0) {
+      return res.status(400).json({ error: 'Valid book_id is required' });
+    }
+
+    const book = await getAccessibleBook(pool, req, bookId);
+    if (!book) return res.status(404).json({ error: 'Book not found' });
+
+    if (!voiceProfileId) {
+      return res.json({
+        audio_url: book.audio_url || null,
+        source: 'original',
+        cached: false,
+      });
+    }
+
+    const profile = await getAccessibleVoiceProfile(pool, req, voiceProfileId);
+    if (!profile || !profile.consent_given || !profile.provider_voice_id) {
+      return res.json({
+        audio_url: book.audio_url || null,
+        source: 'original',
+        cached: false,
+        reason: 'cloned_voice_unavailable',
+      });
+    }
+
+    const narrationText = await getBookNarrationText(pool, book);
+    if (!narrationText) {
+      return res.status(422).json({ error: 'No readable text available for narration' });
+    }
+
+    const textHash = hashNarration({
+      text: narrationText,
+      voiceProfileId: profile.id,
+      providerVoiceId: profile.provider_voice_id,
+    });
+
+    const cachedResult = await pool.query(
+      `SELECT *
+       FROM voice_narrations
+       WHERE voice_profile_id = $1 AND book_id = $2 AND text_hash = $3
+       LIMIT 1`,
+      [profile.id, book.id, textHash]
+    );
+
+    if (cachedResult.rows[0]?.audio_path) {
+      await logVoiceAction(pool, {
+        userId: req.user.id,
+        voiceProfileId: profile.id,
+        action: 'voice_narration_cache_hit',
+        metadata: { book_id: book.id, provider: profile.provider },
+      });
+
+      return res.json({
+        audio_url: cachedResult.rows[0].audio_path,
+        source: 'cloned_voice',
+        cached: true,
+        provider: cachedResult.rows[0].provider,
+      });
+    }
+
+    const jobKey = `${profile.id}:${book.id}:${textHash}`;
+    const reusedExistingJob = narrationJobs.has(jobKey);
+    const generationJob = narrationJobs.get(jobKey) || (async () => {
+      const synthesis = await voiceCloneService.synthesizeSpeech({
+        providerVoiceId: profile.provider_voice_id,
+        text: narrationText,
+      });
+      const synthesizedFile = createAudioUploadFromSynthesis(synthesis, `book-${book.id}-narration.mp3`);
+
+      if (!synthesizedFile) return null;
+
+      const audioPath = await saveAudioFile(synthesizedFile, req.user.id, 'narration');
+      const insertResult = await pool.query(
+        `INSERT INTO voice_narrations (
+          user_id, voice_profile_id, book_id, provider, provider_voice_id,
+          text_hash, audio_path, duration_seconds, metadata
+        )
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+        ON CONFLICT (voice_profile_id, book_id, text_hash)
+        DO UPDATE SET updated_at = NOW()
+        RETURNING *`,
+        [
+          req.user.id,
+          profile.id,
+          book.id,
+          profile.provider || 'mock',
+          profile.provider_voice_id,
+          textHash,
+          audioPath,
+          Math.max(0, Number.parseInt(book.duration_seconds || '0', 10) || 0),
+          {
+            text_length: narrationText.length,
+            provider_metadata: synthesis.provider_metadata || {},
+          },
+        ]
+      );
+
+      await logVoiceAction(pool, {
+        userId: req.user.id,
+        voiceProfileId: profile.id,
+        action: 'voice_narration_generated',
+        metadata: { book_id: book.id, provider: profile.provider, cached: false },
+      });
+
+      return insertResult.rows[0];
+    })();
+
+    if (!narrationJobs.has(jobKey)) {
+      narrationJobs.set(jobKey, generationJob);
+    }
+
+    let generatedNarration = null;
+    try {
+      generatedNarration = await generationJob;
+    } finally {
+      narrationJobs.delete(jobKey);
+    }
+
+    if (!generatedNarration) {
+      return res.json({
+        audio_url: book.audio_url || null,
+        source: 'original',
+        cached: false,
+        reason: 'provider_returned_no_audio',
+      });
+    }
+
+    res.status(reusedExistingJob ? 200 : 201).json({
+      audio_url: generatedNarration.audio_path,
+      source: 'cloned_voice',
+      cached: reusedExistingJob,
+      provider: generatedNarration.provider,
+    });
+  } catch (err) {
+    console.error('Error creating voice narration:', err);
+    if (err?.isAIError) return sendAIError(res, err);
+    res.status(500).json({ error: 'Could not create voice narration' });
   }
 });
 

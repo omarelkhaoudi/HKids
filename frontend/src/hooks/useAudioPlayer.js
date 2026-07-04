@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { voicesAPI } from '../api/voices';
 import { getFileUrl } from '../utils/fileUrl';
 import { storage } from '../utils/storage';
 
@@ -84,7 +85,7 @@ export function useAudioPlayer() {
     };
   };
 
-  const loadBook = (book) => {
+  const loadBook = (book, audioUrlOverride = null) => {
     recordListening(false);
 
     if (audioRef.current) {
@@ -92,29 +93,58 @@ export function useAudioPlayer() {
       audioRef.current = null;
     }
 
-    const audioUrl = getFileUrl(book.audio_url);
+    const sourceUrl = audioUrlOverride || book.audio_url;
+    const audioUrl = getFileUrl(sourceUrl);
     const audio = new Audio(audioUrl);
     audio.volume = state.volume;
     attachAudioEvents(audio);
 
     audioRef.current = audio;
-    activeBookRef.current = book;
+    activeBookRef.current = { ...book, audio_url: sourceUrl };
     listenedFromRef.current = 0;
-    setActiveBook(book);
+    setActiveBook(activeBookRef.current);
     patchState({ currentTime: 0, duration: 0, loading: true, error: null, playing: false });
 
     return audio;
   };
 
-  const play = async (book = activeBookRef.current) => {
-    if (!book?.audio_url) {
+  const resolveAudioSource = async (book, { voiceId } = {}) => {
+    if (!book) return null;
+    if (!voiceId) return book.audio_url;
+
+    try {
+      patchState({ loading: true, error: null });
+      const response = await voicesAPI.generateNarration({
+        book_id: book.id,
+        voice_profile_id: voiceId,
+      });
+      return response.data?.audio_url || book.audio_url;
+    } catch (error) {
+      console.warn('Cloned narration unavailable, falling back to original audio:', error);
+      return book.audio_url;
+    }
+  };
+
+  const play = async (book = activeBookRef.current, options = {}) => {
+    if (!book) {
       patchState({ error: 'Audio indisponible' });
       return false;
     }
 
-    const audio = activeBookRef.current?.id === book.id && audioRef.current
+    const resolvedAudioUrl = await resolveAudioSource(book, options);
+
+    if (!resolvedAudioUrl) {
+      patchState({ error: 'Audio indisponible' });
+      return false;
+    }
+
+    const shouldReuseCurrentAudio = activeBookRef.current?.id === book.id
+      && activeBookRef.current?.audio_url === resolvedAudioUrl
+      && audioRef.current;
+
+    const audio = shouldReuseCurrentAudio
       ? audioRef.current
-      : loadBook(book);
+      : loadBook(book, resolvedAudioUrl);
 
     try {
       listenedFromRef.current = Number.isFinite(audio.currentTime) ? audio.currentTime : 0;
@@ -132,12 +162,12 @@ export function useAudioPlayer() {
     audioRef.current.pause();
   };
 
-  const toggle = (book) => {
+  const toggle = (book, options = {}) => {
     if (activeBookRef.current?.id === book.id && state.playing) {
       pause();
       return;
     }
-    play(book);
+    play(book, options);
   };
 
   const seekBy = (seconds) => {

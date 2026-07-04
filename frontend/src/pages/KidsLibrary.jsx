@@ -260,13 +260,13 @@ function KidsLibrary() {
   };
 
   const toggleAudio = async (book) => {
-    if (!book.audio_url) {
+    if (!book.audio_url && !selectedVoiceId) {
       showToast('Audio pas encore disponible pour cette histoire', 'info');
       return;
     }
 
     const wasPlayingCurrent = audioPlayer.activeBook?.id === book.id && audioPlayer.playing;
-    await audioPlayer.toggle(book);
+    await audioPlayer.toggle(book, { voiceId: selectedVoiceId || '' });
     if (!wasPlayingCurrent) {
       storage.addToHistory(book.id, book.title, 0);
       if (selectedVoiceId) {
@@ -520,7 +520,7 @@ function KidsLibrary() {
           if (audioPlayer.playing) {
             audioPlayer.pause();
           } else if (audioPlayer.activeBook) {
-            audioPlayer.play(audioPlayer.activeBook);
+            audioPlayer.play(audioPlayer.activeBook, { voiceId: selectedVoiceId || '' });
           }
         }}
         onSeekBy={audioPlayer.seekBy}
