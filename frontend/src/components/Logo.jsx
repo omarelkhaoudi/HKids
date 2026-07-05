@@ -130,7 +130,7 @@ export function Logo({ className = "", showText = true, size = "default", isLink
 
   const textContent = showText && (
     <motion.h1 
-      className={`font-bold text-white tracking-tight ${textSizes[size]}`}
+      className={`font-bold tracking-tight text-primary-700 drop-shadow-sm ${textSizes[size]}`}
       whileHover={{ x: 2 }}
     >
       HKids

@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import Home from './pages/Home';
 import BookReader from './pages/BookReader';
@@ -31,7 +31,10 @@ import ErrorBoundary from './components/ErrorBoundary';
 import { OfflineStatusBanner } from './components/offline/OfflineStatusBanner';
 import { OfflineSyncBridge } from './components/offline/OfflineSyncBridge';
 import ScrollToTop from './components/ScrollToTop';
+import { isNativeAndroid } from './services/mobile/capacitorRuntime';
 import { storage } from './utils/storage';
+
+const DEFAULT_ANDROID_KIOSK_IDLE_MS = 10 * 60 * 1000;
 
 function RequireAuth({ children }) {
   const { user, loading } = useAuth();
@@ -81,6 +84,43 @@ function RequireRole({ roles, children }) {
   return children;
 }
 
+function AndroidKioskIdleReset() {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    if (!isNativeAndroid()) return undefined;
+
+    const configuredValue = Number(import.meta.env.VITE_ANDROID_KIOSK_IDLE_MS);
+    const idleMs = Number.isFinite(configuredValue)
+      ? configuredValue
+      : DEFAULT_ANDROID_KIOSK_IDLE_MS;
+
+    if (idleMs <= 0) return undefined;
+
+    let timeoutId;
+    const resetTimer = () => {
+      window.clearTimeout(timeoutId);
+      timeoutId = window.setTimeout(() => {
+        if (window.location.pathname !== '/kids') {
+          navigate('/kids', { replace: true });
+        }
+      }, idleMs);
+    };
+
+    const events = ['pointerdown', 'touchstart', 'keydown', 'scroll'];
+    events.forEach((eventName) => window.addEventListener(eventName, resetTimer, { passive: true }));
+    resetTimer();
+
+    return () => {
+      window.clearTimeout(timeoutId);
+      events.forEach((eventName) => window.removeEventListener(eventName, resetTimer));
+    };
+  }, [location.pathname, navigate]);
+
+  return null;
+}
+
 function App() {
   const [darkMode, setDarkMode] = useState(false);
 
@@ -104,6 +144,7 @@ function App() {
         <AuthProvider>
           <ToastProvider>
             <div className={darkMode ? 'dark' : ''}>
+              <AndroidKioskIdleReset />
               <Routes>
                 <Route path="/" element={<Home darkMode={darkMode} setDarkMode={setDarkMode} />} />
                 <Route path="/book/:id" element={<RequireAuth><BookReader /></RequireAuth>} />
