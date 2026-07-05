@@ -198,25 +198,30 @@ async function updateChallengeProgress(pool, kidProfileId, attempt, content) {
     if (!increment) continue;
 
     const progressResult = await pool.query(
-      `INSERT INTO kid_challenge_progress (kid_profile_id, challenge_id, progress_value, completed, completed_at, updated_at)
-       VALUES ($1, $2, $3, $4, CASE WHEN $4 THEN NOW() ELSE NULL END, NOW())
-       ON CONFLICT (kid_profile_id, challenge_id)
-       DO UPDATE SET
-         progress_value = LEAST(kid_challenge_progress.progress_value + $3, $5),
-         completed = kid_challenge_progress.completed OR (kid_challenge_progress.progress_value + $3 >= $5),
-         completed_at = CASE
-           WHEN kid_challenge_progress.completed_at IS NULL AND kid_challenge_progress.progress_value + $3 >= $5 THEN NOW()
-           ELSE kid_challenge_progress.completed_at
-         END,
-         updated_at = NOW()
-       RETURNING *`,
-      [
-        kidProfileId,
-        challenge.id,
-        increment,
-        increment >= Number(challenge.target_value),
-        Number(challenge.target_value),
-      ]
+      `WITH updated AS (
+         UPDATE kid_challenge_progress
+         SET
+           progress_value = LEAST(progress_value + $3, $4),
+           completed = completed OR (progress_value + $3 >= $4),
+           completed_at = CASE
+             WHEN completed_at IS NULL AND progress_value + $3 >= $4 THEN NOW()
+             ELSE completed_at
+           END,
+           updated_at = NOW()
+         WHERE kid_profile_id = $1 AND challenge_id = $2
+         RETURNING *
+       ),
+       inserted AS (
+         INSERT INTO kid_challenge_progress (kid_profile_id, challenge_id, progress_value, completed, completed_at, updated_at)
+         SELECT $1, $2, LEAST($3, $4), $3 >= $4, CASE WHEN $3 >= $4 THEN NOW() ELSE NULL END, NOW()
+         WHERE NOT EXISTS (SELECT 1 FROM updated)
+         RETURNING *
+       )
+       SELECT * FROM updated
+       UNION ALL
+       SELECT * FROM inserted
+       LIMIT 1`,
+      [kidProfileId, challenge.id, increment, Number(challenge.target_value)]
     );
 
     const progress = progressResult.rows[0];
@@ -248,17 +253,22 @@ async function syncDerivedChallengeProgress(pool, kidProfileId) {
   for (const challenge of challenges.rows) {
     const progressValue = Math.min(listeningCount, Number(challenge.target_value || 1));
     await pool.query(
-      `INSERT INTO kid_challenge_progress (kid_profile_id, challenge_id, progress_value, completed, completed_at, updated_at)
-       VALUES ($1, $2, $3, $4, CASE WHEN $4 THEN NOW() ELSE NULL END, NOW())
-       ON CONFLICT (kid_profile_id, challenge_id)
-       DO UPDATE SET
-         progress_value = GREATEST(kid_challenge_progress.progress_value, $3),
-         completed = kid_challenge_progress.completed OR $4,
-         completed_at = CASE
-           WHEN kid_challenge_progress.completed_at IS NULL AND $4 THEN NOW()
-           ELSE kid_challenge_progress.completed_at
-         END,
-         updated_at = NOW()`,
+      `WITH updated AS (
+         UPDATE kid_challenge_progress
+         SET
+           progress_value = GREATEST(progress_value, $3),
+           completed = completed OR $4,
+           completed_at = CASE
+             WHEN completed_at IS NULL AND $4 THEN NOW()
+             ELSE completed_at
+           END,
+           updated_at = NOW()
+         WHERE kid_profile_id = $1 AND challenge_id = $2
+         RETURNING *
+       )
+       INSERT INTO kid_challenge_progress (kid_profile_id, challenge_id, progress_value, completed, completed_at, updated_at)
+       SELECT $1, $2, $3, $4, CASE WHEN $4 THEN NOW() ELSE NULL END, NOW()
+       WHERE NOT EXISTS (SELECT 1 FROM updated)`,
       [kidProfileId, challenge.id, progressValue, progressValue >= Number(challenge.target_value || 1)]
     );
   }
@@ -361,7 +371,7 @@ router.post('/contents/:id/attempts', verifyToken, async (req, res) => {
       `INSERT INTO learning_attempts (
         kid_profile_id, content_id, score, max_score, success, time_spent_seconds, answers, reward_payload
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+      VALUES ($1, $2, $3, $4, $5, $6, $7::jsonb, $8::jsonb)
       RETURNING *`,
       [
         kidProfile.id,
@@ -370,24 +380,35 @@ router.post('/contents/:id/attempts', verifyToken, async (req, res) => {
         scoring.maxScore,
         scoring.success,
         Math.max(0, Number.parseInt(req.body.time_spent_seconds || '0', 10) || 0),
-        scoring.evaluatedAnswers,
-        rewardPayload,
+        JSON.stringify(scoring.evaluatedAnswers),
+        JSON.stringify(rewardPayload),
       ]
     );
 
+    let reward = rewardPayload;
     if (scoring.success && content.reward?.id) {
-      await pool.query(
-        `INSERT INTO kid_rewards (kid_profile_id, reward_id, source_type, source_id, payload)
-         VALUES ($1, $2, 'learning_attempt', $3, $4)`,
-        [kidProfile.id, content.reward.id, attemptResult.rows[0].id, rewardPayload]
-      );
+      try {
+        await pool.query(
+          `INSERT INTO kid_rewards (kid_profile_id, reward_id, source_type, source_id, payload)
+           VALUES ($1, $2, 'learning_attempt', $3, $4::jsonb)`,
+          [kidProfile.id, content.reward.id, attemptResult.rows[0].id, JSON.stringify(rewardPayload)]
+        );
+      } catch (rewardError) {
+        console.warn('Learning reward could not be saved:', rewardError.message);
+        reward = { ...rewardPayload, save_warning: true };
+      }
     }
 
-    const completedChallenges = await updateChallengeProgress(pool, kidProfile.id, attemptResult.rows[0], content);
+    let completedChallenges = [];
+    try {
+      completedChallenges = await updateChallengeProgress(pool, kidProfile.id, attemptResult.rows[0], content);
+    } catch (challengeError) {
+      console.warn('Learning challenge progress could not be updated:', challengeError.message);
+    }
 
     res.status(201).json({
       attempt: attemptResult.rows[0],
-      reward: rewardPayload,
+      reward,
       completed_challenges: completedChallenges,
     });
   } catch (error) {
