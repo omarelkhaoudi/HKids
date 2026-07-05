@@ -471,6 +471,19 @@ export async function initDatabase() {
     await client.query(`ALTER TABLE learning_contents ADD COLUMN IF NOT EXISTS reward_id INTEGER`);
     await client.query(`ALTER TABLE learning_contents ADD COLUMN IF NOT EXISTS metadata JSONB DEFAULT '{}'::jsonb`);
     await client.query(`ALTER TABLE learning_contents ADD COLUMN IF NOT EXISTS ai_generation_ready BOOLEAN DEFAULT TRUE`);
+    await client.query(`ALTER TABLE learning_attempts ADD COLUMN IF NOT EXISTS score INTEGER NOT NULL DEFAULT 0`);
+    await client.query(`ALTER TABLE learning_attempts ADD COLUMN IF NOT EXISTS max_score INTEGER NOT NULL DEFAULT 0`);
+    await client.query(`ALTER TABLE learning_attempts ADD COLUMN IF NOT EXISTS success BOOLEAN NOT NULL DEFAULT FALSE`);
+    await client.query(`ALTER TABLE learning_attempts ADD COLUMN IF NOT EXISTS time_spent_seconds INTEGER NOT NULL DEFAULT 0`);
+    await client.query(`ALTER TABLE learning_attempts ADD COLUMN IF NOT EXISTS answers JSONB DEFAULT '[]'::jsonb`);
+    await client.query(`ALTER TABLE learning_attempts ADD COLUMN IF NOT EXISTS reward_payload JSONB DEFAULT '{}'::jsonb`);
+    await client.query(`ALTER TABLE kid_challenge_progress ADD COLUMN IF NOT EXISTS progress_value INTEGER NOT NULL DEFAULT 0`);
+    await client.query(`ALTER TABLE kid_challenge_progress ADD COLUMN IF NOT EXISTS completed BOOLEAN NOT NULL DEFAULT FALSE`);
+    await client.query(`ALTER TABLE kid_challenge_progress ADD COLUMN IF NOT EXISTS completed_at TIMESTAMPTZ`);
+    await client.query(`ALTER TABLE kid_challenge_progress ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW()`);
+    await client.query(`ALTER TABLE kid_rewards ADD COLUMN IF NOT EXISTS source_type TEXT NOT NULL DEFAULT 'learning_attempt'`);
+    await client.query(`ALTER TABLE kid_rewards ADD COLUMN IF NOT EXISTS source_id INTEGER`);
+    await client.query(`ALTER TABLE kid_rewards ADD COLUMN IF NOT EXISTS payload JSONB DEFAULT '{}'::jsonb`);
     await client.query(`ALTER TABLE subscription_plans ADD COLUMN IF NOT EXISTS description TEXT`);
     await client.query(`ALTER TABLE subscription_plans ADD COLUMN IF NOT EXISTS monthly_price_cents INTEGER NOT NULL DEFAULT 0`);
     await client.query(`ALTER TABLE subscription_plans ADD COLUMN IF NOT EXISTS currency TEXT NOT NULL DEFAULT 'EUR'`);
@@ -524,6 +537,7 @@ export async function initDatabase() {
     await client.query(`CREATE INDEX IF NOT EXISTS learning_contents_filters_idx ON learning_contents(status, content_type, language, difficulty, age_group_min, age_group_max)`);
     await client.query(`CREATE INDEX IF NOT EXISTS learning_questions_content_idx ON learning_questions(content_id, position)`);
     await client.query(`CREATE INDEX IF NOT EXISTS learning_attempts_kid_idx ON learning_attempts(kid_profile_id, created_at DESC)`);
+    await client.query(`CREATE UNIQUE INDEX IF NOT EXISTS kid_challenge_progress_unique_idx ON kid_challenge_progress(kid_profile_id, challenge_id)`);
     await client.query(`CREATE INDEX IF NOT EXISTS kid_challenge_progress_kid_idx ON kid_challenge_progress(kid_profile_id, completed, updated_at DESC)`);
 
     await client.query(`
