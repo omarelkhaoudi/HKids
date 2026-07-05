@@ -49,7 +49,7 @@ function LibraryMenu({ categories, onCategorySelect, onAgeSelect, selectedCatego
     <div className="relative" ref={menuRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-1 sm:gap-2 text-surface-100 hover:text-white hover:bg-surface-800/80 px-2 sm:px-4 py-1.5 sm:py-2 rounded-2xl transition-colors font-medium text-sm sm:text-base"
+        className="flex items-center gap-1 sm:gap-2 text-surface-800 hover:text-primary-700 hover:bg-primary-50 px-2 sm:px-4 py-1.5 sm:py-2 rounded-2xl transition-colors font-semibold text-sm sm:text-base"
       >
         <BookIcon className="w-4 h-4 sm:w-5 sm:h-5" />
         <span className="hidden sm:inline">Bibliothèque</span>
