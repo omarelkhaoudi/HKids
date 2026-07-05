@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Le Lit Qui Lit</string>
+    <string name="title_activity_main">Le Lit Qui Lit</string>
+    <string name="package_name">com.lelitquilit.app</string>
+    <string name="custom_url_scheme">com.lelitquilit.app</string>
+</resources>

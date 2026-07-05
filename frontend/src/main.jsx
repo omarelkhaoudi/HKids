@@ -4,8 +4,10 @@ import { BrowserRouter } from 'react-router-dom';
 import App from './App';
 import './index.css';
 import { registerServiceWorker } from './services/offline/registerServiceWorker';
+import { initCapacitorRuntime } from './services/mobile/capacitorRuntime';
 
 registerServiceWorker();
+initCapacitorRuntime();
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
