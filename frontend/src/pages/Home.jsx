@@ -304,13 +304,13 @@ function Home({ darkMode, setDarkMode }) {
         initial={{ y: -100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.5 }}
-        className="sticky top-0 z-50 shadow-md bg-surface-900/95 backdrop-blur-md"
+        className="sticky top-0 z-50 border-b border-surface-200 bg-white/95 shadow-sm backdrop-blur-md"
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4 flex justify-between items-center gap-3">
           <Logo size="default" />
           
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center gap-2 text-surface-100">
+          <nav className="hidden md:flex items-center gap-2 text-surface-800">
             <LibraryMenu
               categories={categories}
               onCategorySelect={setSelectedCategory}
@@ -320,7 +320,7 @@ function Home({ darkMode, setDarkMode }) {
             />
             <Link 
               to="/favorites" 
-              className="btn-nav flex items-center gap-2 text-surface-100 hover:text-white hover:bg-surface-800/80"
+              className="btn-nav flex items-center gap-2 text-surface-800 hover:text-primary-700 hover:bg-primary-50"
               title={t.favorites}
             >
               <HeartIcon className="w-4 h-4" filled={false} />
@@ -328,7 +328,7 @@ function Home({ darkMode, setDarkMode }) {
             </Link>
             <Link 
               to="/history" 
-              className="btn-nav flex items-center gap-2 text-surface-100 hover:text-white hover:bg-surface-800/80"
+              className="btn-nav flex items-center gap-2 text-surface-800 hover:text-primary-700 hover:bg-primary-50"
               title={t.history}
             >
               <HistoryIcon className="w-4 h-4" />
@@ -336,7 +336,7 @@ function Home({ darkMode, setDarkMode }) {
             </Link>
             <Link 
               to="/parent/login" 
-              className="btn-nav flex items-center gap-2 text-surface-100 hover:text-white hover:bg-surface-800/80"
+              className="btn-nav flex items-center gap-2 text-surface-800 hover:text-primary-700 hover:bg-primary-50"
             >
               <LockIcon className="w-4 h-4" />
               <span>{t.admin}</span>
@@ -349,7 +349,7 @@ function Home({ darkMode, setDarkMode }) {
             <LanguageSelector />
             <motion.button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-2 text-surface-100 hover:text-white hover:bg-surface-800/80 rounded-2xl transition-colors"
+              className="p-2 text-surface-800 hover:text-primary-700 hover:bg-primary-50 rounded-2xl transition-colors"
               whileTap={{ scale: 0.95 }}
             >
               {mobileMenuOpen ? (
