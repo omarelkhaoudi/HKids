@@ -537,6 +537,13 @@ export async function initDatabase() {
     await client.query(`CREATE INDEX IF NOT EXISTS learning_contents_filters_idx ON learning_contents(status, content_type, language, difficulty, age_group_min, age_group_max)`);
     await client.query(`CREATE INDEX IF NOT EXISTS learning_questions_content_idx ON learning_questions(content_id, position)`);
     await client.query(`CREATE INDEX IF NOT EXISTS learning_attempts_kid_idx ON learning_attempts(kid_profile_id, created_at DESC)`);
+    await client.query(`
+      DELETE FROM kid_challenge_progress duplicate
+      USING kid_challenge_progress keeper
+      WHERE duplicate.kid_profile_id = keeper.kid_profile_id
+        AND duplicate.challenge_id = keeper.challenge_id
+        AND duplicate.id < keeper.id
+    `);
     await client.query(`CREATE UNIQUE INDEX IF NOT EXISTS kid_challenge_progress_unique_idx ON kid_challenge_progress(kid_profile_id, challenge_id)`);
     await client.query(`CREATE INDEX IF NOT EXISTS kid_challenge_progress_kid_idx ON kid_challenge_progress(kid_profile_id, completed, updated_at DESC)`);
 
