@@ -25,14 +25,14 @@ function KidsHome() {
           </Link>
           <button
             onClick={handleLogout}
-            className="grid h-12 w-12 place-items-center rounded-2xl bg-white text-red-500 shadow-md transition hover:bg-red-50"
+            className="grid h-12 w-12 place-items-center rounded-2xl bg-white text-primary-500 shadow-md transition hover:bg-primary-50"
             aria-label="Deconnexion"
           >
             <LogOutIcon className="h-6 w-6" />
           </button>
         </header>
 
-        <section className="mb-7 overflow-hidden rounded-[2rem] bg-gradient-to-br from-red-500 via-pink-500 to-orange-400 p-5 text-white shadow-xl sm:p-7">
+        <section className="mb-7 overflow-hidden rounded-[2rem] bg-gradient-to-br from-primary-500 via-secondary-500 to-accent-400 p-5 text-white shadow-xl sm:p-7">
           <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
             <div>
               <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-white/20 px-4 py-2 text-sm font-black backdrop-blur">
@@ -47,7 +47,7 @@ function KidsHome() {
               <Link
                 to="/kids/story-studio"
                 aria-label="Creer une histoire"
-                className="grid min-h-24 min-w-24 place-items-center rounded-[1.75rem] bg-neutral-900 p-4 text-white shadow-lg transition hover:bg-neutral-800"
+                className="grid min-h-24 min-w-24 place-items-center rounded-[1.75rem] bg-surface-900 p-4 text-white shadow-lg transition hover:bg-surface-800"
               >
                 <SparklesIcon className="h-10 w-10" />
                 <span className="text-sm font-black">Creer</span>
@@ -55,7 +55,7 @@ function KidsHome() {
               <Link
                 to="/kids/ai-stories"
                 aria-label="Mes histoires IA"
-                className="grid min-h-24 min-w-24 place-items-center rounded-[1.75rem] bg-white p-4 text-blue-600 shadow-lg transition hover:bg-blue-50"
+                className="grid min-h-24 min-w-24 place-items-center rounded-[1.75rem] bg-white p-4 text-primary-600 shadow-lg transition hover:bg-primary-50"
               >
                 <BookIcon className="h-10 w-10" />
                 <span className="text-sm font-black">Mes IA</span>
@@ -63,7 +63,7 @@ function KidsHome() {
               <Link
                 to="/content-library"
                 aria-label="Histoires a ecouter"
-                className="grid min-h-24 min-w-24 place-items-center rounded-[1.75rem] bg-white p-4 text-red-600 shadow-lg transition hover:bg-red-50"
+                className="grid min-h-24 min-w-24 place-items-center rounded-[1.75rem] bg-white p-4 text-primary-600 shadow-lg transition hover:bg-primary-50"
               >
                 <AudioIcon className="h-10 w-10" />
                 <span className="text-sm font-black">Audio</span>
@@ -82,11 +82,11 @@ function KidsHome() {
 
         <main>
           <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-2xl font-black text-neutral-900">Univers</h2>
+            <h2 className="text-2xl font-black text-surface-900">Univers</h2>
             <Link
               to="/content-library"
               aria-label="Ouvrir la bibliotheque"
-              className="grid h-16 w-16 place-items-center rounded-2xl bg-neutral-900 text-white shadow-md transition hover:bg-neutral-800"
+              className="grid h-16 w-16 place-items-center rounded-2xl bg-surface-900 text-white shadow-md transition hover:bg-surface-800"
             >
               <BookIcon className="h-8 w-8" />
             </Link>

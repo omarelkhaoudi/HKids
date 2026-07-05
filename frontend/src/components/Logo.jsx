@@ -59,7 +59,7 @@ export function Logo({ className = "", showText = true, size = "default", isLink
       })}
       
       {/* Cadre externe avec gradient rouge/rose (comme l'illustration) */}
-      <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-red-400 via-pink-400 to-orange-400 p-0.5 shadow-lg">
+      <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-primary-400 via-secondary-400 to-accent-400 p-0.5 shadow-lg">
         {/* Cadre blanc interne (comme l'illustration) */}
         <div className="w-full h-full rounded-2xl bg-white relative overflow-hidden">
           {/* Image du logo */}
@@ -77,8 +77,8 @@ export function Logo({ className = "", showText = true, size = "default", isLink
             }}
           />
           {/* Fallback icon si l'image n'existe pas */}
-          <div className="hidden w-full h-full bg-gradient-to-br from-orange-200 to-pink-200 flex items-center justify-center">
-            <BookIcon className="w-2/3 h-2/3 text-orange-600" />
+          <div className="hidden w-full h-full bg-gradient-to-br from-accent-200 to-secondary-200 flex items-center justify-center">
+            <BookIcon className="w-2/3 h-2/3 text-accent-600" />
           </div>
           
           {/* Effet de lumière magique qui émane du livre */}
@@ -99,7 +99,7 @@ export function Logo({ className = "", showText = true, size = "default", isLink
               { left: '45%', top: '15%' },
               { left: '55%', top: '85%' },
             ];
-            const colors = ['bg-yellow-300', 'bg-orange-300', 'bg-blue-300', 'bg-pink-300', 'bg-yellow-200', 'bg-orange-200'];
+            const colors = ['bg-yellow-300', 'bg-accent-300', 'bg-primary-300', 'bg-secondary-300', 'bg-yellow-200', 'bg-accent-200'];
             const pos = positions[i % positions.length];
             
             return (

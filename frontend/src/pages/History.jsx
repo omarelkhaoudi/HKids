@@ -96,14 +96,14 @@ function History() {
         initial={{ y: -100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.5 }}
-        className="sticky top-0 z-50 shadow-md bg-neutral-900/95 backdrop-blur-md"
+        className="sticky top-0 z-50 shadow-md bg-surface-900/95 backdrop-blur-md"
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4 flex justify-between items-center gap-3">
           <Link to="/" className="flex items-center">
             <Logo size="default" />
           </Link>
           <div className="flex items-center gap-2 sm:gap-4">
-            <Link to="/" className="text-neutral-100 hover:text-white font-medium flex items-center gap-1 sm:gap-2 transition-colors px-2 py-1 sm:px-0 sm:py-0">
+            <Link to="/" className="text-surface-100 hover:text-white font-medium flex items-center gap-1 sm:gap-2 transition-colors px-2 py-1 sm:px-0 sm:py-0">
               <ChevronLeftIcon className="w-4 h-4 sm:w-5 sm:h-5" />
               <span className="hidden sm:inline">Retour</span>
             </Link>
@@ -116,7 +116,7 @@ function History() {
                 onClick={clearHistory}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="px-2 sm:px-4 py-1.5 sm:py-2 bg-red-500/20 hover:bg-red-500/30 text-white rounded-lg transition-colors text-xs sm:text-sm font-medium flex items-center gap-1 sm:gap-2 border border-red-400/30"
+                className="px-2 sm:px-4 py-1.5 sm:py-2 bg-primary-500/20 hover:bg-primary-500/30 text-white rounded-2xl transition-colors text-xs sm:text-sm font-medium flex items-center gap-1 sm:gap-2 border border-primary-400/30"
               >
                 <TrashIcon className="w-3 h-3 sm:w-4 sm:h-4" />
                 <span className="hidden sm:inline">Effacer</span>
@@ -127,7 +127,7 @@ function History() {
       </motion.header>
 
       {/* Hero Section avec étoiles animées */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-white via-red-50/30 to-pink-50/30 py-12 md:py-16">
+      <section className="relative overflow-hidden bg-gradient-to-br from-white via-primary-50/30 to-secondary-50/30 py-12 md:py-16">
         {/* Étoiles animées en arrière-plan */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           {Array.from({ length: 20 }).map((_, i) => (
@@ -162,11 +162,11 @@ function History() {
             className="text-center mb-12"
           >
             <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold mb-4 leading-tight">
-              <span className="text-red-600 drop-shadow-lg">Historique</span>
+              <span className="text-primary-600 drop-shadow-lg">Historique</span>
               <br />
-              <span className="text-neutral-900">de Lecture</span>
+              <span className="text-surface-900">de Lecture</span>
             </h1>
-            <p className="text-lg sm:text-xl text-neutral-600 max-w-2xl mx-auto">
+            <p className="text-lg sm:text-xl text-surface-600 max-w-2xl mx-auto">
               Retrouvez tous les livres que vous avez lus
             </p>
           </motion.div>
@@ -181,24 +181,24 @@ function History() {
             >
               <motion.div
                 whileHover={{ scale: 1.05, y: -5 }}
-                className="bg-white/90 backdrop-blur-sm rounded-2xl p-6 shadow-lg border-2 border-red-100"
+                className="bg-white/90 backdrop-blur-sm rounded-2xl p-6 shadow-lg border-2 border-primary-100"
               >
-                <div className="text-3xl font-bold text-red-600 mb-2">{uniqueBooks}</div>
-                <div className="text-sm text-neutral-600 font-medium">Livres lus</div>
+                <div className="text-3xl font-bold text-primary-600 mb-2">{uniqueBooks}</div>
+                <div className="text-sm text-surface-600 font-medium">Livres lus</div>
               </motion.div>
               <motion.div
                 whileHover={{ scale: 1.05, y: -5 }}
-                className="bg-white/90 backdrop-blur-sm rounded-2xl p-6 shadow-lg border-2 border-pink-100"
+                className="bg-white/90 backdrop-blur-sm rounded-2xl p-6 shadow-lg border-2 border-secondary-100"
               >
-                <div className="text-3xl font-bold text-pink-600 mb-2">{totalPagesRead}</div>
-                <div className="text-sm text-neutral-600 font-medium">Pages lues</div>
+                <div className="text-3xl font-bold text-secondary-600 mb-2">{totalPagesRead}</div>
+                <div className="text-sm text-surface-600 font-medium">Pages lues</div>
               </motion.div>
               <motion.div
                 whileHover={{ scale: 1.05, y: -5 }}
-                className="bg-white/90 backdrop-blur-sm rounded-2xl p-6 shadow-lg border-2 border-orange-100"
+                className="bg-white/90 backdrop-blur-sm rounded-2xl p-6 shadow-lg border-2 border-accent-100"
               >
-                <div className="text-3xl font-bold text-orange-600 mb-2">{avgPagesPerBook}</div>
-                <div className="text-sm text-neutral-600 font-medium">Pages moyennes</div>
+                <div className="text-3xl font-bold text-accent-600 mb-2">{avgPagesPerBook}</div>
+                <div className="text-sm text-surface-600 font-medium">Pages moyennes</div>
               </motion.div>
             </motion.div>
           )}
@@ -213,9 +213,9 @@ function History() {
               <motion.div
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="inline-block animate-spin rounded-full h-16 w-16 border-4 border-red-300 border-t-red-600"
+                className="inline-block animate-spin rounded-full h-16 w-16 border-4 border-primary-300 border-t-primary-600"
               />
-              <p className="mt-4 text-neutral-600 text-lg font-medium">Chargement...</p>
+              <p className="mt-4 text-surface-600 text-lg font-medium">Chargement...</p>
             </div>
           ) : books.length === 0 ? (
             <motion.div
@@ -228,20 +228,20 @@ function History() {
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
                   transition={{ type: 'spring', delay: 0.2 }}
-                  className="p-6 bg-gradient-to-br from-red-100 to-pink-100 rounded-full shadow-lg"
+                  className="p-6 bg-gradient-to-br from-primary-100 to-secondary-100 rounded-full shadow-lg"
                 >
-                  <BookIcon className="w-16 h-16 text-red-500" />
+                  <BookIcon className="w-16 h-16 text-primary-500" />
                 </motion.div>
               </div>
-              <h2 className="text-2xl sm:text-3xl font-bold text-neutral-900 mb-3">Aucun historique</h2>
-              <p className="text-lg text-neutral-600 mb-8 max-w-md mx-auto">
+              <h2 className="text-2xl sm:text-3xl font-bold text-surface-900 mb-3">Aucun historique</h2>
+              <p className="text-lg text-surface-600 mb-8 max-w-md mx-auto">
                 Vous n'avez pas encore lu de livres. Commencez votre aventure de lecture dès maintenant !
               </p>
               <Link to="/">
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  className="px-8 py-4 bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-full font-semibold text-lg shadow-lg hover:shadow-xl transition-all"
+                  className="px-8 py-4 bg-gradient-to-r from-primary-500 to-secondary-500 text-white rounded-full font-semibold text-lg shadow-lg hover:shadow-xl transition-all"
                 >
                   Découvrir des livres
                 </motion.button>
@@ -254,7 +254,7 @@ function History() {
                 animate={{ opacity: 1, y: 0 }}
                 className="mb-8"
               >
-                <p className="text-xl sm:text-2xl text-neutral-700 font-semibold">
+                <p className="text-xl sm:text-2xl text-surface-700 font-semibold">
                   {books.length} livre{books.length > 1 ? 's' : ''} dans l'historique
                 </p>
               </motion.div>
@@ -291,13 +291,13 @@ function History() {
                       >
                         <Link
                           to={`/book-details/${book.id}`}
-                          className="bg-white rounded-2xl border-2 border-neutral-200 overflow-hidden group block hover:border-red-300 hover:shadow-xl transition-all shadow-lg"
+                          className="bg-white rounded-2xl border-2 border-surface-200 overflow-hidden group block hover:border-primary-300 hover:shadow-xl transition-all shadow-lg"
                         >
                           <div className="flex flex-col sm:flex-row items-center sm:items-start gap-3 sm:gap-4 p-3 sm:p-4 md:p-6">
                             {/* Image de couverture circulaire */}
                             <div className="flex-shrink-0">
                               <motion.div
-                                className="w-24 h-24 sm:w-32 sm:h-32 rounded-full overflow-hidden shadow-lg border-4 border-white ring-2 ring-neutral-200 group-hover:ring-red-300 transition-all relative bg-gradient-to-br from-neutral-100 to-neutral-50"
+                                className="w-24 h-24 sm:w-32 sm:h-32 rounded-full overflow-hidden shadow-lg border-4 border-white ring-2 ring-surface-200 group-hover:ring-primary-300 transition-all relative bg-gradient-to-br from-surface-100 to-surface-50"
                                 whileHover={{ scale: 1.05 }}
                               >
                                 {coverImageUrl ? (
@@ -316,32 +316,32 @@ function History() {
                                         console.log('[History] Image loaded successfully:', coverImageUrl);
                                       }}
                                     />
-                                    <div className="image-fallback w-full h-full absolute inset-0 flex items-center justify-center bg-gradient-to-br from-neutral-100 to-neutral-50" style={{ display: 'none' }}>
-                                      <BookIcon className="w-12 h-12 text-neutral-400" />
+                                    <div className="image-fallback w-full h-full absolute inset-0 flex items-center justify-center bg-gradient-to-br from-surface-100 to-surface-50" style={{ display: 'none' }}>
+                                      <BookIcon className="w-12 h-12 text-surface-400" />
                                     </div>
                                   </>
                                 ) : (
                                   <div className="w-full h-full flex items-center justify-center">
-                                    <BookIcon className="w-12 h-12 sm:w-16 sm:h-16 text-neutral-400" />
+                                    <BookIcon className="w-12 h-12 sm:w-16 sm:h-16 text-surface-400" />
                                   </div>
                                 )}
                               </motion.div>
                             </div>
-                            <div className="flex-1 w-full bg-gradient-to-br from-red-50/30 to-pink-50/30 rounded-xl p-4 sm:p-6">
+                            <div className="flex-1 w-full bg-gradient-to-br from-primary-50/30 to-secondary-50/30 rounded-3xl p-4 sm:p-6">
                               <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start mb-3 gap-2">
                                 <div className="flex-1">
-                                  <h3 className="font-bold text-xl text-neutral-900 group-hover:text-red-600 transition-colors mb-2">
+                                  <h3 className="font-bold text-xl text-surface-900 group-hover:text-primary-600 transition-colors mb-2">
                                     {book.title}
                                   </h3>
                                   {book.author && (
-                                    <p className="text-sm text-neutral-600 font-medium mb-3">par {book.author}</p>
+                                    <p className="text-sm text-surface-600 font-medium mb-3">par {book.author}</p>
                                   )}
                                 </div>
                                 {historyItem && (
                                   <motion.span
                                     initial={{ opacity: 0 }}
                                     animate={{ opacity: 1 }}
-                                    className="text-sm text-neutral-500 font-medium bg-white/80 px-3 py-1.5 rounded-full whitespace-nowrap"
+                                    className="text-sm text-surface-500 font-medium bg-white/80 px-3 py-1.5 rounded-full whitespace-nowrap"
                                   >
                                     {formatDate(historyItem.lastRead)}
                                   </motion.span>
@@ -349,12 +349,12 @@ function History() {
                               </div>
                               <div className="flex items-center gap-3 flex-wrap mb-4">
                                 {historyItem && historyItem.page > 0 && (
-                                  <span className="px-3 py-1.5 text-xs font-semibold bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-lg shadow-md">
+                                  <span className="px-3 py-1.5 text-xs font-semibold bg-gradient-to-r from-primary-500 to-secondary-500 text-white rounded-2xl shadow-md">
                                     Page {historyItem.page + 1} sur {book.page_count || '?'}
                                   </span>
                                 )}
                                 {book.category_name && (
-                                  <span className="px-3 py-1.5 text-xs font-semibold bg-white text-neutral-700 rounded-lg border border-neutral-200">
+                                  <span className="px-3 py-1.5 text-xs font-semibold bg-white text-surface-700 rounded-2xl border border-surface-200">
                                     {book.category_name}
                                   </span>
                                 )}
@@ -362,15 +362,15 @@ function History() {
                               {historyItem && book.page_count > 0 && (
                                 <div className="mt-4">
                                   <div className="flex justify-between items-center mb-2">
-                                    <span className="text-xs font-semibold text-neutral-600">Progression</span>
-                                    <span className="text-xs font-bold text-red-600">{progress}%</span>
+                                    <span className="text-xs font-semibold text-surface-600">Progression</span>
+                                    <span className="text-xs font-bold text-primary-600">{progress}%</span>
                                   </div>
-                                  <div className="w-full h-2 bg-neutral-200 rounded-full overflow-hidden">
+                                  <div className="w-full h-2 bg-surface-200 rounded-full overflow-hidden">
                                     <motion.div
                                       initial={{ width: 0 }}
                                       animate={{ width: `${progress}%` }}
                                       transition={{ duration: 0.5, delay: index * 0.1 }}
-                                      className="h-full bg-gradient-to-r from-red-500 to-pink-500 rounded-full"
+                                      className="h-full bg-gradient-to-r from-primary-500 to-secondary-500 rounded-full"
                                     />
                                   </div>
                                 </div>

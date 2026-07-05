@@ -41,17 +41,17 @@ export function AudioPlayer({
   const progressValue = Math.min(progressMax, Math.floor(currentTime || 0));
 
   return (
-    <div className="fixed inset-x-0 bottom-0 z-50 border-t border-white/60 bg-white/95 px-4 py-4 shadow-2xl backdrop-blur dark:bg-neutral-900/95">
+    <div className="fixed inset-x-0 bottom-0 z-50 border-t border-white/60 bg-white/95 px-4 py-4 shadow-2xl backdrop-blur dark:bg-surface-900/95">
       <div className="mx-auto grid max-w-7xl gap-3 lg:grid-cols-[1fr_1.4fr_0.7fr] lg:items-center">
         <div className="flex min-w-0 items-center gap-3">
           <div className="grid h-16 w-16 shrink-0 place-items-center rounded-2xl bg-emerald-100 text-emerald-700">
             <AudioIcon className="h-8 w-8" />
           </div>
           <div className="min-w-0">
-            <p className="truncate text-sm font-black text-neutral-900 dark:text-neutral-100">
+            <p className="truncate text-sm font-black text-surface-900 dark:text-surface-100">
               {book.title}
             </p>
-            <p className="text-xs font-semibold text-neutral-500 dark:text-neutral-300">
+            <p className="text-xs font-semibold text-surface-500 dark:text-surface-300">
               {error || (loading ? 'Chargement...' : 'Pret a ecouter')}
             </p>
           </div>
@@ -61,7 +61,7 @@ export function AudioPlayer({
           <div className="mb-2 flex items-center justify-center gap-2">
             <button
               onClick={() => onSeekBy(-10)}
-              className="grid h-14 w-14 place-items-center rounded-full bg-neutral-100 text-neutral-700 transition hover:bg-neutral-200 dark:bg-neutral-800 dark:text-neutral-100"
+              className="grid h-14 w-14 place-items-center rounded-full bg-surface-100 text-surface-700 transition hover:bg-surface-200 dark:bg-surface-800 dark:text-surface-100"
               aria-label="Reculer de 10 secondes"
             >
               <ChevronLeftIcon className="h-7 w-7" />
@@ -75,7 +75,7 @@ export function AudioPlayer({
             </button>
             <button
               onClick={() => onSeekBy(10)}
-              className="grid h-14 w-14 place-items-center rounded-full bg-neutral-100 text-neutral-700 transition hover:bg-neutral-200 dark:bg-neutral-800 dark:text-neutral-100"
+              className="grid h-14 w-14 place-items-center rounded-full bg-surface-100 text-surface-700 transition hover:bg-surface-200 dark:bg-surface-800 dark:text-surface-100"
               aria-label="Avancer de 10 secondes"
             >
               <ChevronRightIcon className="h-7 w-7" />
@@ -83,7 +83,7 @@ export function AudioPlayer({
           </div>
 
           <div className="grid grid-cols-[3rem_1fr_3rem] items-center gap-3">
-            <span className="text-right text-xs font-black text-neutral-500 dark:text-neutral-300">
+            <span className="text-right text-xs font-black text-surface-500 dark:text-surface-300">
               {formatTime(currentTime)}
             </span>
             <input
@@ -95,7 +95,7 @@ export function AudioPlayer({
               className="h-3 w-full cursor-pointer accent-emerald-500"
               aria-label="Progression audio"
             />
-            <span className="text-xs font-black text-neutral-500 dark:text-neutral-300">
+            <span className="text-xs font-black text-surface-500 dark:text-surface-300">
               {formatTime(duration)}
             </span>
           </div>
@@ -106,7 +106,7 @@ export function AudioPlayer({
             <select
               value={selectedVoiceId}
               onChange={(event) => onVoiceChange?.(event.target.value)}
-              className="h-14 max-w-44 rounded-full border border-neutral-200 bg-white px-3 text-sm font-black text-neutral-700 outline-none dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100"
+              className="h-14 max-w-44 rounded-full border border-surface-200 bg-white px-3 text-sm font-black text-surface-700 outline-none dark:border-surface-700 dark:bg-surface-800 dark:text-surface-100"
               aria-label="Voix de narration"
               title="Voix de narration"
             >
@@ -119,7 +119,7 @@ export function AudioPlayer({
             </select>
           )}
           <div className="flex min-w-32 items-center gap-2">
-            <VolumeIcon className="h-5 w-5 text-neutral-500 dark:text-neutral-300" />
+            <VolumeIcon className="h-5 w-5 text-surface-500 dark:text-surface-300" />
             <input
               type="range"
               min="0"
@@ -134,7 +134,7 @@ export function AudioPlayer({
           <button
             onClick={onToggleFavorite}
             className={`grid h-14 w-14 place-items-center rounded-full transition ${
-              favorite ? 'bg-rose-100 text-rose-600' : 'bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-100'
+              favorite ? 'bg-rose-100 text-rose-600' : 'bg-surface-100 text-surface-600 dark:bg-surface-800 dark:text-surface-100'
             }`}
             aria-label="Favori"
           >
@@ -142,7 +142,7 @@ export function AudioPlayer({
           </button>
           <button
             onClick={onClose}
-            className="grid h-14 w-14 place-items-center rounded-full bg-neutral-100 text-neutral-600 transition hover:bg-neutral-200 dark:bg-neutral-800 dark:text-neutral-100"
+            className="grid h-14 w-14 place-items-center rounded-full bg-surface-100 text-surface-600 transition hover:bg-surface-200 dark:bg-surface-800 dark:text-surface-100"
             aria-label="Fermer le lecteur"
           >
             <XIcon className="h-7 w-7" />

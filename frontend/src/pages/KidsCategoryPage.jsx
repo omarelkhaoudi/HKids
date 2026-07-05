@@ -30,7 +30,7 @@ function KidsCategoryPage() {
           </Link>
           <button
             onClick={handleLogout}
-            className="grid h-12 w-12 place-items-center rounded-2xl bg-white text-red-500 shadow-md transition hover:bg-red-50"
+            className="grid h-12 w-12 place-items-center rounded-2xl bg-white text-primary-500 shadow-md transition hover:bg-primary-50"
             aria-label="Deconnexion"
           >
             <LogOutIcon className="h-6 w-6" />
@@ -39,7 +39,7 @@ function KidsCategoryPage() {
 
         <Link
           to="/kids"
-          className="mb-5 inline-flex min-h-16 items-center gap-3 rounded-2xl bg-white px-5 py-4 font-black text-neutral-800 shadow-md transition hover:bg-neutral-50"
+          className="mb-5 inline-flex min-h-16 items-center gap-3 rounded-2xl bg-white px-5 py-4 font-black text-surface-800 shadow-md transition hover:bg-surface-50"
           aria-label="Retour accueil"
         >
           <ChevronLeftIcon className="h-8 w-8" />
@@ -64,7 +64,7 @@ function KidsCategoryPage() {
             </h1>
             <Link
               to="/kids/library"
-              className="mx-auto mt-8 inline-flex min-h-20 min-w-52 items-center justify-center gap-4 rounded-[1.75rem] bg-white px-8 text-2xl font-black text-neutral-900 shadow-xl transition hover:scale-105"
+              className="mx-auto mt-8 inline-flex min-h-20 min-w-52 items-center justify-center gap-4 rounded-[1.75rem] bg-white px-8 text-2xl font-black text-surface-900 shadow-xl transition hover:scale-105"
               aria-label={`Voir les histoires ${category.label}`}
             >
               <BookIcon className="h-9 w-9" />

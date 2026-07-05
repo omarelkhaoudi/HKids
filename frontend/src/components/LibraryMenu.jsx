@@ -24,9 +24,9 @@ function LibraryMenu({ categories, onCategorySelect, onAgeSelect, selectedCatego
   }, [isOpen]);
 
   const ageButtons = [
-    { age: '3-5', label: '3-5 ans', color: 'bg-blue-500 hover:bg-blue-600' },
-    { age: '6-8', label: '6-8 ans', color: 'bg-orange-500 hover:bg-orange-600' },
-    { age: '9-12', label: '9-12 ans', color: 'bg-pink-500 hover:bg-pink-600' }
+    { age: '3-5', label: '3-5 ans', color: 'bg-primary-500 hover:bg-primary-600' },
+    { age: '6-8', label: '6-8 ans', color: 'bg-accent-500 hover:bg-accent-600' },
+    { age: '9-12', label: '9-12 ans', color: 'bg-secondary-500 hover:bg-secondary-600' }
   ];
 
   const scrollToBooksSection = () => {
@@ -49,7 +49,7 @@ function LibraryMenu({ categories, onCategorySelect, onAgeSelect, selectedCatego
     <div className="relative" ref={menuRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-1 sm:gap-2 text-neutral-100 hover:text-white hover:bg-neutral-800/80 px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg transition-colors font-medium text-sm sm:text-base"
+        className="flex items-center gap-1 sm:gap-2 text-surface-100 hover:text-white hover:bg-surface-800/80 px-2 sm:px-4 py-1.5 sm:py-2 rounded-2xl transition-colors font-medium text-sm sm:text-base"
       >
         <BookIcon className="w-4 h-4 sm:w-5 sm:h-5" />
         <span className="hidden sm:inline">Bibliothèque</span>
@@ -79,14 +79,14 @@ function LibraryMenu({ categories, onCategorySelect, onAgeSelect, selectedCatego
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.2 }}
-              className="absolute top-full left-0 sm:left-1/2 sm:transform sm:-translate-x-1/2 mt-2 w-[calc(100vw-2rem)] sm:w-[420px] bg-white rounded-2xl shadow-2xl z-50 overflow-hidden border border-neutral-200 mx-2 sm:mx-0"
+              className="absolute top-full left-0 sm:left-1/2 sm:transform sm:-translate-x-1/2 mt-2 w-[calc(100vw-2rem)] sm:w-[420px] bg-white rounded-2xl shadow-2xl z-50 overflow-hidden border border-surface-200 mx-2 sm:mx-0"
             >
               {/* Header avec titre et boutons d'âge */}
-              <div className="bg-gradient-to-r from-red-50 via-pink-50 to-orange-50 p-4 sm:p-6 border-b border-neutral-200">
+              <div className="bg-gradient-to-r from-primary-50 via-secondary-50 to-accent-50 p-4 sm:p-6 border-b border-surface-200">
                 <div className="mb-5 space-y-4">
-                  <h2 className="text-2xl font-bold text-neutral-900">Bibliothèque</h2>
+                  <h2 className="text-2xl font-bold text-surface-900">Bibliothèque</h2>
                   <div className="grid grid-cols-2 gap-3">
-                    <button className="flex h-14 items-center justify-center gap-2 rounded-xl border border-neutral-200 bg-white px-3 text-sm font-semibold text-neutral-700 shadow-sm transition-colors hover:bg-neutral-50">
+                    <button className="flex h-14 items-center justify-center gap-2 rounded-3xl border border-surface-200 bg-white px-3 text-sm font-semibold text-surface-700 shadow-sm transition-colors hover:bg-surface-50">
                       <GlobeIcon className="w-3 h-3 sm:w-4 sm:h-4" />
                       <span className="hidden sm:inline">Catalogue anglais</span>
                       <span className="sm:hidden">EN</span>
@@ -94,7 +94,7 @@ function LibraryMenu({ categories, onCategorySelect, onAgeSelect, selectedCatego
                     <Link
                       to="/abonnements"
                       onClick={() => setIsOpen(false)}
-                      className="flex h-14 items-center justify-center gap-2 rounded-xl border border-neutral-200 bg-white px-3 text-sm font-semibold text-neutral-700 shadow-sm transition-colors hover:bg-neutral-50"
+                      className="flex h-14 items-center justify-center gap-2 rounded-3xl border border-surface-200 bg-white px-3 text-sm font-semibold text-surface-700 shadow-sm transition-colors hover:bg-surface-50"
                     >
                       <TrophyIcon className="w-3 h-3 sm:w-4 sm:h-4" />
                       <span className="hidden sm:inline">Prix</span>
@@ -112,8 +112,8 @@ function LibraryMenu({ categories, onCategorySelect, onAgeSelect, selectedCatego
                       <button
                         key={ageBtn.age}
                         onClick={() => handleAgeClick(ageBtn.age)}
-                        className={`h-11 rounded-xl px-3 text-sm font-bold text-white transition-all ${
-                          isSelected ? ageBtn.color + ' ring-2 ring-offset-2 ring-offset-white ring-neutral-900' : ageBtn.color
+                        className={`h-11 rounded-3xl px-3 text-sm font-bold text-white transition-all ${
+                          isSelected ? ageBtn.color + ' ring-2 ring-offset-2 ring-offset-white ring-surface-900' : ageBtn.color
                         }`}
                       >
                         {ageBtn.label}

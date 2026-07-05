@@ -18,7 +18,7 @@ export function OfflineStatusBanner() {
   return (
     <div
       className={`fixed inset-x-3 top-3 z-[100] mx-auto flex max-w-md items-center justify-center rounded-2xl px-4 py-3 text-sm font-black shadow-lg ${
-        online ? 'bg-emerald-600 text-white' : 'bg-neutral-900 text-white'
+        online ? 'bg-emerald-600 text-white' : 'bg-surface-900 text-white'
       }`}
       role="status"
       aria-live="polite"

@@ -4,7 +4,7 @@ export const CONTENT_LIBRARY_CATEGORIES = [
     label: 'Histoires',
     description: 'Recits audio et livres illustres.',
     pictogram: '📚',
-    gradient: 'from-red-500 via-pink-500 to-orange-400',
+    gradient: 'from-primary-500 via-secondary-500 to-accent-400',
     contentTypes: ['story', 'audio_story'],
   },
   {

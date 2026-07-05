@@ -277,7 +277,7 @@ function KidsAIStories() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-rose-50 text-neutral-900">
+    <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-rose-50 text-surface-900">
       <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
         <header className="mb-6 flex items-center justify-between gap-4">
           <Link to="/kids" className="shrink-0">
@@ -285,14 +285,14 @@ function KidsAIStories() {
           </Link>
           <Link
             to="/kids"
-            className="inline-flex items-center gap-2 rounded-2xl bg-white px-4 py-3 text-sm font-black text-neutral-800 shadow-md"
+            className="inline-flex items-center gap-2 rounded-2xl bg-white px-4 py-3 text-sm font-black text-surface-800 shadow-md"
           >
             <ChevronLeftIcon className="h-5 w-5" />
             <span>Retour</span>
           </Link>
         </header>
 
-        <section className="mb-6 rounded-[2rem] bg-gradient-to-br from-cyan-500 via-blue-500 to-violet-500 p-6 text-white shadow-xl">
+        <section className="mb-6 rounded-[2rem] bg-gradient-to-br from-cyan-500 via-primary-500 to-violet-500 p-6 text-white shadow-xl">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-white/20 px-4 py-2 text-sm font-black">
@@ -306,7 +306,7 @@ function KidsAIStories() {
             </div>
             <Link
               to="/kids/story-studio"
-              className="inline-flex min-h-14 items-center justify-center gap-2 rounded-2xl bg-white px-5 py-3 text-base font-black text-blue-700 shadow-lg transition hover:bg-blue-50"
+              className="inline-flex min-h-14 items-center justify-center gap-2 rounded-2xl bg-white px-5 py-3 text-base font-black text-primary-700 shadow-lg transition hover:bg-primary-50"
             >
               <SparklesIcon className="h-5 w-5" />
               <span>Nouvelle histoire</span>
@@ -325,23 +325,23 @@ function KidsAIStories() {
                 onClick={() => handleCollectionChange(tab.id)}
                 className={`flex min-h-24 items-center justify-between gap-4 rounded-2xl border-2 p-5 text-left shadow-sm transition ${
                   active
-                    ? 'border-blue-400 bg-blue-600 text-white shadow-lg'
-                    : 'border-neutral-100 bg-white text-neutral-800 hover:border-blue-200'
+                    ? 'border-primary-400 bg-primary-600 text-white shadow-lg'
+                    : 'border-surface-100 bg-white text-surface-800 hover:border-primary-200'
                 }`}
               >
                 <span className="flex items-center gap-4">
-                  <span className={`grid h-12 w-12 place-items-center rounded-2xl ${active ? 'bg-white/20' : 'bg-blue-50 text-blue-600'}`}>
+                  <span className={`grid h-12 w-12 place-items-center rounded-2xl ${active ? 'bg-white/20' : 'bg-primary-50 text-primary-600'}`}>
                     <Icon className="h-6 w-6" />
                   </span>
                   <span>
                     <span className="block text-xl font-black">{tab.label}</span>
-                    <span className={`mt-1 block text-sm font-bold ${active ? 'text-white/80' : 'text-neutral-500'}`}>
+                    <span className={`mt-1 block text-sm font-bold ${active ? 'text-white/80' : 'text-surface-500'}`}>
                       {tab.description}
                     </span>
                   </span>
                 </span>
                 {active && (
-                  <span className="rounded-full bg-white px-3 py-1 text-sm font-black text-blue-700">
+                  <span className="rounded-full bg-white px-3 py-1 text-sm font-black text-primary-700">
                     {stories.length}
                   </span>
                 )}
@@ -350,13 +350,13 @@ function KidsAIStories() {
           })}
         </section>
 
-        <section className="mb-6 rounded-2xl border border-blue-100 bg-white p-4 shadow-lg">
+        <section className="mb-6 rounded-2xl border border-primary-100 bg-white p-4 shadow-lg">
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
             <div>
-              <h2 className="text-xl font-black text-neutral-900">
+              <h2 className="text-xl font-black text-surface-900">
                 {activeCollection === 'library' ? 'Filtres de la bibliotheque' : 'Filtres de l historique'}
               </h2>
-              <p className="mt-1 text-sm font-bold text-neutral-500">
+              <p className="mt-1 text-sm font-bold text-surface-500">
                 {stories.length} histoire{stories.length > 1 ? 's' : ''} affichee{stories.length > 1 ? 's' : ''} - {favoriteStoriesCount} favori{favoriteStoriesCount > 1 ? 's' : ''}
               </p>
             </div>
@@ -369,18 +369,18 @@ function KidsAIStories() {
 
           <form onSubmit={handleSearchSubmit} className="grid grid-cols-1 items-end gap-3 md:grid-cols-2 xl:grid-cols-4">
             <label className="relative block min-w-0 md:col-span-2">
-              <SearchIcon className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-neutral-400" />
+              <SearchIcon className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-surface-400" />
               <input
                 value={filters.search}
                 onChange={(event) => updateFilter('search', event.target.value)}
-                className="h-12 w-full rounded-xl border-2 border-neutral-100 pl-11 pr-4 text-sm font-bold outline-none transition focus:border-blue-300"
+                className="h-12 w-full rounded-3xl border-2 border-surface-100 pl-11 pr-4 text-sm font-bold outline-none transition focus:border-primary-300"
                 placeholder="Rechercher titre, resume, theme..."
               />
             </label>
             <select
               value={selectedKidProfileId}
               onChange={(event) => setSelectedKidProfileId(event.target.value)}
-              className="h-12 w-full min-w-0 rounded-xl border-2 border-neutral-100 px-3 text-sm font-bold outline-none focus:border-blue-300"
+              className="h-12 w-full min-w-0 rounded-3xl border-2 border-surface-100 px-3 text-sm font-bold outline-none focus:border-primary-300"
             >
               {kidProfiles.map((kid) => (
                 <option key={kid.id} value={kid.id}>{kid.name}{kid.age ? ` - ${kid.age} ans` : ''}</option>
@@ -389,7 +389,7 @@ function KidsAIStories() {
             <select
               value={filters.theme}
               onChange={(event) => updateFilter('theme', event.target.value)}
-              className="h-12 w-full min-w-0 rounded-xl border-2 border-neutral-100 px-3 text-sm font-bold outline-none focus:border-blue-300"
+              className="h-12 w-full min-w-0 rounded-3xl border-2 border-surface-100 px-3 text-sm font-bold outline-none focus:border-primary-300"
             >
               <option value="">Tous themes</option>
               {themes.map((theme) => <option key={theme} value={theme}>{theme}</option>)}
@@ -397,7 +397,7 @@ function KidsAIStories() {
             <select
               value={filters.language}
               onChange={(event) => updateFilter('language', event.target.value)}
-              className="h-12 w-full min-w-0 rounded-xl border-2 border-neutral-100 px-3 text-sm font-bold outline-none focus:border-blue-300"
+              className="h-12 w-full min-w-0 rounded-3xl border-2 border-surface-100 px-3 text-sm font-bold outline-none focus:border-primary-300"
             >
               <option value="">Toutes langues</option>
               {languages.map((language) => (
@@ -407,7 +407,7 @@ function KidsAIStories() {
             <select
               value={filters.age_level}
               onChange={(event) => updateFilter('age_level', event.target.value)}
-              className="h-12 w-full min-w-0 rounded-xl border-2 border-neutral-100 px-3 text-sm font-bold outline-none focus:border-blue-300"
+              className="h-12 w-full min-w-0 rounded-3xl border-2 border-surface-100 px-3 text-sm font-bold outline-none focus:border-primary-300"
             >
               <option value="">Tous ages</option>
               {ageLevels.map((ageLevel) => <option key={ageLevel} value={ageLevel}>{ageLevel}</option>)}
@@ -415,7 +415,7 @@ function KidsAIStories() {
             <select
               value={filters.educational_value}
               onChange={(event) => updateFilter('educational_value', event.target.value)}
-              className="h-12 w-full min-w-0 rounded-xl border-2 border-neutral-100 px-3 text-sm font-bold outline-none focus:border-blue-300"
+              className="h-12 w-full min-w-0 rounded-3xl border-2 border-surface-100 px-3 text-sm font-bold outline-none focus:border-primary-300"
             >
               <option value="">Toutes valeurs</option>
               {educationalValues.map((value) => <option key={value} value={value}>{value}</option>)}
@@ -424,7 +424,7 @@ function KidsAIStories() {
               value={filters.saved}
               onChange={(event) => updateFilter('saved', event.target.value)}
               disabled={activeCollection === 'library'}
-              className="h-12 w-full min-w-0 rounded-xl border-2 border-neutral-100 px-3 text-sm font-bold outline-none focus:border-blue-300 disabled:bg-neutral-50 disabled:text-neutral-400"
+              className="h-12 w-full min-w-0 rounded-3xl border-2 border-surface-100 px-3 text-sm font-bold outline-none focus:border-primary-300 disabled:bg-surface-50 disabled:text-surface-400"
             >
               <option value="">Tous statuts</option>
               <option value="true">Sauvees</option>
@@ -433,17 +433,17 @@ function KidsAIStories() {
             <select
               value={filters.favorite}
               onChange={(event) => updateFilter('favorite', event.target.value)}
-              className="h-12 w-full min-w-0 rounded-xl border-2 border-neutral-100 px-3 text-sm font-bold outline-none focus:border-blue-300"
+              className="h-12 w-full min-w-0 rounded-3xl border-2 border-surface-100 px-3 text-sm font-bold outline-none focus:border-primary-300"
             >
               <option value="">Tous favoris</option>
               <option value="true">Favoris</option>
               <option value="false">Non favoris</option>
             </select>
             <div className="flex w-full gap-2 md:col-span-2 xl:col-span-4">
-              <button type="submit" className="h-12 min-w-28 rounded-xl bg-neutral-900 px-4 text-sm font-black text-white">
+              <button type="submit" className="h-12 min-w-28 rounded-3xl bg-surface-900 px-4 text-sm font-black text-white">
                 Filtrer
               </button>
-              <button type="button" onClick={handleResetFilters} className="h-12 min-w-24 rounded-xl bg-neutral-100 px-4 text-sm font-black text-neutral-700">
+              <button type="button" onClick={handleResetFilters} className="h-12 min-w-24 rounded-3xl bg-surface-100 px-4 text-sm font-black text-surface-700">
                 Reset
               </button>
             </div>
@@ -451,7 +451,7 @@ function KidsAIStories() {
         </section>
 
         {error && (
-          <div className="mb-6 rounded-2xl bg-amber-50 px-4 py-3 text-sm font-bold text-amber-800">
+          <div className="mb-6 rounded-2xl bg-accent-50 px-4 py-3 text-sm font-bold text-accent-800">
             {error}
           </div>
         )}
@@ -459,12 +459,12 @@ function KidsAIStories() {
         <main className="grid gap-6 lg:grid-cols-[420px_1fr]">
           <section className="space-y-3">
             {loading ? (
-              <div className="rounded-2xl bg-white p-5 text-sm font-bold text-neutral-500 shadow">Chargement...</div>
+              <div className="rounded-2xl bg-white p-5 text-sm font-bold text-surface-500 shadow">Chargement...</div>
             ) : stories.length === 0 ? (
               <div className="rounded-2xl bg-white p-6 text-center shadow">
-                <BookIcon className="mx-auto mb-3 h-10 w-10 text-blue-500" />
+                <BookIcon className="mx-auto mb-3 h-10 w-10 text-primary-500" />
                 <p className="font-black">Aucune histoire IA</p>
-                <p className="mt-1 text-sm font-bold text-neutral-500">Cree ta premiere histoire personnalisee.</p>
+                <p className="mt-1 text-sm font-bold text-surface-500">Cree ta premiere histoire personnalisee.</p>
               </div>
             ) : stories.map((story) => (
               (() => {
@@ -474,17 +474,17 @@ function KidsAIStories() {
               <article
                 key={story.id}
                 className={`rounded-2xl border bg-white p-4 shadow-sm transition ${
-                  selectedStory?.id === story.id ? 'border-blue-300 ring-2 ring-blue-100' : 'border-neutral-100 hover:border-blue-200'
+                  selectedStory?.id === story.id ? 'border-primary-300 ring-2 ring-primary-100' : 'border-surface-100 hover:border-primary-200'
                 }`}
               >
                 <button type="button" onClick={() => setSelectedStory(story)} className="block w-full text-left">
                   <div className="flex items-start justify-between gap-3">
-                    <h2 className="text-base font-black leading-snug text-neutral-900">{story.title}</h2>
-                    <HeartIcon className={`h-5 w-5 shrink-0 ${story.favorite ? 'text-rose-500' : 'text-neutral-300'}`} filled={story.favorite} />
+                    <h2 className="text-base font-black leading-snug text-surface-900">{story.title}</h2>
+                    <HeartIcon className={`h-5 w-5 shrink-0 ${story.favorite ? 'text-rose-500' : 'text-surface-300'}`} filled={story.favorite} />
                   </div>
-                  <p className="mt-2 line-clamp-2 text-sm font-bold text-neutral-500">{story.summary || story.story_text}</p>
+                  <p className="mt-2 line-clamp-2 text-sm font-bold text-surface-500">{story.summary || story.story_text}</p>
                   <div className="mt-3 flex flex-wrap gap-2 text-[11px] font-black">
-                    <span className="rounded-full bg-blue-50 px-2 py-1 text-blue-700">{story.theme || 'theme'}</span>
+                    <span className="rounded-full bg-primary-50 px-2 py-1 text-primary-700">{story.theme || 'theme'}</span>
                     <span className="rounded-full bg-emerald-50 px-2 py-1 text-emerald-700">{story.language?.toUpperCase() || 'FR'}</span>
                     <span className="inline-flex items-center gap-1 rounded-full bg-rose-50 px-2 py-1 text-rose-700">
                       <ClockIcon className="h-3.5 w-3.5" />
@@ -496,23 +496,23 @@ function KidsAIStories() {
                   </div>
                 </button>
                 <div className="mt-4 grid grid-cols-2 gap-2">
-                  <button onClick={() => handleRelire(story)} className="rounded-xl bg-neutral-900 px-3 py-2 text-xs font-black text-white">
+                  <button onClick={() => handleRelire(story)} className="rounded-3xl bg-surface-900 px-3 py-2 text-xs font-black text-white">
                     Relire
                   </button>
-                  <button onClick={() => handleNewVersion(story)} disabled={busyStoryId === story.id} className="rounded-xl bg-blue-500 px-3 py-2 text-xs font-black text-white disabled:opacity-60">
+                  <button onClick={() => handleNewVersion(story)} disabled={busyStoryId === story.id} className="rounded-3xl bg-primary-500 px-3 py-2 text-xs font-black text-white disabled:opacity-60">
                     Nouvelle version
                   </button>
-                  <button onClick={() => handleFavorite(story)} disabled={busyStoryId === story.id} className="rounded-xl bg-rose-50 px-3 py-2 text-xs font-black text-rose-700 disabled:opacity-60">
+                  <button onClick={() => handleFavorite(story)} disabled={busyStoryId === story.id} className="rounded-3xl bg-rose-50 px-3 py-2 text-xs font-black text-rose-700 disabled:opacity-60">
                     {story.favorite ? 'Retirer favori' : 'Favori'}
                   </button>
-                  <button onClick={() => handleDelete(story)} disabled={busyStoryId === story.id} className="rounded-xl bg-red-50 px-3 py-2 text-xs font-black text-red-700 disabled:opacity-60">
+                  <button onClick={() => handleDelete(story)} disabled={busyStoryId === story.id} className="rounded-3xl bg-primary-50 px-3 py-2 text-xs font-black text-primary-700 disabled:opacity-60">
                     Supprimer
                   </button>
                   <button
                     onClick={() => offlineReady ? handleRemoveStoryDownload(story) : handleDownloadStory(story)}
                     disabled={busyStoryId === story.id}
-                    className={`col-span-2 inline-flex items-center justify-center gap-2 rounded-xl px-3 py-2 text-xs font-black disabled:opacity-60 ${
-                      offlineReady ? 'bg-emerald-50 text-emerald-700' : 'bg-neutral-100 text-neutral-700'
+                    className={`col-span-2 inline-flex items-center justify-center gap-2 rounded-3xl px-3 py-2 text-xs font-black disabled:opacity-60 ${
+                      offlineReady ? 'bg-emerald-50 text-emerald-700' : 'bg-surface-100 text-surface-700'
                     }`}
                   >
                     <DownloadIcon className="h-4 w-4" />
@@ -525,11 +525,11 @@ function KidsAIStories() {
             ))}
           </section>
 
-          <section className="min-h-[520px] rounded-2xl border border-blue-100 bg-white p-5 shadow-lg">
+          <section className="min-h-[520px] rounded-2xl border border-primary-100 bg-white p-5 shadow-lg">
             {!selectedStory ? (
               <div className="grid min-h-[420px] place-items-center text-center">
                 <div>
-                  <BookIcon className="mx-auto mb-3 h-12 w-12 text-blue-500" />
+                  <BookIcon className="mx-auto mb-3 h-12 w-12 text-primary-500" />
                   <p className="text-xl font-black">Choisis une histoire</p>
                 </div>
               </div>
@@ -538,36 +538,36 @@ function KidsAIStories() {
                 <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                   <div>
                     <h2 className="text-3xl font-black">{selectedStory.title}</h2>
-                    <p className="mt-2 text-sm font-bold text-neutral-500">{selectedStory.summary}</p>
+                    <p className="mt-2 text-sm font-bold text-surface-500">{selectedStory.summary}</p>
                     <div className="mt-3 flex flex-wrap gap-2 text-xs font-black">
-                      <span className="rounded-full bg-blue-50 px-3 py-1 text-blue-700">{selectedStory.theme}</span>
+                      <span className="rounded-full bg-primary-50 px-3 py-1 text-primary-700">{selectedStory.theme}</span>
                       <span className="rounded-full bg-violet-50 px-3 py-1 text-violet-700">{selectedStory.age_level || 'niveau'}</span>
                       {selectedStory.saved && <span className="rounded-full bg-green-50 px-3 py-1 text-green-700">Sauvee</span>}
                       {selectedStory.favorite && <span className="rounded-full bg-rose-50 px-3 py-1 text-rose-700">Favorite</span>}
                     </div>
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    <button onClick={() => handleRelire(selectedStory)} disabled={speaking} className="inline-flex items-center gap-2 rounded-xl bg-neutral-900 px-4 py-3 text-sm font-black text-white disabled:opacity-60">
+                    <button onClick={() => handleRelire(selectedStory)} disabled={speaking} className="inline-flex items-center gap-2 rounded-3xl bg-surface-900 px-4 py-3 text-sm font-black text-white disabled:opacity-60">
                       <AudioIcon className="h-5 w-5" />
                       {speaking ? 'Lecture...' : 'Relire'}
                     </button>
-                    <button onClick={() => handleSave(selectedStory)} disabled={selectedStory.saved || busyStoryId === selectedStory.id} className="rounded-xl bg-green-500 px-4 py-3 text-sm font-black text-white disabled:opacity-60">
+                    <button onClick={() => handleSave(selectedStory)} disabled={selectedStory.saved || busyStoryId === selectedStory.id} className="rounded-3xl bg-green-500 px-4 py-3 text-sm font-black text-white disabled:opacity-60">
                       {selectedStory.saved ? 'Sauvee' : 'Sauver'}
                     </button>
-                    <button onClick={() => handleFavorite(selectedStory)} disabled={busyStoryId === selectedStory.id} className="rounded-xl bg-rose-500 px-4 py-3 text-sm font-black text-white disabled:opacity-60">
+                    <button onClick={() => handleFavorite(selectedStory)} disabled={busyStoryId === selectedStory.id} className="rounded-3xl bg-rose-500 px-4 py-3 text-sm font-black text-white disabled:opacity-60">
                       {selectedStory.favorite ? 'Retirer' : 'Favori'}
                     </button>
-                    <button onClick={() => handleNewVersion(selectedStory)} disabled={busyStoryId === selectedStory.id} className="inline-flex items-center gap-2 rounded-xl bg-blue-500 px-4 py-3 text-sm font-black text-white disabled:opacity-60">
+                    <button onClick={() => handleNewVersion(selectedStory)} disabled={busyStoryId === selectedStory.id} className="inline-flex items-center gap-2 rounded-3xl bg-primary-500 px-4 py-3 text-sm font-black text-white disabled:opacity-60">
                       <RefreshIcon className="h-5 w-5" />
                       Nouvelle version
                     </button>
-                    <button onClick={() => handleDelete(selectedStory)} disabled={busyStoryId === selectedStory.id} className="rounded-xl bg-red-50 px-4 py-3 text-sm font-black text-red-700 disabled:opacity-60" aria-label="Supprimer">
+                    <button onClick={() => handleDelete(selectedStory)} disabled={busyStoryId === selectedStory.id} className="rounded-3xl bg-primary-50 px-4 py-3 text-sm font-black text-primary-700 disabled:opacity-60" aria-label="Supprimer">
                       <TrashIcon className="h-5 w-5" />
                     </button>
                     <button
                       onClick={() => offlineContent.getStoryStatus(selectedStory.id)?.status === 'downloaded' ? handleRemoveStoryDownload(selectedStory) : handleDownloadStory(selectedStory)}
                       disabled={busyStoryId === selectedStory.id}
-                      className="inline-flex items-center gap-2 rounded-xl bg-emerald-50 px-4 py-3 text-sm font-black text-emerald-700 disabled:opacity-60"
+                      className="inline-flex items-center gap-2 rounded-3xl bg-emerald-50 px-4 py-3 text-sm font-black text-emerald-700 disabled:opacity-60"
                     >
                       <DownloadIcon className="h-5 w-5" />
                       {offlineContent.getStoryStatus(selectedStory.id)?.status === 'downloaded' ? 'Retirer offline' : 'Telecharger'}
@@ -575,7 +575,7 @@ function KidsAIStories() {
                   </div>
                 </div>
 
-                <div className="whitespace-pre-line rounded-2xl bg-blue-50/70 p-5 text-lg font-bold leading-9 text-neutral-800">
+                <div className="whitespace-pre-line rounded-2xl bg-primary-50/70 p-5 text-lg font-bold leading-9 text-surface-800">
                   {selectedStory.story_text}
                 </div>
               </article>

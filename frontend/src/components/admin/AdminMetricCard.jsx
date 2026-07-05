@@ -1,11 +1,11 @@
-export function AdminMetricCard({ label, value, detail, icon: Icon, tone = 'bg-red-50 text-red-600' }) {
+export function AdminMetricCard({ label, value, detail, icon: Icon, tone = 'bg-primary-50 text-primary-600' }) {
   return (
-    <div className="rounded-2xl border border-red-100 bg-white/90 p-5 shadow-lg backdrop-blur">
+    <div className="rounded-2xl border border-primary-100 bg-white/90 p-5 shadow-lg backdrop-blur">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <p className="text-xs font-bold uppercase tracking-wide text-neutral-500">{label}</p>
-          <p className="mt-2 text-3xl font-black text-neutral-900">{value}</p>
-          {detail && <p className="mt-1 text-sm font-medium text-neutral-500">{detail}</p>}
+          <p className="text-xs font-bold uppercase tracking-wide text-surface-500">{label}</p>
+          <p className="mt-2 text-3xl font-black text-surface-900">{value}</p>
+          {detail && <p className="mt-1 text-sm font-medium text-surface-500">{detail}</p>}
         </div>
         {Icon && (
           <span className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl ${tone}`}>

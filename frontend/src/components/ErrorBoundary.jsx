@@ -28,25 +28,25 @@ class ErrorBoundary extends React.Component {
   render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-screen flex items-center justify-center bg-neutral-50 p-4">
-          <div className="max-w-2xl w-full bg-white rounded-lg border border-neutral-200 shadow-sm p-8 text-center">
+        <div className="min-h-screen flex items-center justify-center bg-surface-50 p-4">
+          <div className="max-w-2xl w-full bg-white rounded-2xl border border-surface-200 shadow-sm p-8 text-center">
             <div className="mb-6 flex justify-center">
-              <div className="p-4 bg-red-50 rounded-full">
-                <AlertIcon className="w-12 h-12 text-red-500" />
+              <div className="p-4 bg-primary-50 rounded-full">
+                <AlertIcon className="w-12 h-12 text-primary-500" />
               </div>
             </div>
             
-            <h1 className="text-2xl font-semibold text-neutral-900 mb-3">
+            <h1 className="text-2xl font-semibold text-surface-900 mb-3">
               Une erreur s'est produite
             </h1>
             
-            <p className="text-neutral-600 mb-6 text-sm">
+            <p className="text-surface-600 mb-6 text-sm">
               Désolé, quelque chose d'inattendu s'est produit. Vos données sont en sécurité.
             </p>
 
             {process.env.NODE_ENV === 'development' && this.state.error && (
-              <details className="mb-6 text-left bg-gray-50 p-4 rounded-lg">
-                <summary className="cursor-pointer font-semibold text-red-600 mb-2">
+              <details className="mb-6 text-left bg-gray-50 p-4 rounded-2xl">
+                <summary className="cursor-pointer font-semibold text-primary-600 mb-2">
                   Error Details (Development Only)
                 </summary>
                 <pre className="text-xs overflow-auto">

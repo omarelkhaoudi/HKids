@@ -304,13 +304,13 @@ function Home({ darkMode, setDarkMode }) {
         initial={{ y: -100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.5 }}
-        className="sticky top-0 z-50 shadow-md bg-neutral-900/95 backdrop-blur-md"
+        className="sticky top-0 z-50 shadow-md bg-surface-900/95 backdrop-blur-md"
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4 flex justify-between items-center gap-3">
           <Logo size="default" />
           
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center gap-2 text-neutral-100">
+          <nav className="hidden md:flex items-center gap-2 text-surface-100">
             <LibraryMenu
               categories={categories}
               onCategorySelect={setSelectedCategory}
@@ -320,7 +320,7 @@ function Home({ darkMode, setDarkMode }) {
             />
             <Link 
               to="/favorites" 
-              className="btn-nav flex items-center gap-2 text-neutral-100 hover:text-white hover:bg-neutral-800/80"
+              className="btn-nav flex items-center gap-2 text-surface-100 hover:text-white hover:bg-surface-800/80"
               title={t.favorites}
             >
               <HeartIcon className="w-4 h-4" filled={false} />
@@ -328,7 +328,7 @@ function Home({ darkMode, setDarkMode }) {
             </Link>
             <Link 
               to="/history" 
-              className="btn-nav flex items-center gap-2 text-neutral-100 hover:text-white hover:bg-neutral-800/80"
+              className="btn-nav flex items-center gap-2 text-surface-100 hover:text-white hover:bg-surface-800/80"
               title={t.history}
             >
               <HistoryIcon className="w-4 h-4" />
@@ -336,7 +336,7 @@ function Home({ darkMode, setDarkMode }) {
             </Link>
             <Link 
               to="/parent/login" 
-              className="btn-nav flex items-center gap-2 text-neutral-100 hover:text-white hover:bg-neutral-800/80"
+              className="btn-nav flex items-center gap-2 text-surface-100 hover:text-white hover:bg-surface-800/80"
             >
               <LockIcon className="w-4 h-4" />
               <span>{t.admin}</span>
@@ -349,7 +349,7 @@ function Home({ darkMode, setDarkMode }) {
             <LanguageSelector />
             <motion.button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-2 text-neutral-100 hover:text-white hover:bg-neutral-800/80 rounded-lg transition-colors"
+              className="p-2 text-surface-100 hover:text-white hover:bg-surface-800/80 rounded-2xl transition-colors"
               whileTap={{ scale: 0.95 }}
             >
               {mobileMenuOpen ? (
@@ -380,13 +380,13 @@ function Home({ darkMode, setDarkMode }) {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
                 transition={{ duration: 0.3 }}
-                className="md:hidden fixed top-[73px] left-0 right-0 bg-neutral-800/95 backdrop-blur-md border-t border-neutral-700 z-50 max-h-[calc(100vh-73px)] overflow-y-auto"
+                className="md:hidden fixed top-[73px] left-0 right-0 bg-surface-800/95 backdrop-blur-md border-t border-surface-700 z-50 max-h-[calc(100vh-73px)] overflow-y-auto"
               >
               <nav className="px-4 py-4 space-y-2">
                 <Link 
                   to="/favorites" 
                   onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center gap-3 px-4 py-3 text-neutral-100 hover:text-white hover:bg-neutral-700/50 rounded-lg transition-colors"
+                  className="flex items-center gap-3 px-4 py-3 text-surface-100 hover:text-white hover:bg-surface-700/50 rounded-2xl transition-colors"
                 >
                   <HeartIcon className="w-5 h-5" filled={false} />
                   <span>{t.favorites}</span>
@@ -394,7 +394,7 @@ function Home({ darkMode, setDarkMode }) {
                 <Link 
                   to="/history" 
                   onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center gap-3 px-4 py-3 text-neutral-100 hover:text-white hover:bg-neutral-700/50 rounded-lg transition-colors"
+                  className="flex items-center gap-3 px-4 py-3 text-surface-100 hover:text-white hover:bg-surface-700/50 rounded-2xl transition-colors"
                 >
                   <HistoryIcon className="w-5 h-5" />
                   <span>{t.history}</span>
@@ -402,19 +402,19 @@ function Home({ darkMode, setDarkMode }) {
                 <Link 
                   to="/parent/login" 
                   onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center gap-3 px-4 py-3 text-neutral-100 hover:text-white hover:bg-neutral-700/50 rounded-lg transition-colors"
+                  className="flex items-center gap-3 px-4 py-3 text-surface-100 hover:text-white hover:bg-surface-700/50 rounded-2xl transition-colors"
                 >
                   <LockIcon className="w-5 h-5" />
                   <span>{t.admin}</span>
                 </Link>
-                <div className="pt-2 border-t border-neutral-700">
+                <div className="pt-2 border-t border-surface-700">
                   <div className="px-4 py-3">
                     <button
                       onClick={() => {
                         document.getElementById('books-section')?.scrollIntoView({ behavior: 'smooth' });
                         setMobileMenuOpen(false);
                       }}
-                      className="w-full flex items-center gap-3 px-4 py-3 text-neutral-100 hover:text-white hover:bg-neutral-700/50 rounded-lg transition-colors"
+                      className="w-full flex items-center gap-3 px-4 py-3 text-surface-100 hover:text-white hover:bg-surface-700/50 rounded-2xl transition-colors"
                     >
                       <BookIcon className="w-5 h-5" />
                       <span>Bibliothèque</span>
@@ -422,11 +422,11 @@ function Home({ darkMode, setDarkMode }) {
                   </div>
                   {/* Boutons d'âge pour mobile */}
                   <div className="px-4 pb-3 space-y-2">
-                    <p className="text-xs text-neutral-400 uppercase tracking-wide px-4 py-2">Filtrer par âge</p>
+                    <p className="text-xs text-surface-400 uppercase tracking-wide px-4 py-2">Filtrer par âge</p>
                     {[
-                      { age: '3-5', label: '3-5 ans', color: 'bg-blue-500 hover:bg-blue-600' },
-                      { age: '6-8', label: '6-8 ans', color: 'bg-orange-500 hover:bg-orange-600' },
-                      { age: '9-12', label: '9-12 ans', color: 'bg-pink-500 hover:bg-pink-600' }
+                      { age: '3-5', label: '3-5 ans', color: 'bg-primary-500 hover:bg-primary-600' },
+                      { age: '6-8', label: '6-8 ans', color: 'bg-accent-500 hover:bg-accent-600' },
+                      { age: '9-12', label: '9-12 ans', color: 'bg-secondary-500 hover:bg-secondary-600' }
                     ].map((ageBtn) => {
                       const ageValue = ageBtn.age.includes('-') ? ageBtn.age.split('-')[0] : ageBtn.age;
                       const isSelected = selectedAge === ageValue;
@@ -440,8 +440,8 @@ function Home({ darkMode, setDarkMode }) {
                               document.getElementById('books-section')?.scrollIntoView({ behavior: 'smooth' });
                             }, 100);
                           }}
-                          className={`w-full px-4 py-2.5 rounded-lg text-white font-semibold text-sm transition-all ${
-                            isSelected ? ageBtn.color + ' ring-2 ring-offset-2 ring-offset-neutral-800 ring-white' : ageBtn.color
+                          className={`w-full px-4 py-2.5 rounded-2xl text-white font-semibold text-sm transition-all ${
+                            isSelected ? ageBtn.color + ' ring-2 ring-offset-2 ring-offset-surface-800 ring-white' : ageBtn.color
                           }`}
                         >
                           {ageBtn.label}
@@ -458,7 +458,7 @@ function Home({ darkMode, setDarkMode }) {
       </motion.header>
 
       {/* Section 1: Hero - Donner le goût de lire */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-white via-red-50/30 to-pink-50/30 py-8 md:py-12 lg:py-16">
+      <section className="relative overflow-hidden bg-gradient-to-br from-white via-primary-50/30 to-secondary-50/30 py-8 md:py-12 lg:py-16">
         {/* Étoiles animées en arrière-plan */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           {Array.from({ length: 20 }).map((_, i) => (
@@ -500,23 +500,23 @@ function Home({ darkMode, setDarkMode }) {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 }}
               >
-                <span className="text-red-600 drop-shadow-lg">{t.heroTitle1}</span>
+                <span className="text-primary-600 drop-shadow-lg">{t.heroTitle1}</span>
                 <br />
-                <span className="text-neutral-900">{t.heroTitle2}</span>
+                <span className="text-surface-900">{t.heroTitle2}</span>
               </motion.h1>
               
               <motion.p 
-                className="text-xl sm:text-2xl md:text-3xl font-bold text-neutral-800 mb-4"
+                className="text-xl sm:text-2xl md:text-3xl font-bold text-surface-800 mb-4"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
               >
                 {t.heroSubtitle}{' '}
-                <span className="text-red-600">{totalBooks} {t.heroSubtitle2}</span>
+                <span className="text-primary-600">{totalBooks} {t.heroSubtitle2}</span>
               </motion.p>
 
               <motion.p 
-                className="text-sm sm:text-base text-neutral-600 mb-6 leading-relaxed"
+                className="text-sm sm:text-base text-surface-600 mb-6 leading-relaxed"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3 }}
@@ -533,21 +533,21 @@ function Home({ darkMode, setDarkMode }) {
             className="relative"
           >
             <div className="relative mx-auto max-w-md">
-              <div className="absolute inset-0 bg-gradient-to-tr from-red-500/30 via-pink-500/20 to-orange-500/30 blur-3xl rounded-[2.5rem]" />
-              <div className="relative rounded-[2.5rem] bg-white/95 backdrop-blur border-2 border-red-100 shadow-2xl p-6">
+              <div className="absolute inset-0 bg-gradient-to-tr from-primary-500/30 via-secondary-500/20 to-accent-500/30 blur-3xl rounded-[2.5rem]" />
+              <div className="relative rounded-[2.5rem] bg-white/95 backdrop-blur border-2 border-primary-100 shadow-2xl p-6">
                 <div className="text-center mb-6">
-                  <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-red-500 to-pink-500 mb-4 shadow-lg">
+                  <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-primary-500 to-secondary-500 mb-4 shadow-lg">
                     <BookIcon className="w-10 h-10 text-white" />
                   </div>
-                  <h3 className="text-2xl font-bold text-neutral-900 mb-2">{t.digitalLibrary}</h3>
-                  <p className="text-sm text-neutral-600">{t.forChildrenAges}</p>
+                  <h3 className="text-2xl font-bold text-surface-900 mb-2">{t.digitalLibrary}</h3>
+                  <p className="text-sm text-surface-600">{t.forChildrenAges}</p>
                 </div>
 
                 <div className="space-y-3">
                   {[
-                    { icon: BookIcon, text: t.illustratedBooks, color: 'from-red-500 to-pink-500' },
-                    { icon: PaletteIcon, text: t.simpleNavigation, color: 'from-pink-500 to-orange-500' },
-                    { icon: StarIcon, text: t.adaptedContent, color: 'from-orange-500 to-amber-500' }
+                    { icon: BookIcon, text: t.illustratedBooks, color: 'from-primary-500 to-secondary-500' },
+                    { icon: PaletteIcon, text: t.simpleNavigation, color: 'from-secondary-500 to-accent-500' },
+                    { icon: StarIcon, text: t.adaptedContent, color: 'from-accent-500 to-accent-500' }
                   ].map((item, i) => {
                     const IconComponent = item.icon;
                     const isBooksLink = item.text === t.illustratedBooks;
@@ -557,19 +557,19 @@ function Home({ darkMode, setDarkMode }) {
                         initial={{ opacity: 0, x: 20 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: 0.3 + i * 0.1 }}
-                        className={`flex items-center gap-4 p-4 rounded-xl bg-gradient-to-r from-neutral-50 to-white border border-neutral-200 shadow-sm hover:shadow-md transition-shadow ${isBooksLink ? 'cursor-pointer' : ''}`}
+                        className={`flex items-center gap-4 p-4 rounded-3xl bg-gradient-to-r from-surface-50 to-white border border-surface-200 shadow-sm hover:shadow-md transition-shadow ${isBooksLink ? 'cursor-pointer' : ''}`}
                         onClick={isBooksLink ? () => navigate('/stories') : undefined}
                         whileHover={isBooksLink ? { scale: 1.02 } : {}}
                         whileTap={isBooksLink ? { scale: 0.98 } : {}}
                       >
-                        <IconComponent className="w-8 h-8 text-red-600" />
-                        <span className="font-semibold text-neutral-900">{item.text}</span>
+                        <IconComponent className="w-8 h-8 text-primary-600" />
+                        <span className="font-semibold text-surface-900">{item.text}</span>
                       </motion.div>
                     );
                   })}
                 </div>
 
-                <div className="mt-6 pt-6 border-t border-neutral-200 flex items-center justify-between">
+                <div className="mt-6 pt-6 border-t border-surface-200 flex items-center justify-between">
                   <div className="flex -space-x-2">
                     {[0, 1, 2].map((i) => (
                       <motion.div
@@ -577,14 +577,14 @@ function Home({ darkMode, setDarkMode }) {
                         initial={{ scale: 0 }}
                         animate={{ scale: 1 }}
                         transition={{ delay: 0.5 + i * 0.1, type: 'spring' }}
-                        className="w-10 h-10 rounded-full bg-gradient-to-br from-red-100 to-pink-100 border-2 border-white flex items-center justify-center shadow-md"
+                        className="w-10 h-10 rounded-full bg-gradient-to-br from-primary-100 to-secondary-100 border-2 border-white flex items-center justify-center shadow-md"
                       >
-                        <ChildIcon className="w-5 h-5 text-red-600" />
+                        <ChildIcon className="w-5 h-5 text-primary-600" />
                       </motion.div>
                     ))}
                   </div>
-                  <p className="text-xs text-neutral-600 text-right">
-                    <span className="font-bold text-neutral-900">{t.designedForChildren}</span>
+                  <p className="text-xs text-surface-600 text-right">
+                    <span className="font-bold text-surface-900">{t.designedForChildren}</span>
                     <br />
                     {t.intuitiveInterface}
                   </p>
@@ -607,14 +607,14 @@ function Home({ darkMode, setDarkMode }) {
               transition={{ duration: 0.6 }}
               className="text-center mb-8"
             >
-              <div className="inline-block px-4 py-2 bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-full text-sm font-bold mb-4">
+              <div className="inline-block px-4 py-2 bg-gradient-to-r from-primary-500 to-secondary-500 text-white rounded-full text-sm font-bold mb-4">
                 {t.bookOfTheWeek}
               </div>
-              <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-neutral-900 mb-3 sm:mb-4">
+              <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-surface-900 mb-3 sm:mb-4">
                 {allBooks[0]?.title || t.discoverSelection}
               </h2>
               {allBooks[0]?.description && (
-                <p className="text-lg text-neutral-600 max-w-3xl mx-auto leading-relaxed">
+                <p className="text-lg text-surface-600 max-w-3xl mx-auto leading-relaxed">
                   {allBooks[0].description.length > 200 
                     ? `${allBooks[0].description.substring(0, 200)}...` 
                     : allBooks[0].description}
@@ -631,18 +631,18 @@ function Home({ darkMode, setDarkMode }) {
                 className="max-w-4xl mx-auto"
               >
                 <Link to={`/book-details/${allBooks[0].id}`}>
-                  <div className="bg-gradient-to-br from-red-50 via-pink-50 to-orange-50 rounded-3xl p-8 md:p-12 shadow-2xl border-4 border-white hover:shadow-3xl transition-all group">
+                  <div className="bg-gradient-to-br from-primary-50 via-secondary-50 to-accent-50 rounded-3xl p-8 md:p-12 shadow-2xl border-4 border-white hover:shadow-3xl transition-all group">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
                       <div className="relative flex justify-center [perspective:1000px]">
-                        <div className="absolute inset-0 bg-gradient-to-tr from-red-500/20 via-pink-500/20 to-orange-500/20 blur-2xl rounded-3xl"></div>
+                        <div className="absolute inset-0 bg-gradient-to-tr from-primary-500/20 via-secondary-500/20 to-accent-500/20 blur-2xl rounded-3xl"></div>
                         <div className="relative w-[72%] max-w-[300px] aspect-[3/4] [transform-style:preserve-3d] transition-transform duration-300 [transform:rotateY(-18deg)_rotateZ(-1deg)] group-hover:[transform:rotateY(-14deg)_rotateZ(-0.5deg)_translateY(-3px)]">
-                          <div className="absolute -right-[13%] top-[3%] h-[94%] w-[16%] rounded-r-md bg-gradient-to-r from-neutral-200 via-white to-neutral-300 shadow-lg [transform:rotateY(72deg)_translateZ(1px)] origin-left">
-                            <div className="absolute inset-y-3 left-1/3 w-px bg-neutral-300/80"></div>
-                            <div className="absolute inset-y-4 right-1/3 w-px bg-neutral-200/80"></div>
+                          <div className="absolute -right-[13%] top-[3%] h-[94%] w-[16%] rounded-r-md bg-gradient-to-r from-surface-200 via-white to-surface-300 shadow-lg [transform:rotateY(72deg)_translateZ(1px)] origin-left">
+                            <div className="absolute inset-y-3 left-1/3 w-px bg-surface-300/80"></div>
+                            <div className="absolute inset-y-4 right-1/3 w-px bg-surface-200/80"></div>
                           </div>
-                          <div className="absolute -right-[8%] top-[5%] h-[90%] w-[10%] rounded-r-sm bg-gradient-to-r from-white via-neutral-100 to-neutral-300 [transform:translateZ(-10px)]"></div>
-                          <div className="absolute inset-0 rounded-md bg-gradient-to-br from-neutral-900/10 to-neutral-900/25 [transform:translateZ(-16px)]"></div>
-                          <div className="relative z-10 h-full w-full overflow-hidden rounded-md bg-white shadow-2xl ring-1 ring-black/10 [transform:translateZ(14px)]">
+                          <div className="absolute -right-[8%] top-[5%] h-[90%] w-[10%] rounded-r-sm bg-gradient-to-r from-white via-surface-100 to-surface-300 [transform:translateZ(-10px)]"></div>
+                          <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-surface-900/10 to-surface-900/25 [transform:translateZ(-16px)]"></div>
+                          <div className="relative z-10 h-full w-full overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-black/10 [transform:translateZ(14px)]">
                             {allBooks[0].cover_image && !imageError ? (
                               <img
                                 src={getImageUrl(allBooks[0].cover_image)}
@@ -652,8 +652,8 @@ function Home({ darkMode, setDarkMode }) {
                                 onLoad={() => setImageError(false)}
                               />
                             ) : (
-                              <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-red-100 to-pink-100">
-                                <BookIcon className="w-24 h-24 text-red-400" />
+                              <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary-100 to-secondary-100">
+                                <BookIcon className="w-24 h-24 text-primary-400" />
                               </div>
                             )}
                             <div className="pointer-events-none absolute inset-y-0 left-0 w-[14%] bg-gradient-to-r from-black/20 via-black/5 to-transparent"></div>
@@ -664,21 +664,21 @@ function Home({ darkMode, setDarkMode }) {
                       </div>
                       <div className="space-y-4">
                         <div>
-                          <h3 className="text-2xl md:text-3xl font-bold text-neutral-900 mb-2 group-hover:text-red-600 transition-colors">
+                          <h3 className="text-2xl md:text-3xl font-bold text-surface-900 mb-2 group-hover:text-primary-600 transition-colors">
                             {allBooks[0].title}
                           </h3>
                           {allBooks[0].author && (
-                            <p className="text-lg text-neutral-600 mb-4">{t.by} {allBooks[0].author}</p>
+                            <p className="text-lg text-surface-600 mb-4">{t.by} {allBooks[0].author}</p>
                           )}
                         </div>
                         <div className="flex flex-wrap gap-2">
                           {allBooks[0].category_name && (
-                            <span className="px-4 py-2 bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-full text-sm font-semibold">
+                            <span className="px-4 py-2 bg-gradient-to-r from-primary-500 to-secondary-500 text-white rounded-full text-sm font-semibold">
                               {allBooks[0].category_name}
                             </span>
                           )}
                           {allBooks[0].age_group_min !== undefined && allBooks[0].age_group_max !== undefined && (
-                            <span className="px-4 py-2 bg-gradient-to-r from-orange-400 to-pink-400 text-white rounded-full text-sm font-semibold">
+                            <span className="px-4 py-2 bg-gradient-to-r from-accent-400 to-secondary-400 text-white rounded-full text-sm font-semibold">
                               {allBooks[0].age_group_min}-{allBooks[0].age_group_max} {t.years}
                             </span>
                           )}
@@ -686,7 +686,7 @@ function Home({ darkMode, setDarkMode }) {
                         <motion.button
                           whileHover={{ scale: 1.05, y: -2 }}
                           whileTap={{ scale: 0.95 }}
-                          className="w-full md:w-auto px-8 py-4 bg-gradient-to-r from-red-600 to-pink-600 text-white rounded-full font-bold text-lg shadow-xl hover:shadow-2xl transition-all flex items-center justify-center gap-3"
+                          className="w-full md:w-auto px-8 py-4 bg-gradient-to-r from-primary-600 to-secondary-600 text-white rounded-full font-bold text-lg shadow-xl hover:shadow-2xl transition-all flex items-center justify-center gap-3"
                         >
                           <BookIcon className="w-6 h-6" />
                           {t.readNow}
@@ -711,10 +711,10 @@ function Home({ darkMode, setDarkMode }) {
             transition={{ duration: 0.6 }}
             className="text-center mb-12"
           >
-            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-neutral-900 mb-3 sm:mb-4">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-surface-900 mb-3 sm:mb-4">
               {t.discoverLibrary}
             </h2>
-            <p className="text-lg text-neutral-600">
+            <p className="text-lg text-surface-600">
               {totalBooks} {t.booksAvailable} • {totalCategories} {t.categories}
             </p>
           </motion.div>
@@ -722,7 +722,7 @@ function Home({ darkMode, setDarkMode }) {
             <div className="mt-8 text-center">
               <Link
                 to="/stories"
-                className="inline-flex items-center justify-center gap-3 px-8 py-4 rounded-full bg-gradient-to-r from-orange-500 to-pink-500 text-white font-bold text-lg shadow-lg hover:shadow-xl transition-all"
+                className="inline-flex items-center justify-center gap-3 px-8 py-4 rounded-full bg-gradient-to-r from-accent-500 to-secondary-500 text-white font-bold text-lg shadow-lg hover:shadow-xl transition-all"
               >
                 <BookIcon className="w-6 h-6" />
                 Voir toutes les histoires
@@ -750,12 +750,12 @@ function Home({ darkMode, setDarkMode }) {
             transition={{ duration: 0.5 }}
           >
             <div className="mb-8 flex justify-center">
-              <div className="p-6 bg-gradient-to-br from-neutral-100 to-neutral-200 rounded-3xl shadow-lg">
-                <BookIcon className="w-16 h-16 text-neutral-400" />
+              <div className="p-6 bg-gradient-to-br from-surface-100 to-surface-200 rounded-3xl shadow-lg">
+                <BookIcon className="w-16 h-16 text-surface-400" />
               </div>
             </div>
-            <h2 className="text-3xl font-bold text-neutral-900 mb-3">{t.noBooksFound}</h2>
-            <p className="text-lg text-neutral-600 mb-8 max-w-md mx-auto">{t.noBooksMatch}</p>
+            <h2 className="text-3xl font-bold text-surface-900 mb-3">{t.noBooksFound}</h2>
+            <p className="text-lg text-surface-600 mb-8 max-w-md mx-auto">{t.noBooksMatch}</p>
             {(searchQuery || selectedCategory || selectedAge) && (
               <motion.button
                 onClick={() => {
@@ -812,7 +812,7 @@ function Home({ darkMode, setDarkMode }) {
                   >
                     <div className="group h-full min-w-0 text-center">
                       {/* Section colorée en haut */}
-                      <div className="relative aspect-[4/5] rounded-lg border-2 border-dashed border-orange-400 bg-gradient-to-br from-orange-50 via-white to-pink-50 p-3 sm:p-4 flex items-center justify-center overflow-hidden transition-all duration-300 group-hover:border-pink-500 group-hover:shadow-md [perspective:900px]">
+                      <div className="relative aspect-[4/5] rounded-2xl border-2 border-dashed border-accent-400 bg-gradient-to-br from-accent-50 via-white to-secondary-50 p-3 sm:p-4 flex items-center justify-center overflow-hidden transition-all duration-300 group-hover:border-secondary-500 group-hover:shadow-md [perspective:900px]">
                         {/* Bouton favori */}
                         <motion.button
                           onClick={(e) => {
@@ -828,26 +828,26 @@ function Home({ darkMode, setDarkMode }) {
                             }
                             setFavoritesUpdate(prev => prev + 1);
                           }}
-                          className="absolute top-3 right-3 z-30 p-2.5 bg-white/85 hover:bg-white text-orange-500 rounded-full shadow-md backdrop-blur-sm transition-all"
+                          className="absolute top-3 right-3 z-30 p-2.5 bg-white/85 hover:bg-white text-accent-500 rounded-full shadow-md backdrop-blur-sm transition-all"
                           title={storage.isFavorite(book.id) ? t.removeFromFavorites : t.addToFavorites}
                           whileHover={{ scale: 1.1 }}
                           whileTap={{ scale: 0.9 }}
                         >
                           <HeartIcon 
-                            className={`w-5 h-5 ${storage.isFavorite(book.id) ? 'text-red-500' : 'text-orange-400'}`}
+                            className={`w-5 h-5 ${storage.isFavorite(book.id) ? 'text-primary-500' : 'text-accent-400'}`}
                             filled={storage.isFavorite(book.id)}
                           />
                         </motion.button>
                         
                         {/* Titre */}
                         <div className="relative w-[72%] max-w-[190px] aspect-[3/4] [transform-style:preserve-3d] transition-transform duration-300 [transform:rotateY(-18deg)_rotateZ(-1deg)] group-hover:[transform:rotateY(-15deg)_rotateZ(-0.5deg)_translateY(-1px)]">
-                          <div className="absolute -right-[13%] top-[3%] h-[94%] w-[16%] rounded-r-md bg-gradient-to-r from-neutral-200 via-white to-neutral-300 shadow-md [transform:rotateY(72deg)_translateZ(1px)] origin-left">
-                            <div className="absolute inset-y-2 left-1/3 w-px bg-neutral-300/80"></div>
-                            <div className="absolute inset-y-3 right-1/3 w-px bg-neutral-200/80"></div>
+                          <div className="absolute -right-[13%] top-[3%] h-[94%] w-[16%] rounded-r-md bg-gradient-to-r from-surface-200 via-white to-surface-300 shadow-md [transform:rotateY(72deg)_translateZ(1px)] origin-left">
+                            <div className="absolute inset-y-2 left-1/3 w-px bg-surface-300/80"></div>
+                            <div className="absolute inset-y-3 right-1/3 w-px bg-surface-200/80"></div>
                           </div>
-                          <div className="absolute -right-[8%] top-[5%] h-[90%] w-[10%] rounded-r-sm bg-gradient-to-r from-white via-neutral-100 to-neutral-300 [transform:translateZ(-9px)]"></div>
-                          <div className="absolute inset-0 rounded-md bg-gradient-to-br from-neutral-900/10 to-neutral-900/25 [transform:translateZ(-14px)]"></div>
-                          <div className="relative z-10 h-full w-full overflow-hidden rounded-md bg-white shadow-2xl ring-1 ring-black/10 [transform:translateZ(12px)]">
+                          <div className="absolute -right-[8%] top-[5%] h-[90%] w-[10%] rounded-r-sm bg-gradient-to-r from-white via-surface-100 to-surface-300 [transform:translateZ(-9px)]"></div>
+                          <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-surface-900/10 to-surface-900/25 [transform:translateZ(-14px)]"></div>
+                          <div className="relative z-10 h-full w-full overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-black/10 [transform:translateZ(12px)]">
                             {book.cover_image ? (
                               <img
                                 src={getImageUrl(book.cover_image)}
@@ -861,8 +861,8 @@ function Home({ darkMode, setDarkMode }) {
                                 }}
                               />
                             ) : null}
-                            <div className={`${book.cover_image ? 'hidden' : 'flex'} absolute inset-0 items-center justify-center bg-gradient-to-br from-orange-100 to-pink-100`}>
-                              <BookIcon className="w-12 h-12 sm:w-16 sm:h-16 text-orange-300" />
+                            <div className={`${book.cover_image ? 'hidden' : 'flex'} absolute inset-0 items-center justify-center bg-gradient-to-br from-accent-100 to-secondary-100`}>
+                              <BookIcon className="w-12 h-12 sm:w-16 sm:h-16 text-accent-300" />
                             </div>
                             <div className="pointer-events-none absolute inset-y-0 left-0 w-[14%] bg-gradient-to-r from-black/20 via-black/5 to-transparent"></div>
                             <div className="pointer-events-none absolute inset-0 bg-gradient-to-tr from-white/0 via-white/10 to-white/35"></div>
@@ -880,27 +880,27 @@ function Home({ darkMode, setDarkMode }) {
                     
                       {/* Section blanche en bas */}
                       <div className="mt-4 px-1">
-                        <h3 className="text-base sm:text-lg font-bold text-neutral-900 leading-snug line-clamp-2 group-hover:text-orange-600 transition-colors">
+                        <h3 className="text-base sm:text-lg font-bold text-surface-900 leading-snug line-clamp-2 group-hover:text-accent-600 transition-colors">
                           {book.title}
                         </h3>
                         {book.category_name && (
-                          <p className="mt-1 text-xs sm:text-sm font-semibold text-neutral-500 truncate">
+                          <p className="mt-1 text-xs sm:text-sm font-semibold text-surface-500 truncate">
                             {book.category_name}
                           </p>
                         )}
                         <div className="mt-3 flex items-center justify-center gap-2 flex-wrap">
                           {book.age_group_min !== undefined && book.age_group_max !== undefined && (
-                            <span className="inline-flex items-center px-3 py-1.5 text-xs font-semibold bg-orange-50 text-orange-700 rounded-full border border-orange-100">
+                            <span className="inline-flex items-center px-3 py-1.5 text-xs font-semibold bg-accent-50 text-accent-700 rounded-full border border-accent-100">
                               {book.age_group_min}-{book.age_group_max} {t.years}
                             </span>
                           )}
                           {book.page_count > 0 && (
-                            <span className="inline-flex items-center px-3 py-1.5 text-xs font-semibold bg-neutral-100 text-neutral-700 rounded-full">
+                            <span className="inline-flex items-center px-3 py-1.5 text-xs font-semibold bg-surface-100 text-surface-700 rounded-full">
                               {book.page_count} {book.page_count === 1 ? t.page : t.pages}
                             </span>
                           )}
                         </div>
-                        <div className="mt-3 inline-flex items-center justify-center gap-1.5 text-orange-500 font-bold text-sm">
+                        <div className="mt-3 inline-flex items-center justify-center gap-1.5 text-accent-500 font-bold text-sm">
                           <BookIcon className="w-4 h-4" />
                           <span>Lire</span>
                         </div>
@@ -917,10 +917,10 @@ function Home({ darkMode, setDarkMode }) {
                 >
                   <Link
                     to={`/book/${book.id}`}
-                    className="book-card-enhanced bg-white rounded-2xl border-2 border-neutral-200/50 overflow-hidden group block hover:shadow-2xl transition-all duration-300"
+                    className="book-card-enhanced bg-white rounded-2xl border-2 border-surface-200/50 overflow-hidden group block hover:shadow-2xl transition-all duration-300"
                   >
                     <div className="flex">
-                      <div className="w-40 h-52 flex-shrink-0 bg-gradient-to-br from-neutral-100 to-neutral-200 overflow-hidden relative">
+                      <div className="w-40 h-52 flex-shrink-0 bg-gradient-to-br from-surface-100 to-surface-200 overflow-hidden relative">
                         {book.cover_image ? (
                           <img
                             src={getImageUrl(book.cover_image)}
@@ -928,28 +928,28 @@ function Home({ darkMode, setDarkMode }) {
                             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                           />
                         ) : (
-                            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-neutral-100 via-neutral-150 to-neutral-200">
-                              <BookIcon className="w-16 h-16 text-neutral-400" />
+                            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-surface-100 via-surface-150 to-surface-200">
+                              <BookIcon className="w-16 h-16 text-surface-400" />
                             </div>
                           )}
                         <div className="absolute inset-0 bg-gradient-to-r from-black/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                       </div>
                       <div className="flex-1 p-6 flex flex-col justify-between">
                         <div>
-                          <h3 className="font-bold text-2xl text-neutral-900 mb-2 group-hover:text-neutral-700 transition-colors leading-tight">
+                          <h3 className="font-bold text-2xl text-surface-900 mb-2 group-hover:text-surface-700 transition-colors leading-tight">
                             {book.title}
                           </h3>
                           {book.author && (
-                            <p className="text-base text-neutral-500 mb-3 font-medium">{t.by} {book.author}</p>
+                            <p className="text-base text-surface-500 mb-3 font-medium">{t.by} {book.author}</p>
                           )}
                           {book.description && (
-                            <p className="text-sm text-neutral-600 mb-4 line-clamp-2 leading-relaxed">{book.description}</p>
+                            <p className="text-sm text-surface-600 mb-4 line-clamp-2 leading-relaxed">{book.description}</p>
                           )}
                         </div>
-                        <div className="flex items-center gap-2 flex-wrap pt-4 border-t border-neutral-100">
+                        <div className="flex items-center gap-2 flex-wrap pt-4 border-t border-surface-100">
                           {book.category_name && (
                             <span 
-                              className="inline-block px-3 py-1.5 text-xs font-bold rounded-lg"
+                              className="inline-block px-3 py-1.5 text-xs font-bold rounded-2xl"
                               style={{ 
                                 backgroundColor: `${getCategoryColor(book.category_name, index)}20`,
                                 color: getCategoryColor(book.category_name, index),
@@ -960,12 +960,12 @@ function Home({ darkMode, setDarkMode }) {
                             </span>
                           )}
                           {book.age_group_min !== undefined && book.age_group_max !== undefined && (
-                            <span className="inline-block px-3 py-1.5 text-xs font-semibold bg-neutral-100 text-neutral-700 rounded-lg">
+                            <span className="inline-block px-3 py-1.5 text-xs font-semibold bg-surface-100 text-surface-700 rounded-2xl">
                               {book.age_group_min}-{book.age_group_max} {t.years}
                             </span>
                           )}
                           {book.page_count > 0 && (
-                            <span className="inline-block px-3 py-1.5 text-xs font-semibold bg-neutral-100 text-neutral-700 rounded-lg">
+                            <span className="inline-block px-3 py-1.5 text-xs font-semibold bg-surface-100 text-surface-700 rounded-2xl">
                               {book.page_count} {book.page_count === 1 ? t.page : t.pages}
                             </span>
                           )}
@@ -987,7 +987,7 @@ function Home({ darkMode, setDarkMode }) {
       </section>
 
       {/* Section 2.5: Navigation par âge - Inspiré de freechildrenstories.com */}
-      <section id="books-section" className="bg-gradient-to-r from-red-50 via-pink-50 to-orange-50 py-12 md:py-16">
+      <section id="books-section" className="bg-gradient-to-r from-primary-50 via-secondary-50 to-accent-50 py-12 md:py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -996,10 +996,10 @@ function Home({ darkMode, setDarkMode }) {
             transition={{ duration: 0.6 }}
             className="text-center mb-12"
           >
-            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-neutral-900 mb-3 sm:mb-4">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-surface-900 mb-3 sm:mb-4">
               {t.browseByAge}
             </h2>
-            <p className="text-lg text-neutral-600 max-w-2xl mx-auto">
+            <p className="text-lg text-surface-600 max-w-2xl mx-auto">
               {t.ageDescription}
             </p>
           </motion.div>
@@ -1022,7 +1022,7 @@ function Home({ darkMode, setDarkMode }) {
                 transition={{ delay: i * 0.1, duration: 0.5 }}
                 whileHover={{ scale: 1.05, y: -5 }}
                 whileTap={{ scale: 0.95 }}
-                className="p-6 rounded-2xl bg-gradient-to-br from-red-500 via-pink-500 to-orange-500 text-white shadow-lg hover:shadow-xl transition-all text-center border-2 border-white/20 relative overflow-hidden group"
+                className="p-6 rounded-2xl bg-gradient-to-br from-primary-500 via-secondary-500 to-accent-500 text-white shadow-lg hover:shadow-xl transition-all text-center border-2 border-white/20 relative overflow-hidden group"
               >
                 {/* Image de fond avec overlay */}
                 <div className="absolute inset-0 opacity-20 group-hover:opacity-30 transition-opacity">
@@ -1074,14 +1074,14 @@ function Home({ darkMode, setDarkMode }) {
               transition={{ duration: 0.6 }}
               className="text-center mb-10 md:mb-14"
             >
-              <div className="inline-flex items-center gap-2 px-4 py-2 bg-orange-50 text-orange-600 rounded-full text-sm font-bold mb-4 border border-orange-100">
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-accent-50 text-accent-600 rounded-full text-sm font-bold mb-4 border border-accent-100">
                 <SparklesIcon className="w-4 h-4" />
                 Collection HKids
               </div>
-              <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-neutral-900 mb-4">
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-surface-900 mb-4">
                 Un apercu des histoires disponibles
               </h2>
-              <p className="text-base sm:text-lg text-neutral-600 max-w-2xl mx-auto leading-relaxed">
+              <p className="text-base sm:text-lg text-surface-600 max-w-2xl mx-auto leading-relaxed">
                 Quelques livres de la bibliotheque pour donner aux enfants une idee des aventures qu'ils peuvent commencer a lire.
               </p>
             </motion.div>
@@ -1102,15 +1102,15 @@ function Home({ darkMode, setDarkMode }) {
                   className="min-w-0"
                 >
                   <Link to={`/book-details/${book.id}`} className="group block text-center">
-                    <div className="relative aspect-[4/5] rounded-lg border-2 border-dashed border-orange-400 bg-gradient-to-br from-orange-50 via-white to-pink-50 p-3 sm:p-4 flex items-center justify-center overflow-hidden transition-all duration-300 group-hover:border-pink-500 group-hover:shadow-md [perspective:900px]">
+                    <div className="relative aspect-[4/5] rounded-2xl border-2 border-dashed border-accent-400 bg-gradient-to-br from-accent-50 via-white to-secondary-50 p-3 sm:p-4 flex items-center justify-center overflow-hidden transition-all duration-300 group-hover:border-secondary-500 group-hover:shadow-md [perspective:900px]">
                       <div className="relative w-[72%] max-w-[190px] aspect-[3/4] [transform-style:preserve-3d] transition-transform duration-300 [transform:rotateY(-18deg)_rotateZ(-1deg)] group-hover:[transform:rotateY(-15deg)_rotateZ(-0.5deg)_translateY(-1px)]">
-                        <div className="absolute -right-[13%] top-[3%] h-[94%] w-[16%] rounded-r-md bg-gradient-to-r from-neutral-200 via-white to-neutral-300 shadow-md [transform:rotateY(72deg)_translateZ(1px)] origin-left">
-                          <div className="absolute inset-y-2 left-1/3 w-px bg-neutral-300/80"></div>
-                          <div className="absolute inset-y-3 right-1/3 w-px bg-neutral-200/80"></div>
+                        <div className="absolute -right-[13%] top-[3%] h-[94%] w-[16%] rounded-r-md bg-gradient-to-r from-surface-200 via-white to-surface-300 shadow-md [transform:rotateY(72deg)_translateZ(1px)] origin-left">
+                          <div className="absolute inset-y-2 left-1/3 w-px bg-surface-300/80"></div>
+                          <div className="absolute inset-y-3 right-1/3 w-px bg-surface-200/80"></div>
                         </div>
-                        <div className="absolute -right-[8%] top-[5%] h-[90%] w-[10%] rounded-r-sm bg-gradient-to-r from-white via-neutral-100 to-neutral-300 [transform:translateZ(-9px)]"></div>
-                        <div className="absolute inset-0 rounded-md bg-gradient-to-br from-neutral-900/10 to-neutral-900/25 [transform:translateZ(-14px)]"></div>
-                        <div className="relative z-10 h-full w-full overflow-hidden rounded-md bg-white shadow-2xl ring-1 ring-black/10 [transform:translateZ(12px)]">
+                        <div className="absolute -right-[8%] top-[5%] h-[90%] w-[10%] rounded-r-sm bg-gradient-to-r from-white via-surface-100 to-surface-300 [transform:translateZ(-9px)]"></div>
+                        <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-surface-900/10 to-surface-900/25 [transform:translateZ(-14px)]"></div>
+                        <div className="relative z-10 h-full w-full overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-black/10 [transform:translateZ(12px)]">
                           {book.cover_image ? (
                             <img
                               src={getImageUrl(book.cover_image)}
@@ -1124,8 +1124,8 @@ function Home({ darkMode, setDarkMode }) {
                               }}
                             />
                           ) : null}
-                          <div className={`${book.cover_image ? 'hidden' : 'flex'} absolute inset-0 items-center justify-center bg-gradient-to-br from-orange-100 to-pink-100`}>
-                            <BookIcon className="w-12 h-12 sm:w-16 sm:h-16 text-orange-300" />
+                          <div className={`${book.cover_image ? 'hidden' : 'flex'} absolute inset-0 items-center justify-center bg-gradient-to-br from-accent-100 to-secondary-100`}>
+                            <BookIcon className="w-12 h-12 sm:w-16 sm:h-16 text-accent-300" />
                           </div>
                           <div className="pointer-events-none absolute inset-y-0 left-0 w-[14%] bg-gradient-to-r from-black/20 via-black/5 to-transparent"></div>
                           <div className="pointer-events-none absolute inset-0 bg-gradient-to-tr from-white/0 via-white/10 to-white/35"></div>
@@ -1135,15 +1135,15 @@ function Home({ darkMode, setDarkMode }) {
                     </div>
 
                     <div className="mt-4 px-1">
-                      <h3 className="text-sm sm:text-base md:text-lg font-bold text-neutral-900 leading-snug line-clamp-2 group-hover:text-orange-600 transition-colors">
+                      <h3 className="text-sm sm:text-base md:text-lg font-bold text-surface-900 leading-snug line-clamp-2 group-hover:text-accent-600 transition-colors">
                         {book.title}
                       </h3>
                       {book.category_name && (
-                        <p className="mt-1 text-xs sm:text-sm font-medium text-neutral-500 truncate">
+                        <p className="mt-1 text-xs sm:text-sm font-medium text-surface-500 truncate">
                           {book.category_name}
                         </p>
                       )}
-                      <div className="mt-3 inline-flex items-center justify-center gap-1.5 text-orange-500 font-bold text-sm">
+                      <div className="mt-3 inline-flex items-center justify-center gap-1.5 text-accent-500 font-bold text-sm">
                         <BookIcon className="w-4 h-4" />
                         <span>Lire</span>
                       </div>
@@ -1158,7 +1158,7 @@ function Home({ darkMode, setDarkMode }) {
                 <motion.span
                   whileHover={{ scale: 1.04, y: -2 }}
                   whileTap={{ scale: 0.96 }}
-                  className="inline-flex items-center justify-center gap-2 px-7 py-3 rounded-full bg-gradient-to-r from-orange-500 to-pink-500 text-white font-bold shadow-lg hover:shadow-xl transition-all"
+                  className="inline-flex items-center justify-center gap-2 px-7 py-3 rounded-full bg-gradient-to-r from-accent-500 to-secondary-500 text-white font-bold shadow-lg hover:shadow-xl transition-all"
                 >
                   Voir toute la bibliotheque
                   <ChevronRightIcon className="w-5 h-5" />
@@ -1170,7 +1170,7 @@ function Home({ darkMode, setDarkMode }) {
       )}
 
       {/* Section 2.7: Le saviez-vous ? - Inspiré de freechildrenstories.com */}
-      <section className="bg-gradient-to-br from-red-50 via-pink-50 to-orange-50 py-16 md:py-24">
+      <section className="bg-gradient-to-br from-primary-50 via-secondary-50 to-accent-50 py-16 md:py-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -1179,10 +1179,10 @@ function Home({ darkMode, setDarkMode }) {
             transition={{ duration: 0.6 }}
             className="text-center mb-12"
           >
-            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-neutral-900 mb-3 sm:mb-4">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-surface-900 mb-3 sm:mb-4">
               {t.didYouKnow}
             </h2>
-            <p className="text-lg text-neutral-600 max-w-2xl mx-auto">
+            <p className="text-lg text-surface-600 max-w-2xl mx-auto">
               {t.funFacts}
             </p>
           </motion.div>
@@ -1193,13 +1193,13 @@ function Home({ darkMode, setDarkMode }) {
                 icon: HeartIcon,
                 title: t.readingDevelopsEmpathy,
                 fact: t.empathyFact,
-                color: 'from-red-400 to-pink-500'
+                color: 'from-primary-400 to-secondary-500'
               },
               {
                 icon: ClockIcon,
                 title: t.twentyMinutes,
                 fact: t.readingFact,
-                color: 'from-orange-400 to-amber-500'
+                color: 'from-accent-400 to-accent-500'
               },
               {
                 icon: BrainIcon,
@@ -1211,7 +1211,7 @@ function Home({ darkMode, setDarkMode }) {
                 icon: GraduationIcon,
                 title: t.betterConcentration,
                 fact: t.concentrationFact,
-                color: 'from-blue-400 to-cyan-500'
+                color: 'from-primary-400 to-cyan-500'
               },
               {
                 icon: LanguageIcon,
@@ -1223,7 +1223,7 @@ function Home({ darkMode, setDarkMode }) {
                 icon: StarIcon,
                 title: t.stressRelief,
                 fact: t.stressFact,
-                color: 'from-pink-400 to-rose-500'
+                color: 'from-secondary-400 to-rose-500'
               }
             ].map((item, i) => {
               const IconComponent = item.icon;
@@ -1235,13 +1235,13 @@ function Home({ darkMode, setDarkMode }) {
                   viewport={{ once: true }}
                   transition={{ delay: i * 0.1, duration: 0.5 }}
                   whileHover={{ y: -8, scale: 1.03 }}
-                  className="bg-white rounded-2xl p-8 shadow-xl hover:shadow-2xl transition-all border-2 border-transparent hover:border-red-200"
+                  className="bg-white rounded-2xl p-8 shadow-xl hover:shadow-2xl transition-all border-2 border-transparent hover:border-primary-200"
                 >
                   <div className={`inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br ${item.color} mb-4 shadow-lg`}>
                     <IconComponent className="w-8 h-8 text-white" />
                   </div>
-                  <h3 className="text-xl font-bold text-neutral-900 mb-3">{item.title}</h3>
-                  <p className="text-neutral-700 leading-relaxed text-sm">{item.fact}</p>
+                  <h3 className="text-xl font-bold text-surface-900 mb-3">{item.title}</h3>
+                  <p className="text-surface-700 leading-relaxed text-sm">{item.fact}</p>
                 </motion.div>
               );
             })}
@@ -1250,7 +1250,7 @@ function Home({ darkMode, setDarkMode }) {
       </section>
 
       {/* Section 4: De l'éveil à l'apprentissage */}
-      <section className="bg-gradient-to-br from-neutral-50 via-white to-red-50 py-16 md:py-24">
+      <section className="bg-gradient-to-br from-surface-50 via-white to-primary-50 py-16 md:py-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -1259,10 +1259,10 @@ function Home({ darkMode, setDarkMode }) {
             transition={{ duration: 0.6 }}
             className="text-center mb-16"
           >
-            <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-neutral-900 mb-6">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-surface-900 mb-6">
               {t.fromAwakeningToLearning}
             </h2>
-            <p className="text-lg md:text-xl text-neutral-600 max-w-3xl mx-auto leading-relaxed">
+            <p className="text-lg md:text-xl text-surface-600 max-w-3xl mx-auto leading-relaxed">
               {t.readingAidDescription}
             </p>
           </motion.div>
@@ -1273,8 +1273,8 @@ function Home({ darkMode, setDarkMode }) {
                 icon: AudioIcon,
                 title: t.audioVersions,
                 desc: t.audioVersionsDesc,
-                color: 'from-red-500 to-pink-500',
-                bgColor: 'from-red-50 to-pink-50',
+                color: 'from-primary-500 to-secondary-500',
+                bgColor: 'from-primary-50 to-secondary-50',
                 comingSoon: false,
                 featureId: 'versions-audio'
               },
@@ -1282,8 +1282,8 @@ function Home({ darkMode, setDarkMode }) {
                 icon: BookIcon,
                 title: t.readingAid,
                 desc: t.readingAidDesc,
-                color: 'from-red-500 to-pink-500',
-                bgColor: 'from-red-50 to-pink-50',
+                color: 'from-primary-500 to-secondary-500',
+                bgColor: 'from-primary-50 to-secondary-50',
                 comingSoon: false,
                 featureId: 'aide-lecture'
               },
@@ -1291,8 +1291,8 @@ function Home({ darkMode, setDarkMode }) {
                 icon: MicrophoneIcon,
                 title: t.recordVoice,
                 desc: t.recordVoiceDesc,
-                color: 'from-red-500 to-pink-500',
-                bgColor: 'from-red-50 to-pink-50',
+                color: 'from-primary-500 to-secondary-500',
+                bgColor: 'from-primary-50 to-secondary-50',
                 comingSoon: true,
                 featureId: 'enregistrer-voix'
               }
@@ -1308,21 +1308,21 @@ function Home({ darkMode, setDarkMode }) {
                   whileHover={{ y: -10, scale: 1.02 }}
                   className="relative group"
                 >
-                  <div className={`bg-gradient-to-br ${item.bgColor} rounded-3xl p-8 shadow-xl hover:shadow-2xl transition-all border-2 border-transparent hover:border-red-200 h-full flex flex-col`}>
+                  <div className={`bg-gradient-to-br ${item.bgColor} rounded-3xl p-8 shadow-xl hover:shadow-2xl transition-all border-2 border-transparent hover:border-primary-200 h-full flex flex-col`}>
                     <div className={`inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br ${item.color} mb-6 shadow-lg group-hover:scale-110 transition-transform`}>
                       <IconComponent className="w-10 h-10 text-white" />
                     </div>
-                    <h3 className="text-xl font-bold text-neutral-900 mb-4">{item.title}</h3>
-                    <p className="text-sm text-neutral-700 leading-relaxed mb-4 flex-1">{item.desc}</p>
+                    <h3 className="text-xl font-bold text-surface-900 mb-4">{item.title}</h3>
+                    <p className="text-sm text-surface-700 leading-relaxed mb-4 flex-1">{item.desc}</p>
                     {item.comingSoon && (
-                      <span className="inline-block px-3 py-1 bg-red-100 text-red-700 rounded-full text-xs font-semibold mb-4">
+                      <span className="inline-block px-3 py-1 bg-primary-100 text-primary-700 rounded-full text-xs font-semibold mb-4">
                         {t.comingSoon}
                       </span>
                     )}
                     <Link to={`/features/${item.featureId}`}>
                       <motion.button
                         whileHover={{ x: 5 }}
-                        className="mt-auto text-red-600 font-semibold flex items-center gap-2 group-hover:text-red-700 transition-colors text-sm"
+                        className="mt-auto text-primary-600 font-semibold flex items-center gap-2 group-hover:text-primary-700 transition-colors text-sm"
                       >
                         {t.learnMore}
                         <ChevronRightIcon className="w-4 h-4" />
@@ -1337,7 +1337,7 @@ function Home({ darkMode, setDarkMode }) {
       </section>
 
       {/* Section 4.7: Ils nous font confiance */}
-      <section className="bg-gradient-to-br from-red-50 via-pink-50 to-orange-50 py-16 md:py-24">
+      <section className="bg-gradient-to-br from-primary-50 via-secondary-50 to-accent-50 py-16 md:py-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -1346,7 +1346,7 @@ function Home({ darkMode, setDarkMode }) {
             transition={{ duration: 0.6 }}
             className="text-center mb-16"
           >
-            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-neutral-900 mb-3 sm:mb-4">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-surface-900 mb-3 sm:mb-4">
               {t.theyTrustUs}
             </h2>
           </motion.div>
@@ -1381,19 +1381,19 @@ function Home({ darkMode, setDarkMode }) {
                   viewport={{ once: true }}
                   transition={{ delay: i * 0.15, duration: 0.5 }}
                   whileHover={{ y: -5 }}
-                  className="bg-white rounded-2xl p-8 shadow-xl hover:shadow-2xl transition-all border-2 border-transparent hover:border-red-200"
+                  className="bg-white rounded-2xl p-8 shadow-xl hover:shadow-2xl transition-all border-2 border-transparent hover:border-primary-200"
                 >
                   <div className="mb-4 flex justify-center">
-                    <div className="w-16 h-16 rounded-full bg-gradient-to-br from-red-100 to-pink-100 flex items-center justify-center">
-                      <IconComponent className="w-8 h-8 text-red-600" />
+                    <div className="w-16 h-16 rounded-full bg-gradient-to-br from-primary-100 to-secondary-100 flex items-center justify-center">
+                      <IconComponent className="w-8 h-8 text-primary-600" />
                     </div>
                   </div>
-                <p className="text-neutral-700 italic mb-6 leading-relaxed text-base line-clamp-3 min-h-[96px]">
+                <p className="text-surface-700 italic mb-6 leading-relaxed text-base line-clamp-3 min-h-[96px]">
                   « {testimonial.quote} »
                 </p>
-                  <div className="border-t border-neutral-200 pt-4">
-                    <p className="font-bold text-neutral-900 text-base">{testimonial.author}</p>
-                    <p className="text-sm text-neutral-600">{testimonial.role}</p>
+                  <div className="border-t border-surface-200 pt-4">
+                    <p className="font-bold text-surface-900 text-base">{testimonial.author}</p>
+                    <p className="text-sm text-surface-600">{testimonial.role}</p>
                   </div>
                 </motion.div>
               );
@@ -1403,7 +1403,7 @@ function Home({ darkMode, setDarkMode }) {
       </section>
 
       {/* Section 6: LIRE - ÉCOUTER - RACONTER - PARTAGER */}
-      <section className="bg-gradient-to-r from-red-50 via-pink-50 to-orange-50 py-12 md:py-16">
+      <section className="bg-gradient-to-r from-primary-50 via-secondary-50 to-accent-50 py-12 md:py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -1412,10 +1412,10 @@ function Home({ darkMode, setDarkMode }) {
             transition={{ duration: 0.6 }}
             className="text-center mb-12"
           >
-            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-neutral-900 mb-3 sm:mb-4">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-surface-900 mb-3 sm:mb-4">
               {t.read} • {t.listen} • {t.tell} • {t.share}
             </h2>
-            <p className="text-lg text-neutral-600 max-w-2xl mx-auto">
+            <p className="text-lg text-surface-600 max-w-2xl mx-auto">
               {t.completeExperience}
             </p>
           </motion.div>
@@ -1436,13 +1436,13 @@ function Home({ darkMode, setDarkMode }) {
                   viewport={{ once: true }}
                   transition={{ delay: i * 0.1, duration: 0.5 }}
                   whileHover={{ scale: 1.05, y: -5 }}
-                  className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all text-center border-2 border-transparent hover:border-red-200"
+                  className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all text-center border-2 border-transparent hover:border-primary-200"
                 >
                   <div className="mb-4 flex justify-center">
-                    <IconComponent className="w-12 h-12 text-red-600" />
+                    <IconComponent className="w-12 h-12 text-primary-600" />
                   </div>
-                  <h3 className="text-xl font-bold text-neutral-900 mb-2">{item.title}</h3>
-                  <p className="text-sm text-neutral-600">{item.desc}</p>
+                  <h3 className="text-xl font-bold text-surface-900 mb-2">{item.title}</h3>
+                  <p className="text-sm text-surface-600">{item.desc}</p>
                 </motion.div>
               );
             })}
@@ -1471,12 +1471,12 @@ function Home({ darkMode, setDarkMode }) {
             transition={{ duration: 0.5 }}
           >
             <div className="mb-8 flex justify-center">
-              <div className="p-6 bg-gradient-to-br from-neutral-100 to-neutral-200 rounded-3xl shadow-lg">
-                <BookIcon className="w-16 h-16 text-neutral-400" />
+              <div className="p-6 bg-gradient-to-br from-surface-100 to-surface-200 rounded-3xl shadow-lg">
+                <BookIcon className="w-16 h-16 text-surface-400" />
               </div>
             </div>
-            <h2 className="text-3xl font-bold text-neutral-900 mb-3">{t.noBooksFound}</h2>
-            <p className="text-lg text-neutral-600 mb-8 max-w-md mx-auto">{t.noBooksMatch}</p>
+            <h2 className="text-3xl font-bold text-surface-900 mb-3">{t.noBooksFound}</h2>
+            <p className="text-lg text-surface-600 mb-8 max-w-md mx-auto">{t.noBooksMatch}</p>
             {(searchQuery || selectedCategory || selectedAge) && (
               <motion.button
                 onClick={() => {
@@ -1531,7 +1531,7 @@ function Home({ darkMode, setDarkMode }) {
                     to={`/book-details/${book.id}`}
                     className="block h-full"
                   >
-                    <div className="book-card-enhanced bg-white rounded-2xl overflow-hidden group h-full flex flex-col relative hover:shadow-xl transition-all duration-300 border border-neutral-200">
+                    <div className="book-card-enhanced bg-white rounded-2xl overflow-hidden group h-full flex flex-col relative hover:shadow-xl transition-all duration-300 border border-surface-200">
                       {/* Section colorée en haut */}
                       <div 
                         className="relative px-6 py-8 text-white flex-shrink-0"
@@ -1580,20 +1580,20 @@ function Home({ darkMode, setDarkMode }) {
                     
                       {/* Section blanche en bas */}
                       <div className="p-6 flex-1 flex flex-col bg-white min-h-[180px]">
-                        <h3 className="font-bold text-lg text-neutral-900 mb-2 line-clamp-2 leading-tight">
+                        <h3 className="font-bold text-lg text-surface-900 mb-2 line-clamp-2 leading-tight">
                           {book.title}
                         </h3>
                         {book.author && (
-                          <p className="text-sm text-neutral-600 mb-4">{t.by} {book.author}</p>
+                          <p className="text-sm text-surface-600 mb-4">{t.by} {book.author}</p>
                         )}
                         <div className="flex items-center gap-2 flex-wrap mt-auto pt-2">
                           {book.age_group_min !== undefined && book.age_group_max !== undefined && (
-                            <span className="inline-block px-3 py-1.5 text-xs font-medium bg-neutral-100 text-neutral-700 rounded-lg">
+                            <span className="inline-block px-3 py-1.5 text-xs font-medium bg-surface-100 text-surface-700 rounded-2xl">
                               {book.age_group_min}-{book.age_group_max} {t.years}
                             </span>
                           )}
                           {book.page_count > 0 && (
-                            <span className="inline-block px-3 py-1.5 text-xs font-medium bg-neutral-100 text-neutral-700 rounded-lg">
+                            <span className="inline-block px-3 py-1.5 text-xs font-medium bg-surface-100 text-surface-700 rounded-2xl">
                               {book.page_count} {book.page_count === 1 ? t.page : t.pages}
                             </span>
                           )}
@@ -1611,10 +1611,10 @@ function Home({ darkMode, setDarkMode }) {
                 >
                   <Link
                     to={`/book/${book.id}`}
-                    className="book-card-enhanced bg-white rounded-2xl border-2 border-neutral-200/50 overflow-hidden group block hover:shadow-2xl transition-all duration-300"
+                    className="book-card-enhanced bg-white rounded-2xl border-2 border-surface-200/50 overflow-hidden group block hover:shadow-2xl transition-all duration-300"
                   >
                     <div className="flex">
-                      <div className="w-40 h-52 flex-shrink-0 bg-gradient-to-br from-neutral-100 to-neutral-200 overflow-hidden relative">
+                      <div className="w-40 h-52 flex-shrink-0 bg-gradient-to-br from-surface-100 to-surface-200 overflow-hidden relative">
                         {book.cover_image ? (
                           <img
                             src={getImageUrl(book.cover_image)}
@@ -1622,28 +1622,28 @@ function Home({ darkMode, setDarkMode }) {
                             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                           />
                         ) : (
-                            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-neutral-100 via-neutral-150 to-neutral-200">
-                              <BookIcon className="w-16 h-16 text-neutral-400" />
+                            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-surface-100 via-surface-150 to-surface-200">
+                              <BookIcon className="w-16 h-16 text-surface-400" />
                             </div>
                           )}
                         <div className="absolute inset-0 bg-gradient-to-r from-black/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                       </div>
                       <div className="flex-1 p-6 flex flex-col justify-between">
                         <div>
-                          <h3 className="font-bold text-2xl text-neutral-900 mb-2 group-hover:text-neutral-700 transition-colors leading-tight">
+                          <h3 className="font-bold text-2xl text-surface-900 mb-2 group-hover:text-surface-700 transition-colors leading-tight">
                             {book.title}
                           </h3>
                           {book.author && (
-                            <p className="text-base text-neutral-500 mb-3 font-medium">{t.by} {book.author}</p>
+                            <p className="text-base text-surface-500 mb-3 font-medium">{t.by} {book.author}</p>
                           )}
                           {book.description && (
-                            <p className="text-sm text-neutral-600 mb-4 line-clamp-2 leading-relaxed">{book.description}</p>
+                            <p className="text-sm text-surface-600 mb-4 line-clamp-2 leading-relaxed">{book.description}</p>
                           )}
                         </div>
-                        <div className="flex items-center gap-2 flex-wrap pt-4 border-t border-neutral-100">
+                        <div className="flex items-center gap-2 flex-wrap pt-4 border-t border-surface-100">
                           {book.category_name && (
                             <span 
-                              className="inline-block px-3 py-1.5 text-xs font-bold rounded-lg"
+                              className="inline-block px-3 py-1.5 text-xs font-bold rounded-2xl"
                               style={{ 
                                 backgroundColor: `${getCategoryColor(book.category_name, index)}20`,
                                 color: getCategoryColor(book.category_name, index),
@@ -1654,12 +1654,12 @@ function Home({ darkMode, setDarkMode }) {
                             </span>
                           )}
                           {book.age_group_min !== undefined && book.age_group_max !== undefined && (
-                            <span className="inline-block px-3 py-1.5 text-xs font-semibold bg-neutral-100 text-neutral-700 rounded-lg">
+                            <span className="inline-block px-3 py-1.5 text-xs font-semibold bg-surface-100 text-surface-700 rounded-2xl">
                               {book.age_group_min}-{book.age_group_max} {t.years}
                             </span>
                           )}
                           {book.page_count > 0 && (
-                            <span className="inline-block px-3 py-1.5 text-xs font-semibold bg-neutral-100 text-neutral-700 rounded-lg">
+                            <span className="inline-block px-3 py-1.5 text-xs font-semibold bg-surface-100 text-surface-700 rounded-2xl">
                               {book.page_count} {book.page_count === 1 ? t.page : t.pages}
                             </span>
                           )}
@@ -1688,15 +1688,15 @@ function Home({ darkMode, setDarkMode }) {
             viewport={{ once: true }}
             transition={{ duration: 0.5 }}
           >
-            <h2 className="text-2xl md:text-3xl font-extrabold text-neutral-900">
+            <h2 className="text-2xl md:text-3xl font-extrabold text-surface-900">
               Abonnez-vous à nos e-mails pour découvrir les dernières nouveautés.
             </h2>
-            <p className="mt-6 text-lg md:text-xl text-neutral-700">
+            <p className="mt-6 text-lg md:text-xl text-surface-700">
               Soyez le premier à découvrir nos nouvelles collections et offres exclusives.
             </p>
 
             <form onSubmit={handleNewsletterSubmit} className="mt-7 mx-auto max-w-xl">
-              <div className="flex items-center border border-neutral-500 bg-white">
+              <div className="flex items-center border border-surface-500 bg-white">
                 <input
                   type="email"
                   value={newsletterEmail}
@@ -1705,14 +1705,14 @@ function Home({ darkMode, setDarkMode }) {
                     if (newsletterStatus) setNewsletterStatus('');
                   }}
                   placeholder="E-mail"
-                  className="min-w-0 flex-1 px-6 py-4 text-lg tracking-widest text-neutral-900 outline-none placeholder:text-neutral-700"
+                  className="min-w-0 flex-1 px-6 py-4 text-lg tracking-widest text-surface-900 outline-none placeholder:text-surface-700"
                   aria-label="Adresse e-mail"
                   disabled={newsletterLoading}
                 />
                 <button
                   type="submit"
                   disabled={newsletterLoading}
-                  className="shrink-0 px-5 py-4 text-2xl text-neutral-700 transition-colors hover:text-neutral-950 disabled:opacity-50"
+                  className="shrink-0 px-5 py-4 text-2xl text-surface-700 transition-colors hover:text-surface-950 disabled:opacity-50"
                   aria-label="S'inscrire aux e-mails"
                 >
                   →
@@ -1720,18 +1720,18 @@ function Home({ darkMode, setDarkMode }) {
               </div>
 
               {newsletterStatus === 'success' && (
-                <p className="mt-5 flex items-center justify-center gap-2 text-left text-neutral-700">
+                <p className="mt-5 flex items-center justify-center gap-2 text-left text-surface-700">
                   <span className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-green-600 text-[10px] font-bold text-white">✓</span>
                   Merci de votre inscription. Vérifiez votre boîte mail pour confirmer.
                 </p>
               )}
               {newsletterStatus === 'saved' && (
-                <p className="mt-5 text-center text-sm font-semibold text-neutral-700">
+                <p className="mt-5 text-center text-sm font-semibold text-surface-700">
                   Inscription enregistree. L'envoi d'e-mail doit encore etre active.
                 </p>
               )}
               {newsletterStatus === 'error' && (
-                <p className="mt-5 text-center text-sm font-semibold text-red-600">
+                <p className="mt-5 text-center text-sm font-semibold text-primary-600">
                   Une erreur est survenue. Veuillez réessayer.
                 </p>
               )}
@@ -1741,7 +1741,7 @@ function Home({ darkMode, setDarkMode }) {
       </section>
 
       {/* Footer */}
-      <footer className="mt-auto border-t border-neutral-800 bg-neutral-900 text-neutral-200 relative overflow-hidden">
+      <footer className="mt-auto border-t border-surface-800 bg-surface-900 text-surface-200 relative overflow-hidden">
         {/* Étoiles animées en arrière-plan du footer */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-40">
           {Array.from({ length: 16 }).map((_, i) => (
@@ -1775,13 +1775,13 @@ function Home({ darkMode, setDarkMode }) {
               <div className="flex items-center gap-2 mb-4">
                 <Logo size="small" />
               </div>
-              <p className="text-sm text-neutral-400 leading-relaxed mb-6">
+              <p className="text-sm text-surface-400 leading-relaxed mb-6">
                 {t.footerDescription}
               </p>
               
               {/* Réseaux sociaux */}
               <div>
-                <p className="text-xs font-semibold text-neutral-300 mb-3 uppercase tracking-wide">
+                <p className="text-xs font-semibold text-surface-300 mb-3 uppercase tracking-wide">
                   {t.followUs}
                 </p>
                 <div className="flex items-center gap-3">
@@ -1789,7 +1789,7 @@ function Home({ darkMode, setDarkMode }) {
                     href="https://facebook.com"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="w-10 h-10 rounded-full bg-neutral-800 hover:bg-blue-600 flex items-center justify-center transition-colors"
+                    className="w-10 h-10 rounded-full bg-surface-800 hover:bg-primary-600 flex items-center justify-center transition-colors"
                     whileHover={{ scale: 1.1, y: -2 }}
                     whileTap={{ scale: 0.95 }}
                     title="Facebook"
@@ -1800,7 +1800,7 @@ function Home({ darkMode, setDarkMode }) {
                     href="https://instagram.com"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="w-10 h-10 rounded-full bg-neutral-800 hover:bg-gradient-to-r hover:from-purple-600 hover:via-pink-600 hover:to-orange-500 flex items-center justify-center transition-colors"
+                    className="w-10 h-10 rounded-full bg-surface-800 hover:bg-gradient-to-r hover:from-purple-600 hover:via-secondary-600 hover:to-accent-500 flex items-center justify-center transition-colors"
                     whileHover={{ scale: 1.1, y: -2 }}
                     whileTap={{ scale: 0.95 }}
                     title="Instagram"
@@ -1811,7 +1811,7 @@ function Home({ darkMode, setDarkMode }) {
                     href="https://wa.me"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="w-10 h-10 rounded-full bg-neutral-800 hover:bg-green-500 flex items-center justify-center transition-colors"
+                    className="w-10 h-10 rounded-full bg-surface-800 hover:bg-green-500 flex items-center justify-center transition-colors"
                     whileHover={{ scale: 1.1, y: -2 }}
                     whileTap={{ scale: 0.95 }}
                     title="WhatsApp"
@@ -1822,7 +1822,7 @@ function Home({ darkMode, setDarkMode }) {
                     href="https://twitter.com"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="w-10 h-10 rounded-full bg-neutral-800 hover:bg-blue-400 flex items-center justify-center transition-colors"
+                    className="w-10 h-10 rounded-full bg-surface-800 hover:bg-primary-400 flex items-center justify-center transition-colors"
                     whileHover={{ scale: 1.1, y: -2 }}
                     whileTap={{ scale: 0.95 }}
                     title="Twitter"
@@ -1833,7 +1833,7 @@ function Home({ darkMode, setDarkMode }) {
                     href="https://youtube.com"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="w-10 h-10 rounded-full bg-neutral-800 hover:bg-red-600 flex items-center justify-center transition-colors"
+                    className="w-10 h-10 rounded-full bg-surface-800 hover:bg-primary-600 flex items-center justify-center transition-colors"
                     whileHover={{ scale: 1.1, y: -2 }}
                     whileTap={{ scale: 0.95 }}
                     title="YouTube"
@@ -1844,7 +1844,7 @@ function Home({ darkMode, setDarkMode }) {
                     href="https://linkedin.com"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="w-10 h-10 rounded-full bg-neutral-800 hover:bg-blue-700 flex items-center justify-center transition-colors"
+                    className="w-10 h-10 rounded-full bg-surface-800 hover:bg-primary-700 flex items-center justify-center transition-colors"
                     whileHover={{ scale: 1.1, y: -2 }}
                     whileTap={{ scale: 0.95 }}
                     title="LinkedIn"
@@ -1858,10 +1858,10 @@ function Home({ darkMode, setDarkMode }) {
             {/* Links */}
             <div className="flex-1 grid grid-cols-2 sm:grid-cols-3 gap-6 text-sm">
               <div>
-                <p className="font-semibold text-neutral-100 mb-3 text-xs uppercase tracking-wide">
+                <p className="font-semibold text-surface-100 mb-3 text-xs uppercase tracking-wide">
                   {t.explore}
                 </p>
-                <ul className="space-y-2 text-neutral-400">
+                <ul className="space-y-2 text-surface-400">
                   <li>
                     <Link to="/" className="hover:text-white transition-colors">
                       {t.home}
@@ -1881,10 +1881,10 @@ function Home({ darkMode, setDarkMode }) {
               </div>
 
               <div>
-                <p className="font-semibold text-neutral-100 mb-3 text-xs uppercase tracking-wide">
+                <p className="font-semibold text-surface-100 mb-3 text-xs uppercase tracking-wide">
                   {t.forParents}
                 </p>
-                <ul className="space-y-2 text-neutral-400">
+                <ul className="space-y-2 text-surface-400">
                   <li>
                     <span className="cursor-default">
                       {t.verifiedContent}
@@ -1904,10 +1904,10 @@ function Home({ darkMode, setDarkMode }) {
               </div>
 
               <div>
-                <p className="font-semibold text-neutral-100 mb-3 text-xs uppercase tracking-wide">
+                <p className="font-semibold text-surface-100 mb-3 text-xs uppercase tracking-wide">
                   {t.adminSpace}
                 </p>
-                <ul className="space-y-2 text-neutral-400">
+                <ul className="space-y-2 text-surface-400">
                   <li>
                     <Link to="/admin/login" className="hover:text-white transition-colors">
                       {t.adminAccess}
@@ -1929,7 +1929,7 @@ function Home({ darkMode, setDarkMode }) {
           </div>
 
           {/* Bottom bar */}
-          <div className="mt-8 pt-6 border-t border-neutral-800 text-xs text-neutral-500 flex flex-col sm:flex-row gap-3 sm:items-center justify-between">
+          <div className="mt-8 pt-6 border-t border-surface-800 text-xs text-surface-500 flex flex-col sm:flex-row gap-3 sm:items-center justify-between">
             <p>
               © {new Date().getFullYear()} HKids. {t.copyright}
             </p>

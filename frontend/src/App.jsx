@@ -41,8 +41,8 @@ function RequireAuth({ children }) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
         <div className="text-center">
-          <div className="inline-block rounded-full h-12 w-12 border-4 border-red-500 border-t-transparent animate-spin mb-4"></div>
-          <p className="text-neutral-600 font-semibold">Chargement...</p>
+          <div className="inline-block rounded-full h-12 w-12 border-4 border-primary-500 border-t-transparent animate-spin mb-4"></div>
+          <p className="text-surface-600 font-semibold">Chargement...</p>
         </div>
       </div>
     );
@@ -62,8 +62,8 @@ function RequireRole({ roles, children }) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
         <div className="text-center">
-          <div className="inline-block rounded-full h-12 w-12 border-4 border-red-500 border-t-transparent animate-spin mb-4"></div>
-          <p className="text-neutral-600 font-semibold">Chargement...</p>
+          <div className="inline-block rounded-full h-12 w-12 border-4 border-primary-500 border-t-transparent animate-spin mb-4"></div>
+          <p className="text-surface-600 font-semibold">Chargement...</p>
         </div>
       </div>
     );

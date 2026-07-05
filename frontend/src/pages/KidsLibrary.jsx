@@ -57,21 +57,21 @@ const themes = [
     id: 'animals',
     label: 'Animaux',
     pictogram: 'A',
-    gradient: 'from-amber-400 to-orange-500',
+    gradient: 'from-accent-400 to-accent-500',
     match: ['animal', 'animaux', 'nature'],
   },
   {
     id: 'princesses',
     label: 'Princesses',
     pictogram: 'P',
-    gradient: 'from-pink-500 to-rose-500',
+    gradient: 'from-secondary-500 to-rose-500',
     match: ['princess', 'princesse', 'fairy', 'conte'],
   },
   {
     id: 'jobs',
     label: 'Metiers',
     pictogram: 'M',
-    gradient: 'from-blue-500 to-teal-500',
+    gradient: 'from-primary-500 to-teal-500',
     match: ['job', 'metier', 'doctor', 'pompier', 'teacher'],
   },
   {
@@ -301,7 +301,7 @@ function KidsLibrary() {
   };
 
   return (
-    <div className="min-h-screen bg-[#f7f3ea] text-neutral-900">
+    <div className="min-h-screen bg-[#f7f3ea] text-surface-900">
       <motion.header
         initial={{ y: -80, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
@@ -341,7 +341,7 @@ function KidsLibrary() {
             </Link>
             <button
               onClick={handleLogout}
-              className="grid h-14 w-14 place-items-center rounded-full bg-neutral-100 text-neutral-700 transition hover:bg-neutral-200"
+              className="grid h-14 w-14 place-items-center rounded-full bg-surface-100 text-surface-700 transition hover:bg-surface-200"
               title="Deconnexion"
             >
               <LogOutIcon className="h-7 w-7" />
@@ -386,14 +386,14 @@ function KidsLibrary() {
               <div className="grid h-12 w-12 place-items-center rounded-2xl bg-indigo-100 text-indigo-600">
                 <SearchIcon className="h-6 w-6" />
               </div>
-              <p className="text-lg font-black text-neutral-900">Adulte</p>
+              <p className="text-lg font-black text-surface-900">Adulte</p>
             </div>
             <input
               type="text"
               placeholder="Recherche..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="mb-4 w-full rounded-2xl border-2 border-neutral-200 bg-neutral-50 px-4 py-3 text-base font-semibold outline-none transition focus:border-cyan-500 focus:bg-white"
+              className="mb-4 w-full rounded-2xl border-2 border-surface-200 bg-surface-50 px-4 py-3 text-base font-semibold outline-none transition focus:border-cyan-500 focus:bg-white"
             />
             <div className="grid grid-cols-4 gap-2">
               {languages.map((language) => (
@@ -402,8 +402,8 @@ function KidsLibrary() {
                   onClick={() => setSelectedLanguage(language.id)}
                   className={`min-h-14 rounded-2xl px-3 py-3 text-sm font-black transition ${
                     selectedLanguage === language.id
-                      ? 'bg-neutral-900 text-white'
-                      : 'bg-neutral-100 text-neutral-700 hover:bg-neutral-200'
+                      ? 'bg-surface-900 text-white'
+                      : 'bg-surface-100 text-surface-700 hover:bg-surface-200'
                   }`}
                 >
                   {language.label}
@@ -415,8 +415,8 @@ function KidsLibrary() {
 
         <section className="mb-8">
           <div className="mb-4 flex items-center justify-between gap-4">
-            <h2 className="text-2xl font-black text-neutral-900">Univers</h2>
-            <span className="rounded-full bg-white px-4 py-2 text-sm font-bold text-neutral-600 shadow-sm">
+            <h2 className="text-2xl font-black text-surface-900">Univers</h2>
+            <span className="rounded-full bg-white px-4 py-2 text-sm font-bold text-surface-600 shadow-sm">
               {visibleBooks.length} contenus
             </span>
           </div>
@@ -429,7 +429,7 @@ function KidsLibrary() {
                 onClick={() => setSelectedTheme(theme.id)}
                 aria-label={theme.label}
                 className={`min-h-36 rounded-[1.75rem] bg-gradient-to-br ${theme.gradient} p-4 text-left text-white shadow-lg transition ${
-                  selectedTheme === theme.id ? 'ring-4 ring-neutral-900 ring-offset-4' : 'hover:shadow-xl'
+                  selectedTheme === theme.id ? 'ring-4 ring-surface-900 ring-offset-4' : 'hover:shadow-xl'
                 }`}
               >
                 <span className="mb-3 grid h-16 w-16 place-items-center rounded-2xl bg-white/25 text-4xl font-black backdrop-blur">
@@ -448,9 +448,9 @@ function KidsLibrary() {
           <BookGridSkeleton />
         ) : visibleBooks.length === 0 ? (
           <div className="rounded-[2rem] bg-white p-12 text-center shadow-lg">
-            <BookIcon className="mx-auto mb-4 h-16 w-16 text-neutral-400" />
-            <h3 className="mb-2 text-2xl font-black text-neutral-800">Aucun contenu disponible</h3>
-            <p className="text-neutral-500">
+            <BookIcon className="mx-auto mb-4 h-16 w-16 text-surface-400" />
+            <h3 className="mb-2 text-2xl font-black text-surface-800">Aucun contenu disponible</h3>
+            <p className="text-surface-500">
               Demande a ton parent d'autoriser plus de contenus.
             </p>
           </div>
@@ -458,7 +458,7 @@ function KidsLibrary() {
           <>
             {featuredBooks.length > 0 && (
               <section className="mb-8">
-                <h2 className="mb-4 text-2xl font-black text-neutral-900">A ecouter maintenant</h2>
+                <h2 className="mb-4 text-2xl font-black text-surface-900">A ecouter maintenant</h2>
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                   {featuredBooks.map((book) => (
                     <BookCard
@@ -499,7 +499,7 @@ function KidsLibrary() {
             )}
 
             <section>
-              <h2 className="mb-4 text-2xl font-black text-neutral-900">Toutes les histoires</h2>
+              <h2 className="mb-4 text-2xl font-black text-surface-900">Toutes les histoires</h2>
               <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6">
                 {visibleBooks.map((book) => (
                   <BookCard
@@ -563,12 +563,12 @@ function RecommendationSection({ section, playingBookId, playing, onToggleAudio,
     <section>
       <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h2 className="text-2xl font-black text-neutral-900">{section.title}</h2>
+          <h2 className="text-2xl font-black text-surface-900">{section.title}</h2>
           {section.subtitle && (
-            <p className="mt-1 text-sm font-bold text-neutral-500">{section.subtitle}</p>
+            <p className="mt-1 text-sm font-bold text-surface-500">{section.subtitle}</p>
           )}
         </div>
-        <span className="rounded-full bg-white px-4 py-2 text-sm font-bold text-neutral-600 shadow-sm">
+        <span className="rounded-full bg-white px-4 py-2 text-sm font-bold text-surface-600 shadow-sm">
           {books.length} choix
         </span>
       </div>
@@ -619,7 +619,7 @@ function BookCard({
       className="group overflow-hidden rounded-[1.5rem] bg-white shadow-lg transition hover:shadow-xl"
     >
       <Link to={`/book/${book.id}`} className="block">
-        <div className={`relative bg-neutral-100 ${large ? 'aspect-[4/3]' : 'aspect-[3/4]'}`}>
+        <div className={`relative bg-surface-100 ${large ? 'aspect-[4/3]' : 'aspect-[3/4]'}`}>
           {coverImageUrl ? (
             <img
               src={coverImageUrl}
@@ -631,11 +631,11 @@ function BookCard({
               <BookIcon className="h-16 w-16 text-cyan-700" />
             </div>
           )}
-          <div className="absolute left-3 top-3 rounded-full bg-white/90 px-3 py-1 text-xs font-black text-neutral-800 shadow-sm">
+          <div className="absolute left-3 top-3 rounded-full bg-white/90 px-3 py-1 text-xs font-black text-surface-800 shadow-sm">
             {(book.language || 'fr').toUpperCase()}
           </div>
           <div className={`absolute bottom-3 left-3 inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-black backdrop-blur ${
-            hasAudio ? 'bg-neutral-900/80 text-white' : 'bg-white/90 text-amber-700'
+            hasAudio ? 'bg-surface-900/80 text-white' : 'bg-white/90 text-accent-700'
           }`}>
             <AudioIcon className="h-4 w-4" />
             {hasAudio ? (duration || 'Audio') : 'Sans audio'}
@@ -659,10 +659,10 @@ function BookCard({
       </Link>
 
       <div className="p-4">
-        <h3 className={`${large ? 'text-lg' : 'text-sm'} mb-1 line-clamp-2 font-black text-neutral-900`}>
+        <h3 className={`${large ? 'text-lg' : 'text-sm'} mb-1 line-clamp-2 font-black text-surface-900`}>
           {book.title}
         </h3>
-        <p className="mb-3 line-clamp-1 text-xs font-semibold text-neutral-500">
+        <p className="mb-3 line-clamp-1 text-xs font-semibold text-surface-500">
           {book.category_name || book.content_type || 'Histoire'}
         </p>
 
@@ -671,9 +671,9 @@ function BookCard({
           className={`mb-2 inline-flex h-16 w-full items-center justify-center gap-3 rounded-[1.4rem] text-lg font-black transition ${
             hasAudio
               ? playing
-                ? 'bg-amber-500 text-white hover:bg-amber-600'
+                ? 'bg-accent-500 text-white hover:bg-accent-600'
                 : 'bg-emerald-500 text-white hover:bg-emerald-600'
-              : 'bg-neutral-100 text-neutral-400'
+              : 'bg-surface-100 text-surface-400'
           }`}
           title={hasAudio ? 'Ecouter' : 'Audio indisponible'}
           aria-label={hasAudio ? `Ecouter ${book.title}` : 'Audio indisponible'}
@@ -697,7 +697,7 @@ function BookCard({
             className={`grid h-12 place-items-center rounded-2xl transition ${
               favorite
                 ? 'bg-rose-100 text-rose-600 hover:bg-rose-200'
-                : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
+                : 'bg-surface-100 text-surface-600 hover:bg-surface-200'
             }`}
             aria-label="Favori"
             title="Favori"
@@ -707,13 +707,13 @@ function BookCard({
         </div>
 
         {downloading ? (
-          <div className="mt-2 rounded-2xl bg-blue-50 p-2">
-            <div className="mb-2 h-2 overflow-hidden rounded-full bg-blue-100">
-              <div className="h-full rounded-full bg-blue-500 transition-all" style={{ width: `${progress || 8}%` }} />
+          <div className="mt-2 rounded-2xl bg-primary-50 p-2">
+            <div className="mb-2 h-2 overflow-hidden rounded-full bg-primary-100">
+              <div className="h-full rounded-full bg-primary-500 transition-all" style={{ width: `${progress || 8}%` }} />
             </div>
             <button
               onClick={() => onCancelDownload(book)}
-              className="inline-flex h-11 w-full items-center justify-center rounded-xl bg-white text-xs font-black text-blue-700"
+              className="inline-flex h-11 w-full items-center justify-center rounded-3xl bg-white text-xs font-black text-primary-700"
             >
               Annuler
             </button>
@@ -730,7 +730,7 @@ function BookCard({
         ) : (
           <button
             onClick={() => onDownload(book)}
-            className="mt-2 grid h-12 w-full place-items-center rounded-2xl bg-neutral-100 px-3 text-neutral-700 transition hover:bg-neutral-200"
+            className="mt-2 grid h-12 w-full place-items-center rounded-2xl bg-surface-100 px-3 text-surface-700 transition hover:bg-surface-200"
             aria-label="Telecharger"
             title="Telecharger"
           >

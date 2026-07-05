@@ -132,7 +132,7 @@ function CategoryManagement() {
             resetForm();
             setShowModal(true);
           }}
-          className="px-6 py-2 bg-neutral-900 text-white rounded-lg hover:bg-neutral-800 transition-colors font-medium"
+          className="px-6 py-2 bg-surface-900 text-white rounded-2xl hover:bg-surface-800 transition-colors font-medium"
         >
           + Add New Category
         </button>
@@ -140,10 +140,10 @@ function CategoryManagement() {
 
       {loading ? (
         <div className="text-center py-12">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-neutral-900"></div>
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-surface-900"></div>
         </div>
       ) : (
-        <div className="bg-white rounded-lg shadow overflow-hidden">
+        <div className="bg-white rounded-2xl shadow overflow-hidden">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
@@ -168,13 +168,13 @@ function CategoryManagement() {
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <button
                       onClick={() => handleEdit(category)}
-                      className="text-neutral-700 hover:text-neutral-900 mr-4 transition-colors"
+                      className="text-surface-700 hover:text-surface-900 mr-4 transition-colors"
                     >
                       Edit
                     </button>
                     <button
                       onClick={() => handleDelete(category.id)}
-                      className="text-red-600 hover:text-red-900"
+                      className="text-primary-600 hover:text-primary-900"
                     >
                       Delete
                     </button>
@@ -189,7 +189,7 @@ function CategoryManagement() {
       {/* Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-md w-full">
+          <div className="bg-white rounded-2xl max-w-md w-full">
             <div className="p-6">
               <div className="flex justify-between items-center mb-6">
                 <h3 className="text-2xl font-bold text-gray-800">
@@ -200,7 +200,7 @@ function CategoryManagement() {
                     setShowModal(false);
                     resetForm();
                   }}
-                  className="text-neutral-400 hover:text-neutral-600 transition-colors"
+                  className="text-surface-400 hover:text-surface-600 transition-colors"
                 >
                   <XIcon className="w-5 h-5" />
                 </button>
@@ -216,7 +216,7 @@ function CategoryManagement() {
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     required
-                    className="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-neutral-900 focus:border-neutral-900"
+                    className="w-full px-4 py-2 border border-surface-300 rounded-2xl focus:ring-2 focus:ring-surface-900 focus:border-surface-900"
                   />
                 </div>
 
@@ -228,7 +228,7 @@ function CategoryManagement() {
                     value={formData.description}
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                     rows={3}
-                    className="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-neutral-900 focus:border-neutral-900"
+                    className="w-full px-4 py-2 border border-surface-300 rounded-2xl focus:ring-2 focus:ring-surface-900 focus:border-surface-900"
                   />
                 </div>
 
@@ -239,7 +239,7 @@ function CategoryManagement() {
                   <select
                     value={formData.parent_id}
                     onChange={(e) => setFormData({ ...formData, parent_id: e.target.value })}
-                    className="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-neutral-900 focus:border-neutral-900"
+                    className="w-full px-4 py-2 border border-surface-300 rounded-2xl focus:ring-2 focus:ring-surface-900 focus:border-surface-900"
                   >
                     <option value="">Categorie principale</option>
                     {categories
@@ -253,7 +253,7 @@ function CategoryManagement() {
                 <div className="flex gap-4 pt-4">
                   <button
                     type="submit"
-                    className="flex-1 px-6 py-2 bg-neutral-900 text-white rounded-lg hover:bg-neutral-800 transition-colors font-medium"
+                    className="flex-1 px-6 py-2 bg-surface-900 text-white rounded-2xl hover:bg-surface-800 transition-colors font-medium"
                   >
                     {editingCategory ? 'Update Category' : 'Create Category'}
                   </button>
@@ -263,7 +263,7 @@ function CategoryManagement() {
                       setShowModal(false);
                       resetForm();
                     }}
-                    className="flex-1 px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+                    className="flex-1 px-6 py-2 bg-gray-200 text-gray-700 rounded-2xl hover:bg-gray-300 transition-colors"
                   >
                     Cancel
                   </button>
