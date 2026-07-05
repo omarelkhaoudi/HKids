@@ -59,7 +59,7 @@ function ReadingAidPanel({
           className="bg-white rounded-3xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col"
         >
           {/* Header */}
-          <div className="bg-gradient-to-r from-red-500 via-pink-500 to-orange-500 text-white p-6 flex justify-between items-center">
+          <div className="bg-gradient-to-r from-primary-500 via-secondary-500 to-accent-500 text-white p-6 flex justify-between items-center">
             <h2 className="text-2xl font-bold">Aide à la lecture</h2>
             <button
               onClick={onClose}
@@ -70,7 +70,7 @@ function ReadingAidPanel({
           </div>
 
           {/* Tabs */}
-          <div className="flex border-b border-neutral-200">
+          <div className="flex border-b border-surface-200">
             {[
               { id: 'voice', label: 'Voix', icon: 'AI' },
               { id: 'font', label: 'Police', icon: '🔤' },
@@ -83,8 +83,8 @@ function ReadingAidPanel({
                 onClick={() => setActiveTab(tab.id)}
                 className={`flex-1 px-4 py-3 font-semibold transition-colors ${
                   activeTab === tab.id
-                    ? 'text-red-600 border-b-2 border-red-600 bg-red-50'
-                    : 'text-neutral-600 hover:text-neutral-900 hover:bg-neutral-50'
+                    ? 'text-primary-600 border-b-2 border-primary-600 bg-primary-50'
+                    : 'text-surface-600 hover:text-surface-900 hover:bg-surface-50'
                 }`}
               >
                 <span className="text-xl mr-2">{tab.icon}</span>
@@ -99,10 +99,10 @@ function ReadingAidPanel({
             {activeTab === 'voice' && (
               <div className="space-y-5">
                 <div>
-                  <h3 className="text-lg font-bold text-neutral-900 mb-2">
+                  <h3 className="text-lg font-bold text-surface-900 mb-2">
                     Choisir qui raconte l'histoire
                   </h3>
-                  <p className="mb-4 text-sm text-neutral-600">
+                  <p className="mb-4 text-sm text-surface-600">
                     Appuyez sur une voix pour entendre un apercu immediat, puis lancez Ecouter pour lire la page avec ce narrateur.
                   </p>
                 </div>
@@ -115,32 +115,32 @@ function ReadingAidPanel({
                       onClick={() => onVoiceProfileChange(profile.id)}
                       className={`p-4 rounded-2xl border-2 text-left transition-all ${
                         selectedVoiceProfile === profile.id
-                          ? 'border-pink-500 bg-pink-50 shadow-md'
-                          : 'border-neutral-200 hover:border-pink-200'
+                          ? 'border-secondary-500 bg-secondary-50 shadow-md'
+                          : 'border-surface-200 hover:border-secondary-200'
                       }`}
                     >
                       <div className="flex items-start gap-3">
-                        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-orange-100 to-pink-100 text-sm font-black text-pink-600">
+                        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-3xl bg-gradient-to-br from-accent-100 to-secondary-100 text-sm font-black text-secondary-600">
                           {profile.icon}
                         </span>
                         <span className="min-w-0">
-                          <span className="flex items-center gap-2 font-extrabold text-neutral-900">
+                          <span className="flex items-center gap-2 font-extrabold text-surface-900">
                             {profile.label}
                             {selectedVoiceProfile === profile.id && (
-                              <span className="rounded-full bg-pink-500 px-2 py-0.5 text-xs font-bold text-white">
+                              <span className="rounded-full bg-secondary-500 px-2 py-0.5 text-xs font-bold text-white">
                                 Actif
                               </span>
                             )}
                           </span>
-                          <span className="mt-1 block text-sm text-neutral-600">{profile.description}</span>
-                          <span className="mt-2 block text-xs font-semibold text-pink-600">Cliquer pour ecouter</span>
+                          <span className="mt-1 block text-sm text-surface-600">{profile.description}</span>
+                          <span className="mt-2 block text-xs font-semibold text-secondary-600">Cliquer pour ecouter</span>
                         </span>
                       </div>
                     </button>
                   ))}
                 </div>
 
-                <p className="text-xs text-neutral-500">
+                <p className="text-xs text-surface-500">
                   {availableVoices.length > 0
                     ? `${availableVoices.length} voix disponibles sur cet appareil.`
                     : "Les voix disponibles dependent du navigateur et de l'appareil."}
@@ -151,7 +151,7 @@ function ReadingAidPanel({
             {/* Font Tab */}
             {activeTab === 'font' && (
               <div className="space-y-4">
-                <h3 className="text-lg font-bold text-neutral-900 mb-4">
+                <h3 className="text-lg font-bold text-surface-900 mb-4">
                   Choisissez une police
                 </h3>
                 <div className="grid grid-cols-1 gap-3">
@@ -159,10 +159,10 @@ function ReadingAidPanel({
                     <button
                       key={font.value}
                       onClick={() => onSettingsChange({ ...settings, font: font.value })}
-                      className={`p-4 rounded-xl border-2 transition-all text-left ${
+                      className={`p-4 rounded-3xl border-2 transition-all text-left ${
                         settings.font === font.value
-                          ? 'border-red-500 bg-red-50'
-                          : 'border-neutral-200 hover:border-red-200'
+                          ? 'border-primary-500 bg-primary-50'
+                          : 'border-surface-200 hover:border-primary-200'
                       }`}
                     >
                       <div className="flex items-center justify-between">
@@ -174,10 +174,10 @@ function ReadingAidPanel({
                           {font.name}
                         </span>
                         {settings.font === font.value && (
-                          <span className="text-red-600 text-xl">✓</span>
+                          <span className="text-primary-600 text-xl">✓</span>
                         )}
                       </div>
-                      <p className={`text-sm mt-2 text-neutral-600 ${font.class}`} style={{
+                      <p className={`text-sm mt-2 text-surface-600 ${font.class}`} style={{
                         fontFamily: font.value === 'dyslexic' ? 'OpenDyslexic, sans-serif' : 
                                     font.value === 'times' ? 'Times New Roman, serif' :
                                     font.value === 'comic' ? 'Comic Sans MS, cursive' : 'Arial, sans-serif'
@@ -193,7 +193,7 @@ function ReadingAidPanel({
             {/* Size Tab */}
             {activeTab === 'size' && (
               <div className="space-y-4">
-                <h3 className="text-lg font-bold text-neutral-900 mb-4">
+                <h3 className="text-lg font-bold text-surface-900 mb-4">
                   Taille du texte
                 </h3>
                 <div className="space-y-3">
@@ -201,22 +201,22 @@ function ReadingAidPanel({
                     <button
                       key={option.value}
                       onClick={() => onSettingsChange({ ...settings, fontSize: option.value })}
-                      className={`w-full p-4 rounded-xl border-2 transition-all text-left ${
+                      className={`w-full p-4 rounded-3xl border-2 transition-all text-left ${
                         settings.fontSize === option.value
-                          ? 'border-red-500 bg-red-50'
-                          : 'border-neutral-200 hover:border-red-200'
+                          ? 'border-primary-500 bg-primary-50'
+                          : 'border-surface-200 hover:border-primary-200'
                       }`}
                     >
                       <div className="flex items-center justify-between">
                         <span className="font-semibold">{option.label}</span>
                         <span
-                          className="text-neutral-900"
+                          className="text-surface-900"
                           style={{ fontSize: `${option.value}px` }}
                         >
                           Aa
                         </span>
                         {settings.fontSize === option.value && (
-                          <span className="text-red-600 text-xl">✓</span>
+                          <span className="text-primary-600 text-xl">✓</span>
                         )}
                       </div>
                     </button>
@@ -228,7 +228,7 @@ function ReadingAidPanel({
             {/* Color Tab */}
             {activeTab === 'color' && (
               <div className="space-y-4">
-                <h3 className="text-lg font-bold text-neutral-900 mb-4">
+                <h3 className="text-lg font-bold text-surface-900 mb-4">
                   Couleurs d'affichage
                 </h3>
                 <div className="grid grid-cols-2 gap-3">
@@ -240,10 +240,10 @@ function ReadingAidPanel({
                         backgroundColor: color.bg,
                         textColor: color.text
                       })}
-                      className={`p-4 rounded-xl border-2 transition-all ${
+                      className={`p-4 rounded-3xl border-2 transition-all ${
                         settings.backgroundColor === color.bg
-                          ? 'border-red-500 ring-2 ring-red-200'
-                          : 'border-neutral-200 hover:border-red-200'
+                          ? 'border-primary-500 ring-2 ring-primary-200'
+                          : 'border-surface-200 hover:border-primary-200'
                       }`}
                       style={{
                         backgroundColor: color.bg,
@@ -266,14 +266,14 @@ function ReadingAidPanel({
             {activeTab === 'other' && (
               <div className="space-y-6">
                 <div>
-                  <h3 className="text-lg font-bold text-neutral-900 mb-4">
+                  <h3 className="text-lg font-bold text-surface-900 mb-4">
                     Options supplémentaires
                   </h3>
                   <div className="space-y-4">
-                    <label className="flex items-center justify-between p-4 rounded-xl border-2 border-neutral-200 hover:border-red-200 transition-colors cursor-pointer">
+                    <label className="flex items-center justify-between p-4 rounded-3xl border-2 border-surface-200 hover:border-primary-200 transition-colors cursor-pointer">
                       <div>
                         <span className="font-semibold block">Syllabisation</span>
-                        <span className="text-sm text-neutral-600">
+                        <span className="text-sm text-surface-600">
                           Afficher les mots en syllabes
                         </span>
                       </div>
@@ -284,14 +284,14 @@ function ReadingAidPanel({
                           ...settings,
                           syllabification: e.target.checked
                         })}
-                        className="w-6 h-6 text-red-600 rounded focus:ring-red-500"
+                        className="w-6 h-6 text-primary-600 rounded focus:ring-primary-500"
                       />
                     </label>
 
-                    <label className="flex items-center justify-between p-4 rounded-xl border-2 border-neutral-200 hover:border-red-200 transition-colors cursor-pointer">
+                    <label className="flex items-center justify-between p-4 rounded-3xl border-2 border-surface-200 hover:border-primary-200 transition-colors cursor-pointer">
                       <div>
                         <span className="font-semibold block">Espacement des lignes</span>
-                        <span className="text-sm text-neutral-600">
+                        <span className="text-sm text-surface-600">
                           Augmenter l'espace entre les lignes
                         </span>
                       </div>
@@ -302,14 +302,14 @@ function ReadingAidPanel({
                           ...settings,
                           lineSpacing: e.target.checked
                         })}
-                        className="w-6 h-6 text-red-600 rounded focus:ring-red-500"
+                        className="w-6 h-6 text-primary-600 rounded focus:ring-primary-500"
                       />
                     </label>
 
-                    <label className="flex items-center justify-between p-4 rounded-xl border-2 border-neutral-200 hover:border-red-200 transition-colors cursor-pointer">
+                    <label className="flex items-center justify-between p-4 rounded-3xl border-2 border-surface-200 hover:border-primary-200 transition-colors cursor-pointer">
                       <div>
                         <span className="font-semibold block">Surbrillance du mot</span>
-                        <span className="text-sm text-neutral-600">
+                        <span className="text-sm text-surface-600">
                           Mettre en évidence le mot lu
                         </span>
                       </div>
@@ -320,13 +320,13 @@ function ReadingAidPanel({
                           ...settings,
                           wordHighlight: e.target.checked
                         })}
-                        className="w-6 h-6 text-red-600 rounded focus:ring-red-500"
+                        className="w-6 h-6 text-primary-600 rounded focus:ring-primary-500"
                       />
                     </label>
                   </div>
                 </div>
 
-                <div className="pt-4 border-t border-neutral-200">
+                <div className="pt-4 border-t border-surface-200">
                   <button
                     onClick={() => {
                       onSettingsChange({
@@ -339,7 +339,7 @@ function ReadingAidPanel({
                         wordHighlight: false
                       });
                     }}
-                    className="w-full px-6 py-3 bg-neutral-100 hover:bg-neutral-200 rounded-xl font-semibold text-neutral-700 transition-colors"
+                    className="w-full px-6 py-3 bg-surface-100 hover:bg-surface-200 rounded-3xl font-semibold text-surface-700 transition-colors"
                   >
                     Réinitialiser les paramètres
                   </button>

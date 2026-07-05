@@ -217,15 +217,15 @@ function Subscriptions() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-white via-red-50/30 to-pink-50/30">
-      <header className="sticky top-0 z-40 shadow-md bg-neutral-900/95 backdrop-blur-md">
+    <div className="min-h-screen bg-gradient-to-br from-white via-primary-50/30 to-secondary-50/30">
+      <header className="sticky top-0 z-40 shadow-md bg-surface-900/95 backdrop-blur-md">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between gap-4">
           <Link to="/" className="flex items-center">
             <Logo size="default" />
           </Link>
           <Link
             to="/"
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white text-neutral-900 font-bold hover:bg-red-50 transition-colors shadow-sm"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white text-surface-900 font-bold hover:bg-primary-50 transition-colors shadow-sm"
           >
             <ChevronLeftIcon className="w-4 h-4" />
             Accueil
@@ -235,8 +235,8 @@ function Subscriptions() {
 
       <main className="relative overflow-hidden py-12 md:py-16">
         <div className="absolute inset-0 pointer-events-none opacity-50">
-          <div className="absolute left-10 top-16 h-40 w-40 rounded-full bg-pink-200 blur-3xl"></div>
-          <div className="absolute right-10 bottom-16 h-48 w-48 rounded-full bg-orange-200 blur-3xl"></div>
+          <div className="absolute left-10 top-16 h-40 w-40 rounded-full bg-secondary-200 blur-3xl"></div>
+          <div className="absolute right-10 bottom-16 h-48 w-48 rounded-full bg-accent-200 blur-3xl"></div>
         </div>
 
         <section className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6">
@@ -245,14 +245,14 @@ function Subscriptions() {
             animate={{ opacity: 1, y: 0 }}
             className="text-center max-w-3xl mx-auto"
           >
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-white text-orange-600 rounded-full text-sm font-bold mb-5 border border-orange-100 shadow-sm">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-white text-accent-600 rounded-full text-sm font-bold mb-5 border border-accent-100 shadow-sm">
               <StarIcon className="w-4 h-4" />
               Abonnements mensuels
             </div>
-            <h1 className="text-4xl md:text-6xl font-extrabold text-neutral-900 leading-tight">
+            <h1 className="text-4xl md:text-6xl font-extrabold text-surface-900 leading-tight">
               {isKidAccount ? 'Un parent choisit tes livres' : 'Choisissez le rythme de lecture de votre enfant'}
             </h1>
-            <p className="mt-5 text-lg text-neutral-600 leading-relaxed">
+            <p className="mt-5 text-lg text-surface-600 leading-relaxed">
               {isKidAccount
                 ? "Les abonnements et les paiements sont geres par ton parent. Tu peux lire les livres qu'il autorise."
                 : "Des formules simples, pensées pour débloquer 1, 2 ou 3 livres par mois selon l'envie et l'âge de votre enfant."}
@@ -260,20 +260,20 @@ function Subscriptions() {
           </motion.div>
 
           {!isAuthenticated && (
-            <div className="mt-8 mx-auto max-w-2xl rounded-2xl bg-white/90 border border-orange-100 p-4 text-center text-neutral-700 shadow-sm">
-              <LockIcon className="inline-block w-5 h-5 text-orange-500 mr-2" />
+            <div className="mt-8 mx-auto max-w-2xl rounded-2xl bg-white/90 border border-accent-100 p-4 text-center text-surface-700 shadow-sm">
+              <LockIcon className="inline-block w-5 h-5 text-accent-500 mr-2" />
               Connectez-vous pour activer une formule. Les offres restent visibles pour vous aider à choisir.
             </div>
           )}
 
           {isKidAccount && (
-            <div className="mt-8 mx-auto max-w-2xl rounded-2xl bg-white/90 border border-orange-100 p-5 text-center text-neutral-700 shadow-sm">
-              <LockIcon className="inline-block w-5 h-5 text-orange-500 mr-2" />
+            <div className="mt-8 mx-auto max-w-2xl rounded-2xl bg-white/90 border border-accent-100 p-5 text-center text-surface-700 shadow-sm">
+              <LockIcon className="inline-block w-5 h-5 text-accent-500 mr-2" />
               Les paiements sont reserves aux parents. Si un livre est bloque, demande a ton parent d'activer une formule depuis son espace.
               <div className="mt-4">
                 <Link
                   to="/kids"
-                  className="inline-flex items-center justify-center rounded-full bg-neutral-900 px-5 py-2.5 text-sm font-bold text-white hover:bg-neutral-800"
+                  className="inline-flex items-center justify-center rounded-full bg-surface-900 px-5 py-2.5 text-sm font-bold text-white hover:bg-surface-800"
                 >
                   Retour a mes livres
                 </Link>
@@ -284,22 +284,22 @@ function Subscriptions() {
           <motion.div
             initial={{ opacity: 0, y: 18 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mt-10 rounded-3xl bg-neutral-900 text-white p-6 md:p-8 shadow-2xl flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6"
+            className="mt-10 rounded-3xl bg-surface-900 text-white p-6 md:p-8 shadow-2xl flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6"
           >
             <div>
-              <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-sm font-bold text-orange-200">
+              <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-sm font-bold text-accent-200">
                 <StarIcon className="w-4 h-4" />
                 Essai gratuit
               </div>
               <h2 className="mt-4 text-3xl font-extrabold">Essayez HKids gratuitement</h2>
-              <p className="mt-2 text-neutral-300 max-w-2xl">
+              <p className="mt-2 text-surface-300 max-w-2xl">
                 7 jours pour découvrir le lecteur, avec 3 livres offerts. Aucun paiement Stripe nécessaire pour démarrer.
               </p>
             </div>
             <button
               onClick={handleStartTrial}
               disabled={isKidAccount || startingTrial || loading || hasUsableSubscription}
-              className="shrink-0 rounded-full bg-white px-7 py-4 font-extrabold text-neutral-900 shadow-lg transition-colors hover:bg-orange-50 disabled:cursor-default disabled:opacity-70"
+              className="shrink-0 rounded-full bg-white px-7 py-4 font-extrabold text-surface-900 shadow-lg transition-colors hover:bg-accent-50 disabled:cursor-default disabled:opacity-70"
             >
               {hasUsableSubscription && currentSubscription?.status === 'trialing'
                 ? 'Essai gratuit actif'
@@ -325,39 +325,39 @@ function Subscriptions() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.08 }}
                   className={`relative rounded-3xl bg-white p-6 shadow-xl border-2 ${
-                    plan.is_featured ? 'border-pink-400 md:-translate-y-4' : 'border-white'
+                    plan.is_featured ? 'border-secondary-400 md:-translate-y-4' : 'border-white'
                   }`}
                 >
                   {plan.is_featured && (
-                    <div className="absolute -top-4 left-1/2 -translate-x-1/2 rounded-full bg-gradient-to-r from-orange-500 to-pink-500 px-4 py-1.5 text-xs font-bold text-white shadow-lg">
+                    <div className="absolute -top-4 left-1/2 -translate-x-1/2 rounded-full bg-gradient-to-r from-accent-500 to-secondary-500 px-4 py-1.5 text-xs font-bold text-white shadow-lg">
                       Recommandé
                     </div>
                   )}
 
                   <div className="flex h-full flex-col">
-                    <div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-orange-100 to-pink-100 flex items-center justify-center mb-5">
-                      <BookIcon className="w-7 h-7 text-pink-600" />
+                    <div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-accent-100 to-secondary-100 flex items-center justify-center mb-5">
+                      <BookIcon className="w-7 h-7 text-secondary-600" />
                     </div>
-                    <h2 className="text-2xl font-extrabold text-neutral-900">{plan.name}</h2>
-                    <p className="mt-3 text-neutral-600 leading-relaxed min-h-[72px]">{plan.description}</p>
+                    <h2 className="text-2xl font-extrabold text-surface-900">{plan.name}</h2>
+                    <p className="mt-3 text-surface-600 leading-relaxed min-h-[72px]">{plan.description}</p>
 
                     <div className="mt-6 flex items-end gap-2">
-                      <span className="text-5xl font-extrabold text-neutral-900">{formatPrice(plan)}</span>
-                      <span className="pb-2 text-neutral-500 font-semibold">/ mois</span>
+                      <span className="text-5xl font-extrabold text-surface-900">{formatPrice(plan)}</span>
+                      <span className="pb-2 text-surface-500 font-semibold">/ mois</span>
                     </div>
 
                     <div className="mt-6 space-y-3">
-                      <div className="flex items-center gap-3 text-neutral-800">
+                      <div className="flex items-center gap-3 text-surface-800">
                         <CheckIcon className="w-5 h-5 text-green-500" />
                         <span className="font-semibold">
                           {plan.book_limit} {plan.book_limit > 1 ? 'livres inclus' : 'livre inclus'} chaque mois
                         </span>
                       </div>
-                      <div className="flex items-center gap-3 text-neutral-800">
+                      <div className="flex items-center gap-3 text-surface-800">
                         <CheckIcon className="w-5 h-5 text-green-500" />
                         <span>Lecture et écoute dans le lecteur HKids</span>
                       </div>
-                      <div className="flex items-center gap-3 text-neutral-800">
+                      <div className="flex items-center gap-3 text-surface-800">
                         <CheckIcon className="w-5 h-5 text-green-500" />
                         <span>Formule mensuelle modifiable</span>
                       </div>
@@ -369,7 +369,7 @@ function Subscriptions() {
                       className={`mt-8 w-full rounded-full px-6 py-4 font-bold shadow-lg transition-all ${
                         isCurrent
                           ? 'bg-green-100 text-green-700 cursor-default'
-                          : 'bg-gradient-to-r from-orange-500 to-pink-500 text-white hover:shadow-xl'
+                          : 'bg-gradient-to-r from-accent-500 to-secondary-500 text-white hover:shadow-xl'
                       } disabled:opacity-70`}
                     >
                       {isCurrent && currentSubscription?.status === 'trialing'
@@ -388,9 +388,9 @@ function Subscriptions() {
             })}
           </div>
 
-          <div className="mt-10 rounded-3xl bg-neutral-900 text-white p-6 md:p-8 shadow-xl">
+          <div className="mt-10 rounded-3xl bg-surface-900 text-white p-6 md:p-8 shadow-xl">
             <h2 className="text-2xl font-extrabold mb-3">Paiement sécurisé avec Stripe</h2>
-            <p className="text-neutral-300 leading-relaxed">
+            <p className="text-surface-300 leading-relaxed">
               Les formules payantes passent par Stripe Checkout et doivent etre activees par un parent ou un adulte responsable. L'essai gratuit permet de tester HKids avant de choisir un abonnement mensuel.
             </p>
           </div>

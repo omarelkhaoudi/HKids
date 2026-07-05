@@ -10,19 +10,19 @@ function getLanguageLabel(languageId) {
 
 export function KidProfilesList({ kids, selectedKidId, onSelect, onAdd, onEdit, onDelete }) {
   return (
-    <div className="rounded-xl bg-white p-6 shadow-lg dark:bg-neutral-800">
+    <div className="rounded-3xl bg-white p-6 shadow-lg dark:bg-surface-800">
       <div className="mb-5 flex items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl font-bold text-neutral-800 dark:text-neutral-100">
+          <h2 className="text-xl font-bold text-surface-800 dark:text-surface-100">
             Profils enfants
           </h2>
-          <p className="text-sm text-neutral-500 dark:text-neutral-400">
+          <p className="text-sm text-surface-500 dark:text-surface-400">
             {kids.length} {kids.length > 1 ? 'profils' : 'profil'}
           </p>
         </div>
         <button
           onClick={onAdd}
-          className="inline-flex items-center gap-2 rounded-lg bg-red-500 px-4 py-2 font-bold text-white transition hover:bg-red-600"
+          className="inline-flex items-center gap-2 rounded-2xl bg-primary-500 px-4 py-2 font-bold text-white transition hover:bg-primary-600"
         >
           <PlusIcon className="h-5 w-5" />
           <span>Ajouter un enfant</span>
@@ -30,13 +30,13 @@ export function KidProfilesList({ kids, selectedKidId, onSelect, onAdd, onEdit, 
       </div>
 
       {kids.length === 0 ? (
-        <div className="rounded-xl border-2 border-dashed border-neutral-200 p-8 text-center dark:border-neutral-700">
-          <p className="font-semibold text-neutral-700 dark:text-neutral-200">
+        <div className="rounded-3xl border-2 border-dashed border-surface-200 p-8 text-center dark:border-surface-700">
+          <p className="font-semibold text-surface-700 dark:text-surface-200">
             Aucun profil enfant
           </p>
           <button
             onClick={onAdd}
-            className="mt-4 inline-flex items-center gap-2 rounded-lg bg-red-500 px-4 py-2 font-bold text-white transition hover:bg-red-600"
+            className="mt-4 inline-flex items-center gap-2 rounded-2xl bg-primary-500 px-4 py-2 font-bold text-white transition hover:bg-primary-600"
           >
             <PlusIcon className="h-5 w-5" />
             <span>Ajouter un enfant</span>
@@ -53,10 +53,10 @@ export function KidProfilesList({ kids, selectedKidId, onSelect, onAdd, onEdit, 
               <motion.div
                 key={kid.id}
                 whileHover={{ y: -2 }}
-                className={`rounded-xl border-2 p-4 transition ${
+                className={`rounded-3xl border-2 p-4 transition ${
                   active
-                    ? 'border-red-500 bg-red-50 dark:bg-red-900/20'
-                    : 'border-neutral-100 bg-neutral-50 hover:border-red-200 dark:border-neutral-700 dark:bg-neutral-700/50'
+                    ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20'
+                    : 'border-surface-100 bg-surface-50 hover:border-primary-200 dark:border-surface-700 dark:bg-surface-700/50'
                 }`}
               >
                 <button
@@ -66,14 +66,14 @@ export function KidProfilesList({ kids, selectedKidId, onSelect, onAdd, onEdit, 
                   <div className="flex items-start gap-4">
                     <KidAvatar kid={kid} />
                     <div className="min-w-0 flex-1">
-                      <h3 className="truncate text-lg font-black text-neutral-900 dark:text-neutral-100">
+                      <h3 className="truncate text-lg font-black text-surface-900 dark:text-surface-100">
                         {kid.name}
                       </h3>
-                      <p className="text-sm text-neutral-500 dark:text-neutral-300">
+                      <p className="text-sm text-surface-500 dark:text-surface-300">
                         {kid.age ? `${kid.age} ans` : 'Age non renseigne'} - {getLanguageLabel(kid.preferred_language)}
                       </p>
                       {birthDate && (
-                        <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-300">
+                        <p className="mt-1 text-sm text-surface-500 dark:text-surface-300">
                           Naissance: {birthDate}
                         </p>
                       )}
@@ -86,7 +86,7 @@ export function KidProfilesList({ kids, selectedKidId, onSelect, onAdd, onEdit, 
                     {interests.slice(0, 4).map((interest) => (
                       <span
                         key={interest}
-                        className="rounded-full bg-white px-3 py-1 text-xs font-bold text-neutral-600 shadow-sm dark:bg-neutral-800 dark:text-neutral-200"
+                        className="rounded-full bg-white px-3 py-1 text-xs font-bold text-surface-600 shadow-sm dark:bg-surface-800 dark:text-surface-200"
                       >
                         {interest}
                       </span>
@@ -97,14 +97,14 @@ export function KidProfilesList({ kids, selectedKidId, onSelect, onAdd, onEdit, 
                 <div className="mt-4 flex gap-2">
                   <button
                     onClick={() => onEdit(kid)}
-                    className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg bg-white px-3 py-2 text-sm font-bold text-blue-600 transition hover:bg-blue-50 dark:bg-neutral-800 dark:hover:bg-neutral-700"
+                    className="inline-flex flex-1 items-center justify-center gap-2 rounded-2xl bg-white px-3 py-2 text-sm font-bold text-primary-600 transition hover:bg-primary-50 dark:bg-surface-800 dark:hover:bg-surface-700"
                   >
                     <EditIcon className="h-4 w-4" />
                     <span>Modifier</span>
                   </button>
                   <button
                     onClick={() => onDelete(kid)}
-                    className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg bg-white px-3 py-2 text-sm font-bold text-red-600 transition hover:bg-red-50 dark:bg-neutral-800 dark:hover:bg-neutral-700"
+                    className="inline-flex flex-1 items-center justify-center gap-2 rounded-2xl bg-white px-3 py-2 text-sm font-bold text-primary-600 transition hover:bg-primary-50 dark:bg-surface-800 dark:hover:bg-surface-700"
                   >
                     <TrashIcon className="h-4 w-4" />
                     <span>Supprimer</span>

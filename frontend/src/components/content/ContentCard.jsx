@@ -19,10 +19,10 @@ export function ContentCard({ content, playing = false, onToggleAudio }) {
   return (
     <motion.article
       whileHover={{ y: -3 }}
-      className="flex h-full flex-col overflow-hidden rounded-xl bg-white shadow-md ring-1 ring-neutral-100 transition hover:shadow-lg dark:bg-neutral-800 dark:ring-neutral-700"
+      className="flex h-full flex-col overflow-hidden rounded-3xl bg-white shadow-md ring-1 ring-surface-100 transition hover:shadow-lg dark:bg-surface-800 dark:ring-surface-700"
     >
       <Link to={`/book-details/${content.id}`} className="flex flex-1 flex-col">
-        <div className="relative aspect-[4/3] bg-neutral-100 dark:bg-neutral-700">
+        <div className="relative aspect-[4/3] bg-surface-100 dark:bg-surface-700">
           {content.cover_url ? (
             <img
               src={content.cover_url}
@@ -31,14 +31,14 @@ export function ContentCard({ content, playing = false, onToggleAudio }) {
               loading="lazy"
             />
           ) : (
-            <div className="grid h-full place-items-center text-neutral-400">
+            <div className="grid h-full place-items-center text-surface-400">
               <BookIcon className="h-14 w-14" />
             </div>
           )}
 
           <div className="absolute left-3 top-3 flex flex-wrap gap-2">
             {content.is_premium && (
-              <span className="inline-flex items-center gap-1 rounded-full bg-amber-400 px-3 py-1 text-xs font-black text-amber-950 shadow">
+              <span className="inline-flex items-center gap-1 rounded-full bg-accent-400 px-3 py-1 text-xs font-black text-accent-950 shadow">
                 <LockIcon className="h-3.5 w-3.5" />
                 Premium
               </span>
@@ -58,7 +58,7 @@ export function ContentCard({ content, playing = false, onToggleAudio }) {
 
         <div className="flex flex-1 flex-col p-4">
           <div className="mb-2 flex flex-wrap gap-2">
-            <span className="inline-flex items-center gap-1 rounded-full bg-red-50 px-3 py-1 text-xs font-bold text-red-600 dark:bg-red-900/30 dark:text-red-200">
+            <span className="inline-flex items-center gap-1 rounded-full bg-primary-50 px-3 py-1 text-xs font-bold text-primary-600 dark:bg-primary-900/30 dark:text-primary-200">
               <TagIcon className="h-3.5 w-3.5" />
               {content.library_category_label}
             </span>
@@ -68,14 +68,14 @@ export function ContentCard({ content, playing = false, onToggleAudio }) {
             </span>
           </div>
 
-          <h3 className="line-clamp-2 text-lg font-black text-neutral-900 dark:text-neutral-100">
+          <h3 className="line-clamp-2 text-lg font-black text-surface-900 dark:text-surface-100">
             {content.title}
           </h3>
-          <p className="mt-2 line-clamp-2 text-sm text-neutral-600 dark:text-neutral-300">
+          <p className="mt-2 line-clamp-2 text-sm text-surface-600 dark:text-surface-300">
             {content.short_description}
           </p>
 
-          <div className="mt-auto flex flex-wrap items-center gap-2 pt-4 text-sm font-bold text-neutral-500 dark:text-neutral-300">
+          <div className="mt-auto flex flex-wrap items-center gap-2 pt-4 text-sm font-bold text-surface-500 dark:text-surface-300">
             <span className="inline-flex items-center gap-1">
               <ClockIcon className="h-4 w-4" />
               {content.duration_label}
@@ -89,12 +89,12 @@ export function ContentCard({ content, playing = false, onToggleAudio }) {
         <div className="mt-auto px-4 pb-4">
           <button
             onClick={() => onToggleAudio(content)}
-            className={`inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl text-sm font-black transition ${
+            className={`inline-flex h-12 w-full items-center justify-center gap-2 rounded-3xl text-sm font-black transition ${
               hasAudio
                 ? playing
-                  ? 'bg-amber-500 text-white hover:bg-amber-600'
+                  ? 'bg-accent-500 text-white hover:bg-accent-600'
                   : 'bg-emerald-500 text-white hover:bg-emerald-600'
-                : 'bg-neutral-100 text-neutral-400 dark:bg-neutral-700'
+                : 'bg-surface-100 text-surface-400 dark:bg-surface-700'
             }`}
             title={hasAudio ? 'Ecouter' : 'Audio indisponible'}
           >

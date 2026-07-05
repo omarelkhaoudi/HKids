@@ -36,8 +36,8 @@ function statusLabel(status) {
 
 function qualityTone(status) {
   if (status === 'good') return 'bg-green-50 text-green-700';
-  if (status === 'medium') return 'bg-amber-50 text-amber-700';
-  return 'bg-red-50 text-red-700';
+  if (status === 'medium') return 'bg-accent-50 text-accent-700';
+  return 'bg-primary-50 text-primary-700';
 }
 
 function useAudioRecorder() {
@@ -304,29 +304,29 @@ function FamilyVoices() {
 
   if (loading) {
     return (
-      <div className="grid min-h-screen place-items-center bg-neutral-50">
+      <div className="grid min-h-screen place-items-center bg-surface-50">
         <div className="text-center">
-          <div className="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-4 border-red-500 border-t-transparent" />
-          <p className="font-bold text-neutral-600">Chargement des voix...</p>
+          <div className="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-4 border-primary-500 border-t-transparent" />
+          <p className="font-bold text-surface-600">Chargement des voix...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-rose-50 via-white to-sky-50 text-neutral-900">
+    <div className="min-h-screen bg-gradient-to-br from-rose-50 via-white to-sky-50 text-surface-900">
       <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
         <header className="mb-6 flex items-center justify-between gap-4">
           <Link to="/parent" className="shrink-0">
             <Logo size="default" showText={true} />
           </Link>
-          <Link to="/parent" className="inline-flex items-center gap-2 rounded-2xl bg-white px-4 py-3 text-sm font-black text-neutral-800 shadow-md">
+          <Link to="/parent" className="inline-flex items-center gap-2 rounded-2xl bg-white px-4 py-3 text-sm font-black text-surface-800 shadow-md">
             <ChevronLeftIcon className="h-5 w-5" />
             Retour
           </Link>
         </header>
 
-        <section className="mb-6 rounded-[2rem] bg-gradient-to-br from-red-500 via-pink-500 to-violet-500 p-6 text-white shadow-xl">
+        <section className="mb-6 rounded-[2rem] bg-gradient-to-br from-primary-500 via-secondary-500 to-violet-500 p-6 text-white shadow-xl">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-white/20 px-4 py-2 text-sm font-black">
@@ -357,10 +357,10 @@ function FamilyVoices() {
               <div className="mb-4 flex items-center justify-between gap-3">
                 <div>
                   <h2 className="text-xl font-black">{editingProfile ? 'Modifier une voix' : 'Ajouter un profil vocal'}</h2>
-                  <p className="text-sm font-bold text-neutral-500">Consentement explicite et controle qualite obligatoires.</p>
+                  <p className="text-sm font-bold text-surface-500">Consentement explicite et controle qualite obligatoires.</p>
                 </div>
                 {editingProfile && (
-                  <button onClick={resetProfileForm} className="rounded-xl bg-neutral-100 px-3 py-2 text-sm font-black text-neutral-700">
+                  <button onClick={resetProfileForm} className="rounded-3xl bg-surface-100 px-3 py-2 text-sm font-black text-surface-700">
                     Annuler
                   </button>
                 )}
@@ -371,26 +371,26 @@ function FamilyVoices() {
                   value={profileForm.name}
                   onChange={(event) => setProfileForm({ ...profileForm, name: event.target.value })}
                   placeholder="Nom de la voix"
-                  className="h-12 rounded-xl border-2 border-neutral-100 px-4 font-bold outline-none focus:border-rose-300"
+                  className="h-12 rounded-3xl border-2 border-surface-100 px-4 font-bold outline-none focus:border-rose-300"
                   required
                 />
                 <input
                   value={profileForm.relation}
                   onChange={(event) => setProfileForm({ ...profileForm, relation: event.target.value })}
                   placeholder="Relation avec l'enfant"
-                  className="h-12 rounded-xl border-2 border-neutral-100 px-4 font-bold outline-none focus:border-rose-300"
+                  className="h-12 rounded-3xl border-2 border-surface-100 px-4 font-bold outline-none focus:border-rose-300"
                   required
                 />
                 <select
                   value={profileForm.language}
                   onChange={(event) => setProfileForm({ ...profileForm, language: event.target.value })}
-                  className="h-12 rounded-xl border-2 border-neutral-100 px-4 font-bold outline-none focus:border-rose-300"
+                  className="h-12 rounded-3xl border-2 border-surface-100 px-4 font-bold outline-none focus:border-rose-300"
                 >
                   <option value="fr">Francais</option>
                   <option value="en">English</option>
                   <option value="ar">Arabe</option>
                 </select>
-                <label className="flex min-h-12 items-center gap-3 rounded-xl border-2 border-neutral-100 px-4 text-sm font-bold">
+                <label className="flex min-h-12 items-center gap-3 rounded-3xl border-2 border-surface-100 px-4 text-sm font-bold">
                   <input
                     type="checkbox"
                     checked={profileForm.consent_given}
@@ -402,9 +402,9 @@ function FamilyVoices() {
 
                 <RecorderPanel recorder={profileRecorder} title="Parcours guide d'enregistrement" />
 
-                <div className="rounded-2xl bg-neutral-50 p-4">
+                <div className="rounded-2xl bg-surface-50 p-4">
                   <h3 className="mb-2 font-black">Controle qualite</h3>
-                  <ul className="space-y-2 text-sm font-bold text-neutral-600">
+                  <ul className="space-y-2 text-sm font-bold text-surface-600">
                     <li className="flex gap-2"><CheckIcon className="h-5 w-5 text-green-600" /> 20 a 30 secondes dans un endroit calme.</li>
                     <li className="flex gap-2"><CheckIcon className="h-5 w-5 text-green-600" /> Lire une phrase naturelle avec une voix stable.</li>
                     <li className="flex gap-2"><CheckIcon className="h-5 w-5 text-green-600" /> Eviter musique, bruit et plusieurs personnes.</li>
@@ -414,7 +414,7 @@ function FamilyVoices() {
                 <button
                   type="submit"
                   disabled={savingProfile}
-                  className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-neutral-900 px-5 py-3 font-black text-white disabled:opacity-60 lg:col-span-2"
+                  className="inline-flex min-h-12 items-center justify-center gap-2 rounded-3xl bg-surface-900 px-5 py-3 font-black text-white disabled:opacity-60 lg:col-span-2"
                 >
                   <PlusIcon className="h-5 w-5" />
                   {savingProfile ? 'Sauvegarde...' : editingProfile ? 'Mettre a jour la voix' : 'Ajouter la voix'}
@@ -427,16 +427,16 @@ function FamilyVoices() {
                 <div className="rounded-2xl bg-white p-6 text-center shadow md:col-span-2">
                   <MicrophoneIcon className="mx-auto mb-3 h-10 w-10 text-rose-500" />
                   <p className="font-black">Aucune voix familiale</p>
-                  <p className="mt-1 text-sm font-bold text-neutral-500">Ajoutez une voix pour la proposer dans le lecteur.</p>
+                  <p className="mt-1 text-sm font-bold text-surface-500">Ajoutez une voix pour la proposer dans le lecteur.</p>
                 </div>
               ) : activeProfiles.map((profile) => (
-                <article key={profile.id} className="rounded-2xl border border-neutral-100 bg-white p-4 shadow-sm">
+                <article key={profile.id} className="rounded-2xl border border-surface-100 bg-white p-4 shadow-sm">
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <h3 className="text-lg font-black">{profile.name}</h3>
-                      <p className="text-sm font-bold text-neutral-500">{profile.relation} - {profile.language?.toUpperCase()}</p>
+                      <p className="text-sm font-bold text-surface-500">{profile.relation} - {profile.language?.toUpperCase()}</p>
                     </div>
-                    <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-black text-blue-700">{statusLabel(profile.status)}</span>
+                    <span className="rounded-full bg-primary-50 px-3 py-1 text-xs font-black text-primary-700">{statusLabel(profile.status)}</span>
                   </div>
                   <div className="mt-3 flex flex-wrap gap-2 text-xs font-black">
                     <span className={`rounded-full px-3 py-1 ${qualityTone(profile.quality_status)}`}>
@@ -444,15 +444,15 @@ function FamilyVoices() {
                     </span>
                     {profile.consent_given && <span className="rounded-full bg-green-50 px-3 py-1 text-green-700">Consentement OK</span>}
                   </div>
-                  {profile.quality_notes && <p className="mt-3 text-sm font-bold text-neutral-500">{profile.quality_notes}</p>}
+                  {profile.quality_notes && <p className="mt-3 text-sm font-bold text-surface-500">{profile.quality_notes}</p>}
                   <div className="mt-4 grid grid-cols-3 gap-2">
-                    <button onClick={() => playPreview(profile)} disabled={!profile.has_preview} className="rounded-xl bg-neutral-900 px-3 py-2 text-xs font-black text-white disabled:opacity-40">
+                    <button onClick={() => playPreview(profile)} disabled={!profile.has_preview} className="rounded-3xl bg-surface-900 px-3 py-2 text-xs font-black text-white disabled:opacity-40">
                       Apercu
                     </button>
-                    <button onClick={() => editProfile(profile)} className="inline-flex items-center justify-center rounded-xl bg-blue-50 px-3 py-2 text-xs font-black text-blue-700">
+                    <button onClick={() => editProfile(profile)} className="inline-flex items-center justify-center rounded-3xl bg-primary-50 px-3 py-2 text-xs font-black text-primary-700">
                       <EditIcon className="h-4 w-4" />
                     </button>
-                    <button onClick={() => deleteProfile(profile)} className="inline-flex items-center justify-center rounded-xl bg-red-50 px-3 py-2 text-xs font-black text-red-700">
+                    <button onClick={() => deleteProfile(profile)} className="inline-flex items-center justify-center rounded-3xl bg-primary-50 px-3 py-2 text-xs font-black text-primary-700">
                       <TrashIcon className="h-4 w-4" />
                     </button>
                   </div>
@@ -464,26 +464,26 @@ function FamilyVoices() {
           <aside className="space-y-6">
             <section className="rounded-2xl border border-sky-100 bg-white p-5 shadow-lg">
               <h2 className="text-xl font-black">Messages personnalises</h2>
-              <p className="mt-1 text-sm font-bold text-neutral-500">Courts messages du soir, encouragements ou mots doux.</p>
+              <p className="mt-1 text-sm font-bold text-surface-500">Courts messages du soir, encouragements ou mots doux.</p>
 
               <form onSubmit={submitMessage} className="mt-4 space-y-3">
                 <input
                   value={messageForm.title}
                   onChange={(event) => setMessageForm({ ...messageForm, title: event.target.value })}
                   placeholder="Titre du message"
-                  className="h-12 w-full rounded-xl border-2 border-neutral-100 px-4 font-bold outline-none focus:border-sky-300"
+                  className="h-12 w-full rounded-3xl border-2 border-surface-100 px-4 font-bold outline-none focus:border-sky-300"
                   required
                 />
                 <textarea
                   value={messageForm.message_text}
                   onChange={(event) => setMessageForm({ ...messageForm, message_text: event.target.value })}
                   placeholder="Texte optionnel"
-                  className="min-h-24 w-full rounded-xl border-2 border-neutral-100 px-4 py-3 font-bold outline-none focus:border-sky-300"
+                  className="min-h-24 w-full rounded-3xl border-2 border-surface-100 px-4 py-3 font-bold outline-none focus:border-sky-300"
                 />
                 <select
                   value={messageForm.voice_profile_id}
                   onChange={(event) => setMessageForm({ ...messageForm, voice_profile_id: event.target.value })}
-                  className="h-12 w-full rounded-xl border-2 border-neutral-100 px-4 font-bold outline-none focus:border-sky-300"
+                  className="h-12 w-full rounded-3xl border-2 border-surface-100 px-4 font-bold outline-none focus:border-sky-300"
                 >
                   <option value="">Sans voix associee</option>
                   {activeProfiles.map((profile) => (
@@ -491,7 +491,7 @@ function FamilyVoices() {
                   ))}
                 </select>
                 <RecorderPanel recorder={messageRecorder} title="Enregistrer le message" compact />
-                <button disabled={savingMessage} className="w-full rounded-xl bg-sky-500 px-4 py-3 font-black text-white disabled:opacity-60">
+                <button disabled={savingMessage} className="w-full rounded-3xl bg-sky-500 px-4 py-3 font-black text-white disabled:opacity-60">
                   {savingMessage ? 'Sauvegarde...' : 'Enregistrer le message'}
                 </button>
               </form>
@@ -501,27 +501,27 @@ function FamilyVoices() {
               <h2 className="mb-3 text-xl font-black">Messages sauvegardes</h2>
               <div className="space-y-3">
                 {messages.length === 0 ? (
-                  <p className="rounded-xl bg-neutral-50 p-4 text-sm font-bold text-neutral-500">Aucun message pour le moment.</p>
+                  <p className="rounded-3xl bg-surface-50 p-4 text-sm font-bold text-surface-500">Aucun message pour le moment.</p>
                 ) : messages.map((message) => {
                   const offlineReady = offlineContent.downloadsById[offlineContentIds.voiceMessage(message.id)]?.status === 'downloaded';
                   return (
-                  <article key={message.id} className="rounded-xl border border-neutral-100 p-3">
+                  <article key={message.id} className="rounded-3xl border border-surface-100 p-3">
                     <div className="flex items-start justify-between gap-3">
                       <div>
                         <p className="font-black">{message.title}</p>
-                        <p className="text-xs font-bold text-neutral-500">{message.language?.toUpperCase()} {message.has_audio ? '- audio' : '- texte'}</p>
+                        <p className="text-xs font-bold text-surface-500">{message.language?.toUpperCase()} {message.has_audio ? '- audio' : '- texte'}</p>
                       </div>
-                      <button onClick={() => deleteMessage(message)} className="rounded-lg bg-red-50 p-2 text-red-600">
+                      <button onClick={() => deleteMessage(message)} className="rounded-2xl bg-primary-50 p-2 text-primary-600">
                         <XIcon className="h-4 w-4" />
                       </button>
                     </div>
-                    {message.message_text && <p className="mt-2 text-sm font-bold text-neutral-600">{message.message_text}</p>}
+                    {message.message_text && <p className="mt-2 text-sm font-bold text-surface-600">{message.message_text}</p>}
                     <div className="mt-3 grid grid-cols-2 gap-2">
                       <button
                         type="button"
                         onClick={() => playMessage(message)}
                         disabled={!message.has_audio}
-                        className="inline-flex items-center justify-center gap-2 rounded-xl bg-neutral-900 px-3 py-2 text-xs font-black text-white disabled:opacity-40"
+                        className="inline-flex items-center justify-center gap-2 rounded-3xl bg-surface-900 px-3 py-2 text-xs font-black text-white disabled:opacity-40"
                       >
                         <AudioIcon className="h-4 w-4" />
                         Ecouter
@@ -529,8 +529,8 @@ function FamilyVoices() {
                       <button
                         type="button"
                         onClick={() => offlineReady ? removeMessageDownload(message) : downloadMessage(message)}
-                        className={`inline-flex items-center justify-center gap-2 rounded-xl px-3 py-2 text-xs font-black ${
-                          offlineReady ? 'bg-emerald-50 text-emerald-700' : 'bg-neutral-100 text-neutral-700'
+                        className={`inline-flex items-center justify-center gap-2 rounded-3xl px-3 py-2 text-xs font-black ${
+                          offlineReady ? 'bg-emerald-50 text-emerald-700' : 'bg-surface-100 text-surface-700'
                         }`}
                       >
                         <DownloadIcon className="h-4 w-4" />
@@ -556,27 +556,27 @@ function RecorderPanel({ recorder, title, compact = false }) {
     : 'Pret a enregistrer';
 
   return (
-    <div className={`rounded-2xl bg-neutral-50 p-4 ${compact ? '' : 'lg:col-span-1'}`}>
+    <div className={`rounded-2xl bg-surface-50 p-4 ${compact ? '' : 'lg:col-span-1'}`}>
       <div className="mb-3 flex items-center justify-between gap-3">
         <div>
           <h3 className="font-black">{title}</h3>
-          <p className="text-xs font-bold text-neutral-500">{qualityHint}</p>
+          <p className="text-xs font-bold text-surface-500">{qualityHint}</p>
         </div>
         <MicrophoneIcon className="h-6 w-6 text-rose-500" />
       </div>
-      {recorder.error && <p className="mb-3 rounded-xl bg-amber-50 px-3 py-2 text-sm font-bold text-amber-700">{recorder.error}</p>}
+      {recorder.error && <p className="mb-3 rounded-3xl bg-accent-50 px-3 py-2 text-sm font-bold text-accent-700">{recorder.error}</p>}
       <div className="flex flex-wrap gap-2">
         {!recorder.recording ? (
-          <button type="button" onClick={recorder.start} className="rounded-xl bg-rose-500 px-4 py-2 text-sm font-black text-white">
+          <button type="button" onClick={recorder.start} className="rounded-3xl bg-rose-500 px-4 py-2 text-sm font-black text-white">
             Enregistrer
           </button>
         ) : (
-          <button type="button" onClick={recorder.stop} className="rounded-xl bg-neutral-900 px-4 py-2 text-sm font-black text-white">
+          <button type="button" onClick={recorder.stop} className="rounded-3xl bg-surface-900 px-4 py-2 text-sm font-black text-white">
             Stop
           </button>
         )}
         {recorder.audioBlob && (
-          <button type="button" onClick={recorder.clear} className="rounded-xl bg-white px-4 py-2 text-sm font-black text-neutral-700">
+          <button type="button" onClick={recorder.clear} className="rounded-3xl bg-white px-4 py-2 text-sm font-black text-surface-700">
             Refaire
           </button>
         )}
@@ -585,7 +585,7 @@ function RecorderPanel({ recorder, title, compact = false }) {
         <audio controls src={previewUrl} className="mt-3 w-full" />
       )}
       {recorder.durationSeconds > 0 && (
-        <p className="mt-2 text-xs font-bold text-neutral-500">Duree: {recorder.durationSeconds}s</p>
+        <p className="mt-2 text-xs font-bold text-surface-500">Duree: {recorder.durationSeconds}s</p>
       )}
     </div>
   );

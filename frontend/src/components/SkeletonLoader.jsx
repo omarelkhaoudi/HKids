@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 export function BookCardSkeleton({ viewMode = 'grid' }) {
   if (viewMode === 'list') {
     return (
-      <div className="bg-white rounded-xl shadow-md overflow-hidden animate-pulse">
+      <div className="bg-white rounded-3xl shadow-md overflow-hidden animate-pulse">
         <div className="flex">
           <div className="w-32 h-40 bg-gray-200 flex-shrink-0"></div>
           <div className="flex-1 p-5">

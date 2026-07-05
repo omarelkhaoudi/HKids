@@ -76,14 +76,14 @@ function Favorites() {
         initial={{ y: -100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.5 }}
-        className="sticky top-0 z-50 shadow-md bg-neutral-900/95 backdrop-blur-md"
+        className="sticky top-0 z-50 shadow-md bg-surface-900/95 backdrop-blur-md"
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4 flex justify-between items-center gap-3">
           <Link to="/" className="flex items-center">
             <Logo size="default" />
           </Link>
           <div className="flex items-center gap-2 sm:gap-4">
-            <Link to="/" className="text-neutral-100 hover:text-white font-medium flex items-center gap-1 sm:gap-2 transition-colors px-2 py-1 sm:px-0 sm:py-0">
+            <Link to="/" className="text-surface-100 hover:text-white font-medium flex items-center gap-1 sm:gap-2 transition-colors px-2 py-1 sm:px-0 sm:py-0">
               <ChevronLeftIcon className="w-4 h-4 sm:w-5 sm:h-5" />
               <span className="hidden sm:inline">Retour</span>
             </Link>
@@ -96,7 +96,7 @@ function Favorites() {
       </motion.header>
 
       {/* Hero Section avec étoiles animées */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-white via-red-50/30 to-pink-50/30 py-12 md:py-16">
+      <section className="relative overflow-hidden bg-gradient-to-br from-white via-primary-50/30 to-secondary-50/30 py-12 md:py-16">
         {/* Étoiles animées en arrière-plan */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           {Array.from({ length: 20 }).map((_, i) => (
@@ -131,11 +131,11 @@ function Favorites() {
             className="text-center mb-12"
           >
             <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold mb-4 leading-tight">
-              <span className="text-red-600 drop-shadow-lg">Mes Livres</span>
+              <span className="text-primary-600 drop-shadow-lg">Mes Livres</span>
               <br />
-              <span className="text-neutral-900">Favoris</span>
+              <span className="text-surface-900">Favoris</span>
             </h1>
-            <p className="text-lg sm:text-xl text-neutral-600 max-w-2xl mx-auto">
+            <p className="text-lg sm:text-xl text-surface-600 max-w-2xl mx-auto">
               Retrouvez tous vos livres préférés en un seul endroit
             </p>
           </motion.div>
@@ -160,20 +160,20 @@ function Favorites() {
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
                   transition={{ type: 'spring', delay: 0.2 }}
-                  className="p-6 bg-gradient-to-br from-red-100 to-pink-100 rounded-full shadow-lg"
+                  className="p-6 bg-gradient-to-br from-primary-100 to-secondary-100 rounded-full shadow-lg"
                 >
-                  <HeartIcon className="w-16 h-16 text-red-500" filled={false} />
+                  <HeartIcon className="w-16 h-16 text-primary-500" filled={false} />
                 </motion.div>
               </div>
-              <h2 className="text-2xl sm:text-3xl font-bold text-neutral-900 mb-3">Aucun favori</h2>
-              <p className="text-lg text-neutral-600 mb-8 max-w-md mx-auto">
+              <h2 className="text-2xl sm:text-3xl font-bold text-surface-900 mb-3">Aucun favori</h2>
+              <p className="text-lg text-surface-600 mb-8 max-w-md mx-auto">
                 Vous n'avez pas encore de livres favoris. Explorez notre bibliothèque et ajoutez vos préférés !
               </p>
               <Link to="/">
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  className="px-8 py-4 bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-full font-semibold text-lg shadow-lg hover:shadow-xl transition-all"
+                  className="px-8 py-4 bg-gradient-to-r from-primary-500 to-secondary-500 text-white rounded-full font-semibold text-lg shadow-lg hover:shadow-xl transition-all"
                 >
                   Découvrir des livres
                 </motion.button>
@@ -186,7 +186,7 @@ function Favorites() {
                 animate={{ opacity: 1, y: 0 }}
                 className="mb-8"
               >
-                <p className="text-xl sm:text-2xl text-neutral-700 font-semibold">
+                <p className="text-xl sm:text-2xl text-surface-700 font-semibold">
                   {favoriteBooks.length} livre{favoriteBooks.length > 1 ? 's' : ''} favori{favoriteBooks.length > 1 ? 's' : ''}
                 </p>
               </motion.div>
@@ -208,9 +208,9 @@ function Favorites() {
                       whileTap={{ scale: 0.97 }}
                       layout
                     >
-                      <div className="bg-white rounded-2xl border-2 border-neutral-200 overflow-hidden group h-full flex flex-col hover:border-red-300 hover:shadow-xl transition-all shadow-lg">
+                      <div className="bg-white rounded-2xl border-2 border-surface-200 overflow-hidden group h-full flex flex-col hover:border-primary-300 hover:shadow-xl transition-all shadow-lg">
                         <Link to={`/book-details/${book.id}`} className="flex-1">
-                          <div className="h-56 bg-gradient-to-br from-neutral-100 to-neutral-50 flex items-center justify-center overflow-hidden relative">
+                          <div className="h-56 bg-gradient-to-br from-surface-100 to-surface-50 flex items-center justify-center overflow-hidden relative">
                             {book.cover_image ? (
                               <>
                                 <motion.img
@@ -228,29 +228,29 @@ function Favorites() {
                                     console.log('[Favorites] Image loaded successfully for book', book.id);
                                   }}
                                 />
-                                <div className="image-fallback w-full h-full absolute inset-0 flex items-center justify-center bg-gradient-to-br from-neutral-100 to-neutral-50" style={{ display: 'none' }}>
-                                  <BookIcon className="w-20 h-20 text-neutral-400" />
+                                <div className="image-fallback w-full h-full absolute inset-0 flex items-center justify-center bg-gradient-to-br from-surface-100 to-surface-50" style={{ display: 'none' }}>
+                                  <BookIcon className="w-20 h-20 text-surface-400" />
                                 </div>
                               </>
                             ) : (
                               <div className="w-full h-full flex items-center justify-center">
-                                <BookIcon className="w-20 h-20 text-neutral-400" />
+                                <BookIcon className="w-20 h-20 text-surface-400" />
                               </div>
                             )}
                           </div>
-                          <div className="p-5 bg-gradient-to-br from-red-50/50 to-pink-50/50">
-                            <h3 className="font-bold text-lg text-neutral-900 mb-2 line-clamp-2">
+                          <div className="p-5 bg-gradient-to-br from-primary-50/50 to-secondary-50/50">
+                            <h3 className="font-bold text-lg text-surface-900 mb-2 line-clamp-2">
                               {book.title}
                             </h3>
                             {book.author && (
-                              <p className="text-sm text-neutral-600 font-medium">par {book.author}</p>
+                              <p className="text-sm text-surface-600 font-medium">par {book.author}</p>
                             )}
                           </div>
                         </Link>
                         <div className="p-5 pt-0">
                           <motion.button
                             onClick={() => removeFavorite(book.id)}
-                            className="w-full px-4 py-3 bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-xl hover:from-red-600 hover:to-pink-600 transition-all font-semibold text-sm flex items-center justify-center gap-2 shadow-md hover:shadow-lg"
+                            className="w-full px-4 py-3 bg-gradient-to-r from-primary-500 to-secondary-500 text-white rounded-3xl hover:from-primary-600 hover:to-secondary-600 transition-all font-semibold text-sm flex items-center justify-center gap-2 shadow-md hover:shadow-lg"
                             whileHover={{ scale: 1.02 }}
                             whileTap={{ scale: 0.98 }}
                           >

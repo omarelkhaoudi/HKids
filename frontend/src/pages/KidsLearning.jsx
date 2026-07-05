@@ -135,7 +135,7 @@ function KidsLearning() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-rose-50 text-neutral-900">
+    <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-rose-50 text-surface-900">
       <div className="mx-auto max-w-7xl px-4 py-6 pb-32 sm:px-6 lg:px-8">
         <header className="mb-6 flex items-center justify-between gap-4">
           <Link to="/kids" className="shrink-0">
@@ -151,7 +151,7 @@ function KidsLearning() {
             </Link>
             <button
               onClick={handleLogout}
-              className="grid h-14 w-14 place-items-center rounded-full bg-white text-red-500 shadow-md"
+              className="grid h-14 w-14 place-items-center rounded-full bg-white text-primary-500 shadow-md"
               aria-label="Deconnexion"
             >
               <LogOutIcon className="h-7 w-7" />
@@ -159,7 +159,7 @@ function KidsLearning() {
           </div>
         </header>
 
-        <section className="mb-6 rounded-[2rem] bg-gradient-to-br from-violet-500 via-blue-500 to-cyan-400 p-6 text-white shadow-xl">
+        <section className="mb-6 rounded-[2rem] bg-gradient-to-br from-violet-500 via-primary-500 to-cyan-400 p-6 text-white shadow-xl">
           <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
             <div>
               <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-white/20 px-4 py-2 text-sm font-black">
@@ -181,7 +181,7 @@ function KidsLearning() {
 
         {user?.role !== 'kid' && (
           <section className="mb-6 rounded-[1.5rem] bg-white p-4 shadow-lg">
-            <label className="mb-2 block text-sm font-black text-neutral-600">
+            <label className="mb-2 block text-sm font-black text-surface-600">
               Profil enfant
             </label>
             {kidProfiles.length > 0 ? (
@@ -197,7 +197,7 @@ function KidsLearning() {
                 ))}
               </select>
             ) : (
-              <p className="rounded-2xl bg-amber-50 px-4 py-3 text-sm font-black text-amber-800">
+              <p className="rounded-2xl bg-accent-50 px-4 py-3 text-sm font-black text-accent-800">
                 Aucun profil enfant disponible pour enregistrer les scores.
               </p>
             )}
@@ -208,7 +208,7 @@ function KidsLearning() {
           <section className="rounded-[2rem] bg-white p-5 shadow-xl">
             <button
               onClick={() => setSelectedContent(null)}
-              className="mb-4 inline-flex h-14 items-center gap-2 rounded-2xl bg-neutral-100 px-4 font-black"
+              className="mb-4 inline-flex h-14 items-center gap-2 rounded-2xl bg-surface-100 px-4 font-black"
             >
               <ChevronLeftIcon className="h-6 w-6" />
               Retour
@@ -221,7 +221,7 @@ function KidsLearning() {
 
             <div className="space-y-5">
               {(selectedContent.questions || []).map((question) => (
-                <div key={question.id} className="rounded-[1.5rem] bg-neutral-50 p-4">
+                <div key={question.id} className="rounded-[1.5rem] bg-surface-50 p-4">
                   <p className="mb-4 text-2xl font-black">{question.prompt}</p>
                   <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
                     {(question.options || []).map((option) => {
@@ -249,7 +249,7 @@ function KidsLearning() {
             {!result ? (
               <button
                 onClick={submit}
-                className="mt-5 inline-flex min-h-16 w-full items-center justify-center gap-3 rounded-[1.5rem] bg-neutral-900 text-xl font-black text-white"
+                className="mt-5 inline-flex min-h-16 w-full items-center justify-center gap-3 rounded-[1.5rem] bg-surface-900 text-xl font-black text-white"
               >
                 <CheckIcon className="h-7 w-7" />
                 Valider
@@ -302,7 +302,7 @@ function KidsLearning() {
                   <div key={challenge.id} className="rounded-[1.5rem] bg-white p-4 shadow-lg">
                     <div className="text-4xl">{challenge.metadata?.pictogram || challenge.reward_icon || '🏅'}</div>
                     <p className="mt-2 text-lg font-black">{challenge.title}</p>
-                    <div className="mt-3 h-3 overflow-hidden rounded-full bg-neutral-100">
+                    <div className="mt-3 h-3 overflow-hidden rounded-full bg-surface-100">
                       <div
                         className="h-full rounded-full bg-emerald-500"
                         style={{ width: `${Math.min(100, (Number(challenge.progress_value || 0) / Math.max(1, Number(challenge.target_value || 1))) * 100)}%` }}

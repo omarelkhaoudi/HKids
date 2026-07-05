@@ -64,7 +64,7 @@ function ContentLibraryHome() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-neutral-50 to-red-50/40 dark:from-neutral-900 dark:to-neutral-800">
+    <div className="min-h-screen bg-gradient-to-br from-surface-50 to-primary-50/40 dark:from-surface-900 dark:to-surface-800">
       <div className="mx-auto max-w-7xl px-4 py-8 pb-36 sm:px-6 lg:px-8">
         <header className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <Link to="/">
@@ -72,15 +72,15 @@ function ContentLibraryHome() {
           </Link>
           <Link
             to="/kids"
-            className="inline-flex min-h-12 items-center justify-center rounded-xl bg-neutral-900 px-5 py-3 font-black text-white shadow-md transition hover:bg-neutral-800"
+            className="inline-flex min-h-12 items-center justify-center rounded-3xl bg-surface-900 px-5 py-3 font-black text-white shadow-md transition hover:bg-surface-800"
           >
             Espace enfant
           </Link>
         </header>
 
-        <section className="mb-6 rounded-2xl bg-white p-6 shadow-sm dark:bg-neutral-800">
-          <p className="text-sm font-black uppercase text-red-500">Le Lit Qui Lit</p>
-          <h1 className="mt-2 text-3xl font-black text-neutral-900 dark:text-neutral-100 sm:text-4xl">
+        <section className="mb-6 rounded-2xl bg-white p-6 shadow-sm dark:bg-surface-800">
+          <p className="text-sm font-black uppercase text-primary-500">Le Lit Qui Lit</p>
+          <h1 className="mt-2 text-3xl font-black text-surface-900 dark:text-surface-100 sm:text-4xl">
             Bibliotheque de contenus
           </h1>
         </section>
@@ -101,10 +101,10 @@ function ContentLibraryHome() {
 
         <section className="mt-6">
           <div className="mb-4 flex items-center justify-between gap-3">
-            <h2 className="text-xl font-black text-neutral-900 dark:text-neutral-100">
+            <h2 className="text-xl font-black text-surface-900 dark:text-surface-100">
               Contenus
             </h2>
-            <span className="rounded-full bg-white px-4 py-2 text-sm font-bold text-neutral-600 shadow-sm dark:bg-neutral-800 dark:text-neutral-200">
+            <span className="rounded-full bg-white px-4 py-2 text-sm font-bold text-surface-600 shadow-sm dark:bg-surface-800 dark:text-surface-200">
               {visibleContents.length}
             </span>
           </div>
@@ -112,11 +112,11 @@ function ContentLibraryHome() {
           {loading ? (
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
               {Array.from({ length: 4 }).map((_, index) => (
-                <div key={index} className="h-72 animate-pulse rounded-xl bg-white dark:bg-neutral-800" />
+                <div key={index} className="h-72 animate-pulse rounded-3xl bg-white dark:bg-surface-800" />
               ))}
             </div>
           ) : visibleContents.length === 0 ? (
-            <div className="rounded-xl bg-white p-10 text-center font-bold text-neutral-500 shadow-sm dark:bg-neutral-800 dark:text-neutral-300">
+            <div className="rounded-3xl bg-white p-10 text-center font-bold text-surface-500 shadow-sm dark:bg-surface-800 dark:text-surface-300">
               Aucun contenu
             </div>
           ) : (

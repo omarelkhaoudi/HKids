@@ -154,8 +154,8 @@ export function VoiceAssistant({ language = 'fr-FR' }) {
         }}
         className={`fixed bottom-6 right-6 z-50 grid h-20 w-20 place-items-center rounded-full text-white shadow-2xl ${
           listening
-            ? 'bg-gradient-to-br from-amber-400 to-orange-500'
-            : 'bg-gradient-to-br from-red-500 via-pink-500 to-purple-500'
+            ? 'bg-gradient-to-br from-accent-400 to-accent-500'
+            : 'bg-gradient-to-br from-primary-500 via-secondary-500 to-purple-500'
         }`}
         aria-label="Assistant vocal"
         title="Assistant vocal"
@@ -169,9 +169,9 @@ export function VoiceAssistant({ language = 'fr-FR' }) {
             initial={{ opacity: 0, y: 24, scale: 0.96 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 24, scale: 0.96 }}
-            className="fixed bottom-28 right-4 z-50 w-[min(92vw,420px)] overflow-hidden rounded-[2rem] bg-white shadow-2xl ring-1 ring-red-100"
+            className="fixed bottom-28 right-4 z-50 w-[min(92vw,420px)] overflow-hidden rounded-[2rem] bg-white shadow-2xl ring-1 ring-primary-100"
           >
-            <div className="bg-gradient-to-r from-red-500 via-pink-500 to-purple-500 p-4 text-white">
+            <div className="bg-gradient-to-r from-primary-500 via-secondary-500 to-purple-500 p-4 text-white">
               <div className="flex items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
                   <span className="grid h-11 w-11 place-items-center rounded-2xl bg-white/20">
@@ -204,7 +204,7 @@ export function VoiceAssistant({ language = 'fr-FR' }) {
                   className={`rounded-2xl px-4 py-3 text-sm font-bold leading-relaxed ${
                     message.role === 'kid'
                       ? 'ml-8 bg-cyan-100 text-cyan-900'
-                      : 'mr-8 bg-neutral-100 text-neutral-800'
+                      : 'mr-8 bg-surface-100 text-surface-800'
                   }`}
                 >
                   {message.text}
@@ -218,19 +218,19 @@ export function VoiceAssistant({ language = 'fr-FR' }) {
               )}
 
               {(listening || thinking) && (
-                <div className="mr-8 rounded-2xl bg-red-50 px-4 py-3 text-sm font-bold text-red-700">
+                <div className="mr-8 rounded-2xl bg-primary-50 px-4 py-3 text-sm font-bold text-primary-700">
                   {listening ? 'Parle maintenant...' : 'Recherche de reponse...'}
                 </div>
               )}
 
               {error && (
-                <div className="rounded-2xl bg-amber-50 px-4 py-3 text-sm font-bold text-amber-800">
+                <div className="rounded-2xl bg-accent-50 px-4 py-3 text-sm font-bold text-accent-800">
                   {error}
                 </div>
               )}
             </div>
 
-            <div className="border-t border-neutral-100 p-4">
+            <div className="border-t border-surface-100 p-4">
               <div className="mb-3 grid grid-cols-3 gap-2">
                 {quickVoiceActions.map((action) => (
                   <button
@@ -238,7 +238,7 @@ export function VoiceAssistant({ language = 'fr-FR' }) {
                     type="button"
                     onClick={() => handleQuickAction(action.prompt)}
                     disabled={listening || thinking}
-                    className="grid min-h-20 place-items-center rounded-2xl bg-neutral-100 text-neutral-900 transition hover:bg-neutral-200 disabled:opacity-60"
+                    className="grid min-h-20 place-items-center rounded-2xl bg-surface-100 text-surface-900 transition hover:bg-surface-200 disabled:opacity-60"
                     aria-label={action.prompt}
                     title={action.label}
                   >
@@ -252,13 +252,13 @@ export function VoiceAssistant({ language = 'fr-FR' }) {
                   value={manualText}
                   onChange={(event) => setManualText(event.target.value)}
                   disabled={listening || thinking}
-                  className="min-w-0 flex-1 rounded-2xl border-2 border-neutral-100 px-4 py-3 text-sm font-bold text-neutral-900 outline-none transition focus:border-pink-300 disabled:opacity-60"
+                  className="min-w-0 flex-1 rounded-2xl border-2 border-surface-100 px-4 py-3 text-sm font-bold text-surface-900 outline-none transition focus:border-secondary-300 disabled:opacity-60"
                   placeholder="Ecris ta demande..."
                 />
                 <button
                   type="submit"
                   disabled={!manualText.trim() || listening || thinking}
-                  className="rounded-2xl bg-pink-500 px-4 py-3 text-sm font-black text-white transition hover:bg-pink-600 disabled:opacity-60"
+                  className="rounded-2xl bg-secondary-500 px-4 py-3 text-sm font-black text-white transition hover:bg-secondary-600 disabled:opacity-60"
                 >
                   Envoyer
                 </button>
@@ -266,7 +266,7 @@ export function VoiceAssistant({ language = 'fr-FR' }) {
               <button
                 onClick={handleAsk}
                 disabled={listening || thinking || voiceUnavailable || !canUseVoice}
-                className="inline-flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-neutral-900 text-base font-black text-white transition hover:bg-neutral-800 disabled:opacity-60"
+                className="inline-flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-surface-900 text-base font-black text-white transition hover:bg-surface-800 disabled:opacity-60"
               >
                 <MicrophoneIcon className="h-6 w-6" />
                 {listening ? 'Enregistrement...' : thinking ? 'Patiente...' : voiceUnavailable || !canUseVoice ? 'Micro indisponible' : 'Parler'}

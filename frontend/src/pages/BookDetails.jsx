@@ -123,14 +123,14 @@ function BookDetails() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-50 via-pink-50 to-orange-50">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 via-secondary-50 to-accent-50">
         <motion.div 
           className="text-center"
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
         >
-          <div className="inline-block animate-spin rounded-full h-16 w-16 border-4 border-red-300 border-t-red-600"></div>
-          <p className="mt-4 text-neutral-600 text-lg font-medium">Chargement du livre...</p>
+          <div className="inline-block animate-spin rounded-full h-16 w-16 border-4 border-primary-300 border-t-primary-600"></div>
+          <p className="mt-4 text-surface-600 text-lg font-medium">Chargement du livre...</p>
         </motion.div>
       </div>
     );
@@ -138,7 +138,7 @@ function BookDetails() {
 
   if (!book) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-50 via-pink-50 to-orange-50">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 via-secondary-50 to-accent-50">
         <motion.div 
           className="text-center"
           initial={{ opacity: 0, y: 20 }}
@@ -146,10 +146,10 @@ function BookDetails() {
         >
           <div className="mb-6 flex justify-center">
             <div className="p-6 bg-white rounded-full shadow-lg">
-              <BookIcon className="w-16 h-16 text-neutral-400" />
+              <BookIcon className="w-16 h-16 text-surface-400" />
             </div>
           </div>
-          <p className="text-neutral-700 text-xl mb-6 font-semibold">Livre non trouvé</p>
+          <p className="text-surface-700 text-xl mb-6 font-semibold">Livre non trouvé</p>
           <Link to="/" className="btn-primary inline-block px-8 py-3">
             Retour à l'accueil
           </Link>
@@ -165,13 +165,13 @@ function BookDetails() {
   const getCategoryColor = (categoryName) => {
     const colorMap = {
       'Nature': 'from-green-500 to-emerald-500',
-      'Aventure': 'from-pink-500 to-rose-500',
-      'Animaux': 'from-orange-500 to-amber-500',
+      'Aventure': 'from-secondary-500 to-rose-500',
+      'Animaux': 'from-accent-500 to-accent-500',
       'Espace': 'from-indigo-500 to-purple-500',
-      'Fiction': 'from-purple-500 to-pink-500',
-      'Educational': 'from-blue-500 to-cyan-500',
+      'Fiction': 'from-purple-500 to-secondary-500',
+      'Educational': 'from-primary-500 to-cyan-500',
     };
-    return colorMap[categoryName] || 'from-red-500 to-pink-500';
+    return colorMap[categoryName] || 'from-primary-500 to-secondary-500';
   };
 
   return (
@@ -181,7 +181,7 @@ function BookDetails() {
         initial={{ y: -100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.5 }}
-        className="sticky top-0 z-50 shadow-md bg-neutral-900/95 backdrop-blur-md"
+        className="sticky top-0 z-50 shadow-md bg-surface-900/95 backdrop-blur-md"
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4 flex justify-between items-center gap-3">
           <Link to="/" className="flex items-center">
@@ -192,7 +192,7 @@ function BookDetails() {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => navigate(-1)}
-              className="text-neutral-100 hover:text-white font-medium flex items-center gap-2 transition-colors"
+              className="text-surface-100 hover:text-white font-medium flex items-center gap-2 transition-colors"
             >
               <ChevronLeftIcon className="w-4 h-4" />
               <span className="hidden sm:inline">Retour</span>
@@ -203,8 +203,8 @@ function BookDetails() {
               onClick={toggleFavorite}
               className={`p-3 rounded-full transition-all ${
                 isFavorite
-                  ? 'bg-red-500 text-white shadow-lg'
-                  : 'bg-neutral-800 text-neutral-300 hover:bg-neutral-700'
+                  ? 'bg-primary-500 text-white shadow-lg'
+                  : 'bg-surface-800 text-surface-300 hover:bg-surface-700'
               }`}
             >
               <HeartIcon className="w-5 h-5" filled={isFavorite} />
@@ -214,7 +214,7 @@ function BookDetails() {
       </motion.header>
 
       {/* Hero Section avec étoiles animées et couverture */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-white via-red-50/30 to-pink-50/30 py-12 md:py-16">
+      <section className="relative overflow-hidden bg-gradient-to-br from-white via-primary-50/30 to-secondary-50/30 py-12 md:py-16">
         {/* Étoiles animées en arrière-plan */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           {Array.from({ length: 20 }).map((_, i) => (
@@ -255,20 +255,20 @@ function BookDetails() {
               className="lg:col-span-1 flex justify-center lg:justify-start"
             >
               <div className="relative">
-                <div className="absolute inset-0 bg-gradient-to-br from-red-500/20 via-pink-500/20 to-orange-500/20 blur-2xl rounded-3xl"></div>
+                <div className="absolute inset-0 bg-gradient-to-br from-primary-500/20 via-secondary-500/20 to-accent-500/20 blur-2xl rounded-3xl"></div>
                 <motion.div
                   whileHover={{ scale: 1.04, y: -4 }}
                   transition={{ type: 'spring', stiffness: 300 }}
-                  className="relative w-[300px] sm:w-[360px] md:w-[420px] rounded-3xl border-4 border-white bg-gradient-to-br from-red-50 via-pink-50 to-orange-50 p-8 sm:p-10 shadow-2xl [perspective:1200px]"
+                  className="relative w-[300px] sm:w-[360px] md:w-[420px] rounded-3xl border-4 border-white bg-gradient-to-br from-primary-50 via-secondary-50 to-accent-50 p-8 sm:p-10 shadow-2xl [perspective:1200px]"
                 >
                   <div className="relative mx-auto w-[78%] max-w-[300px] aspect-[3/4] [transform-style:preserve-3d] [transform:rotateY(-18deg)_rotateZ(-1deg)] transition-transform duration-300 hover:[transform:rotateY(-14deg)_rotateZ(-0.5deg)_translateY(-2px)]">
-                    <div className="absolute -right-[14%] top-[3%] h-[94%] w-[17%] rounded-r-lg bg-gradient-to-r from-neutral-200 via-white to-neutral-300 shadow-lg [transform:rotateY(72deg)_translateZ(1px)] origin-left">
-                      <div className="absolute inset-y-4 left-1/3 w-px bg-neutral-300/80"></div>
-                      <div className="absolute inset-y-5 right-1/3 w-px bg-neutral-200/80"></div>
+                    <div className="absolute -right-[14%] top-[3%] h-[94%] w-[17%] rounded-r-lg bg-gradient-to-r from-surface-200 via-white to-surface-300 shadow-lg [transform:rotateY(72deg)_translateZ(1px)] origin-left">
+                      <div className="absolute inset-y-4 left-1/3 w-px bg-surface-300/80"></div>
+                      <div className="absolute inset-y-5 right-1/3 w-px bg-surface-200/80"></div>
                     </div>
-                    <div className="absolute -right-[8%] top-[5%] h-[90%] w-[10%] rounded-r-md bg-gradient-to-r from-white via-neutral-100 to-neutral-300 [transform:translateZ(-12px)]"></div>
-                    <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-neutral-900/10 to-neutral-900/25 [transform:translateZ(-18px)]"></div>
-                    <div className="relative z-10 h-full w-full overflow-hidden rounded-xl bg-white shadow-2xl ring-1 ring-black/10 [transform:translateZ(16px)]">
+                    <div className="absolute -right-[8%] top-[5%] h-[90%] w-[10%] rounded-r-md bg-gradient-to-r from-white via-surface-100 to-surface-300 [transform:translateZ(-12px)]"></div>
+                    <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-surface-900/10 to-surface-900/25 [transform:translateZ(-18px)]"></div>
+                    <div className="relative z-10 h-full w-full overflow-hidden rounded-3xl bg-white shadow-2xl ring-1 ring-black/10 [transform:translateZ(16px)]">
                       {book.cover_image && !imageError ? (
                         <img
                           src={getImageUrl(book.cover_image)}
@@ -278,8 +278,8 @@ function BookDetails() {
                           onLoad={() => setImageError(false)}
                         />
                       ) : (
-                        <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-red-100 to-pink-100">
-                          <BookIcon className="w-28 h-28 text-red-400" />
+                        <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary-100 to-secondary-100">
+                          <BookIcon className="w-28 h-28 text-primary-400" />
                         </div>
                       )}
                       <div className="pointer-events-none absolute inset-y-0 left-0 w-[14%] bg-gradient-to-r from-black/20 via-black/5 to-transparent"></div>
@@ -298,16 +298,16 @@ function BookDetails() {
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.3 }}
               >
-                <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-neutral-900 mb-4 leading-tight">
+                <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-surface-900 mb-4 leading-tight">
                   {book.title}
                 </h1>
                 
                 {book.author && (
                   <div className="flex items-center gap-3 mb-6">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-red-100 to-pink-100 flex items-center justify-center">
-                      <BookIcon className="w-5 h-5 text-red-600" />
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary-100 to-secondary-100 flex items-center justify-center">
+                      <BookIcon className="w-5 h-5 text-primary-600" />
                     </div>
-                    <p className="text-xl md:text-2xl text-neutral-700 font-medium">
+                    <p className="text-xl md:text-2xl text-surface-700 font-medium">
                       par {book.author}
                     </p>
                   </div>
@@ -327,7 +327,7 @@ function BookDetails() {
                   {book.age_group_min !== undefined && book.age_group_max !== undefined && (
                     <motion.span
                       whileHover={{ scale: 1.05 }}
-                      className="px-4 py-2 bg-gradient-to-r from-orange-400 to-pink-400 text-white rounded-full text-sm font-semibold shadow-lg flex items-center gap-2"
+                      className="px-4 py-2 bg-gradient-to-r from-accent-400 to-secondary-400 text-white rounded-full text-sm font-semibold shadow-lg flex items-center gap-2"
                     >
                       <ChildIcon className="w-4 h-4" />
                       {book.age_group_min}-{book.age_group_max} ans
@@ -336,7 +336,7 @@ function BookDetails() {
                   {book.page_count > 0 && (
                     <motion.span
                       whileHover={{ scale: 1.05 }}
-                      className="px-4 py-2 bg-gradient-to-r from-blue-400 to-cyan-400 text-white rounded-full text-sm font-semibold shadow-lg flex items-center gap-2"
+                      className="px-4 py-2 bg-gradient-to-r from-primary-400 to-cyan-400 text-white rounded-full text-sm font-semibold shadow-lg flex items-center gap-2"
                     >
                       <BookIcon className="w-4 h-4" />
                       {book.page_count} page{book.page_count > 1 ? 's' : ''}
@@ -352,11 +352,11 @@ function BookDetails() {
                     transition={{ delay: 0.4 }}
                     className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/50"
                   >
-                    <h3 className="font-bold text-neutral-900 mb-3 text-lg flex items-center gap-2">
+                    <h3 className="font-bold text-surface-900 mb-3 text-lg flex items-center gap-2">
                       <StarIcon className="w-5 h-5 text-yellow-500" />
                       À propos de ce livre
                     </h3>
-                    <p className="text-neutral-700 leading-relaxed text-base">
+                    <p className="text-surface-700 leading-relaxed text-base">
                       {book.description}
                     </p>
                   </motion.div>
@@ -371,20 +371,20 @@ function BookDetails() {
                     className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/50"
                   >
                     <div className="flex items-center gap-3 mb-3">
-                      <HistoryIcon className="w-5 h-5 text-blue-600" />
-                      <h3 className="font-bold text-neutral-900">Votre progression</h3>
+                      <HistoryIcon className="w-5 h-5 text-primary-600" />
+                      <h3 className="font-bold text-surface-900">Votre progression</h3>
                     </div>
                     <div className="space-y-2">
-                      <div className="flex justify-between text-sm text-neutral-600">
+                      <div className="flex justify-between text-sm text-surface-600">
                         <span>Page {lastPage + 1} sur {book.page_count || '?'}</span>
                         <span>{progress}% terminé</span>
                       </div>
-                      <div className="w-full h-3 bg-neutral-200 rounded-full overflow-hidden">
+                      <div className="w-full h-3 bg-surface-200 rounded-full overflow-hidden">
                         <motion.div
                           initial={{ width: 0 }}
                           animate={{ width: `${progress}%` }}
                           transition={{ duration: 1, ease: 'easeOut' }}
-                          className="h-full bg-gradient-to-r from-red-500 via-pink-500 to-orange-500 rounded-full shadow-lg"
+                          className="h-full bg-gradient-to-r from-primary-500 via-secondary-500 to-accent-500 rounded-full shadow-lg"
                         />
                       </div>
                     </div>
@@ -395,10 +395,10 @@ function BookDetails() {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.55 }}
-                  className="rounded-2xl bg-neutral-900 text-white p-5 shadow-xl flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+                  className="rounded-2xl bg-surface-900 text-white p-5 shadow-xl flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
                 >
                   <div>
-                    <p className="text-sm font-bold text-orange-200 uppercase tracking-wide">
+                    <p className="text-sm font-bold text-accent-200 uppercase tracking-wide">
                       {isKidAccount ? 'Acces gere par tes parents' : 'Abonnement mensuel'}
                     </p>
                     <p className="mt-1 text-lg font-bold">
@@ -410,7 +410,7 @@ function BookDetails() {
                   {!isKidAccount && (
                     <Link
                       to="/abonnements"
-                      className="shrink-0 inline-flex items-center justify-center gap-2 rounded-full bg-white px-5 py-3 font-bold text-neutral-900 hover:bg-orange-50 transition-colors"
+                      className="shrink-0 inline-flex items-center justify-center gap-2 rounded-full bg-white px-5 py-3 font-bold text-surface-900 hover:bg-accent-50 transition-colors"
                     >
                       Voir les formules
                     </Link>
@@ -430,7 +430,7 @@ function BookDetails() {
                         whileHover={{ scale: 1.05, y: -2 }}
                         whileTap={{ scale: 0.95 }}
                         onClick={continueReading}
-                        className="flex-1 px-8 py-4 bg-gradient-to-r from-red-600 to-pink-600 text-white rounded-full font-bold text-lg shadow-xl hover:shadow-2xl transition-all flex items-center justify-center gap-3"
+                        className="flex-1 px-8 py-4 bg-gradient-to-r from-primary-600 to-secondary-600 text-white rounded-full font-bold text-lg shadow-xl hover:shadow-2xl transition-all flex items-center justify-center gap-3"
                       >
                         <BookIcon className="w-6 h-6" />
                         Continuer la lecture
@@ -439,7 +439,7 @@ function BookDetails() {
                         whileHover={{ scale: 1.05, y: -2 }}
                         whileTap={{ scale: 0.95 }}
                         onClick={startReading}
-                        className="px-8 py-4 bg-white text-neutral-900 rounded-full font-bold text-lg shadow-lg hover:shadow-xl transition-all border-2 border-neutral-200 flex items-center justify-center gap-3"
+                        className="px-8 py-4 bg-white text-surface-900 rounded-full font-bold text-lg shadow-lg hover:shadow-xl transition-all border-2 border-surface-200 flex items-center justify-center gap-3"
                       >
                         <RefreshIcon className="w-5 h-5" />
                         Recommencer
@@ -450,7 +450,7 @@ function BookDetails() {
                       whileHover={{ scale: 1.05, y: -2 }}
                       whileTap={{ scale: 0.95 }}
                       onClick={startReading}
-                      className="w-full px-8 py-4 bg-gradient-to-r from-red-600 via-pink-600 to-orange-600 text-white rounded-full font-bold text-lg shadow-xl hover:shadow-2xl transition-all flex items-center justify-center gap-3"
+                      className="w-full px-8 py-4 bg-gradient-to-r from-primary-600 via-secondary-600 to-accent-600 text-white rounded-full font-bold text-lg shadow-xl hover:shadow-2xl transition-all flex items-center justify-center gap-3"
                     >
                       <BookIcon className="w-6 h-6" />
                       Commencer la lecture
@@ -473,7 +473,7 @@ function BookDetails() {
               viewport={{ once: true }}
               transition={{ duration: 0.6 }}
             >
-              <h2 className="text-3xl md:text-4xl font-bold text-neutral-900 mb-8 flex items-center gap-3">
+              <h2 className="text-3xl md:text-4xl font-bold text-surface-900 mb-8 flex items-center gap-3">
                 <StarIcon className="w-8 h-8 text-yellow-500" />
                 Livres similaires
               </h2>
@@ -489,9 +489,9 @@ function BookDetails() {
                   >
                     <Link
                       to={`/book-details/${relatedBook.id}`}
-                      className="bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all border-2 border-transparent hover:border-red-200 block"
+                      className="bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all border-2 border-transparent hover:border-primary-200 block"
                     >
-                      <div className="h-56 bg-gradient-to-br from-red-100 to-pink-100 flex items-center justify-center overflow-hidden">
+                      <div className="h-56 bg-gradient-to-br from-primary-100 to-secondary-100 flex items-center justify-center overflow-hidden">
                         {relatedBook.cover_image ? (
                           <img
                             src={getImageUrl(relatedBook.cover_image)}
@@ -505,15 +505,15 @@ function BookDetails() {
                           />
                         ) : null}
                         <div className={`${relatedBook.cover_image ? 'hidden' : 'flex'} book-fallback w-full h-full items-center justify-center`}>
-                          <BookIcon className="w-20 h-20 text-red-400" />
+                          <BookIcon className="w-20 h-20 text-primary-400" />
                         </div>
                       </div>
                       <div className="p-5">
-                        <h3 className="font-bold text-neutral-900 line-clamp-2 text-base mb-2">
+                        <h3 className="font-bold text-surface-900 line-clamp-2 text-base mb-2">
                           {relatedBook.title}
                         </h3>
                         {relatedBook.author && (
-                          <p className="text-sm text-neutral-600">par {relatedBook.author}</p>
+                          <p className="text-sm text-surface-600">par {relatedBook.author}</p>
                         )}
                       </div>
                     </Link>

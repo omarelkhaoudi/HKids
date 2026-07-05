@@ -13,13 +13,13 @@ export function KidAvatar({ kid, size = 'md' }) {
       <img
         src={kid.photo_url}
         alt={kid.name || 'Profil enfant'}
-        className={`${className} rounded-full object-cover ring-4 ring-white shadow-sm dark:ring-neutral-800`}
+        className={`${className} rounded-full object-cover ring-4 ring-white shadow-sm dark:ring-surface-800`}
       />
     );
   }
 
   return (
-    <div className={`${className} grid place-items-center rounded-full bg-red-500 font-black text-white ring-4 ring-white shadow-sm dark:ring-neutral-800`}>
+    <div className={`${className} grid place-items-center rounded-full bg-primary-500 font-black text-white ring-4 ring-white shadow-sm dark:ring-surface-800`}>
       {getKidInitial(kid)}
     </div>
   );

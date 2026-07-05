@@ -32,7 +32,7 @@ function StoryBookCard({ book, index, isAuthenticated, showToast, onFavoriteChan
         }}
         className="group block text-center cursor-pointer"
       >
-        <div className="relative aspect-[4/5] rounded-lg border-2 border-dashed border-orange-400 bg-gradient-to-br from-orange-50 via-white to-pink-50 p-3 sm:p-4 flex items-center justify-center overflow-hidden transition-all duration-300 group-hover:border-pink-500 group-hover:shadow-md [perspective:900px]">
+        <div className="relative aspect-[4/5] rounded-2xl border-2 border-dashed border-accent-400 bg-gradient-to-br from-accent-50 via-white to-secondary-50 p-3 sm:p-4 flex items-center justify-center overflow-hidden transition-all duration-300 group-hover:border-secondary-500 group-hover:shadow-md [perspective:900px]">
           <motion.button
             onClick={(e) => {
               e.preventDefault();
@@ -55,25 +55,25 @@ function StoryBookCard({ book, index, isAuthenticated, showToast, onFavoriteChan
             whileTap={{ scale: 0.95 }}
           >
             <HeartIcon
-              className={`w-5 h-5 ${isFavorite ? 'text-red-500' : 'text-orange-400'}`}
+              className={`w-5 h-5 ${isFavorite ? 'text-primary-500' : 'text-accent-400'}`}
               filled={isFavorite}
             />
           </motion.button>
           {!isAuthenticated && (
-            <div className="absolute top-3 left-3 z-30 inline-flex items-center gap-1.5 rounded-full bg-white/90 px-3 py-1.5 text-xs font-bold text-neutral-800 shadow-md backdrop-blur-sm">
-              <LockIcon className="w-3.5 h-3.5 text-orange-500" />
+            <div className="absolute top-3 left-3 z-30 inline-flex items-center gap-1.5 rounded-full bg-white/90 px-3 py-1.5 text-xs font-bold text-surface-800 shadow-md backdrop-blur-sm">
+              <LockIcon className="w-3.5 h-3.5 text-accent-500" />
               Prive
             </div>
           )}
 
           <div className="relative w-[72%] max-w-[190px] aspect-[3/4] [transform-style:preserve-3d] transition-transform duration-300 [transform:rotateY(-18deg)_rotateZ(-1deg)] group-hover:[transform:rotateY(-15deg)_rotateZ(-0.5deg)_translateY(-1px)]">
-            <div className="absolute -right-[13%] top-[3%] h-[94%] w-[16%] rounded-r-md bg-gradient-to-r from-neutral-200 via-white to-neutral-300 shadow-md [transform:rotateY(72deg)_translateZ(1px)] origin-left">
-              <div className="absolute inset-y-2 left-1/3 w-px bg-neutral-300/80"></div>
-              <div className="absolute inset-y-3 right-1/3 w-px bg-neutral-200/80"></div>
+            <div className="absolute -right-[13%] top-[3%] h-[94%] w-[16%] rounded-r-md bg-gradient-to-r from-surface-200 via-white to-surface-300 shadow-md [transform:rotateY(72deg)_translateZ(1px)] origin-left">
+              <div className="absolute inset-y-2 left-1/3 w-px bg-surface-300/80"></div>
+              <div className="absolute inset-y-3 right-1/3 w-px bg-surface-200/80"></div>
             </div>
-            <div className="absolute -right-[8%] top-[5%] h-[90%] w-[10%] rounded-r-sm bg-gradient-to-r from-white via-neutral-100 to-neutral-300 [transform:translateZ(-9px)]"></div>
-            <div className="absolute inset-0 rounded-md bg-gradient-to-br from-neutral-900/10 to-neutral-900/25 [transform:translateZ(-14px)]"></div>
-            <div className="relative z-10 h-full w-full overflow-hidden rounded-md bg-white shadow-2xl ring-1 ring-black/10 [transform:translateZ(12px)]">
+            <div className="absolute -right-[8%] top-[5%] h-[90%] w-[10%] rounded-r-sm bg-gradient-to-r from-white via-surface-100 to-surface-300 [transform:translateZ(-9px)]"></div>
+            <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-surface-900/10 to-surface-900/25 [transform:translateZ(-14px)]"></div>
+            <div className="relative z-10 h-full w-full overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-black/10 [transform:translateZ(12px)]">
               {book.cover_image ? (
                 <img
                   src={getImageUrl(book.cover_image)}
@@ -87,8 +87,8 @@ function StoryBookCard({ book, index, isAuthenticated, showToast, onFavoriteChan
                   }}
                 />
               ) : null}
-              <div className={`${book.cover_image ? 'hidden' : 'flex'} absolute inset-0 items-center justify-center bg-gradient-to-br from-orange-100 to-pink-100`}>
-                <BookIcon className="w-12 h-12 sm:w-16 sm:h-16 text-orange-300" />
+              <div className={`${book.cover_image ? 'hidden' : 'flex'} absolute inset-0 items-center justify-center bg-gradient-to-br from-accent-100 to-secondary-100`}>
+                <BookIcon className="w-12 h-12 sm:w-16 sm:h-16 text-accent-300" />
               </div>
               <div className="pointer-events-none absolute inset-y-0 left-0 w-[14%] bg-gradient-to-r from-black/20 via-black/5 to-transparent"></div>
               <div className="pointer-events-none absolute inset-0 bg-gradient-to-tr from-white/0 via-white/10 to-white/35"></div>
@@ -98,27 +98,27 @@ function StoryBookCard({ book, index, isAuthenticated, showToast, onFavoriteChan
         </div>
 
         <div className="mt-4 px-1">
-          <h3 className="text-base sm:text-lg font-bold text-neutral-900 leading-snug line-clamp-2 group-hover:text-orange-600 transition-colors">
+          <h3 className="text-base sm:text-lg font-bold text-surface-900 leading-snug line-clamp-2 group-hover:text-accent-600 transition-colors">
             {book.title}
           </h3>
           {book.category_name && (
-            <p className="mt-1 text-xs sm:text-sm font-semibold text-neutral-500 truncate">
+            <p className="mt-1 text-xs sm:text-sm font-semibold text-surface-500 truncate">
               {book.category_name}
             </p>
           )}
           <div className="mt-3 flex items-center justify-center gap-2 flex-wrap">
             {book.age_group_min !== undefined && book.age_group_max !== undefined && (
-              <span className="inline-flex items-center px-3 py-1.5 text-xs font-semibold bg-orange-50 text-orange-700 rounded-full border border-orange-100">
+              <span className="inline-flex items-center px-3 py-1.5 text-xs font-semibold bg-accent-50 text-accent-700 rounded-full border border-accent-100">
                 {book.age_group_min}-{book.age_group_max} ans
               </span>
             )}
             {book.page_count > 0 && (
-              <span className="inline-flex items-center px-3 py-1.5 text-xs font-semibold bg-neutral-100 text-neutral-700 rounded-full">
+              <span className="inline-flex items-center px-3 py-1.5 text-xs font-semibold bg-surface-100 text-surface-700 rounded-full">
                 {book.page_count} {book.page_count === 1 ? 'page' : 'pages'}
               </span>
             )}
           </div>
-          <div className="mt-3 inline-flex items-center justify-center gap-1.5 text-orange-500 font-bold text-sm">
+          <div className="mt-3 inline-flex items-center justify-center gap-1.5 text-accent-500 font-bold text-sm">
             {isAuthenticated ? (
               <BookIcon className="w-4 h-4" />
             ) : (
@@ -179,22 +179,22 @@ function StoriesGallery() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-white via-red-50/30 to-pink-50/30">
-      <header className="sticky top-0 z-40 shadow-md bg-neutral-900/95 backdrop-blur-md">
+    <div className="min-h-screen bg-gradient-to-br from-white via-primary-50/30 to-secondary-50/30">
+      <header className="sticky top-0 z-40 shadow-md bg-surface-900/95 backdrop-blur-md">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between gap-4">
           <Link to="/" className="flex items-center">
             <Logo size="default" />
           </Link>
           <Link
             to="/"
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white text-neutral-900 font-bold hover:bg-red-50 transition-colors shadow-sm"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white text-surface-900 font-bold hover:bg-primary-50 transition-colors shadow-sm"
           >
             <ChevronLeftIcon className="w-4 h-4" />
             Accueil
           </Link>
           <Link
             to="/abonnements"
-            className="hidden sm:inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-gradient-to-r from-orange-500 to-pink-500 text-white font-bold hover:shadow-lg transition-all"
+            className="hidden sm:inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-gradient-to-r from-accent-500 to-secondary-500 text-white font-bold hover:shadow-lg transition-all"
           >
             <BookIcon className="w-4 h-4" />
             Abonnements
@@ -213,26 +213,26 @@ function StoriesGallery() {
 
         <section className="relative z-10 py-10 md:py-14">
           <div className="max-w-7xl mx-auto px-4 sm:px-6">
-            <div className="rounded-[2rem] bg-gradient-to-br from-red-50 via-pink-50 to-orange-50 border-4 border-white shadow-xl px-5 py-10 md:px-10 md:py-12 text-center">
-              <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/80 text-orange-600 rounded-full text-sm font-bold mb-4 border border-orange-100 shadow-sm">
+            <div className="rounded-[2rem] bg-gradient-to-br from-primary-50 via-secondary-50 to-accent-50 border-4 border-white shadow-xl px-5 py-10 md:px-10 md:py-12 text-center">
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/80 text-accent-600 rounded-full text-sm font-bold mb-4 border border-accent-100 shadow-sm">
                 <StarIcon className="w-4 h-4" />
                 Collection HKids
               </div>
-              <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-neutral-900 mb-4">
+              <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-surface-900 mb-4">
                 Toutes les histoires HKids
               </h1>
-              <p className="text-base sm:text-lg text-neutral-600 max-w-2xl mx-auto leading-relaxed">
+              <p className="text-base sm:text-lg text-surface-600 max-w-2xl mx-auto leading-relaxed">
                 Parcourez les livres disponibles, ajoutez vos favoris et choisissez une histoire adaptee a l'age de votre enfant.
               </p>
               <Link
                 to="/abonnements"
-                className="mt-6 inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-orange-500 to-pink-500 px-6 py-3 text-white font-bold shadow-lg hover:shadow-xl transition-all"
+                className="mt-6 inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-accent-500 to-secondary-500 px-6 py-3 text-white font-bold shadow-lg hover:shadow-xl transition-all"
               >
                 Voir les abonnements mensuels
               </Link>
               {!isAuthenticated && (
-                <div className="mt-6 inline-flex items-center gap-2 rounded-full bg-white/90 px-4 py-2 text-sm font-bold text-neutral-800 shadow-sm border border-orange-100">
-                  <LockIcon className="w-4 h-4 text-orange-500" />
+                <div className="mt-6 inline-flex items-center gap-2 rounded-full bg-white/90 px-4 py-2 text-sm font-bold text-surface-800 shadow-sm border border-accent-100">
+                  <LockIcon className="w-4 h-4 text-accent-500" />
                   Connectez-vous pour lire les histoires.
                 </div>
               )}
@@ -245,13 +245,13 @@ function StoriesGallery() {
           {loading ? (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-10 sm:gap-x-6 lg:gap-x-8">
               {Array.from({ length: 8 }).map((_, index) => (
-                <div key={index} className="aspect-[4/5] rounded-lg bg-white/80 border-2 border-dashed border-orange-200 animate-pulse" />
+                <div key={index} className="aspect-[4/5] rounded-2xl bg-white/80 border-2 border-dashed border-accent-200 animate-pulse" />
               ))}
             </div>
           ) : books.length === 0 ? (
-            <div className="text-center py-20 rounded-[2rem] bg-white/80 border border-orange-100 shadow-sm">
-              <BookIcon className="w-16 h-16 text-orange-300 mx-auto mb-4" />
-              <p className="text-lg font-bold text-neutral-700">Aucune histoire disponible.</p>
+            <div className="text-center py-20 rounded-[2rem] bg-white/80 border border-accent-100 shadow-sm">
+              <BookIcon className="w-16 h-16 text-accent-300 mx-auto mb-4" />
+              <p className="text-lg font-bold text-surface-700">Aucune histoire disponible.</p>
             </div>
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-12 sm:gap-x-6 lg:gap-x-8">

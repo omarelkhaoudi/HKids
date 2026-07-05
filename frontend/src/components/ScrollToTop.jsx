@@ -40,7 +40,7 @@ function ScrollToTop() {
           whileHover={{ scale: 1.1, y: -5 }}
           whileTap={{ scale: 0.9 }}
           onClick={scrollToTop}
-          className="fixed bottom-8 right-8 z-50 p-4 bg-gradient-to-br from-red-600 to-pink-600 text-white rounded-full shadow-2xl hover:shadow-red-500/50 transition-all duration-300 flex items-center justify-center group"
+          className="fixed bottom-8 right-8 z-50 p-4 bg-gradient-to-br from-primary-600 to-secondary-600 text-white rounded-full shadow-2xl hover:shadow-primary-500/50 transition-all duration-300 flex items-center justify-center group"
           aria-label="Remonter en haut de la page"
         >
           <ChevronUpIcon className="w-6 h-6 group-hover:translate-y-[-2px] transition-transform" />

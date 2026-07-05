@@ -300,7 +300,7 @@ function BookManagement() {
     'Actions',
   ];
   const tableColumnWidths = ['130px', '330px', '100px', '140px', '80px', '120px', '120px', '120px', '170px'];
-  const tableHeaderClass = 'px-5 py-5 text-left text-xs font-bold uppercase text-red-700';
+  const tableHeaderClass = 'px-5 py-5 text-left text-xs font-bold uppercase text-primary-700';
   const tableCellClass = 'px-5 py-5 align-middle';
   const filteredBooks = books.filter((book) => {
     const query = filters.search.trim().toLowerCase();
@@ -344,7 +344,7 @@ function BookManagement() {
         className="relative mb-8 rounded-3xl overflow-hidden"
       >
         {/* Fond avec gradient chaud et effet aquarelle */}
-        <div className="absolute inset-0 bg-gradient-to-br from-orange-200/40 via-pink-200/40 to-red-200/40 backdrop-blur-sm"></div>
+        <div className="absolute inset-0 bg-gradient-to-br from-accent-200/40 via-secondary-200/40 to-primary-200/40 backdrop-blur-sm"></div>
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,rgba(255,200,100,0.3),transparent_50%)]"></div>
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_80%,rgba(255,150,150,0.2),transparent_50%)]"></div>
         
@@ -381,17 +381,17 @@ function BookManagement() {
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.2 }}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/60 backdrop-blur-md border border-orange-200/50 mb-4"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/60 backdrop-blur-md border border-accent-200/50 mb-4"
               >
-                <BookIcon className="w-5 h-5 text-orange-600" />
-                <span className="text-sm font-semibold text-orange-700">Gestion de la Bibliothèque</span>
+                <BookIcon className="w-5 h-5 text-accent-600" />
+                <span className="text-sm font-semibold text-accent-700">Gestion de la Bibliothèque</span>
               </motion.div>
               
               <motion.h2
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3 }}
-                className="text-4xl md:text-5xl font-extrabold mb-3 bg-gradient-to-r from-orange-600 via-pink-600 to-red-600 bg-clip-text text-transparent"
+                className="text-4xl md:text-5xl font-extrabold mb-3 bg-gradient-to-r from-accent-600 via-secondary-600 to-primary-600 bg-clip-text text-transparent"
               >
                 Book Management
               </motion.h2>
@@ -400,7 +400,7 @@ function BookManagement() {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.4 }}
-                className="text-lg text-neutral-700 max-w-2xl"
+                className="text-lg text-surface-700 max-w-2xl"
               >
                 Créez, modifiez et gérez votre collection de livres pour enfants avec un design magique et intuitif.
               </motion.p>
@@ -418,7 +418,7 @@ function BookManagement() {
                 }}
                 whileHover={{ scale: 1.05, boxShadow: "0 20px 25px -5px rgba(239, 68, 68, 0.3)" }}
                 whileTap={{ scale: 0.95 }}
-                className="px-8 py-4 bg-gradient-to-r from-orange-500 via-pink-500 to-red-500 text-white rounded-2xl hover:from-orange-600 hover:via-pink-600 hover:to-red-600 transition-all font-bold text-lg shadow-2xl shadow-orange-500/30 relative overflow-hidden group"
+                className="px-8 py-4 bg-gradient-to-r from-accent-500 via-secondary-500 to-primary-500 text-white rounded-2xl hover:from-accent-600 hover:via-secondary-600 hover:to-primary-600 transition-all font-bold text-lg shadow-2xl shadow-accent-500/30 relative overflow-hidden group"
               >
                 {/* Effet de brillance au survol */}
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
@@ -434,23 +434,23 @@ function BookManagement() {
         </div>
         
         {/* Bordure décorative en bas */}
-        <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-orange-300/50 to-transparent"></div>
+        <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-accent-300/50 to-transparent"></div>
       </motion.div>
 
       <div className="px-8 pb-8">
-        <div className="mb-6 rounded-2xl border border-red-100 bg-white/90 p-5 shadow-lg">
+        <div className="mb-6 rounded-2xl border border-primary-100 bg-white/90 p-5 shadow-lg">
           <div className="grid grid-cols-1 gap-3 md:grid-cols-3 xl:grid-cols-6">
             <input
               type="search"
               value={filters.search}
               onChange={(e) => setFilters({ ...filters, search: e.target.value })}
               placeholder="Rechercher titre, tag, auteur..."
-              className="rounded-xl border-2 border-red-100 px-4 py-2 text-sm focus:border-red-400 focus:outline-none md:col-span-2"
+              className="rounded-3xl border-2 border-primary-100 px-4 py-2 text-sm focus:border-primary-400 focus:outline-none md:col-span-2"
             />
             <select
               value={filters.status}
               onChange={(e) => setFilters({ ...filters, status: e.target.value })}
-              className="rounded-xl border-2 border-red-100 px-3 py-2 text-sm focus:border-red-400 focus:outline-none"
+              className="rounded-3xl border-2 border-primary-100 px-3 py-2 text-sm focus:border-primary-400 focus:outline-none"
             >
               <option value="all">Tous statuts</option>
               <option value="published">Publie</option>
@@ -459,7 +459,7 @@ function BookManagement() {
             <select
               value={filters.access}
               onChange={(e) => setFilters({ ...filters, access: e.target.value })}
-              className="rounded-xl border-2 border-red-100 px-3 py-2 text-sm focus:border-red-400 focus:outline-none"
+              className="rounded-3xl border-2 border-primary-100 px-3 py-2 text-sm focus:border-primary-400 focus:outline-none"
             >
               <option value="all">Gratuit/Premium</option>
               <option value="free">Gratuit</option>
@@ -468,7 +468,7 @@ function BookManagement() {
             <select
               value={filters.language}
               onChange={(e) => setFilters({ ...filters, language: e.target.value })}
-              className="rounded-xl border-2 border-red-100 px-3 py-2 text-sm focus:border-red-400 focus:outline-none"
+              className="rounded-3xl border-2 border-primary-100 px-3 py-2 text-sm focus:border-primary-400 focus:outline-none"
             >
               <option value="all">Toutes langues</option>
               {CONTENT_LANGUAGES.map((language) => (
@@ -478,7 +478,7 @@ function BookManagement() {
             <select
               value={filters.flag}
               onChange={(e) => setFilters({ ...filters, flag: e.target.value })}
-              className="rounded-xl border-2 border-red-100 px-3 py-2 text-sm focus:border-red-400 focus:outline-none"
+              className="rounded-3xl border-2 border-primary-100 px-3 py-2 text-sm focus:border-primary-400 focus:outline-none"
             >
               <option value="all">Tous indicateurs</option>
               <option value="recommended">Recommande</option>
@@ -490,7 +490,7 @@ function BookManagement() {
             <select
               value={filters.category_id}
               onChange={(e) => setFilters({ ...filters, category_id: e.target.value })}
-              className="rounded-xl border-2 border-red-100 px-3 py-2 text-sm focus:border-red-400 focus:outline-none"
+              className="rounded-3xl border-2 border-primary-100 px-3 py-2 text-sm focus:border-primary-400 focus:outline-none"
             >
               <option value="all">Toutes categories</option>
               {categories.map((category) => (
@@ -499,7 +499,7 @@ function BookManagement() {
                 </option>
               ))}
             </select>
-            <span className="text-sm font-bold text-neutral-500">
+            <span className="text-sm font-bold text-surface-500">
               {filteredBooks.length} contenu{filteredBooks.length > 1 ? 's' : ''} affiche{filteredBooks.length > 1 ? 's' : ''}
             </span>
           </div>
@@ -507,14 +507,14 @@ function BookManagement() {
 
       {loading ? (
         <div className="text-center py-12">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-red-500 border-t-transparent"></div>
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-primary-500 border-t-transparent"></div>
         </div>
       ) : (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
-          className="overflow-x-auto rounded-2xl border border-red-200/70 bg-white/95 shadow-xl"
+          className="overflow-x-auto rounded-2xl border border-primary-200/70 bg-white/95 shadow-xl"
         >
           <table className="w-full min-w-[1310px] table-fixed border-collapse">
             <colgroup>
@@ -522,21 +522,21 @@ function BookManagement() {
                 <col key={`${width}-${index}`} style={{ width }} />
               ))}
             </colgroup>
-            <thead className="bg-red-50">
+            <thead className="bg-primary-50">
               <tr>
                 {tableHeaders.map((header) => (
                   <th key={header} className={tableHeaderClass}>{header}</th>
                 ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-red-100 bg-white">
+            <tbody className="divide-y divide-primary-100 bg-white">
               {filteredBooks.map((book, index) => (
                 <motion.tr
                   key={book.id}
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: index * 0.05, duration: 0.3 }}
-                  className="h-[190px] transition-colors hover:bg-red-50/50"
+                  className="h-[190px] transition-colors hover:bg-primary-50/50"
                 >
                   <td className={tableCellClass}>
                     {(() => {
@@ -544,10 +544,10 @@ function BookManagement() {
                       if (!imageUrl) {
                         return (
                           <div className="relative h-[112px] w-[76px]">
-                            <div className="absolute left-2 top-2 h-[104px] w-[58px] rounded-r-lg bg-neutral-200 shadow-[8px_8px_18px_rgba(15,23,42,0.16)]" />
-                            <div className="absolute left-[62px] top-3 h-[100px] w-3 rounded-r-md border border-neutral-200 bg-gradient-to-r from-white to-neutral-200" />
-                            <div className="absolute left-0 top-0 flex h-[104px] w-[66px] items-center justify-center rounded-lg border border-neutral-200 bg-neutral-100 shadow-[0_14px_24px_rgba(15,23,42,0.16)]">
-                              <BookIcon className="h-7 w-7 text-neutral-400" />
+                            <div className="absolute left-2 top-2 h-[104px] w-[58px] rounded-r-lg bg-surface-200 shadow-[8px_8px_18px_rgba(15,23,42,0.16)]" />
+                            <div className="absolute left-[62px] top-3 h-[100px] w-3 rounded-r-md border border-surface-200 bg-gradient-to-r from-white to-surface-200" />
+                            <div className="absolute left-0 top-0 flex h-[104px] w-[66px] items-center justify-center rounded-2xl border border-surface-200 bg-surface-100 shadow-[0_14px_24px_rgba(15,23,42,0.16)]">
+                              <BookIcon className="h-7 w-7 text-surface-400" />
                             </div>
                           </div>
                         );
@@ -555,18 +555,18 @@ function BookManagement() {
 
                       return (
                         <div className="relative h-[112px] w-[76px]">
-                          <div className="absolute left-2 top-2 h-[104px] w-[58px] rounded-r-lg bg-red-50 shadow-[8px_8px_18px_rgba(15,23,42,0.16)]" />
-                          <div className="absolute left-[62px] top-3 h-[100px] w-3 rounded-r-md border border-neutral-200 bg-gradient-to-r from-white via-neutral-100 to-neutral-300" />
+                          <div className="absolute left-2 top-2 h-[104px] w-[58px] rounded-r-lg bg-primary-50 shadow-[8px_8px_18px_rgba(15,23,42,0.16)]" />
+                          <div className="absolute left-[62px] top-3 h-[100px] w-3 rounded-r-md border border-surface-200 bg-gradient-to-r from-white via-surface-100 to-surface-300" />
                           <img
                             src={imageUrl}
                             alt={book.title}
-                            className="absolute left-0 top-0 h-[104px] w-[66px] rounded-lg object-cover shadow-[0_14px_24px_rgba(15,23,42,0.18)]"
+                            className="absolute left-0 top-0 h-[104px] w-[66px] rounded-2xl object-cover shadow-[0_14px_24px_rgba(15,23,42,0.18)]"
                             onError={(e) => {
                               console.error(`[Book ${book.id}] Failed to load image from:`, imageUrl);
                               e.target.style.display = 'none';
                             }}
                           />
-                          <div className="pointer-events-none absolute left-0 top-0 h-[104px] w-[66px] rounded-lg bg-gradient-to-r from-black/10 via-transparent to-white/20" />
+                          <div className="pointer-events-none absolute left-0 top-0 h-[104px] w-[66px] rounded-2xl bg-gradient-to-r from-black/10 via-transparent to-white/20" />
                         </div>
                       );
                     })()}
@@ -583,10 +583,10 @@ function BookManagement() {
                         <span className="rounded-full bg-purple-100 px-2 py-0.5 text-[11px] font-bold text-purple-700">Premium</span>
                       )}
                       {(book.is_recommended === true || book.is_recommended === 1) && (
-                        <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[11px] font-bold text-blue-700">Recommande</span>
+                        <span className="rounded-full bg-primary-100 px-2 py-0.5 text-[11px] font-bold text-primary-700">Recommande</span>
                       )}
                       {(book.is_popular === true || book.is_popular === 1) && (
-                        <span className="rounded-full bg-orange-100 px-2 py-0.5 text-[11px] font-bold text-orange-700">Populaire</span>
+                        <span className="rounded-full bg-accent-100 px-2 py-0.5 text-[11px] font-bold text-accent-700">Populaire</span>
                       )}
                       {(book.is_new === true || book.is_new === 1) && (
                         <span className="rounded-full bg-green-100 px-2 py-0.5 text-[11px] font-bold text-green-700">Nouveau</span>
@@ -609,7 +609,7 @@ function BookManagement() {
                     <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold ${
                       book.audio_url
                         ? 'border border-green-200 bg-green-100 text-green-700'
-                        : 'border border-amber-200 bg-amber-100 text-amber-700'
+                        : 'border border-accent-200 bg-accent-100 text-accent-700'
                     }`}>
                       <AudioIcon className="h-3.5 w-3.5" />
                       {book.audio_url ? 'Pret' : 'Manquant'}
@@ -636,7 +636,7 @@ function BookManagement() {
                         onClick={() => setSelectedBook(book)}
                         whileHover={{ scale: 1.03 }}
                         whileTap={{ scale: 0.97 }}
-                        className="inline-flex h-8 items-center justify-center gap-1.5 rounded-lg border border-blue-200 bg-blue-50 px-3 text-xs font-semibold text-blue-700 shadow-sm transition-colors hover:bg-blue-100"
+                        className="inline-flex h-8 items-center justify-center gap-1.5 rounded-2xl border border-primary-200 bg-primary-50 px-3 text-xs font-semibold text-primary-700 shadow-sm transition-colors hover:bg-primary-100"
                         title="Voir la fiche complete"
                       >
                         <BookIcon className="h-3 w-3" />
@@ -646,7 +646,7 @@ function BookManagement() {
                         onClick={() => handleEdit(book)}
                         whileHover={{ scale: 1.03 }}
                         whileTap={{ scale: 0.97 }}
-                        className="inline-flex h-8 items-center justify-center gap-1.5 rounded-lg border border-red-200 bg-white px-3 text-xs font-semibold text-red-700 shadow-sm transition-colors hover:bg-red-50 hover:text-red-800"
+                        className="inline-flex h-8 items-center justify-center gap-1.5 rounded-2xl border border-primary-200 bg-white px-3 text-xs font-semibold text-primary-700 shadow-sm transition-colors hover:bg-primary-50 hover:text-primary-800"
                         title="Modifier le livre"
                       >
                         <EditIcon className="h-3 w-3" />
@@ -656,7 +656,7 @@ function BookManagement() {
                         onClick={() => handleDelete(book.id)}
                         whileHover={{ scale: 1.03 }}
                         whileTap={{ scale: 0.97 }}
-                        className="inline-flex h-8 items-center justify-center gap-1.5 rounded-lg border border-red-200 bg-red-50 px-3 text-xs font-semibold text-red-700 shadow-sm transition-colors hover:bg-red-100 hover:text-red-900"
+                        className="inline-flex h-8 items-center justify-center gap-1.5 rounded-2xl border border-primary-200 bg-primary-50 px-3 text-xs font-semibold text-primary-700 shadow-sm transition-colors hover:bg-primary-100 hover:text-primary-900"
                         title="Supprimer le livre"
                       >
                         <TrashIcon className="h-3 w-3" />
@@ -667,7 +667,7 @@ function BookManagement() {
                           onClick={() => handleTogglePublish(book)}
                           whileHover={{ scale: 1.03 }}
                           whileTap={{ scale: 0.97 }}
-                          className="inline-flex h-8 items-center justify-center gap-1.5 rounded-lg bg-gradient-to-r from-green-500 to-green-600 px-3 text-xs font-semibold text-white shadow-sm transition-all hover:from-green-600 hover:to-green-700"
+                          className="inline-flex h-8 items-center justify-center gap-1.5 rounded-2xl bg-gradient-to-r from-green-500 to-green-600 px-3 text-xs font-semibold text-white shadow-sm transition-all hover:from-green-600 hover:to-green-700"
                           title="Publier le livre"
                         >
                           <PublishIcon className="h-3 w-3" />
@@ -679,7 +679,7 @@ function BookManagement() {
                           onClick={() => handleTogglePublish(book)}
                           whileHover={{ scale: 1.03 }}
                           whileTap={{ scale: 0.97 }}
-                          className="inline-flex h-8 items-center justify-center gap-1.5 rounded-lg bg-gradient-to-r from-gray-500 to-gray-600 px-3 text-xs font-semibold text-white shadow-sm transition-all hover:from-gray-600 hover:to-gray-700"
+                          className="inline-flex h-8 items-center justify-center gap-1.5 rounded-2xl bg-gradient-to-r from-gray-500 to-gray-600 px-3 text-xs font-semibold text-white shadow-sm transition-all hover:from-gray-600 hover:to-gray-700"
                           title="Dépublier le livre"
                         >
                           <UnpublishIcon className="h-3 w-3" />
@@ -698,54 +698,54 @@ function BookManagement() {
 
       {selectedBook && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-2xl border-2 border-red-200 bg-white p-6 shadow-2xl">
+          <div className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-2xl border-2 border-primary-200 bg-white p-6 shadow-2xl">
             <div className="mb-5 flex items-start justify-between gap-4">
               <div>
-                <p className="text-sm font-bold uppercase tracking-wide text-red-600">Fiche contenu</p>
-                <h3 className="mt-1 text-2xl font-black text-neutral-900">{selectedBook.title}</h3>
-                <p className="mt-1 text-sm text-neutral-500">{selectedBook.author || 'Auteur non renseigne'}</p>
+                <p className="text-sm font-bold uppercase tracking-wide text-primary-600">Fiche contenu</p>
+                <h3 className="mt-1 text-2xl font-black text-surface-900">{selectedBook.title}</h3>
+                <p className="mt-1 text-sm text-surface-500">{selectedBook.author || 'Auteur non renseigne'}</p>
               </div>
               <button
                 onClick={() => setSelectedBook(null)}
-                className="rounded-lg p-2 text-neutral-400 transition hover:bg-red-50 hover:text-red-600"
+                className="rounded-2xl p-2 text-surface-400 transition hover:bg-primary-50 hover:text-primary-600"
               >
                 <XIcon className="h-5 w-5" />
               </button>
             </div>
 
             <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-              <div className="rounded-xl bg-red-50 p-4">
-                <p className="text-xs font-bold uppercase text-red-600">Statut</p>
-                <p className="mt-1 font-black text-neutral-900">
+              <div className="rounded-3xl bg-primary-50 p-4">
+                <p className="text-xs font-bold uppercase text-primary-600">Statut</p>
+                <p className="mt-1 font-black text-surface-900">
                   {(selectedBook.is_published === true || selectedBook.is_published === 1) ? 'Publie' : 'Brouillon'}
                 </p>
               </div>
-              <div className="rounded-xl bg-neutral-50 p-4">
-                <p className="text-xs font-bold uppercase text-neutral-500">Acces</p>
-                <p className="mt-1 font-black text-neutral-900">
+              <div className="rounded-3xl bg-surface-50 p-4">
+                <p className="text-xs font-bold uppercase text-surface-500">Acces</p>
+                <p className="mt-1 font-black text-surface-900">
                   {(selectedBook.is_premium === true || selectedBook.is_premium === 1) ? 'Premium' : 'Gratuit'}
                 </p>
               </div>
-              <div className="rounded-xl bg-neutral-50 p-4">
-                <p className="text-xs font-bold uppercase text-neutral-500">Publication</p>
-                <p className="mt-1 font-black text-neutral-900">
+              <div className="rounded-3xl bg-surface-50 p-4">
+                <p className="text-xs font-bold uppercase text-surface-500">Publication</p>
+                <p className="mt-1 font-black text-surface-900">
                   {selectedBook.publish_at ? new Date(selectedBook.publish_at).toLocaleString('fr-FR') : 'Immediate'}
                 </p>
               </div>
             </div>
 
             <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2">
-              <div className="rounded-xl border border-neutral-200 p-4">
-                <p className="text-sm font-bold text-neutral-700">Classification</p>
-                <div className="mt-3 space-y-2 text-sm text-neutral-600">
+              <div className="rounded-3xl border border-surface-200 p-4">
+                <p className="text-sm font-bold text-surface-700">Classification</p>
+                <div className="mt-3 space-y-2 text-sm text-surface-600">
                   <p>Categorie: <strong>{selectedBook.category_name || '-'}</strong></p>
                   <p>Sous-categorie: <strong>{selectedBook.subcategory_name || '-'}</strong></p>
                   <p>Langue: <strong>{(selectedBook.language || 'fr').toUpperCase()}</strong></p>
                   <p>Age: <strong>{selectedBook.age_group_min}-{selectedBook.age_group_max} ans</strong></p>
                 </div>
               </div>
-              <div className="rounded-xl border border-neutral-200 p-4">
-                <p className="text-sm font-bold text-neutral-700">Indicateurs</p>
+              <div className="rounded-3xl border border-surface-200 p-4">
+                <p className="text-sm font-bold text-surface-700">Indicateurs</p>
                 <div className="mt-3 flex flex-wrap gap-2">
                   {[
                     [(selectedBook.is_recommended === true || selectedBook.is_recommended === 1), 'Recommande'],
@@ -753,20 +753,20 @@ function BookManagement() {
                     [(selectedBook.is_new === true || selectedBook.is_new === 1), 'Nouveau'],
                     [Boolean(selectedBook.audio_url), 'Audio pret'],
                   ].filter(([active]) => active).map(([, label]) => (
-                    <span key={label} className="rounded-full bg-red-100 px-3 py-1 text-xs font-bold text-red-700">{label}</span>
+                    <span key={label} className="rounded-full bg-primary-100 px-3 py-1 text-xs font-bold text-primary-700">{label}</span>
                   ))}
                 </div>
                 <div className="mt-3 flex flex-wrap gap-2">
                   {(Array.isArray(selectedBook.tags) ? selectedBook.tags : []).map((tag) => (
-                    <span key={tag} className="rounded-full bg-neutral-100 px-3 py-1 text-xs font-bold text-neutral-600">{tag}</span>
+                    <span key={tag} className="rounded-full bg-surface-100 px-3 py-1 text-xs font-bold text-surface-600">{tag}</span>
                   ))}
                 </div>
               </div>
             </div>
 
-            <div className="mt-5 rounded-xl bg-neutral-50 p-4">
-              <p className="text-sm font-bold text-neutral-700">Description</p>
-              <p className="mt-2 text-sm leading-relaxed text-neutral-600">{selectedBook.description || 'Aucune description.'}</p>
+            <div className="mt-5 rounded-3xl bg-surface-50 p-4">
+              <p className="text-sm font-bold text-surface-700">Description</p>
+              <p className="mt-2 text-sm leading-relaxed text-surface-600">{selectedBook.description || 'Aucune description.'}</p>
             </div>
           </div>
         </div>
@@ -779,11 +779,11 @@ function BookManagement() {
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            className="bg-white/95 backdrop-blur-lg rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto border-2 border-red-200 shadow-2xl"
+            className="bg-white/95 backdrop-blur-lg rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto border-2 border-primary-200 shadow-2xl"
           >
             <div className="p-6">
               <div className="flex justify-between items-center mb-6">
-                <h3 className="text-2xl font-bold text-neutral-900">
+                <h3 className="text-2xl font-bold text-surface-900">
                   {editingBook ? 'Edit Book' : 'Add New Book'}
                 </h3>
                 <motion.button
@@ -793,7 +793,7 @@ function BookManagement() {
                   }}
                   whileHover={{ scale: 1.1, rotate: 90 }}
                   whileTap={{ scale: 0.9 }}
-                  className="text-red-400 hover:text-red-600 transition-colors"
+                  className="text-primary-400 hover:text-primary-600 transition-colors"
                 >
                   <XIcon className="w-5 h-5" />
                 </motion.button>
@@ -801,7 +801,7 @@ function BookManagement() {
 
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-red-700 mb-1">
+                  <label className="block text-sm font-medium text-primary-700 mb-1">
                     Title *
                   </label>
                   <input
@@ -809,43 +809,43 @@ function BookManagement() {
                     value={formData.title}
                     onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                     required
-                    className="w-full px-4 py-2.5 border-2 border-red-200 rounded-xl focus:ring-4 focus:ring-red-500/20 focus:border-red-400 transition-all bg-white"
+                    className="w-full px-4 py-2.5 border-2 border-primary-200 rounded-3xl focus:ring-4 focus:ring-primary-500/20 focus:border-primary-400 transition-all bg-white"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-red-700 mb-1">
+                  <label className="block text-sm font-medium text-primary-700 mb-1">
                     Author
                   </label>
                   <input
                     type="text"
                     value={formData.author}
                     onChange={(e) => setFormData({ ...formData, author: e.target.value })}
-                    className="w-full px-4 py-2.5 border-2 border-red-200 rounded-xl focus:ring-4 focus:ring-red-500/20 focus:border-red-400 transition-all bg-white"
+                    className="w-full px-4 py-2.5 border-2 border-primary-200 rounded-3xl focus:ring-4 focus:ring-primary-500/20 focus:border-primary-400 transition-all bg-white"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-red-700 mb-1">
+                  <label className="block text-sm font-medium text-primary-700 mb-1">
                     Description
                   </label>
                   <textarea
                     value={formData.description}
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                     rows={3}
-                    className="w-full px-4 py-2.5 border-2 border-red-200 rounded-xl focus:ring-4 focus:ring-red-500/20 focus:border-red-400 transition-all bg-white"
+                    className="w-full px-4 py-2.5 border-2 border-primary-200 rounded-3xl focus:ring-4 focus:ring-primary-500/20 focus:border-primary-400 transition-all bg-white"
                   />
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-red-700 mb-1">
+                    <label className="block text-sm font-medium text-primary-700 mb-1">
                       Category
                     </label>
                     <select
                       value={formData.category_id}
                       onChange={(e) => setFormData({ ...formData, category_id: e.target.value, subcategory_id: '' })}
-                      className="w-full px-4 py-2.5 border-2 border-red-200 rounded-xl focus:ring-4 focus:ring-red-500/20 focus:border-red-400 transition-all bg-white"
+                      className="w-full px-4 py-2.5 border-2 border-primary-200 rounded-3xl focus:ring-4 focus:ring-primary-500/20 focus:border-primary-400 transition-all bg-white"
                     >
                       <option value="">None</option>
                       {parentCategories.map(cat => (
@@ -855,7 +855,7 @@ function BookManagement() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-red-700 mb-1">
+                    <label className="block text-sm font-medium text-primary-700 mb-1">
                       Age Group
                     </label>
                     <div className="flex gap-2">
@@ -865,7 +865,7 @@ function BookManagement() {
                         onChange={(e) => setFormData({ ...formData, age_group_min: parseInt(e.target.value) })}
                         min="0"
                         max="12"
-                        className="w-full px-4 py-2.5 border-2 border-red-200 rounded-xl focus:ring-4 focus:ring-red-500/20 focus:border-red-400 transition-all bg-white"
+                        className="w-full px-4 py-2.5 border-2 border-primary-200 rounded-3xl focus:ring-4 focus:ring-primary-500/20 focus:border-primary-400 transition-all bg-white"
                         placeholder="Min"
                       />
                       <input
@@ -874,7 +874,7 @@ function BookManagement() {
                         onChange={(e) => setFormData({ ...formData, age_group_max: parseInt(e.target.value) })}
                         min="0"
                         max="12"
-                        className="w-full px-4 py-2.5 border-2 border-red-200 rounded-xl focus:ring-4 focus:ring-red-500/20 focus:border-red-400 transition-all bg-white"
+                        className="w-full px-4 py-2.5 border-2 border-primary-200 rounded-3xl focus:ring-4 focus:ring-primary-500/20 focus:border-primary-400 transition-all bg-white"
                         placeholder="Max"
                       />
                     </div>
@@ -883,13 +883,13 @@ function BookManagement() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-red-700 mb-1">
+                    <label className="block text-sm font-medium text-primary-700 mb-1">
                       Sous-categorie
                     </label>
                     <select
                       value={formData.subcategory_id}
                       onChange={(e) => setFormData({ ...formData, subcategory_id: e.target.value })}
-                      className="w-full px-4 py-2.5 border-2 border-red-200 rounded-xl focus:ring-4 focus:ring-red-500/20 focus:border-red-400 transition-all bg-white"
+                      className="w-full px-4 py-2.5 border-2 border-primary-200 rounded-3xl focus:ring-4 focus:ring-primary-500/20 focus:border-primary-400 transition-all bg-white"
                     >
                       <option value="">Aucune</option>
                       {availableSubcategories.map((cat) => (
@@ -899,14 +899,14 @@ function BookManagement() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-red-700 mb-1">
+                    <label className="block text-sm font-medium text-primary-700 mb-1">
                       Tags
                     </label>
                     <input
                       type="text"
                       value={formData.tags}
                       onChange={(e) => setFormData({ ...formData, tags: e.target.value })}
-                      className="w-full px-4 py-2.5 border-2 border-red-200 rounded-xl focus:ring-4 focus:ring-red-500/20 focus:border-red-400 transition-all bg-white"
+                      className="w-full px-4 py-2.5 border-2 border-primary-200 rounded-3xl focus:ring-4 focus:ring-primary-500/20 focus:border-primary-400 transition-all bg-white"
                       placeholder="sommeil, aventure, calme..."
                     />
                   </div>
@@ -914,13 +914,13 @@ function BookManagement() {
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-red-700 mb-1">
+                    <label className="block text-sm font-medium text-primary-700 mb-1">
                       Type de contenu
                     </label>
                     <select
                       value={formData.content_type}
                       onChange={(e) => setFormData({ ...formData, content_type: e.target.value })}
-                      className="w-full px-4 py-2.5 border-2 border-red-200 rounded-xl focus:ring-4 focus:ring-red-500/20 focus:border-red-400 transition-all bg-white"
+                      className="w-full px-4 py-2.5 border-2 border-primary-200 rounded-3xl focus:ring-4 focus:ring-primary-500/20 focus:border-primary-400 transition-all bg-white"
                     >
                       {CONTENT_TYPE_OPTIONS.map((option) => (
                         <option key={option.id} value={option.id}>{option.label}</option>
@@ -929,13 +929,13 @@ function BookManagement() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-red-700 mb-1">
+                    <label className="block text-sm font-medium text-primary-700 mb-1">
                       Langue
                     </label>
                     <select
                       value={formData.language}
                       onChange={(e) => setFormData({ ...formData, language: e.target.value })}
-                      className="w-full px-4 py-2.5 border-2 border-red-200 rounded-xl focus:ring-4 focus:ring-red-500/20 focus:border-red-400 transition-all bg-white"
+                      className="w-full px-4 py-2.5 border-2 border-primary-200 rounded-3xl focus:ring-4 focus:ring-primary-500/20 focus:border-primary-400 transition-all bg-white"
                     >
                       {CONTENT_LANGUAGES.map((language) => (
                         <option key={language.id} value={language.id}>{language.label}</option>
@@ -944,13 +944,13 @@ function BookManagement() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-red-700 mb-1">
+                    <label className="block text-sm font-medium text-primary-700 mb-1">
                       Univers visuel
                     </label>
                     <select
                       value={formData.theme}
                       onChange={(e) => setFormData({ ...formData, theme: e.target.value })}
-                      className="w-full px-4 py-2.5 border-2 border-red-200 rounded-xl focus:ring-4 focus:ring-red-500/20 focus:border-red-400 transition-all bg-white"
+                      className="w-full px-4 py-2.5 border-2 border-primary-200 rounded-3xl focus:ring-4 focus:ring-primary-500/20 focus:border-primary-400 transition-all bg-white"
                     >
                       <option value="">General</option>
                       {CONTENT_THEMES.map((theme) => (
@@ -962,20 +962,20 @@ function BookManagement() {
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-red-700 mb-1">
+                    <label className="block text-sm font-medium text-primary-700 mb-1">
                       URL audio existante
                     </label>
                     <input
                       type="url"
                       value={formData.audio_url}
                       onChange={(e) => setFormData({ ...formData, audio_url: e.target.value })}
-                      className="w-full px-4 py-2.5 border-2 border-red-200 rounded-xl focus:ring-4 focus:ring-red-500/20 focus:border-red-400 transition-all bg-white"
+                      className="w-full px-4 py-2.5 border-2 border-primary-200 rounded-3xl focus:ring-4 focus:ring-primary-500/20 focus:border-primary-400 transition-all bg-white"
                       placeholder="https://..."
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-red-700 mb-1">
+                    <label className="block text-sm font-medium text-primary-700 mb-1">
                       Duree audio (sec)
                     </label>
                     <input
@@ -983,25 +983,25 @@ function BookManagement() {
                       value={formData.duration_seconds}
                       onChange={(e) => setFormData({ ...formData, duration_seconds: parseInt(e.target.value, 10) || 0 })}
                       min="0"
-                      className="w-full px-4 py-2.5 border-2 border-red-200 rounded-xl focus:ring-4 focus:ring-red-500/20 focus:border-red-400 transition-all bg-white"
+                      className="w-full px-4 py-2.5 border-2 border-primary-200 rounded-3xl focus:ring-4 focus:ring-primary-500/20 focus:border-primary-400 transition-all bg-white"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-red-700 mb-1">
+                  <label className="block text-sm font-medium text-primary-700 mb-1">
                     Fichier audio
                   </label>
                   <input
                     type="file"
                     accept="audio/mpeg,audio/mp3,audio/wav,audio/x-wav,audio/mp4,audio/m4a,audio/x-m4a,audio/ogg,.mp3,.wav,.m4a,.ogg"
                     onChange={(e) => setAudioFile(e.target.files?.[0] || null)}
-                    className="w-full px-4 py-2.5 border-2 border-red-200 rounded-xl focus:ring-4 focus:ring-red-500/20 focus:border-red-400 transition-all bg-white mb-2"
+                    className="w-full px-4 py-2.5 border-2 border-primary-200 rounded-3xl focus:ring-4 focus:ring-primary-500/20 focus:border-primary-400 transition-all bg-white mb-2"
                   />
-                  <div className={`rounded-xl border-2 p-3 text-sm ${
+                  <div className={`rounded-3xl border-2 p-3 text-sm ${
                     audioFile || formData.audio_url
                       ? 'border-green-200 bg-green-50 text-green-800'
-                      : 'border-amber-200 bg-amber-50 text-amber-800'
+                      : 'border-accent-200 bg-accent-50 text-accent-800'
                   }`}>
                     <div className="flex items-center gap-2 font-bold">
                       <AudioIcon className="w-5 h-5" />
@@ -1017,14 +1017,14 @@ function BookManagement() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-red-700 mb-1">
+                  <label className="block text-sm font-medium text-primary-700 mb-1">
                     Cover Image
                   </label>
                   <input
                     type="file"
                     accept="image/*"
                     onChange={handleCoverFileChange}
-                    className="w-full px-4 py-2.5 border-2 border-red-200 rounded-xl focus:ring-4 focus:ring-red-500/20 focus:border-red-400 transition-all bg-white mb-2"
+                    className="w-full px-4 py-2.5 border-2 border-primary-200 rounded-3xl focus:ring-4 focus:ring-primary-500/20 focus:border-primary-400 transition-all bg-white mb-2"
                   />
                   {coverPreview && (
                     <div className="mt-2">
@@ -1032,7 +1032,7 @@ function BookManagement() {
                       <img
                         src={coverPreview}
                         alt="Cover preview"
-                        className="w-full max-w-xs h-48 object-cover rounded-lg border-2 border-red-200"
+                        className="w-full max-w-xs h-48 object-cover rounded-2xl border-2 border-primary-200"
                         onError={(e) => {
                           console.error('Error loading cover image:', coverPreview);
                           e.target.style.display = 'none';
@@ -1044,7 +1044,7 @@ function BookManagement() {
 
                 {!editingBook && (
                   <div>
-                    <label className="block text-sm font-medium text-red-700 mb-2">
+                    <label className="block text-sm font-medium text-primary-700 mb-2">
                       Page Images (multiple) *
                     </label>
                     <div className="space-y-3">
@@ -1074,13 +1074,13 @@ function BookManagement() {
                       />
                       <label
                         htmlFor="page-files-input"
-                        className="block w-full px-6 py-4 border-2 border-dashed border-neutral-300 rounded-lg hover:border-neutral-400 hover:bg-neutral-50 transition-all cursor-pointer text-center"
+                        className="block w-full px-6 py-4 border-2 border-dashed border-surface-300 rounded-2xl hover:border-surface-400 hover:bg-surface-50 transition-all cursor-pointer text-center"
                       >
                         <div className="flex flex-col items-center gap-2">
-                          <svg className="w-12 h-12 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <svg className="w-12 h-12 text-surface-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
                           </svg>
-                          <span className="font-semibold text-neutral-700">
+                          <span className="font-semibold text-surface-700">
                             Cliquez pour sélectionner plusieurs pages
                           </span>
                           <span className="text-sm text-gray-500">
@@ -1093,25 +1093,25 @@ function BookManagement() {
                       </label>
                       
                       {pageFiles.length > 0 && (
-                        <div className="mt-3 p-4 bg-green-50 border-2 border-green-200 rounded-xl">
+                        <div className="mt-3 p-4 bg-green-50 border-2 border-green-200 rounded-3xl">
                           <div className="flex items-center justify-between mb-3">
-                            <p className="text-sm font-medium text-neutral-700">
+                            <p className="text-sm font-medium text-surface-700">
                               {pageFiles.length} {pageFiles.length === 1 ? 'fichier sélectionné' : 'fichiers sélectionnés'}
                             </p>
                             <button
                               type="button"
                               onClick={() => setPageFiles([])}
-                              className="text-xs text-red-600 hover:text-red-800 font-medium flex items-center gap-1"
+                              className="text-xs text-primary-600 hover:text-primary-800 font-medium flex items-center gap-1"
                             >
                               <TrashIcon className="w-3 h-3" />
                               <span>Tout effacer</span>
                             </button>
                           </div>
-                          <div className="max-h-40 overflow-y-auto space-y-2 bg-white p-3 rounded-lg border border-green-200">
+                          <div className="max-h-40 overflow-y-auto space-y-2 bg-white p-3 rounded-2xl border border-green-200">
                             {pageFiles.map((file, index) => (
                               <div key={`${file.name}-${file.size}-${index}`} className="flex items-center justify-between p-2 bg-gray-50 rounded hover:bg-gray-100">
                                 <div className="flex items-center gap-3 flex-1">
-                                  <span className="font-bold text-neutral-700 w-8">#{index + 1}</span>
+                                  <span className="font-bold text-surface-700 w-8">#{index + 1}</span>
                                   <span className="text-sm text-gray-700 flex-1 truncate">{file.name}</span>
                                   <span className="text-xs text-gray-500">({(file.size / 1024).toFixed(1)} KB)</span>
                                 </div>
@@ -1120,7 +1120,7 @@ function BookManagement() {
                                   onClick={() => {
                                     setPageFiles(prev => prev.filter((_, i) => i !== index));
                                   }}
-                                  className="ml-2 text-red-500 hover:text-red-700 transition-colors"
+                                  className="ml-2 text-primary-500 hover:text-primary-700 transition-colors"
                                   title="Supprimer"
                                 >
                                   <XIcon className="w-4 h-4" />
@@ -1137,12 +1137,12 @@ function BookManagement() {
                                   // Permettre de réorganiser (optionnel)
                                 }
                               }}
-                              className="text-xs px-3 py-1 bg-neutral-100 text-neutral-700 rounded hover:bg-neutral-200"
+                              className="text-xs px-3 py-1 bg-surface-100 text-surface-700 rounded hover:bg-surface-200"
                             >
                               L'ordre actuel sera utilisé pour les pages
                             </button>
                           </div>
-                          <p className="text-xs text-neutral-600 mt-2 flex items-start gap-2">
+                          <p className="text-xs text-surface-600 mt-2 flex items-start gap-2">
                             <LightBulbIcon className="w-4 h-4 flex-shrink-0 mt-0.5" />
                             <span>L'ordre d'affichage ci-dessus correspond à l'ordre des pages dans le livre. Vous pouvez cliquer sur "Sélectionner" à nouveau pour ajouter plus de fichiers.</span>
                           </p>
@@ -1150,8 +1150,8 @@ function BookManagement() {
                       )}
                       
                       {pageFiles.length === 0 && (
-                        <div className="mt-2 p-3 bg-neutral-50 border border-neutral-200 rounded-lg">
-                          <p className="text-xs text-neutral-700 flex items-start gap-2">
+                        <div className="mt-2 p-3 bg-surface-50 border border-surface-200 rounded-2xl">
+                          <p className="text-xs text-surface-700 flex items-start gap-2">
                             <LightBulbIcon className="w-4 h-4 flex-shrink-0 mt-0.5" />
                             <span>
                               <strong>Astuce:</strong> Cliquez sur la zone ci-dessus, puis dans la fenêtre de sélection, maintenez <strong>Ctrl</strong> (Windows) ou <strong>Cmd</strong> (Mac) et cliquez sur plusieurs fichiers pour les sélectionner tous en même temps. Vous pouvez aussi cliquer plusieurs fois pour ajouter des fichiers progressivement.
@@ -1164,14 +1164,14 @@ function BookManagement() {
                 )}
 
                 <div>
-                  <label className="block text-sm font-medium text-red-700 mb-1">
+                  <label className="block text-sm font-medium text-primary-700 mb-1">
                     Planification de publication
                   </label>
                   <input
                     type="datetime-local"
                     value={formData.publish_at}
                     onChange={(e) => setFormData({ ...formData, publish_at: e.target.value })}
-                    className="w-full px-4 py-2.5 border-2 border-red-200 rounded-xl focus:ring-4 focus:ring-red-500/20 focus:border-red-400 transition-all bg-white"
+                    className="w-full px-4 py-2.5 border-2 border-primary-200 rounded-3xl focus:ring-4 focus:ring-primary-500/20 focus:border-primary-400 transition-all bg-white"
                   />
                 </div>
 
@@ -1244,7 +1244,7 @@ function BookManagement() {
                     disabled={submitting}
                     whileHover={submitting ? {} : { scale: 1.02 }}
                     whileTap={submitting ? {} : { scale: 0.98 }}
-                    className="flex-1 px-6 py-3 bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-xl hover:from-red-600 hover:to-pink-600 transition-all font-medium shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    className="flex-1 px-6 py-3 bg-gradient-to-r from-primary-500 to-secondary-500 text-white rounded-3xl hover:from-primary-600 hover:to-secondary-600 transition-all font-medium shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                   >
                     {submitting ? (
                       <>
@@ -1263,7 +1263,7 @@ function BookManagement() {
                     }}
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    className="flex-1 px-6 py-3 bg-gray-200 text-gray-700 rounded-xl hover:bg-gray-300 transition-colors border-2 border-gray-300"
+                    className="flex-1 px-6 py-3 bg-gray-200 text-gray-700 rounded-3xl hover:bg-gray-300 transition-colors border-2 border-gray-300"
                   >
                     Cancel
                   </motion.button>

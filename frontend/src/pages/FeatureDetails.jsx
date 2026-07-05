@@ -19,8 +19,8 @@ const features = {
       'Aide à la compréhension et à la prononciation',
       'Accessible pour les enfants ayant des difficultés de lecture'
     ],
-    color: 'from-red-500 to-pink-500',
-    bgColor: 'from-red-50 to-pink-50'
+    color: 'from-primary-500 to-secondary-500',
+    bgColor: 'from-primary-50 to-secondary-50'
   },
   'aide-lecture': {
     icon: BookIcon,
@@ -35,8 +35,8 @@ const features = {
       'Espacement des lignes et des mots ajustable',
       'Synthèse vocale pour l\'aide à la prononciation'
     ],
-    color: 'from-red-500 to-pink-500',
-    bgColor: 'from-red-50 to-pink-50'
+    color: 'from-primary-500 to-secondary-500',
+    bgColor: 'from-primary-50 to-secondary-50'
   },
   'enregistrer-voix': {
     icon: MicrophoneIcon,
@@ -50,8 +50,8 @@ const features = {
       'Création de souvenirs audio précieux',
       'Encouragement de la participation active des enfants'
     ],
-    color: 'from-red-500 to-pink-500',
-    bgColor: 'from-red-50 to-pink-50',
+    color: 'from-primary-500 to-secondary-500',
+    bgColor: 'from-primary-50 to-secondary-50',
     comingSoon: true
   }
 };
@@ -62,14 +62,14 @@ function FeatureDetails() {
 
   if (!feature) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-50 via-pink-50 to-orange-50">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 via-secondary-50 to-accent-50">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="text-center"
         >
-          <h1 className="text-3xl font-bold text-neutral-900 mb-4">Fonctionnalité non trouvée</h1>
-          <Link to="/" className="text-red-600 hover:underline">
+          <h1 className="text-3xl font-bold text-surface-900 mb-4">Fonctionnalité non trouvée</h1>
+          <Link to="/" className="text-primary-600 hover:underline">
             Retour à l'accueil
           </Link>
         </motion.div>
@@ -86,13 +86,13 @@ function FeatureDetails() {
         initial={{ y: -100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.5 }}
-        className="sticky top-0 z-50 shadow-md bg-neutral-900/95 backdrop-blur-md"
+        className="sticky top-0 z-50 shadow-md bg-surface-900/95 backdrop-blur-md"
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4 flex justify-between items-center gap-3">
           <Link to="/" className="flex items-center">
             <Logo size="default" />
           </Link>
-          <Link to="/" className="text-neutral-100 hover:text-white font-medium flex items-center gap-2 transition-colors">
+          <Link to="/" className="text-surface-100 hover:text-white font-medium flex items-center gap-2 transition-colors">
             <ChevronLeftIcon className="w-4 h-4" />
             <span className="hidden sm:inline">Retour</span>
           </Link>
@@ -100,7 +100,7 @@ function FeatureDetails() {
       </motion.header>
 
       {/* Hero Section avec étoiles animées */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-white via-red-50/30 to-pink-50/30 py-12 md:py-16">
+      <section className="relative overflow-hidden bg-gradient-to-br from-white via-primary-50/30 to-secondary-50/30 py-12 md:py-16">
         {/* Étoiles animées en arrière-plan */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           {Array.from({ length: 20 }).map((_, i) => (
@@ -134,13 +134,13 @@ function FeatureDetails() {
             transition={{ duration: 0.6 }}
             className="text-center mb-12"
           >
-            <div className="inline-flex items-center justify-center w-24 h-24 rounded-3xl bg-gradient-to-br from-red-500 to-pink-500 mb-6 shadow-2xl">
+            <div className="inline-flex items-center justify-center w-24 h-24 rounded-3xl bg-gradient-to-br from-primary-500 to-secondary-500 mb-6 shadow-2xl">
               <IconComponent className="w-12 h-12 text-white" />
             </div>
             <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold mb-4 leading-tight">
-              <span className="text-red-600 drop-shadow-lg">{feature.title}</span>
+              <span className="text-primary-600 drop-shadow-lg">{feature.title}</span>
             </h1>
-            <p className="text-xl sm:text-2xl text-neutral-700 font-medium">
+            <p className="text-xl sm:text-2xl text-surface-700 font-medium">
               {feature.subtitle}
             </p>
             {feature.comingSoon && (
@@ -148,7 +148,7 @@ function FeatureDetails() {
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 transition={{ delay: 0.3, type: 'spring' }}
-                className="inline-block mt-4 px-6 py-2 bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-full text-sm font-semibold shadow-lg"
+                className="inline-block mt-4 px-6 py-2 bg-gradient-to-r from-primary-500 to-secondary-500 text-white rounded-full text-sm font-semibold shadow-lg"
               >
                 Bientôt disponible
               </motion.span>
@@ -165,13 +165,13 @@ function FeatureDetails() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
-            className="bg-gradient-to-br from-red-50 to-pink-50 rounded-3xl p-8 md:p-12 shadow-xl border-2 border-red-100 mb-12"
+            className="bg-gradient-to-br from-primary-50 to-secondary-50 rounded-3xl p-8 md:p-12 shadow-xl border-2 border-primary-100 mb-12"
           >
-            <h2 className="text-2xl md:text-3xl font-bold text-neutral-900 mb-4 flex items-center gap-3">
+            <h2 className="text-2xl md:text-3xl font-bold text-surface-900 mb-4 flex items-center gap-3">
               <StarIcon className="w-8 h-8 text-yellow-500" />
               À propos
             </h2>
-            <p className="text-lg text-neutral-700 leading-relaxed">
+            <p className="text-lg text-surface-700 leading-relaxed">
               {feature.description}
             </p>
           </motion.div>
@@ -181,10 +181,10 @@ function FeatureDetails() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6, delay: 0.2 }}
-            className="bg-white rounded-3xl p-8 md:p-12 shadow-xl border-2 border-neutral-200"
+            className="bg-white rounded-3xl p-8 md:p-12 shadow-xl border-2 border-surface-200"
           >
-            <h2 className="text-2xl md:text-3xl font-bold text-neutral-900 mb-8 flex items-center gap-3">
-              <SparklesIcon className="w-8 h-8 text-red-600" />
+            <h2 className="text-2xl md:text-3xl font-bold text-surface-900 mb-8 flex items-center gap-3">
+              <SparklesIcon className="w-8 h-8 text-primary-600" />
               Avantages
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -195,12 +195,12 @@ function FeatureDetails() {
                   whileInView={{ opacity: 1, x: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: index * 0.1 }}
-                  className="flex items-start gap-4 p-4 rounded-xl bg-gradient-to-br from-red-50 to-pink-50 border border-red-100"
+                  className="flex items-start gap-4 p-4 rounded-3xl bg-gradient-to-br from-primary-50 to-secondary-50 border border-primary-100"
                 >
-                  <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-r from-red-500 to-pink-500 flex items-center justify-center">
+                  <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-r from-primary-500 to-secondary-500 flex items-center justify-center">
                     <span className="text-white font-bold text-sm">{index + 1}</span>
                   </div>
-                  <p className="text-neutral-700 font-medium leading-relaxed">{benefit}</p>
+                  <p className="text-surface-700 font-medium leading-relaxed">{benefit}</p>
                 </motion.div>
               ))}
             </div>
@@ -217,7 +217,7 @@ function FeatureDetails() {
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="px-8 py-4 bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-full font-semibold text-lg shadow-lg hover:shadow-xl transition-all"
+                className="px-8 py-4 bg-gradient-to-r from-primary-500 to-secondary-500 text-white rounded-full font-semibold text-lg shadow-lg hover:shadow-xl transition-all"
               >
                 Retour à l'accueil
               </motion.button>

@@ -261,7 +261,7 @@ function PDFPageViewer({ pdfUrl, pageNumber, onLoad, onPdfLoaded, imageClassName
           onClick={() => {
             setReloadKey(prev => prev + 1);
           }}
-          className="mt-4 px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors"
+          className="mt-4 px-4 py-2 bg-purple-500 text-white rounded-2xl hover:bg-purple-600 transition-colors"
         >
           Réessayer
         </button>
@@ -1061,7 +1061,7 @@ function BookReader() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-100 via-pink-50 to-orange-100">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-100 via-secondary-50 to-accent-100">
         <motion.div
           initial={{ scale: 0 }}
           animate={{ scale: 1, rotate: 360 }}
@@ -1083,7 +1083,7 @@ function BookReader() {
 
   if (!book || !book.pages || book.pages.length === 0) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-100 via-pink-50 to-orange-100">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-100 via-secondary-50 to-accent-100">
         <div className="text-center">
           <motion.div
             initial={{ scale: 0 }}
@@ -1099,7 +1099,7 @@ function BookReader() {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => navigate('/')}
-            className="px-8 py-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-full font-bold text-lg shadow-lg hover:shadow-xl transition-shadow"
+            className="px-8 py-4 bg-gradient-to-r from-purple-500 to-secondary-500 text-white rounded-full font-bold text-lg shadow-lg hover:shadow-xl transition-shadow"
           >
             Retour à la bibliothèque
           </motion.button>
@@ -1167,7 +1167,7 @@ function BookReader() {
                 disabled={isExtracting || (!currentPageData?.content && !currentPageData?.image_path)}
                 className={`absolute top-4 left-4 z-10 flex items-center gap-2 px-6 py-3 rounded-full font-semibold transition-colors backdrop-blur-sm ${
                   isPlaying
-                    ? 'bg-red-500 hover:bg-red-600 text-white'
+                    ? 'bg-primary-500 hover:bg-primary-600 text-white'
                     : isExtracting
                     ? 'bg-yellow-500 hover:bg-yellow-600 text-white'
                     : 'bg-white/20 hover:bg-white/30 text-white'
@@ -1272,7 +1272,7 @@ function BookReader() {
       </AnimatePresence>
 
       <div 
-        className="h-screen bg-gradient-to-br from-purple-100 via-pink-50 to-orange-100 flex flex-col relative overflow-hidden"
+        className="h-screen bg-gradient-to-br from-purple-100 via-secondary-50 to-accent-100 flex flex-col relative overflow-hidden"
         onTouchStart={onTouchStart}
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
@@ -1284,7 +1284,7 @@ function BookReader() {
       <motion.header 
         initial={{ y: -100 }}
         animate={{ y: 0 }}
-        className="bg-gradient-to-r from-purple-500 via-pink-500 to-orange-500 text-white py-4 px-6 sticky top-0 z-40 shadow-lg"
+        className="bg-gradient-to-r from-purple-500 via-secondary-500 to-accent-500 text-white py-4 px-6 sticky top-0 z-40 shadow-lg"
       >
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <motion.button
@@ -1313,7 +1313,7 @@ function BookReader() {
               disabled={isExtracting || (!currentPageData?.content && !currentPageData?.image_path)}
               className={`flex h-10 shrink-0 items-center gap-2 whitespace-nowrap px-4 py-2 rounded-full font-semibold transition-colors backdrop-blur-sm ${
                 isPlaying
-                  ? 'bg-red-500 hover:bg-red-600 text-white'
+                  ? 'bg-primary-500 hover:bg-primary-600 text-white'
                   : isExtracting
                   ? 'bg-yellow-500 hover:bg-yellow-600 text-white'
                   : 'bg-white/20 hover:bg-white/30 text-white'
@@ -1391,7 +1391,7 @@ function BookReader() {
             className={`absolute left-2 md:left-8 z-20 p-4 md:p-6 rounded-full shadow-2xl transition-all ${
               isFirstPage || isTurning
                 ? 'bg-gray-300 cursor-not-allowed opacity-50'
-                : 'bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white'
+                : 'bg-gradient-to-r from-purple-500 to-secondary-500 hover:from-purple-600 hover:to-secondary-600 text-white'
             }`}
           >
             <ChevronLeftIcon className="w-8 h-8 md:w-10 md:h-10" />
@@ -1403,7 +1403,7 @@ function BookReader() {
             style={{ perspective: '1000px' }}
           >
             <motion.div
-              className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-3xl shadow-2xl p-4 md:p-8 lg:p-12 border-4 border-white"
+              className="bg-gradient-to-br from-accent-50 to-accent-50 rounded-3xl shadow-2xl p-4 md:p-8 lg:p-12 border-4 border-white"
               whileHover={{ scale: 1.02 }}
               transition={{ type: 'spring', stiffness: 300 }}
             >
@@ -1514,7 +1514,7 @@ function BookReader() {
                             ? currentPageData.content.split(' ').map((word, i) => (
                                 <span key={i} className="inline-block mr-1">
                                   {word.split('').map((char, j) => (
-                                    <span key={j} className={j % 2 === 0 ? '' : 'text-blue-500'}>
+                                    <span key={j} className={j % 2 === 0 ? '' : 'text-primary-500'}>
                                       {char}
                                     </span>
                                   ))}
@@ -1549,7 +1549,7 @@ function BookReader() {
             className={`absolute right-2 md:right-8 z-20 p-4 md:p-6 rounded-full shadow-2xl transition-all ${
               isLastPage || isTurning
                 ? 'bg-gray-300 cursor-not-allowed opacity-50'
-                : 'bg-gradient-to-r from-pink-500 to-orange-500 hover:from-pink-600 hover:to-orange-600 text-white'
+                : 'bg-gradient-to-r from-secondary-500 to-accent-500 hover:from-secondary-600 hover:to-accent-600 text-white'
             }`}
           >
             <ChevronRightIcon className="w-8 h-8 md:w-10 md:h-10" />
@@ -1561,7 +1561,7 @@ function BookReader() {
       <motion.footer
         initial={{ y: 100 }}
         animate={{ y: 0 }}
-        className="bg-gradient-to-r from-purple-500 via-pink-500 to-orange-500 text-white py-6 px-6 shadow-lg"
+        className="bg-gradient-to-r from-purple-500 via-secondary-500 to-accent-500 text-white py-6 px-6 shadow-lg"
       >
         <div className="max-w-7xl mx-auto">
           {/* Indicateurs de pages - style amusant */}

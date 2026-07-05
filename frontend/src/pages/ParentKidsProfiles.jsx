@@ -132,17 +132,17 @@ function ParentKidsProfiles() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-neutral-50 to-neutral-100 dark:from-neutral-900 dark:to-neutral-800">
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-surface-50 to-surface-100 dark:from-surface-900 dark:to-surface-800">
         <div className="text-center">
-          <div className="mx-auto h-12 w-12 animate-spin rounded-full border-b-2 border-red-500"></div>
-          <p className="mt-4 text-neutral-600 dark:text-neutral-300">Chargement...</p>
+          <div className="mx-auto h-12 w-12 animate-spin rounded-full border-b-2 border-primary-500"></div>
+          <p className="mt-4 text-surface-600 dark:text-surface-300">Chargement...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-neutral-50 to-neutral-100 dark:from-neutral-900 dark:to-neutral-800">
+    <div className="min-h-screen bg-gradient-to-br from-surface-50 to-surface-100 dark:from-surface-900 dark:to-surface-800">
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-4">
@@ -150,10 +150,10 @@ function ParentKidsProfiles() {
               <Logo size="default" showText={true} />
             </Link>
             <div>
-              <h1 className="text-2xl font-bold text-neutral-800 dark:text-neutral-100">
+              <h1 className="text-2xl font-bold text-surface-800 dark:text-surface-100">
                 Profils enfants
               </h1>
-              <p className="text-sm text-neutral-500 dark:text-neutral-400">
+              <p className="text-sm text-surface-500 dark:text-surface-400">
                 Gerer les profils associes au parent connecte.
               </p>
             </div>
@@ -161,13 +161,13 @@ function ParentKidsProfiles() {
           <div className="flex gap-3">
             <Link
               to="/parent"
-              className="rounded-lg bg-white px-4 py-2 font-bold text-neutral-700 shadow-sm transition hover:bg-neutral-50 dark:bg-neutral-800 dark:text-neutral-200 dark:hover:bg-neutral-700"
+              className="rounded-2xl bg-white px-4 py-2 font-bold text-surface-700 shadow-sm transition hover:bg-surface-50 dark:bg-surface-800 dark:text-surface-200 dark:hover:bg-surface-700"
             >
               Dashboard
             </Link>
             <button
               onClick={handleLogout}
-              className="inline-flex items-center gap-2 rounded-lg bg-red-500 px-4 py-2 font-bold text-white transition hover:bg-red-600"
+              className="inline-flex items-center gap-2 rounded-2xl bg-primary-500 px-4 py-2 font-bold text-white transition hover:bg-primary-600"
             >
               <LogOutIcon className="h-5 w-5" />
               <span>Deconnexion</span>
@@ -177,11 +177,11 @@ function ParentKidsProfiles() {
 
         <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-3">
           {stats.map((item) => (
-            <div key={item.label} className="rounded-xl bg-white p-5 shadow-sm dark:bg-neutral-800">
-              <span className="text-sm font-bold text-neutral-500 dark:text-neutral-400">
+            <div key={item.label} className="rounded-3xl bg-white p-5 shadow-sm dark:bg-surface-800">
+              <span className="text-sm font-bold text-surface-500 dark:text-surface-400">
                 {item.label}
               </span>
-              <span className="mt-1 block text-3xl font-black text-neutral-900 dark:text-neutral-100">
+              <span className="mt-1 block text-3xl font-black text-surface-900 dark:text-surface-100">
                 {item.value}
               </span>
             </div>

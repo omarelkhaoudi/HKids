@@ -69,7 +69,7 @@ function AdminDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-white via-red-50/30 to-pink-50/30 text-neutral-900 relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-white via-primary-50/30 to-secondary-50/30 text-surface-900 relative overflow-hidden">
       {/* Étoiles animées en arrière-plan */}
       <StarParticles count={15} />
       
@@ -78,7 +78,7 @@ function AdminDashboard() {
         initial={{ x: -80, opacity: 0 }}
         animate={{ x: 0, opacity: 1 }}
         transition={{ duration: 0.3 }}
-        className="fixed inset-y-0 left-0 w-64 bg-white/90 backdrop-blur-lg border-r border-red-200/50 z-40 hidden md:flex shadow-xl"
+        className="fixed inset-y-0 left-0 w-64 bg-white/90 backdrop-blur-lg border-r border-primary-200/50 z-40 hidden md:flex shadow-xl"
       >
         <div className="p-6 h-full flex flex-col">
           <motion.div
@@ -89,7 +89,7 @@ function AdminDashboard() {
             <div className="mb-3">
               <Logo size="default" showText={true} className="pointer-events-none" />
             </div>
-            <p className="text-xs text-neutral-500 mb-6 uppercase tracking-wide">
+            <p className="text-xs text-surface-500 mb-6 uppercase tracking-wide">
               Tableau de bord administrateur
             </p>
           </motion.div>
@@ -103,10 +103,10 @@ function AdminDashboard() {
                 <Link
                   key={item.to}
                   to={item.to}
-                  className={`group flex items-center gap-3 px-4 py-2.5 rounded-xl font-medium transition-all ${
+                  className={`group flex items-center gap-3 px-4 py-2.5 rounded-3xl font-medium transition-all ${
                     active
-                      ? 'bg-gradient-to-r from-red-500 to-pink-500 text-white shadow-lg'
-                      : 'text-neutral-700 hover:bg-red-50/50 hover:border-red-200 border border-transparent'
+                      ? 'bg-gradient-to-r from-primary-500 to-secondary-500 text-white shadow-lg'
+                      : 'text-surface-700 hover:bg-primary-50/50 hover:border-primary-200 border border-transparent'
                   }`}
                 >
                   <Icon className="w-5 h-5" />
@@ -116,17 +116,17 @@ function AdminDashboard() {
             })}
           </nav>
 
-          <div className="border-t border-neutral-200 pt-5 mt-4 text-xs">
-            <div className="mb-3 p-3 rounded-xl bg-neutral-50 border border-neutral-200">
-              <p className="text-neutral-500 mb-1">Connecté en tant que</p>
-              <p className="font-medium text-neutral-900 flex items-center gap-2">
+          <div className="border-t border-surface-200 pt-5 mt-4 text-xs">
+            <div className="mb-3 p-3 rounded-3xl bg-surface-50 border border-surface-200">
+              <p className="text-surface-500 mb-1">Connecté en tant que</p>
+              <p className="font-medium text-surface-900 flex items-center gap-2">
                 <UserIcon className="w-4 h-4" />
                 {user.username}
               </p>
             </div>
             <button
               onClick={handleLogout}
-              className="w-full px-4 py-2.5 rounded-xl bg-gradient-to-r from-red-500 to-pink-500 text-white font-medium hover:from-red-600 hover:to-pink-600 transition-all flex items-center justify-center gap-2 text-sm shadow-lg hover:shadow-xl"
+              className="w-full px-4 py-2.5 rounded-3xl bg-gradient-to-r from-primary-500 to-secondary-500 text-white font-medium hover:from-primary-600 hover:to-secondary-600 transition-all flex items-center justify-center gap-2 text-sm shadow-lg hover:shadow-xl"
             >
               <LogOutIcon className="w-4 h-4" />
               <span>Déconnexion</span>
@@ -143,16 +143,16 @@ function AdminDashboard() {
         className="md:ml-64 relative z-10"
       >
         {/* Top bar for mobile */}
-        <header className="md:hidden sticky top-0 z-30 bg-white/90 backdrop-blur-lg border-b border-red-200/50 px-4 py-3 flex items-center justify-between shadow-sm">
+        <header className="md:hidden sticky top-0 z-30 bg-white/90 backdrop-blur-lg border-b border-primary-200/50 px-4 py-3 flex items-center justify-between shadow-sm">
           <Logo size="small" />
-          <div className="flex items-center gap-3 text-xs text-neutral-600">
-            <span className="hidden xs:inline-flex items-center gap-1 px-2 py-1 rounded-full bg-red-50 border border-red-200">
-              <UserIcon className="w-3 h-3 text-red-600" />
+          <div className="flex items-center gap-3 text-xs text-surface-600">
+            <span className="hidden xs:inline-flex items-center gap-1 px-2 py-1 rounded-full bg-primary-50 border border-primary-200">
+              <UserIcon className="w-3 h-3 text-primary-600" />
               {user.username}
             </span>
             <button
               onClick={handleLogout}
-              className="px-3 py-1 rounded-lg bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-xs font-medium text-white flex items-center gap-1 transition-all shadow-sm"
+              className="px-3 py-1 rounded-2xl bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600 text-xs font-medium text-white flex items-center gap-1 transition-all shadow-sm"
             >
               <LogOutIcon className="w-3 h-3" />
               <span>Quitter</span>
