@@ -301,226 +301,255 @@ function KidsLibrary() {
   };
 
   return (
-    <div className="min-h-screen bg-[#f7f3ea] text-surface-900">
+    <div className="min-h-screen bg-slate-900 text-white font-sans selection:bg-primary-500 selection:text-white">
+      {/* HEADER */}
       <motion.header
         initial={{ y: -80, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        className="sticky top-0 z-50 border-b border-white/60 bg-white/90 px-4 py-3 shadow-sm backdrop-blur"
+        className="sticky top-0 z-50 bg-slate-900/80 backdrop-blur-xl border-b border-white/10 px-4 py-3 shadow-lg"
       >
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-3">
-          <Logo size="default" showText={true} />
+          <Logo size="default" showText={true} className="text-white" />
 
           <div className="flex items-center gap-2">
-            <Link
-              to="/kids"
-              className="grid h-14 w-14 place-items-center rounded-full bg-emerald-100 text-emerald-700 transition hover:bg-emerald-200"
-              title="Accueil"
-            >
-              <HomeIcon className="h-7 w-7" />
+            <Link to="/kids" className="grid h-12 w-12 place-items-center rounded-full bg-white/10 text-white transition hover:bg-white/20" title="Accueil">
+              <HomeIcon className="h-6 w-6" />
             </Link>
-            <Link
-              to="/content-library"
-              className="grid h-14 w-14 place-items-center rounded-full bg-yellow-100 text-yellow-700 transition hover:bg-yellow-200"
-              title="Contenus"
-            >
-              <BookIcon className="h-7 w-7" />
+            <Link to="/content-library" className="grid h-12 w-12 place-items-center rounded-full bg-white/10 text-white transition hover:bg-white/20" title="Contenus">
+              <BookIcon className="h-6 w-6" />
             </Link>
-            <Link
-              to="/favorites"
-              className="grid h-14 w-14 place-items-center rounded-full bg-rose-100 text-rose-600 transition hover:bg-rose-200"
-              title="Favoris"
-            >
-              <HeartIcon className="h-7 w-7" />
+            <Link to="/favorites" className="grid h-12 w-12 place-items-center rounded-full bg-white/10 text-white transition hover:bg-white/20" title="Favoris">
+              <HeartIcon className="h-6 w-6" />
             </Link>
-            <Link
-              to="/history"
-              className="grid h-14 w-14 place-items-center rounded-full bg-sky-100 text-sky-700 transition hover:bg-sky-200"
-              title="Historique"
-            >
-              <HistoryIcon className="h-7 w-7" />
+            <Link to="/history" className="grid h-12 w-12 place-items-center rounded-full bg-white/10 text-white transition hover:bg-white/20" title="Historique">
+              <HistoryIcon className="h-6 w-6" />
             </Link>
-            <button
-              onClick={handleLogout}
-              className="grid h-14 w-14 place-items-center rounded-full bg-surface-100 text-surface-700 transition hover:bg-surface-200"
-              title="Deconnexion"
-            >
-              <LogOutIcon className="h-7 w-7" />
+            <button onClick={handleLogout} className="grid h-12 w-12 place-items-center rounded-full bg-white/10 text-white transition hover:bg-white/20" title="Déconnexion">
+              <LogOutIcon className="h-6 w-6" />
             </button>
           </div>
         </div>
       </motion.header>
 
-      <main className="mx-auto max-w-7xl px-4 py-6 pb-36 sm:px-6 lg:px-8">
-        <section className="mb-6 grid gap-4 lg:grid-cols-[1.3fr_0.7fr]">
-          <div className="rounded-[2rem] bg-gradient-to-br from-cyan-500 via-emerald-400 to-yellow-300 p-6 text-white shadow-xl">
-            <div className="flex min-h-56 flex-col justify-between gap-6">
-              <div>
-                <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/20 px-4 py-2 text-sm font-bold backdrop-blur">
-                  <SparklesIcon className="h-5 w-5" />
-                  Le Lit Qui Lit
+      {loading ? (
+        <div className="mx-auto max-w-7xl px-4 py-8">
+           <BookGridSkeleton />
+        </div>
+      ) : visibleBooks.length === 0 && !searchQuery ? (
+        <div className="flex flex-col items-center justify-center py-32 px-4 text-center">
+          <div className="w-24 h-24 bg-white/5 rounded-full flex items-center justify-center mb-6">
+            <BookIcon className="h-12 w-12 text-slate-500" />
+          </div>
+          <h3 className="mb-2 text-3xl font-black text-white">Bibliothèque vide</h3>
+          <p className="text-slate-400 text-lg">Demande à ton parent d'autoriser plus de contenus.</p>
+        </div>
+      ) : (
+        <>
+          <main className="pb-36">
+            
+            {/* HERO BANNER (NETFLIX STYLE) */}
+            {visibleBooks.length > 0 && selectedTheme === 'all' && !searchQuery && (
+              <div className="relative w-full h-[50vh] min-h-[400px] max-h-[600px] mb-12 overflow-hidden flex items-end">
+                {/* Background Cover */}
+                <div className="absolute inset-0 z-0">
+                  <img 
+                    src={getImageUrl(visibleBooks[0].cover_image)} 
+                    alt="Hero Background" 
+                    className="w-full h-full object-cover object-top opacity-60"
+                  />
+                  {/* Gradients to fade into background */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/60 to-transparent"></div>
+                  <div className="absolute inset-0 bg-gradient-to-r from-slate-900 via-slate-900/40 to-transparent"></div>
                 </div>
-                <h1 className="max-w-2xl text-5xl font-black leading-tight sm:text-6xl">
-                  Touche. Ecoute.
-                </h1>
+
+                <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
+                  <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>
+                    <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/20 backdrop-blur-md text-white rounded-full text-xs font-bold mb-4 uppercase tracking-wider border border-white/10">
+                      <SparklesIcon className="h-4 w-4 text-yellow-400" /> Nouveauté
+                    </div>
+                    <h1 className="text-4xl sm:text-6xl md:text-7xl font-black text-white mb-4 leading-tight drop-shadow-2xl">
+                      {visibleBooks[0].title}
+                    </h1>
+                    <div className="flex items-center gap-4 text-sm font-semibold text-slate-300 mb-6">
+                      <span className="bg-slate-800 px-2 py-1 rounded text-white">{visibleBooks[0].age_group_min || '3'}+ ans</span>
+                      {visibleBooks[0].duration_seconds > 0 && (
+                        <span>{formatDuration(visibleBooks[0].duration_seconds)}</span>
+                      )}
+                      <span className="hidden sm:inline">{visibleBooks[0].category_name}</span>
+                    </div>
+                    <div className="flex gap-4">
+                      <button 
+                        onClick={() => toggleAudio(visibleBooks[0])}
+                        className="flex items-center gap-2 bg-white text-slate-900 px-6 py-3 rounded-full font-black text-lg hover:bg-slate-200 transition-all hover:scale-105"
+                      >
+                        {audioPlayer.activeBook?.id === visibleBooks[0].id && audioPlayer.playing ? (
+                          <><PauseIcon className="h-6 w-6" /> Pause</>
+                        ) : (
+                          <><PlayIcon className="h-6 w-6" /> Écouter</>
+                        )}
+                      </button>
+                      <Link 
+                        to={`/book/${visibleBooks[0].id}`}
+                        className="flex items-center gap-2 bg-white/20 backdrop-blur-md text-white border border-white/30 px-6 py-3 rounded-full font-bold text-lg hover:bg-white/30 transition-all"
+                      >
+                        <BookIcon className="h-6 w-6" /> Lire
+                      </Link>
+                    </div>
+                  </motion.div>
+                </div>
+              </div>
+            )}
+
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              
+              {/* STICKY SEARCH & FILTERS */}
+              <div className="sticky top-20 z-40 mb-12 bg-slate-900/90 backdrop-blur-md py-4 border-b border-white/10 flex flex-col sm:flex-row gap-4 justify-between items-center">
+                <div className="relative w-full sm:w-96 group">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-white transition-colors">
+                    <SearchIcon className="h-5 w-5" />
+                  </div>
+                  <input
+                    type="text"
+                    placeholder="Chercher une histoire..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full bg-slate-800/50 border border-slate-700 text-white rounded-full pl-11 pr-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-slate-800 transition-all font-medium"
+                  />
+                </div>
+                <div className="flex overflow-x-auto hide-scrollbar gap-2 w-full sm:w-auto pb-2 sm:pb-0">
+                  {languages.map((language) => (
+                    <button
+                      key={language.id}
+                      onClick={() => setSelectedLanguage(language.id)}
+                      className={`whitespace-nowrap px-5 py-2.5 rounded-full text-sm font-bold transition-all ${
+                        selectedLanguage === language.id
+                          ? 'bg-primary-500 text-white shadow-lg shadow-primary-500/30'
+                          : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+                      }`}
+                    >
+                      {language.label}
+                    </button>
+                  ))}
+                </div>
               </div>
 
-              <div className="grid max-w-xl grid-cols-3 gap-3">
-                <div className="rounded-2xl bg-white/20 p-4 backdrop-blur">
-                  <BookIcon className="mb-2 h-7 w-7" />
-                  <span className="text-3xl font-black">{books.length}</span>
+              {/* EMPTY STATE FOR SEARCH */}
+              {visibleBooks.length === 0 && searchQuery && (
+                <div className="flex flex-col items-center justify-center py-20 text-center">
+                  <SearchIcon className="h-16 w-16 text-slate-600 mb-4" />
+                  <h3 className="text-2xl font-bold text-white mb-2">Aucun résultat</h3>
+                  <p className="text-slate-400">Aucune histoire ne correspond à "{searchQuery}".</p>
                 </div>
-                <div className="rounded-2xl bg-white/20 p-4 backdrop-blur">
-                  <SparklesIcon className="mb-2 h-7 w-7" />
-                  <span className="text-3xl font-black">{completedBooks}</span>
-                </div>
-                <div className="rounded-2xl bg-white/20 p-4 backdrop-blur">
-                  <AudioIcon className="mb-2 h-7 w-7" />
-                  <span className="text-3xl font-black">{totalMinutes}</span>
-                </div>
-              </div>
-            </div>
-          </div>
+              )}
 
-          <div className="rounded-[2rem] bg-white p-5 shadow-lg">
-            <div className="mb-4 flex items-center gap-3">
-              <div className="grid h-12 w-12 place-items-center rounded-2xl bg-indigo-100 text-indigo-600">
-                <SearchIcon className="h-6 w-6" />
-              </div>
-              <p className="text-lg font-black text-surface-900">Adulte</p>
-            </div>
-            <input
-              type="text"
-              placeholder="Recherche..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="mb-4 w-full rounded-2xl border-2 border-surface-200 bg-surface-50 px-4 py-3 text-base font-semibold outline-none transition focus:border-cyan-500 focus:bg-white"
-            />
-            <div className="grid grid-cols-4 gap-2">
-              {languages.map((language) => (
-                <button
-                  key={language.id}
-                  onClick={() => setSelectedLanguage(language.id)}
-                  className={`min-h-14 rounded-2xl px-3 py-3 text-sm font-black transition ${
-                    selectedLanguage === language.id
-                      ? 'bg-surface-900 text-white'
-                      : 'bg-surface-100 text-surface-700 hover:bg-surface-200'
-                  }`}
-                >
-                  {language.label}
-                </button>
-              ))}
-            </div>
-          </div>
-        </section>
+              {/* UNIVERS / CATEGORIES (DISNEY+ STYLE CAROUSEL) */}
+              {visibleBooks.length > 0 && !searchQuery && (
+                <section className="mb-12">
+                  <h2 className="text-2xl font-black text-white mb-4 px-2">Univers</h2>
+                  <div className="flex overflow-x-auto hide-scrollbar snap-x snap-mandatory gap-4 pb-4 px-2 -mx-2">
+                    {childThemes.map((theme) => (
+                      <button
+                        key={theme.id}
+                        onClick={() => setSelectedTheme(theme.id)}
+                        className={`group relative snap-start shrink-0 w-40 sm:w-48 aspect-[4/3] rounded-[1.5rem] p-4 text-left overflow-hidden transition-all duration-300 ${
+                          selectedTheme === theme.id ? 'ring-4 ring-white ring-offset-4 ring-offset-slate-900 scale-100 shadow-[0_0_30px_rgba(255,255,255,0.2)]' : 'hover:scale-105 hover:shadow-xl'
+                        }`}
+                      >
+                        {/* Gradient Background */}
+                        <div className={`absolute inset-0 bg-gradient-to-br ${theme.gradient} opacity-90 group-hover:opacity-100 transition-opacity`}></div>
+                        {/* Overlay */}
+                        <div className="absolute inset-0 bg-black/10"></div>
+                        <div className="relative z-10 flex flex-col h-full justify-between">
+                          <span className="text-4xl filter drop-shadow-md">{theme.pictogram}</span>
+                          <div>
+                            <span className="inline-block bg-white/20 backdrop-blur text-white text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full mb-1">
+                              {theme.cue}
+                            </span>
+                            <span className="block text-white font-black text-lg sm:text-xl drop-shadow-md">
+                              {theme.shortLabel || theme.label}
+                            </span>
+                          </div>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </section>
+              )}
 
-        <section className="mb-8">
-          <div className="mb-4 flex items-center justify-between gap-4">
-            <h2 className="text-2xl font-black text-surface-900">Univers</h2>
-            <span className="rounded-full bg-white px-4 py-2 text-sm font-bold text-surface-600 shadow-sm">
-              {visibleBooks.length} contenus
-            </span>
-          </div>
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-7">
-            {childThemes.map((theme) => (
-              <motion.button
-                key={theme.id}
-                whileHover={{ y: -3 }}
-                whileTap={{ scale: 0.97 }}
-                onClick={() => setSelectedTheme(theme.id)}
-                aria-label={theme.label}
-                className={`min-h-36 rounded-[1.75rem] bg-gradient-to-br ${theme.gradient} p-4 text-left text-white shadow-lg transition ${
-                  selectedTheme === theme.id ? 'ring-4 ring-surface-900 ring-offset-4' : 'hover:shadow-xl'
-                }`}
-              >
-                <span className="mb-3 grid h-16 w-16 place-items-center rounded-2xl bg-white/25 text-4xl font-black backdrop-blur">
-                  {theme.pictogram}
-                </span>
-                <span className="mb-1 inline-flex min-h-7 items-center rounded-full bg-white/20 px-2 text-xs font-black">
-                  {theme.cue}
-                </span>
-                <span className="block text-xl font-black leading-tight">{theme.shortLabel || theme.label}</span>
-              </motion.button>
-            ))}
-          </div>
-        </section>
+              {/* FEATURED CAROUSEL */}
+              {featuredBooks.length > 0 && !searchQuery && selectedTheme === 'all' && (
+                <section className="mb-12">
+                  <h2 className="text-2xl font-black text-white mb-4 px-2">À écouter maintenant</h2>
+                  <div className="flex overflow-x-auto hide-scrollbar snap-x snap-mandatory gap-4 pb-6 px-2 -mx-2">
+                    {featuredBooks.map((book) => (
+                      <div key={book.id} className="snap-start shrink-0 w-[160px] sm:w-[200px] md:w-[240px]">
+                        <BookCard
+                          book={book}
+                          playing={audioPlayer.activeBook?.id === book.id && audioPlayer.playing}
+                          onToggleAudio={toggleAudio}
+                          onToggleFavorite={toggleFavorite}
+                          downloadStatus={offlineContent.getBookStatus(book.id)}
+                          downloadProgress={offlineContent.progressById[offlineContentIds.book(book.id)]}
+                          onDownload={handleDownloadBook}
+                          onRemoveDownload={handleRemoveDownload}
+                          onCancelDownload={handleCancelDownload}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              )}
 
-        {loading ? (
-          <BookGridSkeleton />
-        ) : visibleBooks.length === 0 ? (
-          <div className="rounded-[2rem] bg-white p-12 text-center shadow-lg">
-            <BookIcon className="mx-auto mb-4 h-16 w-16 text-surface-400" />
-            <h3 className="mb-2 text-2xl font-black text-surface-800">Aucun contenu disponible</h3>
-            <p className="text-surface-500">
-              Demande a ton parent d'autoriser plus de contenus.
-            </p>
-          </div>
-        ) : (
-          <>
-            {featuredBooks.length > 0 && (
-              <section className="mb-8">
-                <h2 className="mb-4 text-2xl font-black text-surface-900">A ecouter maintenant</h2>
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                  {featuredBooks.map((book) => (
-                    <BookCard
-                      key={book.id}
-                      book={book}
-                      large
-                      playing={audioPlayer.activeBook?.id === book.id && audioPlayer.playing}
+              {/* RECOMMENDATIONS CAROUSELS */}
+              {!searchQuery && selectedTheme === 'all' && recommendationSections.length > 0 && (
+                <div className="space-y-12 mb-12">
+                  {recommendationSections.map((section) => (
+                    <RecommendationCarousel
+                      key={section.id}
+                      section={section}
+                      playingBookId={audioPlayer.activeBook?.id}
+                      playing={audioPlayer.playing}
                       onToggleAudio={toggleAudio}
                       onToggleFavorite={toggleFavorite}
-                      downloadStatus={offlineContent.getBookStatus(book.id)}
-                      downloadProgress={offlineContent.progressById[offlineContentIds.book(book.id)]}
+                      offlineContent={offlineContent}
                       onDownload={handleDownloadBook}
                       onRemoveDownload={handleRemoveDownload}
                       onCancelDownload={handleCancelDownload}
                     />
                   ))}
                 </div>
-              </section>
-            )}
+              )}
 
-            {recommendationSections.length > 0 && (
-              <section className="mb-8 space-y-8">
-                {recommendationSections.map((section) => (
-                  <RecommendationSection
-                    key={section.id}
-                    section={section}
-                    playingBookId={audioPlayer.activeBook?.id}
-                    playing={audioPlayer.playing}
-                    onToggleAudio={toggleAudio}
-                    onToggleFavorite={toggleFavorite}
-                    offlineContent={offlineContent}
-                    onDownload={handleDownloadBook}
-                    onRemoveDownload={handleRemoveDownload}
-                    onCancelDownload={handleCancelDownload}
-                  />
-                ))}
-              </section>
-            )}
+              {/* ALL STORIES GRID */}
+              {visibleBooks.length > 0 && (
+                <section className="mb-12">
+                  <h2 className="text-2xl font-black text-white mb-6 px-2">
+                    {searchQuery ? 'Résultats de recherche' : selectedTheme !== 'all' ? 'Dans cet univers' : 'Toutes les histoires'}
+                  </h2>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 sm:gap-6 px-2">
+                    {visibleBooks.map((book) => (
+                      <BookCard
+                        key={book.id}
+                        book={book}
+                        playing={audioPlayer.activeBook?.id === book.id && audioPlayer.playing}
+                        onToggleAudio={toggleAudio}
+                        onToggleFavorite={toggleFavorite}
+                        downloadStatus={offlineContent.getBookStatus(book.id)}
+                        downloadProgress={offlineContent.progressById[offlineContentIds.book(book.id)]}
+                        onDownload={handleDownloadBook}
+                        onRemoveDownload={handleRemoveDownload}
+                        onCancelDownload={handleCancelDownload}
+                      />
+                    ))}
+                  </div>
+                </section>
+              )}
+            </div>
+          </main>
+        </>
+      )}
 
-            <section>
-              <h2 className="mb-4 text-2xl font-black text-surface-900">Toutes les histoires</h2>
-              <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6">
-                {visibleBooks.map((book) => (
-                  <BookCard
-                    key={book.id}
-                    book={book}
-                    playing={audioPlayer.activeBook?.id === book.id && audioPlayer.playing}
-                    onToggleAudio={toggleAudio}
-                    onToggleFavorite={toggleFavorite}
-                    downloadStatus={offlineContent.getBookStatus(book.id)}
-                    downloadProgress={offlineContent.progressById[offlineContentIds.book(book.id)]}
-                    onDownload={handleDownloadBook}
-                    onRemoveDownload={handleRemoveDownload}
-                    onCancelDownload={handleCancelDownload}
-                  />
-                ))}
-              </div>
-            </section>
-          </>
-        )}
-      </main>
-
+      {/* AUDIO PLAYER & ASSISTANT */}
       <AudioPlayer
         book={audioPlayer.activeBook}
         playing={audioPlayer.playing}
@@ -551,41 +580,52 @@ function KidsLibrary() {
         onVoiceChange={handleVoiceChange}
       />
       <VoiceAssistant />
+
+      {/* Add custom CSS for hide-scrollbar if not in index.css */}
+      <style>{`
+        .hide-scrollbar::-webkit-scrollbar {
+          display: none;
+        }
+        .hide-scrollbar {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+      `}</style>
     </div>
   );
 }
 
-function RecommendationSection({ section, playingBookId, playing, onToggleAudio, onToggleFavorite, offlineContent, onDownload, onRemoveDownload, onCancelDownload }) {
+// ---------------------------------------------------------
+// NEW COMPONENTS
+// ---------------------------------------------------------
+
+function RecommendationCarousel({ section, playingBookId, playing, onToggleAudio, onToggleFavorite, offlineContent, onDownload, onRemoveDownload, onCancelDownload }) {
   const books = Array.isArray(section.items) ? section.items : [];
   if (books.length === 0) return null;
 
   return (
     <section>
-      <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h2 className="text-2xl font-black text-surface-900">{section.title}</h2>
-          {section.subtitle && (
-            <p className="mt-1 text-sm font-bold text-surface-500">{section.subtitle}</p>
-          )}
-        </div>
-        <span className="rounded-full bg-white px-4 py-2 text-sm font-bold text-surface-600 shadow-sm">
-          {books.length} choix
-        </span>
+      <div className="mb-4 px-2">
+        <h2 className="text-2xl font-black text-white">{section.title}</h2>
+        {section.subtitle && (
+          <p className="text-slate-400 font-medium text-sm mt-1">{section.subtitle}</p>
+        )}
       </div>
-      <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
+      <div className="flex overflow-x-auto hide-scrollbar snap-x snap-mandatory gap-4 pb-6 px-2 -mx-2">
         {books.map((book) => (
-          <BookCard
-            key={`${section.id}-${book.id}`}
-            book={book}
-            playing={playingBookId === book.id && playing}
-            onToggleAudio={onToggleAudio}
-            onToggleFavorite={onToggleFavorite}
-            downloadStatus={offlineContent.getBookStatus(book.id)}
-            downloadProgress={offlineContent.progressById[offlineContentIds.book(book.id)]}
-            onDownload={onDownload}
-            onRemoveDownload={onRemoveDownload}
-            onCancelDownload={onCancelDownload}
-          />
+          <div key={`${section.id}-${book.id}`} className="snap-start shrink-0 w-[160px] sm:w-[200px] md:w-[240px]">
+            <BookCard
+              book={book}
+              playing={playingBookId === book.id && playing}
+              onToggleAudio={onToggleAudio}
+              onToggleFavorite={onToggleFavorite}
+              downloadStatus={offlineContent.getBookStatus(book.id)}
+              downloadProgress={offlineContent.progressById[offlineContentIds.book(book.id)]}
+              onDownload={onDownload}
+              onRemoveDownload={onRemoveDownload}
+              onCancelDownload={onCancelDownload}
+            />
+          </div>
         ))}
       </div>
     </section>
@@ -594,7 +634,6 @@ function RecommendationSection({ section, playingBookId, playing, onToggleAudio,
 
 function BookCard({
   book,
-  large = false,
   playing,
   onToggleAudio,
   onToggleFavorite,
@@ -606,139 +645,110 @@ function BookCard({
 }) {
   const coverImageUrl = getImageUrl(book.cover_image);
   const favorite = storage.isFavorite(book.id);
-  const duration = formatDuration(book.duration_seconds);
   const hasAudio = Boolean(book.audio_url);
   const downloaded = downloadStatus?.status === 'downloaded';
   const downloading = downloadStatus?.status === 'downloading' || Number(downloadProgress) > 0;
   const progress = Math.max(0, Math.min(100, Number(downloadProgress || downloadStatus?.progress || 0)));
 
   return (
-    <motion.article
+    <motion.div
       layout
-      whileHover={{ y: -4 }}
-      className="group overflow-hidden rounded-[1.5rem] bg-white shadow-lg transition hover:shadow-xl"
+      whileHover={{ scale: 1.05, y: -5 }}
+      transition={{ type: "spring", stiffness: 300, damping: 20 }}
+      className="group relative flex flex-col w-full h-full"
     >
-      <Link to={`/book/${book.id}`} className="block">
-        <div className={`relative bg-surface-100 ${large ? 'aspect-[4/3]' : 'aspect-[3/4]'}`}>
-          {coverImageUrl ? (
-            <img
-              src={coverImageUrl}
-              alt={book.title}
-              className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
-            />
-          ) : (
-            <div className="grid h-full w-full place-items-center bg-gradient-to-br from-cyan-100 to-emerald-100">
-              <BookIcon className="h-16 w-16 text-cyan-700" />
-            </div>
-          )}
-          <div className="absolute left-3 top-3 rounded-full bg-white/90 px-3 py-1 text-xs font-black text-surface-800 shadow-sm">
-            {(book.language || 'fr').toUpperCase()}
-          </div>
-          <div className={`absolute bottom-3 left-3 inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-black backdrop-blur ${
-            hasAudio ? 'bg-surface-900/80 text-white' : 'bg-white/90 text-accent-700'
-          }`}>
-            <AudioIcon className="h-4 w-4" />
-            {hasAudio ? (duration || 'Audio') : 'Sans audio'}
-          </div>
-          {hasAudio && (
-            <motion.div
-              animate={{ scale: [1, 1.08, 1] }}
-              transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut' }}
-              className="absolute bottom-3 right-3 grid h-14 w-14 place-items-center rounded-full bg-emerald-500 text-white shadow-lg"
-              aria-hidden="true"
-            >
-              <PlayIcon className="h-6 w-6" />
-            </motion.div>
-          )}
-          {downloaded && (
-            <div className="absolute right-3 top-3 rounded-full bg-emerald-500 px-3 py-1 text-xs font-black text-white shadow-sm">
-              Telecharge
-            </div>
-          )}
-        </div>
-      </Link>
-
-      <div className="p-4">
-        <h3 className={`${large ? 'text-lg' : 'text-sm'} mb-1 line-clamp-2 font-black text-surface-900`}>
-          {book.title}
-        </h3>
-        <p className="mb-3 line-clamp-1 text-xs font-semibold text-surface-500">
-          {book.category_name || book.content_type || 'Histoire'}
-        </p>
-
-        <button
-          onClick={() => onToggleAudio(book)}
-          className={`mb-2 inline-flex h-16 w-full items-center justify-center gap-3 rounded-[1.4rem] text-lg font-black transition ${
-            hasAudio
-              ? playing
-                ? 'bg-accent-500 text-white hover:bg-accent-600'
-                : 'bg-emerald-500 text-white hover:bg-emerald-600'
-              : 'bg-surface-100 text-surface-400'
-          }`}
-          title={hasAudio ? 'Ecouter' : 'Audio indisponible'}
-          aria-label={hasAudio ? `Ecouter ${book.title}` : 'Audio indisponible'}
-        >
-          {playing ? <PauseIcon className="h-8 w-8" /> : <PlayIcon className="h-8 w-8" />}
-          <span>{hasAudio ? 'Ecouter' : 'Audio'}</span>
-        </button>
-
-        <div className="grid grid-cols-2 gap-2">
-          <Link
-            to={`/book/${book.id}`}
-            className="grid h-12 place-items-center rounded-2xl bg-cyan-100 px-3 text-cyan-800 transition hover:bg-cyan-200"
-            aria-label={`Ouvrir ${book.title}`}
-            title="Lire"
-          >
-            <BookIcon className="h-6 w-6" />
-          </Link>
-
-          <button
-            onClick={() => onToggleFavorite(book.id)}
-            className={`grid h-12 place-items-center rounded-2xl transition ${
-              favorite
-                ? 'bg-rose-100 text-rose-600 hover:bg-rose-200'
-                : 'bg-surface-100 text-surface-600 hover:bg-surface-200'
-            }`}
-            aria-label="Favori"
-            title="Favori"
-          >
-            <HeartIcon className="h-6 w-6" filled={favorite} />
-          </button>
-        </div>
-
-        {downloading ? (
-          <div className="mt-2 rounded-2xl bg-primary-50 p-2">
-            <div className="mb-2 h-2 overflow-hidden rounded-full bg-primary-100">
-              <div className="h-full rounded-full bg-primary-500 transition-all" style={{ width: `${progress || 8}%` }} />
-            </div>
-            <button
-              onClick={() => onCancelDownload(book)}
-              className="inline-flex h-11 w-full items-center justify-center rounded-3xl bg-white text-xs font-black text-primary-700"
-            >
-              Annuler
-            </button>
-          </div>
-        ) : downloaded ? (
-          <button
-            onClick={() => onRemoveDownload(book)}
-            className="mt-2 grid h-12 w-full place-items-center rounded-2xl bg-emerald-100 px-3 text-emerald-700 transition hover:bg-emerald-200"
-            aria-label="Retirer le telechargement"
-            title="Telecharge"
-          >
-            <DownloadIcon className="h-6 w-6" />
-          </button>
+      <div className="relative aspect-[3/4] w-full rounded-[1.5rem] bg-slate-800 shadow-lg overflow-hidden border border-slate-700/50 group-hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.5)] transition-all duration-300">
+        
+        {/* Cover Image */}
+        {coverImageUrl ? (
+          <img
+            src={coverImageUrl}
+            alt={book.title}
+            className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+          />
         ) : (
+          <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-indigo-900 to-purple-900">
+            <BookIcon className="h-12 w-12 text-white/30" />
+          </div>
+        )}
+
+        {/* Gradient Overlay for Text Visibility */}
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/20 to-transparent opacity-80 group-hover:opacity-90 transition-opacity"></div>
+
+        {/* Top Badges */}
+        <div className="absolute top-3 left-3 flex gap-2">
+          <div className="px-2 py-1 bg-white/20 backdrop-blur-md rounded text-[10px] font-black text-white shadow-sm border border-white/20">
+            {(book.language || 'FR').toUpperCase()}
+          </div>
+          {downloaded && (
+            <div className="px-2 py-1 bg-emerald-500/90 backdrop-blur-md rounded text-[10px] font-black text-white shadow-sm">
+              <DownloadIcon className="h-3 w-3 inline" />
+            </div>
+          )}
+        </div>
+
+        {/* Quick Actions (Appear on Hover) */}
+        <div className="absolute top-3 right-3 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-20 translate-x-2 group-hover:translate-x-0">
           <button
-            onClick={() => onDownload(book)}
-            className="mt-2 grid h-12 w-full place-items-center rounded-2xl bg-surface-100 px-3 text-surface-700 transition hover:bg-surface-200"
-            aria-label="Telecharger"
-            title="Telecharger"
+            onClick={(e) => { e.preventDefault(); onToggleFavorite(book.id); }}
+            className={`p-2 rounded-full backdrop-blur-md shadow-lg transition-colors ${
+              favorite ? 'bg-rose-500 text-white' : 'bg-white/20 text-white hover:bg-white/40'
+            }`}
           >
-            <DownloadIcon className="h-6 w-6" />
+            <HeartIcon className="h-4 w-4" filled={favorite} />
+          </button>
+          
+          {!downloaded && !downloading && (
+             <button
+               onClick={(e) => { e.preventDefault(); onDownload(book); }}
+               className="p-2 rounded-full bg-white/20 backdrop-blur-md text-white hover:bg-white/40 shadow-lg transition-colors"
+             >
+               <DownloadIcon className="h-4 w-4" />
+             </button>
+          )}
+        </div>
+
+        {/* Center Play Button (Large, appears on hover) */}
+        {hasAudio && (
+          <button
+            onClick={(e) => { e.preventDefault(); onToggleAudio(book); }}
+            className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-14 h-14 rounded-full flex items-center justify-center shadow-xl backdrop-blur-md border border-white/30 transition-all duration-300 z-20 ${
+              playing 
+                ? 'bg-accent-500/90 text-white opacity-100 scale-100' 
+                : 'bg-white/20 text-white opacity-0 scale-75 group-hover:opacity-100 group-hover:scale-100 hover:bg-white/40'
+            }`}
+          >
+            {playing ? <PauseIcon className="h-6 w-6" /> : <PlayIcon className="h-6 w-6 ml-1" />}
           </button>
         )}
+
+        {/* Bottom Info */}
+        <div className="absolute bottom-0 left-0 right-0 p-4 z-10">
+          <h3 className="text-white font-black leading-tight line-clamp-2 text-sm sm:text-base drop-shadow-md">
+            {book.title}
+          </h3>
+          <div className="flex items-center gap-2 mt-2 text-[10px] sm:text-xs font-bold text-slate-300">
+            <span>{book.category_name || 'Histoire'}</span>
+            {hasAudio && (
+              <>
+                <span className="w-1 h-1 rounded-full bg-slate-500"></span>
+                <span className="flex items-center gap-1"><AudioIcon className="h-3 w-3" /> Audio</span>
+              </>
+            )}
+          </div>
+        </div>
+
+        {/* Downloading Progress Bar */}
+        {downloading && (
+          <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-slate-800">
+            <div className="h-full bg-primary-500 transition-all" style={{ width: `${progress}%` }}></div>
+          </div>
+        )}
       </div>
-    </motion.article>
+      
+      {/* Invisible link covering the card for navigation */}
+      <Link to={`/book/${book.id}`} className="absolute inset-0 z-0 rounded-[1.5rem]" aria-label={book.title}></Link>
+    </motion.div>
   );
 }
 
