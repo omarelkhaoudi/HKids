@@ -2,10 +2,12 @@ import express from 'express';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import { getDatabase } from '../database/init.js';
+import { logSecurityEvent } from '../services/security/auditLog.js';
 
 const router = express.Router();
 const JWT_SECRET = process.env.JWT_SECRET || 'hkids-secret-key-change-in-production';
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '30d';
+const USERNAME_PATTERN = /^[a-zA-Z0-9_.-]{3,40}$/;
 
 // Helper function to get database pool safely
 function getPool() {
@@ -19,29 +21,42 @@ function getPool() {
 
 // Signup
 router.post('/signup', async (req, res) => {
-  const { username, password, role } = req.body;
+  const { username, password, role, admin_signup_code } = req.body;
 
   if (!username || !password) {
     return res.status(400).json({ error: 'Username and password required' });
   }
 
-  if (username.length < 3) {
-    return res.status(400).json({ error: 'Username must be at least 3 characters' });
+  const normalizedUsername = String(username).trim();
+
+  if (!USERNAME_PATTERN.test(normalizedUsername)) {
+    return res.status(400).json({ error: 'Username must be 3-40 characters and use only letters, numbers, dot, dash or underscore' });
   }
 
-  if (password.length < 6) {
-    return res.status(400).json({ error: 'Password must be at least 6 characters' });
+  if (String(password).length < 8) {
+    return res.status(400).json({ error: 'Password must be at least 8 characters' });
   }
 
   // Validate role if provided
-  const validRoles = ['admin', 'parent', 'kid'];
-  const userRole = role && validRoles.includes(role) ? role : 'admin';
+  const validRoles = ['parent'];
+  let userRole = role && validRoles.includes(role) ? role : 'parent';
+
+  if (role === 'admin') {
+    const adminSignupEnabled = process.env.ADMIN_SIGNUP_ENABLED === 'true';
+    const requiredCode = process.env.ADMIN_SIGNUP_CODE;
+
+    if (!adminSignupEnabled || (requiredCode && admin_signup_code !== requiredCode)) {
+      return res.status(403).json({ error: 'Admin signup is not available' });
+    }
+
+    userRole = 'admin';
+  }
 
   try {
     const pool = getPool();
     const existing = await pool.query(
       'SELECT * FROM users WHERE username = $1',
-      [username.trim()]
+      [normalizedUsername]
     );
 
     if (existing.rows.length > 0) {
@@ -49,15 +64,25 @@ router.post('/signup', async (req, res) => {
       return res.status(409).json({ error: 'Username already exists' });
     }
 
-    const hashedPassword = bcrypt.hashSync(password, 10);
+    const hashedPassword = bcrypt.hashSync(password, 12);
 
     const result = await pool.query(
       'INSERT INTO users (username, password, role) VALUES ($1, $2, $3) RETURNING id, username, role',
-      [username.trim(), hashedPassword, userRole]
+      [normalizedUsername, hashedPassword, userRole]
     );
 
     const user = result.rows[0];
     console.log(`✅ New user created: ${user.username} with role: ${user.role}`);
+
+    await logSecurityEvent(pool, {
+      userId: user.id,
+      actorRole: user.role,
+      action: 'user_signup',
+      resourceType: 'user',
+      resourceId: user.id,
+      req,
+      metadata: { role: user.role }
+    });
 
     res.status(201).json({
       message: 'User created successfully',
@@ -79,20 +104,35 @@ router.post('/login', async (req, res) => {
 
   try {
     const pool = getPool();
+    const normalizedUsername = String(username).trim();
     const result = await pool.query(
       'SELECT * FROM users WHERE username = $1',
-      [username.trim()]
+      [normalizedUsername]
     );
 
     const user = result.rows[0];
     if (!user) {
       console.log(`Login attempt failed: User '${username}' not found`);
+      await logSecurityEvent(pool, {
+        action: 'login_failed',
+        req,
+        metadata: { reason: 'user_not_found', username: normalizedUsername.slice(0, 40) }
+      });
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
     const isValid = bcrypt.compareSync(password, user.password);
     if (!isValid) {
       console.log(`Login attempt failed: Invalid password for user '${username}'`);
+      await logSecurityEvent(pool, {
+        userId: user.id,
+        actorRole: user.role,
+        action: 'login_failed',
+        resourceType: 'user',
+        resourceId: user.id,
+        req,
+        metadata: { reason: 'invalid_password' }
+      });
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
@@ -108,6 +148,15 @@ router.post('/login', async (req, res) => {
     );
 
     console.log(`✅ Successful login for user: ${user.username}`);
+    await logSecurityEvent(pool, {
+      userId: user.id,
+      actorRole: user.role,
+      action: 'login_success',
+      resourceType: 'user',
+      resourceId: user.id,
+      req
+    });
+
     res.json({
       token,
       user: {

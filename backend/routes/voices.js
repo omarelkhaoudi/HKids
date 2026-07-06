@@ -97,6 +97,76 @@ async function saveAudioFile(file, userId, kind) {
   return `/uploads/voices/${filename}`;
 }
 
+async function deleteStoredVoiceFile(audioPath) {
+  if (!audioPath || !audioPath.startsWith('/uploads/voices/')) return;
+  const absolutePath = path.join(voiceStorageDir, path.basename(audioPath));
+  try {
+    await fs.remove(absolutePath);
+  } catch (error) {
+    console.warn('Stored voice file could not be removed:', error.message);
+  }
+}
+
+function voiceFileUrl(audioPath) {
+  if (!audioPath) return null;
+  const filename = path.basename(audioPath);
+  return `/api/voices/files/${encodeURIComponent(filename)}`;
+}
+
+async function canAccessVoiceFile(pool, req, audioPath) {
+  if (!audioPath || !audioPath.startsWith('/uploads/voices/')) return false;
+
+  if (['parent', 'admin'].includes(req.user?.role)) {
+    const result = await pool.query(
+      `SELECT 1
+       WHERE EXISTS (
+         SELECT 1 FROM voice_profiles
+         WHERE user_id = $1 AND deleted_at IS NULL
+           AND (sample_audio_path = $2 OR preview_audio_path = $2)
+       )
+       OR EXISTS (
+         SELECT 1 FROM voice_messages
+         WHERE user_id = $1 AND deleted_at IS NULL AND audio_path = $2
+       )
+       OR EXISTS (
+         SELECT 1 FROM voice_narrations
+         WHERE user_id = $1 AND audio_path = $2
+       )`,
+      [req.user.id, audioPath]
+    );
+    return result.rows.length > 0;
+  }
+
+  if (req.user?.role === 'kid' && req.user.kid_profile_id) {
+    const result = await pool.query(
+      `SELECT 1
+       FROM kids_profiles kp
+       WHERE kp.id = $1
+         AND (
+           EXISTS (
+             SELECT 1 FROM voice_profiles vp
+             WHERE vp.user_id = kp.parent_id
+               AND vp.deleted_at IS NULL
+               AND vp.consent_given = TRUE
+               AND (vp.sample_audio_path = $2 OR vp.preview_audio_path = $2)
+           )
+           OR EXISTS (
+             SELECT 1 FROM voice_narrations vn
+             JOIN voice_profiles vp ON vp.id = vn.voice_profile_id
+             WHERE vp.user_id = kp.parent_id
+               AND vp.deleted_at IS NULL
+               AND vp.consent_given = TRUE
+               AND vn.audio_path = $2
+           )
+         )`,
+      [req.user.kid_profile_id, audioPath]
+    );
+    return result.rows.length > 0;
+  }
+
+  return false;
+}
+
 async function logVoiceAction(pool, { userId, voiceProfileId = null, action, metadata = {} }) {
   await pool.query(
     `INSERT INTO voice_audit_logs (user_id, voice_profile_id, action, metadata)
@@ -229,6 +299,28 @@ router.get('/available', verifyToken, async (req, res) => {
   } catch (err) {
     console.error('Error loading available voices:', err);
     res.status(500).json({ error: 'Could not load available voices' });
+  }
+});
+
+router.get('/files/:filename', verifyToken, async (req, res) => {
+  try {
+    const filename = path.basename(req.params.filename || '');
+    if (!/^[a-zA-Z0-9_.-]+\.(webm|mp3|wav|ogg|m4a|mpeg|audio)$/i.test(filename)) {
+      return res.status(400).json({ error: 'Invalid voice file name' });
+    }
+
+    const audioPath = `/uploads/voices/${filename}`;
+    const pool = getPool();
+    const allowed = await canAccessVoiceFile(pool, req, audioPath);
+    if (!allowed) return res.status(404).json({ error: 'Voice file not found' });
+
+    const absolutePath = path.join(voiceStorageDir, filename);
+    if (!fs.existsSync(absolutePath)) return res.status(404).json({ error: 'Voice file not found' });
+
+    res.sendFile(absolutePath);
+  } catch (err) {
+    console.error('Error serving voice file:', err);
+    res.status(500).json({ error: 'Could not load voice file' });
   }
 });
 
@@ -371,6 +463,59 @@ router.put('/profiles/:id', verifyToken, requireParent, upload.single('sample'),
   }
 });
 
+router.post('/profiles/:id/revoke-consent', verifyToken, requireParent, async (req, res) => {
+  try {
+    const pool = getPool();
+    const profile = await getOwnedVoiceProfile(pool, req.user.id, req.params.id);
+    if (!profile) return res.status(404).json({ error: 'Voice profile not found' });
+
+    let providerDeletion = null;
+    if (profile.provider_voice_id) {
+      try {
+        providerDeletion = await voiceCloneService.deleteVoiceProfile({
+          providerVoiceId: profile.provider_voice_id,
+        });
+      } catch (error) {
+        providerDeletion = {
+          deleted: false,
+          reason: error?.code || error?.message || 'provider_deletion_failed',
+        };
+      }
+    }
+
+    const result = await pool.query(
+      `UPDATE voice_profiles
+       SET consent_given = FALSE,
+           status = 'consent_revoked',
+           provider_voice_id = NULL,
+           preview_audio_path = NULL,
+           updated_at = NOW()
+       WHERE id = $1 AND user_id = $2 AND deleted_at IS NULL
+       RETURNING *`,
+      [req.params.id, req.user.id]
+    );
+
+    await deleteStoredVoiceFile(profile.preview_audio_path);
+    await pool.query(
+      `DELETE FROM voice_narrations
+       WHERE voice_profile_id = $1 AND user_id = $2`,
+      [req.params.id, req.user.id]
+    );
+
+    await logVoiceAction(pool, {
+      userId: req.user.id,
+      voiceProfileId: req.params.id,
+      action: 'voice_consent_revoked',
+      metadata: { provider_deletion: providerDeletion },
+    });
+
+    res.json(mapVoiceProfile(result.rows[0]));
+  } catch (err) {
+    console.error('Error revoking voice consent:', err);
+    res.status(500).json({ error: 'Could not revoke voice consent' });
+  }
+});
+
 router.delete('/profiles/:id', verifyToken, requireParent, async (req, res) => {
   try {
     const pool = getPool();
@@ -391,6 +536,15 @@ router.delete('/profiles/:id', verifyToken, requireParent, async (req, res) => {
         };
       }
     }
+
+    await deleteStoredVoiceFile(profile.sample_audio_path);
+    await deleteStoredVoiceFile(profile.preview_audio_path);
+    const messageFiles = await pool.query(
+      `SELECT audio_path FROM voice_messages
+       WHERE voice_profile_id = $1 AND user_id = $2 AND deleted_at IS NULL`,
+      [req.params.id, req.user.id]
+    );
+    await Promise.all(messageFiles.rows.map((row) => deleteStoredVoiceFile(row.audio_path)));
 
     await pool.query(
       `UPDATE voice_profiles
@@ -431,7 +585,7 @@ router.get('/profiles/:id/preview', verifyToken, async (req, res) => {
     if (!profile) return res.status(404).json({ error: 'Voice profile not found' });
     if (!profile.preview_audio_path) return res.status(404).json({ error: 'Preview not available' });
 
-    res.redirect(profile.preview_audio_path);
+    res.redirect(voiceFileUrl(profile.preview_audio_path));
   } catch (err) {
     console.error('Error loading voice preview:', err);
     res.status(500).json({ error: 'Could not load preview' });
@@ -472,7 +626,7 @@ router.post('/messages', verifyToken, requireParent, upload.single('audio'), asy
     let audioPath = req.file ? await saveAudioFile(req.file, req.user.id, 'message') : null;
     let generatedWithProvider = false;
 
-    if (!audioPath && profile?.provider_voice_id && messageText) {
+    if (!audioPath && profile?.provider_voice_id && profile?.consent_given && messageText) {
       const synthesis = await voiceCloneService.synthesizeSpeech({
         providerVoiceId: profile.provider_voice_id,
         text: messageText,
@@ -532,7 +686,7 @@ router.get('/messages/:id/audio', verifyToken, requireParent, async (req, res) =
     const audioPath = result.rows[0]?.audio_path;
     if (!audioPath) return res.status(404).json({ error: 'Message audio not found' });
 
-    res.redirect(audioPath);
+    res.redirect(voiceFileUrl(audioPath));
   } catch (err) {
     console.error('Error loading voice message audio:', err);
     res.status(500).json({ error: 'Could not load message audio' });
@@ -543,15 +697,26 @@ router.delete('/messages/:id', verifyToken, requireParent, async (req, res) => {
   try {
     const pool = getPool();
     const result = await pool.query(
-      `UPDATE voice_messages
-       SET deleted_at = NOW(), audio_path = NULL
-       WHERE id = $1 AND user_id = $2 AND deleted_at IS NULL
-       RETURNING *`,
+      `WITH existing AS (
+         SELECT *
+         FROM voice_messages
+         WHERE id = $1 AND user_id = $2 AND deleted_at IS NULL
+       ),
+       updated AS (
+         UPDATE voice_messages
+         SET deleted_at = NOW(), audio_path = NULL
+         WHERE id = $1 AND user_id = $2 AND deleted_at IS NULL
+         RETURNING *
+       )
+       SELECT updated.*, existing.audio_path AS deleted_audio_path
+       FROM updated
+       JOIN existing ON existing.id = updated.id`,
       [req.params.id, req.user.id]
     );
 
     if (result.rows.length === 0) return res.status(404).json({ error: 'Voice message not found' });
 
+    await deleteStoredVoiceFile(result.rows[0].deleted_audio_path);
     await logVoiceAction(pool, {
       userId: req.user.id,
       voiceProfileId: result.rows[0].voice_profile_id,
@@ -624,7 +789,7 @@ router.post('/narrations', verifyToken, async (req, res) => {
       });
 
       return res.json({
-        audio_url: cachedResult.rows[0].audio_path,
+        audio_url: voiceFileUrl(cachedResult.rows[0].audio_path),
         source: 'cloned_voice',
         cached: true,
         provider: cachedResult.rows[0].provider,
@@ -699,7 +864,7 @@ router.post('/narrations', verifyToken, async (req, res) => {
     }
 
     res.status(reusedExistingJob ? 200 : 201).json({
-      audio_url: generatedNarration.audio_path,
+      audio_url: voiceFileUrl(generatedNarration.audio_path),
       source: 'cloned_voice',
       cached: reusedExistingJob,
       provider: generatedNarration.provider,

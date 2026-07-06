@@ -286,6 +286,18 @@ export async function initDatabase() {
         metadata JSONB DEFAULT '{}'::jsonb,
         created_at TIMESTAMPTZ DEFAULT NOW()
       );`,
+      `CREATE TABLE IF NOT EXISTS security_audit_logs (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+        actor_role TEXT,
+        action TEXT NOT NULL,
+        resource_type TEXT,
+        resource_id TEXT,
+        ip_address TEXT,
+        user_agent TEXT,
+        metadata JSONB DEFAULT '{}'::jsonb,
+        created_at TIMESTAMPTZ DEFAULT NOW()
+      );`,
       `CREATE TABLE IF NOT EXISTS voice_narrations (
         id SERIAL PRIMARY KEY,
         user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
@@ -530,6 +542,8 @@ export async function initDatabase() {
     await client.query(`CREATE INDEX IF NOT EXISTS voice_profiles_user_idx ON voice_profiles(user_id, deleted_at, created_at DESC)`);
     await client.query(`CREATE INDEX IF NOT EXISTS voice_messages_user_idx ON voice_messages(user_id, deleted_at, created_at DESC)`);
     await client.query(`CREATE INDEX IF NOT EXISTS voice_audit_logs_profile_idx ON voice_audit_logs(voice_profile_id, created_at DESC)`);
+    await client.query(`CREATE INDEX IF NOT EXISTS security_audit_logs_user_idx ON security_audit_logs(user_id, created_at DESC)`);
+    await client.query(`CREATE INDEX IF NOT EXISTS security_audit_logs_action_idx ON security_audit_logs(action, created_at DESC)`);
     await client.query(`CREATE UNIQUE INDEX IF NOT EXISTS voice_narrations_unique_idx ON voice_narrations(voice_profile_id, book_id, text_hash)`);
     await client.query(`CREATE INDEX IF NOT EXISTS voice_narrations_lookup_idx ON voice_narrations(voice_profile_id, book_id, text_hash)`);
     await client.query(`CREATE INDEX IF NOT EXISTS voice_narrations_user_idx ON voice_narrations(user_id, created_at DESC)`);
