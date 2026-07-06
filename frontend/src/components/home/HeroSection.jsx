@@ -123,10 +123,13 @@ export default function HeroSection({ t, totalBooks }) {
                     <span className="text-white text-2xl">🚀</span>
                   </motion.div>
 
-                  <div className="w-full max-w-[280px] aspect-square rounded-[2rem] bg-gradient-to-b from-primary-100 to-white shadow-2xl border-4 border-white relative mt-8 flex flex-col items-center justify-end overflow-hidden">
-                     {/* Image proxy representing the child reading */}
-                     <div className="absolute inset-x-0 bottom-0 h-4/5 bg-surface-200 rounded-t-full mx-8 opacity-50"></div>
-                     <div className="relative z-20 bg-primary-600 text-white font-bold text-2xl py-4 px-10 rounded-t-xl mb-0 shadow-lg">HKids</div>
+                  <div className="w-full max-w-[280px] aspect-square rounded-[2rem] bg-gradient-to-b from-primary-50 to-white shadow-2xl border-4 border-white relative mt-8 flex flex-col items-center justify-end overflow-hidden group">
+                     {/* Real Image */}
+                     <div className="absolute inset-0 flex items-center justify-center p-2">
+                       <img src="/enfant3ans.webp" alt="Enfant qui lit" className="w-full h-full object-cover rounded-[1.5rem] filter drop-shadow-xl group-hover:scale-105 transition-transform duration-500" />
+                     </div>
+                     <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent z-10"></div>
+                     <div className="relative z-20 bg-primary-600/95 backdrop-blur-md text-white font-bold text-xl py-3 px-10 rounded-t-2xl mb-0 shadow-lg border-t border-x border-white/20">HKids</div>
                   </div>
                 </div>
 
@@ -138,9 +141,9 @@ export default function HeroSection({ t, totalBooks }) {
 
                 <div className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-white/90 backdrop-blur-md rounded-full px-5 py-3 shadow-lg border border-white/50 flex items-center gap-3 w-[max-content] z-20">
                   <div className="flex -space-x-2">
-                    <div className="w-8 h-8 rounded-full bg-surface-200 border-2 border-white"></div>
-                    <div className="w-8 h-8 rounded-full bg-surface-300 border-2 border-white"></div>
-                    <div className="w-8 h-8 rounded-full bg-surface-400 border-2 border-white"></div>
+                    <div className="w-8 h-8 rounded-full bg-blue-100 border-2 border-white flex items-center justify-center text-sm shadow-sm z-30">👨‍👩‍👧</div>
+                    <div className="w-8 h-8 rounded-full bg-green-100 border-2 border-white flex items-center justify-center text-sm shadow-sm z-20">👩‍👦</div>
+                    <div className="w-8 h-8 rounded-full bg-purple-100 border-2 border-white flex items-center justify-center text-sm shadow-sm z-10">👨‍👧‍👦</div>
                   </div>
                   <div className="text-xs font-semibold text-surface-600">
                     Rejoint par plus de<br/><span className="text-surface-900">5.000 familles</span> ✨
