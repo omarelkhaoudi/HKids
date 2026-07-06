@@ -24,9 +24,11 @@ import generatedStoriesRouter from './routes/generatedStories.js';
 import recommendationsRouter from './routes/recommendations.js';
 import voicesRouter from './routes/voices.js';
 import learningRouter from './routes/learning.js';
+import privacyRouter from './routes/privacy.js';
 import { errorHandler, notFound } from './middleware/errorHandler.js';
 import { requestLogger } from './middleware/logger.js';
 import { apiRateLimiter, authRateLimiter, resetRateLimit } from './middleware/rateLimiter.js';
+import { securityHeaders } from './middleware/securityHeaders.js';
 import { sanitizeBody } from './middleware/validator.js';
 import { exec } from 'child_process';
 
@@ -38,6 +40,8 @@ const PORT = config.port;
 
 // Trust proxy (for rate limiting behind reverse proxy)
 app.set('trust proxy', 1);
+app.disable('x-powered-by');
+app.use(securityHeaders);
 
 // Middleware CORS
 // Normaliser l'origine CORS (enlever le slash final si présent)
@@ -51,6 +55,10 @@ app.get('/', (req, res) => {
 });
 
 app.get('/api/test-supabase', async (req, res) => {
+  if (config.nodeEnv === 'production') {
+    return res.status(404).json({ error: 'Not found' });
+  }
+
   try {
     if (!supabase) {
       return res.status(503).json({
@@ -200,6 +208,9 @@ app.get('/__disabled_upload_fallback/books/:filename', (req, res, next) => {
 });
 
 // Static files for other uploads (non-books)
+app.use('/uploads/voices', (req, res) => {
+  res.status(403).json({ error: 'Voice files require authenticated API access' });
+});
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Database initialization flag
@@ -244,6 +255,7 @@ app.use('/api/generated-stories', generatedStoriesRouter);
 app.use('/api/recommendations', recommendationsRouter);
 app.use('/api/voices', voicesRouter);
 app.use('/api/learning', learningRouter);
+app.use('/api/privacy', privacyRouter);
 
 // Log available routes for debugging
 console.log('📋 Available auth routes:');
@@ -282,6 +294,10 @@ app.get('/api/health', (req, res) => {
 
 // Uploads status (useful when Render Shell is unavailable)
 app.get('/api/uploads-status', (req, res) => {
+  if (config.nodeEnv === 'production') {
+    return res.status(404).json({ error: 'Not found' });
+  }
+
   try {
     const booksDir = path.join(__dirname, 'uploads', 'books');
     const booksDirExists = fs.existsSync(booksDir);
@@ -301,6 +317,10 @@ app.get('/api/uploads-status', (req, res) => {
 // Reset rate limit endpoint (available in all environments)
 // This helps users who hit rate limits during testing
 app.post('/api/reset-rate-limit', (req, res) => {
+  if (config.nodeEnv === 'production') {
+    return res.status(404).json({ error: 'Not found' });
+  }
+
   const ip = req.ip || req.connection.remoteAddress;
   resetRateLimit(ip);
   res.json({ 

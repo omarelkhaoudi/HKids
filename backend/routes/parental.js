@@ -2,6 +2,7 @@ import express from 'express';
 import bcrypt from 'bcryptjs';
 import { getDatabase } from '../database/init.js';
 import { verifyToken } from './auth.js';
+import { logSecurityEvent } from '../services/security/auditLog.js';
 
 const router = express.Router();
 
@@ -198,6 +199,15 @@ router.post('/kids', verifyToken, verifyParent, async (req, res) => {
       ]
     );
 
+    await logSecurityEvent(pool, {
+      userId: req.user.id,
+      actorRole: req.user.role,
+      action: 'kid_profile_created',
+      resourceType: 'kid_profile',
+      resourceId: result.rows[0].id,
+      req
+    });
+
     res.status(201).json(result.rows[0]);
   } catch (err) {
     console.error('Error creating kid profile:', err);
@@ -273,6 +283,14 @@ router.delete('/kids/:id', verifyToken, verifyParent, async (req, res) => {
     }
 
     await pool.query('DELETE FROM kids_profiles WHERE id = $1', [req.params.id]);
+    await logSecurityEvent(pool, {
+      userId: req.user.id,
+      actorRole: req.user.role,
+      action: 'kid_profile_deleted',
+      resourceType: 'kid_profile',
+      resourceId: req.params.id,
+      req
+    });
     res.json({ message: 'Kid profile deleted successfully' });
   } catch (err) {
     console.error('Error deleting kid profile:', err);
@@ -561,12 +579,21 @@ router.post('/kids/:id/create-account', verifyToken, verifyParent, async (req, r
     }
 
     // Create the kid account
-    const hashedPassword = bcrypt.hashSync(password, 10);
+    const hashedPassword = bcrypt.hashSync(password, 12);
 
     const result = await pool.query(
       'INSERT INTO users (username, password, role, kid_profile_id) VALUES ($1, $2, $3, $4) RETURNING id, username, role, kid_profile_id',
       [username.trim(), hashedPassword, 'kid', req.params.id]
     );
+
+    await logSecurityEvent(pool, {
+      userId: req.user.id,
+      actorRole: req.user.role,
+      action: 'kid_account_created',
+      resourceType: 'kid_profile',
+      resourceId: req.params.id,
+      req
+    });
 
     res.status(201).json(result.rows[0]);
   } catch (err) {
