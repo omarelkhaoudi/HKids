@@ -1061,6 +1061,33 @@ function BookReader() {
     }
   };
 
+  const [themeMode, setThemeMode] = useState('day'); // 'day' | 'sepia' | 'night'
+  const [showMenu, setShowMenu] = useState(true);
+  const [isFavorite, setIsFavorite] = useState(false);
+  const [showEndModal, setShowEndModal] = useState(false);
+
+  // Auto-hide menu
+  useEffect(() => {
+    let timeout;
+    if (showMenu) {
+      timeout = setTimeout(() => setShowMenu(false), 3500);
+    }
+    return () => clearTimeout(timeout);
+  }, [showMenu, currentPage, isPlaying]);
+
+  // Handle End of book
+  useEffect(() => {
+    if (!book || !book.pages || book.pages.length === 0) return;
+    const firstPageData = book.pages[0];
+    const isPDF = firstPageData?.image_path?.toLowerCase().endsWith('.pdf');
+    const effectiveTotalPages = (isPDF && pdfTotalPages) ? pdfTotalPages : book.pages.length;
+    const isLastPage = currentPage === effectiveTotalPages - 1;
+
+    if (isLastPage) {
+      setTimeout(() => setShowEndModal(true), 1500);
+    }
+  }, [currentPage, book, pdfTotalPages]);
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-100 via-secondary-50 to-accent-100">
@@ -1127,27 +1154,6 @@ function BookReader() {
   const isLastPage = currentPage === totalPages - 1;
   const progress = ((currentPage + 1) / totalPages) * 100;
   const selectedNarrationProfile = voiceProfiles.find((profile) => profile.id === selectedVoiceProfile) || voiceProfiles[0];
-
-  const [themeMode, setThemeMode] = useState('day'); // 'day' | 'sepia' | 'night'
-  const [showMenu, setShowMenu] = useState(true);
-  const [isFavorite, setIsFavorite] = useState(false);
-  const [showEndModal, setShowEndModal] = useState(false);
-
-  // Auto-hide menu
-  useEffect(() => {
-    let timeout;
-    if (showMenu) {
-      timeout = setTimeout(() => setShowMenu(false), 3500);
-    }
-    return () => clearTimeout(timeout);
-  }, [showMenu, currentPage, isPlaying]);
-
-  // Handle End of book
-  useEffect(() => {
-    if (isLastPage) {
-      setTimeout(() => setShowEndModal(true), 1500);
-    }
-  }, [isLastPage]);
 
   // Handle theme colors
   const themeColors = {
