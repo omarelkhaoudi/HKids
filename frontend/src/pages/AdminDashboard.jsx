@@ -339,7 +339,7 @@ function AdminDashboard() {
 
         {/* MAIN SCROLLABLE AREA */}
         <main className="flex-1 overflow-y-auto bg-[#fafafa]">
-          <div className="p-4 md:p-6 lg:p-8 w-full max-w-[1600px] mx-auto">
+          <div className="p-6 md:p-8 w-full max-w-[1600px] mx-auto">
             <Routes>
               <Route index element={<AdminOverview />} />
               <Route path="contents" element={<BookManagement />} />
