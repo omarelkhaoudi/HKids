@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Routes, Route, Navigate, Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
@@ -20,7 +21,7 @@ import { Avatar } from '../components/ui';
 const QuickActions = () => {
   const [isOpen, setIsOpen] = useState(false);
   
-  return (
+  const content = (
     <>
       <AnimatePresence>
         {isOpen && (
@@ -51,6 +52,8 @@ const QuickActions = () => {
       </button>
     </>
   );
+
+  return typeof document !== 'undefined' ? createPortal(content, document.body) : null;
 };
 
 // COMMAND PALETTE COMPONENT
