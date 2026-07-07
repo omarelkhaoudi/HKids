@@ -745,7 +745,7 @@ function ParentDashboard() {
                   </div>
                   <ProgressBar progress={12} color="bg-yellow-400" />
                 </div>
-                <Button variant="outline" fullWidth className="bg-white hover:bg-surface-100 text-black border-none font-bold">Gérer l'abonnement</Button>
+                <Button variant="outline" fullWidth onClick={() => navigate('/abonnements')} className="bg-white hover:bg-surface-100 text-black border-none font-bold">Gérer l'abonnement</Button>
               </div>
 
               {/* AI Insights & Timeline */}
