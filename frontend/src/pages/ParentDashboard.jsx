@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Card, Button, Badge, ProgressBar, Switch, Input, Skeleton, Avatar, EmptyState } from '../components/ui';
+
 import { useAuth } from '../context/AuthContext';
 import { parentalAPI } from '../api/parental';
 import { categoriesAPI } from '../api/books';
@@ -475,1212 +477,334 @@ function ParentDashboard() {
     amber: 'bg-accent-100 text-accent-700 dark:bg-accent-900/30 dark:text-accent-300'
   };
 
+
+  const currentDate = new Date().toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+  const totalReadingTime = kidActivity?.summary?.total_time_seconds || 0;
+  
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-surface-50 to-surface-100 dark:from-surface-900 dark:to-surface-800 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500 mx-auto"></div>
-          <p className="mt-4 text-surface-600 dark:text-surface-400">Chargement...</p>
+      <div className="min-h-screen bg-surface-50 dark:bg-surface-900 p-8 flex flex-col gap-6">
+        <Skeleton className="h-48 w-full rounded-3xl" />
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <Skeleton className="h-32 w-full rounded-3xl" />
+          <Skeleton className="h-32 w-full rounded-3xl" />
+          <Skeleton className="h-32 w-full rounded-3xl" />
+          <Skeleton className="h-32 w-full rounded-3xl" />
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-surface-50 to-surface-100 dark:from-surface-900 dark:to-surface-800">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-4">
-            <Link to="/">
-              <Logo size="default" showText={true} />
-            </Link>
+    <div className="min-h-screen bg-surface-50 dark:bg-surface-900 text-surface-900 dark:text-surface-100 font-sans pb-24">
+      {/* 1. Dashboard Hero */}
+      <div className="relative bg-gradient-to-r from-primary-600 via-secondary-500 to-accent-500 text-white pb-24 pt-8 px-6 md:px-12 overflow-hidden shadow-lg">
+        {/* Animated background elements */}
+        <motion.div animate={{ rotate: 360 }} transition={{ duration: 150, repeat: Infinity, ease: 'linear' }} className="absolute -top-32 -right-32 w-96 h-96 bg-white/10 rounded-full blur-3xl pointer-events-none" />
+        <motion.div animate={{ rotate: -360 }} transition={{ duration: 200, repeat: Infinity, ease: 'linear' }} className="absolute -bottom-32 -left-32 w-[500px] h-[500px] bg-white/10 rounded-full blur-3xl pointer-events-none" />
+        
+        <div className="max-w-7xl mx-auto relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="flex items-center gap-6">
+            <Avatar src={null} fallback={user?.username?.[0] || 'P'} size="xl" className="border-4 border-white/20 shadow-xl" />
             <div>
-              <h1 className="text-2xl font-bold text-surface-800 dark:text-surface-200">
-                Espace parent
-              </h1>
-              <p className="text-sm text-surface-500">
-                Payer, autoriser et suivre la lecture de votre enfant.
-              </p>
-            </div>
-          </div>
-          <button
-            onClick={handleLogout}
-            className="flex items-center gap-2 px-4 py-2 bg-primary-500 text-white rounded-2xl hover:bg-primary-600 transition-colors"
-          >
-            <LogOutIcon className="w-5 h-5" />
-            <span>Déconnexion</span>
-          </button>
-        </div>
-
-        <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-          {parentSummaryCards.map((card) => {
-            const Icon = card.icon;
-
-            return (
-              <div key={card.label} className="rounded-3xl bg-white p-4 shadow-lg dark:bg-surface-800">
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="text-sm font-bold text-surface-500">{card.label}</p>
-                    <p className="mt-2 text-2xl font-bold text-surface-900 dark:text-surface-100">
-                      {card.value}
-                    </p>
-                    <p className="mt-1 text-xs font-medium text-surface-500">{card.detail}</p>
-                  </div>
-                  <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-3xl ${card.tone}`}>
-                    <Icon className="h-5 w-5" />
-                  </span>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Kids List */}
-          <div className="lg:col-span-1">
-            <div className="bg-white dark:bg-surface-800 rounded-3xl shadow-lg p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-bold text-surface-800 dark:text-surface-200">
-                  Profils Enfants
-                </h2>
-                <div className="flex items-center gap-2">
-                  <Link
-                    to="/parent/profiles"
-                    className="rounded-2xl bg-surface-100 px-3 py-2 text-sm font-bold text-surface-700 transition hover:bg-surface-200 dark:bg-surface-700 dark:text-surface-100 dark:hover:bg-surface-600"
-                  >
-                    Gerer
-                  </Link>
-                  <button
-                    onClick={() => {
-                      setEditingKid(null);
-                      setKidForm(emptyKidForm);
-                      setShowKidModal(true);
-                    }}
-                    className="p-2 bg-primary-500 text-white rounded-2xl hover:bg-primary-600 transition-colors"
-                  >
-                    <PlusIcon className="w-5 h-5" />
-                  </button>
-                </div>
-              </div>
-
-              <div className="space-y-3">
-                {kids.length === 0 ? (
-                  <p className="text-surface-500 text-center py-8">
-                    Aucun profil enfant. Cliquez sur + pour en créer un.
-                  </p>
-                ) : (
-                  kids.map(kid => (
-                    <motion.div
-                      key={kid.id}
-                      onClick={() => handleSelectKid(kid)}
-                      className={`p-4 rounded-2xl cursor-pointer transition-all ${
-                        selectedKid?.id === kid.id
-                          ? 'bg-primary-100 dark:bg-primary-900/30 border-2 border-primary-500'
-                          : 'bg-surface-50 dark:bg-surface-700 hover:bg-surface-100 dark:hover:bg-surface-600 border-2 border-transparent'
-                      }`}
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <KidAvatar kid={kid} size="sm" />
-                          <div>
-                            <p className="font-semibold text-surface-800 dark:text-surface-200">
-                              {kid.name}
-                            </p>
-                            {kid.age && (
-                              <p className="text-sm text-surface-500">{kid.age} ans</p>
-                            )}
-                          </div>
-                        </div>
-                        <div className="flex gap-2">
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setEditingKid(kid);
-                              setKidForm(kidToForm(kid));
-                              setShowKidModal(true);
-                            }}
-                            className="p-1 text-primary-500 hover:bg-primary-50 rounded"
-                          >
-                            <EditIcon className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDeleteKid(kid.id);
-                            }}
-                            className="p-1 text-primary-500 hover:bg-primary-50 rounded"
-                          >
-                            <TrashIcon className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </div>
-                    </motion.div>
-                  ))
-                )}
+              <p className="text-white/80 font-medium capitalize">{currentDate}</p>
+              <h1 className="text-3xl md:text-5xl font-black tracking-tight mb-2">Bonjour, {user?.username || 'Parent'} !</h1>
+              <div className="flex items-center gap-3">
+                <Badge variant="glass" className="bg-white/20 text-white border-none font-bold">
+                  {kids.length} {kids.length > 1 ? 'Enfants' : 'Enfant'}
+                </Badge>
+                <Badge variant="glass" className="bg-green-500/80 text-white border-none font-bold">Abonnement Actif</Badge>
               </div>
             </div>
           </div>
-
-          {/* Approvals Panel */}
-          <div className="lg:col-span-2">
-            {selectedKid ? (
-              <div className="space-y-6">
-                <div className="rounded-2xl bg-gradient-to-br from-primary-500 via-secondary-500 to-accent-500 p-6 text-white shadow-xl">
-                  <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
-                    <div>
-                      <p className="text-sm font-bold uppercase tracking-wide text-white/80">
-                        Espace de {selectedKid.name}
-                      </p>
-                      <h2 className="mt-2 text-2xl font-bold">
-                        Le parent gere, l'enfant lit simplement.
-                      </h2>
-                      <p className="mt-2 max-w-2xl text-sm text-white/85">
-                        Le paiement, le compte enfant et les categories autorisees restent ici. Cote enfant, il ne voit que les livres disponibles.
-                      </p>
-                    </div>
-                    <Link
-                      to="/abonnements"
-                      className="inline-flex items-center justify-center rounded-3xl bg-white px-5 py-3 font-bold text-primary-600 shadow-lg transition hover:bg-primary-50"
-                    >
-                      Gerer l'abonnement
-                    </Link>
-                  </div>
-
-                  <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
-                    <div className="rounded-3xl bg-white/15 p-4 backdrop-blur">
-                      <span className="block text-sm text-white/80">Temps lu</span>
-                      <span className="text-2xl font-bold">
-                        {formatDuration(kidActivity?.summary?.total_time_seconds)}
-                      </span>
-                    </div>
-                    <div className="rounded-3xl bg-white/15 p-4 backdrop-blur">
-                      <span className="block text-sm text-white/80">Livres termines</span>
-                      <span className="text-2xl font-bold">
-                        {kidActivity?.summary?.completed_books || 0}
-                      </span>
-                    </div>
-                    <div className="rounded-3xl bg-white/15 p-4 backdrop-blur">
-                      <span className="block text-sm text-white/80">Acces autorises</span>
-                      <span className="text-2xl font-bold">
-                        {approvedCount}/{totalCategories}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
-                  <button
-                    onClick={() => setActiveSection('account')}
-                    className="rounded-3xl border border-primary-100 bg-white p-4 text-left shadow-sm transition hover:border-primary-300 hover:shadow-md dark:border-surface-700 dark:bg-surface-800"
-                  >
-                    <span className="block text-sm font-bold text-primary-600">1. Compte enfant</span>
-                    <span className="mt-1 block text-sm text-surface-600 dark:text-surface-300">
-                      Creer l'identifiant que l'enfant utilisera pour lire.
-                    </span>
-                  </button>
-                  <button
-                    onClick={() => setActiveSection('access')}
-                    className="rounded-3xl border border-primary-100 bg-white p-4 text-left shadow-sm transition hover:border-primary-300 hover:shadow-md dark:border-surface-700 dark:bg-surface-800"
-                  >
-                    <span className="block text-sm font-bold text-primary-600">2. Acces aux livres</span>
-                    <span className="mt-1 block text-sm text-surface-600 dark:text-surface-300">
-                      Choisir les categories visibles pour {selectedKid.name}.
-                    </span>
-                  </button>
-                  <button
-                    onClick={() => setActiveSection('reading')}
-                    className="rounded-3xl border border-primary-100 bg-white p-4 text-left shadow-sm transition hover:border-primary-300 hover:shadow-md dark:border-surface-700 dark:bg-surface-800"
-                  >
-                    <span className="block text-sm font-bold text-primary-600">3. Suivi de lecture</span>
-                    <span className="mt-1 block text-sm text-surface-600 dark:text-surface-300">
-                      Voir les progres apres les sessions de lecture.
-                    </span>
-                  </button>
-                  <button
-                    onClick={() => setActiveSection('rules')}
-                    className="rounded-3xl border border-primary-100 bg-white p-4 text-left shadow-sm transition hover:border-primary-300 hover:shadow-md dark:border-surface-700 dark:bg-surface-800"
-                  >
-                    <span className="block text-sm font-bold text-primary-600">4. Controle parental</span>
-                    <span className="mt-1 block text-sm text-surface-600 dark:text-surface-300">
-                      Regler duree, horaires, langues et univers autorises.
-                    </span>
-                  </button>
-                  <button
-                    onClick={() => setActiveSection('subscription')}
-                    className="rounded-3xl border border-primary-100 bg-white p-4 text-left shadow-sm transition hover:border-primary-300 hover:shadow-md dark:border-surface-700 dark:bg-surface-800"
-                  >
-                    <span className="block text-sm font-bold text-primary-600">5. Abonnement</span>
-                    <span className="mt-1 block text-sm text-surface-600 dark:text-surface-300">
-                      Preparer la formule familiale et les limites de livres.
-                    </span>
-                  </button>
-                  <button
-                    onClick={() => setActiveSection('notifications')}
-                    className="rounded-3xl border border-primary-100 bg-white p-4 text-left shadow-sm transition hover:border-primary-300 hover:shadow-md dark:border-surface-700 dark:bg-surface-800"
-                  >
-                    <span className="block text-sm font-bold text-primary-600">6. Notifications</span>
-                    <span className="mt-1 block text-sm text-surface-600 dark:text-surface-300">
-                      Preparer les rappels de coucher et alertes parentales.
-                    </span>
-                  </button>
-                </div>
-
-                <div className="flex flex-wrap gap-2 rounded-2xl bg-white p-2 shadow-lg dark:bg-surface-800">
-                  {parentSections.map((section) => (
-                    <button
-                      key={section.id}
-                      onClick={() => setActiveSection(section.id)}
-                      className={`rounded-3xl px-4 py-2 text-sm font-bold transition ${
-                        activeSection === section.id
-                          ? 'bg-primary-500 text-white shadow'
-                          : 'text-surface-600 hover:bg-surface-100 dark:text-surface-300 dark:hover:bg-surface-700'
-                      }`}
-                    >
-                      {section.label}
-                    </button>
-                  ))}
-                </div>
-
-                {activeSection === 'overview' && (
-                  <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-                    <div className="rounded-3xl bg-white p-6 shadow-lg dark:bg-surface-800">
-                      <h2 className="text-xl font-bold text-surface-800 dark:text-surface-200">
-                        Parcours parent logique
-                      </h2>
-                      <div className="mt-5 space-y-4">
-                        {[
-                          ['Payer cote parent', "L'enfant ne voit jamais le paiement."],
-                          ['Creer le compte enfant', 'Un acces simple et limite a son profil.'],
-                          ['Autoriser les categories', 'Le contenu visible reste valide par le parent.'],
-                          ['Suivre sans interrompre', 'Le parent consulte les progres quand il veut.']
-                        ].map(([title, text], index) => (
-                          <div key={title} className="flex gap-3">
-                            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary-100 font-bold text-primary-600">
-                              {index + 1}
-                            </span>
-                            <div>
-                              <p className="font-bold text-surface-900 dark:text-surface-100">{title}</p>
-                              <p className="text-sm text-surface-600 dark:text-surface-300">{text}</p>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div className="rounded-3xl bg-white p-6 shadow-lg dark:bg-surface-800">
-                      <h2 className="text-xl font-bold text-surface-800 dark:text-surface-200">
-                        Resume de {selectedKid.name}
-                      </h2>
-                      <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2">
-                        <div className="rounded-2xl bg-surface-50 p-4 dark:bg-surface-700">
-                          <span className="block text-sm text-surface-500">Age</span>
-                          <span className="text-xl font-bold text-surface-900 dark:text-surface-100">
-                            {selectedKid.age ? `${selectedKid.age} ans` : 'Non renseigne'}
-                          </span>
-                        </div>
-                        <div className="rounded-2xl bg-surface-50 p-4 dark:bg-surface-700">
-                          <span className="block text-sm text-surface-500">Sessions</span>
-                          <span className="text-xl font-bold text-surface-900 dark:text-surface-100">
-                            {kidActivity?.summary?.total_sessions || 0}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="mt-5 flex flex-wrap gap-2">
-                        <button
-                          onClick={() => setActiveSection('account')}
-                          className="rounded-2xl bg-primary-500 px-4 py-2 font-bold text-white hover:bg-primary-600"
-                        >
-                          Configurer le compte
-                        </button>
-                        <button
-                          onClick={() => setActiveSection('access')}
-                          className="rounded-2xl bg-surface-100 px-4 py-2 font-bold text-surface-700 hover:bg-surface-200 dark:bg-surface-700 dark:text-surface-200"
-                        >
-                          Gerer les acces
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {activeSection === 'rules' && (
-                  <div className="rounded-3xl bg-white p-6 shadow-lg dark:bg-surface-800">
-                    <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-                      <div>
-                        <h2 className="text-xl font-bold text-surface-800 dark:text-surface-200">
-                          Regles du coucher de {selectedKid.name}
-                        </h2>
-                        <p className="mt-1 text-sm text-surface-500">
-                          Duree, horaires, langues et univers autorises.
-                        </p>
-                      </div>
-                      <button
-                        onClick={handleSaveRules}
-                        disabled={rulesSaving || rulesLoading}
-                        className="rounded-2xl bg-primary-500 px-4 py-2 font-bold text-white transition hover:bg-primary-600 disabled:opacity-60"
-                      >
-                        {rulesSaving ? 'Enregistrement...' : 'Enregistrer'}
-                      </button>
-                    </div>
-
-                    {rulesLoading ? (
-                      <p className="py-8 text-center text-surface-500">Chargement des regles...</p>
-                    ) : (
-                      <div className="space-y-6">
-                        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                          <div>
-                            <label className="mb-2 block text-sm font-bold text-surface-700 dark:text-surface-200">
-                              Duree quotidienne
-                            </label>
-                            <div className="flex items-center gap-2">
-                              <input
-                                type="number"
-                                min="0"
-                                max="240"
-                                value={rulesForm.daily_screen_time_minutes}
-                                onChange={(event) => setRulesForm({
-                                  ...rulesForm,
-                                  daily_screen_time_minutes: event.target.value
-                                })}
-                                className="w-full rounded-2xl border border-surface-300 px-3 py-2 dark:border-surface-600 dark:bg-surface-700 dark:text-white"
-                              />
-                              <span className="text-sm font-bold text-surface-500">min</span>
-                            </div>
-                          </div>
-                          <div>
-                            <label className="mb-2 block text-sm font-bold text-surface-700 dark:text-surface-200">
-                              Heure debut
-                            </label>
-                            <input
-                              type="time"
-                              value={rulesForm.quiet_start_time}
-                              onChange={(event) => setRulesForm({ ...rulesForm, quiet_start_time: event.target.value })}
-                              className="w-full rounded-2xl border border-surface-300 px-3 py-2 dark:border-surface-600 dark:bg-surface-700 dark:text-white"
-                            />
-                          </div>
-                          <div>
-                            <label className="mb-2 block text-sm font-bold text-surface-700 dark:text-surface-200">
-                              Heure fin
-                            </label>
-                            <input
-                              type="time"
-                              value={rulesForm.quiet_end_time}
-                              onChange={(event) => setRulesForm({ ...rulesForm, quiet_end_time: event.target.value })}
-                              className="w-full rounded-2xl border border-surface-300 px-3 py-2 dark:border-surface-600 dark:bg-surface-700 dark:text-white"
-                            />
-                          </div>
-                        </div>
-
-                        <div className="rounded-3xl border border-primary-100 bg-primary-50/60 p-4 dark:border-primary-900/40 dark:bg-primary-950/20">
-                          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                            <div>
-                              <h3 className="font-bold text-surface-900 dark:text-surface-100">Contenus autorises</h3>
-                              <p className="mt-1 text-sm text-surface-600 dark:text-surface-300">
-                                {approvedCount} categorie{approvedCount > 1 ? 's' : ''} autorisee{approvedCount > 1 ? 's' : ''} sur {totalCategories || 0}.
-                              </p>
-                            </div>
-                            <button
-                              onClick={() => setActiveSection('access')}
-                              className="rounded-2xl bg-white px-4 py-2 text-sm font-bold text-primary-600 shadow-sm transition hover:bg-primary-100 dark:bg-surface-800 dark:hover:bg-surface-700"
-                            >
-                              Modifier les contenus
-                            </button>
-                          </div>
-                          <div className="mt-3 flex flex-wrap gap-2">
-                            {approvals.filter((approval) => approval.approved).length > 0 ? (
-                              approvals
-                                .filter((approval) => approval.approved)
-                                .slice(0, 6)
-                                .map((approval) => (
-                                  <span
-                                    key={approval.category_id}
-                                    className="rounded-full bg-white px-3 py-1 text-xs font-bold text-surface-700 shadow-sm dark:bg-surface-700 dark:text-surface-100"
-                                  >
-                                    {approval.category_name}
-                                  </span>
-                                ))
-                            ) : (
-                              <span className="text-sm font-medium text-surface-500">Aucune categorie autorisee.</span>
-                            )}
-                          </div>
-                        </div>
-
-                        <div>
-                          <h3 className="mb-3 font-bold text-surface-900 dark:text-surface-100">Langues autorisees</h3>
-                          <div className="flex flex-wrap gap-2">
-                            {bedtimeLanguages.map((language) => {
-                              const active = rulesForm.allowed_languages.includes(language.id);
-                              return (
-                                <button
-                                  key={language.id}
-                                  onClick={() => toggleRuleValue('allowed_languages', language.id)}
-                                  className={`rounded-full px-4 py-2 text-sm font-bold transition ${
-                                    active
-                                      ? 'bg-green-500 text-white'
-                                      : 'bg-surface-100 text-surface-700 hover:bg-surface-200 dark:bg-surface-700 dark:text-surface-200'
-                                  }`}
-                                >
-                                  {language.label}
-                                </button>
-                              );
-                            })}
-                          </div>
-                        </div>
-
-                        <div>
-                          <h3 className="mb-3 font-bold text-surface-900 dark:text-surface-100">Univers autorises</h3>
-                          <div className="grid grid-cols-2 gap-2 md:grid-cols-3">
-                            {bedtimeThemes.map((theme) => {
-                              const active = rulesForm.allowed_themes.includes(theme.id);
-                              return (
-                                <button
-                                  key={theme.id}
-                                  onClick={() => toggleRuleValue('allowed_themes', theme.id)}
-                                  className={`rounded-3xl px-4 py-3 text-left text-sm font-bold transition ${
-                                    active
-                                      ? 'bg-primary-500 text-white'
-                                      : 'bg-surface-100 text-surface-700 hover:bg-surface-200 dark:bg-surface-700 dark:text-surface-200'
-                                  }`}
-                                >
-                                  {theme.label}
-                                </button>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {activeSection === 'reading' && (
-                <div className="bg-white dark:bg-surface-800 rounded-3xl shadow-lg p-6">
-                  <div className="flex items-center justify-between mb-6">
-                    <div>
-                      <h2 className="text-xl font-bold text-surface-800 dark:text-surface-200">
-                        Suivi de lecture de {selectedKid.name}
-                      </h2>
-                      <p className="text-sm text-surface-500 mt-1">
-                        Consultez son activite, sa progression et ses livres termines.
-                      </p>
-                    </div>
-                    <button
-                      onClick={() => loadKidActivity(selectedKid.id)}
-                      className="px-4 py-2 bg-surface-100 dark:bg-surface-700 text-surface-700 dark:text-surface-200 rounded-2xl hover:bg-surface-200 dark:hover:bg-surface-600 transition-colors"
-                    >
-                      Actualiser
-                    </button>
-                  </div>
-
-                  {activityLoading ? (
-                    <p className="text-surface-500 text-center py-8">Chargement du suivi...</p>
-                  ) : (
-                    <>
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
-                        <div className="rounded-2xl bg-primary-50 dark:bg-primary-900/20 p-4">
-                          <span className="block text-sm text-surface-500">Temps lu</span>
-                          <span className="text-2xl font-bold text-primary-600">
-                            {formatDuration(kidActivity?.summary?.total_time_seconds)}
-                          </span>
-                        </div>
-                        <div className="rounded-2xl bg-green-50 dark:bg-green-900/20 p-4">
-                          <span className="block text-sm text-surface-500">Sessions</span>
-                          <span className="text-2xl font-bold text-green-600">
-                            {kidActivity?.summary?.total_sessions || 0}
-                          </span>
-                        </div>
-                        <div className="rounded-2xl bg-primary-50 dark:bg-primary-900/20 p-4">
-                          <span className="block text-sm text-surface-500">Livres termines</span>
-                          <span className="text-2xl font-bold text-primary-600">
-                            {kidActivity?.summary?.completed_books || 0}
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="rounded-3xl border-2 border-primary-100 dark:border-primary-900/40 bg-gradient-to-br from-white to-primary-50/40 dark:from-surface-800 dark:to-primary-950/20 p-4 mb-6">
-                        <div className="flex flex-col lg:flex-row lg:items-end gap-3">
-                          <div className="flex-1">
-                            <h3 className="font-bold text-surface-900 dark:text-surface-100 mb-1">
-                              Objectif de lecture
-                            </h3>
-                            <p className="text-sm text-surface-500 mb-3">
-                              Fixez un objectif motivant pour accompagner {selectedKid.name}.
-                            </p>
-                            {kidActivity?.goal ? (
-                              <div className="mb-4">
-                                <div className="flex items-center justify-between text-sm mb-2">
-                                  <span className="font-semibold text-surface-700 dark:text-surface-200">
-                                    {kidActivity.goal.progress_value || 0} / {kidActivity.goal.target_value}
-                                    {kidActivity.goal.goal_type === 'minutes' ? ' min' : ''}
-                                  </span>
-                                  <span className={`font-bold ${kidActivity.goal.achieved ? 'text-green-600' : 'text-primary-600'}`}>
-                                    {kidActivity.goal.achieved ? 'Objectif atteint' : `${kidActivity.goal.progress_percent || 0}%`}
-                                  </span>
-                                </div>
-                                <div className="h-3 rounded-full bg-surface-200 dark:bg-surface-700 overflow-hidden">
-                                  <div
-                                    className={`h-full rounded-full ${kidActivity.goal.achieved ? 'bg-green-500' : 'bg-primary-500'}`}
-                                    style={{ width: `${Math.min(100, kidActivity.goal.progress_percent || 0)}%` }}
-                                  />
-                                </div>
-                              </div>
-                            ) : (
-                              <p className="mb-4 text-sm font-medium text-surface-500">Aucun objectif actif.</p>
-                            )}
-                          </div>
-
-                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 lg:w-[520px]">
-                            <select
-                              value={goalForm.goal_type}
-                              onChange={(event) => setGoalForm({ ...goalForm, goal_type: event.target.value })}
-                              className="px-3 py-2 rounded-2xl border border-surface-300 dark:border-surface-600 dark:bg-surface-700 dark:text-white"
-                            >
-                              <option value="minutes">Minutes lues</option>
-                              <option value="completed_books">Livres termines</option>
-                              <option value="sessions">Sessions</option>
-                            </select>
-                            <input
-                              type="number"
-                              min="1"
-                              max="999"
-                              value={goalForm.target_value}
-                              onChange={(event) => setGoalForm({ ...goalForm, target_value: event.target.value })}
-                              className="px-3 py-2 rounded-2xl border border-surface-300 dark:border-surface-600 dark:bg-surface-700 dark:text-white"
-                            />
-                            <select
-                              value={goalForm.period}
-                              onChange={(event) => setGoalForm({ ...goalForm, period: event.target.value })}
-                              className="px-3 py-2 rounded-2xl border border-surface-300 dark:border-surface-600 dark:bg-surface-700 dark:text-white"
-                            >
-                              <option value="daily">Par jour</option>
-                              <option value="weekly">Par semaine</option>
-                              <option value="monthly">Par mois</option>
-                            </select>
-                          </div>
-                        </div>
-                        <div className="mt-3 flex flex-wrap gap-2">
-                          <button
-                            onClick={handleSaveGoal}
-                            disabled={goalSaving}
-                            className="px-4 py-2 rounded-2xl bg-primary-500 text-white font-semibold hover:bg-primary-600 disabled:opacity-60"
-                          >
-                            {goalSaving ? 'Enregistrement...' : 'Enregistrer objectif'}
-                          </button>
-                          {kidActivity?.goal && (
-                            <button
-                              onClick={handleClearGoal}
-                              disabled={goalSaving}
-                              className="px-4 py-2 rounded-2xl bg-surface-100 dark:bg-surface-700 text-surface-700 dark:text-surface-200 font-semibold hover:bg-surface-200 dark:hover:bg-surface-600 disabled:opacity-60"
-                            >
-                              Desactiver
-                            </button>
-                          )}
-                        </div>
-                      </div>
-
-                      {kidActivity?.badges?.length > 0 && (
-                        <div className="mb-6">
-                          <h3 className="font-bold text-surface-900 dark:text-surface-100 mb-3">
-                            Badges de motivation
-                          </h3>
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            {kidActivity.badges.map((badge) => (
-                              <div
-                                key={badge.id}
-                                className={`rounded-3xl border-2 p-4 ${
-                                  badge.earned
-                                    ? 'border-yellow-300 bg-yellow-50 dark:bg-yellow-900/20'
-                                    : 'border-surface-200 bg-surface-50 dark:border-surface-700 dark:bg-surface-700/60 opacity-70'
-                                }`}
-                              >
-                                <div className="flex items-start gap-3">
-                                  <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${
-                                    badge.earned
-                                      ? 'bg-yellow-400 text-white'
-                                      : 'bg-surface-200 text-surface-500 dark:bg-surface-600 dark:text-surface-300'
-                                  }`}>
-                                    {badge.earned ? <CheckIcon className="w-5 h-5" /> : <LockIcon className="w-5 h-5" />}
-                                  </span>
-                                  <div>
-                                    <p className="font-bold text-surface-900 dark:text-surface-100">{badge.label}</p>
-                                    <p className="text-sm text-surface-600 dark:text-surface-300">{badge.description}</p>
-                                    <p className={`mt-1 text-xs font-bold ${badge.earned ? 'text-yellow-700 dark:text-yellow-300' : 'text-surface-500'}`}>
-                                      {badge.earned ? 'Gagne' : 'A debloquer'}
-                                    </p>
-                                  </div>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                      {kidActivity?.progress?.length > 0 ? (
-                        <div className="space-y-3">
-                          {kidActivity.progress.map((item) => (
-                            <div key={item.id} className="p-4 rounded-2xl bg-surface-50 dark:bg-surface-700">
-                              <div className="flex items-center justify-between gap-3 mb-2">
-                                <div>
-                                  <p className="font-semibold text-surface-800 dark:text-surface-200">
-                                    {item.book_title}
-                                  </p>
-                                  <p className="text-xs text-surface-500">
-                                    Derniere lecture: {formatDate(item.last_read_at)}
-                                  </p>
-                                </div>
-                                <span className="text-sm font-bold text-primary-600">
-                                  {item.progress_percent || 0}%
-                                </span>
-                              </div>
-                              <div className="h-2 rounded-full bg-surface-200 dark:bg-surface-600 overflow-hidden">
-                                <div
-                                  className="h-full rounded-full bg-primary-500"
-                                  style={{ width: `${Math.min(100, item.progress_percent || 0)}%` }}
-                                />
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <p className="text-surface-500 text-center py-6">
-                          Aucune lecture enregistree pour le moment.
-                        </p>
-                      )}
-
-                      <div className="mt-6">
-                        <div className="mb-3 flex items-center gap-2">
-                          <HistoryIcon className="h-5 w-5 text-primary-500" />
-                          <h3 className="font-bold text-surface-900 dark:text-surface-100">
-                            Historique recent
-                          </h3>
-                        </div>
-                        {kidActivity?.recent_sessions?.length > 0 ? (
-                          <div className="divide-y divide-surface-200 overflow-hidden rounded-3xl border border-surface-200 dark:divide-surface-700 dark:border-surface-700">
-                            {kidActivity.recent_sessions.map((session) => (
-                              <div
-                                key={session.id}
-                                className="flex flex-col gap-2 bg-white p-4 dark:bg-surface-800 sm:flex-row sm:items-center sm:justify-between"
-                              >
-                                <div>
-                                  <p className="font-semibold text-surface-800 dark:text-surface-100">
-                                    {session.book_title}
-                                  </p>
-                                  <p className="text-xs text-surface-500">
-                                    {formatDate(session.created_at)}
-                                  </p>
-                                </div>
-                                <div className="flex flex-wrap gap-2 text-xs font-bold">
-                                  <span className="rounded-full bg-primary-50 px-3 py-1 text-primary-600 dark:bg-primary-900/20 dark:text-primary-300">
-                                    {formatDuration(session.duration_seconds)}
-                                  </span>
-                                  {session.completed && (
-                                    <span className="rounded-full bg-green-50 px-3 py-1 text-green-600 dark:bg-green-900/20 dark:text-green-300">
-                                      Termine
-                                    </span>
-                                  )}
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        ) : (
-                          <p className="rounded-3xl bg-surface-50 p-4 text-sm text-surface-500 dark:bg-surface-700">
-                            Aucune session recente.
-                          </p>
-                        )}
-                      </div>
-                    </>
-                  )}
-                </div>
-                )}
-
-                {activeSection === 'learning' && (
-                  <div className="rounded-3xl bg-white p-6 shadow-lg dark:bg-surface-800">
-                    <div className="mb-6 flex items-center justify-between">
-                      <div>
-                        <h2 className="text-xl font-bold text-surface-800 dark:text-surface-200">
-                          Jeux educatifs de {selectedKid.name}
-                        </h2>
-                        <p className="mt-1 text-sm text-surface-500">
-                          Quiz realises, defis, temps passe et recompenses.
-                        </p>
-                      </div>
-                      <button
-                        onClick={() => loadLearningActivity(selectedKid.id)}
-                        className="rounded-2xl bg-surface-100 px-4 py-2 font-semibold text-surface-700 transition-colors hover:bg-surface-200 dark:bg-surface-700 dark:text-surface-200"
-                      >
-                        Actualiser
-                      </button>
-                    </div>
-
-                    <div className="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-4">
-                      <div className="rounded-2xl bg-violet-50 p-4 dark:bg-violet-900/20">
-                        <span className="block text-sm text-surface-500">Quiz</span>
-                        <span className="text-2xl font-bold text-violet-600">{learningActivity?.summary?.attempts || 0}</span>
-                      </div>
-                      <div className="rounded-2xl bg-green-50 p-4 dark:bg-green-900/20">
-                        <span className="block text-sm text-surface-500">Reussites</span>
-                        <span className="text-2xl font-bold text-green-600">{learningActivity?.summary?.successes || 0}</span>
-                      </div>
-                      <div className="rounded-2xl bg-primary-50 p-4 dark:bg-primary-900/20">
-                        <span className="block text-sm text-surface-500">Score moyen</span>
-                        <span className="text-2xl font-bold text-primary-600">{learningActivity?.summary?.average_score || 0}%</span>
-                      </div>
-                      <div className="rounded-2xl bg-accent-50 p-4 dark:bg-accent-900/20">
-                        <span className="block text-sm text-surface-500">Temps</span>
-                        <span className="text-2xl font-bold text-accent-600">{formatDuration(learningActivity?.summary?.time_spent_seconds)}</span>
-                      </div>
-                    </div>
-
-                    <div className="grid gap-6 lg:grid-cols-2">
-                      <section>
-                        <h3 className="mb-3 font-bold text-surface-900 dark:text-surface-100">Defis</h3>
-                        <div className="space-y-3">
-                          {(learningActivity?.challenges || []).length > 0 ? learningActivity.challenges.map((challenge) => (
-                            <div key={challenge.id} className="rounded-3xl bg-surface-50 p-4 dark:bg-surface-700">
-                              <div className="flex items-center justify-between gap-3">
-                                <p className="font-bold text-surface-900 dark:text-surface-100">{challenge.title}</p>
-                                <span className="text-2xl">{challenge.reward_icon || '🏅'}</span>
-                              </div>
-                              <div className="mt-3 h-3 overflow-hidden rounded-full bg-surface-200 dark:bg-surface-600">
-                                <div
-                                  className="h-full rounded-full bg-violet-500"
-                                  style={{ width: `${Math.min(100, (Number(challenge.progress_value || 0) / Math.max(1, Number(challenge.target_value || 1))) * 100)}%` }}
-                                />
-                              </div>
-                            </div>
-                          )) : (
-                            <p className="rounded-3xl bg-surface-50 p-4 text-sm text-surface-500 dark:bg-surface-700">Aucun defi commence.</p>
-                          )}
-                        </div>
-                      </section>
-
-                      <section>
-                        <h3 className="mb-3 font-bold text-surface-900 dark:text-surface-100">Recompenses</h3>
-                        <div className="grid grid-cols-2 gap-3">
-                          {(learningActivity?.rewards || []).length > 0 ? learningActivity.rewards.map((reward) => (
-                            <div key={reward.id} className="rounded-3xl bg-yellow-50 p-4 dark:bg-yellow-900/20">
-                              <span className="text-3xl">{reward.icon || reward.payload?.icon || '⭐'}</span>
-                              <p className="mt-2 font-bold text-surface-900 dark:text-surface-100">{reward.name || reward.payload?.name || 'Recompense'}</p>
-                            </div>
-                          )) : (
-                            <p className="col-span-2 rounded-3xl bg-surface-50 p-4 text-sm text-surface-500 dark:bg-surface-700">Aucune recompense pour le moment.</p>
-                          )}
-                        </div>
-                      </section>
-                    </div>
-
-                    <section className="mt-6">
-                      <h3 className="mb-3 font-bold text-surface-900 dark:text-surface-100">Derniers quiz</h3>
-                      <div className="divide-y divide-surface-200 overflow-hidden rounded-3xl border border-surface-200 dark:divide-surface-700 dark:border-surface-700">
-                        {(learningActivity?.recent_attempts || []).length > 0 ? learningActivity.recent_attempts.map((attempt) => (
-                          <div key={attempt.id} className="flex items-center justify-between gap-3 bg-white p-4 dark:bg-surface-800">
-                            <div className="flex items-center gap-3">
-                              <span className="text-2xl">{attempt.category_pictogram || '⭐'}</span>
-                              <div>
-                                <p className="font-semibold text-surface-900 dark:text-surface-100">{attempt.title}</p>
-                                <p className="text-xs text-surface-500">{formatDate(attempt.created_at)}</p>
-                              </div>
-                            </div>
-                            <span className={`rounded-full px-3 py-1 text-sm font-bold ${attempt.success ? 'bg-green-50 text-green-700' : 'bg-accent-50 text-accent-700'}`}>
-                              {attempt.score}/{attempt.max_score}
-                            </span>
-                          </div>
-                        )) : (
-                          <p className="bg-surface-50 p-4 text-sm text-surface-500 dark:bg-surface-700">Aucun quiz realise.</p>
-                        )}
-                      </div>
-                    </section>
-                  </div>
-                )}
-
-                {activeSection === 'subscription' && (
-                  <div className="rounded-3xl bg-white p-6 shadow-lg dark:bg-surface-800">
-                    <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                      <div>
-                        <h2 className="text-xl font-bold text-surface-800 dark:text-surface-200">
-                          Abonnement familial
-                        </h2>
-                        <p className="mt-1 text-sm text-surface-500">
-                          Le parent garde la gestion du paiement et des limites de livres.
-                        </p>
-                      </div>
-                      <Link
-                        to="/abonnements"
-                        className="inline-flex items-center justify-center rounded-2xl bg-primary-500 px-4 py-2 font-bold text-white transition hover:bg-primary-600"
-                      >
-                        Gerer l'abonnement
-                      </Link>
-                    </div>
-
-                    <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-3">
-                      <div className="rounded-3xl bg-primary-50 p-4 dark:bg-primary-900/20">
-                        <p className="font-bold text-primary-700 dark:text-primary-300">Compte parent</p>
-                        <p className="mt-1 text-sm text-surface-600 dark:text-surface-300">
-                          La facturation reste separee de l'espace enfant.
-                        </p>
-                      </div>
-                      <div className="rounded-3xl bg-green-50 p-4 dark:bg-green-900/20">
-                        <p className="font-bold text-green-700 dark:text-green-300">Acces controle</p>
-                        <p className="mt-1 text-sm text-surface-600 dark:text-surface-300">
-                          Les livres disponibles suivent l'abonnement et les autorisations parentales.
-                        </p>
-                      </div>
-                      <div className="rounded-3xl bg-primary-50 p-4 dark:bg-primary-900/20">
-                        <p className="font-bold text-primary-700 dark:text-primary-300">Evolution MVP</p>
-                        <p className="mt-1 text-sm text-surface-600 dark:text-surface-300">
-                          Cette zone pourra afficher le plan actif, les limites et le renouvellement.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {activeSection === 'voice' && (
-                  <div className="rounded-3xl bg-white p-6 shadow-lg dark:bg-surface-800">
-                    <div className="flex items-start gap-4">
-                      <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-3xl bg-purple-50 text-purple-600 dark:bg-purple-900/20 dark:text-purple-300">
-                        <MicrophoneIcon className="h-6 w-6" />
-                      </span>
-                      <div>
-                        <h2 className="text-xl font-bold text-surface-800 dark:text-surface-200">
-                          Clonage vocal
-                        </h2>
-                        <p className="mt-1 text-sm text-surface-500">
-                          Enregistrez les voix familiales, gerez le consentement et preparez les apercus audio.
-                        </p>
-                        <Link
-                          to="/parent/voices"
-                          className="mt-4 inline-flex rounded-3xl bg-purple-600 px-4 py-3 text-sm font-bold text-white transition hover:bg-purple-700"
-                        >
-                          Ouvrir Voix de la famille
-                        </Link>
-                      </div>
-                    </div>
-
-                    <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-3">
-                      {[
-                        ['Consentement parent', 'Validation explicite avant toute creation de voix.'],
-                        ['Echantillons audio', 'Flux securise pour importer ou enregistrer les extraits.'],
-                        ['Messages courts', 'Creer des mots personnalises pour accompagner les histoires.']
-                      ].map(([title, text]) => (
-                        <div key={title} className="rounded-3xl bg-surface-50 p-4 dark:bg-surface-700">
-                          <p className="font-bold text-surface-900 dark:text-surface-100">{title}</p>
-                          <p className="mt-1 text-sm text-surface-600 dark:text-surface-300">{text}</p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {activeSection === 'notifications' && (
-                  <div className="rounded-3xl bg-white p-6 shadow-lg dark:bg-surface-800">
-                    <div className="flex items-start gap-4">
-                      <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-3xl bg-accent-50 text-accent-600 dark:bg-accent-900/20 dark:text-accent-300">
-                        <ClockIcon className="h-6 w-6" />
-                      </span>
-                      <div>
-                        <h2 className="text-xl font-bold text-surface-800 dark:text-surface-200">
-                          Notifications parentales
-                        </h2>
-                        <p className="mt-1 text-sm text-surface-500">
-                          Rappels de coucher, fin de temps autorise et resume d'activite.
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="mt-6 space-y-3">
-                      {[
-                        ['Rappel du coucher', rulesForm.quiet_start_time ? `A partir de ${rulesForm.quiet_start_time}` : 'Horaire a configurer'],
-                        ['Limite quotidienne', `${rulesForm.daily_screen_time_minutes || 0} minutes par jour`],
-                        ['Resume enfant', latestActivityDate ? `Derniere activite ${formatDate(latestActivityDate)}` : 'Aucune activite recente']
-                      ].map(([title, value]) => (
-                        <div key={title} className="flex flex-col gap-2 rounded-3xl bg-surface-50 p-4 dark:bg-surface-700 sm:flex-row sm:items-center sm:justify-between">
-                          <p className="font-bold text-surface-900 dark:text-surface-100">{title}</p>
-                          <span className="rounded-full bg-white px-3 py-1 text-xs font-bold text-surface-600 shadow-sm dark:bg-surface-800 dark:text-surface-200">
-                            {value}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {activeSection === 'access' && (
-                <div className="bg-white dark:bg-surface-800 rounded-3xl shadow-lg p-6">
-                <div className="flex items-center justify-between mb-6">
-                  <div>
-                    <h2 className="text-xl font-bold text-surface-800 dark:text-surface-200">
-                      Catégories approuvées pour {selectedKid.name}
-                    </h2>
-                    <p className="text-sm text-surface-500 mt-1">
-                      Sélectionnez les catégories que {selectedKid.name} peut lire
-                    </p>
-                  </div>
-                  <button
-                    onClick={() => setActiveSection('account')}
-                    className="flex items-center gap-2 px-4 py-2 bg-surface-100 text-surface-700 rounded-2xl hover:bg-surface-200 transition-colors dark:bg-surface-700 dark:text-surface-200 dark:hover:bg-surface-600"
-                  >
-                    <LockIcon className="w-5 h-5" />
-                    <span>Compte enfant</span>
-                  </button>
-                </div>
-
-                <div className="space-y-3">
-                  {approvals.length === 0 ? (
-                    <p className="text-surface-500 text-center py-8">
-                      Chargement des catégories...
-                    </p>
-                  ) : (
-                    approvals.map(approval => {
-                      const guidance = getCategoryGuidance(approval);
-
-                      return (
-                      <motion.div
-                        key={approval.category_id}
-                        className="flex flex-col gap-4 p-4 bg-surface-50 dark:bg-surface-700 rounded-2xl sm:flex-row sm:items-center sm:justify-between"
-                        whileHover={{ scale: 1.01 }}
-                      >
-                        <div className="flex items-start gap-3">
-                          <BookIcon className="mt-1 w-5 h-5 shrink-0 text-primary-500" />
-                          <div>
-                            <div className="flex flex-wrap items-center gap-2">
-                              <span className="font-semibold text-surface-900 dark:text-surface-100">
-                                {approval.category_name}
-                              </span>
-                              <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${guidanceToneClasses[guidance.tone]}`}>
-                                {guidance.advice}
-                              </span>
-                            </div>
-                            <p className="mt-1 max-w-2xl text-sm leading-relaxed text-surface-600 dark:text-surface-300">
-                              {guidance.description}
-                            </p>
-                          </div>
-                        </div>
-                        <button
-                          onClick={() => handleToggleApproval(approval.category_id, !approval.approved)}
-                          className={`shrink-0 px-4 py-2 rounded-2xl font-medium transition-colors ${
-                            approval.approved
-                              ? 'bg-green-500 text-white hover:bg-green-600'
-                              : 'bg-surface-300 dark:bg-surface-600 text-surface-700 dark:text-surface-300 hover:bg-surface-400'
-                          }`}
-                        >
-                          {approval.approved ? (
-                            <span className="flex items-center gap-2">
-                              <CheckIcon className="w-4 h-4" />
-                              Approuvé
-                            </span>
-                          ) : (
-                            'Non approuvé'
-                          )}
-                        </button>
-                      </motion.div>
-                      );
-                    })
-                  )}
-                </div>
-              </div>
-              )}
-
-              {activeSection === 'account' && (
-                <div className="rounded-3xl bg-white p-6 shadow-lg dark:bg-surface-800">
-                  <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                    <div>
-                      <h2 className="text-xl font-bold text-surface-800 dark:text-surface-200">
-                        Compte enfant de {selectedKid.name}
-                      </h2>
-                      <p className="mt-1 text-sm text-surface-500">
-                        Ce compte sert uniquement a lire les livres autorises. Le paiement et les reglages restent dans l'espace parent.
-                      </p>
-                    </div>
-                    <button
-                      onClick={() => setShowAccountModal(true)}
-                      className="inline-flex items-center justify-center gap-2 rounded-2xl bg-green-500 px-4 py-2 font-bold text-white transition hover:bg-green-600"
-                    >
-                      <LockIcon className="h-5 w-5" />
-                      Creer un compte enfant
-                    </button>
-                  </div>
-
-                  <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-3">
-                    <div className="rounded-3xl bg-green-50 p-4 dark:bg-green-900/20">
-                      <p className="font-bold text-green-700 dark:text-green-300">Connexion simple</p>
-                      <p className="mt-1 text-sm text-surface-600 dark:text-surface-300">
-                        Un identifiant enfant, sans carte bancaire ni espace paiement.
-                      </p>
-                    </div>
-                    <div className="rounded-3xl bg-primary-50 p-4 dark:bg-primary-900/20">
-                      <p className="font-bold text-primary-700 dark:text-primary-300">Acces limite</p>
-                      <p className="mt-1 text-sm text-surface-600 dark:text-surface-300">
-                        Les livres visibles suivent les categories approuvees par le parent.
-                      </p>
-                    </div>
-                    <div className="rounded-3xl bg-primary-50 p-4 dark:bg-primary-900/20">
-                      <p className="font-bold text-primary-700 dark:text-primary-300">Parent responsable</p>
-                      <p className="mt-1 text-sm text-surface-600 dark:text-surface-300">
-                        L'abonnement et les decisions restent cote adulte.
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="mt-6 flex flex-wrap gap-2">
-                    <button
-                      onClick={() => setActiveSection('access')}
-                      className="rounded-2xl bg-surface-100 px-4 py-2 font-bold text-surface-700 hover:bg-surface-200 dark:bg-surface-700 dark:text-surface-200"
-                    >
-                      Choisir les categories
-                    </button>
-                    <Link
-                      to="/abonnements"
-                      className="rounded-2xl bg-primary-500 px-4 py-2 font-bold text-white hover:bg-primary-600"
-                    >
-                      Gerer l'abonnement parent
-                    </Link>
-                  </div>
-                </div>
-              )}
-              </div>
-            ) : (
-              <div className="bg-white dark:bg-surface-800 rounded-3xl shadow-lg p-6 flex items-center justify-center h-full">
-                <div className="text-center">
-                  <ChildIcon className="w-16 h-16 text-surface-400 mx-auto mb-4" />
-                  <p className="text-surface-500 text-lg">
-                    Sélectionnez un profil enfant pour gérer les approbations
-                  </p>
-                </div>
-              </div>
-            )}
+          <div className="flex gap-3">
+            <Button variant="glass" onClick={handleLogout} className="bg-white/10 hover:bg-white/20 text-white font-bold border-none">Déconnexion</Button>
+            <Button variant="glass" onClick={() => { setEditingKid(null); setKidForm(emptyKidForm); setShowKidModal(true); }} className="bg-white hover:bg-surface-100 text-primary-600 font-bold border-none shadow-xl">
+              <PlusIcon className="w-5 h-5 mr-2" /> Ajouter un enfant
+            </Button>
           </div>
         </div>
       </div>
 
-      {/* Kid Modal */}
-      <AnimatePresence>
-        {showKidModal && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
-            onClick={() => setShowKidModal(false)}
-          >
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              onClick={(e) => e.stopPropagation()}
-              className="bg-white dark:bg-surface-800 rounded-3xl p-6 w-full max-w-md"
-            >
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-xl font-bold text-surface-800 dark:text-surface-200">
-                  {editingKid ? 'Modifier le profil' : 'Nouveau profil enfant'}
-                </h3>
-                <button
-                  onClick={() => setShowKidModal(false)}
-                  className="p-2 hover:bg-surface-100 dark:hover:bg-surface-700 rounded-2xl"
+      <div className="max-w-7xl mx-auto px-4 md:px-12 -mt-16 relative z-20 flex flex-col gap-8">
+        
+        {/* 2. Quick Statistics */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+          <Card className="p-6 shadow-floating hover:-translate-y-1 transition-transform border-none overflow-hidden relative">
+            <div className="absolute -right-4 -top-4 w-24 h-24 bg-primary-100 dark:bg-primary-900/30 rounded-full blur-xl"></div>
+            <div className="flex items-center gap-4 mb-4 relative">
+              <div className="p-3 bg-primary-100 dark:bg-primary-900/50 text-primary-600 rounded-2xl"><ClockIcon className="w-6 h-6" /></div>
+              <h3 className="font-bold text-surface-500 dark:text-surface-400">Temps de lecture</h3>
+            </div>
+            <p className="text-3xl font-black relative">{formatDuration(totalReadingTime)}</p>
+          </Card>
+          <Card className="p-6 shadow-floating hover:-translate-y-1 transition-transform border-none overflow-hidden relative">
+            <div className="absolute -right-4 -top-4 w-24 h-24 bg-success-100 dark:bg-success-900/30 rounded-full blur-xl"></div>
+            <div className="flex items-center gap-4 mb-4 relative">
+              <div className="p-3 bg-success-100 dark:bg-success-900/50 text-success-600 rounded-2xl"><BookIcon className="w-6 h-6" /></div>
+              <h3 className="font-bold text-surface-500 dark:text-surface-400">Histoires lues</h3>
+            </div>
+            <p className="text-3xl font-black relative">{learningActivity?.summary?.attempts || 0}</p>
+          </Card>
+          <Card className="p-6 shadow-floating hover:-translate-y-1 transition-transform border-none overflow-hidden relative">
+            <div className="absolute -right-4 -top-4 w-24 h-24 bg-secondary-100 dark:bg-secondary-900/30 rounded-full blur-xl"></div>
+            <div className="flex items-center gap-4 mb-4 relative">
+              <div className="p-3 bg-secondary-100 dark:bg-secondary-900/50 text-secondary-600 rounded-2xl"><StarIcon className="w-6 h-6" /></div>
+              <h3 className="font-bold text-surface-500 dark:text-surface-400">Série de lecture</h3>
+            </div>
+            <p className="text-3xl font-black relative">3 Jours <span className="text-sm font-medium text-success-500 ml-2">🔥 En cours</span></p>
+          </Card>
+          <Card className="p-6 shadow-floating hover:-translate-y-1 transition-transform border-none overflow-hidden relative">
+            <div className="absolute -right-4 -top-4 w-24 h-24 bg-warning-100 dark:bg-warning-900/30 rounded-full blur-xl"></div>
+            <div className="flex items-center gap-4 mb-4 relative">
+              <div className="p-3 bg-warning-100 dark:bg-warning-900/50 text-warning-600 rounded-2xl"><BrainIcon className="w-6 h-6" /></div>
+              <h3 className="font-bold text-surface-500 dark:text-surface-400">Jeux éducatifs</h3>
+            </div>
+            <p className="text-3xl font-black relative">{learningActivity?.summary?.successes || 0}</p>
+          </Card>
+        </div>
+
+        {/* 3. Children Profiles Grid */}
+        <div>
+          <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">Profils Enfants</h2>
+          {kids.length === 0 ? (
+            <EmptyState 
+              title="Aucun profil enfant" 
+              description="Créez un profil pour votre enfant afin de suivre sa progression et personnaliser son expérience." 
+              actionLabel="Ajouter un enfant" 
+              onAction={() => { setEditingKid(null); setKidForm(emptyKidForm); setShowKidModal(true); }}
+            />
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+              {kids.map(kid => (
+                <Card 
+                  key={kid.id} 
+                  className={`p-0 overflow-hidden shadow-floating transition-all ${selectedKid?.id === kid.id ? 'ring-4 ring-primary-500' : 'hover:shadow-xl'}`}
+                  onClick={() => handleSelectKid(kid)}
                 >
-                  <XIcon className="w-5 h-5" />
-                </button>
+                  <div className="p-6 cursor-pointer bg-gradient-to-br from-white to-surface-50 dark:from-surface-800 dark:to-surface-800/80">
+                    <div className="flex items-start justify-between mb-6">
+                      <div className="flex items-center gap-4">
+                        <KidAvatar kid={kid} size="lg" />
+                        <div>
+                          <h3 className="text-xl font-bold">{kid.name}</h3>
+                          <div className="flex gap-2 mt-1">
+                            {kid.age && <Badge variant="secondary">{kid.age} ans</Badge>}
+                            <Badge variant="outline">Niveau 2</Badge>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-4">
+                      <div>
+                        <div className="flex justify-between text-sm font-bold mb-1">
+                          <span className="text-surface-500">Lecture hebdo</span>
+                          <span className="text-primary-600">45 / 60 min</span>
+                        </div>
+                        <ProgressBar progress={75} color="bg-primary-500" />
+                      </div>
+                      
+                      {selectedKid?.id === kid.id && (
+                        <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="pt-4 grid grid-cols-2 gap-2 border-t border-surface-100 dark:border-surface-700">
+                          <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); setEditingKid(kid); setKidForm(kidToForm(kid)); setShowKidModal(true); }} className="font-bold text-xs"><EditIcon className="w-4 h-4 mr-1"/> Modifier</Button>
+                          <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); setShowAccountModal(true); }} className="font-bold text-xs"><LockIcon className="w-4 h-4 mr-1"/> Compte</Button>
+                          <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); handleDeleteKid(kid.id); }} className="font-bold text-xs text-danger-500 hover:bg-danger-50 hover:text-danger-600 col-span-2 border border-transparent hover:border-danger-200"><TrashIcon className="w-4 h-4 mr-1"/> Supprimer</Button>
+                        </motion.div>
+                      )}
+                    </div>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {selectedKid && (
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            
+            <div className="lg:col-span-2 flex flex-col gap-8">
+              {/* 4. Analytics & Goals */}
+              <Card className="p-6 shadow-floating">
+                <h2 className="text-xl font-bold mb-6">Activité de {selectedKid.name}</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  {/* Fake Bar Chart */}
+                  <div className="flex flex-col h-48 justify-end gap-2 border-b border-l border-surface-200 dark:border-surface-700 p-4">
+                    <div className="flex items-end justify-between h-full w-full gap-2">
+                      {[30, 45, 20, 60, 80, 40, 90].map((h, i) => (
+                        <div key={i} className="w-full bg-primary-100 dark:bg-primary-900/30 rounded-t-md relative group">
+                          <motion.div initial={{ height: 0 }} animate={{ height: `${h}%` }} className="absolute bottom-0 inset-x-0 bg-primary-500 rounded-t-md" />
+                          <div className="absolute -top-8 inset-x-0 text-center opacity-0 group-hover:opacity-100 transition-opacity text-xs font-bold bg-surface-800 text-white py-1 rounded">{h}m</div>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="flex justify-between text-xs text-surface-500 font-bold mt-2">
+                      <span>L</span><span>M</span><span>M</span><span>J</span><span>V</span><span>S</span><span>D</span>
+                    </div>
+                  </div>
+
+                  {/* Circular Goal */}
+                  <div className="flex flex-col items-center justify-center">
+                    <div className="relative w-32 h-32 flex items-center justify-center">
+                      <svg className="w-full h-full transform -rotate-90">
+                        <circle cx="64" cy="64" r="56" fill="transparent" stroke="currentColor" strokeWidth="12" className="text-surface-100 dark:text-surface-700" />
+                        <motion.circle initial={{ strokeDashoffset: 351 }} animate={{ strokeDashoffset: 351 - (351 * 75 / 100) }} transition={{ duration: 1, ease: 'easeOut' }} cx="64" cy="64" r="56" fill="transparent" stroke="currentColor" strokeWidth="12" strokeDasharray="351" strokeLinecap="round" className="text-secondary-500" />
+                      </svg>
+                      <div className="absolute flex flex-col items-center justify-center">
+                        <span className="text-3xl font-black">75%</span>
+                        <span className="text-xs font-bold text-surface-500 uppercase tracking-wider">Objectif</span>
+                      </div>
+                    </div>
+                    <p className="mt-4 font-bold text-center text-sm text-surface-600 dark:text-surface-400">Objectif de {goalForm.target_value} minutes {goalForm.period === 'daily' ? 'par jour' : 'par semaine'}</p>
+                  </div>
+                </div>
+              </Card>
+
+              {/* 5. Parental Controls */}
+              <Card className="p-6 shadow-floating">
+                <h2 className="text-xl font-bold mb-6">Paramètres Parentaux</h2>
+                <div className="space-y-6">
+                  <div className="flex items-center justify-between p-4 bg-surface-50 dark:bg-surface-800/50 rounded-2xl">
+                    <div>
+                      <h4 className="font-bold">Temps d'écran quotidien</h4>
+                      <p className="text-sm text-surface-500">Limite de lecture (minutes)</p>
+                    </div>
+                    <Input 
+                      type="number" 
+                      value={rulesForm.daily_screen_time_minutes} 
+                      onChange={(e) => setRulesForm({...rulesForm, daily_screen_time_minutes: parseInt(e.target.value) || 30})}
+                      className="w-24 text-center font-bold"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="p-4 bg-surface-50 dark:bg-surface-800/50 rounded-2xl">
+                      <h4 className="font-bold mb-2">Début pause</h4>
+                      <Input type="time" value={rulesForm.quiet_start_time} onChange={(e) => setRulesForm({...rulesForm, quiet_start_time: e.target.value})} className="w-full font-bold" />
+                    </div>
+                    <div className="p-4 bg-surface-50 dark:bg-surface-800/50 rounded-2xl">
+                      <h4 className="font-bold mb-2">Fin pause</h4>
+                      <Input type="time" value={rulesForm.quiet_end_time} onChange={(e) => setRulesForm({...rulesForm, quiet_end_time: e.target.value})} className="w-full font-bold" />
+                    </div>
+                  </div>
+
+                  <div className="pt-4 border-t border-surface-100 dark:border-surface-700 flex justify-end">
+                    <Button variant="primary" onClick={handleSaveRules} disabled={rulesSaving}>
+                      {rulesSaving ? 'Enregistrement...' : 'Enregistrer les règles'}
+                    </Button>
+                  </div>
+                </div>
+              </Card>
+
+              {/* Theme & Language Permissions */}
+              <Card className="p-6 shadow-floating">
+                 <h2 className="text-xl font-bold mb-6">Autorisations de lecture</h2>
+                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                   <div>
+                     <h4 className="font-bold mb-3">Langues autorisées</h4>
+                     <div className="flex flex-wrap gap-2">
+                       {bedtimeLanguages.map(lang => (
+                         <div key={lang.id} onClick={() => toggleRuleValue('allowed_languages', lang.id)} className={`px-4 py-2 rounded-full text-sm font-bold cursor-pointer transition-colors border-2 ${rulesForm.allowed_languages.includes(lang.id) ? 'bg-primary-500 border-primary-500 text-white' : 'bg-transparent border-surface-200 dark:border-surface-700 text-surface-600 hover:border-primary-300'}`}>
+                           {lang.label}
+                         </div>
+                       ))}
+                     </div>
+                   </div>
+                   <div>
+                     <h4 className="font-bold mb-3">Thèmes autorisés</h4>
+                     <div className="flex flex-wrap gap-2">
+                       {bedtimeThemes.map(theme => (
+                         <div key={theme.id} onClick={() => toggleRuleValue('allowed_themes', theme.id)} className={`px-4 py-2 rounded-full text-sm font-bold cursor-pointer transition-colors border-2 ${rulesForm.allowed_themes.includes(theme.id) ? 'bg-secondary-500 border-secondary-500 text-white' : 'bg-transparent border-surface-200 dark:border-surface-700 text-surface-600 hover:border-secondary-300'}`}>
+                           {theme.label}
+                         </div>
+                       ))}
+                     </div>
+                   </div>
+                 </div>
+              </Card>
+            </div>
+
+            {/* Sidebar (Right) */}
+            <div className="flex flex-col gap-8">
+              {/* Subscription Card */}
+              <div className="bg-gradient-to-br from-gray-900 to-black text-white p-6 rounded-3xl shadow-2xl relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-yellow-500/20 rounded-full blur-2xl"></div>
+                <Badge variant="glass" className="bg-white/20 text-white border-none font-bold mb-4">Premium</Badge>
+                <h2 className="text-2xl font-black mb-1">Illimité</h2>
+                <p className="text-white/70 text-sm mb-6">Renouvellement le 14 Août 2026</p>
+                <div className="space-y-2 mb-6">
+                  <div className="flex justify-between text-sm font-bold">
+                    <span>Livres IA générés</span>
+                    <span>12 / 100</span>
+                  </div>
+                  <ProgressBar progress={12} color="bg-yellow-400" />
+                </div>
+                <Button variant="outline" fullWidth className="bg-white hover:bg-surface-100 text-black border-none font-bold">Gérer l'abonnement</Button>
               </div>
 
+              {/* AI Insights & Timeline */}
+              <Card className="p-6 shadow-floating">
+                <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
+                  <BrainIcon className="w-6 h-6 text-primary-500" /> Recommandations IA
+                </h2>
+                <div className="space-y-4">
+                  <div className="p-4 bg-primary-50 dark:bg-primary-900/20 rounded-2xl border border-primary-100 dark:border-primary-900/50">
+                    <p className="text-sm font-bold text-primary-800 dark:text-primary-300">💡 {selectedKid.name} adore les histoires sur les animaux en ce moment. Vous devriez lui proposer une histoire sur la jungle.</p>
+                  </div>
+                  <div className="p-4 bg-secondary-50 dark:bg-secondary-900/20 rounded-2xl border border-secondary-100 dark:border-secondary-900/50">
+                    <p className="text-sm font-bold text-secondary-800 dark:text-secondary-300">📈 Son vocabulaire progresse bien. Essayez des livres de Niveau 3 la semaine prochaine.</p>
+                  </div>
+                </div>
+              </Card>
+
+              {/* Timeline */}
+              <Card className="p-6 shadow-floating">
+                <h2 className="text-xl font-bold mb-6">Activités récentes</h2>
+                <div className="relative border-l-2 border-surface-200 dark:border-surface-700 ml-3 space-y-6">
+                  <div className="relative pl-6">
+                    <div className="absolute -left-[9px] top-1 w-4 h-4 rounded-full bg-success-500 ring-4 ring-white dark:ring-surface-800"></div>
+                    <p className="font-bold text-sm">A terminé "Le Lion Courageux"</p>
+                    <p className="text-xs text-surface-500">Aujourd'hui, 14h30</p>
+                  </div>
+                  <div className="relative pl-6">
+                    <div className="absolute -left-[9px] top-1 w-4 h-4 rounded-full bg-primary-500 ring-4 ring-white dark:ring-surface-800"></div>
+                    <p className="font-bold text-sm">A gagné le badge Lecteur Assidu</p>
+                    <p className="text-xs text-surface-500">Hier</p>
+                  </div>
+                  <div className="relative pl-6">
+                    <div className="absolute -left-[9px] top-1 w-4 h-4 rounded-full bg-warning-500 ring-4 ring-white dark:ring-surface-800"></div>
+                    <p className="font-bold text-sm">A joué à "Mots croisés"</p>
+                    <p className="text-xs text-surface-500">Il y a 3 jours</p>
+                  </div>
+                </div>
+              </Card>
+            </div>
+
+          </motion.div>
+        )}
+      </div>
+
+      {/* Modals from old implementation */}
+      <AnimatePresence>
+        {showKidModal && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setShowKidModal(false)}>
+            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} onClick={(e) => e.stopPropagation()} className="bg-white dark:bg-surface-800 rounded-3xl p-6 w-full max-w-md shadow-2xl">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-2xl font-black">{editingKid ? 'Modifier le profil' : 'Créer un profil'}</h3>
+                <button onClick={() => setShowKidModal(false)} className="p-2 hover:bg-surface-100 dark:hover:bg-surface-700 rounded-full transition-colors"><XIcon className="w-5 h-5" /></button>
+              </div>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-2">
-                    Nom
-                  </label>
-                  <input
-                    type="text"
-                    value={kidForm.name}
-                    onChange={(e) => setKidForm({ ...kidForm, name: e.target.value })}
-                    className="w-full px-4 py-2 border border-surface-300 dark:border-surface-600 rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-surface-700 dark:text-white"
-                    placeholder="Nom de l'enfant"
-                  />
+                  <label className="block text-sm font-bold mb-2">Prénom</label>
+                  <Input type="text" value={kidForm.name} onChange={(e) => setKidForm({...kidForm, name: e.target.value})} placeholder="Prénom" className="w-full" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-2">
-                    Âge
-                  </label>
-                  <input
-                    type="number"
-                    value={kidForm.age}
-                    onChange={(e) => setKidForm({ ...kidForm, age: e.target.value })}
-                    className="w-full px-4 py-2 border border-surface-300 dark:border-surface-600 rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-surface-700 dark:text-white"
-                    placeholder="Âge"
-                    min="0"
-                    max="18"
-                  />
+                  <label className="block text-sm font-bold mb-2">Âge (optionnel)</label>
+                  <Input type="number" value={kidForm.age} onChange={(e) => setKidForm({...kidForm, age: e.target.value})} placeholder="Âge" className="w-full" />
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-2">
-                    Date de naissance
-                  </label>
-                  <input
-                    type="date"
-                    value={kidForm.date_of_birth}
-                    onChange={(e) => setKidForm({ ...kidForm, date_of_birth: e.target.value })}
-                    className="w-full px-4 py-2 border border-surface-300 dark:border-surface-600 rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-surface-700 dark:text-white"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-2">
-                    Photo ou avatar
-                  </label>
-                  <input
-                    type="text"
-                    value={kidForm.avatar}
-                    onChange={(e) => setKidForm({ ...kidForm, avatar: e.target.value })}
-                    className="mb-3 w-full px-4 py-2 border border-surface-300 dark:border-surface-600 rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-surface-700 dark:text-white"
-                    placeholder="Initiale ou petit nom"
-                  />
-                  <input
-                    type="url"
-                    value={kidForm.photo_url}
-                    onChange={(e) => setKidForm({ ...kidForm, photo_url: e.target.value })}
-                    className="w-full px-4 py-2 border border-surface-300 dark:border-surface-600 rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-surface-700 dark:text-white"
-                    placeholder="https://..."
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-2">
-                    Langue preferee
-                  </label>
-                  <select
-                    value={kidForm.preferred_language}
-                    onChange={(e) => setKidForm({ ...kidForm, preferred_language: e.target.value })}
-                    className="w-full px-4 py-2 border border-surface-300 dark:border-surface-600 rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-surface-700 dark:text-white"
-                  >
-                    {CONTENT_LANGUAGES.map((language) => (
-                      <option key={language.id} value={language.id}>{language.label}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-2">
-                    Centres d'interet
-                  </label>
-                  <input
-                    type="text"
-                    value={kidForm.interests}
-                    onChange={(e) => setKidForm({ ...kidForm, interests: e.target.value })}
-                    className="w-full px-4 py-2 border border-surface-300 dark:border-surface-600 rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-surface-700 dark:text-white"
-                    placeholder="dinosaures, espace, animaux..."
-                  />
-                </div>
-                <div className="flex gap-3">
-                  <button
-                    onClick={() => setShowKidModal(false)}
-                    className="flex-1 px-4 py-2 bg-surface-200 dark:bg-surface-700 text-surface-800 dark:text-surface-200 rounded-2xl hover:bg-surface-300 dark:hover:bg-surface-600 transition-colors"
-                  >
-                    Annuler
-                  </button>
-                  <button
-                    onClick={handleSaveKid}
-                    className="flex-1 px-4 py-2 bg-primary-500 text-white rounded-2xl hover:bg-primary-600 transition-colors"
-                  >
-                    {editingKid ? 'Modifier' : 'Créer'}
-                  </button>
+                <div className="flex gap-3 pt-4">
+                  <Button variant="ghost" className="flex-1" onClick={() => setShowKidModal(false)}>Annuler</Button>
+                  <Button variant="primary" className="flex-1" onClick={handleSaveKid}>{editingKid ? 'Modifier' : 'Créer'}</Button>
                 </div>
               </div>
             </motion.div>
@@ -1688,73 +812,26 @@ function ParentDashboard() {
         )}
       </AnimatePresence>
 
-      {/* Account Modal */}
       <AnimatePresence>
         {showAccountModal && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
-            onClick={() => setShowAccountModal(false)}
-          >
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              onClick={(e) => e.stopPropagation()}
-              className="bg-white dark:bg-surface-800 rounded-3xl p-6 w-full max-w-md"
-            >
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-xl font-bold text-surface-800 dark:text-surface-200">
-                  Créer un compte pour {selectedKid?.name}
-                </h3>
-                <button
-                  onClick={() => setShowAccountModal(false)}
-                  className="p-2 hover:bg-surface-100 dark:hover:bg-surface-700 rounded-2xl"
-                >
-                  <XIcon className="w-5 h-5" />
-                </button>
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setShowAccountModal(false)}>
+            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} onClick={(e) => e.stopPropagation()} className="bg-white dark:bg-surface-800 rounded-3xl p-6 w-full max-w-md shadow-2xl">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-2xl font-black">Compte de {selectedKid?.name}</h3>
+                <button onClick={() => setShowAccountModal(false)} className="p-2 hover:bg-surface-100 dark:hover:bg-surface-700 rounded-full transition-colors"><XIcon className="w-5 h-5" /></button>
               </div>
-
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-2">
-                    Nom d'utilisateur
-                  </label>
-                  <input
-                    type="text"
-                    value={accountForm.username}
-                    onChange={(e) => setAccountForm({ ...accountForm, username: e.target.value })}
-                    className="w-full px-4 py-2 border border-surface-300 dark:border-surface-600 rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-surface-700 dark:text-white"
-                    placeholder="Nom d'utilisateur"
-                  />
+                  <label className="block text-sm font-bold mb-2">Nom d'utilisateur</label>
+                  <Input type="text" value={accountForm.username} onChange={(e) => setAccountForm({ ...accountForm, username: e.target.value })} placeholder="Nom d'utilisateur" className="w-full" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-2">
-                    Mot de passe
-                  </label>
-                  <input
-                    type="password"
-                    value={accountForm.password}
-                    onChange={(e) => setAccountForm({ ...accountForm, password: e.target.value })}
-                    className="w-full px-4 py-2 border border-surface-300 dark:border-surface-600 rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-surface-700 dark:text-white"
-                    placeholder="Mot de passe (min. 6 caractères)"
-                  />
+                  <label className="block text-sm font-bold mb-2">Mot de passe</label>
+                  <Input type="password" value={accountForm.password} onChange={(e) => setAccountForm({ ...accountForm, password: e.target.value })} placeholder="Mot de passe (min. 6 caractères)" className="w-full" />
                 </div>
-                <div className="flex gap-3">
-                  <button
-                    onClick={() => setShowAccountModal(false)}
-                    className="flex-1 px-4 py-2 bg-surface-200 dark:bg-surface-700 text-surface-800 dark:text-surface-200 rounded-2xl hover:bg-surface-300 dark:hover:bg-surface-600 transition-colors"
-                  >
-                    Annuler
-                  </button>
-                  <button
-                    onClick={handleCreateAccount}
-                    className="flex-1 px-4 py-2 bg-green-500 text-white rounded-2xl hover:bg-green-600 transition-colors"
-                  >
-                    Créer le compte
-                  </button>
+                <div className="flex gap-3 pt-4">
+                  <Button variant="ghost" className="flex-1" onClick={() => setShowAccountModal(false)}>Annuler</Button>
+                  <Button variant="primary" className="flex-1 bg-green-500 hover:bg-green-600 text-white" onClick={handleCreateAccount}>Créer le compte</Button>
                 </div>
               </div>
             </motion.div>
@@ -1766,4 +843,3 @@ function ParentDashboard() {
 }
 
 export default ParentDashboard;
-
