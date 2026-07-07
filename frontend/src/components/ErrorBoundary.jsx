@@ -32,7 +32,7 @@ class ErrorBoundary extends React.Component {
           <div className="max-w-2xl w-full bg-white rounded-2xl border border-surface-200 shadow-sm p-8 text-center">
             <div className="mb-6 flex justify-center">
               <div className="p-4 bg-primary-50 rounded-full">
-                <AlertIcon className="w-12 h-12 text-primary-500" />
+                <AlertIcon className="w-12 h-12 text-foreground-500" />
               </div>
             </div>
             
@@ -46,7 +46,7 @@ class ErrorBoundary extends React.Component {
 
             {process.env.NODE_ENV === 'development' && this.state.error && (
               <details className="mb-6 text-left bg-gray-50 p-4 rounded-2xl">
-                <summary className="cursor-pointer font-semibold text-primary-600 mb-2">
+                <summary className="cursor-pointer font-semibold text-foreground-600 mb-2">
                   Error Details (Development Only)
                 </summary>
                 <pre className="text-xs overflow-auto">

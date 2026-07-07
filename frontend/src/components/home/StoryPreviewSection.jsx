@@ -46,7 +46,7 @@ export default function StoryPreviewSection({ books, getImageUrl }) {
           >
             <Link 
               to="/stories"
-              className="text-primary-600 font-bold hover:text-primary-700 flex items-center gap-1 text-sm sm:text-base transition-colors"
+              className="text-foreground-600 font-bold hover:text-foreground-700 flex items-center gap-1 text-sm sm:text-base transition-colors"
             >
               Voir toute la bibliothèque <ChevronRightIcon className="w-4 h-4" />
             </Link>
@@ -91,7 +91,7 @@ export default function StoryPreviewSection({ books, getImageUrl }) {
 
                   {/* Text content */}
                   <div className="p-5 flex flex-col flex-1">
-                    <h3 className="font-bold text-lg text-surface-900 mb-1 line-clamp-1 group-hover:text-primary-600 transition-colors">
+                    <h3 className="font-bold text-lg text-surface-900 mb-1 line-clamp-1 group-hover:text-foreground-600 transition-colors">
                       {book.title}
                     </h3>
                     

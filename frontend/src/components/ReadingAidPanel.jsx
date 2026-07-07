@@ -83,7 +83,7 @@ function ReadingAidPanel({
                 onClick={() => setActiveTab(tab.id)}
                 className={`flex-1 px-4 py-3 font-semibold transition-colors ${
                   activeTab === tab.id
-                    ? 'text-primary-600 border-b-2 border-primary-600 bg-primary-50'
+                    ? 'text-foreground-600 border-b-2 border-primary-600 bg-primary-50'
                     : 'text-surface-600 hover:text-surface-900 hover:bg-surface-50'
                 }`}
               >
@@ -120,7 +120,7 @@ function ReadingAidPanel({
                       }`}
                     >
                       <div className="flex items-start gap-3">
-                        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-3xl bg-gradient-to-br from-accent-100 to-secondary-100 text-sm font-black text-secondary-600">
+                        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-3xl bg-gradient-to-br from-accent-100 to-secondary-100 text-sm font-black text-foreground-secondary-600">
                           {profile.icon}
                         </span>
                         <span className="min-w-0">
@@ -133,7 +133,7 @@ function ReadingAidPanel({
                             )}
                           </span>
                           <span className="mt-1 block text-sm text-surface-600">{profile.description}</span>
-                          <span className="mt-2 block text-xs font-semibold text-secondary-600">Cliquer pour ecouter</span>
+                          <span className="mt-2 block text-xs font-semibold text-foreground-secondary-600">Cliquer pour ecouter</span>
                         </span>
                       </div>
                     </button>
@@ -174,7 +174,7 @@ function ReadingAidPanel({
                           {font.name}
                         </span>
                         {settings.font === font.value && (
-                          <span className="text-primary-600 text-xl">✓</span>
+                          <span className="text-foreground-600 text-xl">✓</span>
                         )}
                       </div>
                       <p className={`text-sm mt-2 text-surface-600 ${font.class}`} style={{
@@ -216,7 +216,7 @@ function ReadingAidPanel({
                           Aa
                         </span>
                         {settings.fontSize === option.value && (
-                          <span className="text-primary-600 text-xl">✓</span>
+                          <span className="text-foreground-600 text-xl">✓</span>
                         )}
                       </div>
                     </button>
@@ -284,7 +284,7 @@ function ReadingAidPanel({
                           ...settings,
                           syllabification: e.target.checked
                         })}
-                        className="w-6 h-6 text-primary-600 rounded focus:ring-primary-500"
+                        className="w-6 h-6 text-foreground-600 rounded focus:ring-primary-500"
                       />
                     </label>
 
@@ -302,7 +302,7 @@ function ReadingAidPanel({
                           ...settings,
                           lineSpacing: e.target.checked
                         })}
-                        className="w-6 h-6 text-primary-600 rounded focus:ring-primary-500"
+                        className="w-6 h-6 text-foreground-600 rounded focus:ring-primary-500"
                       />
                     </label>
 
@@ -320,7 +320,7 @@ function ReadingAidPanel({
                           ...settings,
                           wordHighlight: e.target.checked
                         })}
-                        className="w-6 h-6 text-primary-600 rounded focus:ring-primary-500"
+                        className="w-6 h-6 text-foreground-600 rounded focus:ring-primary-500"
                       />
                     </label>
                   </div>

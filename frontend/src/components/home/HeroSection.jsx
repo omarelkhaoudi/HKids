@@ -43,7 +43,7 @@ export default function HeroSection({ t, totalBooks }) {
             transition={{ duration: 0.7, ease: "easeOut" }}
             className="text-center lg:text-left"
           >
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-primary-100 to-primary-50 text-primary-600 rounded-full text-sm font-bold mb-6 border border-primary-200 shadow-sm">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-primary-100 to-primary-50 text-foreground-600 rounded-full text-sm font-bold mb-6 border border-primary-200 shadow-sm">
               <span className="w-2 h-2 rounded-full bg-primary-500 animate-pulse"></span>
               L'IA au service de l'imagination
             </div>
@@ -51,7 +51,7 @@ export default function HeroSection({ t, totalBooks }) {
             <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold text-surface-900 mb-6 leading-[1.1] tracking-tight">
               {t.heroTitle1}
               <br />
-              <span className="text-primary-500">{t.heroTitle2}</span>
+              <span className="text-foreground-500">{t.heroTitle2}</span>
             </h1>
             
             <p className="text-lg sm:text-xl text-surface-600 mb-8 max-w-2xl mx-auto lg:mx-0 leading-relaxed font-medium">
@@ -135,7 +135,7 @@ export default function HeroSection({ t, totalBooks }) {
 
                 {/* Badges on glass */}
                 <div className="absolute top-6 right-6 bg-white/90 backdrop-blur-md rounded-2xl px-5 py-3 shadow-lg border border-white/50 text-center z-20">
-                  <div className="text-xl font-extrabold text-primary-600">+10K</div>
+                  <div className="text-xl font-extrabold text-foreground-600">+10K</div>
                   <div className="text-xs font-semibold text-surface-500">histoires créées</div>
                 </div>
 

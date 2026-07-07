@@ -4,10 +4,19 @@
 
 @layer base {
   :root {
-    /* Backgrounds */
-    --color-bg: #fefcfb; /* Warm off-white */
-    --color-bg-card: #ffffff;
-    --color-bg-elevated: #ffffff;
+
+    /* Semantic Tokens (Light) */
+    --color-bg: #fefcfb;
+    --color-surface: #ffffff;
+    --color-surface-secondary: #f5f1ef;
+    --color-card: #ffffff;
+    --color-elevated: #ffffff;
+    --color-border: #e9e2df;
+    --color-divider: #e9e2df;
+    --color-text-primary: #111827;
+    --color-text-secondary: #4b5563;
+    --color-text-muted: #9ca3af;
+
 
     /* Primary: Magical Purple/Indigo */
     --color-primary-50: #f0ebf8;
@@ -60,10 +69,24 @@
   }
 
   .dark {
-    /* Backgrounds: Deep Space / Disney+ Night */
-    --color-bg: #0f172a; /* slate-900 */
-    --color-bg-card: #1e293b; /* slate-800 */
-    --color-bg-elevated: #334155; /* slate-700 */
+
+    /* Semantic Tokens (Dark) */
+    --color-bg: #0B0F14;
+    --color-surface: #111827;
+    --color-surface-secondary: #1F2937;
+    --color-card: #161B22;
+    --color-elevated: #1E293B;
+    --color-border: rgba(255, 255, 255, 0.08);
+    --color-divider: rgba(255, 255, 255, 0.08);
+    --color-text-primary: #F8FAFC;
+    --color-text-secondary: #CBD5E1;
+    --color-text-muted: #94A3B8;
+
+    /* Base colors update for dark mode */
+    --color-primary-500: #8B5CF6;
+    --color-secondary-500: #60A5FA;
+    --color-accent-500: #34D399;
+
 
     /* Surface (Neutrals adjusted for dark mode) */
     --color-surface-50: #f8fafc;

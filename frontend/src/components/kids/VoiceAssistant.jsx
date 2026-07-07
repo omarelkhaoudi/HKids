@@ -218,7 +218,7 @@ export function VoiceAssistant({ language = 'fr-FR' }) {
               )}
 
               {(listening || thinking) && (
-                <div className="mr-8 rounded-2xl bg-primary-50 px-4 py-3 text-sm font-bold text-primary-700">
+                <div className="mr-8 rounded-2xl bg-primary-50 px-4 py-3 text-sm font-bold text-foreground-700">
                   {listening ? 'Parle maintenant...' : 'Recherche de reponse...'}
                 </div>
               )}
