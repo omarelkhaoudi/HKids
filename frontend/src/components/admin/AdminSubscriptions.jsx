@@ -15,7 +15,14 @@ function AdminSubscriptions() {
       try {
         setLoading(true);
         const response = await adminAPI.getSubscriptions();
-        setSubscriptions(response.data || []);
+        const subsArray = response.data.active_subscriptions || [];
+        const formattedSubs = subsArray.map(sub => ({
+          ...sub,
+          user_name: sub.parent_name,
+          user_email: sub.email || '',
+          mrr: sub.monthly_price_cents ? sub.monthly_price_cents / 100 : 0,
+        }));
+        setSubscriptions(formattedSubs);
       } catch (err) {
         console.error('Error loading admin subscriptions:', err);
       } finally {
