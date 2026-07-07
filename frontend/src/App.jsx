@@ -14,6 +14,7 @@ import FamilyVoices from './pages/FamilyVoices';
 import KidsHome from './pages/KidsHome';
 import KidsLibrary from './pages/KidsLibrary';
 import KidsCategoryPage from './pages/KidsCategoryPage';
+import DesignSystem from './pages/DesignSystem';
 import KidsStoryStudio from './pages/KidsStoryStudio';
 import KidsAIStories from './pages/KidsAIStories';
 import KidsLearning from './pages/KidsLearning';
@@ -171,6 +172,7 @@ function App() {
                 <Route path="/kids/storystudio" element={<Navigate to="/kids/story-studio" replace />} />
                 <Route path="/kids/ai-stories" element={<RequireAuth><KidsAIStories /></RequireAuth>} />
                 <Route path="/kids/category/:categoryId" element={<RequireAuth><KidsCategoryPage /></RequireAuth>} />
+                <Route path="/design-system" element={<DesignSystem />} />
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
               <ScrollToTop />
