@@ -128,6 +128,16 @@ function App() {
   useEffect(() => {
     const prefs = storage.getPreferences();
     setDarkMode(prefs.darkMode || false);
+
+    const handleToggleDarkMode = (e) => {
+        if (e.detail !== undefined) {
+            setDarkMode(e.detail);
+        } else {
+            setDarkMode(prev => !prev);
+        }
+    };
+    window.addEventListener('toggleDarkMode', handleToggleDarkMode);
+    return () => window.removeEventListener('toggleDarkMode', handleToggleDarkMode);
   }, []);
 
   useEffect(() => {

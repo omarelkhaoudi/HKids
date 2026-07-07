@@ -12,6 +12,7 @@ import {useToast} from '../ToastProvider';
 
 const SECTIONS = [
  {id: 'account', label: 'Compte', icon: UserIcon},
+ {id: 'appearance', label: 'Apparence', icon: SmartphoneIcon},
  {id: 'profile', label: 'Profil', icon: ChildIcon},
  {id: 'notifications', label: 'Notifications', icon: BellIcon},
  {id: 'privacy', label: 'Confidentialité', icon: ShieldIcon},
@@ -25,6 +26,7 @@ const SECTIONS = [
 export function SettingsCenterModal({isOpen, onClose}) {
  const [activeSection, setActiveSection] = useState('account');
  const [searchQuery, setSearchQuery] = useState('');
+ const [isDarkMode, setIsDarkMode] = useState(document.documentElement.classList.contains('dark'));
  const contentRef = useRef(null);
  const sectionRefs = useRef({});
  const {user} = useAuth();
@@ -205,6 +207,38 @@ export function SettingsCenterModal({isOpen, onClose}) {
  </div>
  <Button className="bg-danger-500 hover:bg-danger-600 text-white shadow-md">Supprimer</Button>
  </div>
+ </div>
+ </div>
+ </section>
+ 
+ <hr className="border-border" />
+
+ {/* APPARENCE */}
+ <section id="appearance" ref={el => sectionRefs.current['appearance'] = el} className="scroll-mt-24 space-y-6">
+ <div>
+ <h2 className="text-2xl font-black tracking-tight mb-2">Apparence</h2>
+ <p className="text-foreground-muted">Personnalisez l'apparence visuelle de HKids.</p>
+ </div>
+ 
+ <div className="bg-card rounded-3xl p-6 shadow-sm border border-border space-y-6">
+ <div className="flex items-center justify-between">
+ <div className="flex items-center gap-4">
+ <div className="w-12 h-12 rounded-xl bg-surface-secondary flex items-center justify-center text-foreground">
+ <SmartphoneIcon className="w-6 h-6" />
+ </div>
+ <div>
+ <h4 className="font-bold text-foreground">Mode Sombre</h4>
+ <p className="text-sm text-foreground-muted">Un thème sombre élégant et reposant pour les yeux.</p>
+ </div>
+ </div>
+ <Switch 
+ checked={isDarkMode} 
+ onChange={() => {
+   const newMode = !isDarkMode;
+   setIsDarkMode(newMode);
+   window.dispatchEvent(new CustomEvent('toggleDarkMode', { detail: newMode }));
+ }} 
+ />
  </div>
  </div>
  </section>
