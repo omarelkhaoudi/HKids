@@ -6,7 +6,7 @@ import { useAuth } from '../context/AuthContext';
 import { speakText, stopSpeaking } from '../services/ai/browserTextToSpeech';
 import { 
   AudioIcon, BookIcon, CheckIcon, ClockIcon, SparklesIcon, StarIcon, 
-  ChevronLeftIcon, PlayIcon, PauseIcon, BrainIcon, HeartIcon 
+  ChevronLeftIcon, PlayIcon, PauseIcon, BrainIcon, HeartIcon, HistoryIcon
 } from '../components/Icons';
 import { Logo } from '../components/Logo';
 import { Button, Card, Badge, Avatar } from '../components/ui';
