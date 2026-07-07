@@ -62,7 +62,7 @@ export default function TestimonialsSection({ t }) {
                 className="snap-start shrink-0 w-[85vw] sm:w-[350px] md:w-[300px] lg:w-[280px] bg-white rounded-2xl p-6 border border-surface-100 shadow-[0_4px_20px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] transition-all duration-300 flex flex-col justify-between"
               >
                 <p className="text-surface-700 font-medium mb-6 leading-relaxed italic relative">
-                  <span className="text-4xl text-primary-200 absolute -top-4 -left-2 font-serif opacity-50">"</span>
+                  <span className="text-4xl text-foreground-200 absolute -top-4 -left-2 font-serif opacity-50">"</span>
                   <span className="relative z-10">{item.quote}</span>
                 </p>
                 

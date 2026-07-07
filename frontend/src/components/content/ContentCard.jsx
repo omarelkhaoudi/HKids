@@ -58,7 +58,7 @@ export function ContentCard({ content, playing = false, onToggleAudio }) {
 
         <div className="flex flex-1 flex-col p-4">
           <div className="mb-2 flex flex-wrap gap-2">
-            <span className="inline-flex items-center gap-1 rounded-full bg-primary-50 px-3 py-1 text-xs font-bold text-primary-600 dark:bg-primary-900/30 dark:text-primary-200">
+            <span className="inline-flex items-center gap-1 rounded-full bg-primary-50 px-3 py-1 text-xs font-bold text-foreground-600 dark:bg-primary-900/30 dark:text-foreground-200">
               <TagIcon className="h-3.5 w-3.5" />
               {content.library_category_label}
             </span>

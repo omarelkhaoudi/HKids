@@ -40,40 +40,40 @@ export default function FooterSection({ t }) {
             <div>
               <h4 className="font-bold text-surface-900 mb-4">Produit</h4>
               <ul className="space-y-3 text-sm text-surface-500 font-medium">
-                <li><Link to="/stories" className="hover:text-primary-600 transition-colors">Bibliothèque</Link></li>
-                <li><Link to="/features" className="hover:text-primary-600 transition-colors">IA Créative</Link></li>
-                <li><Link to="/features" className="hover:text-primary-600 transition-colors">Fonctionnalités</Link></li>
-                <li><Link to="/abonnements" className="hover:text-primary-600 transition-colors">Tarifs</Link></li>
+                <li><Link to="/stories" className="hover:text-foreground-600 transition-colors">Bibliothèque</Link></li>
+                <li><Link to="/features" className="hover:text-foreground-600 transition-colors">IA Créative</Link></li>
+                <li><Link to="/features" className="hover:text-foreground-600 transition-colors">Fonctionnalités</Link></li>
+                <li><Link to="/abonnements" className="hover:text-foreground-600 transition-colors">Tarifs</Link></li>
               </ul>
             </div>
             
             <div>
               <h4 className="font-bold text-surface-900 mb-4">Ressources</h4>
               <ul className="space-y-3 text-sm text-surface-500 font-medium">
-                <li><span className="cursor-pointer hover:text-primary-600 transition-colors">Blog</span></li>
-                <li><span className="cursor-pointer hover:text-primary-600 transition-colors">Conseils Parents</span></li>
-                <li><span className="cursor-pointer hover:text-primary-600 transition-colors">Centre d'aide</span></li>
-                <li><span className="cursor-pointer hover:text-primary-600 transition-colors">Contact</span></li>
+                <li><span className="cursor-pointer hover:text-foreground-600 transition-colors">Blog</span></li>
+                <li><span className="cursor-pointer hover:text-foreground-600 transition-colors">Conseils Parents</span></li>
+                <li><span className="cursor-pointer hover:text-foreground-600 transition-colors">Centre d'aide</span></li>
+                <li><span className="cursor-pointer hover:text-foreground-600 transition-colors">Contact</span></li>
               </ul>
             </div>
 
             <div>
               <h4 className="font-bold text-surface-900 mb-4">Entreprise</h4>
               <ul className="space-y-3 text-sm text-surface-500 font-medium">
-                <li><span className="cursor-pointer hover:text-primary-600 transition-colors">À propos</span></li>
-                <li><span className="cursor-pointer hover:text-primary-600 transition-colors">Presse</span></li>
-                <li><span className="cursor-pointer hover:text-primary-600 transition-colors">Carrières</span></li>
-                <li><span className="cursor-pointer hover:text-primary-600 transition-colors">Partenaires</span></li>
+                <li><span className="cursor-pointer hover:text-foreground-600 transition-colors">À propos</span></li>
+                <li><span className="cursor-pointer hover:text-foreground-600 transition-colors">Presse</span></li>
+                <li><span className="cursor-pointer hover:text-foreground-600 transition-colors">Carrières</span></li>
+                <li><span className="cursor-pointer hover:text-foreground-600 transition-colors">Partenaires</span></li>
               </ul>
             </div>
 
             <div>
               <h4 className="font-bold text-surface-900 mb-4">Légal</h4>
               <ul className="space-y-3 text-sm text-surface-500 font-medium">
-                <li><span className="cursor-pointer hover:text-primary-600 transition-colors">Confidentialité</span></li>
-                <li><span className="cursor-pointer hover:text-primary-600 transition-colors">Conditions d'utilisation</span></li>
-                <li><span className="cursor-pointer hover:text-primary-600 transition-colors">CGU</span></li>
-                <li><span className="cursor-pointer hover:text-primary-600 transition-colors">Politique cookies</span></li>
+                <li><span className="cursor-pointer hover:text-foreground-600 transition-colors">Confidentialité</span></li>
+                <li><span className="cursor-pointer hover:text-foreground-600 transition-colors">Conditions d'utilisation</span></li>
+                <li><span className="cursor-pointer hover:text-foreground-600 transition-colors">CGU</span></li>
+                <li><span className="cursor-pointer hover:text-foreground-600 transition-colors">Politique cookies</span></li>
               </ul>
             </div>
           </div>

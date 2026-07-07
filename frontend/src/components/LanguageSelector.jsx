@@ -9,8 +9,8 @@ function LanguageSelector() {
         onClick={() => changeLanguage('en')}
         className={`px-2 sm:px-3 py-1 sm:py-1.5 font-medium transition-colors text-xs sm:text-sm rounded ${
           language === 'en'
-            ? 'text-primary-700 bg-primary-100'
-            : 'text-surface-700 hover:text-primary-700 hover:bg-white'
+            ? 'text-foreground-700 bg-primary-100'
+            : 'text-surface-700 hover:text-foreground-700 hover:bg-white'
         }`}
       >
         <span className="hidden sm:inline">English</span>
@@ -21,8 +21,8 @@ function LanguageSelector() {
         onClick={() => changeLanguage('fr')}
         className={`px-2 sm:px-3 py-1 sm:py-1.5 font-medium transition-colors text-xs sm:text-sm rounded ${
           language === 'fr'
-            ? 'text-primary-700 bg-primary-100'
-            : 'text-surface-700 hover:text-primary-700 hover:bg-white'
+            ? 'text-foreground-700 bg-primary-100'
+            : 'text-surface-700 hover:text-foreground-700 hover:bg-white'
         }`}
       >
         <span className="hidden sm:inline">Français</span>

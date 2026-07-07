@@ -36,6 +36,15 @@ export default {
         '5xl': '2.5rem',
         'full': '9999px',
       },
+
+      textColor: {
+        foreground: {
+          DEFAULT: 'var(--color-text-primary)',
+          secondary: 'var(--color-text-secondary)',
+          muted: 'var(--color-text-muted)',
+        }
+      },
+
       colors: {
         primary: {
           50: 'var(--color-primary-50)',
@@ -105,7 +114,14 @@ export default {
           700: '#1d4ed8',
           900: '#1e3a8a',
         },
+        background: {
+          DEFAULT: 'var(--color-bg)',
+          card: 'var(--color-bg-card)',
+          elevated: 'var(--color-bg-elevated)',
+        },
         surface: {
+          DEFAULT: 'var(--color-surface)',
+          secondary: 'var(--color-surface-secondary)',
           50: 'var(--color-surface-50)',
           100: 'var(--color-surface-100)',
           200: 'var(--color-surface-200)',
@@ -116,6 +132,16 @@ export default {
           700: 'var(--color-surface-700)',
           800: 'var(--color-surface-800)',
           900: 'var(--color-surface-900)',
+        },
+        card: {
+          DEFAULT: 'var(--color-card)',
+          elevated: 'var(--color-elevated)',
+        },
+        border: {
+          DEFAULT: 'var(--color-border)',
+        },
+        divider: {
+          DEFAULT: 'var(--color-divider)',
         },
         background: {
           DEFAULT: 'var(--color-bg)',

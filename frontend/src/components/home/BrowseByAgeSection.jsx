@@ -72,7 +72,7 @@ export default function BrowseByAgeSection({ t, selectedAge, setSelectedAge }) {
                 setSelectedAge('');
                 document.getElementById('popular-stories')?.scrollIntoView({ behavior: 'smooth' });
               }}
-              className="text-primary-600 font-bold hover:text-primary-700 flex items-center gap-1 text-sm sm:text-base transition-colors"
+              className="text-foreground-600 font-bold hover:text-foreground-700 flex items-center gap-1 text-sm sm:text-base transition-colors"
             >
               Voir toutes les catégories <ChevronRightIcon className="w-4 h-4" />
             </button>
