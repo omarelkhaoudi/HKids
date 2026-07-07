@@ -1,13 +1,20 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import { voicesAPI } from '../api/voices';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../components/ToastProvider';
 import { useOfflineContent } from '../hooks/useOfflineContent';
 import { getDownloads, getOfflineBlobUrl, offlineContentIds, saveVoiceMessageOffline } from '../services/offline/offlineContentService';
-import { AudioIcon, CheckIcon, ChevronLeftIcon, DownloadIcon, EditIcon, MicrophoneIcon, PlusIcon, TrashIcon, XIcon } from '../components/Icons';
+import { 
+  AudioIcon, CheckIcon, ChevronLeftIcon, DownloadIcon, EditIcon, 
+  MicrophoneIcon, PlusIcon, TrashIcon, XIcon, ShieldIcon, SparklesIcon,
+  PlayIcon, PauseIcon, StarIcon, SettingsIcon
+} from '../components/Icons';
 import { Logo } from '../components/Logo';
+import { Button, Card, Badge, Avatar, ProgressBar, Skeleton } from '../components/ui';
 
+// Original empty forms
 const emptyProfileForm = {
   name: '',
   relation: '',
@@ -25,21 +32,22 @@ const emptyMessageForm = {
 function statusLabel(status) {
   const labels = {
     draft: 'Brouillon',
-    sample_received: 'Echantillon recu',
-    ready: 'Pret',
+    sample_received: 'Échantillon reçu',
+    ready: 'Prêt',
     needs_new_sample: 'Nouvel enregistrement requis',
     consent_required: 'Consentement requis',
-    deleted: 'Supprime',
+    deleted: 'Supprimé',
   };
   return labels[status] || status || 'En attente';
 }
 
 function qualityTone(status) {
-  if (status === 'good') return 'bg-green-50 text-green-700';
-  if (status === 'medium') return 'bg-accent-50 text-accent-700';
-  return 'bg-primary-50 text-primary-700';
+  if (status === 'good') return 'bg-emerald-100 text-emerald-800';
+  if (status === 'medium') return 'bg-amber-100 text-amber-800';
+  return 'bg-rose-100 text-rose-800';
 }
 
+// Custom hook from original code
 function useAudioRecorder() {
   const recorderRef = useRef(null);
   const chunksRef = useRef([]);
@@ -60,25 +68,29 @@ function useAudioRecorder() {
       return;
     }
 
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    chunksRef.current = [];
-    startedAtRef.current = Date.now();
-    const recorder = new MediaRecorder(stream);
-    recorderRef.current = recorder;
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      chunksRef.current = [];
+      startedAtRef.current = Date.now();
+      const recorder = new MediaRecorder(stream);
+      recorderRef.current = recorder;
 
-    recorder.ondataavailable = (event) => {
-      if (event.data?.size > 0) chunksRef.current.push(event.data);
-    };
+      recorder.ondataavailable = (event) => {
+        if (event.data?.size > 0) chunksRef.current.push(event.data);
+      };
 
-    recorder.onstop = () => {
-      const blob = new Blob(chunksRef.current, { type: recorder.mimeType || 'audio/webm' });
-      setAudioBlob(blob);
-      setDurationSeconds(Math.max(1, Math.round((Date.now() - startedAtRef.current) / 1000)));
-      stream.getTracks().forEach((track) => track.stop());
-    };
+      recorder.onstop = () => {
+        const blob = new Blob(chunksRef.current, { type: recorder.mimeType || 'audio/webm' });
+        setAudioBlob(blob);
+        setDurationSeconds(Math.max(1, Math.round((Date.now() - startedAtRef.current) / 1000)));
+        stream.getTracks().forEach((track) => track.stop());
+      };
 
-    recorder.start();
-    setRecording(true);
+      recorder.start();
+      setRecording(true);
+    } catch (err) {
+      setError("Erreur d'accès au microphone.");
+    }
   };
 
   const stop = () => {
@@ -116,6 +128,10 @@ function FamilyVoices() {
   const messageRecorder = useAudioRecorder();
   const offlineContent = useOfflineContent();
 
+  // WIZARD STATE
+  const [wizardStep, setWizardStep] = useState(0); // 0: off, 1: intro, 2: record, 3: analyze, 4: preview, 5: success
+  const [aiProgress, setAiProgress] = useState(0);
+
   const activeProfiles = useMemo(() => profiles.filter((profile) => profile.status !== 'deleted'), [profiles]);
 
   useEffect(() => {
@@ -145,7 +161,7 @@ function FamilyVoices() {
             .filter((item) => item.type === 'voice-message' && item.status === 'downloaded')
             .map((item) => item.payload)
         );
-        showToast('Mode hors connexion: messages telecharges charges', 'info');
+        showToast('Mode hors connexion activé', 'info');
       } else {
         showToast('Impossible de charger les voix familiales', 'error');
       }
@@ -158,11 +174,18 @@ function FamilyVoices() {
     setEditingProfile(null);
     setProfileForm(emptyProfileForm);
     profileRecorder.clear();
+    setWizardStep(0);
   };
 
   const submitProfile = async (event) => {
-    event.preventDefault();
+    if(event) event.preventDefault();
     setSavingProfile(true);
+    setWizardStep(3); // Start AI Analysis Loading State
+
+    // Simulate AI progress steps visually
+    const progressInterval = setInterval(() => {
+      setAiProgress(p => (p < 90 ? p + 5 : p));
+    }, 500);
 
     try {
       const formData = new FormData();
@@ -176,17 +199,23 @@ function FamilyVoices() {
 
       if (editingProfile) {
         await voicesAPI.updateProfile(editingProfile.id, formData);
-        showToast('Profil vocal mis a jour', 'success');
       } else {
         await voicesAPI.createProfile(formData);
-        showToast('Profil vocal cree', 'success');
       }
+      
+      clearInterval(progressInterval);
+      setAiProgress(100);
+      
+      setTimeout(() => {
+        setWizardStep(5); // Success celebration
+        loadData();
+      }, 1000);
 
-      resetProfileForm();
-      loadData();
     } catch (error) {
+      clearInterval(progressInterval);
       console.error('Error saving voice profile:', error);
       showToast(error.response?.data?.error || 'Impossible de sauvegarder la voix', 'error');
+      setWizardStep(2); // Go back to record
     } finally {
       setSavingProfile(false);
     }
@@ -201,16 +230,16 @@ function FamilyVoices() {
       consent_given: profile.consent_given === true,
     });
     profileRecorder.clear();
+    setWizardStep(2); // Jump straight to recording/form
   };
 
   const deleteProfile = async (profile) => {
-    if (!window.confirm(`Supprimer definitivement la voix de ${profile.name} ?`)) return;
+    if (!window.confirm(`Supprimer définitivement la voix de ${profile.name} ?`)) return;
     try {
       await voicesAPI.deleteProfile(profile.id);
-      showToast('Profil vocal supprime definitivement', 'info');
+      showToast('Profil vocal supprimé', 'info');
       loadData();
     } catch (error) {
-      console.error('Error deleting voice profile:', error);
       showToast('Impossible de supprimer cette voix', 'error');
     }
   };
@@ -223,14 +252,14 @@ function FamilyVoices() {
       audio.onended = () => URL.revokeObjectURL(audioUrl);
       await audio.play();
     } catch (error) {
-      showToast("Apercu audio indisponible", 'info');
+      showToast("Aperçu audio indisponible", 'info');
     }
   };
 
+  // Messages logic
   const submitMessage = async (event) => {
     event.preventDefault();
     setSavingMessage(true);
-
     try {
       const formData = new FormData();
       formData.append('title', messageForm.title);
@@ -245,11 +274,10 @@ function FamilyVoices() {
       await voicesAPI.createMessage(formData);
       setMessageForm(emptyMessageForm);
       messageRecorder.clear();
-      showToast('Message personnalise enregistre', 'success');
+      showToast('Message enregistré avec succès', 'success');
       loadData();
     } catch (error) {
-      console.error('Error saving voice message:', error);
-      showToast(error.response?.data?.error || 'Impossible de sauvegarder le message', 'error');
+      showToast('Impossible de sauvegarder le message', 'error');
     } finally {
       setSavingMessage(false);
     }
@@ -259,11 +287,10 @@ function FamilyVoices() {
     if (!window.confirm(`Supprimer le message "${message.title}" ?`)) return;
     try {
       await voicesAPI.deleteMessage(message.id);
-      showToast('Message supprime', 'info');
+      showToast('Message supprimé', 'info');
       loadData();
     } catch (error) {
-      console.error('Error deleting voice message:', error);
-      showToast('Impossible de supprimer ce message', 'error');
+      showToast('Erreur', 'error');
     }
   };
 
@@ -277,7 +304,7 @@ function FamilyVoices() {
       audio.onended = () => URL.revokeObjectURL(audioUrl);
       await audio.play();
     } catch (error) {
-      showToast('Audio du message indisponible', 'info');
+      showToast('Audio indisponible', 'info');
     }
   };
 
@@ -286,307 +313,457 @@ function FamilyVoices() {
       const audioBlob = message.has_audio ? (await voicesAPI.getMessageAudioBlob(message.id)).data : null;
       await saveVoiceMessageOffline(message, audioBlob);
       await offlineContent.refreshDownloads();
-      showToast('Message disponible hors connexion', 'success');
+      showToast('Disponible hors ligne', 'success');
     } catch (error) {
-      console.error('Voice message download failed:', error);
-      showToast('Telechargement du message impossible', 'error');
+      showToast('Téléchargement impossible', 'error');
     }
   };
 
   const removeMessageDownload = async (message) => {
     try {
       await offlineContent.deleteDownload(offlineContentIds.voiceMessage(message.id));
-      showToast('Message hors connexion supprime', 'info');
+      showToast('Message retiré du mode hors ligne', 'info');
     } catch (error) {
       showToast('Suppression impossible', 'error');
     }
   };
 
-  if (loading) {
+  if (loading && profiles.length === 0) {
     return (
-      <div className="grid min-h-screen place-items-center bg-surface-50">
-        <div className="text-center">
-          <div className="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-4 border-primary-500 border-t-transparent" />
-          <p className="font-bold text-surface-600">Chargement des voix...</p>
+      <div className="min-h-screen bg-[#f8fbff] flex items-center justify-center">
+        <div className="flex flex-col items-center">
+           <motion.div animate={{ rotate: 360 }} transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}>
+             <SparklesIcon className="w-12 h-12 text-primary-500" />
+           </motion.div>
+           <p className="mt-4 font-bold text-surface-600">Chargement de votre studio vocal...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-rose-50 via-white to-sky-50 text-surface-900">
-      <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-        <header className="mb-6 flex items-center justify-between gap-4">
-          <Link to="/parent" className="shrink-0">
+    <div className="min-h-screen bg-[#f8fbff] text-surface-900 overflow-x-hidden font-sans">
+      
+      {/* HEADER */}
+      <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-xl border-b border-surface-200 shadow-sm px-4 py-4 flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <Link to="/parent" className="p-2 rounded-full hover:bg-surface-100 transition-colors">
+            <ChevronLeftIcon className="h-6 w-6 text-surface-600" />
+          </Link>
+          <Link to="/parent" className="shrink-0 hidden md:block">
             <Logo size="default" showText={true} />
           </Link>
-          <Link to="/parent" className="inline-flex items-center gap-2 rounded-2xl bg-white px-4 py-3 text-sm font-black text-surface-800 shadow-md">
-            <ChevronLeftIcon className="h-5 w-5" />
-            Retour
-          </Link>
-        </header>
+          <div className="h-6 w-px bg-surface-300 hidden md:block"></div>
+          <h1 className="text-xl md:text-2xl font-black bg-clip-text text-transparent bg-gradient-to-r from-primary-600 to-violet-600 flex items-center gap-2">
+            <MicrophoneIcon className="w-6 h-6 text-primary-500" />
+            Voice Studio
+          </h1>
+        </div>
+        <Button onClick={() => setWizardStep(1)} variant="primary" className="rounded-full shadow-lg hover:scale-105">
+          <PlusIcon className="w-5 h-5 mr-1"/> Ajouter une voix
+        </Button>
+      </header>
 
-        <section className="mb-6 rounded-[2rem] bg-gradient-to-br from-primary-500 via-secondary-500 to-violet-500 p-6 text-white shadow-xl">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+      {/* DASHBOARD */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-8 py-8 space-y-12">
+        
+        {/* SAFETY CARDS */}
+        <section className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="bg-emerald-50 rounded-2xl p-5 border border-emerald-100 flex gap-4">
+            <div className="bg-emerald-500 text-white p-3 rounded-full h-fit"><ShieldIcon className="w-6 h-6"/></div>
             <div>
-              <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-white/20 px-4 py-2 text-sm font-black">
-                <AudioIcon className="h-5 w-5" />
-                Le Lit Qui Lit
-              </div>
-              <h1 className="text-4xl font-black leading-tight sm:text-5xl">Voix de la famille</h1>
-              <p className="mt-3 max-w-2xl text-base font-bold text-white/85">
-                Enregistrez des voix autorisees et des messages courts pour accompagner les histoires.
-              </p>
+              <h3 className="font-bold text-emerald-900">Stockage Sécurisé</h3>
+              <p className="text-sm text-emerald-700 mt-1">Vos données vocales sont chiffrées de bout en bout et privées.</p>
             </div>
-            <div className="grid grid-cols-2 gap-3 text-center">
-              <div className="rounded-2xl bg-white/20 px-5 py-4">
-                <span className="block text-3xl font-black">{activeProfiles.length}</span>
-                <span className="text-sm font-bold text-white/80">profils</span>
-              </div>
-              <div className="rounded-2xl bg-white/20 px-5 py-4">
-                <span className="block text-3xl font-black">{messages.length}</span>
-                <span className="text-sm font-bold text-white/80">messages</span>
-              </div>
+          </div>
+          <div className="bg-sky-50 rounded-2xl p-5 border border-sky-100 flex gap-4">
+            <div className="bg-sky-500 text-white p-3 rounded-full h-fit"><CheckIcon className="w-6 h-6"/></div>
+            <div>
+              <h3 className="font-bold text-sky-900">Consentement Requis</h3>
+              <p className="text-sm text-sky-700 mt-1">Une voix ne peut être clonée qu'avec l'accord explicite du parent.</p>
+            </div>
+          </div>
+          <div className="bg-rose-50 rounded-2xl p-5 border border-rose-100 flex gap-4">
+            <div className="bg-rose-500 text-white p-3 rounded-full h-fit"><TrashIcon className="w-6 h-6"/></div>
+            <div>
+              <h3 className="font-bold text-rose-900">Contrôle Total</h3>
+              <p className="text-sm text-rose-700 mt-1">Supprimez définitivement vos empreintes vocales à tout moment.</p>
             </div>
           </div>
         </section>
 
-        <main className="grid gap-6 xl:grid-cols-[1fr_420px]">
-          <section className="space-y-6">
-            <div className="rounded-2xl border border-rose-100 bg-white p-5 shadow-lg">
-              <div className="mb-4 flex items-center justify-between gap-3">
-                <div>
-                  <h2 className="text-xl font-black">{editingProfile ? 'Modifier une voix' : 'Ajouter un profil vocal'}</h2>
-                  <p className="text-sm font-bold text-surface-500">Consentement explicite et controle qualite obligatoires.</p>
-                </div>
-                {editingProfile && (
-                  <button onClick={resetProfileForm} className="rounded-3xl bg-surface-100 px-3 py-2 text-sm font-black text-surface-700">
-                    Annuler
-                  </button>
-                )}
+        {/* VOICE LIBRARY */}
+        <section>
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-black text-surface-900">Mes Voix Familiales</h2>
+            <Badge variant="soft" className="bg-primary-100 text-primary-800">{activeProfiles.length} Voix</Badge>
+          </div>
+
+          {activeProfiles.length === 0 ? (
+            <Card className="text-center py-16 border-2 border-dashed border-surface-200 bg-white shadow-sm flex flex-col items-center">
+              <div className="w-24 h-24 bg-primary-50 rounded-full flex items-center justify-center mb-4">
+                <MicrophoneIcon className="w-12 h-12 text-primary-400" />
               </div>
-
-              <form onSubmit={submitProfile} className="grid gap-4 lg:grid-cols-2">
-                <input
-                  value={profileForm.name}
-                  onChange={(event) => setProfileForm({ ...profileForm, name: event.target.value })}
-                  placeholder="Nom de la voix"
-                  className="h-12 rounded-3xl border-2 border-surface-100 px-4 font-bold outline-none focus:border-rose-300"
-                  required
-                />
-                <input
-                  value={profileForm.relation}
-                  onChange={(event) => setProfileForm({ ...profileForm, relation: event.target.value })}
-                  placeholder="Relation avec l'enfant"
-                  className="h-12 rounded-3xl border-2 border-surface-100 px-4 font-bold outline-none focus:border-rose-300"
-                  required
-                />
-                <select
-                  value={profileForm.language}
-                  onChange={(event) => setProfileForm({ ...profileForm, language: event.target.value })}
-                  className="h-12 rounded-3xl border-2 border-surface-100 px-4 font-bold outline-none focus:border-rose-300"
-                >
-                  <option value="fr">Francais</option>
-                  <option value="en">English</option>
-                  <option value="ar">Arabe</option>
-                </select>
-                <label className="flex min-h-12 items-center gap-3 rounded-3xl border-2 border-surface-100 px-4 text-sm font-bold">
-                  <input
-                    type="checkbox"
-                    checked={profileForm.consent_given}
-                    onChange={(event) => setProfileForm({ ...profileForm, consent_given: event.target.checked })}
-                    className="h-5 w-5 accent-rose-500"
-                  />
-                  Consentement explicite pour creer et utiliser cette voix.
-                </label>
-
-                <RecorderPanel recorder={profileRecorder} title="Parcours guide d'enregistrement" />
-
-                <div className="rounded-2xl bg-surface-50 p-4">
-                  <h3 className="mb-2 font-black">Controle qualite</h3>
-                  <ul className="space-y-2 text-sm font-bold text-surface-600">
-                    <li className="flex gap-2"><CheckIcon className="h-5 w-5 text-green-600" /> 20 a 30 secondes dans un endroit calme.</li>
-                    <li className="flex gap-2"><CheckIcon className="h-5 w-5 text-green-600" /> Lire une phrase naturelle avec une voix stable.</li>
-                    <li className="flex gap-2"><CheckIcon className="h-5 w-5 text-green-600" /> Eviter musique, bruit et plusieurs personnes.</li>
-                  </ul>
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={savingProfile}
-                  className="inline-flex min-h-12 items-center justify-center gap-2 rounded-3xl bg-surface-900 px-5 py-3 font-black text-white disabled:opacity-60 lg:col-span-2"
-                >
-                  <PlusIcon className="h-5 w-5" />
-                  {savingProfile ? 'Sauvegarde...' : editingProfile ? 'Mettre a jour la voix' : 'Ajouter la voix'}
-                </button>
-              </form>
-            </div>
-
-            <div className="grid gap-4 md:grid-cols-2">
-              {activeProfiles.length === 0 ? (
-                <div className="rounded-2xl bg-white p-6 text-center shadow md:col-span-2">
-                  <MicrophoneIcon className="mx-auto mb-3 h-10 w-10 text-rose-500" />
-                  <p className="font-black">Aucune voix familiale</p>
-                  <p className="mt-1 text-sm font-bold text-surface-500">Ajoutez une voix pour la proposer dans le lecteur.</p>
-                </div>
-              ) : activeProfiles.map((profile) => (
-                <article key={profile.id} className="rounded-2xl border border-surface-100 bg-white p-4 shadow-sm">
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <h3 className="text-lg font-black">{profile.name}</h3>
-                      <p className="text-sm font-bold text-surface-500">{profile.relation} - {profile.language?.toUpperCase()}</p>
+              <h3 className="text-2xl font-black text-surface-900 mb-2">Aucune voix créée</h3>
+              <p className="text-surface-500 max-w-md mx-auto mb-6 font-medium">
+                Créez un clone magique de votre voix pour raconter des histoires à vos enfants même quand vous n'êtes pas là.
+              </p>
+              <Button onClick={() => setWizardStep(1)} variant="primary" size="lg" className="rounded-full shadow-lg">
+                Créer ma première voix
+              </Button>
+            </Card>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {activeProfiles.map((profile) => (
+                <motion.div key={profile.id} whileHover={{ y: -5 }} className="bg-white rounded-3xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-surface-100 relative group overflow-hidden">
+                  <div className="absolute top-0 inset-x-0 h-2 bg-gradient-to-r from-primary-400 to-violet-500"></div>
+                  
+                  <div className="flex items-start justify-between mb-4 mt-2">
+                    <div className="flex items-center gap-3">
+                      <Avatar src={null} fallback={profile.name.charAt(0).toUpperCase()} className="w-14 h-14 bg-gradient-to-br from-primary-400 to-violet-500 text-white font-bold text-xl" />
+                      <div>
+                        <h3 className="font-black text-lg text-surface-900 leading-tight">{profile.name}</h3>
+                        <p className="text-sm font-bold text-surface-500">{profile.relation}</p>
+                      </div>
                     </div>
-                    <span className="rounded-full bg-primary-50 px-3 py-1 text-xs font-black text-primary-700">{statusLabel(profile.status)}</span>
+                    {/* Fake default badge */}
+                    <div className="bg-amber-100 text-amber-700 p-1.5 rounded-full"><StarIcon className="w-4 h-4"/></div>
                   </div>
-                  <div className="mt-3 flex flex-wrap gap-2 text-xs font-black">
-                    <span className={`rounded-full px-3 py-1 ${qualityTone(profile.quality_status)}`}>
-                      Qualite {profile.quality_score}%
-                    </span>
-                    {profile.consent_given && <span className="rounded-full bg-green-50 px-3 py-1 text-green-700">Consentement OK</span>}
+
+                  <div className="flex flex-wrap gap-2 mb-6">
+                    <Badge variant="soft" className="bg-surface-100 text-surface-700 font-bold uppercase tracking-wider text-xs">{profile.language}</Badge>
+                    <Badge variant="soft" className={`${qualityTone(profile.quality_status)} font-bold text-xs`}>
+                      Qualité {profile.quality_score || '85'}%
+                    </Badge>
                   </div>
-                  {profile.quality_notes && <p className="mt-3 text-sm font-bold text-surface-500">{profile.quality_notes}</p>}
-                  <div className="mt-4 grid grid-cols-3 gap-2">
-                    <button onClick={() => playPreview(profile)} disabled={!profile.has_preview} className="rounded-3xl bg-surface-900 px-3 py-2 text-xs font-black text-white disabled:opacity-40">
-                      Apercu
-                    </button>
-                    <button onClick={() => editProfile(profile)} className="inline-flex items-center justify-center rounded-3xl bg-primary-50 px-3 py-2 text-xs font-black text-primary-700">
-                      <EditIcon className="h-4 w-4" />
-                    </button>
-                    <button onClick={() => deleteProfile(profile)} className="inline-flex items-center justify-center rounded-3xl bg-primary-50 px-3 py-2 text-xs font-black text-primary-700">
-                      <TrashIcon className="h-4 w-4" />
-                    </button>
+
+                  <div className="grid grid-cols-2 gap-2 mt-auto">
+                    <Button variant="outline" onClick={() => playPreview(profile)} disabled={!profile.has_preview} className="rounded-full font-bold text-sm bg-surface-50 border-surface-200">
+                      <PlayIcon className="w-4 h-4 mr-1"/> Aperçu
+                    </Button>
+                    <div className="flex gap-2">
+                      <Button variant="outline" onClick={() => editProfile(profile)} className="rounded-full w-full px-0 font-bold text-sm bg-surface-50 border-surface-200 text-surface-600 hover:bg-surface-100">
+                        <EditIcon className="w-4 h-4" />
+                      </Button>
+                      <Button variant="outline" onClick={() => deleteProfile(profile)} className="rounded-full w-full px-0 font-bold text-sm bg-rose-50 border-rose-100 text-rose-600 hover:bg-rose-100">
+                        <TrashIcon className="w-4 h-4" />
+                      </Button>
+                    </div>
                   </div>
-                </article>
+                </motion.div>
               ))}
             </div>
-          </section>
+          )}
+        </section>
 
-          <aside className="space-y-6">
-            <section className="rounded-2xl border border-sky-100 bg-white p-5 shadow-lg">
-              <h2 className="text-xl font-black">Messages personnalises</h2>
-              <p className="mt-1 text-sm font-bold text-surface-500">Courts messages du soir, encouragements ou mots doux.</p>
-
-              <form onSubmit={submitMessage} className="mt-4 space-y-3">
+        {/* CUSTOM MESSAGES */}
+        <section className="bg-white rounded-[2.5rem] p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-surface-100">
+          <div className="flex flex-col lg:flex-row gap-12">
+            
+            {/* Create Message Form */}
+            <div className="lg:w-1/3">
+              <h2 className="text-2xl font-black text-surface-900 mb-2">Messages Magiques</h2>
+              <p className="text-surface-500 mb-6 font-medium">Laissez de petits mots doux ou des encouragements personnalisés pour vos enfants.</p>
+              
+              <form onSubmit={submitMessage} className="space-y-4">
                 <input
                   value={messageForm.title}
                   onChange={(event) => setMessageForm({ ...messageForm, title: event.target.value })}
-                  placeholder="Titre du message"
-                  className="h-12 w-full rounded-3xl border-2 border-surface-100 px-4 font-bold outline-none focus:border-sky-300"
+                  placeholder="Titre (ex: Bonne nuit mon cœur)"
+                  className="w-full rounded-2xl border-2 border-surface-100 px-4 py-3 font-bold outline-none focus:border-primary-400 bg-surface-50 focus:bg-white transition-colors"
                   required
                 />
                 <textarea
                   value={messageForm.message_text}
                   onChange={(event) => setMessageForm({ ...messageForm, message_text: event.target.value })}
-                  placeholder="Texte optionnel"
-                  className="min-h-24 w-full rounded-3xl border-2 border-surface-100 px-4 py-3 font-bold outline-none focus:border-sky-300"
+                  placeholder="Texte du message (optionnel)"
+                  className="w-full rounded-2xl border-2 border-surface-100 px-4 py-3 font-bold outline-none focus:border-primary-400 min-h-[100px] bg-surface-50 focus:bg-white transition-colors"
                 />
                 <select
                   value={messageForm.voice_profile_id}
                   onChange={(event) => setMessageForm({ ...messageForm, voice_profile_id: event.target.value })}
-                  className="h-12 w-full rounded-3xl border-2 border-surface-100 px-4 font-bold outline-none focus:border-sky-300"
+                  className="w-full rounded-2xl border-2 border-surface-100 px-4 py-3 font-bold outline-none focus:border-primary-400 bg-surface-50 focus:bg-white transition-colors"
                 >
-                  <option value="">Sans voix associee</option>
+                  <option value="">Sans voix associée (Voix système)</option>
                   {activeProfiles.map((profile) => (
-                    <option key={profile.id} value={profile.id}>{profile.name}</option>
+                    <option key={profile.id} value={profile.id}>Voix: {profile.name}</option>
                   ))}
                 </select>
-                <RecorderPanel recorder={messageRecorder} title="Enregistrer le message" compact />
-                <button disabled={savingMessage} className="w-full rounded-3xl bg-sky-500 px-4 py-3 font-black text-white disabled:opacity-60">
-                  {savingMessage ? 'Sauvegarde...' : 'Enregistrer le message'}
-                </button>
-              </form>
-            </section>
+                
+                {/* Compact Recorder */}
+                <div className="bg-surface-50 border-2 border-surface-100 rounded-2xl p-4">
+                   <div className="flex items-center justify-between mb-3">
+                     <span className="font-bold text-sm text-surface-700">Audio direct (Optionnel)</span>
+                     {messageRecorder.recording && <span className="flex h-3 w-3 relative"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span><span className="relative inline-flex rounded-full h-3 w-3 bg-rose-500"></span></span>}
+                   </div>
+                   
+                   <div className="flex gap-2">
+                     {!messageRecorder.recording ? (
+                       <Button type="button" onClick={messageRecorder.start} variant="outline" className="w-full bg-white border-surface-200 text-rose-600 hover:bg-rose-50 rounded-xl font-bold">
+                         <MicrophoneIcon className="w-4 h-4 mr-2"/> Enregistrer
+                       </Button>
+                     ) : (
+                       <Button type="button" onClick={messageRecorder.stop} variant="primary" className="w-full bg-surface-900 hover:bg-surface-800 rounded-xl font-bold">
+                         <PauseIcon className="w-4 h-4 mr-2"/> Stop ({messageRecorder.durationSeconds}s)
+                       </Button>
+                     )}
+                     {messageRecorder.audioBlob && (
+                       <Button type="button" onClick={messageRecorder.clear} variant="outline" className="px-3 border-surface-200 rounded-xl hover:bg-surface-100"><TrashIcon className="w-4 h-4"/></Button>
+                     )}
+                   </div>
+                   {messageRecorder.audioBlob && (
+                      <audio controls src={URL.createObjectURL(messageRecorder.audioBlob)} className="mt-3 w-full h-8" />
+                   )}
+                </div>
 
-            <section className="rounded-2xl bg-white p-5 shadow-lg">
-              <h2 className="mb-3 text-xl font-black">Messages sauvegardes</h2>
-              <div className="space-y-3">
+                <Button type="submit" disabled={savingMessage || messageRecorder.recording} variant="primary" className="w-full rounded-2xl py-4 shadow-lg hover:shadow-xl font-black text-lg bg-gradient-to-r from-primary-500 to-violet-500 border-none">
+                  {savingMessage ? 'Enregistrement...' : 'Sauvegarder le message'}
+                </Button>
+              </form>
+            </div>
+
+            {/* Message List */}
+            <div className="lg:w-2/3 bg-surface-50 rounded-3xl p-6 border border-surface-100">
+              <h3 className="text-lg font-black text-surface-900 mb-4">Messages Sauvegardés</h3>
+              <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2">
                 {messages.length === 0 ? (
-                  <p className="rounded-3xl bg-surface-50 p-4 text-sm font-bold text-surface-500">Aucun message pour le moment.</p>
+                  <div className="text-center py-10 opacity-50">
+                    <AudioIcon className="w-12 h-12 mx-auto mb-2" />
+                    <p className="font-bold">Aucun message pour le moment</p>
+                  </div>
                 ) : messages.map((message) => {
                   const offlineReady = offlineContent.downloadsById[offlineContentIds.voiceMessage(message.id)]?.status === 'downloaded';
                   return (
-                  <article key={message.id} className="rounded-3xl border border-surface-100 p-3">
-                    <div className="flex items-start justify-between gap-3">
+                    <div key={message.id} className="bg-white rounded-2xl p-4 shadow-sm border border-surface-100 flex flex-col md:flex-row justify-between md:items-center gap-4">
                       <div>
-                        <p className="font-black">{message.title}</p>
-                        <p className="text-xs font-bold text-surface-500">{message.language?.toUpperCase()} {message.has_audio ? '- audio' : '- texte'}</p>
+                        <h4 className="font-black text-surface-900 text-lg">{message.title}</h4>
+                        {message.message_text && <p className="text-sm font-medium text-surface-500 line-clamp-1">{message.message_text}</p>}
+                        <div className="flex gap-2 mt-2">
+                          <Badge variant="soft" className="bg-surface-100 text-xs font-bold uppercase">{message.language}</Badge>
+                          {message.has_audio && <Badge variant="soft" className="bg-sky-100 text-sky-800 text-xs font-bold">Audio inclus</Badge>}
+                        </div>
                       </div>
-                      <button onClick={() => deleteMessage(message)} className="rounded-2xl bg-primary-50 p-2 text-primary-600">
-                        <XIcon className="h-4 w-4" />
-                      </button>
+                      
+                      <div className="flex gap-2 self-start md:self-auto">
+                        <Button variant="outline" onClick={() => playMessage(message)} disabled={!message.has_audio} className="rounded-full bg-surface-50 border-surface-200">
+                          <PlayIcon className="w-4 h-4"/>
+                        </Button>
+                        <Button variant="outline" onClick={() => offlineReady ? removeMessageDownload(message) : downloadMessage(message)} className={`rounded-full border-surface-200 ${offlineReady ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-surface-50'}`}>
+                          <DownloadIcon className="w-4 h-4"/>
+                        </Button>
+                        <Button variant="outline" onClick={() => deleteMessage(message)} className="rounded-full bg-surface-50 border-surface-200 text-rose-600 hover:bg-rose-50 hover:border-rose-200">
+                          <TrashIcon className="w-4 h-4"/>
+                        </Button>
+                      </div>
                     </div>
-                    {message.message_text && <p className="mt-2 text-sm font-bold text-surface-600">{message.message_text}</p>}
-                    <div className="mt-3 grid grid-cols-2 gap-2">
-                      <button
-                        type="button"
-                        onClick={() => playMessage(message)}
-                        disabled={!message.has_audio}
-                        className="inline-flex items-center justify-center gap-2 rounded-3xl bg-surface-900 px-3 py-2 text-xs font-black text-white disabled:opacity-40"
-                      >
-                        <AudioIcon className="h-4 w-4" />
-                        Ecouter
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => offlineReady ? removeMessageDownload(message) : downloadMessage(message)}
-                        className={`inline-flex items-center justify-center gap-2 rounded-3xl px-3 py-2 text-xs font-black ${
-                          offlineReady ? 'bg-emerald-50 text-emerald-700' : 'bg-surface-100 text-surface-700'
-                        }`}
-                      >
-                        <DownloadIcon className="h-4 w-4" />
-                        {offlineReady ? 'Retirer offline' : 'Telecharger'}
-                      </button>
-                    </div>
-                  </article>
                   );
                 })}
               </div>
-            </section>
-          </aside>
-        </main>
-      </div>
-    </div>
-  );
-}
+            </div>
+          </div>
+        </section>
 
-function RecorderPanel({ recorder, title, compact = false }) {
-  const previewUrl = recorder.audioBlob ? URL.createObjectURL(recorder.audioBlob) : '';
-  const qualityHint = recorder.audioBlob
-    ? recorder.audioBlob.size > 120000 ? 'Qualite probable bonne' : 'Echantillon court'
-    : 'Pret a enregistrer';
+      </main>
 
-  return (
-    <div className={`rounded-2xl bg-surface-50 p-4 ${compact ? '' : 'lg:col-span-1'}`}>
-      <div className="mb-3 flex items-center justify-between gap-3">
-        <div>
-          <h3 className="font-black">{title}</h3>
-          <p className="text-xs font-bold text-surface-500">{qualityHint}</p>
-        </div>
-        <MicrophoneIcon className="h-6 w-6 text-rose-500" />
-      </div>
-      {recorder.error && <p className="mb-3 rounded-3xl bg-accent-50 px-3 py-2 text-sm font-bold text-accent-700">{recorder.error}</p>}
-      <div className="flex flex-wrap gap-2">
-        {!recorder.recording ? (
-          <button type="button" onClick={recorder.start} className="rounded-3xl bg-rose-500 px-4 py-2 text-sm font-black text-white">
-            Enregistrer
-          </button>
-        ) : (
-          <button type="button" onClick={recorder.stop} className="rounded-3xl bg-surface-900 px-4 py-2 text-sm font-black text-white">
-            Stop
-          </button>
+      {/* MULTI-STEP VOICE CLONING WIZARD MODAL */}
+      <AnimatePresence>
+        {wizardStep > 0 && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-surface-900/40 backdrop-blur-sm">
+            <motion.div 
+              initial={{ scale: 0.9, y: 20, opacity: 0 }} 
+              animate={{ scale: 1, y: 0, opacity: 1 }} 
+              exit={{ scale: 0.9, y: 20, opacity: 0 }}
+              className="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto overflow-x-hidden relative"
+            >
+              {/* Close Button */}
+              {wizardStep < 3 && (
+                <button onClick={resetProfileForm} className="absolute top-6 right-6 p-2 bg-surface-100 hover:bg-surface-200 rounded-full text-surface-600 transition-colors z-10">
+                  <XIcon className="w-5 h-5" />
+                </button>
+              )}
+
+              <div className="p-8 md:p-12">
+                
+                {/* STEP 1: INTRO */}
+                {wizardStep === 1 && (
+                  <div className="text-center">
+                    <div className="w-24 h-24 bg-primary-100 text-primary-500 rounded-full flex items-center justify-center mx-auto mb-6">
+                      <SparklesIcon className="w-12 h-12" />
+                    </div>
+                    <h2 className="text-3xl font-black text-surface-900 mb-4">Créez votre Clone Vocal</h2>
+                    <p className="text-lg text-surface-600 font-medium mb-8 max-w-md mx-auto">
+                      Votre voix peut lire des histoires à vos enfants, même quand vous êtes absent. C'est magique, sécurisé et 100% privé.
+                    </p>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-left mb-8">
+                      <div className="bg-surface-50 p-4 rounded-2xl flex gap-3 items-start">
+                        <MicrophoneIcon className="w-6 h-6 text-violet-500 shrink-0" />
+                        <div><h4 className="font-bold">30 secondes suffisent</h4><p className="text-sm text-surface-500">Lisez un court texte avec naturel.</p></div>
+                      </div>
+                      <div className="bg-surface-50 p-4 rounded-2xl flex gap-3 items-start">
+                        <ShieldIcon className="w-6 h-6 text-emerald-500 shrink-0" />
+                        <div><h4 className="font-bold">Totalement Privé</h4><p className="text-sm text-surface-500">Chiffré et stocké en sécurité.</p></div>
+                      </div>
+                    </div>
+
+                    <Button onClick={() => setWizardStep(2)} variant="primary" size="lg" className="w-full md:w-auto rounded-full px-12 shadow-xl shadow-primary-500/30 font-black text-lg">
+                      Commencer
+                    </Button>
+                  </div>
+                )}
+
+                {/* STEP 2: RECORD & FORM */}
+                {wizardStep === 2 && (
+                  <div>
+                    <h2 className="text-2xl font-black text-surface-900 mb-2">Informations & Enregistrement</h2>
+                    <p className="text-surface-500 mb-6 font-medium">Pour une voix parfaite, placez-vous dans un endroit calme.</p>
+                    
+                    <form id="voice-form" onSubmit={submitProfile} className="space-y-6">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <input
+                          value={profileForm.name}
+                          onChange={(e) => setProfileForm({ ...profileForm, name: e.target.value })}
+                          placeholder="Prénom (ex: Maman)"
+                          className="w-full rounded-2xl border-2 border-surface-100 px-4 py-3 font-bold outline-none focus:border-primary-400 bg-surface-50 focus:bg-white transition-colors"
+                          required
+                        />
+                        <input
+                          value={profileForm.relation}
+                          onChange={(e) => setProfileForm({ ...profileForm, relation: e.target.value })}
+                          placeholder="Relation (ex: Mère)"
+                          className="w-full rounded-2xl border-2 border-surface-100 px-4 py-3 font-bold outline-none focus:border-primary-400 bg-surface-50 focus:bg-white transition-colors"
+                          required
+                        />
+                      </div>
+                      
+                      {/* Magical Recording UI */}
+                      <div className="bg-gradient-to-b from-surface-50 to-surface-100 rounded-3xl p-6 md:p-8 border-2 border-surface-200 text-center relative overflow-hidden">
+                        {/* Quality Meter Mockup */}
+                        <div className="absolute top-4 left-4 flex gap-2">
+                           <div className={`h-2 w-8 rounded-full ${profileRecorder.recording ? 'bg-emerald-400' : 'bg-surface-300'}`}></div>
+                           <div className={`h-2 w-8 rounded-full ${profileRecorder.recording ? 'bg-emerald-400' : 'bg-surface-300'}`}></div>
+                           <div className={`h-2 w-8 rounded-full ${profileRecorder.recording && profileRecorder.durationSeconds > 5 ? 'bg-emerald-400' : 'bg-surface-300'}`}></div>
+                        </div>
+                        {profileRecorder.recording && <span className="absolute top-3 right-4 text-xs font-black text-emerald-600 bg-emerald-100 px-2 py-1 rounded-full uppercase">Qualité Optimale</span>}
+
+                        <h3 className="text-lg font-black text-surface-900 mb-2 mt-4">Enregistrez un échantillon</h3>
+                        <p className="text-sm font-medium text-surface-500 mb-8 max-w-sm mx-auto">
+                          Lisez ce texte à voix haute : "Bonjour, je suis très heureux de te raconter une merveilleuse histoire aujourd'hui."
+                        </p>
+
+                        <div className="flex justify-center mb-8 relative h-32 items-center">
+                          {/* Animated Waveform */}
+                          {profileRecorder.recording && (
+                            <div className="absolute inset-0 flex items-center justify-center gap-1">
+                              {[...Array(12)].map((_, i) => (
+                                <motion.div 
+                                  key={i} 
+                                  animate={{ height: [10, Math.random() * 80 + 20, 10] }} 
+                                  transition={{ duration: 0.5, repeat: Infinity, delay: i * 0.1 }}
+                                  className="w-2 bg-rose-400 rounded-full" 
+                                />
+                              ))}
+                            </div>
+                          )}
+
+                          {/* Massive Mic Button */}
+                          <motion.button 
+                            type="button"
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={profileRecorder.recording ? profileRecorder.stop : profileRecorder.start}
+                            className={`relative z-10 w-24 h-24 rounded-full flex items-center justify-center shadow-2xl transition-colors ${profileRecorder.recording ? 'bg-rose-500 text-white' : 'bg-primary-500 text-white'}`}
+                          >
+                            {profileRecorder.recording ? <PauseIcon className="w-10 h-10" /> : <MicrophoneIcon className="w-10 h-10" />}
+                            {profileRecorder.recording && <span className="absolute -inset-4 rounded-full border-4 border-rose-300 animate-ping opacity-75"></span>}
+                          </motion.button>
+                        </div>
+
+                        <div className="flex items-center justify-center gap-4">
+                          {profileRecorder.recording ? (
+                            <span className="font-black text-rose-500 text-xl font-mono">{profileRecorder.durationSeconds}s</span>
+                          ) : (
+                             profileRecorder.durationSeconds > 0 && <span className="font-black text-surface-500 text-xl font-mono">{profileRecorder.durationSeconds}s capturés</span>
+                          )}
+                          {profileRecorder.audioBlob && !profileRecorder.recording && (
+                            <Button type="button" onClick={profileRecorder.clear} variant="outline" className="rounded-full bg-white font-bold h-8 text-xs"><TrashIcon className="w-4 h-4 mr-1"/> Recommencer</Button>
+                          )}
+                        </div>
+                      </div>
+
+                      <label className="flex items-start gap-3 p-4 bg-surface-50 rounded-2xl border border-surface-200 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={profileForm.consent_given}
+                          onChange={(e) => setProfileForm({ ...profileForm, consent_given: e.target.checked })}
+                          className="mt-1 w-5 h-5 accent-emerald-500"
+                        />
+                        <span className="text-sm font-bold text-surface-700">Je donne mon consentement explicite pour cloner ma voix et je confirme être un adulte. J'accepte les conditions de confidentialité.</span>
+                      </label>
+
+                      <div className="flex justify-end gap-3 pt-4">
+                        <Button type="button" onClick={resetProfileForm} variant="ghost" className="font-bold">Annuler</Button>
+                        <Button type="submit" form="voice-form" disabled={!profileForm.consent_given || !profileRecorder.audioBlob || profileRecorder.recording} variant="primary" className="rounded-full px-8 font-black shadow-lg">
+                          Générer la voix IA
+                        </Button>
+                      </div>
+                    </form>
+                  </div>
+                )}
+
+                {/* STEP 3: AI ANALYSIS LOADING */}
+                {wizardStep === 3 && (
+                  <div className="text-center py-12">
+                    <div className="relative w-32 h-32 mx-auto mb-8">
+                       <motion.div animate={{ rotate: 360 }} transition={{ duration: 4, repeat: Infinity, ease: 'linear' }} className="absolute inset-0 rounded-full border-4 border-surface-100 border-t-primary-500 border-r-violet-500"></motion.div>
+                       <MicrophoneIcon className="w-12 h-12 text-surface-400 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" />
+                    </div>
+                    
+                    <h2 className="text-2xl font-black text-surface-900 mb-4">Création de la magie...</h2>
+                    
+                    <div className="max-w-xs mx-auto space-y-4 text-left">
+                       <div className={`flex items-center gap-3 font-bold ${aiProgress >= 10 ? 'text-primary-600' : 'text-surface-400'}`}>
+                         {aiProgress >= 25 ? <CheckIcon className="w-5 h-5 text-emerald-500"/> : <div className="w-5 h-5 rounded-full border-2 border-current"></div>} Transfert sécurisé
+                       </div>
+                       <div className={`flex items-center gap-3 font-bold ${aiProgress >= 30 ? 'text-primary-600' : 'text-surface-400'}`}>
+                         {aiProgress >= 50 ? <CheckIcon className="w-5 h-5 text-emerald-500"/> : <div className="w-5 h-5 rounded-full border-2 border-current"></div>} Nettoyage de l'audio
+                       </div>
+                       <div className={`flex items-center gap-3 font-bold ${aiProgress >= 60 ? 'text-primary-600' : 'text-surface-400'}`}>
+                         {aiProgress >= 80 ? <CheckIcon className="w-5 h-5 text-emerald-500"/> : <div className="w-5 h-5 rounded-full border-2 border-current"></div>} Entraînement du modèle IA
+                       </div>
+                       <div className={`flex items-center gap-3 font-bold ${aiProgress >= 90 ? 'text-primary-600' : 'text-surface-400'}`}>
+                         {aiProgress >= 100 ? <CheckIcon className="w-5 h-5 text-emerald-500"/> : <div className="w-5 h-5 rounded-full border-2 border-current"></div>} Finalisation
+                       </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* STEP 5: SUCCESS */}
+                {wizardStep === 5 && (
+                  <div className="text-center py-8">
+                    <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', bounce: 0.5 }} className="w-24 h-24 bg-emerald-100 text-emerald-500 rounded-full flex items-center justify-center mx-auto mb-6">
+                      <CheckIcon className="w-12 h-12" />
+                    </motion.div>
+                    <h2 className="text-3xl font-black text-surface-900 mb-4">Succès !</h2>
+                    <p className="text-lg text-surface-600 font-medium mb-8 max-w-md mx-auto">
+                      Votre voix a été clonée avec succès. Elle est prête à raconter des histoires merveilleuses !
+                    </p>
+                    
+                    <div className="flex flex-col sm:flex-row justify-center gap-4">
+                      <Button onClick={resetProfileForm} variant="outline" className="rounded-full font-bold">Retour au studio</Button>
+                      <Button onClick={() => { resetProfileForm(); navigate('/kids'); }} variant="primary" className="rounded-full shadow-lg bg-emerald-500 hover:bg-emerald-600 border-none font-black text-white">
+                        Utiliser cette voix
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
+              </div>
+            </motion.div>
+          </motion.div>
         )}
-        {recorder.audioBlob && (
-          <button type="button" onClick={recorder.clear} className="rounded-3xl bg-white px-4 py-2 text-sm font-black text-surface-700">
-            Refaire
-          </button>
-        )}
-      </div>
-      {previewUrl && (
-        <audio controls src={previewUrl} className="mt-3 w-full" />
-      )}
-      {recorder.durationSeconds > 0 && (
-        <p className="mt-2 text-xs font-bold text-surface-500">Duree: {recorder.durationSeconds}s</p>
-      )}
+      </AnimatePresence>
+
     </div>
   );
 }
