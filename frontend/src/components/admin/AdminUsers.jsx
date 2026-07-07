@@ -134,82 +134,119 @@ function AdminUsers() {
           </div>
         </motion.div>
 
+        {/* SIDE DRAWER OVERLAY (Mobile/Tablet Only) */}
+        <AnimatePresence>
+          {selectedParent && (
+            <motion.div 
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              className="fixed inset-0 z-40 bg-surface-900/30 backdrop-blur-sm xl:hidden" 
+              onClick={() => setSelectedParent(null)}
+            />
+          )}
+        </AnimatePresence>
+
         {/* SIDE DRAWER FOR USER DETAILS */}
         <AnimatePresence>
           {selectedParent && (
-            <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} className="w-full xl:w-96 shrink-0 flex flex-col gap-4">
-              
-              {/* Parent Summary Card */}
-              <div className="bg-white rounded-[2rem] border border-surface-200 shadow-sm p-6 relative overflow-hidden">
-                <div className="absolute top-0 left-0 right-0 h-24 bg-gradient-to-r from-primary-500 to-violet-500"></div>
-                <button onClick={() => setSelectedParent(null)} className="absolute top-4 right-4 z-10 p-2 bg-white/20 text-white rounded-full hover:bg-white/30 backdrop-blur-sm transition-colors"><XIcon className="w-4 h-4"/></button>
-                <div className="relative pt-8 mb-4">
-                  <div className="w-20 h-20 bg-white p-1 rounded-2xl shadow-lg mx-auto mb-3">
-                    <div className="w-full h-full bg-gradient-to-br from-primary-400 to-violet-500 rounded-xl flex items-center justify-center text-white text-3xl font-black uppercase">
-                      {selectedParent.name.charAt(0)}
+            <motion.div 
+              initial={{ opacity: 0, x: 50 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 50 }} transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className="fixed inset-y-0 right-0 z-50 w-full sm:w-[400px] bg-[#fafafa] shadow-2xl xl:relative xl:inset-auto xl:z-auto xl:w-[380px] xl:bg-transparent xl:shadow-none shrink-0 flex flex-col h-full xl:h-auto overflow-hidden"
+            >
+              <div className="flex-1 overflow-y-auto p-4 xl:p-0 space-y-6 pb-24 xl:pb-0">
+                {/* Parent Summary Card */}
+                <div className="bg-white rounded-[2rem] border border-surface-200 shadow-sm relative overflow-hidden">
+                  <div className="absolute top-0 left-0 right-0 h-24 bg-gradient-to-r from-primary-500 to-violet-500"></div>
+                  <button onClick={() => setSelectedParent(null)} className="absolute top-4 right-4 z-10 p-2 bg-black/20 text-white rounded-full hover:bg-black/40 backdrop-blur-md transition-colors"><XIcon className="w-5 h-5"/></button>
+                  
+                  <div className="relative pt-12 px-6 pb-6">
+                    <div className="w-24 h-24 bg-white p-1.5 rounded-[1.5rem] shadow-lg mb-4">
+                      <div className="w-full h-full bg-gradient-to-br from-primary-400 to-violet-500 rounded-2xl flex items-center justify-center text-white text-4xl font-black uppercase">
+                        {selectedParent.name.charAt(0)}
+                      </div>
                     </div>
-                  </div>
-                  <h3 className="text-xl font-black text-center text-surface-900">{detail?.parent?.name || selectedParent.name}</h3>
-                  <div className="flex items-center justify-center gap-1 text-sm text-surface-500 font-medium mt-1">
-                    <MailIcon className="w-4 h-4" /> {detail?.parent?.email || selectedParent.email || 'Email inconnu'}
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-3 mb-6">
-                  <div className="bg-surface-50 rounded-2xl p-3 text-center border border-surface-100">
-                    <div className="text-xs font-bold text-surface-400 uppercase mb-1">Abonnement</div>
-                    <div className={`text-sm font-black ${selectedParent.subscription_status === 'free' ? 'text-surface-600' : 'text-emerald-600'}`}>
-                      {selectedParent.subscription_status === 'free' ? 'Gratuit' : 'Premium'}
+                    
+                    <h3 className="text-2xl font-black text-surface-900 mb-1 leading-tight break-words">{detail?.parent?.name || selectedParent.name}</h3>
+                    <div className="flex items-center gap-2 text-surface-500 font-medium text-sm mb-6">
+                      <MailIcon className="w-4 h-4 shrink-0" />
+                      <span className="truncate">{detail?.parent?.email || selectedParent.email || 'Email inconnu'}</span>
                     </div>
-                  </div>
-                  <div className="bg-surface-50 rounded-2xl p-3 text-center border border-surface-100">
-                    <div className="text-xs font-bold text-surface-400 uppercase mb-1">Inscription</div>
-                    <div className="text-sm font-black text-surface-700">{formatAdminDate(selectedParent.created_at).split(' ')[0]}</div>
-                  </div>
-                </div>
 
-                <div className="space-y-2 text-sm font-medium border-t border-surface-100 pt-4">
-                  <div className="flex justify-between items-center"><span className="text-surface-500 flex items-center gap-2"><ChildIcon className="w-4 h-4"/> Enfants</span><span className="font-bold text-surface-900">{totalChildren} profils</span></div>
-                  <div className="flex justify-between items-center"><span className="text-surface-500 flex items-center gap-2"><ClockIcon className="w-4 h-4"/> Temps d'écoute</span><span className="font-bold text-surface-900">{formatAdminDuration(totalTime)}</span></div>
-                </div>
-              </div>
-
-              {/* Children Profiles List */}
-              <div className="bg-white rounded-[2rem] border border-surface-200 shadow-sm p-6 flex-1">
-                <h4 className="font-black text-surface-900 mb-4 flex items-center gap-2"><ChildIcon className="w-5 h-5 text-primary-500"/> Profils Enfants</h4>
-                {detailLoading ? (
-                  <div className="space-y-3">
-                    <div className="h-20 bg-surface-50 rounded-2xl animate-pulse"></div>
-                    <div className="h-20 bg-surface-50 rounded-2xl animate-pulse"></div>
-                  </div>
-                ) : detail?.kids?.length > 0 ? (
-                  <div className="space-y-3">
-                    {detail.kids.map(kid => (
-                      <div key={kid.id} className="p-4 bg-surface-50 border border-surface-100 rounded-2xl hover:border-surface-200 transition-colors">
-                        <div className="flex justify-between items-start mb-2">
-                          <div>
-                            <h5 className="font-bold text-surface-900 text-base flex items-center gap-2">
-                              {kid.name}
-                              {kid.is_premium_voice && <StarIcon className="w-4 h-4 text-amber-500" title="Premium Voice" />}
-                            </h5>
-                            <p className="text-xs font-medium text-surface-500 mt-0.5">{kid.age ? `${kid.age} ans` : 'Âge N/A'} • {kid.preferred_language || 'fr'}</p>
-                          </div>
-                        </div>
-                        <div className="flex gap-2 text-xs font-bold text-surface-600 mt-3 pt-3 border-t border-surface-200/50">
-                          <div className="bg-white px-2 py-1 rounded-lg border border-surface-200 shadow-sm flex-1 text-center"><span className="text-primary-600 block text-lg">{kid.total_sessions || 0}</span> Sessions</div>
-                          <div className="bg-white px-2 py-1 rounded-lg border border-surface-200 shadow-sm flex-1 text-center"><span className="text-emerald-600 block text-lg">{Math.round((kid.total_time_seconds || 0)/60)}</span> Minutes</div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
+                      <div className="bg-surface-50 rounded-2xl p-4 border border-surface-100 flex flex-col justify-center items-center">
+                        <div className="text-xs font-bold text-surface-400 uppercase tracking-wider mb-1">Abonnement</div>
+                        <div className={`text-base font-black ${selectedParent.subscription_status === 'free' ? 'text-surface-600' : 'text-emerald-600'}`}>
+                          {selectedParent.subscription_status === 'free' ? 'Gratuit' : 'Premium'}
                         </div>
                       </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-8">
-                    <div className="w-12 h-12 bg-surface-100 rounded-full flex items-center justify-center mx-auto mb-3"><ChildIcon className="w-6 h-6 text-surface-400"/></div>
-                    <p className="text-sm font-medium text-surface-500">Aucun enfant ajouté.</p>
-                  </div>
-                )}
-              </div>
+                      <div className="bg-surface-50 rounded-2xl p-4 border border-surface-100 flex flex-col justify-center items-center">
+                        <div className="text-xs font-bold text-surface-400 uppercase tracking-wider mb-1">Inscription</div>
+                        <div className="text-base font-black text-surface-700">{formatAdminDate(selectedParent.created_at).split(' ')[0]}</div>
+                      </div>
+                    </div>
 
+                    <div className="space-y-3 pt-4 border-t border-surface-100">
+                      <div className="flex justify-between items-center p-3 bg-surface-50 rounded-xl border border-surface-100">
+                        <span className="text-surface-600 font-bold flex items-center gap-2 text-sm"><ChildIcon className="w-4 h-4 text-surface-400"/> Enfants</span>
+                        <Badge variant="soft" className="bg-white text-surface-900 font-black border border-surface-200">{totalChildren} profils</Badge>
+                      </div>
+                      <div className="flex justify-between items-center p-3 bg-surface-50 rounded-xl border border-surface-100">
+                        <span className="text-surface-600 font-bold flex items-center gap-2 text-sm"><ClockIcon className="w-4 h-4 text-surface-400"/> Temps d'écoute</span>
+                        <Badge variant="soft" className="bg-white text-surface-900 font-black border border-surface-200">{formatAdminDuration(totalTime)}</Badge>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Children Profiles List */}
+                <div className="bg-white rounded-[2rem] border border-surface-200 shadow-sm p-6">
+                  <h4 className="font-black text-surface-900 mb-5 flex items-center gap-2 text-lg"><ChildIcon className="w-6 h-6 text-primary-500"/> Profils Enfants</h4>
+                  
+                  {detailLoading ? (
+                    <div className="space-y-4">
+                      <div className="h-24 bg-surface-50 rounded-2xl animate-pulse"></div>
+                      <div className="h-24 bg-surface-50 rounded-2xl animate-pulse"></div>
+                    </div>
+                  ) : detail?.kids?.length > 0 ? (
+                    <div className="space-y-4">
+                      {detail.kids.map(kid => (
+                        <div key={kid.id} className="p-4 bg-surface-50 border border-surface-100 rounded-2xl hover:border-primary-100 hover:shadow-sm transition-all group">
+                          <div className="flex justify-between items-start mb-3">
+                            <div className="min-w-0 flex-1 pr-2">
+                              <h5 className="font-black text-surface-900 text-lg flex items-center gap-2 truncate">
+                                {kid.name}
+                                {kid.is_premium_voice && <StarIcon className="w-5 h-5 text-amber-500 shrink-0" title="Premium Voice" />}
+                              </h5>
+                              <p className="text-sm font-bold text-surface-500 mt-1 truncate">
+                                {kid.age ? `${kid.age} ans` : 'Âge N/A'} • <span className="uppercase text-surface-400">{kid.preferred_language || 'fr'}</span>
+                              </p>
+                            </div>
+                            <div className="w-12 h-12 bg-white rounded-xl shadow-sm border border-surface-200 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                              <span className="text-xl font-black text-primary-500">{kid.name.charAt(0)}</span>
+                            </div>
+                          </div>
+                          
+                          <div className="grid grid-cols-2 gap-2 mt-4 pt-4 border-t border-surface-200/60">
+                            <div className="bg-white p-2 rounded-xl border border-surface-100 text-center">
+                              <span className="text-primary-600 font-black text-lg block leading-none mb-1">{kid.total_sessions || 0}</span>
+                              <span className="text-[10px] font-bold text-surface-400 uppercase tracking-wider">Sessions</span>
+                            </div>
+                            <div className="bg-white p-2 rounded-xl border border-surface-100 text-center">
+                              <span className="text-emerald-600 font-black text-lg block leading-none mb-1">{Math.round((kid.total_time_seconds || 0)/60)}</span>
+                              <span className="text-[10px] font-bold text-surface-400 uppercase tracking-wider">Minutes</span>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-10 bg-surface-50 rounded-2xl border border-surface-100 border-dashed">
+                      <div className="w-14 h-14 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm border border-surface-200"><ChildIcon className="w-6 h-6 text-surface-400"/></div>
+                      <p className="text-base font-bold text-surface-900 mb-1">Aucun profil enfant</p>
+                      <p className="text-sm font-medium text-surface-500">Ce parent n'a pas encore créé de profils.</p>
+                    </div>
+                  )}
+                </div>
+              </div>
             </motion.div>
           )}
         </AnimatePresence>
