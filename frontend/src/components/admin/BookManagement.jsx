@@ -263,7 +263,7 @@ function BookManagement() {
                   <th className="p-4 w-12 text-center">
                     <input type="checkbox" checked={selectedItems.length === filteredBooks.length && filteredBooks.length > 0} onChange={toggleAll} className="w-4 h-4 rounded border-surface-300 text-primary-600 focus:ring-primary-500"/>
                   </th>
-                  <th className="p-4 text-xs font-bold text-surface-400 uppercase tracking-wider w-80">Histoire</th>
+                  <th className="p-4 text-xs font-bold text-surface-400 uppercase tracking-wider min-w-[300px]">Histoire</th>
                   <th className="p-4 text-xs font-bold text-surface-400 uppercase tracking-wider">Catégorie</th>
                   <th className="p-4 text-xs font-bold text-surface-400 uppercase tracking-wider">Statut</th>
                   <th className="p-4 text-xs font-bold text-surface-400 uppercase tracking-wider">Audio</th>
@@ -288,8 +288,8 @@ function BookManagement() {
                             {imageUrl ? <img src={imageUrl} alt={book.title} className="w-full h-full object-cover" /> : <BookIcon className="w-6 h-6 text-surface-300 m-auto mt-5" />}
                           </div>
                           <div>
-                            <p className="font-bold text-surface-900 text-sm mb-1">{book.title}</p>
-                            <p className="text-xs text-surface-500 truncate max-w-[200px]">{book.author || 'Inconnu'}</p>
+                            <p className="font-bold text-surface-900 text-sm mb-1 leading-snug">{book.title}</p>
+                            <p className="text-xs text-surface-500 truncate max-w-[250px]">{book.author || 'Inconnu'}</p>
                           </div>
                         </div>
                       </td>
