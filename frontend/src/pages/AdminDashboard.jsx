@@ -28,7 +28,7 @@ const QuickActions = () => {
             initial={{ opacity: 0, y: 20, scale: 0.9 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.9 }}
-            className="absolute bottom-16 right-0 bg-white rounded-2xl shadow-2xl border border-surface-200 p-2 w-64 mb-2 origin-bottom-right"
+            className="absolute bottom-16 right-0 bg-white rounded-2xl shadow-xl border border-surface-200 p-2 w-64 mb-2 origin-bottom-right"
           >
             <div className="p-2 text-xs font-bold text-surface-400 uppercase tracking-wider">Actions Rapides</div>
             <Link to="/admin/contents" onClick={() => setIsOpen(false)} className="flex items-center gap-3 w-full p-3 rounded-xl hover:bg-surface-50 text-surface-700 font-medium transition-colors">
@@ -45,7 +45,7 @@ const QuickActions = () => {
       </AnimatePresence>
       <button 
         onClick={() => setIsOpen(!isOpen)}
-        className="w-14 h-14 bg-surface-900 text-white rounded-full flex items-center justify-center shadow-[0_8px_30px_rgb(0,0,0,0.2)] hover:scale-105 transition-transform"
+        className="w-14 h-14 bg-surface-900 text-white rounded-full flex items-center justify-center shadow-xl hover:scale-105 transition-transform"
       >
         <motion.div animate={{ rotate: isOpen ? 45 : 0 }}><PlusIcon className="w-6 h-6" /></motion.div>
       </button>
@@ -290,7 +290,7 @@ function AdminDashboard() {
 
         {/* MAIN SCROLLABLE AREA */}
         <main className="flex-1 overflow-y-auto bg-[#fafafa]">
-          <div className="max-w-7xl mx-auto p-4 md:p-8">
+          <div className="p-4 md:p-6 lg:p-8 w-full max-w-[1600px] mx-auto">
             <Routes>
               <Route index element={<AdminOverview />} />
               <Route path="contents" element={<BookManagement />} />
