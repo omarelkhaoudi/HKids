@@ -21,35 +21,35 @@ const QuickActions = () => {
   const [isOpen, setIsOpen] = useState(false);
   
   return (
-    <div className="fixed bottom-8 right-8 z-50">
+    <>
       <AnimatePresence>
         {isOpen && (
           <motion.div
             initial={{ opacity: 0, y: 20, scale: 0.9 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.9 }}
-            className="absolute bottom-16 right-0 bg-white rounded-2xl shadow-xl border border-surface-200 p-2 w-64 mb-2 origin-bottom-right"
+            className="fixed bottom-[5.5rem] right-8 z-[100] bg-white rounded-2xl shadow-xl border border-surface-200 p-2 w-64 origin-bottom-right"
           >
             <div className="p-2 text-xs font-bold text-surface-400 uppercase tracking-wider">Actions Rapides</div>
-            <Link to="/admin/contents" onClick={() => setIsOpen(false)} className="flex items-center gap-3 w-full p-3 rounded-xl hover:bg-surface-50 text-surface-700 font-medium transition-colors">
-              <div className="bg-primary-50 p-2 rounded-lg text-primary-600"><BookIcon className="w-4 h-4"/></div> Créer une histoire
+            <Link to="/admin/contents" onClick={() => setIsOpen(false)} className="flex items-center gap-3 w-full p-3 rounded-xl hover:bg-surface-50 text-surface-700 font-medium transition-colors whitespace-nowrap">
+              <div className="bg-primary-50 p-2 rounded-lg text-primary-600 shrink-0"><BookIcon className="w-4 h-4"/></div> Créer une histoire
             </Link>
-            <Link to="/admin/categories" onClick={() => setIsOpen(false)} className="flex items-center gap-3 w-full p-3 rounded-xl hover:bg-surface-50 text-surface-700 font-medium transition-colors">
-              <div className="bg-emerald-50 p-2 rounded-lg text-emerald-600"><TagIcon className="w-4 h-4"/></div> Ajouter une catégorie
+            <Link to="/admin/categories" onClick={() => setIsOpen(false)} className="flex items-center gap-3 w-full p-3 rounded-xl hover:bg-surface-50 text-surface-700 font-medium transition-colors whitespace-nowrap">
+              <div className="bg-emerald-50 p-2 rounded-lg text-emerald-600 shrink-0"><TagIcon className="w-4 h-4"/></div> Ajouter une catégorie
             </Link>
-            <Link to="/admin/subscriptions" onClick={() => setIsOpen(false)} className="flex items-center gap-3 w-full p-3 rounded-xl hover:bg-surface-50 text-surface-700 font-medium transition-colors">
-              <div className="bg-blue-50 p-2 rounded-lg text-blue-600"><CheckIcon className="w-4 h-4"/></div> Gérer les abonnements
+            <Link to="/admin/subscriptions" onClick={() => setIsOpen(false)} className="flex items-center gap-3 w-full p-3 rounded-xl hover:bg-surface-50 text-surface-700 font-medium transition-colors whitespace-nowrap">
+              <div className="bg-blue-50 p-2 rounded-lg text-blue-600 shrink-0"><CheckIcon className="w-4 h-4"/></div> Gérer les abonnements
             </Link>
           </motion.div>
         )}
       </AnimatePresence>
       <button 
         onClick={() => setIsOpen(!isOpen)}
-        className="w-14 h-14 bg-surface-900 text-white rounded-full flex items-center justify-center shadow-xl hover:scale-105 transition-transform"
+        className="fixed bottom-8 right-8 z-[100] w-14 h-14 bg-surface-900 text-white rounded-full flex items-center justify-center shadow-xl hover:scale-105 transition-transform"
       >
         <motion.div animate={{ rotate: isOpen ? 45 : 0 }}><PlusIcon className="w-6 h-6" /></motion.div>
       </button>
-    </div>
+    </>
   );
 };
 
