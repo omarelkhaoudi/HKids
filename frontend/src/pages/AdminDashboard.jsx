@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { Routes, Route, Navigate, Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -20,40 +20,86 @@ import { Avatar } from '../components/ui';
 // QUICK ACTIONS FAB COMPONENT
 const QuickActions = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const buttonRef = React.useRef(null);
+  const [menuStyle, setMenuStyle] = useState({});
+
+  useEffect(() => {
+    if (isOpen && buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect();
+      const margin = 16;
+      const menuWidth = 256; // w-64
+      const menuHeight = 200; // approximate
+      
+      let top = rect.top - menuHeight - 16;
+      let left = rect.right - menuWidth;
+      
+      // Prevent top clipping
+      if (top < margin) {
+        top = rect.bottom + 16;
+      }
+      
+      // Prevent left clipping
+      if (left < margin) {
+        left = margin;
+      }
+      
+      // Prevent right clipping
+      if (left + menuWidth > window.innerWidth - margin) {
+        left = window.innerWidth - menuWidth - margin;
+      }
+      
+      // Prevent bottom clipping
+      if (top + menuHeight > window.innerHeight - margin) {
+        top = window.innerHeight - menuHeight - margin;
+      }
+
+      setMenuStyle({
+        position: 'fixed',
+        top: `${top}px`,
+        left: `${left}px`,
+        width: `${menuWidth}px`,
+        zIndex: 9999
+      });
+    }
+  }, [isOpen]);
   
   const content = (
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9, y: 10 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.9, y: 10 }}
+          style={menuStyle}
+          className="bg-white rounded-2xl shadow-2xl border border-surface-200 p-2 origin-bottom-right"
+        >
+          <div className="p-2 text-xs font-bold text-surface-400 uppercase tracking-wider">Actions Rapides</div>
+          <Link to="/admin/contents" onClick={() => setIsOpen(false)} className="flex items-center gap-3 w-full p-3 rounded-xl hover:bg-surface-50 text-surface-700 font-medium transition-colors whitespace-nowrap">
+            <div className="bg-primary-50 p-2 rounded-lg text-primary-600 shrink-0"><BookIcon className="w-4 h-4"/></div> Créer une histoire
+          </Link>
+          <Link to="/admin/categories" onClick={() => setIsOpen(false)} className="flex items-center gap-3 w-full p-3 rounded-xl hover:bg-surface-50 text-surface-700 font-medium transition-colors whitespace-nowrap">
+            <div className="bg-emerald-50 p-2 rounded-lg text-emerald-600 shrink-0"><TagIcon className="w-4 h-4"/></div> Ajouter une catégorie
+          </Link>
+          <Link to="/admin/subscriptions" onClick={() => setIsOpen(false)} className="flex items-center gap-3 w-full p-3 rounded-xl hover:bg-surface-50 text-surface-700 font-medium transition-colors whitespace-nowrap">
+            <div className="bg-blue-50 p-2 rounded-lg text-blue-600 shrink-0"><CheckIcon className="w-4 h-4"/></div> Gérer les abonnements
+          </Link>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+
+  return (
     <>
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: 20, scale: 0.9 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 20, scale: 0.9 }}
-            className="fixed bottom-[5.5rem] right-8 z-[100] bg-white rounded-2xl shadow-xl border border-surface-200 p-2 w-64 origin-bottom-right"
-          >
-            <div className="p-2 text-xs font-bold text-surface-400 uppercase tracking-wider">Actions Rapides</div>
-            <Link to="/admin/contents" onClick={() => setIsOpen(false)} className="flex items-center gap-3 w-full p-3 rounded-xl hover:bg-surface-50 text-surface-700 font-medium transition-colors whitespace-nowrap">
-              <div className="bg-primary-50 p-2 rounded-lg text-primary-600 shrink-0"><BookIcon className="w-4 h-4"/></div> Créer une histoire
-            </Link>
-            <Link to="/admin/categories" onClick={() => setIsOpen(false)} className="flex items-center gap-3 w-full p-3 rounded-xl hover:bg-surface-50 text-surface-700 font-medium transition-colors whitespace-nowrap">
-              <div className="bg-emerald-50 p-2 rounded-lg text-emerald-600 shrink-0"><TagIcon className="w-4 h-4"/></div> Ajouter une catégorie
-            </Link>
-            <Link to="/admin/subscriptions" onClick={() => setIsOpen(false)} className="flex items-center gap-3 w-full p-3 rounded-xl hover:bg-surface-50 text-surface-700 font-medium transition-colors whitespace-nowrap">
-              <div className="bg-blue-50 p-2 rounded-lg text-blue-600 shrink-0"><CheckIcon className="w-4 h-4"/></div> Gérer les abonnements
-            </Link>
-          </motion.div>
-        )}
-      </AnimatePresence>
       <button 
+        ref={buttonRef}
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed bottom-8 right-8 z-[100] w-14 h-14 bg-surface-900 text-white rounded-full flex items-center justify-center shadow-xl hover:scale-105 transition-transform"
+        className="fixed bottom-6 right-6 md:bottom-8 md:right-8 z-[9990] w-14 h-14 bg-surface-900 text-white rounded-full flex items-center justify-center shadow-[0_8px_30px_rgb(0,0,0,0.12)] hover:scale-105 transition-transform"
       >
         <motion.div animate={{ rotate: isOpen ? 45 : 0 }}><PlusIcon className="w-6 h-6" /></motion.div>
       </button>
+      {typeof document !== 'undefined' && createPortal(content, document.body)}
     </>
   );
-
-  return typeof document !== 'undefined' ? createPortal(content, document.body) : null;
 };
 
 // COMMAND PALETTE COMPONENT
