@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Button, ProgressBar, Badge, Skeleton, Modal } from '../components/ui';
+
 import { createWorker } from 'tesseract.js';
 import * as pdfjsLib from 'pdfjs-dist';
 import { booksAPI } from '../api/books';
@@ -1126,247 +1128,113 @@ function BookReader() {
   const progress = ((currentPage + 1) / totalPages) * 100;
   const selectedNarrationProfile = voiceProfiles.find((profile) => profile.id === selectedVoiceProfile) || voiceProfiles[0];
 
+  const [themeMode, setThemeMode] = useState('day'); // 'day' | 'sepia' | 'night'
+  const [showMenu, setShowMenu] = useState(true);
+  const [isFavorite, setIsFavorite] = useState(false);
+  const [showEndModal, setShowEndModal] = useState(false);
+
+  // Auto-hide menu
+  useEffect(() => {
+    let timeout;
+    if (showMenu) {
+      timeout = setTimeout(() => setShowMenu(false), 3500);
+    }
+    return () => clearTimeout(timeout);
+  }, [showMenu, currentPage, isPlaying]);
+
+  // Handle End of book
+  useEffect(() => {
+    if (isLastPage) {
+      setTimeout(() => setShowEndModal(true), 1500);
+    }
+  }, [isLastPage]);
+
+  // Handle theme colors
+  const themeColors = {
+    day: 'bg-[#fefcfb] text-[#1e293b]',
+    sepia: 'bg-[#fbf0d9] text-[#5c4b37]',
+    night: 'bg-[#0f172a] text-[#e2e8f0]'
+  };
+
+  const navThemeColors = {
+    day: 'bg-white/70',
+    sepia: 'bg-[#f4e4c3]/80',
+    night: 'bg-[#1e293b]/70'
+  };
+
+
   return (
-    <>
-      {/* Mode plein écran pour PDF */}
+    <div 
+      className={`h-screen w-full flex flex-col relative overflow-hidden transition-colors duration-700 ease-in-out ${themeColors[themeMode]}`}
+      onClick={() => setShowMenu(!showMenu)}
+      onTouchStart={onTouchStart}
+      onTouchMove={onTouchMove}
+      onTouchEnd={onTouchEnd}
+    >
+      <Confetti show={showConfetti} />
+      
+      {/* Top Navbar (Glassmorphism) */}
       <AnimatePresence>
-        {isFullscreen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-black flex items-center justify-center"
-            onClick={() => setIsFullscreen(false)}
+        {showMenu && (
+          <motion.header
+            initial={{ y: -100, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: -100, opacity: 0 }}
+            transition={{ duration: 0.3, ease: "easeOut" }}
+            onClick={(e) => e.stopPropagation()}
+            className={`absolute top-0 inset-x-0 z-40 px-6 py-4 flex items-center justify-between backdrop-blur-xl border-b border-white/10 ${navThemeColors[themeMode]} shadow-soft`}
           >
-            <motion.div
-              initial={{ scale: 0.8 }}
-              animate={{ scale: 1 }}
-              exit={{ scale: 0.8 }}
-              className="relative w-full h-full overflow-y-auto px-4 py-24 md:px-8"
-              onClick={(e) => e.stopPropagation()}
-            >
-              {/* Bouton fermer */}
-              <motion.button
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-                onClick={() => setIsFullscreen(false)}
-                className="absolute top-4 right-4 z-10 bg-white/20 hover:bg-white/30 text-white p-3 rounded-full backdrop-blur-sm transition-colors"
-                title="Fermer (Échap)"
+            <div className="flex items-center gap-4">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={() => navigate('/')}
+                className={`rounded-full ${themeMode === 'night' ? 'hover:bg-white/10 text-white' : 'hover:bg-black/5'}`}
               >
-                <XIcon className="w-6 h-6" />
-              </motion.button>
+                <HomeIcon className="w-6 h-6" />
+              </Button>
+              <div>
+                <h1 className="text-xl font-bold line-clamp-1">{book.title}</h1>
+                {book.author && <p className="text-sm opacity-70">par {book.author}</p>}
+              </div>
+            </div>
 
-              {/* Bouton Écouter */}
-              <motion.button
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  toggleAudio();
-                }}
-                disabled={isExtracting || (!currentPageData?.content && !currentPageData?.image_path)}
-                className={`absolute top-4 left-4 z-10 flex items-center gap-2 px-6 py-3 rounded-full font-semibold transition-colors backdrop-blur-sm ${
-                  isPlaying
-                    ? 'bg-primary-500 hover:bg-primary-600 text-white'
-                    : isExtracting
-                    ? 'bg-yellow-500 hover:bg-yellow-600 text-white'
-                    : 'bg-white/20 hover:bg-white/30 text-white'
-                } ${(isExtracting || (!currentPageData?.content && !currentPageData?.image_path)) ? 'opacity-50 cursor-not-allowed' : ''}`}
-                title={isExtracting ? 'Extraction du texte...' : isPlaying ? 'Arrêter la lecture' : 'Lire la page'}
+            <div className="flex items-center gap-3">
+              <Badge variant="glass" className="hidden md:flex gap-2 items-center px-4 py-2 border-none bg-black/5 dark:bg-white/10 text-inherit">
+                <span className="opacity-70">Temps de lecture:</span>
+                <span className="font-mono font-bold">{Math.floor(readingTime / 60)}m {readingTime % 60}s</span>
+              </Badge>
+              
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={() => setIsFavorite(!isFavorite)}
+                className={`rounded-full transition-transform hover:scale-110 ${isFavorite ? 'text-danger-500' : ''} ${themeMode === 'night' ? 'hover:bg-white/10 text-white' : 'hover:bg-black/5'}`}
               >
-                {isExtracting ? (
-                  <motion.div
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-                    className="w-5 h-5 border-2 border-white border-t-transparent rounded-full"
-                  />
-                ) : isPlaying ? (
-                  <PauseIcon className="w-6 h-6" />
-                ) : (
-                  <PlayIcon className="w-6 h-6" />
-                )}
-                <span className="text-lg">
-                  {isExtracting ? 'OCR...' : isPlaying ? 'Pause' : 'Écouter'}
-                </span>
-              </motion.button>
+                <svg className="w-6 h-6" fill={isFavorite ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                </svg>
+              </Button>
 
-              {/* Navigation pages */}
-              {!isFirstPage && (
-                <motion.button
-                  whileHover={{ scale: 1.15, x: -5 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    prevPage();
-                  }}
-                  disabled={isTurning}
-                  className="absolute left-4 z-10 p-4 rounded-full shadow-2xl bg-white/20 hover:bg-white/30 text-white backdrop-blur-sm transition-all"
-                >
-                  <ChevronLeftIcon className="w-8 h-8" />
-                </motion.button>
-              )}
+              <div className="flex bg-black/5 dark:bg-white/10 rounded-full p-1">
+                <button onClick={() => setThemeMode('day')} className={`p-2 rounded-full transition-colors ${themeMode === 'day' ? 'bg-white shadow-sm' : 'opacity-50'}`}>☀️</button>
+                <button onClick={() => setThemeMode('sepia')} className={`p-2 rounded-full transition-colors ${themeMode === 'sepia' ? 'bg-[#fbf0d9] shadow-sm' : 'opacity-50'}`}>📖</button>
+                <button onClick={() => setThemeMode('night')} className={`p-2 rounded-full transition-colors ${themeMode === 'night' ? 'bg-[#1e293b] shadow-sm' : 'opacity-50'}`}>🌙</button>
+              </div>
 
-              {!isLastPage && (
-                <motion.button
-                  whileHover={{ scale: 1.15, x: 5 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    nextPage();
-                  }}
-                  disabled={isTurning}
-                  className="absolute right-4 z-10 p-4 rounded-full shadow-2xl bg-white/20 hover:bg-white/30 text-white backdrop-blur-sm transition-all"
-                >
-                  <ChevronRightIcon className="w-8 h-8" />
-                </motion.button>
-              )}
-
-              {/* Page PDF en plein écran */}
-              {currentPageData.image_path && (() => {
-                const fileUrl = getFileUrl(currentPageData.image_path);
-                const fileExtension = currentPageData.image_path.toLowerCase().split('.').pop();
-                const isPDF = fileExtension === 'pdf';
-                
-                if (isPDF) {
-                  return (
-                    <div className="mx-auto flex min-h-full w-full justify-center">
-                      <PDFPageViewer 
-                        key={`pdf-fullscreen-${fileUrl}-${currentPage}`}
-                        pdfUrl={fileUrl} 
-                        pageNumber={currentPage + 1}
-                        imageClassName="h-auto w-full max-w-3xl object-contain shadow-2xl"
-                        onPdfLoaded={(numPages) => {
-                          if (numPages && numPages > 0) {
-                            setPdfTotalPages(numPages);
-                            setCurrentPdfUrl(fileUrl);
-                          }
-                        }}
-                      />
-                    </div>
-                  );
-                }
-                
-                return (
-                  <motion.img
-                    src={fileUrl}
-                    alt={`Page ${currentPage + 1}`}
-                    className="mx-auto h-auto max-w-full object-contain shadow-2xl"
-                    initial={{ scale: 0.9 }}
-                    animate={{ scale: 1 }}
-                    transition={{ delay: 0.2, duration: 0.3 }}
-                  />
-                );
-              })()}
-
-              {/* Indicateur de page */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-white/20 text-white px-6 py-3 rounded-full font-bold text-lg backdrop-blur-sm shadow-lg"
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={() => setShowReadingAid(true)}
+                className={`rounded-full ${themeMode === 'night' ? 'hover:bg-white/10 text-white' : 'hover:bg-black/5'}`}
               >
-                {currentPage + 1} / {totalPages}
-              </motion.div>
-            </motion.div>
-          </motion.div>
+                <SettingsIcon className="w-6 h-6" />
+              </Button>
+            </div>
+          </motion.header>
         )}
       </AnimatePresence>
 
-      <div 
-        className="h-screen bg-gradient-to-br from-purple-100 via-secondary-50 to-accent-100 flex flex-col relative overflow-hidden"
-        onTouchStart={onTouchStart}
-        onTouchMove={onTouchMove}
-        onTouchEnd={onTouchEnd}
-      >
-        <Confetti show={showConfetti} />
-        <StarParticles count={15} />
-
-      {/* Header coloré et amusant */}
-      <motion.header 
-        initial={{ y: -100 }}
-        animate={{ y: 0 }}
-        className="bg-gradient-to-r from-purple-500 via-secondary-500 to-accent-500 text-white py-4 px-6 sticky top-0 z-40 shadow-lg"
-      >
-        <div className="max-w-7xl mx-auto flex justify-between items-center">
-          <motion.button
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-              onClick={() => navigate('/')}
-            className="flex items-center gap-2 bg-white/20 hover:bg-white/30 px-4 py-2 rounded-full font-semibold transition-colors backdrop-blur-sm"
-          >
-            <HomeIcon className="w-5 h-5" />
-            <span>Accueil</span>
-          </motion.button>
-          
-          <div className="text-center flex-1 min-w-0 mx-4">
-            <h1 className="text-xl md:text-2xl font-bold drop-shadow-lg">{book.title}</h1>
-            {book.author && (
-              <p className="text-sm md:text-base opacity-90 mt-1">par {book.author}</p>
-            )}
-          </div>
-
-          <div className="flex shrink-0 flex-nowrap items-center justify-end gap-4">
-            {/* Bouton lecture audio */}
-            <motion.button
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-              onClick={toggleAudio}
-              disabled={isExtracting || (!currentPageData?.content && !currentPageData?.image_path)}
-              className={`flex h-10 shrink-0 items-center gap-2 whitespace-nowrap px-4 py-2 rounded-full font-semibold transition-colors backdrop-blur-sm ${
-                isPlaying
-                  ? 'bg-primary-500 hover:bg-primary-600 text-white'
-                  : isExtracting
-                  ? 'bg-yellow-500 hover:bg-yellow-600 text-white'
-                  : 'bg-white/20 hover:bg-white/30 text-white'
-              } ${(isExtracting || (!currentPageData?.content && !currentPageData?.image_path)) ? 'opacity-50 cursor-not-allowed' : ''}`}
-              title={isExtracting ? 'Extraction du texte...' : isPlaying ? 'Arrêter la lecture' : 'Lire la page (OCR si nécessaire)'}
-            >
-              {isExtracting ? (
-                <motion.div
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-                  className="w-5 h-5 border-2 border-white border-t-transparent rounded-full"
-                />
-              ) : isPlaying ? (
-                <PauseIcon className="w-5 h-5" />
-              ) : (
-                <PlayIcon className="w-5 h-5" />
-              )}
-              <span className="hidden sm:inline">
-                {isExtracting ? 'OCR...' : isPlaying ? 'Pause' : 'Écouter'}
-              </span>
-            </motion.button>
-            
-            <motion.button
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-              onClick={() => setShowReadingAid(true)}
-              className="flex h-10 shrink-0 items-center gap-2 whitespace-nowrap bg-white/20 hover:bg-white/30 px-4 py-2 rounded-full font-semibold transition-colors backdrop-blur-sm"
-              title="Personnaliser la lecture"
-            >
-              <SettingsIcon className="w-5 h-5" />
-              <span className="hidden sm:inline">Personnaliser</span>
-              <span className="hidden lg:inline rounded-full bg-white/20 px-2 py-0.5 text-xs font-bold">
-                {selectedNarrationProfile.label}
-              </span>
-            </motion.button>
-            <div className="flex h-10 shrink-0 items-center gap-3">
-              <div className="min-w-16 text-center text-lg font-bold leading-none">
-                {currentPage + 1} / {totalPages}
-              </div>
-              <div className="w-32 h-3 bg-white/30 rounded-full overflow-hidden shadow-inner">
-                <motion.div
-                  className="h-full bg-white rounded-full shadow-lg"
-                  initial={{ width: 0 }}
-                  animate={{ width: `${progress}%` }}
-                  transition={{ duration: 0.5, ease: 'easeOut' }}
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-      </motion.header>
-
-      {/* Panneau d'aide à la lecture */}
       <ReadingAidPanel
         isOpen={showReadingAid}
         onClose={() => setShowReadingAid(false)}
@@ -1378,253 +1246,178 @@ function BookReader() {
         availableVoices={availableVoices}
       />
 
-      {/* Zone de lecture principale */}
-      <div className="relative min-h-0 flex-1 overflow-y-auto p-4 md:p-8">
-        <div className="relative mx-auto flex min-h-full w-full max-w-6xl items-center">
-          
-          {/* Bouton précédent - Grand et coloré */}
-          <motion.button
-            whileHover={{ scale: 1.15, x: -5 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={prevPage}
-            disabled={isFirstPage || isTurning}
-            className={`absolute left-2 md:left-8 z-20 p-4 md:p-6 rounded-full shadow-2xl transition-all ${
-              isFirstPage || isTurning
-                ? 'bg-gray-300 cursor-not-allowed opacity-50'
-                : 'bg-gradient-to-r from-purple-500 to-secondary-500 hover:from-purple-600 hover:to-secondary-600 text-white'
-            }`}
-          >
-            <ChevronLeftIcon className="w-8 h-8 md:w-10 md:h-10" />
-          </motion.button>
+      {/* Main Content Area */}
+      <div className="relative flex-1 w-full h-full flex items-center justify-center p-4 md:p-12 overflow-hidden">
+        
+        {/* Invisible Click Areas for Navigation */}
+        <div className="absolute left-0 inset-y-0 w-1/4 z-10 cursor-pointer hidden md:flex items-center justify-start px-4 opacity-0 hover:opacity-100 transition-opacity" onClick={(e) => { e.stopPropagation(); prevPage(); }}>
+          {!isFirstPage && <ChevronLeftIcon className="w-16 h-16 opacity-30" />}
+        </div>
+        <div className="absolute right-0 inset-y-0 w-1/4 z-10 cursor-pointer hidden md:flex items-center justify-end px-4 opacity-0 hover:opacity-100 transition-opacity" onClick={(e) => { e.stopPropagation(); nextPage(); }}>
+          {!isLastPage && <ChevronRightIcon className="w-16 h-16 opacity-30" />}
+        </div>
 
-          {/* Livre avec effet 3D */}
-          <motion.div 
-            className="flex-1 mx-16 md:mx-32 py-6"
-            style={{ perspective: '1000px' }}
-          >
+        {/* The Book Canvas */}
+        <div className="relative w-full max-w-5xl h-full flex items-center justify-center" style={{ perspective: '1200px' }}>
+          <AnimatePresence mode="wait">
             <motion.div
-              className="bg-gradient-to-br from-accent-50 to-accent-50 rounded-3xl shadow-2xl p-4 md:p-8 lg:p-12 border-4 border-white"
-              whileHover={{ scale: 1.02 }}
-              transition={{ type: 'spring', stiffness: 300 }}
+              key={currentPage}
+              initial={{ opacity: 0, rotateY: pageDirection === 'next' ? 45 : -45, scale: 0.95 }}
+              animate={{ opacity: 1, rotateY: 0, scale: 1 }}
+              exit={{ opacity: 0, rotateY: pageDirection === 'next' ? -45 : 45, scale: 0.95 }}
+              transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
+              className="w-full h-full flex flex-col items-center justify-center"
+              style={{
+                fontFamily: readingSettings.font === 'dyslexic' ? 'OpenDyslexic, sans-serif' : readingSettings.font === 'comic' ? 'Comic Sans MS, cursive' : 'Nunito, sans-serif'
+              }}
             >
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={currentPage}
-                  initial={{ 
-                    opacity: 0, 
-                    x: pageDirection === 'next' ? 100 : -100,
-                    rotateY: pageDirection === 'next' ? 90 : -90
-                  }}
-                  animate={{ 
-                    opacity: 1, 
-                    x: 0,
-                    rotateY: 0,
-                    scale: 1
-                  }}
-                  exit={{ 
-                    opacity: 0, 
-                    x: pageDirection === 'next' ? -100 : 100,
-                    rotateY: pageDirection === 'next' ? -90 : 90
-                  }}
-                  transition={{ 
-                    duration: 0.4,
-                    ease: "easeInOut"
-                  }}
-                  className="flex min-h-[60vh] items-center justify-center rounded-2xl overflow-hidden shadow-inner relative"
-                  style={{
-                    backgroundColor: readingSettings.backgroundColor,
-                    color: readingSettings.textColor
-                  }}
-                >
-                  {currentPageData.image_path ? (() => {
-                    const fileUrl = getFileUrl(currentPageData.image_path);
-                    const fileExtension = currentPageData.image_path.toLowerCase().split('.').pop();
-                    const isPDF = fileExtension === 'pdf';
-                    
-                    if (isPDF) {
-                      return (
-                        <motion.div
-                          onClick={() => setIsFullscreen(true)}
-                          className="cursor-pointer w-full h-full flex items-center justify-center"
-                          whileHover={{ scale: 1.02 }}
-                          whileTap={{ scale: 0.98 }}
-                        >
-                          <PDFPageViewer 
-                            key={`pdf-${fileUrl}-${currentPage}`}
-                            pdfUrl={fileUrl} 
-                            pageNumber={currentPage + 1}
-                            imageClassName="h-auto w-full max-w-full object-contain"
-                            onPdfLoaded={(numPages) => {
-                              // Mettre à jour le nombre total de pages si c'est un PDF
-                              if (numPages && numPages > 0) {
-                                setPdfTotalPages(numPages);
-                                setCurrentPdfUrl(fileUrl);
-                              }
-                            }}
-                          />
-                        </motion.div>
-                      );
-                    }
-                    
-                    return (
-                    <motion.img
-                        src={fileUrl}
-                      alt={`Page ${currentPage + 1}`}
-                        className="max-w-full max-h-full object-contain"
-                        initial={{ scale: 0.9 }}
-                        animate={{ scale: 1 }}
-                        transition={{ delay: 0.2, duration: 0.3 }}
-                      />
-                    );
-                  })() : (
-                    <div className="text-center p-8 w-full">
-                      <motion.div
-                        initial={{ scale: 0 }}
-                        animate={{ scale: 1 }}
-                        transition={{ delay: 0.2, type: 'spring' }}
-                        className="mb-4 flex justify-center"
-                      >
-                        <BookIcon className="w-16 h-16 text-purple-600" />
-                      </motion.div>
-                      <p 
-                        className="font-bold mb-4"
-                        style={{
-                          fontSize: `${readingSettings.fontSize * 1.5}px`,
-                          fontFamily: readingSettings.font === 'dyslexic' ? 'OpenDyslexic, sans-serif' : 
-                                      readingSettings.font === 'times' ? 'Times New Roman, serif' :
-                                      readingSettings.font === 'comic' ? 'Comic Sans MS, cursive' : 'Arial, sans-serif',
-                          lineHeight: readingSettings.lineSpacing ? '2' : '1.5'
+              {currentPageData.image_path ? (() => {
+                const fileUrl = getFileUrl(currentPageData.image_path);
+                const isPDF = currentPageData.image_path.toLowerCase().endsWith('.pdf');
+                
+                if (isPDF) {
+                  return (
+                    <div className={`w-full max-h-[85vh] overflow-hidden rounded-2xl shadow-floating bg-white`}>
+                      <PDFPageViewer 
+                        pdfUrl={fileUrl} 
+                        pageNumber={currentPage + 1}
+                        imageClassName="w-full h-full object-contain"
+                        onPdfLoaded={(numPages) => {
+                          if (numPages > 0) {
+                            setPdfTotalPages(numPages);
+                            setCurrentPdfUrl(fileUrl);
+                          }
                         }}
-                      >
-                        Page {currentPage + 1}
-                      </p>
-                      {currentPageData.content && (
-                        <p 
-                          className="max-w-md mx-auto"
-                          style={{
-                            fontSize: `${readingSettings.fontSize}px`,
-                            fontFamily: readingSettings.font === 'dyslexic' ? 'OpenDyslexic, sans-serif' : 
-                                        readingSettings.font === 'times' ? 'Times New Roman, serif' :
-                                        readingSettings.font === 'comic' ? 'Comic Sans MS, cursive' : 'Arial, sans-serif',
-                            lineHeight: readingSettings.lineSpacing ? '2' : '1.5',
-                            letterSpacing: readingSettings.syllabification ? '0.1em' : 'normal'
-                          }}
-                        >
-                          {readingSettings.syllabification && currentPageData.content
-                            ? currentPageData.content.split(' ').map((word, i) => (
-                                <span key={i} className="inline-block mr-1">
-                                  {word.split('').map((char, j) => (
-                                    <span key={j} className={j % 2 === 0 ? '' : 'text-primary-500'}>
-                                      {char}
-                                    </span>
-                                  ))}
-                                </span>
-                              ))
-                            : currentPageData.content}
-                        </p>
-                      )}
+                      />
                     </div>
+                  );
+                }
+                
+                return (
+                  <div className="w-full h-[85vh] flex items-center justify-center">
+                    <motion.img
+                      src={fileUrl}
+                      alt={`Page ${currentPage + 1}`}
+                      className="max-w-full max-h-full object-contain rounded-2xl shadow-floating"
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.2 }}
+                    />
+                  </div>
+                );
+              })() : (
+                <div className={`w-full max-w-3xl p-10 md:p-16 rounded-3xl shadow-floating text-center flex flex-col items-center justify-center ${themeMode === 'night' ? 'bg-[#1e293b]' : 'bg-white'}`}>
+                  {currentPageData.content && (
+                    <p 
+                      className="text-left md:text-center w-full"
+                      style={{
+                        fontSize: `${readingSettings.fontSize}px`,
+                        lineHeight: readingSettings.lineSpacing ? '2' : '1.6',
+                        letterSpacing: readingSettings.syllabification ? '0.1em' : 'normal'
+                      }}
+                    >
+                      {currentPageData.content}
+                    </p>
                   )}
-                  
-                  {/* Numéro de page en bas */}
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.3 }}
-                    className="absolute bottom-4 right-4 bg-purple-500/80 text-white px-4 py-2 rounded-full font-bold text-sm backdrop-blur-sm shadow-lg"
-                  >
-                    {currentPage + 1} / {totalPages}
-                  </motion.div>
-                </motion.div>
-              </AnimatePresence>
+                </div>
+              )}
             </motion.div>
-          </motion.div>
-
-          {/* Bouton suivant - Grand et coloré */}
-          <motion.button
-            whileHover={{ scale: 1.15, x: 5 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={nextPage}
-            disabled={isLastPage || isTurning}
-            className={`absolute right-2 md:right-8 z-20 p-4 md:p-6 rounded-full shadow-2xl transition-all ${
-              isLastPage || isTurning
-                ? 'bg-gray-300 cursor-not-allowed opacity-50'
-                : 'bg-gradient-to-r from-secondary-500 to-accent-500 hover:from-secondary-600 hover:to-accent-600 text-white'
-            }`}
-          >
-            <ChevronRightIcon className="w-8 h-8 md:w-10 md:h-10" />
-          </motion.button>
+          </AnimatePresence>
         </div>
       </div>
 
-      {/* Footer avec indicateurs de pages */}
-      <motion.footer
-        initial={{ y: 100 }}
-        animate={{ y: 0 }}
-        className="bg-gradient-to-r from-purple-500 via-secondary-500 to-accent-500 text-white py-6 px-6 shadow-lg"
-      >
-        <div className="max-w-7xl mx-auto">
-          {/* Indicateurs de pages - style amusant */}
-          <div className="flex justify-center items-center gap-2 mb-4 flex-wrap">
-            {book.pages.map((_, index) => (
-              <motion.button
-                key={index}
-                whileHover={{ scale: 1.3, y: -5 }}
-                whileTap={{ scale: 0.9 }}
-                onClick={() => {
-                  if (!isTurning) {
-                    setPageDirection(index > currentPage ? 'next' : 'prev');
-                    setIsTurning(true);
-                    setTimeout(() => {
-                      setCurrentPage(index);
-                      setIsTurning(false);
-                    }, 300);
-                  }
-                }}
-                className={`rounded-full transition-all shadow-lg ${
-                  index === currentPage
-                    ? 'bg-white w-10 h-3 shadow-xl'
-                    : 'bg-white/40 w-3 h-3 hover:bg-white/60 hover:w-6'
-                }`}
-              />
-            ))}
-          </div>
-
-          {/* Stats et progression */}
-          <div className="flex justify-center items-center gap-6 text-sm md:text-base font-semibold">
+      {/* Floating Audio Controls */}
+      <div className="absolute bottom-24 inset-x-0 flex justify-center z-40 pointer-events-none">
+        <AnimatePresence>
+          {(showMenu || isPlaying) && (
             <motion.div
-              whileHover={{ scale: 1.1 }}
-              className="flex items-center gap-2 bg-white/20 px-4 py-2 rounded-full backdrop-blur-sm"
+              initial={{ y: 50, opacity: 0, scale: 0.9 }}
+              animate={{ y: 0, opacity: 1, scale: 1 }}
+              exit={{ y: 50, opacity: 0, scale: 0.9 }}
+              onClick={(e) => e.stopPropagation()}
+              className={`pointer-events-auto flex items-center gap-4 px-6 py-3 rounded-full backdrop-blur-xl border border-white/20 shadow-floating ${navThemeColors[themeMode]}`}
             >
-              <span>{Math.floor(readingTime / 60)}m {readingTime % 60}s</span>
-            </motion.div>
-            <motion.div
-              whileHover={{ scale: 1.1 }}
-              className="flex items-center gap-2 bg-white/20 px-4 py-2 rounded-full backdrop-blur-sm"
-            >
-              <StarIcon className="w-6 h-6" />
-              <span>{Math.round(progress)}% terminé</span>
-            </motion.div>
-          </div>
-
-          {/* Message de fin */}
-          {isLastPage && (
-            <motion.div
-              initial={{ scale: 0, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              className="mt-4 text-center"
-            >
-              <div className="inline-flex items-center gap-2 bg-white/30 px-6 py-3 rounded-full backdrop-blur-sm">
-                <StarIcon className="w-8 h-8 text-yellow-400" />
-                <span className="font-bold text-lg">Bravo ! Tu as terminé l'histoire !</span>
+              <div className="flex items-center gap-2 pr-4 border-r border-current/10">
+                <span className="text-xs font-bold opacity-70 uppercase tracking-widest">{selectedNarrationProfile.label}</span>
               </div>
+              
+              <button 
+                onClick={toggleAudio}
+                disabled={isExtracting || (!currentPageData?.content && !currentPageData?.image_path)}
+                className={`p-3 rounded-full shadow-md transition-transform hover:scale-110 active:scale-95 ${isPlaying ? 'bg-primary-500 text-white' : 'bg-white text-surface-900'} ${isExtracting ? 'opacity-50 cursor-not-allowed' : ''}`}
+              >
+                {isExtracting ? (
+                  <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, ease: 'linear' }} className="w-5 h-5 border-2 border-current border-t-transparent rounded-full" />
+                ) : isPlaying ? (
+                  <PauseIcon className="w-5 h-5" />
+                ) : (
+                  <PlayIcon className="w-5 h-5 ml-1" />
+                )}
+              </button>
+
+              {isPlaying && (
+                <div className="flex items-center gap-1 pl-2">
+                  {[1,2,3,4,5].map(i => (
+                    <motion.div
+                      key={i}
+                      animate={{ height: [8, 24, 8] }}
+                      transition={{ duration: 0.8, repeat: Infinity, delay: i * 0.1 }}
+                      className="w-1 bg-primary-500 rounded-full"
+                    />
+                  ))}
+                </div>
+              )}
             </motion.div>
           )}
+        </AnimatePresence>
+      </div>
+
+      {/* Persistent Bottom Progress Bar */}
+      <div className="absolute bottom-0 inset-x-0 z-30 px-4 md:px-12 pb-6 pt-10 bg-gradient-to-t from-black/20 to-transparent flex flex-col justify-end pointer-events-none">
+        <div className="flex items-center justify-between text-xs font-bold opacity-70 mb-2">
+          <span>Page {currentPage + 1} sur {totalPages}</span>
+          <span>{Math.round(progress)}% complété</span>
         </div>
-      </motion.footer>
-      <VoiceAssistant />
+        <ProgressBar progress={progress} color="bg-primary-500" className="opacity-80" />
+      </div>
+
+      {/* End of Book Celebration Modal */}
+      <Modal isOpen={showEndModal} onClose={() => setShowEndModal(false)} maxWidth="max-w-md">
+        <div className="text-center p-4">
+          <motion.div 
+            initial={{ scale: 0 }}
+            animate={{ scale: 1, rotate: 360 }}
+            transition={{ type: "spring", bounce: 0.5, delay: 0.2 }}
+            className="w-24 h-24 bg-gradient-to-br from-yellow-400 to-amber-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-glow"
+          >
+            <StarIcon className="w-12 h-12 text-white" />
+          </motion.div>
+          <h2 className="text-3xl font-black mb-2 text-surface-900 dark:text-white">Félicitations !</h2>
+          <p className="text-surface-600 dark:text-surface-300 mb-6">Tu as terminé "{book.title}"</p>
+          
+          <div className="grid grid-cols-2 gap-4 mb-8">
+            <div className="bg-surface-100 dark:bg-surface-700 p-4 rounded-2xl">
+              <div className="text-2xl font-bold text-primary-500">{totalPages}</div>
+              <div className="text-xs uppercase font-bold text-surface-500">Pages Lues</div>
+            </div>
+            <div className="bg-surface-100 dark:bg-surface-700 p-4 rounded-2xl">
+              <div className="text-2xl font-bold text-secondary-500">{Math.floor(readingTime / 60)}m {readingTime % 60}s</div>
+              <div className="text-xs uppercase font-bold text-surface-500">Temps</div>
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-3">
+            <Button variant="primary" fullWidth onClick={() => navigate('/')}>
+              Lire une autre histoire
+            </Button>
+            <Button variant="ghost" fullWidth onClick={() => setShowEndModal(false)}>
+              Revoir l'histoire
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
     </div>
-    </>
   );
 }
 
