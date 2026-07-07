@@ -17,6 +17,8 @@ import {
 } from '../components/Icons';
 import { Logo } from '../components/Logo';
 import { KidAvatar } from '../components/parent/KidAvatar';
+import { SettingsCenterModal } from '../components/parent/SettingsCenterModal';
+import { SettingsIcon } from '../components/Icons';
 
 const bedtimeLanguages = CONTENT_LANGUAGES.map((language) => ({
   id: language.id,
@@ -45,6 +47,7 @@ function ParentDashboard() {
   const [loading, setLoading] = useState(true);
   const [showKidModal, setShowKidModal] = useState(false);
   const [showAccountModal, setShowAccountModal] = useState(false);
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [editingKid, setEditingKid] = useState(null);
   const [activeSection, setActiveSection] = useState('overview');
   const emptyKidForm = createEmptyKidForm();
@@ -517,9 +520,12 @@ function ParentDashboard() {
               </div>
             </div>
           </div>
-          <div className="flex gap-3">
-            <Button variant="glass" onClick={handleLogout} className="bg-white/10 hover:bg-white/20 text-white font-bold border-none">Déconnexion</Button>
-            <Button variant="glass" onClick={() => { setEditingKid(null); setKidForm(emptyKidForm); setShowKidModal(true); }} className="bg-white hover:bg-surface-100 text-primary-600 font-bold border-none shadow-xl">
+          <div className="flex flex-col sm:flex-row gap-3">
+            <Button variant="glass" onClick={() => setShowSettingsModal(true)} className="bg-white/10 hover:bg-white/20 text-white font-bold border-none shrink-0">
+              <SettingsIcon className="w-5 h-5 mr-2" /> Paramètres
+            </Button>
+            <Button variant="glass" onClick={handleLogout} className="bg-white/10 hover:bg-white/20 text-white font-bold border-none shrink-0">Déconnexion</Button>
+            <Button variant="glass" onClick={() => { setEditingKid(null); setKidForm(emptyKidForm); setShowKidModal(true); }} className="bg-white hover:bg-surface-100 text-primary-600 font-bold border-none shadow-xl shrink-0">
               <PlusIcon className="w-5 h-5 mr-2" /> Ajouter un enfant
             </Button>
           </div>
@@ -838,6 +844,11 @@ function ParentDashboard() {
           </motion.div>
         )}
       </AnimatePresence>
+      
+      <SettingsCenterModal 
+        isOpen={showSettingsModal}
+        onClose={() => setShowSettingsModal(false)}
+      />
     </div>
   );
 }
