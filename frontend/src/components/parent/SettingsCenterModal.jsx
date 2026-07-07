@@ -4,7 +4,7 @@ import {
   UserIcon, SearchIcon, XIcon, ShieldIcon, LockIcon, LanguageIcon, 
   BellIcon, BookIcon, FontIcon, VolumeIcon, SmartphoneIcon, 
   ComputerIcon, MailIcon, CheckCircleIcon, LogOutIcon, ChildIcon, 
-  HistoryIcon, StarIcon, ArrowRightIcon
+  HistoryIcon, StarIcon, ArrowRightIcon, AlertIcon
 } from '../Icons';
 import { Button, Badge, Switch, Input, Avatar } from '../ui';
 import { useAuth } from '../../context/AuthContext';
@@ -498,6 +498,3 @@ export function SettingsCenterModal({ isOpen, onClose }) {
     </AnimatePresence>
   );
 }
-
-// Need to define AlertIcon since I used it but didn't import it from Icons if it wasn't there. I'll add a simple inline or import it.
-// Oh wait, AlertIcon is in Icons.jsx. Let me import it.
