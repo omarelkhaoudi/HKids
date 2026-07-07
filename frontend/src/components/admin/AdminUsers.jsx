@@ -63,7 +63,7 @@ function AdminUsers() {
       <div className="flex flex-col xl:flex-row gap-6">
         
         {/* USERS TABLE */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="flex-1 bg-white rounded-[2rem] border border-surface-200 shadow-sm overflow-hidden flex flex-col">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="flex-1 min-w-0 bg-white rounded-[2rem] border border-surface-200 shadow-sm overflow-hidden flex flex-col">
           <div className="p-4 border-b border-surface-100 flex items-center justify-between bg-surface-50">
             <div className="relative w-full max-w-sm">
               <SearchIcon className="w-5 h-5 text-surface-400 absolute left-3 top-1/2 -translate-y-1/2" />
@@ -142,7 +142,7 @@ function AdminUsers() {
               {/* Parent Summary Card */}
               <div className="bg-white rounded-[2rem] border border-surface-200 shadow-sm p-6 relative overflow-hidden">
                 <div className="absolute top-0 left-0 right-0 h-24 bg-gradient-to-r from-primary-500 to-violet-500"></div>
-                <button onClick={() => setSelectedParent(null)} className="absolute top-4 right-4 p-2 bg-white/20 text-white rounded-full hover:bg-white/30 backdrop-blur-sm transition-colors xl:hidden"><XIcon className="w-4 h-4"/></button>
+                <button onClick={() => setSelectedParent(null)} className="absolute top-4 right-4 z-10 p-2 bg-white/20 text-white rounded-full hover:bg-white/30 backdrop-blur-sm transition-colors"><XIcon className="w-4 h-4"/></button>
                 <div className="relative pt-8 mb-4">
                   <div className="w-20 h-20 bg-white p-1 rounded-2xl shadow-lg mx-auto mb-3">
                     <div className="w-full h-full bg-gradient-to-br from-primary-400 to-violet-500 rounded-xl flex items-center justify-center text-white text-3xl font-black uppercase">
