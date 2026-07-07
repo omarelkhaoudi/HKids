@@ -1,5 +1,6 @@
+import { useState, useEffect } from 'react';
 import { Routes, Route, Navigate, Link, useNavigate, useLocation } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import BookManagement from '../components/admin/BookManagement';
 import CategoryManagement from '../components/admin/CategoryManagement';
@@ -8,13 +9,115 @@ import AdminUsers from '../components/admin/AdminUsers';
 import AdminStatistics from '../components/admin/AdminStatistics';
 import AdminSubscriptions from '../components/admin/AdminSubscriptions';
 import LearningManagement from '../components/admin/LearningManagement';
-import { BookIcon, TagIcon, UserIcon, LogOutIcon, HomeIcon, HistoryIcon, CheckIcon, BrainIcon } from '../components/Icons';
-import { Logo } from '../components/Logo';
+import { 
+  BookIcon, TagIcon, UserIcon, LogOutIcon, HomeIcon, HistoryIcon, 
+  CheckIcon, BrainIcon, SearchIcon, BellIcon, ChevronLeftIcon, PlusIcon,
+  XIcon
+} from '../components/Icons';
+import { Avatar } from '../components/ui';
+
+// QUICK ACTIONS FAB COMPONENT
+const QuickActions = () => {
+  const [isOpen, setIsOpen] = useState(false);
+  
+  return (
+    <div className="fixed bottom-8 right-8 z-50">
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: 20, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.9 }}
+            className="absolute bottom-16 right-0 bg-white rounded-2xl shadow-2xl border border-surface-200 p-2 w-64 mb-2 origin-bottom-right"
+          >
+            <div className="p-2 text-xs font-bold text-surface-400 uppercase tracking-wider">Actions Rapides</div>
+            <Link to="/admin/contents" onClick={() => setIsOpen(false)} className="flex items-center gap-3 w-full p-3 rounded-xl hover:bg-surface-50 text-surface-700 font-medium transition-colors">
+              <div className="bg-primary-50 p-2 rounded-lg text-primary-600"><BookIcon className="w-4 h-4"/></div> Créer une histoire
+            </Link>
+            <Link to="/admin/categories" onClick={() => setIsOpen(false)} className="flex items-center gap-3 w-full p-3 rounded-xl hover:bg-surface-50 text-surface-700 font-medium transition-colors">
+              <div className="bg-emerald-50 p-2 rounded-lg text-emerald-600"><TagIcon className="w-4 h-4"/></div> Ajouter une catégorie
+            </Link>
+            <Link to="/admin/subscriptions" onClick={() => setIsOpen(false)} className="flex items-center gap-3 w-full p-3 rounded-xl hover:bg-surface-50 text-surface-700 font-medium transition-colors">
+              <div className="bg-blue-50 p-2 rounded-lg text-blue-600"><CheckIcon className="w-4 h-4"/></div> Gérer les abonnements
+            </Link>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      <button 
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-14 h-14 bg-surface-900 text-white rounded-full flex items-center justify-center shadow-[0_8px_30px_rgb(0,0,0,0.2)] hover:scale-105 transition-transform"
+      >
+        <motion.div animate={{ rotate: isOpen ? 45 : 0 }}><PlusIcon className="w-6 h-6" /></motion.div>
+      </button>
+    </div>
+  );
+};
+
+// COMMAND PALETTE COMPONENT
+const CommandPalette = ({ isOpen, onClose }) => {
+  const [query, setQuery] = useState('');
+  
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'k' && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault();
+        isOpen ? onClose() : null; // Toggle logic handled by parent usually, but we keep it simple here
+      }
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-start justify-center pt-32 px-4">
+      <div className="fixed inset-0 bg-surface-900/40 backdrop-blur-sm" onClick={onClose}></div>
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.95 }}
+        className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl relative z-10 overflow-hidden border border-surface-200"
+      >
+        <div className="flex items-center p-4 border-b border-surface-100 gap-3">
+          <SearchIcon className="w-6 h-6 text-surface-400" />
+          <input 
+            autoFocus
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Rechercher des histoires, utilisateurs, abonnements..."
+            className="flex-1 bg-transparent border-none outline-none text-lg text-surface-900 placeholder-surface-400"
+          />
+          <div className="flex items-center gap-1 text-xs font-bold text-surface-400 bg-surface-100 px-2 py-1 rounded">ESC</div>
+        </div>
+        <div className="p-2 max-h-96 overflow-y-auto">
+          {query ? (
+            <div className="p-8 text-center text-surface-500 font-medium">Recherche de "{query}"... (UI Only)</div>
+          ) : (
+            <>
+              <div className="p-2 text-xs font-bold text-surface-400 uppercase tracking-wider">Raccourcis</div>
+              <Link to="/admin/contents" onClick={onClose} className="flex items-center gap-3 p-3 rounded-xl hover:bg-surface-50 text-surface-700 transition-colors">
+                <BookIcon className="w-5 h-5 text-surface-400" /> Aller à la gestion des histoires
+              </Link>
+              <Link to="/admin/users" onClick={onClose} className="flex items-center gap-3 p-3 rounded-xl hover:bg-surface-50 text-surface-700 transition-colors">
+                <UserIcon className="w-5 h-5 text-surface-400" /> Aller à la gestion des utilisateurs
+              </Link>
+            </>
+          )}
+        </div>
+      </motion.div>
+    </div>
+  );
+};
 
 function AdminDashboard() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const [isSidebarOpen, setSidebarOpen] = useState(true);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
 
   if (!user) {
     return <Navigate to="/admin/login" replace />;
@@ -27,155 +130,185 @@ function AdminDashboard() {
 
   const isActive = (path) => location.pathname === path;
   const navItems = [
-    { to: '/admin', label: 'Tableau de bord', icon: HomeIcon, end: true },
-    { to: '/admin/contents', label: 'Contenus', icon: BookIcon },
-    { to: '/admin/categories', label: 'Categories', icon: TagIcon },
-    { to: '/admin/learning', label: 'Quiz & Jeux', icon: BrainIcon },
+    { to: '/admin', label: "Vue d'ensemble", icon: HomeIcon, end: true },
+    { to: '/admin/contents', label: 'Histoires CMS', icon: BookIcon },
+    { to: '/admin/categories', label: 'Catégories', icon: TagIcon },
     { to: '/admin/users', label: 'Utilisateurs', icon: UserIcon },
     { to: '/admin/subscriptions', label: 'Abonnements', icon: CheckIcon },
-    { to: '/admin/statistics', label: 'Statistiques', icon: HistoryIcon },
+    { to: '/admin/learning', label: 'Quiz & Jeux', icon: BrainIcon },
+    { to: '/admin/statistics', label: 'Analytique', icon: HistoryIcon },
   ];
 
-  // Composant pour les étoiles animées
-  const StarParticles = ({ count = 15 }) => {
-    return (
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {Array.from({ length: count }).map((_, i) => (
-          <motion.div
-            key={i}
-            className="absolute text-yellow-400"
-            style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-            }}
-            animate={{
-              y: [0, -20, 0],
-              opacity: [0.3, 1, 0.3],
-              scale: [1, 1.2, 1],
-            }}
-            transition={{
-              duration: 3 + Math.random() * 2,
-              repeat: Infinity,
-              delay: Math.random() * 2,
-            }}
-          >
-            <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-            </svg>
-          </motion.div>
-        ))}
-      </div>
-    );
-  };
+  // Listener for CMD+K to open search
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'k' && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault();
+        setIsSearchOpen(true);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-white via-primary-50/30 to-secondary-50/30 text-surface-900 relative overflow-hidden">
-      {/* Étoiles animées en arrière-plan */}
-      <StarParticles count={15} />
+    <div className="min-h-screen bg-[#fafafa] text-surface-900 flex overflow-hidden font-sans">
       
-      {/* Sidebar */}
+      {/* SIDEBAR */}
       <motion.aside
-        initial={{ x: -80, opacity: 0 }}
-        animate={{ x: 0, opacity: 1 }}
-        transition={{ duration: 0.3 }}
-        className="fixed inset-y-0 left-0 w-64 bg-white/90 backdrop-blur-lg border-r border-primary-200/50 z-40 hidden md:flex shadow-xl"
+        initial={false}
+        animate={{ width: isSidebarOpen ? 260 : 72 }}
+        className="bg-white border-r border-surface-200 z-40 hidden md:flex flex-col h-screen shrink-0 transition-all duration-300"
       >
-        <div className="p-6 h-full flex flex-col">
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.15 }}
+        <div className="h-16 flex items-center justify-between px-4 border-b border-surface-100">
+          {isSidebarOpen && <span className="font-black text-xl tracking-tight">HKids <span className="text-primary-500">Admin</span></span>}
+          {!isSidebarOpen && <span className="font-black text-xl tracking-tight mx-auto text-primary-500">H</span>}
+        </div>
+
+        <nav className="flex-1 overflow-y-auto p-3 space-y-1 mt-2">
+          <div className={`text-xs font-bold text-surface-400 uppercase tracking-wider mb-2 px-2 ${!isSidebarOpen && 'text-center'}`}>
+            {isSidebarOpen ? 'Général' : 'Gén'}
+          </div>
+          {navItems.map((item) => {
+            const Icon = item.icon;
+            const active = item.end ? isActive(item.to) : location.pathname.startsWith(item.to);
+
+            return (
+              <Link
+                key={item.to}
+                to={item.to}
+                className={`group flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium transition-all ${
+                  active
+                    ? 'bg-surface-900 text-white shadow-md'
+                    : 'text-surface-600 hover:bg-surface-100 hover:text-surface-900'
+                }`}
+                title={!isSidebarOpen ? item.label : ''}
+              >
+                <Icon className={`w-5 h-5 shrink-0 ${active ? 'text-white' : 'text-surface-400 group-hover:text-surface-600'}`} />
+                {isSidebarOpen && <span className="truncate">{item.label}</span>}
+              </Link>
+            );
+          })}
+        </nav>
+
+        <div className="p-3 border-t border-surface-100">
+          <button
+            onClick={() => setSidebarOpen(!isSidebarOpen)}
+            className="w-full p-2 flex items-center justify-center text-surface-400 hover:text-surface-600 hover:bg-surface-100 rounded-xl transition-colors mb-2"
           >
-            <div className="mb-3">
-              <Logo size="default" showText={true} className="pointer-events-none" />
-            </div>
-            <p className="text-xs text-surface-500 mb-6 uppercase tracking-wide">
-              Tableau de bord administrateur
-            </p>
-          </motion.div>
-
-          <nav className="space-y-1.5 flex-1 text-sm">
-            {navItems.map((item) => {
-              const Icon = item.icon;
-              const active = item.end ? isActive(item.to) : location.pathname.startsWith(item.to);
-
-              return (
-                <Link
-                  key={item.to}
-                  to={item.to}
-                  className={`group flex items-center gap-3 px-4 py-2.5 rounded-3xl font-medium transition-all ${
-                    active
-                      ? 'bg-gradient-to-r from-primary-500 to-secondary-500 text-white shadow-lg'
-                      : 'text-surface-700 hover:bg-primary-50/50 hover:border-primary-200 border border-transparent'
-                  }`}
-                >
-                  <Icon className="w-5 h-5" />
-                  <span>{item.label}</span>
-                </Link>
-              );
-            })}
-          </nav>
-
-          <div className="border-t border-surface-200 pt-5 mt-4 text-xs">
-            <div className="mb-3 p-3 rounded-3xl bg-surface-50 border border-surface-200">
-              <p className="text-surface-500 mb-1">Connecté en tant que</p>
-              <p className="font-medium text-surface-900 flex items-center gap-2">
-                <UserIcon className="w-4 h-4" />
-                {user.username}
-              </p>
-            </div>
-            <button
-              onClick={handleLogout}
-              className="w-full px-4 py-2.5 rounded-3xl bg-gradient-to-r from-primary-500 to-secondary-500 text-white font-medium hover:from-primary-600 hover:to-secondary-600 transition-all flex items-center justify-center gap-2 text-sm shadow-lg hover:shadow-xl"
-            >
-              <LogOutIcon className="w-4 h-4" />
-              <span>Déconnexion</span>
-            </button>
+            <ChevronLeftIcon className={`w-5 h-5 transition-transform ${!isSidebarOpen ? 'rotate-180' : ''}`} />
+          </button>
+          <div className={`flex items-center gap-3 p-2 rounded-xl bg-surface-50 border border-surface-200 ${!isSidebarOpen && 'justify-center'}`}>
+            <Avatar fallback={user.username.charAt(0).toUpperCase()} className="w-8 h-8 bg-gradient-to-br from-primary-400 to-violet-500 text-white font-bold shrink-0" />
+            {isSidebarOpen && (
+              <div className="overflow-hidden flex-1">
+                <p className="text-sm font-bold text-surface-900 truncate">{user.username}</p>
+                <p className="text-xs text-surface-500 truncate">{user.email || 'admin@hkids.com'}</p>
+              </div>
+            )}
           </div>
         </div>
       </motion.aside>
 
-      {/* Main Content */}
-      <motion.main
-        initial={{ opacity: 0, x: 16 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ delay: 0.25 }}
-        className="md:ml-64 relative z-10"
-      >
-        {/* Top bar for mobile */}
-        <header className="md:hidden sticky top-0 z-30 bg-white/90 backdrop-blur-lg border-b border-primary-200/50 px-4 py-3 flex items-center justify-between shadow-sm">
-          <Logo size="small" />
-          <div className="flex items-center gap-3 text-xs text-surface-600">
-            <span className="hidden xs:inline-flex items-center gap-1 px-2 py-1 rounded-full bg-primary-50 border border-primary-200">
-              <UserIcon className="w-3 h-3 text-primary-600" />
-              {user.username}
-            </span>
+      {/* MAIN LAYOUT */}
+      <div className="flex-1 flex flex-col h-screen overflow-hidden relative">
+        
+        {/* TOP BAR */}
+        <header className="h-16 bg-white/80 backdrop-blur-md border-b border-surface-200 flex items-center justify-between px-6 z-30 shrink-0">
+          <div className="flex items-center gap-4">
+            <div className="hidden md:flex items-center gap-2 text-sm text-surface-500 font-medium">
+              <span>Admin</span>
+              <span>/</span>
+              <span className="text-surface-900 font-bold capitalize">
+                {location.pathname.split('/')[2] || "Vue d'ensemble"}
+              </span>
+            </div>
+            {/* Mobile branding */}
+            <div className="md:hidden font-black text-lg">HKids Admin</div>
+          </div>
+
+          <div className="flex items-center gap-4">
+            <button 
+              onClick={() => setIsSearchOpen(true)}
+              className="hidden md:flex items-center gap-2 bg-surface-100 hover:bg-surface-200 text-surface-500 px-3 py-1.5 rounded-lg transition-colors text-sm font-medium border border-surface-200 w-64"
+            >
+              <SearchIcon className="w-4 h-4" />
+              <span>Rechercher...</span>
+              <div className="ml-auto flex gap-1">
+                <kbd className="bg-white px-1.5 rounded text-xs font-sans shadow-sm">⌘</kbd>
+                <kbd className="bg-white px-1.5 rounded text-xs font-sans shadow-sm">K</kbd>
+              </div>
+            </button>
+            <button className="md:hidden p-2 text-surface-500 hover:bg-surface-100 rounded-full" onClick={() => setIsSearchOpen(true)}>
+              <SearchIcon className="w-5 h-5" />
+            </button>
+
+            <div className="relative">
+              <button 
+                onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
+                className="p-2 text-surface-500 hover:bg-surface-100 rounded-full relative transition-colors"
+              >
+                <BellIcon className="w-5 h-5" />
+                <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-rose-500 rounded-full border-2 border-white"></span>
+              </button>
+              <AnimatePresence>
+                {isNotificationsOpen && (
+                  <motion.div 
+                    initial={{ opacity: 0, y: 10, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                    className="absolute right-0 mt-2 w-80 bg-white rounded-2xl shadow-xl border border-surface-200 overflow-hidden z-50 origin-top-right"
+                  >
+                    <div className="p-4 border-b border-surface-100 flex justify-between items-center bg-surface-50">
+                      <h3 className="font-bold text-surface-900">Notifications</h3>
+                      <button className="text-xs text-primary-600 font-bold hover:underline">Tout marquer lu</button>
+                    </div>
+                    <div className="max-h-64 overflow-y-auto">
+                      <div className="p-4 border-b border-surface-100 hover:bg-surface-50 cursor-pointer">
+                        <p className="text-sm font-bold text-surface-900">Nouvel abonnement 🎉</p>
+                        <p className="text-xs text-surface-500 mt-1">Un parent vient de souscrire à la Formule Lecture.</p>
+                        <p className="text-xs text-surface-400 mt-2">Il y a 2 min</p>
+                      </div>
+                      <div className="p-4 border-b border-surface-100 hover:bg-surface-50 cursor-pointer">
+                        <p className="text-sm font-bold text-surface-900">Alerte Système</p>
+                        <p className="text-xs text-surface-500 mt-1">Mise à jour des modèles vocaux terminée avec succès.</p>
+                        <p className="text-xs text-surface-400 mt-2">Il y a 1h</p>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+            
             <button
               onClick={handleLogout}
-              className="px-3 py-1 rounded-2xl bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600 text-xs font-medium text-white flex items-center gap-1 transition-all shadow-sm"
+              className="p-2 text-surface-500 hover:bg-rose-50 hover:text-rose-600 rounded-full transition-colors"
+              title="Déconnexion"
             >
-              <LogOutIcon className="w-3 h-3" />
-              <span>Quitter</span>
+              <LogOutIcon className="w-5 h-5" />
             </button>
           </div>
         </header>
 
-        <div className="relative z-10">
-          <Routes>
-            <Route index element={<AdminOverview />} />
-            <Route path="contents" element={<BookManagement />} />
-            <Route path="categories" element={<CategoryManagement />} />
-            <Route path="learning" element={<LearningManagement />} />
-            <Route path="users" element={<AdminUsers />} />
-            <Route path="subscriptions" element={<AdminSubscriptions />} />
-            <Route path="statistics" element={<AdminStatistics />} />
-            <Route path="*" element={<Navigate to="/admin" replace />} />
-          </Routes>
-        </div>
-      </motion.main>
+        {/* MAIN SCROLLABLE AREA */}
+        <main className="flex-1 overflow-y-auto bg-[#fafafa]">
+          <div className="max-w-7xl mx-auto p-4 md:p-8">
+            <Routes>
+              <Route index element={<AdminOverview />} />
+              <Route path="contents" element={<BookManagement />} />
+              <Route path="categories" element={<CategoryManagement />} />
+              <Route path="learning" element={<LearningManagement />} />
+              <Route path="users" element={<AdminUsers />} />
+              <Route path="subscriptions" element={<AdminSubscriptions />} />
+              <Route path="statistics" element={<AdminStatistics />} />
+              <Route path="*" element={<Navigate to="/admin" replace />} />
+            </Routes>
+          </div>
+        </main>
+        
+        <QuickActions />
+        <CommandPalette isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
+      </div>
     </div>
   );
 }
 
 export default AdminDashboard;
-

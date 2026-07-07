@@ -1,22 +1,54 @@
 import { useEffect, useState } from 'react';
+import { motion } from 'framer-motion';
 import { adminAPI } from '../../api/admin';
-import { AdminMetricCard, formatAdminDate, formatAdminDuration } from './AdminMetricCard';
-import { AudioIcon, BookIcon, ClockIcon, HistoryIcon, UserIcon } from '../Icons';
+import { formatAdminDate, formatAdminDuration } from './AdminMetricCard';
+import { AudioIcon, BookIcon, ClockIcon, HistoryIcon, UserIcon, ArrowRightIcon, SparklesIcon } from '../Icons';
 
-function BarRow({ label, value, max, detail }) {
-  const width = max > 0 ? Math.max(4, Math.round((Number(value || 0) / max) * 100)) : 0;
+function BarRow({ label, value, max, detail, colorClass = "bg-primary-500", icon: Icon }) {
+  const width = max > 0 ? Math.max(8, Math.round((Number(value || 0) / max) * 100)) : 0;
 
   return (
-    <div className="space-y-2 rounded-3xl bg-surface-50 p-3">
-      <div className="flex items-center justify-between gap-3 text-sm">
-        <span className="font-bold text-surface-900">{label}</span>
-        <span className="font-bold text-primary-600">{value || 0}</span>
+    <div className="group relative">
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center gap-2">
+          {Icon && <Icon className="w-4 h-4 text-surface-400" />}
+          <span className="font-bold text-surface-900 text-sm truncate max-w-[200px]">{label}</span>
+        </div>
+        <span className="font-black text-surface-900 text-sm">{value || 0}</span>
       </div>
-      <div className="h-2 overflow-hidden rounded-full bg-surface-200">
-        <div className="h-full rounded-full bg-gradient-to-r from-primary-500 to-secondary-500" style={{ width: `${width}%` }} />
+      <div className="h-2.5 overflow-hidden rounded-full bg-surface-100 flex items-center">
+        <motion.div 
+          initial={{ width: 0 }}
+          animate={{ width: `${width}%` }}
+          transition={{ duration: 1, type: "spring", bounce: 0.2 }}
+          className={`h-full rounded-full ${colorClass}`} 
+        />
       </div>
-      {detail && <p className="text-xs text-surface-500">{detail}</p>}
+      {detail && <p className="text-xs text-surface-400 font-medium mt-1.5">{detail}</p>}
     </div>
+  );
+}
+
+function StatCard({ title, value, detail, icon: Icon, tone, index }) {
+  return (
+    <motion.div 
+      initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.1 }}
+      className="bg-white p-6 rounded-[2rem] border border-surface-200 shadow-sm relative overflow-hidden group"
+    >
+      <div className={`absolute -right-6 -top-6 w-24 h-24 rounded-full opacity-20 transition-transform group-hover:scale-150 duration-700 ${tone.split(' ')[0]}`}></div>
+      <div className="relative z-10 flex flex-col h-full">
+        <div className="flex items-center justify-between mb-4">
+          <div className={`p-3 rounded-2xl ${tone}`}>
+            <Icon className="w-6 h-6" />
+          </div>
+        </div>
+        <div className="mt-auto">
+          <span className="block text-3xl font-black text-surface-900 tracking-tight">{value}</span>
+          <span className="block text-sm font-bold text-surface-500 uppercase tracking-wider mt-1">{title}</span>
+          <span className="block text-xs font-medium text-surface-400 mt-2">{detail}</span>
+        </div>
+      </div>
+    </motion.div>
   );
 }
 
@@ -36,12 +68,18 @@ function AdminStatistics() {
         setLoading(false);
       }
     };
-
     loadStats();
   }, []);
 
   if (loading) {
-    return <div className="p-8 text-center text-surface-500">Chargement des statistiques...</div>;
+    return (
+      <div className="space-y-6 pb-12">
+        <div className="h-10 bg-surface-200 rounded-lg w-1/4 animate-pulse"></div>
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+          {[1,2,3,4].map(i => <div key={i} className="h-40 bg-white rounded-[2rem] border border-surface-200 animate-pulse"></div>)}
+        </div>
+      </div>
+    );
   }
 
   const summary = data?.summary || {};
@@ -49,88 +87,65 @@ function AdminStatistics() {
   const maxCategoryListens = Math.max(0, ...(data?.top_categories || []).map((item) => Number(item.listens_count || 0)));
 
   return (
-    <div className="space-y-6 p-6">
-      <div>
-        <p className="text-sm font-bold uppercase tracking-wide text-primary-600">Admin</p>
-        <h1 className="mt-1 text-3xl font-black text-surface-900">Statistiques</h1>
-        <p className="mt-2 text-surface-500">Ecoutes, contenus populaires et utilisateurs actifs.</p>
+    <div className="space-y-8 pb-12">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-black text-surface-900 tracking-tight">Analytique</h1>
+          <p className="text-surface-500 font-medium mt-1">Performances et usage de la plateforme.</p>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <AdminMetricCard label="Ecoutes" value={summary.total_listens || 0} detail="sessions totales" icon={AudioIcon} tone="bg-purple-50 text-purple-600" />
-        <AdminMetricCard label="Temps total" value={formatAdminDuration(summary.total_listening_seconds)} detail="ecoute cumulee" icon={ClockIcon} tone="bg-accent-50 text-accent-600" />
-        <AdminMetricCard label="Temps moyen" value={formatAdminDuration(summary.average_listening_seconds)} detail="par session" icon={HistoryIcon} tone="bg-primary-50 text-primary-600" />
-        <AdminMetricCard label="Utilisateurs actifs" value={summary.active_children || 0} detail="enfants avec activite" icon={UserIcon} tone="bg-green-50 text-green-600" />
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-4">
+        <StatCard index={0} title="Écoutes" value={summary.total_listens || 0} detail="Sessions totales démarrées" icon={AudioIcon} tone="bg-purple-100 text-purple-600" />
+        <StatCard index={1} title="Temps Total" value={formatAdminDuration(summary.total_listening_seconds)} detail="Volume d'écoute cumulé" icon={ClockIcon} tone="bg-emerald-100 text-emerald-600" />
+        <StatCard index={2} title="Temps Moyen" value={formatAdminDuration(summary.average_listening_seconds)} detail="Durée moyenne par session" icon={HistoryIcon} tone="bg-blue-100 text-blue-600" />
+        <StatCard index={3} title="Enfants Actifs" value={summary.active_children || 0} detail="Profils ayant une activité" icon={UserIcon} tone="bg-amber-100 text-amber-600" />
       </div>
 
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
-        <section className="rounded-2xl border border-primary-100 bg-white/90 p-5 shadow-lg">
-          <h2 className="text-lg font-black text-surface-900">Histoires les plus ecoutees</h2>
-          <div className="mt-4 space-y-3">
-            {(data?.top_books || []).map((book) => (
+        {/* TOP STORIES */}
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="bg-white rounded-[2rem] p-8 border border-surface-200 shadow-sm">
+          <div className="flex items-center justify-between mb-8">
+            <h2 className="text-xl font-black text-surface-900">Histoires les plus populaires</h2>
+            <button className="text-primary-600 hover:text-primary-700 bg-primary-50 p-2 rounded-xl transition-colors"><ArrowRightIcon className="w-5 h-5"/></button>
+          </div>
+          <div className="space-y-6">
+            {(data?.top_books || []).slice(0,5).map((book, i) => (
               <BarRow
                 key={book.id}
                 label={book.title}
                 value={book.listens_count}
                 max={maxBookListens}
-                detail={formatAdminDuration(book.listening_seconds)}
+                detail={`Temps total: ${formatAdminDuration(book.listening_seconds)}`}
+                colorClass={`bg-gradient-to-r from-primary-400 to-violet-500`}
+                icon={BookIcon}
               />
             ))}
           </div>
-        </section>
+        </motion.div>
 
-        <section className="rounded-2xl border border-primary-100 bg-white/90 p-5 shadow-lg">
-          <h2 className="text-lg font-black text-surface-900">Categories populaires</h2>
-          <div className="mt-4 space-y-3">
-            {(data?.top_categories || []).map((category) => (
+        {/* TOP CATEGORIES */}
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }} className="bg-white rounded-[2rem] p-8 border border-surface-200 shadow-sm">
+          <div className="flex items-center justify-between mb-8">
+            <h2 className="text-xl font-black text-surface-900">Catégories phares</h2>
+            <button className="text-emerald-600 hover:text-emerald-700 bg-emerald-50 p-2 rounded-xl transition-colors"><ArrowRightIcon className="w-5 h-5"/></button>
+          </div>
+          <div className="space-y-6">
+            {(data?.top_categories || []).slice(0,5).map((category) => (
               <BarRow
                 key={category.id}
                 label={category.name}
                 value={category.listens_count}
                 max={maxCategoryListens}
-                detail={formatAdminDuration(category.listening_seconds)}
+                detail={`Temps total: ${formatAdminDuration(category.listening_seconds)}`}
+                colorClass={`bg-gradient-to-r from-emerald-400 to-teal-500`}
+                icon={SparklesIcon}
               />
             ))}
           </div>
-        </section>
+        </motion.div>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
-        <section className="rounded-2xl border border-primary-100 bg-white/90 p-5 shadow-lg">
-          <h2 className="text-lg font-black text-surface-900">Utilisateurs actifs</h2>
-          <div className="mt-4 space-y-3">
-            {(data?.active_users || []).map((kid) => (
-              <div key={kid.id} className="rounded-3xl bg-surface-50 p-4">
-                <div className="flex items-center justify-between gap-3">
-                  <div>
-                    <p className="font-bold text-surface-900">{kid.name}</p>
-                    <p className="text-xs text-surface-500">Parent: {kid.parent_name}</p>
-                  </div>
-                  <span className="rounded-full bg-white px-3 py-1 text-xs font-bold text-primary-600 shadow-sm">
-                    {kid.sessions_count || 0} session(s)
-                  </span>
-                </div>
-                <p className="mt-2 text-xs text-surface-500">Derniere activite: {formatAdminDate(kid.last_activity_at)}</p>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        <section className="rounded-2xl border border-primary-100 bg-white/90 p-5 shadow-lg">
-          <h2 className="flex items-center gap-2 text-lg font-black text-surface-900">
-            <BookIcon className="h-5 w-5 text-primary-500" />
-            Dernieres activites
-          </h2>
-          <div className="mt-4 space-y-3">
-            {(data?.recent_activity || []).map((item) => (
-              <div key={item.id} className="rounded-3xl bg-surface-50 p-4">
-                <p className="font-bold text-surface-900">{item.kid_name} - {item.book_title}</p>
-                <p className="text-xs text-surface-500">{formatAdminDuration(item.duration_seconds)} - {formatAdminDate(item.created_at)}</p>
-              </div>
-            ))}
-          </div>
-        </section>
-      </div>
     </div>
   );
 }
