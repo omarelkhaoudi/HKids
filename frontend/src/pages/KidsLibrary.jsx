@@ -218,7 +218,7 @@ function KidsLibrary() {
   const offlineContent = useOfflineContent();
 
   useEffect(() => {
-    if (!user || user.role !== 'kid') {
+    if (!user) {
       navigate('/parent/login');
       return;
     }
