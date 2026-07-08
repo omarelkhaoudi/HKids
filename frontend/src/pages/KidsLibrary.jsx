@@ -18,7 +18,7 @@ import { VoiceAssistant } from '../components/kids/VoiceAssistant';
 import {
   AudioIcon, BookIcon, DownloadIcon, HeartIcon, PlayIcon, PauseIcon,
   SearchIcon, SparklesIcon, ChevronLeftIcon, ChevronRightIcon,
-  ClockIcon, InfoIcon, ShieldIcon
+  ClockIcon, InfoIcon, ShieldIcon, HomeIcon
 } from '../components/Icons';
 import { Logo } from '../components/Logo';
 
