@@ -1191,52 +1191,40 @@ function BookReader() {
  className={`absolute top-0 inset-x-0 z-40 px-6 py-4 flex items-center justify-between backdrop-blur-xl border-b border-white/10 ${navThemeColors[themeMode]} shadow-soft`}
  >
  <div className="flex items-center gap-4">
- <Button 
- variant="ghost" 
- size="icon" 
- onClick={() => navigate('/')}
- className={`rounded-full ${themeMode === 'night' ? 'hover:bg-card/10 text-white' : 'hover:bg-black/5'}`}
- >
- <HomeIcon className="w-6 h-6" />
- </Button>
- <div>
- <h1 className="text-xl font-bold line-clamp-1">{book.title}</h1>
- {book.author && <p className="text-sm opacity-70">par {book.author}</p>}
- </div>
- </div>
+  <Button 
+    variant="ghost" 
+    size="icon" 
+    onClick={() => navigate('/')}
+    className={`rounded-full w-14 h-14 bg-white/20 hover:bg-white/40 shadow-sm`}
+  >
+    <HomeIcon className="w-8 h-8 text-primary-700" />
+  </Button>
+  <div>
+    <h1 className="text-2xl font-black text-primary-800 line-clamp-1">{book.title}</h1>
+  </div>
+</div>
 
- <div className="flex items-center gap-3">
- <Badge variant="glass" className="hidden md:flex gap-2 items-center px-4 py-2 border-none bg-black/5 /10 text-inherit">
- <span className="opacity-70">Temps de lecture:</span>
- <span className="font-mono font-bold">{Math.floor(readingTime / 60)}m {readingTime % 60}s</span>
- </Badge>
- 
- <Button 
- variant="ghost" 
- size="icon" 
- onClick={() => setIsFavorite(!isFavorite)}
- className={`rounded-full transition-transform hover:scale-110 ${isFavorite ? 'text-danger-500' : ''} ${themeMode === 'night' ? 'hover:bg-card/10 text-white' : 'hover:bg-black/5'}`}
- >
- <svg className="w-6 h-6" fill={isFavorite ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
- <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
- </svg>
- </Button>
+<div className="flex items-center gap-4">
+  <Button 
+    variant="ghost" 
+    size="icon" 
+    onClick={() => setIsFavorite(!isFavorite)}
+    className={`rounded-full w-14 h-14 bg-white/20 hover:bg-white/40 shadow-sm transition-transform hover:scale-110 ${isFavorite ? 'text-danger-500' : 'text-primary-700'}`}
+  >
+    <svg className="w-8 h-8" fill={isFavorite ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+    </svg>
+  </Button>
 
- <div className="flex bg-black/5 /10 rounded-full p-1">
- <button onClick={() => setThemeMode('day')} className={`p-2 rounded-full transition-colors ${themeMode === 'day' ? 'bg-card shadow-sm' : 'opacity-50'}`}>☀️</button>
- <button onClick={() => setThemeMode('sepia')} className={`p-2 rounded-full transition-colors ${themeMode === 'sepia' ? 'bg-[#fbf0d9] shadow-sm' : 'opacity-50'}`}>📖</button>
- <button onClick={() => setThemeMode('night')} className={`p-2 rounded-full transition-colors ${themeMode === 'night' ? 'bg-[#1e293b] shadow-sm' : 'opacity-50'}`}>🌙</button>
- </div>
-
- <Button 
- variant="ghost" 
- size="icon" 
- onClick={() => setShowReadingAid(true)}
- className={`rounded-full ${themeMode === 'night' ? 'hover:bg-card/10 text-white' : 'hover:bg-black/5'}`}
- >
- <SettingsIcon className="w-6 h-6" />
- </Button>
- </div>
+  <Button 
+    variant="ghost" 
+    size="icon" 
+    onClick={() => setShowReadingAid(true)}
+    className={`rounded-full w-14 h-14 bg-white/20 hover:bg-white/40 shadow-sm text-primary-700`}
+  >
+    <SettingsIcon className="w-8 h-8" />
+  </Button>
+</div>
  </motion.header>
  )}
  </AnimatePresence>
@@ -1255,13 +1243,21 @@ function BookReader() {
  {/* Main Content Area */}
  <div className="relative flex-1 w-full h-full flex items-center justify-center p-4 md:p-12 overflow-hidden">
  
- {/* Invisible Click Areas for Navigation */}
- <div className="absolute left-0 inset-y-0 w-1/4 z-10 cursor-pointer hidden md:flex items-center justify-start px-4 opacity-0 hover:opacity-100 transition-opacity" onClick={(e) => {e.stopPropagation(); prevPage();}}>
- {!isFirstPage && <ChevronLeftIcon className="w-16 h-16 opacity-30" />}
- </div>
- <div className="absolute right-0 inset-y-0 w-1/4 z-10 cursor-pointer hidden md:flex items-center justify-end px-4 opacity-0 hover:opacity-100 transition-opacity" onClick={(e) => {e.stopPropagation(); nextPage();}}>
- {!isLastPage && <ChevronRightIcon className="w-16 h-16 opacity-30" />}
- </div>
+ {/* Big Visible Arrows for Navigation */}
+  <div className="absolute left-4 inset-y-0 z-20 flex items-center justify-start pointer-events-none">
+    {!isFirstPage && (
+      <button onClick={(e) => {e.stopPropagation(); prevPage();}} className="pointer-events-auto w-20 h-20 bg-white/60 backdrop-blur-md rounded-full flex items-center justify-center shadow-lg hover:bg-white hover:scale-110 active:scale-95 transition-all border-4 border-white/40">
+        <ChevronLeftIcon className="w-10 h-10 text-primary-600" />
+      </button>
+    )}
+  </div>
+  <div className="absolute right-4 inset-y-0 z-20 flex items-center justify-end pointer-events-none">
+    {!isLastPage && (
+      <button onClick={(e) => {e.stopPropagation(); nextPage();}} className="pointer-events-auto w-20 h-20 bg-white/60 backdrop-blur-md rounded-full flex items-center justify-center shadow-lg hover:bg-white hover:scale-110 active:scale-95 transition-all border-4 border-white/40">
+        <ChevronRightIcon className="w-10 h-10 text-primary-600" />
+      </button>
+    )}
+  </div>
 
  {/* The Book Canvas */}
  <div className="relative w-full max-w-5xl h-full flex items-center justify-center" style={{perspective: '1200px'}}>
@@ -1341,38 +1337,34 @@ function BookReader() {
  animate={{y: 0, opacity: 1, scale: 1}}
  exit={{y: 50, opacity: 0, scale: 0.9}}
  onClick={(e) => e.stopPropagation()}
- className={`pointer-events-auto flex items-center gap-4 px-6 py-3 rounded-full backdrop-blur-xl border border-white/20 shadow-floating ${navThemeColors[themeMode]}`}
+ className={`pointer-events-auto flex items-center gap-6 px-4 py-4 rounded-[40px] backdrop-blur-xl border-4 border-white/40 shadow-floating bg-white/30`}
  >
- <div className="flex items-center gap-2 pr-4 border-r border-current/10">
- <span className="text-xs font-bold opacity-70 uppercase tracking-widest">{selectedNarrationProfile.label}</span>
- </div>
- 
- <button 
- onClick={toggleAudio}
- disabled={isExtracting || (!currentPageData?.content && !currentPageData?.image_path)}
- className={`p-3 rounded-full shadow-md transition-transform hover:scale-110 active:scale-95 ${isPlaying ? 'bg-primary-500 text-white' : 'bg-card text-foreground'} ${isExtracting ? 'opacity-50 cursor-not-allowed' : ''}`}
- >
- {isExtracting ? (
- <motion.div animate={{rotate: 360}} transition={{repeat: Infinity, ease: 'linear'}} className="w-5 h-5 border-2 border-current border-t-transparent rounded-full" />
- ) : isPlaying ? (
- <PauseIcon className="w-5 h-5" />
- ) : (
- <PlayIcon className="w-5 h-5 ml-1" />
- )}
- </button>
+              <button 
+                onClick={toggleAudio}
+                disabled={isExtracting || (!currentPageData?.content && !currentPageData?.image_path)}
+                className={`w-24 h-24 rounded-full flex items-center justify-center shadow-glow transition-transform hover:scale-110 active:scale-95 ${isPlaying ? 'bg-primary-500 text-white' : 'bg-gradient-to-r from-purple-500 to-secondary-500 text-white'} ${isExtracting ? 'opacity-50 cursor-not-allowed' : ''}`}
+              >
+                {isExtracting ? (
+                  <motion.div animate={{rotate: 360}} transition={{repeat: Infinity, ease: 'linear'}} className="w-10 h-10 border-4 border-white border-t-transparent rounded-full" />
+                ) : isPlaying ? (
+                  <PauseIcon className="w-12 h-12" />
+                ) : (
+                  <PlayIcon className="w-12 h-12 ml-2" />
+                )}
+              </button>
 
- {isPlaying && (
- <div className="flex items-center gap-1 pl-2">
- {[1,2,3,4,5].map(i => (
- <motion.div
- key={i}
- animate={{height: [8, 24, 8]}}
- transition={{duration: 0.8, repeat: Infinity, delay: i * 0.1}}
- className="w-1 bg-primary-500 rounded-full"
- />
- ))}
- </div>
- )}
+              {isPlaying && (
+                <div className="flex items-center gap-3 pr-6">
+                  {[1,2,3,4,5].map(i => (
+                    <motion.div
+                      key={i}
+                      animate={{height: [12, 36, 12]}}
+                      transition={{duration: 0.8, repeat: Infinity, delay: i * 0.1}}
+                      className="w-3 bg-primary-500 rounded-full"
+                    />
+                  ))}
+                </div>
+              )}
  </motion.div>
  )}
  </AnimatePresence>
@@ -1380,11 +1372,14 @@ function BookReader() {
 
  {/* Persistent Bottom Progress Bar */}
  <div className="absolute bottom-0 inset-x-0 z-30 px-4 md:px-12 pb-6 pt-10 bg-gradient-to-t from-black/20 to-transparent flex flex-col justify-end pointer-events-none">
- <div className="flex items-center justify-between text-xs font-bold opacity-70 mb-2">
- <span>Page {currentPage + 1} sur {totalPages}</span>
- <span>{Math.round(progress)}% complété</span>
- </div>
- <ProgressBar progress={progress} color="bg-primary-500" className="opacity-80" />
+        <div className="w-full max-w-4xl mx-auto h-4 bg-black/10 rounded-full overflow-hidden border border-white/20 shadow-inner">
+          <motion.div 
+            className="h-full bg-gradient-to-r from-primary-400 to-secondary-400 rounded-full"
+            initial={{width: 0}}
+            animate={{width: `${progress}%`}}
+            transition={{duration: 0.5}}
+          />
+        </div>
  </div>
 
  {/* End of Book Celebration Modal */}
@@ -1398,20 +1393,9 @@ function BookReader() {
  >
  <StarIcon className="w-12 h-12 text-white" />
  </motion.div>
- <h2 className="text-3xl font-black mb-2 text-foreground">Félicitations !</h2>
- <p className="text-foreground-secondary mb-6">Tu as terminé"{book.title}"</p>
+          <h2 className="text-4xl font-black mb-2 text-primary-600">Bravo !</h2>
+          <p className="text-xl font-bold text-foreground-secondary mb-8">Tu as terminé "{book.title}"</p>
  
- <div className="grid grid-cols-2 gap-4 mb-8">
- <div className="bg-surface-secondary p-4 rounded-2xl">
- <div className="text-2xl font-bold text-foreground-500">{totalPages}</div>
- <div className="text-xs uppercase font-bold text-foreground-muted">Pages Lues</div>
- </div>
- <div className="bg-surface-secondary p-4 rounded-2xl">
- <div className="text-2xl font-bold text-foreground-secondary-500">{Math.floor(readingTime / 60)}m {readingTime % 60}s</div>
- <div className="text-xs uppercase font-bold text-foreground-muted">Temps</div>
- </div>
- </div>
-
  <div className="flex flex-col gap-3">
  <Button variant="primary" fullWidth onClick={() => navigate('/')}>
  Lire une autre histoire
