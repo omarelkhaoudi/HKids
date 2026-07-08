@@ -21,6 +21,7 @@ import {
   ClockIcon, InfoIcon, ShieldIcon, HomeIcon
 } from '../components/Icons';
 import { Logo } from '../components/Logo';
+import { BookGridSkeleton } from '../components/SkeletonLoader';
 
 // --- THEMES & CONSTANTS ---
 const themes = [
