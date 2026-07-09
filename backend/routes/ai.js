@@ -4,6 +4,10 @@ import { verifyToken } from './auth.js';
 import { getVoiceAssistantReply } from '../services/ai/voiceAssistantService.js';
 import { transcribeAudio } from '../services/ai/SpeechToTextService.js';
 import { aiErrorResponse } from '../services/ai/errors.js';
+import {
+  loadVoiceAssistantContext,
+  normalizeConversation
+} from '../services/ai/voiceAssistantContextService.js';
 
 const router = express.Router();
 const upload = multer({
@@ -59,7 +63,12 @@ router.post('/transcribe', verifyToken, upload.single('audio'), async (req, res)
 
 router.post('/voice-assistant', verifyToken, async (req, res) => {
   try {
-    const { transcript } = req.body;
+    const {
+      transcript,
+      conversation,
+      kid_profile_id: requestedKidProfileId,
+      language: requestedLanguage
+    } = req.body;
 
     if (typeof transcript !== 'string') {
       return res.status(400).json({ error: 'transcript is required' });
@@ -69,9 +78,18 @@ router.post('/voice-assistant', verifyToken, async (req, res) => {
       return res.status(403).json({ error: 'Access denied' });
     }
 
+    const assistantContext = await loadVoiceAssistantContext({
+      user: req.user,
+      requestedKidProfileId,
+      requestedLanguage
+    });
+
     const reply = await getVoiceAssistantReply({
       transcript,
       user: req.user,
+      context: assistantContext,
+      conversation: normalizeConversation(conversation),
+      requestedLanguage
     });
 
     res.json(reply);
