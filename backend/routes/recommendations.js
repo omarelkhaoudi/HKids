@@ -3,6 +3,13 @@ import crypto from 'crypto';
 import { getDatabase } from '../database/init.js';
 import { verifyToken } from './auth.js';
 import { RecommendationService } from '../services/ai/RecommendationService.js';
+import {
+  filterAllowedContent,
+  getGlobalAccessViolation,
+  loadChildAccessPolicy,
+  sendParentalAccessError,
+  serializePolicyForClient
+} from '../services/parental/parentalAccessService.js';
 
 const router = express.Router();
 const recommendationService = new RecommendationService();
@@ -18,10 +25,10 @@ function getPool() {
   }
 }
 
-function getCacheKey({ kidProfileId, context }) {
+function getCacheKey({ kidProfileId, context, policy }) {
   const contextHash = crypto
     .createHash('sha1')
-    .update(JSON.stringify(context || {}))
+    .update(JSON.stringify({ context: context || {}, policy: policy || {} }))
     .digest('hex');
   return `${kidProfileId}:${contextHash}`;
 }
@@ -93,8 +100,20 @@ router.post('/', verifyToken, async (req, res) => {
       return res.status(403).json({ error: 'Kid profile required or not authorized' });
     }
 
+    const policy = await loadChildAccessPolicy({
+      user: req.user,
+      requestedKidProfileId,
+      pool
+    });
+    const globalViolation = getGlobalAccessViolation(policy);
+    if (globalViolation) return sendParentalAccessError(res, globalViolation);
+
     const context = normalizeClientContext(req.body);
-    const cacheKey = getCacheKey({ kidProfileId: kid.id, context });
+    const cacheKey = getCacheKey({
+      kidProfileId: kid.id,
+      context,
+      policy: serializePolicyForClient(policy)
+    });
     const cached = getCachedRecommendations(cacheKey);
 
     if (cached) {
@@ -176,9 +195,10 @@ router.post('/', verifyToken, async (req, res) => {
       [kid.id, kid.age || null]
     );
 
+    const allowedContents = filterAllowedContent(policy, result.rows);
     const recommendations = await recommendationService.recommendContent({
       kid,
-      contents: result.rows,
+      contents: allowedContents,
       context,
     });
 

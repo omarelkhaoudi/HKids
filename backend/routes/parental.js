@@ -3,6 +3,14 @@ import bcrypt from 'bcryptjs';
 import { getDatabase } from '../database/init.js';
 import { verifyToken } from './auth.js';
 import { logSecurityEvent } from '../services/security/auditLog.js';
+import {
+  filterAllowedContent,
+  getContentAccessViolation,
+  getGlobalAccessViolation,
+  loadChildAccessPolicy,
+  sendParentalAccessError,
+  serializePolicyForClient
+} from '../services/parental/parentalAccessService.js';
 
 const router = express.Router();
 
@@ -760,13 +768,20 @@ router.post('/reading-progress', verifyToken, async (req, res) => {
 
     const pool = getPool();
     const bookCheck = await pool.query(
-      'SELECT id FROM books WHERE id = $1 AND is_published = TRUE',
+      `SELECT b.*, c.name AS category_name
+       FROM books b
+       LEFT JOIN categories c ON c.id = b.category_id
+       WHERE b.id = $1 AND b.is_published = TRUE`,
       [book_id]
     );
 
     if (bookCheck.rows.length === 0) {
       return res.status(404).json({ error: 'Book not found' });
     }
+
+    const policy = await loadChildAccessPolicy({ user: req.user, pool });
+    const violation = getContentAccessViolation(policy, bookCheck.rows[0]);
+    if (violation) return sendParentalAccessError(res, violation);
 
     const progressResult = await pool.query(
       `INSERT INTO kid_reading_progress (
@@ -861,6 +876,24 @@ router.get('/me/overview', verifyToken, async (req, res) => {
   } catch (err) {
     console.error('Error fetching connected kid overview:', err);
     res.status(500).json({ error: 'Database error' });
+  }
+});
+
+router.get('/me/access-policy', verifyToken, async (req, res) => {
+  try {
+    if (req.user.role !== 'kid' || !req.user.kid_profile_id) {
+      return res.status(403).json({ error: 'Access denied. Kid account required.' });
+    }
+
+    const policy = await loadChildAccessPolicy({ user: req.user });
+    res.json(serializePolicyForClient(policy));
+  } catch (error) {
+    console.error('Error fetching connected kid access policy:', error);
+    res.status(503).json({
+      error: 'Le contrôle parental est momentanément indisponible.',
+      code: 'POLICY_UNAVAILABLE',
+      parental_restriction: true
+    });
   }
 });
 
@@ -973,46 +1006,30 @@ router.delete('/kids/:id/reading-goal', verifyToken, verifyParent, async (req, r
 router.get('/kids/:id/books', verifyToken, async (req, res) => {
   try {
     const pool = getPool();
-    
-    // Get kid profile
-    const kidResult = await pool.query('SELECT * FROM kids_profiles WHERE id = $1', [req.params.id]);
-    
-    if (kidResult.rows.length === 0) {
-      return res.status(404).json({ error: 'Kid profile not found' });
-    }
-
-    const kid = kidResult.rows[0];
-    
-    // If user is not the parent or admin, deny access
-    if (req.user.role !== 'admin' && req.user.id !== kid.parent_id) {
+    const requestedKidProfileId = req.params.id;
+    const policy = await loadChildAccessPolicy({
+      user: req.user,
+      requestedKidProfileId,
+      pool
+    });
+    if (!policy.applies) {
       return res.status(403).json({ error: 'Access denied' });
     }
 
-    // Get approved category IDs for this kid
-    const approvalsResult = await pool.query(
-      'SELECT category_id FROM parent_approvals WHERE kid_profile_id = $1 AND approved = TRUE',
-      [req.params.id]
-    );
+    const enforceGlobalRules = req.user.role === 'kid';
+    const globalViolation = enforceGlobalRules ? getGlobalAccessViolation(policy) : null;
+    if (globalViolation) return sendParentalAccessError(res, globalViolation);
 
-    const approvedCategoryIds = approvalsResult.rows.map(row => row.category_id);
-
-    // If no categories approved, return empty array
-    if (approvedCategoryIds.length === 0) {
-      return res.json([]);
-    }
-
-    // Get books from approved categories
     const booksResult = await pool.query(
       `SELECT b.*, c.name as category_name 
        FROM books b
        LEFT JOIN categories c ON b.category_id = c.id
-       WHERE b.is_published = TRUE 
-       AND b.category_id = ANY($1::int[])
+       WHERE b.is_published = TRUE
        ORDER BY b.created_at DESC`,
-      [approvedCategoryIds]
+      []
     );
 
-    res.json(booksResult.rows);
+    res.json(filterAllowedContent(policy, booksResult.rows, { includeGlobal: enforceGlobalRules }));
   } catch (err) {
     console.error('Error fetching approved books:', err);
     res.status(500).json({ error: 'Database error' });

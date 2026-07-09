@@ -8,6 +8,11 @@ import { getDatabase } from '../database/init.js';
 import { verifyToken } from './auth.js';
 import { VoiceCloneService } from '../services/ai/VoiceCloneService.js';
 import { aiErrorResponse } from '../services/ai/errors.js';
+import {
+  getContentAccessViolation,
+  loadChildAccessPolicy,
+  sendParentalAccessError
+} from '../services/parental/parentalAccessService.js';
 
 const router = express.Router();
 const upload = multer({
@@ -198,8 +203,9 @@ function hashNarration({ text, voiceProfileId, providerVoiceId }) {
 
 async function getAccessibleBook(pool, req, bookId) {
   const result = await pool.query(
-    `SELECT b.*
+    `SELECT b.*, c.name AS category_name
      FROM books b
+     LEFT JOIN categories c ON c.id = b.category_id
      WHERE b.id = $1
        AND (b.is_published = TRUE OR $2 = TRUE)`,
     [bookId, ['parent', 'admin'].includes(req.user?.role)]
@@ -742,6 +748,12 @@ router.post('/narrations', verifyToken, async (req, res) => {
 
     const book = await getAccessibleBook(pool, req, bookId);
     if (!book) return res.status(404).json({ error: 'Book not found' });
+
+    if (req.user.role === 'kid') {
+      const policy = await loadChildAccessPolicy({ user: req.user, pool });
+      const violation = getContentAccessViolation(policy, book);
+      if (violation) return sendParentalAccessError(res, violation);
+    }
 
     if (!voiceProfileId) {
       return res.json({

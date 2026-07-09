@@ -286,6 +286,16 @@ router.post('/unlock-book', verifyToken, async (req, res) => {
       });
     }
 
+    if (req.user.role === 'kid') {
+      await client.query('ROLLBACK');
+      return res.status(403).json({
+        error: 'Ce contenu premium doit être débloqué par le parent.',
+        code: 'PREMIUM_PARENT_REQUIRED',
+        parental_restriction: true,
+        parent_required: true
+      });
+    }
+
     if (used >= limit) {
       await client.query('ROLLBACK');
       return res.status(403).json({

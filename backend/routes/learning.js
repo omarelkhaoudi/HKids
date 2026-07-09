@@ -2,6 +2,14 @@ import express from 'express';
 import { getDatabase } from '../database/init.js';
 import { verifyToken } from './auth.js';
 import { adminOnly } from '../middleware/adminOnly.js';
+import {
+  filterAllowedContent,
+  getAuthorizedKidProfile,
+  getContentAccessViolation,
+  getGlobalAccessViolation,
+  loadChildAccessPolicy,
+  sendParentalAccessError
+} from '../services/parental/parentalAccessService.js';
 
 const router = express.Router();
 
@@ -108,21 +116,23 @@ function normalizeQuestionPayload(question, index) {
 }
 
 async function getKidProfileForRequest(pool, req, requestedKidProfileId = null) {
-  if (req.user.role === 'kid' && req.user.kid_profile_id) {
-    const result = await pool.query('SELECT * FROM kids_profiles WHERE id = $1', [req.user.kid_profile_id]);
-    return result.rows[0] || null;
-  }
+  return getAuthorizedKidProfile(pool, req.user, requestedKidProfileId);
+}
 
-  if (['parent', 'admin'].includes(req.user.role) && requestedKidProfileId) {
-    const query = req.user.role === 'admin'
-      ? 'SELECT * FROM kids_profiles WHERE id = $1'
-      : 'SELECT * FROM kids_profiles WHERE id = $1 AND parent_id = $2';
-    const params = req.user.role === 'admin' ? [requestedKidProfileId] : [requestedKidProfileId, req.user.id];
-    const result = await pool.query(query, params);
-    return result.rows[0] || null;
-  }
+function learningContentDescriptor(content) {
+  return {
+    ...content,
+    category_aliases: [content.category_name, content.category_code, 'Education', 'Educatif'],
+    is_premium: false
+  };
+}
 
-  return null;
+async function loadLearningPolicy(pool, req, requestedKidProfileId = null) {
+  return loadChildAccessPolicy({
+    user: req.user,
+    requestedKidProfileId,
+    pool
+  });
 }
 
 async function loadContent(pool, contentId, { includeDraft = false, includeAnswers = false } = {}) {
@@ -277,6 +287,9 @@ async function syncDerivedChallengeProgress(pool, kidProfileId) {
 router.get('/categories', verifyToken, async (req, res) => {
   try {
     const pool = getPool();
+    const policy = await loadLearningPolicy(pool, req, req.query.kid_profile_id);
+    const violation = getGlobalAccessViolation(policy);
+    if (violation) return sendParentalAccessError(res, violation);
     const result = await pool.query('SELECT * FROM learning_categories ORDER BY id ASC');
     res.json(result.rows);
   } catch (error) {
@@ -288,6 +301,9 @@ router.get('/categories', verifyToken, async (req, res) => {
 router.get('/rewards', verifyToken, async (req, res) => {
   try {
     const pool = getPool();
+    const policy = await loadLearningPolicy(pool, req, req.query.kid_profile_id);
+    const violation = getGlobalAccessViolation(policy);
+    if (violation) return sendParentalAccessError(res, violation);
     const result = await pool.query('SELECT * FROM learning_rewards ORDER BY id ASC');
     res.json(result.rows);
   } catch (error) {
@@ -299,6 +315,9 @@ router.get('/rewards', verifyToken, async (req, res) => {
 router.get('/contents', verifyToken, async (req, res) => {
   try {
     const pool = getPool();
+    const policy = await loadLearningPolicy(pool, req, req.query.kid_profile_id);
+    const globalViolation = getGlobalAccessViolation(policy);
+    if (globalViolation) return sendParentalAccessError(res, globalViolation);
     const includeDraft = req.user.role === 'admin' && req.query.include_draft === 'true';
     const params = [];
     const where = [includeDraft ? 'TRUE' : "lc.status = 'published'"];
@@ -328,7 +347,12 @@ router.get('/contents', verifyToken, async (req, res) => {
       params
     );
 
-    res.json(result.rows.map((row) => mapContent(row)));
+    const contents = result.rows.map((row) => mapContent(row));
+    const allowedContents = filterAllowedContent(
+      policy,
+      contents.map(learningContentDescriptor)
+    ).map(({ category_aliases, ...content }) => content);
+    res.json(allowedContents);
   } catch (error) {
     console.error('Error loading learning contents:', error);
     res.status(500).json({ error: 'Could not load learning contents' });
@@ -343,6 +367,9 @@ router.get('/contents/:id', verifyToken, async (req, res) => {
       includeAnswers: req.user.role === 'admin',
     });
     if (!content) return res.status(404).json({ error: 'Learning content not found' });
+    const policy = await loadLearningPolicy(pool, req, req.query.kid_profile_id);
+    const violation = getContentAccessViolation(policy, learningContentDescriptor(content));
+    if (violation) return sendParentalAccessError(res, violation);
     res.json(content);
   } catch (error) {
     console.error('Error loading learning content:', error);
@@ -358,6 +385,9 @@ router.post('/contents/:id/attempts', verifyToken, async (req, res) => {
 
     const content = await loadContent(pool, req.params.id, { includeDraft: false, includeAnswers: true });
     if (!content) return res.status(404).json({ error: 'Learning content not found' });
+    const policy = await loadLearningPolicy(pool, req, kidProfile.id);
+    const violation = getContentAccessViolation(policy, learningContentDescriptor(content));
+    if (violation) return sendParentalAccessError(res, violation);
 
     const scoring = scoreAnswers(content.questions, Array.isArray(req.body.answers) ? req.body.answers : []);
     const rewardPayload = scoring.success && content.reward ? {
@@ -421,6 +451,9 @@ router.get('/challenges', verifyToken, async (req, res) => {
   try {
     const pool = getPool();
     const kidProfile = await getKidProfileForRequest(pool, req, req.query.kid_profile_id);
+    const policy = await loadLearningPolicy(pool, req, kidProfile?.id || req.query.kid_profile_id);
+    const violation = getGlobalAccessViolation(policy);
+    if (violation) return sendParentalAccessError(res, violation);
     if (kidProfile) await syncDerivedChallengeProgress(pool, kidProfile.id);
     const params = kidProfile ? [kidProfile.id] : [null];
     const result = await pool.query(

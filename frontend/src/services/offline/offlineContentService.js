@@ -1,5 +1,9 @@
 import { getFileUrl } from '../../utils/fileUrl';
 import { getImageUrl } from '../../utils/imageUrl';
+import {
+  assertParentalAccess,
+  filterOfflineContent
+} from '../parental/parentalAccessService';
 import { offlineDb } from './offlineDb';
 
 const DOWNLOAD_VERSION = 1;
@@ -109,7 +113,7 @@ async function putBlob(id, blob, metadata) {
 }
 
 async function pruneOldDownloads() {
-  const all = await offlineDb.getAll(offlineDb.stores.downloads);
+  const all = await getDownloads({ includeRestricted: true });
   const completed = all
     .filter((item) => item.status === 'downloaded')
     .sort((a, b) => String(a.updatedAt).localeCompare(String(b.updatedAt)));
@@ -119,8 +123,9 @@ async function pruneOldDownloads() {
   await Promise.all(excess.map((item) => removeDownload(item.id)));
 }
 
-export async function getDownloads() {
-  return offlineDb.getAll(offlineDb.stores.downloads);
+export async function getDownloads({ includeRestricted = false } = {}) {
+  const records = await offlineDb.getAll(offlineDb.stores.downloads);
+  return includeRestricted ? records : filterOfflineContent(records);
 }
 
 export async function getDownload(id) {
@@ -140,6 +145,7 @@ export async function getVoiceMessageDownload(messageId) {
 }
 
 export async function downloadBook(book, { signal, onProgress } = {}) {
+  await assertParentalAccess(book);
   const draft = serializeBook(book);
   const startedAt = nowIso();
 
@@ -202,6 +208,7 @@ export async function downloadBook(book, { signal, onProgress } = {}) {
 }
 
 export async function saveGeneratedStoryOffline(story) {
+  await assertParentalAccess(story);
   const draft = serializeGeneratedStory(story);
   const timestamp = nowIso();
   const record = {
@@ -245,7 +252,7 @@ export async function saveVoiceMessageOffline(message, audioBlob = null) {
 }
 
 export async function removeDownload(id) {
-  const record = await getDownload(id);
+  const record = await offlineDb.get(offlineDb.stores.downloads, id);
   if (record?.assetKeys?.length) {
     await Promise.all(record.assetKeys.map((assetKey) => offlineDb.delete(offlineDb.stores.blobs, assetKey)));
   }

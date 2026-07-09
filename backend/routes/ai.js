@@ -8,6 +8,12 @@ import {
   loadVoiceAssistantContext,
   normalizeConversation
 } from '../services/ai/voiceAssistantContextService.js';
+import { enforceParentalAccess } from '../middleware/parentalAccess.js';
+import {
+  getTextAccessViolation,
+  loadChildAccessPolicy,
+  sendParentalAccessError
+} from '../services/parental/parentalAccessService.js';
 
 const router = express.Router();
 const upload = multer({
@@ -22,7 +28,7 @@ function canUseAI(user) {
   return ['kid', 'parent', 'admin'].includes(user?.role);
 }
 
-router.post('/transcribe', verifyToken, upload.single('audio'), async (req, res) => {
+router.post('/transcribe', verifyToken, upload.single('audio'), enforceParentalAccess(), async (req, res) => {
   try {
     if (!canUseAI(req.user)) {
       return res.status(403).json({ error: 'Access denied' });
@@ -78,10 +84,20 @@ router.post('/voice-assistant', verifyToken, async (req, res) => {
       return res.status(403).json({ error: 'Access denied' });
     }
 
+    const accessPolicy = await loadChildAccessPolicy({
+      user: req.user,
+      requestedKidProfileId
+    });
+    const restriction = getTextAccessViolation(accessPolicy, transcript);
+    if (restriction) {
+      return sendParentalAccessError(res, restriction);
+    }
+
     const assistantContext = await loadVoiceAssistantContext({
       user: req.user,
       requestedKidProfileId,
-      requestedLanguage
+      requestedLanguage,
+      policy: accessPolicy
     });
 
     const reply = await getVoiceAssistantReply({
