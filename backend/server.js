@@ -162,7 +162,7 @@ app.get('/__disabled_upload_fallback/books/:filename', (req, res, next) => {
     const filename = req.params.filename;
     const fullPath = path.join(__dirname, 'uploads', 'books', filename);
     
-    console.log(`� Book file request: ${filename}`);
+    console.log(`📖 Book file request: ${filename}`);
     console.log(`📂 File exists: ${fs.existsSync(fullPath)}`);
     
     // If file exists, serve it directly
