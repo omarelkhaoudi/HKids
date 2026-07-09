@@ -9,6 +9,7 @@ const initialMessages = [
   {
     role: 'assistant',
     text: '🎙️ Appuie et parle.',
+    includeInContext: false,
   },
 ];
 
@@ -49,15 +50,22 @@ export function VoiceAssistant({ language = 'fr-FR' }) {
   };
 
   const sendTranscriptToAssistant = async (transcript) => {
+    const conversation = messages
+      .filter((message) => message.includeInContext !== false)
+      .map((message) => ({
+        role: message.role,
+        text: message.text,
+      }));
+
     addMessage('kid', transcript);
     setThinking(true);
-    const response = await aiAPI.sendVoiceAssistantRequest(transcript);
+    const response = await aiAPI.sendVoiceAssistantRequest(transcript, conversation, language);
     const replyText = response.data?.reply_text || "Je n ai pas encore de reponse.";
     addMessage('assistant', replyText);
     setThinking(false);
 
     try {
-      await speakText(replyText, { language });
+      await speakText(replyText, { language: response.data?.language || language });
     } catch {
       // Text is already displayed; audio playback is a progressive enhancement.
     }

@@ -1,8 +1,18 @@
 import { AIProviderFactory } from './AIProviderFactory.js';
 import { aiConfig } from './aiConfig.js';
 import { normalizeAIError, withAITimeout } from './errors.js';
+import {
+  createFallbackAssistantContext,
+  normalizeConversation,
+  resolveAssistantLanguage
+} from './voiceAssistantContextService.js';
 
 const provider = AIProviderFactory.getProvider();
+const EMPTY_REPLIES = {
+  fr: "Je n ai pas bien entendu. Tu peux recommencer doucement.",
+  en: 'I did not hear you clearly. You can try again slowly.',
+  ar: 'لم أسمعك جيدًا. يمكنك المحاولة مرة أخرى بهدوء.'
+};
 
 export class VoiceAssistantService {
   constructor({ aiProvider = provider, timeoutMs = aiConfig.timeoutMs } = {}) {
@@ -10,15 +20,24 @@ export class VoiceAssistantService {
     this.timeoutMs = timeoutMs;
   }
 
-  async getReply({ transcript, user }) {
+  async getReply({
+    transcript,
+    user,
+    context = createFallbackAssistantContext({ user }),
+    conversation = [],
+    requestedLanguage = null
+  }) {
     const cleanTranscript = String(transcript || '').trim().slice(0, 1000);
+    const safeConversation = normalizeConversation(conversation);
+    const responseLanguage = resolveAssistantLanguage(context, requestedLanguage);
 
     if (!cleanTranscript) {
       return {
         transcript: '',
-        reply_text: "Je n ai pas bien entendu. Tu peux recommencer doucement.",
+        reply_text: EMPTY_REPLIES[responseLanguage] || EMPTY_REPLIES.fr,
         intent: 'empty',
         provider: this.aiProvider.name,
+        language: responseLanguage
       };
     }
 
@@ -27,6 +46,9 @@ export class VoiceAssistantService {
         this.aiProvider.chat({
           transcript: cleanTranscript,
           user,
+          context,
+          conversation: safeConversation,
+          language: responseLanguage
         }),
         this.timeoutMs,
         {
@@ -40,6 +62,7 @@ export class VoiceAssistantService {
         reply_text: response.text,
         intent: response.intent || 'unknown',
         provider: this.aiProvider.name,
+        language: responseLanguage
       };
     } catch (error) {
       throw normalizeAIError(error, {

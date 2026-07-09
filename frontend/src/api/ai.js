@@ -25,9 +25,9 @@ export const aiAPI = {
     );
   },
 
-  sendVoiceAssistantRequest: (transcript) => axios.post(
+  sendVoiceAssistantRequest: (transcript, conversation = [], language = null) => axios.post(
     buildApiUrl('/ai/voice-assistant'),
-    { transcript },
+    { transcript, conversation, language },
     { headers: authHeaders() }
   ),
 };

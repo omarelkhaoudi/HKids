@@ -14,8 +14,14 @@ export class MockAIProvider extends AIProvider {
     return this.storyProvider.generate({ kid, preferences });
   }
 
-  async chat({ transcript, user, messages }) {
-    return this.voiceProvider.respond({ transcript, user, messages });
+  async chat({ transcript, user, context, conversation, language, messages }) {
+    return this.voiceProvider.respond({
+      transcript,
+      user,
+      context,
+      conversation: conversation || messages || [],
+      language
+    });
   }
 
   async transcribeAudio({ audioBuffer, mimeType, language }) {
