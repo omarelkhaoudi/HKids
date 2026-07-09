@@ -1,41 +1,48 @@
-import {useState, useEffect} from 'react';
+import {useEffect, useState} from 'react';
 import {Link, useNavigate} from 'react-router-dom';
-import {motion, AnimatePresence} from 'framer-motion';
+import {motion} from 'framer-motion';
 import {useAuth} from '../context/AuthContext';
 import {KID_CATEGORIES} from '../constants/kidCategories';
 import {VoiceAssistant} from '../components/kids/VoiceAssistant';
 import {Logo} from '../components/Logo';
+import {parentalAPI} from '../api/parental';
+import {recommendationsAPI} from '../api/recommendations';
+import {getImageUrl} from '../utils/imageUrl';
 import {
  PlayIcon, StarIcon, LockIcon, SparklesIcon
 } from '../components/Icons';
 import {Avatar} from '../components/ui';
 
-// Dummy data for design
-const continueReadingBook = {
- id: 1,
- title: "Le Petit Prince",
- coverUrl: "https://images.unsplash.com/photo-1532012197267-da84d127e765?auto=format&fit=crop&q=80&w=800",
- progress: 75,
-};
+function getRecommendedBooks(sections = []) {
+ const recommendedSection = sections.find((section) => section.id === 'recommended_for_you');
+ return Array.isArray(recommendedSection?.items) ? recommendedSection.items : [];
+}
 
-const recommendedBooks = [
- {id: 2, title: "Alice au pays des merveilles", coverUrl: "https://images.unsplash.com/photo-1491841550275-ad7854e35ca6?auto=format&fit=crop&q=80&w=400"},
- {id: 3, title: "Peter Pan", coverUrl: "https://images.unsplash.com/photo-1512820790803-83ca734da794?auto=format&fit=crop&q=80&w=400"},
- {id: 4, title: "Le Livre de la Jungle", coverUrl: "https://images.unsplash.com/photo-1501862700950-18382cd41497?auto=format&fit=crop&q=80&w=400"},
-];
+function getMissionText(goal, summary) {
+ if (goal) {
+   const units = {
+     minutes: 'min',
+     completed_books: 'livres',
+     sessions: 'sessions',
+   };
+   return `${Number(goal.progress_value || 0)} / ${Number(goal.target_value || 0)} ${units[goal.goal_type] || ''}`.trim();
+ }
 
-const badges = [
- {id: 1, name: "Premier Livre", icon: "📚", unlocked: true},
- {id: 2, name: "Série de 7 jours", icon: "🔥", unlocked: true},
- {id: 3, name: "Créateur IA", icon: "✨", unlocked: true},
- {id: 4, name: "Lecteur Nocturne", icon: "🌙", unlocked: false},
-];
+ const totalMinutes = Math.floor(Number(summary?.total_time_seconds || 0) / 60);
+ if (totalMinutes > 0) return `${totalMinutes} min de lecture`;
+
+ const totalSessions = Number(summary?.total_sessions || 0);
+ if (totalSessions > 0) return `${totalSessions} session${totalSessions > 1 ? 's' : ''}`;
+
+ return 'Aucune lecture enregistrée';
+}
 
 function KidsHome() {
  const {user} = useAuth();
  const navigate = useNavigate();
  const [greeting, setGreeting] = useState('Bonjour');
- const kidName = user?.username || 'Champion';
+ const [homeData, setHomeData] = useState(null);
+ const [recommendationSections, setRecommendationSections] = useState([]);
 
  useEffect(() => {
    const hour = new Date().getHours();
@@ -43,6 +50,73 @@ function KidsHome() {
    else if (hour < 18) setGreeting('Bon après-midi');
    else setGreeting('Bonsoir');
  }, []);
+
+ useEffect(() => {
+   let active = true;
+
+   const loadKidsHome = async () => {
+     const [overviewResult, recommendationsResult] = await Promise.allSettled([
+       parentalAPI.getConnectedKidOverview(),
+       recommendationsAPI.getForKid(),
+     ]);
+
+     if (!active) return;
+
+     if (overviewResult.status === 'fulfilled') {
+       setHomeData(overviewResult.value.data);
+     } else {
+       console.warn('Connected kid overview unavailable:', overviewResult.reason);
+     }
+
+     if (recommendationsResult.status === 'fulfilled') {
+       setRecommendationSections(recommendationsResult.value.data?.sections || []);
+     } else {
+       console.warn('Kid recommendations unavailable:', recommendationsResult.reason);
+     }
+   };
+
+   loadKidsHome();
+   return () => {
+     active = false;
+   };
+ }, []);
+
+ const kid = homeData?.kid || null;
+ const kidName = kid?.name || user?.username || '';
+ const avatarSrc = kid?.photo_url ? getImageUrl(kid.photo_url) : null;
+ const avatarInitials = kid?.avatar || kidName.trim().charAt(0).toUpperCase() || '?';
+ const progressRows = Array.isArray(homeData?.progress) ? homeData.progress : [];
+ const continueReading = progressRows.find((item) => (
+   !item.completed && Number(item.progress_percent || 0) > 0
+ )) || null;
+ const recommendedBooks = getRecommendedBooks(recommendationSections);
+ const featuredBook = continueReading
+   ? {
+       id: continueReading.book_id,
+       title: continueReading.book_title,
+       cover_image: continueReading.cover_image,
+       progress: Number(continueReading.progress_percent || 0),
+       isInProgress: true,
+     }
+   : recommendedBooks[0]
+     ? {
+         ...recommendedBooks[0],
+         progress: Number(recommendedBooks[0].kid_progress_percent || 0),
+         isInProgress: false,
+       }
+     : null;
+ const badges = Array.isArray(homeData?.badges) ? homeData.badges : [];
+ const missionText = getMissionText(homeData?.goal, homeData?.summary);
+
+ const handleSurprise = () => {
+   if (recommendedBooks.length === 0) {
+     navigate('/kids/library');
+     return;
+   }
+
+   const randomBook = recommendedBooks[Math.floor(Math.random() * recommendedBooks.length)];
+   navigate(`/book/${randomBook.id}`);
+ };
 
  return (
    <div className="min-h-screen bg-[#f8fbff] text-foreground overflow-x-hidden font-sans pb-32">
@@ -56,7 +130,7 @@ function KidsHome() {
      {/* HEADER (Discreet) */}
      <header className="relative z-10 px-6 py-4 flex items-center justify-between">
        <div className="flex items-center gap-4">
-         <Avatar src={null} fallback={kidName[0].toUpperCase()} size="lg" className="w-16 h-16 border-4 border-white shadow-lg bg-gradient-to-br from-primary-400 to-secondary-500 text-white" />
+         <Avatar src={avatarSrc} initials={avatarInitials} alt={kidName} size="lg" className="w-16 h-16 border-4 border-white shadow-lg bg-gradient-to-br from-primary-400 to-secondary-500 text-white" />
          <div>
            <h1 className="text-2xl font-black text-foreground-700">{greeting} <span className="text-primary-600">{kidName}</span></h1>
            <p className="text-sm font-bold text-foreground-muted">Prêt à jouer ?</p>
@@ -73,9 +147,16 @@ function KidsHome() {
        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
          
          {/* CONTINUER LA LECTURE (Massive Card) */}
-         <motion.div whileHover={{scale: 1.02}} whileTap={{scale: 0.98}} className="lg:col-span-2 cursor-pointer" onClick={() => navigate(`/book/${continueReadingBook.id}`)}>
+         <motion.div
+           whileHover={{scale: 1.02}}
+           whileTap={{scale: 0.98}}
+           className="lg:col-span-2 cursor-pointer"
+           onClick={() => featuredBook && navigate(`/book/${featuredBook.id}`)}
+         >
            <div className="relative h-64 md:h-80 w-full rounded-[2.5rem] overflow-hidden shadow-2xl group">
-             <img src={continueReadingBook.coverUrl} alt="Cover" className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+             {featuredBook?.cover_image && (
+               <img src={getImageUrl(featuredBook.cover_image)} alt={featuredBook.title} className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+             )}
              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
              
              {/* Giant Play Button */}
@@ -88,13 +169,15 @@ function KidsHome() {
              {/* Progress & Title */}
              <div className="absolute bottom-0 inset-x-0 p-6 flex flex-col gap-3">
                <div className="flex items-center justify-between">
-                 <span className="bg-white/20 backdrop-blur-md px-3 py-1 rounded-full text-white text-xs font-black border border-white/30 uppercase tracking-wider">Reprendre</span>
-                 <span className="text-white font-black drop-shadow-md">{continueReadingBook.progress}%</span>
+                 <span className="bg-white/20 backdrop-blur-md px-3 py-1 rounded-full text-white text-xs font-black border border-white/30 uppercase tracking-wider">
+                   {featuredBook?.isInProgress ? 'Reprendre' : 'Découvrir'}
+                 </span>
+                 <span className="text-white font-black drop-shadow-md">{featuredBook?.progress || 0}%</span>
                </div>
                <div className="h-4 w-full bg-black/40 rounded-full overflow-hidden border border-white/20 backdrop-blur-sm">
-                 <motion.div initial={{width: 0}} animate={{width: `${continueReadingBook.progress}%`}} className="h-full bg-gradient-to-r from-green-400 to-emerald-500 rounded-full" />
+                 <motion.div initial={{width: 0}} animate={{width: `${featuredBook?.progress || 0}%`}} className="h-full bg-gradient-to-r from-green-400 to-emerald-500 rounded-full" />
                </div>
-               <h2 className="text-white text-2xl font-black drop-shadow-lg opacity-90">{continueReadingBook.title}</h2>
+               <h2 className="text-white text-2xl font-black drop-shadow-lg opacity-90">{featuredBook?.title || 'Aucune lecture disponible'}</h2>
              </div>
            </div>
          </motion.div>
@@ -113,7 +196,7 @@ function KidsHome() {
              <h3 className="text-white text-2xl font-black drop-shadow-md mb-2">Coffre Magique</h3>
              <div className="flex items-center gap-2 bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full border border-white/30 text-white font-bold">
                <StarIcon className="w-5 h-5 text-yellow-300" />
-               <span>Lire une histoire</span>
+               <span>{missionText}</span>
              </div>
            </div>
          </motion.div>
@@ -124,6 +207,7 @@ function KidsHome() {
          <motion.button 
            whileHover={{scale: 1.05}} 
            whileTap={{scale: 0.95}}
+           onClick={handleSurprise}
            className="group relative flex items-center gap-4 bg-gradient-to-r from-purple-500 via-fuchsia-500 to-pink-500 p-4 pr-8 rounded-[3rem] shadow-2xl border-4 border-white overflow-hidden"
          >
            <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4IiBoZWlnaHQ9IjgiPgo8cmVjdCB3aWR0aD0iOCIgaGVpZ2h0PSI4IiBmaWxsPSIjZmZmIiBmaWxsLW9wYWNpdHk9IjAuMiIvPgo8L3N2Zz4=')] opacity-30 mix-blend-overlay"></div>
@@ -164,7 +248,9 @@ function KidsHome() {
                className="snap-start shrink-0 relative w-48 h-64 md:w-56 md:h-72 rounded-[2rem] overflow-hidden shadow-xl cursor-pointer"
                onClick={() => navigate(`/book/${book.id}`)}
              >
-               <img src={book.coverUrl} alt="Cover" className="absolute inset-0 w-full h-full object-cover" />
+               {book.cover_image && (
+                 <img src={getImageUrl(book.cover_image)} alt={book.title} className="absolute inset-0 w-full h-full object-cover" />
+               )}
                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
                <div className="absolute bottom-0 inset-x-0 p-4">
                  <h3 className="text-white font-black text-lg leading-tight drop-shadow-md">{book.title}</h3>
@@ -181,13 +267,14 @@ function KidsHome() {
        <section className="mb-12">
          <h2 className="text-2xl font-black text-foreground-700 mb-6 pl-2">🏆 Tes Médailles</h2>
          <div className="flex flex-wrap gap-6 justify-center md:justify-start px-2">
-           {badges.map(badge => (
+           {badges.map((badge) => (
              <motion.div 
                key={badge.id}
                whileHover={{scale: 1.1, rotate: [0, -10, 10, -10, 10, 0]}}
-               className={`relative w-28 h-28 md:w-32 md:h-32 rounded-full flex items-center justify-center text-5xl md:text-6xl shadow-2xl border-8 ${badge.unlocked ? 'bg-gradient-to-br from-yellow-300 via-amber-400 to-orange-500 border-yellow-200' : 'bg-surface-200 border-surface-300 grayscale opacity-60'}`}
+               title={`${badge.label} — ${badge.description}`}
+               className={`relative w-28 h-28 md:w-32 md:h-32 rounded-full flex items-center justify-center text-5xl md:text-6xl shadow-2xl border-8 ${badge.earned ? 'bg-gradient-to-br from-yellow-300 via-amber-400 to-orange-500 border-yellow-200' : 'bg-surface-200 border-surface-300 grayscale opacity-60'}`}
              >
-               {badge.unlocked ? (
+               {badge.earned ? (
                  <>
                    <span className="filter drop-shadow-lg z-10 relative">{badge.icon}</span>
                    <motion.div animate={{rotate: 360}} transition={{duration: 10, repeat: Infinity, ease: 'linear'}} className="absolute inset-0 rounded-full border-4 border-dashed border-white/40"></motion.div>

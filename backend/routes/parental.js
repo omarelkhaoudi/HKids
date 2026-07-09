@@ -38,40 +38,155 @@ function buildBadges(summary, progressRows) {
   const totalMinutes = Math.floor(Number(summary.total_time_seconds || 0) / 60);
   const totalSessions = Number(summary.total_sessions || 0);
   const completedBooks = Number(summary.completed_books || 0);
-  const activeBooks = progressRows.length;
+  const activeBooks = Number(summary.active_books || progressRows.length);
 
   return [
     {
       id: 'first_steps',
       label: 'Premier pas',
       description: 'Premiere session de lecture terminee',
+      icon: '📖',
       earned: totalSessions >= 1
     },
     {
       id: 'ten_minutes',
       label: '10 minutes de lecture',
       description: 'A lu au moins 10 minutes au total',
+      icon: '⏱️',
       earned: totalMinutes >= 10
     },
     {
       id: 'first_book',
       label: 'Premier livre termine',
       description: 'A termine son premier livre',
+      icon: '📚',
       earned: completedBooks >= 1
     },
     {
       id: 'regular_reader',
       label: 'Lecteur regulier',
       description: 'A realise au moins 5 sessions',
+      icon: '🔥',
       earned: totalSessions >= 5
     },
     {
       id: 'explorer',
       label: 'Explorateur',
       description: 'A commence au moins 3 livres differents',
+      icon: '🧭',
       earned: activeBooks >= 3
     }
   ];
+}
+
+async function getKidActivitySnapshot(pool, kidProfileId) {
+  const [summaryResult, progressResult, sessionsResult, goalResult] = await Promise.all([
+    pool.query(
+      `SELECT
+        COALESCE(SUM(duration_seconds), 0)::int AS total_time_seconds,
+        COUNT(*)::int AS total_sessions,
+        COALESCE(SUM(CASE WHEN completed THEN 1 ELSE 0 END), 0)::int AS completed_sessions,
+        (
+          SELECT COUNT(*)::int
+          FROM kid_reading_progress
+          WHERE kid_profile_id = $1 AND completed = TRUE
+        ) AS completed_books,
+        (
+          SELECT COUNT(*)::int
+          FROM kid_reading_progress
+          WHERE kid_profile_id = $1
+        ) AS active_books
+      FROM kid_reading_sessions
+      WHERE kid_profile_id = $1`,
+      [kidProfileId]
+    ),
+    pool.query(
+      `SELECT
+        krp.*,
+        b.title AS book_title,
+        b.cover_image,
+        b.page_count
+      FROM kid_reading_progress krp
+      JOIN books b ON b.id = krp.book_id
+      WHERE krp.kid_profile_id = $1
+      ORDER BY krp.last_read_at DESC
+      LIMIT 8`,
+      [kidProfileId]
+    ),
+    pool.query(
+      `SELECT
+        krs.*,
+        b.title AS book_title
+      FROM kid_reading_sessions krs
+      JOIN books b ON b.id = krs.book_id
+      WHERE krs.kid_profile_id = $1
+      ORDER BY krs.created_at DESC
+      LIMIT 10`,
+      [kidProfileId]
+    ),
+    pool.query(
+      `SELECT *
+       FROM kid_reading_goals
+       WHERE kid_profile_id = $1 AND active = TRUE
+       ORDER BY updated_at DESC
+       LIMIT 1`,
+      [kidProfileId]
+    )
+  ]);
+
+  const summary = summaryResult.rows[0];
+  const activeGoal = goalResult.rows[0] || null;
+  let goal = null;
+
+  if (activeGoal) {
+    const windowStart = getGoalWindow(activeGoal.period);
+    let progressValue = 0;
+
+    if (activeGoal.goal_type === 'completed_books') {
+      const goalProgress = await pool.query(
+        `SELECT COUNT(*)::int AS value
+         FROM kid_reading_progress
+         WHERE kid_profile_id = $1
+           AND completed = TRUE
+           AND completed_at >= ${windowStart}`,
+        [kidProfileId]
+      );
+      progressValue = Number(goalProgress.rows[0]?.value || 0);
+    } else if (activeGoal.goal_type === 'sessions') {
+      const goalProgress = await pool.query(
+        `SELECT COUNT(*)::int AS value
+         FROM kid_reading_sessions
+         WHERE kid_profile_id = $1
+           AND created_at >= ${windowStart}`,
+        [kidProfileId]
+      );
+      progressValue = Number(goalProgress.rows[0]?.value || 0);
+    } else {
+      const goalProgress = await pool.query(
+        `SELECT COALESCE(SUM(duration_seconds), 0)::int AS value
+         FROM kid_reading_sessions
+         WHERE kid_profile_id = $1
+           AND created_at >= ${windowStart}`,
+        [kidProfileId]
+      );
+      progressValue = Math.floor(Number(goalProgress.rows[0]?.value || 0) / 60);
+    }
+
+    goal = {
+      ...activeGoal,
+      progress_value: progressValue,
+      progress_percent: Math.min(100, Math.round((progressValue / Number(activeGoal.target_value || 1)) * 100)),
+      achieved: progressValue >= Number(activeGoal.target_value || 1)
+    };
+  }
+
+  return {
+    summary,
+    goal,
+    badges: buildBadges(summary, progressResult.rows),
+    progress: progressResult.rows,
+    recent_sessions: sessionsResult.rows
+  };
 }
 
 function normalizeInterests(interests) {
@@ -711,6 +826,44 @@ router.post('/reading-progress', verifyToken, async (req, res) => {
   }
 });
 
+// Get the connected kid profile and its real reading activity
+router.get('/me/overview', verifyToken, async (req, res) => {
+  try {
+    if (req.user.role !== 'kid' || !req.user.kid_profile_id) {
+      return res.status(403).json({ error: 'Access denied. Kid account required.' });
+    }
+
+    const pool = getPool();
+    const kidResult = await pool.query(
+      `SELECT
+        id,
+        name,
+        avatar,
+        photo_url,
+        age,
+        date_of_birth,
+        preferred_language,
+        interests
+      FROM kids_profiles
+      WHERE id = $1`,
+      [req.user.kid_profile_id]
+    );
+
+    if (kidResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Kid profile not found' });
+    }
+
+    const activity = await getKidActivitySnapshot(pool, req.user.kid_profile_id);
+    res.json({
+      kid: kidResult.rows[0],
+      ...activity
+    });
+  } catch (err) {
+    console.error('Error fetching connected kid overview:', err);
+    res.status(500).json({ error: 'Database error' });
+  }
+});
+
 // Get reading activity for one child
 router.get('/kids/:id/activity', verifyToken, verifyParent, async (req, res) => {
   try {
@@ -725,107 +878,7 @@ router.get('/kids/:id/activity', verifyToken, verifyParent, async (req, res) => 
       return res.status(404).json({ error: 'Kid profile not found' });
     }
 
-    const [summaryResult, progressResult, sessionsResult, goalResult] = await Promise.all([
-      pool.query(
-        `SELECT
-          COALESCE(SUM(duration_seconds), 0)::int AS total_time_seconds,
-          COUNT(*)::int AS total_sessions,
-          COALESCE(SUM(CASE WHEN completed THEN 1 ELSE 0 END), 0)::int AS completed_sessions
-        FROM kid_reading_sessions
-        WHERE kid_profile_id = $1`,
-        [req.params.id]
-      ),
-      pool.query(
-        `SELECT
-          krp.*,
-          b.title AS book_title,
-          b.cover_image,
-          b.page_count
-        FROM kid_reading_progress krp
-        JOIN books b ON b.id = krp.book_id
-        WHERE krp.kid_profile_id = $1
-        ORDER BY krp.last_read_at DESC
-        LIMIT 8`,
-        [req.params.id]
-      ),
-      pool.query(
-        `SELECT
-          krs.*,
-          b.title AS book_title
-        FROM kid_reading_sessions krs
-        JOIN books b ON b.id = krs.book_id
-        WHERE krs.kid_profile_id = $1
-        ORDER BY krs.created_at DESC
-        LIMIT 10`,
-        [req.params.id]
-      ),
-      pool.query(
-        `SELECT *
-         FROM kid_reading_goals
-         WHERE kid_profile_id = $1 AND active = TRUE
-         ORDER BY updated_at DESC
-         LIMIT 1`,
-        [req.params.id]
-      )
-    ]);
-
-    const completedBooks = progressResult.rows.filter((item) => item.completed).length;
-    const summary = {
-      ...summaryResult.rows[0],
-      completed_books: completedBooks
-    };
-    const activeGoal = goalResult.rows[0] || null;
-    let goal = null;
-
-    if (activeGoal) {
-      const windowStart = getGoalWindow(activeGoal.period);
-      let progressValue = 0;
-
-      if (activeGoal.goal_type === 'completed_books') {
-        const goalProgress = await pool.query(
-          `SELECT COUNT(*)::int AS value
-           FROM kid_reading_progress
-           WHERE kid_profile_id = $1
-             AND completed = TRUE
-             AND completed_at >= ${windowStart}`,
-          [req.params.id]
-        );
-        progressValue = Number(goalProgress.rows[0]?.value || 0);
-      } else if (activeGoal.goal_type === 'sessions') {
-        const goalProgress = await pool.query(
-          `SELECT COUNT(*)::int AS value
-           FROM kid_reading_sessions
-           WHERE kid_profile_id = $1
-             AND created_at >= ${windowStart}`,
-          [req.params.id]
-        );
-        progressValue = Number(goalProgress.rows[0]?.value || 0);
-      } else {
-        const goalProgress = await pool.query(
-          `SELECT COALESCE(SUM(duration_seconds), 0)::int AS value
-           FROM kid_reading_sessions
-           WHERE kid_profile_id = $1
-             AND created_at >= ${windowStart}`,
-          [req.params.id]
-        );
-        progressValue = Math.floor(Number(goalProgress.rows[0]?.value || 0) / 60);
-      }
-
-      goal = {
-        ...activeGoal,
-        progress_value: progressValue,
-        progress_percent: Math.min(100, Math.round((progressValue / Number(activeGoal.target_value || 1)) * 100)),
-        achieved: progressValue >= Number(activeGoal.target_value || 1)
-      };
-    }
-
-    res.json({
-      summary,
-      goal,
-      badges: buildBadges(summary, progressResult.rows),
-      progress: progressResult.rows,
-      recent_sessions: sessionsResult.rows
-    });
+    res.json(await getKidActivitySnapshot(pool, req.params.id));
   } catch (err) {
     console.error('Error fetching reading activity:', err);
     res.status(500).json({ error: 'Database error' });
