@@ -8,6 +8,13 @@ import supabase from '../config/supabase.js';
 import { getDatabase } from '../database/init.js';
 import { verifyToken } from './auth.js';
 import { adminOnly } from '../middleware/adminOnly.js';
+import {
+  filterAllowedContent,
+  getGlobalAccessViolation,
+  getContentAccessViolation,
+  loadChildAccessPolicy,
+  sendParentalAccessError
+} from '../services/parental/parentalAccessService.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -198,14 +205,14 @@ router.get('/published', async (req, res) => {
   const { age_group, category_id, theme, language, content_type } = req.query;
 
   const token = req.headers.authorization?.split(' ')[1];
-  let kidProfileId = null;
+  let authenticatedUser = null;
 
   if (token) {
     try {
       const JWT_SECRET = process.env.JWT_SECRET || 'hkids-secret-key-change-in-production';
       const decoded = jwt.verify(token, JWT_SECRET);
       if (decoded.role === 'kid' && decoded.kid_profile_id) {
-        kidProfileId = decoded.kid_profile_id;
+        authenticatedUser = decoded;
       }
     } catch (err) {
       // Invalid token, continue as public user.
@@ -222,81 +229,6 @@ router.get('/published', async (req, res) => {
   `;
   const params = [];
   let index = 1;
-
-  if (kidProfileId) {
-    query += ` AND b.category_id IN (
-      SELECT category_id FROM parent_approvals
-      WHERE kid_profile_id = $${index} AND approved = TRUE
-    )`;
-    params.push(kidProfileId);
-    index += 1;
-
-    query += ` AND (
-      NOT EXISTS (
-        SELECT 1 FROM parental_rules pr
-        WHERE pr.kid_profile_id = $${index}
-          AND cardinality(pr.allowed_languages) > 0
-      )
-      OR b.language = ANY(COALESCE((
-        SELECT pr.allowed_languages FROM parental_rules pr
-        WHERE pr.kid_profile_id = $${index}
-        LIMIT 1
-      ), ARRAY[]::text[]))
-    )`;
-    params.push(kidProfileId);
-    index += 1;
-
-    query += ` AND (
-      NOT EXISTS (
-        SELECT 1 FROM parental_rules pr
-        WHERE pr.kid_profile_id = $${index}
-          AND cardinality(pr.allowed_themes) > 0
-      )
-      OR b.theme = ANY(COALESCE((
-        SELECT pr.allowed_themes FROM parental_rules pr
-        WHERE pr.kid_profile_id = $${index}
-        LIMIT 1
-      ), ARRAY[]::text[]))
-    )`;
-    params.push(kidProfileId);
-    index += 1;
-
-    query += ` AND (
-      NOT EXISTS (
-        SELECT 1 FROM parental_rules pr
-        WHERE pr.kid_profile_id = $${index}
-          AND pr.quiet_start_time IS NOT NULL
-          AND pr.quiet_end_time IS NOT NULL
-      )
-      OR EXISTS (
-        SELECT 1 FROM parental_rules pr
-        WHERE pr.kid_profile_id = $${index}
-          AND (
-            (pr.quiet_start_time <= pr.quiet_end_time AND CURRENT_TIME BETWEEN pr.quiet_start_time AND pr.quiet_end_time)
-            OR
-            (pr.quiet_start_time > pr.quiet_end_time AND (CURRENT_TIME >= pr.quiet_start_time OR CURRENT_TIME <= pr.quiet_end_time))
-          )
-      )
-    )`;
-    params.push(kidProfileId);
-    index += 1;
-
-    query += ` AND (
-      NOT EXISTS (
-        SELECT 1 FROM parental_rules pr
-        WHERE pr.kid_profile_id = $${index}
-          AND pr.daily_screen_time_minutes > 0
-          AND (
-            SELECT COALESCE(SUM(krs.duration_seconds), 0)
-            FROM kid_reading_sessions krs
-            WHERE krs.kid_profile_id = pr.kid_profile_id
-              AND krs.created_at >= date_trunc('day', NOW())
-          ) >= pr.daily_screen_time_minutes * 60
-      )
-    )`;
-    params.push(kidProfileId);
-    index += 1;
-  }
 
   if (age_group) {
     query += ` AND b.age_group_min <= $${index} AND b.age_group_max >= $${index + 1}`;
@@ -333,8 +265,17 @@ router.get('/published', async (req, res) => {
   try {
     const pool = getPool();
     const result = await pool.query(query, params);
-    console.log('API response:', { route: 'GET /books/published', count: result.rowCount });
-    res.json(result.rows);
+    let books = result.rows;
+
+    if (authenticatedUser) {
+      const policy = await loadChildAccessPolicy({ user: authenticatedUser, pool });
+      const globalViolation = getGlobalAccessViolation(policy);
+      if (globalViolation) return sendParentalAccessError(res, globalViolation);
+      books = filterAllowedContent(policy, books);
+    }
+
+    console.log('API response:', { route: 'GET /books/published', count: books.length });
+    res.json(books);
   } catch (err) {
     console.error('Error fetching published books:', err);
     res.status(500).json({ error: 'Database error' });
@@ -367,56 +308,9 @@ router.get('/:id', async (req, res) => {
         const JWT_SECRET = process.env.JWT_SECRET || 'hkids-secret-key-change-in-production';
         const decoded = jwt.verify(token, JWT_SECRET);
         if (decoded.role === 'kid' && decoded.kid_profile_id) {
-          const approvalResult = await pool.query(
-            `SELECT 1
-             FROM parent_approvals
-             WHERE kid_profile_id = $1
-               AND category_id = $2
-               AND approved = TRUE
-             LIMIT 1`,
-            [decoded.kid_profile_id, book.category_id]
-          );
-
-          if (approvalResult.rows.length === 0) {
-            return res.status(403).json({ error: 'This book is not approved for this child' });
-          }
-
-          const rulesResult = await pool.query(
-            `SELECT 1
-             FROM parental_rules pr
-             WHERE pr.kid_profile_id = $1
-               AND (
-                 (cardinality(pr.allowed_languages) > 0 AND NOT ($2 = ANY(pr.allowed_languages)))
-                 OR
-                 (cardinality(pr.allowed_themes) > 0 AND NOT ($3 = ANY(pr.allowed_themes)))
-                 OR
-                 (
-                   pr.quiet_start_time IS NOT NULL
-                   AND pr.quiet_end_time IS NOT NULL
-                   AND NOT (
-                     (pr.quiet_start_time <= pr.quiet_end_time AND CURRENT_TIME BETWEEN pr.quiet_start_time AND pr.quiet_end_time)
-                     OR
-                     (pr.quiet_start_time > pr.quiet_end_time AND (CURRENT_TIME >= pr.quiet_start_time OR CURRENT_TIME <= pr.quiet_end_time))
-                   )
-                 )
-                 OR
-                 (
-                   pr.daily_screen_time_minutes > 0
-                   AND (
-                     SELECT COALESCE(SUM(krs.duration_seconds), 0)
-                     FROM kid_reading_sessions krs
-                     WHERE krs.kid_profile_id = pr.kid_profile_id
-                       AND krs.created_at >= date_trunc('day', NOW())
-                   ) >= pr.daily_screen_time_minutes * 60
-                 )
-               )
-             LIMIT 1`,
-            [decoded.kid_profile_id, book.language || 'fr', book.theme || '']
-          );
-
-          if (rulesResult.rows.length > 0) {
-            return res.status(403).json({ error: 'This book is outside parental rules' });
-          }
+          const policy = await loadChildAccessPolicy({ user: decoded, pool });
+          const violation = getContentAccessViolation(policy, book);
+          if (violation) return sendParentalAccessError(res, violation);
         }
       } catch (err) {
         return res.status(401).json({ error: 'Invalid or expired token' });

@@ -13,6 +13,7 @@ import { KID_CATEGORIES } from '../constants/kidCategories';
 import { useAudioPlayer } from '../hooks/useAudioPlayer';
 import { useOfflineContent } from '../hooks/useOfflineContent';
 import { getDownloads, offlineContentIds } from '../services/offline/offlineContentService';
+import { getRestrictionMessage } from '../services/parental/parentalAccessService';
 import { AudioPlayer } from '../components/audio/AudioPlayer';
 import { VoiceAssistant } from '../components/kids/VoiceAssistant';
 import {
@@ -232,7 +233,11 @@ function KidsLibrary() {
       setLoading(true);
       const [booksRes, recommendationsRes] = await Promise.all([
         booksAPI.getPublishedBooks(),
-        recommendationsAPI.getForKid(getRecommendationContext()).catch(() => ({ data: { sections: [] } })),
+        recommendationsAPI.getForKid(getRecommendationContext()).catch((error) => {
+          const message = getRestrictionMessage(error);
+          if (message) showToast(message, 'info');
+          return { data: { sections: [] } };
+        }),
       ]);
       setBooks(booksRes.data || []);
       setRecommendationSections(recommendationsRes.data?.sections || []);
@@ -246,7 +251,7 @@ function KidsLibrary() {
         setRecommendationSections([]);
         showToast('Mode hors connexion', 'info');
       } else {
-        showToast('Erreur lors du chargement', 'error');
+        showToast(getRestrictionMessage(error, 'Erreur lors du chargement'), 'error');
       }
     } finally {
       setLoading(false);
@@ -302,7 +307,9 @@ function KidsLibrary() {
       storage.markDownloaded(book.id);
       showToast('Téléchargé !', 'success');
     } catch (error) {
-      if (error.name !== 'AbortError') showToast('Erreur', 'error');
+      if (error.name !== 'AbortError') {
+        showToast(getRestrictionMessage(error, 'Erreur'), 'error');
+      }
     }
   };
 

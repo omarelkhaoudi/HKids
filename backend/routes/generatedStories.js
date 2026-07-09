@@ -4,6 +4,14 @@ import { verifyToken } from './auth.js';
 import { generatePersonalizedStory, normalizeStoryRequest, validateStoryRequest } from '../services/ai/storyGenerationService.js';
 import { aiErrorResponse } from '../services/ai/errors.js';
 import { buildGeneratedStoryWhereClause, mapGeneratedStory, normalizeStoryListFilters } from '../models/GeneratedStory.js';
+import {
+  filterAllowedContent,
+  getAuthorizedKidProfile,
+  getContentAccessViolation,
+  getGlobalAccessViolation,
+  loadChildAccessPolicy,
+  sendParentalAccessError
+} from '../services/parental/parentalAccessService.js';
 
 const router = express.Router();
 
@@ -16,31 +24,25 @@ function getPool() {
   }
 }
 
-async function getAuthorizedKid(pool, req, requestedKidProfileId = null) {
-  if (req.user.role === 'kid') {
-    if (!req.user.kid_profile_id) return null;
-    const result = await pool.query('SELECT * FROM kids_profiles WHERE id = $1', [req.user.kid_profile_id]);
-    return result.rows[0] || null;
-  }
+function generatedStoryDescriptor(story) {
+  return {
+    ...story,
+    id: story.id,
+    language: story.language,
+    theme: story.theme,
+    is_premium: false
+  };
+}
 
-  if (req.user.role === 'parent') {
-    const kidProfileId = requestedKidProfileId;
-    if (!kidProfileId) return null;
-    const result = await pool.query(
-      'SELECT * FROM kids_profiles WHERE id = $1 AND parent_id = $2',
-      [kidProfileId, req.user.id]
-    );
-    return result.rows[0] || null;
-  }
-
-  if (req.user.role === 'admin') {
-    const kidProfileId = requestedKidProfileId;
-    if (!kidProfileId) return null;
-    const result = await pool.query('SELECT * FROM kids_profiles WHERE id = $1', [kidProfileId]);
-    return result.rows[0] || null;
-  }
-
-  return null;
+async function getGeneratedStoryViolation(pool, req, kidProfileId, story = null) {
+  const policy = await loadChildAccessPolicy({
+    user: req.user,
+    requestedKidProfileId: kidProfileId,
+    pool
+  });
+  return story
+    ? getContentAccessViolation(policy, generatedStoryDescriptor(story))
+    : getGlobalAccessViolation(policy);
 }
 
 function mapKidProfile(row) {
@@ -89,11 +91,19 @@ router.get('/kid-profiles', verifyToken, async (req, res) => {
 router.post('/generate', verifyToken, async (req, res) => {
   try {
     const pool = getPool();
-    const kid = await getAuthorizedKid(pool, req, req.body.kid_profile_id);
+    const kid = await getAuthorizedKidProfile(pool, req.user, req.body.kid_profile_id);
 
     if (!kid) {
       return res.status(403).json({ error: 'Kid profile required or not authorized' });
     }
+
+    const policy = await loadChildAccessPolicy({
+      user: req.user,
+      requestedKidProfileId: kid.id,
+      pool
+    });
+    const globalViolation = getGlobalAccessViolation(policy);
+    if (globalViolation) return sendParentalAccessError(res, globalViolation);
 
     const validation = validateStoryRequest(req.body);
     if (!validation.valid) {
@@ -105,6 +115,12 @@ router.post('/generate', verifyToken, async (req, res) => {
     }
 
     const preferences = normalizeStoryRequest(req.body, kid);
+    const contentViolation = getContentAccessViolation(policy, {
+      language: preferences.language,
+      theme: preferences.theme
+    }, { includeGlobal: false });
+    if (contentViolation) return sendParentalAccessError(res, contentViolation);
+
     const generated = await generatePersonalizedStory({ kid, preferences });
 
     if (!generated.story_text) {
@@ -178,11 +194,19 @@ router.post('/generate', verifyToken, async (req, res) => {
 router.get('/', verifyToken, async (req, res) => {
   try {
     const pool = getPool();
-    const kid = await getAuthorizedKid(pool, req, req.query.kid_profile_id);
+    const kid = await getAuthorizedKidProfile(pool, req.user, req.query.kid_profile_id);
 
     if (!kid) {
       return res.status(403).json({ error: 'Kid profile required or not authorized' });
     }
+
+    const policy = await loadChildAccessPolicy({
+      user: req.user,
+      requestedKidProfileId: kid.id,
+      pool
+    });
+    const globalViolation = getGlobalAccessViolation(policy);
+    if (globalViolation) return sendParentalAccessError(res, globalViolation);
 
     const filters = normalizeStoryListFilters(req.query);
     const { whereSql, values } = buildGeneratedStoryWhereClause({
@@ -200,7 +224,11 @@ router.get('/', verifyToken, async (req, res) => {
       values
     );
 
-    res.json(result.rows.map(mapGeneratedStory));
+    const allowedStories = filterAllowedContent(
+      policy,
+      result.rows.map(generatedStoryDescriptor)
+    );
+    res.json(allowedStories.map(mapGeneratedStory));
   } catch (err) {
     console.error('Error fetching generated stories:', err);
     res.status(500).json({ error: 'Could not load generated stories' });
@@ -217,10 +245,13 @@ router.get('/:id', verifyToken, async (req, res) => {
       return res.status(404).json({ error: 'Story not found' });
     }
 
-    const kid = await getAuthorizedKid(pool, req, story.kid_profile_id);
+    const kid = await getAuthorizedKidProfile(pool, req.user, story.kid_profile_id);
     if (!kid) {
       return res.status(403).json({ error: 'Not authorized to read this story' });
     }
+
+    const violation = await getGeneratedStoryViolation(pool, req, kid.id, story);
+    if (violation) return sendParentalAccessError(res, violation);
 
     res.json(mapGeneratedStory(story));
   } catch (err) {
@@ -239,10 +270,13 @@ router.post('/:id/save', verifyToken, async (req, res) => {
       return res.status(404).json({ error: 'Story not found' });
     }
 
-    const kid = await getAuthorizedKid(pool, req, story.kid_profile_id);
+    const kid = await getAuthorizedKidProfile(pool, req.user, story.kid_profile_id);
     if (!kid) {
       return res.status(403).json({ error: 'Not authorized to save this story' });
     }
+
+    const violation = await getGeneratedStoryViolation(pool, req, kid.id, story);
+    if (violation) return sendParentalAccessError(res, violation);
 
     const result = await pool.query(
       `UPDATE generated_stories
@@ -269,10 +303,13 @@ router.post('/:id/favorite', verifyToken, async (req, res) => {
       return res.status(404).json({ error: 'Story not found' });
     }
 
-    const kid = await getAuthorizedKid(pool, req, story.kid_profile_id);
+    const kid = await getAuthorizedKidProfile(pool, req.user, story.kid_profile_id);
     if (!kid) {
       return res.status(403).json({ error: 'Not authorized to favorite this story' });
     }
+
+    const violation = await getGeneratedStoryViolation(pool, req, kid.id, story);
+    if (violation) return sendParentalAccessError(res, violation);
 
     const favorite = req.body?.favorite !== false;
     const result = await pool.query(
@@ -300,10 +337,18 @@ router.post('/:id/version', verifyToken, async (req, res) => {
       return res.status(404).json({ error: 'Story not found' });
     }
 
-    const kid = await getAuthorizedKid(pool, req, story.kid_profile_id);
+    const kid = await getAuthorizedKidProfile(pool, req.user, story.kid_profile_id);
     if (!kid) {
       return res.status(403).json({ error: 'Not authorized to regenerate this story' });
     }
+
+    const policy = await loadChildAccessPolicy({
+      user: req.user,
+      requestedKidProfileId: kid.id,
+      pool
+    });
+    const globalViolation = getGlobalAccessViolation(policy);
+    if (globalViolation) return sendParentalAccessError(res, globalViolation);
 
     const preferences = normalizeStoryRequest({
       theme: req.body?.theme || story.theme,
@@ -312,6 +357,12 @@ router.post('/:id/version', verifyToken, async (req, res) => {
       educational_value: req.body?.educational_value || story.educational_value,
       language: req.body?.language || story.language
     }, kid);
+    const contentViolation = getContentAccessViolation(policy, {
+      language: preferences.language,
+      theme: preferences.theme
+    }, { includeGlobal: false });
+    if (contentViolation) return sendParentalAccessError(res, contentViolation);
+
     const generated = await generatePersonalizedStory({ kid, preferences });
 
     if (!generated.story_text) {
@@ -408,10 +459,13 @@ router.delete('/:id', verifyToken, async (req, res) => {
       return res.status(404).json({ error: 'Story not found' });
     }
 
-    const kid = await getAuthorizedKid(pool, req, story.kid_profile_id);
+    const kid = await getAuthorizedKidProfile(pool, req.user, story.kid_profile_id);
     if (!kid) {
       return res.status(403).json({ error: 'Not authorized to delete this story' });
     }
+
+    const violation = await getGeneratedStoryViolation(pool, req, kid.id, story);
+    if (violation) return sendParentalAccessError(res, violation);
 
     await pool.query('DELETE FROM generated_stories WHERE id = $1', [req.params.id]);
     res.json({ message: 'Generated story deleted successfully' });

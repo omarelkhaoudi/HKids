@@ -8,6 +8,8 @@ import {Logo} from '../components/Logo';
 import {parentalAPI} from '../api/parental';
 import {recommendationsAPI} from '../api/recommendations';
 import {getImageUrl} from '../utils/imageUrl';
+import {useToast} from '../components/ToastProvider';
+import {getRestrictionMessage} from '../services/parental/parentalAccessService';
 import {
  PlayIcon, StarIcon, LockIcon, SparklesIcon
 } from '../components/Icons';
@@ -39,6 +41,7 @@ function getMissionText(goal, summary) {
 
 function KidsHome() {
  const {user} = useAuth();
+ const {showToast} = useToast();
  const navigate = useNavigate();
  const [greeting, setGreeting] = useState('Bonjour');
  const [homeData, setHomeData] = useState(null);
@@ -72,6 +75,8 @@ function KidsHome() {
        setRecommendationSections(recommendationsResult.value.data?.sections || []);
      } else {
        console.warn('Kid recommendations unavailable:', recommendationsResult.reason);
+       const message = getRestrictionMessage(recommendationsResult.reason);
+       if (message) showToast(message, 'info');
      }
    };
 
@@ -79,7 +84,7 @@ function KidsHome() {
    return () => {
      active = false;
    };
- }, []);
+ }, [showToast]);
 
  const kid = homeData?.kid || null;
  const kidName = kid?.name || user?.username || '';

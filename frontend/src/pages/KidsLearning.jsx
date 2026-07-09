@@ -7,6 +7,7 @@ import { useAuth } from '../context/AuthContext';
 import { useToast } from '../components/ToastProvider';
 import { Logo } from '../components/Logo';
 import { VoiceAssistant } from '../components/kids/VoiceAssistant';
+import { getRestrictionMessage } from '../services/parental/parentalAccessService';
 import {
   AudioIcon, BookIcon, ChevronLeftIcon, CheckIcon, HomeIcon, 
   LogOutIcon, SparklesIcon, StarIcon, TrophyIcon, ShieldIcon, SearchIcon, PlayIcon
@@ -101,7 +102,7 @@ function KidsLearning() {
       setChallenges(challengesRes.data || []);
     } catch (error) {
       console.error('Learning load error:', error);
-      showToast('Jeux indisponibles pour le moment', 'error');
+      showToast(getRestrictionMessage(error, 'Jeux indisponibles pour le moment'), 'error');
     } finally {
       setLoading(false);
     }
@@ -148,7 +149,7 @@ function KidsLearning() {
       setSelectedContent(response.data);
     } catch (error) {
       console.error('Learning content error:', error);
-      showToast('Activité impossible à ouvrir', 'error');
+      showToast(getRestrictionMessage(error, 'Activité impossible à ouvrir'), 'error');
     }
   };
 

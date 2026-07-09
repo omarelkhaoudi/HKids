@@ -3,6 +3,7 @@ import { useNetworkStatus } from '../../hooks/useNetworkStatus';
 import { parentalAPI } from '../../api/parental';
 import { generatedStoriesAPI } from '../../api/generatedStories';
 import { synchronizePendingMutations } from '../../services/offline/offlineSyncService';
+import { synchronizeParentalPolicy } from '../../services/parental/parentalAccessService';
 
 const syncHandlers = {
   reading_progress: (payload) => parentalAPI.recordReadingProgress(payload),
@@ -20,7 +21,10 @@ export function OfflineSyncBridge() {
   useEffect(() => {
     if (!online) return;
 
-    synchronizePendingMutations(syncHandlers).catch((error) => {
+    Promise.all([
+      synchronizeParentalPolicy(),
+      synchronizePendingMutations(syncHandlers)
+    ]).catch((error) => {
       console.warn('Offline synchronization failed:', error);
     });
   }, [online, changedAt]);

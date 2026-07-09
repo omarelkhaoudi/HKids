@@ -63,6 +63,10 @@ export const parentalAPI = {
     return axios.get(buildApiUrl('/parental/me/overview'), { headers: getAuthHeaders() });
   },
 
+  getConnectedKidAccessPolicy: () => {
+    return axios.get(buildApiUrl('/parental/me/access-policy'), { headers: getAuthHeaders() });
+  },
+
   getKidActivity: (kidId) => {
     return axios.get(buildApiUrl(`/parental/kids/${kidId}/activity`), { headers: getAuthHeaders() });
   },
