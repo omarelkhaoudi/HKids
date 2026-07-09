@@ -2,22 +2,9 @@ import { useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { aiAPI } from '../../api/ai';
 import { MicrophoneIcon, SparklesIcon, XIcon } from '../Icons';
+import { useLanguage } from '../../context/LanguageContext';
 import { isAudioRecordingSupported, recordAudioClip } from '../../services/ai/browserSpeechRecognition';
 import { speakText, stopSpeaking } from '../../services/ai/browserTextToSpeech';
-
-const initialMessages = [
-  {
-    role: 'assistant',
-    text: '🎙️ Appuie et parle.',
-    includeInContext: false,
-  },
-];
-
-const quickVoiceActions = [
-  { icon: '🎧', label: 'Audio', prompt: 'Je veux ecouter une histoire courte.' },
-  { icon: '🦖', label: 'Dino', prompt: 'Je veux une histoire de dinosaures.' },
-  { icon: '🚀', label: 'Fusee', prompt: 'Je veux une histoire dans l espace.' },
-];
 
 function isExpectedVoiceRecordingError(error) {
   const message = String(error?.message || error?.response?.data?.error || '').toLowerCase();
@@ -29,21 +16,45 @@ function isExpectedVoiceRecordingError(error) {
   );
 }
 
-export function VoiceAssistant({ language = 'fr-FR' }) {
+function toSpeechLanguage(language) {
+  if (language === 'en') return 'en-US';
+  if (language === 'ar') return 'ar-MA';
+  return 'fr-FR';
+}
+
+export function VoiceAssistant({ language: requestedSpeechLanguage }) {
+  const { language, t, isRtl } = useLanguage();
+  const speechLanguage = requestedSpeechLanguage || toSpeechLanguage(language);
   const [open, setOpen] = useState(false);
   const [listening, setListening] = useState(false);
   const [thinking, setThinking] = useState(false);
   const [transcriptPreview, setTranscriptPreview] = useState('');
   const [manualText, setManualText] = useState('');
-  const [messages, setMessages] = useState(initialMessages);
+  const [messages, setMessages] = useState(() => [
+    {
+      role: 'assistant',
+      text: t('assistantTapAndTalk'),
+      includeInContext: false,
+    },
+  ]);
   const [error, setError] = useState('');
   const [voiceUnavailable, setVoiceUnavailable] = useState(false);
 
-  const canUseVoice = useMemo(() => (
-    isAudioRecordingSupported()
-  ), []);
+  const canUseVoice = useMemo(() => isAudioRecordingSupported(), []);
+  const quickVoiceActions = useMemo(() => [
+    { icon: '🎧', label: t('assistantQuickAudio'), prompt: t('assistantPromptAudio') },
+    { icon: '🦖', label: t('assistantQuickDino'), prompt: t('assistantPromptDino') },
+    { icon: '🚀', label: t('assistantQuickRocket'), prompt: t('assistantPromptRocket') },
+  ], [t]);
 
   useEffect(() => () => stopSpeaking(), []);
+
+  useEffect(() => {
+    setMessages((current) => {
+      if (current.length > 1 || current[0]?.includeInContext !== false) return current;
+      return [{ ...current[0], text: t('assistantTapAndTalk') }];
+    });
+  }, [t]);
 
   const addMessage = (role, text) => {
     setMessages((current) => [...current, { role, text }].slice(-8));
@@ -59,13 +70,13 @@ export function VoiceAssistant({ language = 'fr-FR' }) {
 
     addMessage('kid', transcript);
     setThinking(true);
-    const response = await aiAPI.sendVoiceAssistantRequest(transcript, conversation, language);
-    const replyText = response.data?.reply_text || "Je n ai pas encore de reponse.";
+    const response = await aiAPI.sendVoiceAssistantRequest(transcript, conversation, speechLanguage);
+    const replyText = response.data?.reply_text || t('assistantFallbackReply');
     addMessage('assistant', replyText);
     setThinking(false);
 
     try {
-      await speakText(replyText, { language: response.data?.language || language });
+      await speakText(replyText, { language: response.data?.language || speechLanguage });
     } catch {
       // Text is already displayed; audio playback is a progressive enhancement.
     }
@@ -78,7 +89,7 @@ export function VoiceAssistant({ language = 'fr-FR' }) {
 
     if (!canUseVoice || voiceUnavailable) {
       setVoiceUnavailable(true);
-      setError("Le micro n est pas disponible ici. Ecris ta demande.");
+      setError(t('assistantMicUnavailable'));
       return;
     }
 
@@ -89,13 +100,13 @@ export function VoiceAssistant({ language = 'fr-FR' }) {
       });
       const transcription = await aiAPI.transcribeVoice({
         audioBlob: result.audioBlob,
-        language
+        language: speechLanguage,
       });
       const transcript = String(transcription.data?.transcript || '').trim();
       setListening(false);
       setTranscriptPreview(transcript);
       if (!transcript) {
-        setError("Je n ai pas bien entendu. Recommence doucement ou ecris ta demande.");
+        setError(t('assistantDidNotHear'));
         return;
       }
 
@@ -103,7 +114,7 @@ export function VoiceAssistant({ language = 'fr-FR' }) {
     } catch (err) {
       setListening(false);
       setThinking(false);
-      const message = err.response?.data?.error || err.message || 'Erreur reseau avec l assistant.';
+      const message = err.response?.data?.error || err.message || t('assistantNetworkError');
       if (isExpectedVoiceRecordingError(err)) {
         setVoiceUnavailable(true);
       } else {
@@ -128,7 +139,7 @@ export function VoiceAssistant({ language = 'fr-FR' }) {
     } catch (err) {
       console.warn('Voice assistant text fallback error:', err);
       setThinking(false);
-      setError(err.response?.data?.error || err.message || 'Erreur reseau avec l assistant.');
+      setError(err.response?.data?.error || err.message || t('assistantNetworkError'));
     }
   };
 
@@ -143,7 +154,7 @@ export function VoiceAssistant({ language = 'fr-FR' }) {
     } catch (err) {
       console.warn('Voice assistant quick action error:', err);
       setThinking(false);
-      setError(err.response?.data?.error || err.message || 'Erreur reseau avec l assistant.');
+      setError(err.response?.data?.error || err.message || t('assistantNetworkError'));
     }
   };
 
@@ -155,18 +166,18 @@ export function VoiceAssistant({ language = 'fr-FR' }) {
         onClick={() => {
           if (voiceUnavailable || !canUseVoice) {
             setOpen(true);
-            setError("Le micro n est pas disponible ici. Ecris ta demande.");
+            setError(t('assistantMicUnavailable'));
             return;
           }
           handleAsk();
         }}
-        className={`fixed bottom-6 right-6 z-50 grid h-20 w-20 place-items-center rounded-full text-white shadow-2xl ${
+        className={`fixed bottom-6 z-50 grid h-20 w-20 place-items-center rounded-full text-white shadow-2xl ${isRtl ? 'left-6' : 'right-6'} ${
           listening
             ? 'bg-gradient-to-br from-accent-400 to-accent-500'
             : 'bg-gradient-to-br from-primary-500 via-secondary-500 to-purple-500'
         }`}
-        aria-label="Assistant vocal"
-        title="Assistant vocal"
+        aria-label={t('assistantVoice')}
+        title={t('assistantVoice')}
       >
         <MicrophoneIcon className="h-9 w-9" />
       </motion.button>
@@ -177,7 +188,8 @@ export function VoiceAssistant({ language = 'fr-FR' }) {
             initial={{ opacity: 0, y: 24, scale: 0.96 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 24, scale: 0.96 }}
-            className="fixed bottom-28 right-4 z-50 w-[min(92vw,420px)] overflow-hidden rounded-[2rem] bg-white shadow-2xl ring-1 ring-primary-100"
+            className={`fixed bottom-28 z-50 w-[min(92vw,420px)] overflow-hidden rounded-[2rem] bg-white shadow-2xl ring-1 ring-primary-100 ${isRtl ? 'left-4' : 'right-4'}`}
+            dir={isRtl ? 'rtl' : 'ltr'}
           >
             <div className="bg-gradient-to-r from-primary-500 via-secondary-500 to-purple-500 p-4 text-white">
               <div className="flex items-center justify-between gap-3">
@@ -186,9 +198,9 @@ export function VoiceAssistant({ language = 'fr-FR' }) {
                     <SparklesIcon className="h-6 w-6" />
                   </span>
                   <div>
-                    <p className="text-lg font-black">Assistant vocal</p>
+                    <p className="text-lg font-black">{t('assistantVoice')}</p>
                     <p className="text-xs font-bold text-white/80">
-                      {listening ? 'J enregistre...' : thinking ? 'Je reflechis...' : voiceUnavailable ? 'Texte disponible' : 'Pret'}
+                      {listening ? t('assistantRecording') : thinking ? t('assistantThinking') : voiceUnavailable ? t('assistantTextAvailable') : t('assistantReady')}
                     </p>
                   </div>
                 </div>
@@ -198,7 +210,7 @@ export function VoiceAssistant({ language = 'fr-FR' }) {
                     stopSpeaking();
                   }}
                   className="grid h-10 w-10 place-items-center rounded-full bg-white/20 transition hover:bg-white/30"
-                  aria-label="Fermer"
+                  aria-label={t('close')}
                 >
                   <XIcon className="h-5 w-5" />
                 </button>
@@ -211,8 +223,8 @@ export function VoiceAssistant({ language = 'fr-FR' }) {
                   key={`${message.role}-${index}`}
                   className={`rounded-2xl px-4 py-3 text-sm font-bold leading-relaxed ${
                     message.role === 'kid'
-                      ? 'ml-8 bg-cyan-100 text-cyan-900'
-                      : 'mr-8 bg-surface-100 text-surface-800'
+                      ? `${isRtl ? 'mr-8' : 'ml-8'} bg-cyan-100 text-cyan-900`
+                      : `${isRtl ? 'ml-8' : 'mr-8'} bg-surface-100 text-surface-800`
                   }`}
                 >
                   {message.text}
@@ -220,14 +232,14 @@ export function VoiceAssistant({ language = 'fr-FR' }) {
               ))}
 
               {transcriptPreview && listening && (
-                <div className="ml-8 rounded-2xl bg-cyan-50 px-4 py-3 text-sm font-bold text-cyan-800">
+                <div className={`${isRtl ? 'mr-8' : 'ml-8'} rounded-2xl bg-cyan-50 px-4 py-3 text-sm font-bold text-cyan-800`}>
                   {transcriptPreview}
                 </div>
               )}
 
               {(listening || thinking) && (
-                <div className="mr-8 rounded-2xl bg-primary-50 px-4 py-3 text-sm font-bold text-foreground-700">
-                  {listening ? 'Parle maintenant...' : 'Recherche de reponse...'}
+                <div className={`${isRtl ? 'ml-8' : 'mr-8'} rounded-2xl bg-primary-50 px-4 py-3 text-sm font-bold text-foreground-700`}>
+                  {listening ? t('assistantSpeakNow') : t('assistantSearching')}
                 </div>
               )}
 
@@ -261,14 +273,14 @@ export function VoiceAssistant({ language = 'fr-FR' }) {
                   onChange={(event) => setManualText(event.target.value)}
                   disabled={listening || thinking}
                   className="min-w-0 flex-1 rounded-2xl border-2 border-surface-100 px-4 py-3 text-sm font-bold text-surface-900 outline-none transition focus:border-secondary-300 disabled:opacity-60"
-                  placeholder="Ecris ta demande..."
+                  placeholder={t('assistantPlaceholder')}
                 />
                 <button
                   type="submit"
                   disabled={!manualText.trim() || listening || thinking}
                   className="rounded-2xl bg-secondary-500 px-4 py-3 text-sm font-black text-white transition hover:bg-secondary-600 disabled:opacity-60"
                 >
-                  Envoyer
+                  {t('assistantSend')}
                 </button>
               </form>
               <button
@@ -277,7 +289,7 @@ export function VoiceAssistant({ language = 'fr-FR' }) {
                 className="inline-flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-surface-900 text-base font-black text-white transition hover:bg-surface-800 disabled:opacity-60"
               >
                 <MicrophoneIcon className="h-6 w-6" />
-                {listening ? 'Enregistrement...' : thinking ? 'Patiente...' : voiceUnavailable || !canUseVoice ? 'Micro indisponible' : 'Parler'}
+                {listening ? t('assistantRecording') : thinking ? t('assistantWaiting') : voiceUnavailable || !canUseVoice ? t('assistantMicDisabled') : t('assistantTalk')}
               </button>
             </div>
           </motion.aside>

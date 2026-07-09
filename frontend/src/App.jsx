@@ -26,7 +26,7 @@ import FeatureDetails from './pages/FeatureDetails';
 import StoriesGallery from './pages/StoriesGallery';
 import Subscriptions from './pages/Subscriptions';
 import { AuthProvider, useAuth } from './context/AuthContext';
-import { LanguageProvider } from './context/LanguageContext';
+import { LanguageProvider, useLanguage } from './context/LanguageContext';
 import { ToastProvider } from './components/ToastProvider';
 import ErrorBoundary from './components/ErrorBoundary';
 import { OfflineStatusBanner } from './components/offline/OfflineStatusBanner';
@@ -39,6 +39,7 @@ const DEFAULT_ANDROID_KIOSK_IDLE_MS = 10 * 60 * 1000;
 
 function RequireAuth({ children }) {
   const { user, loading } = useAuth();
+  const { t } = useLanguage();
   const hasToken = Boolean(localStorage.getItem('token'));
 
   if (loading) {
@@ -46,7 +47,7 @@ function RequireAuth({ children }) {
       <div className="min-h-screen flex items-center justify-center bg-white">
         <div className="text-center">
           <div className="inline-block rounded-full h-12 w-12 border-4 border-primary-500 border-t-transparent animate-spin mb-4"></div>
-          <p className="text-surface-600 font-semibold">Chargement...</p>
+          <p className="text-surface-600 font-semibold">{t('loading')}</p>
         </div>
       </div>
     );
@@ -61,13 +62,14 @@ function RequireAuth({ children }) {
 
 function RequireRole({ roles, children }) {
   const { user, loading } = useAuth();
+  const { t } = useLanguage();
 
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
         <div className="text-center">
           <div className="inline-block rounded-full h-12 w-12 border-4 border-primary-500 border-t-transparent animate-spin mb-4"></div>
-          <p className="text-surface-600 font-semibold">Chargement...</p>
+          <p className="text-surface-600 font-semibold">{t('loading')}</p>
         </div>
       </div>
     );

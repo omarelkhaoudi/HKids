@@ -12,6 +12,7 @@ import {
 } from '../components/Icons';
 import { Logo } from '../components/Logo';
 import { VoiceAssistant } from '../components/kids/VoiceAssistant';
+import { useLanguage } from '../context/LanguageContext';
 
 // --- MAGIC CELEBRATION PARTICLES ---
 function MagicCelebration({ active, onComplete }) {
@@ -138,11 +139,12 @@ function speechLanguage(language) {
 }
 
 function KidsAIStories() {
+  const { language, isRtl } = useLanguage();
   const [kidProfiles, setKidProfiles] = useState([]);
   const [selectedKidProfileId, setSelectedKidProfileId] = useState('');
   const [stories, setStories] = useState([]);
   const [selectedStory, setSelectedStory] = useState(null);
-  const [filters, setFilters] = useState(filtersInitialState);
+  const [filters, setFilters] = useState(() => ({ ...filtersInitialState, language }));
   const [activeCollection, setActiveCollection] = useState('library');
   const [loading, setLoading] = useState(true);
   const [busyStoryId, setBusyStoryId] = useState(null);
@@ -227,14 +229,21 @@ function KidsAIStories() {
     if (selectedKidProfileId) loadStories(selectedKidProfileId, filters, activeCollection);
   }, [selectedKidProfileId]);
 
+  useEffect(() => {
+    const nextFilters = { ...filters, language };
+    setFilters(nextFilters);
+    if (selectedKidProfileId) loadStories(selectedKidProfileId, nextFilters, activeCollection);
+  }, [language]);
+
   const handleSearchSubmit = (event) => {
     event.preventDefault();
     loadStories(selectedKidProfileId, filters, activeCollection);
   };
 
   const handleResetFilters = () => {
-    setFilters(filtersInitialState);
-    loadStories(selectedKidProfileId, filtersInitialState, activeCollection);
+    const nextFilters = { ...filtersInitialState, language };
+    setFilters(nextFilters);
+    loadStories(selectedKidProfileId, nextFilters, activeCollection);
   };
   
   const patchStory = (nextStory) => {
@@ -463,7 +472,7 @@ function KidsAIStories() {
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground overflow-hidden">
+    <div className="min-h-screen bg-background text-foreground overflow-hidden" dir={isRtl ? 'rtl' : 'ltr'}>
       {/* Immersive Magical Background */}
       <div className="fixed inset-0 pointer-events-none z-0">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary-900/20 via-background to-background" />

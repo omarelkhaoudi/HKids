@@ -30,17 +30,17 @@ import FeaturesSection from '../components/home/FeaturesSection';
 import TestimonialsSection from '../components/home/TestimonialsSection';
 import NewsletterSection from '../components/home/NewsletterSection';
 import FooterSection from '../components/home/FooterSection';
-const HOME_DATA_CACHE_KEY = 'hkids_home_data_cache_v1';
+const HOME_DATA_CACHE_KEY = 'hkids_home_data_cache_v2';
 const HOME_DATA_CACHE_TTL_MS = 10 * 60 * 1000;
 const FALLBACK_BOOK_COUNT = 12;
 
-const readHomeDataCache = () => {
+const readHomeDataCache = (language = 'fr') => {
  try {
  const rawCache = localStorage.getItem(HOME_DATA_CACHE_KEY);
  if (!rawCache) return null;
 
  const cache = JSON.parse(rawCache);
- if (!cache?.cachedAt || Date.now() - cache.cachedAt > HOME_DATA_CACHE_TTL_MS) {
+ if (!cache?.cachedAt || cache.language !== language || Date.now() - cache.cachedAt > HOME_DATA_CACHE_TTL_MS) {
  return null;
 }
 
@@ -53,11 +53,11 @@ const readHomeDataCache = () => {
 }
 };
 
-const writeHomeDataCache = (books, categories) => {
+const writeHomeDataCache = (books, categories, language = 'fr') => {
  try {
  localStorage.setItem(
  HOME_DATA_CACHE_KEY,
- JSON.stringify({books, categories, cachedAt: Date.now()})
+ JSON.stringify({books, categories, language, cachedAt: Date.now()})
  );
 } catch (error) {
  // Optional cache only; API data stays the source of truth.
@@ -117,7 +117,7 @@ function Home({darkMode, setDarkMode}) {
 
  useEffect(() => {
  loadData();
-}, []);
+}, [language]);
 
  useEffect(() => {
  filterAndSortBooks(allBooks);
@@ -231,7 +231,7 @@ function Home({darkMode, setDarkMode}) {
 };
 
  const loadData = async () => {
- const cachedData = readHomeDataCache();
+ const cachedData = readHomeDataCache(language);
 
  if (cachedData?.books?.length || cachedData?.categories?.length) {
  setAllBooks(cachedData.books);
@@ -258,7 +258,8 @@ function Home({darkMode, setDarkMode}) {
  const [booksRes, categoriesRes] = await Promise.all([
  booksAPI.getPublishedBooks({
  category_id: selectedCategory || undefined,
- age_group: ageGroupForAPI
+ age_group: ageGroupForAPI,
+ language
 }),
  categoriesAPI.getAll()
  ]);
@@ -268,7 +269,8 @@ function Home({darkMode, setDarkMode}) {
  setCategories(categoriesRes.data);
  writeHomeDataCache(
  Array.isArray(booksRes.data) ? booksRes.data : [],
- Array.isArray(categoriesRes.data) ? categoriesRes.data : []
+ Array.isArray(categoriesRes.data) ? categoriesRes.data : [],
+ language
  );
 } catch (error) {
  console.error('Error loading data:', error);

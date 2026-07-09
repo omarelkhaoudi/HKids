@@ -8,14 +8,16 @@ import {BookGridSkeleton} from '../components/SkeletonLoader';
 import {HeartIcon, BookIcon, ChevronLeftIcon, StarIcon} from '../components/Icons';
 import {Logo} from '../components/Logo';
 import {getImageUrl} from '../utils/imageUrl';
+import {useLanguage} from '../context/LanguageContext';
 
 function Favorites() {
  const [favoriteBooks, setFavoriteBooks] = useState([]);
  const [loading, setLoading] = useState(true);
+ const {language, isRtl} = useLanguage();
 
  useEffect(() => {
  loadFavorites();
-}, []);
+}, [language]);
 
  const loadFavorites = async () => {
  try {
@@ -29,7 +31,7 @@ function Favorites() {
 }
 
  // Charger tous les livres publiés et filtrer les favoris
- const response = await booksAPI.getPublishedBooks();
+ const response = await booksAPI.getPublishedBooks({language});
  const favorites = response.data.filter(book => favoriteIds.includes(book.id));
  
  // Pour les livres manquants (non publiés), charger individuellement
@@ -70,7 +72,7 @@ function Favorites() {
 };
 
  return (
- <div className="min-h-screen bg-card">
+ <div className="min-h-screen bg-card" dir={isRtl ? 'rtl' : 'ltr'}>
  {/* Header */}
  <motion.header 
  initial={{y: -100, opacity: 0}}

@@ -10,6 +10,7 @@ import {getContentLibraryCategory} from '../constants/contentLibrary';
 import {filterContentItems, normalizeContentItem} from '../utils/contentLibrary';
 import {useAudioPlayer} from '../hooks/useAudioPlayer';
 import {storage} from '../utils/storage';
+import {useLanguage} from '../context/LanguageContext';
 
 const defaultFilters = {
  search: '',
@@ -20,20 +21,24 @@ const defaultFilters = {
 
 function ContentCategoryContents() {
  const {categoryId} = useParams();
- const category = getContentLibraryCategory(categoryId);
+ const {language, isRtl} = useLanguage();
+ const category = getContentLibraryCategory(categoryId, language);
  const [contents, setContents] = useState([]);
- const [filters, setFilters] = useState(defaultFilters);
+ const [filters, setFilters] = useState(() => ({...defaultFilters, language}));
  const [loading, setLoading] = useState(true);
  const audioPlayer = useAudioPlayer();
 
  useEffect(() => {
- if (category) loadContents();
-}, [categoryId]);
+ if (category) {
+ setFilters((current) => ({...current, language}));
+ loadContents();
+}
+}, [categoryId, language]);
 
  const loadContents = async () => {
  try {
  setLoading(true);
- const response = await booksAPI.getPublishedBooks();
+ const response = await booksAPI.getPublishedBooks({language});
  setContents((response.data || []).map(normalizeContentItem));
 } catch (error) {
  console.error('Error loading category contents:', error);
@@ -59,7 +64,7 @@ function ContentCategoryContents() {
 }
 
  return (
- <div className="min-h-screen bg-gradient-to-br from-surface-50 to-primary-50/40 dark:from-surface-900 dark:to-surface-800">
+ <div className="min-h-screen bg-gradient-to-br from-surface-50 to-primary-50/40 dark:from-surface-900 dark:to-surface-800" dir={isRtl ? 'rtl' : 'ltr'}>
  <div className="mx-auto max-w-7xl px-4 py-8 pb-36 sm:px-6 lg:px-8">
  <header className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
  <Link to="/">

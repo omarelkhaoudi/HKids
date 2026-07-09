@@ -7,15 +7,17 @@ import {useToast} from '../components/ToastProvider';
 import {HistoryIcon, BookIcon, ChevronLeftIcon, TrashIcon, StarIcon} from '../components/Icons';
 import {Logo} from '../components/Logo';
 import {getImageUrl} from '../utils/imageUrl';
+import {useLanguage} from '../context/LanguageContext';
 
 function History() {
  const [history, setHistory] = useState([]);
  const [books, setBooks] = useState([]);
  const [loading, setLoading] = useState(true);
+ const {language, isRtl} = useLanguage();
 
  useEffect(() => {
  loadHistory();
-}, []);
+}, [language]);
 
  const loadHistory = async () => {
  try {
@@ -26,7 +28,7 @@ function History() {
  if (historyData.length > 0) {
  // Charger les détails des livres
  const bookIds = historyData.map(h => h.bookId);
- const response = await booksAPI.getPublishedBooks();
+ const response = await booksAPI.getPublishedBooks({language});
  const historyBooks = response.data.filter(book => bookIds.includes(book.id));
  
  // Pour les livres manquants (non publiés), charger individuellement
@@ -90,7 +92,7 @@ function History() {
  const avgPagesPerBook = uniqueBooks > 0 ? Math.round(totalPagesRead / uniqueBooks) : 0;
 
  return (
- <div className="min-h-screen bg-card">
+ <div className="min-h-screen bg-card" dir={isRtl ? 'rtl' : 'ltr'}>
  {/* Header */}
  <motion.header 
  initial={{y: -100, opacity: 0}}

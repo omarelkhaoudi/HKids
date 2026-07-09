@@ -6,6 +6,7 @@ import {storage} from '../utils/storage';
 import {getImageUrl} from '../utils/imageUrl';
 import {useToast} from '../components/ToastProvider';
 import {useAuth} from '../context/AuthContext';
+import {useLanguage} from '../context/LanguageContext';
 import {BookIcon, ChevronLeftIcon, HeartIcon, LockIcon, StarIcon} from '../components/Icons';
 import {Logo} from '../components/Logo';
 
@@ -138,6 +139,7 @@ function StoriesGallery() {
  const [favoritesVersion, setFavoritesVersion] = useState(0);
  const {showToast} = useToast();
  const {user} = useAuth();
+ const {language, isRtl} = useLanguage();
  const navigate = useNavigate();
  const isAuthenticated = Boolean(user || localStorage.getItem('token'));
 
@@ -158,7 +160,7 @@ function StoriesGallery() {
  const loadBooks = async () => {
  try {
  setLoading(true);
- const response = await booksAPI.getPublishedBooks();
+ const response = await booksAPI.getPublishedBooks({language});
  setBooks(response.data || []);
 } catch (error) {
  console.error('Error loading stories gallery:', error);
@@ -168,7 +170,7 @@ function StoriesGallery() {
 };
 
  loadBooks();
-}, []);
+}, [language]);
 
  const decorativeStars = [
  {top: '8%', left: '7%', size: 'w-5 h-5', opacity: 'opacity-40'},
@@ -179,7 +181,7 @@ function StoriesGallery() {
  ];
 
  return (
- <div className="min-h-screen bg-gradient-to-br from-white via-primary-50/30 to-secondary-50/30">
+ <div className="min-h-screen bg-gradient-to-br from-white via-primary-50/30 to-secondary-50/30" dir={isRtl ? 'rtl' : 'ltr'}>
  <header className="sticky top-0 z-40 shadow-md bg-surface-900/95 backdrop-blur-md">
  <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between gap-4">
  <Link to="/" className="flex items-center">
