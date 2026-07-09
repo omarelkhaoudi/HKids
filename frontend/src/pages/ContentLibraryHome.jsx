@@ -7,6 +7,7 @@ import { Logo } from '../components/Logo';
 import { CONTENT_LIBRARY_CATEGORIES } from '../constants/contentLibrary';
 import { filterContentItems, normalizeContentItem } from '../utils/contentLibrary';
 import { useAudioPlayer } from '../hooks/useAudioPlayer';
+import { useLanguage } from '../context/LanguageContext';
 import { storage } from '../utils/storage';
 import { getImageUrl } from '../utils/imageUrl';
 import {
@@ -159,19 +160,21 @@ const SectionCarousel = ({ title, icon: Icon, contents, audioPlayer, onToggleAud
 };
 
 function ContentLibraryHome() {
+  const { language, isRtl } = useLanguage();
   const [contents, setContents] = useState([]);
-  const [filters, setFilters] = useState(defaultFilters);
+  const [filters, setFilters] = useState(() => ({ ...defaultFilters, language }));
   const [loading, setLoading] = useState(true);
   const audioPlayer = useAudioPlayer();
 
   useEffect(() => {
     loadContents();
-  }, []);
+    setFilters((current) => ({ ...current, language }));
+  }, [language]);
 
   const loadContents = async () => {
     try {
       setLoading(true);
-      const response = await booksAPI.getPublishedBooks();
+      const response = await booksAPI.getPublishedBooks({ language });
       setContents((response.data || []).map(normalizeContentItem));
     } catch (error) {
       console.error('Error loading content library:', error);
@@ -224,7 +227,7 @@ function ContentLibraryHome() {
   const isFiltering = filters.search || filters.category || filters.age || filters.language;
 
   return (
-    <div className="min-h-screen bg-background text-foreground pb-36 overflow-hidden">
+    <div className="min-h-screen bg-background text-foreground pb-36 overflow-hidden" dir={isRtl ? 'rtl' : 'ltr'}>
       {/* MAGICAL IMMERSIVE BACKGROUND */}
       <div className="fixed inset-0 pointer-events-none z-0">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-900/10 via-background to-background dark:from-indigo-900/30" />

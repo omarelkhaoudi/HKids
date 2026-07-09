@@ -82,11 +82,13 @@ async function getAuthorizedKid(pool, req, requestedKidProfileId = null) {
 
 function normalizeClientContext(body = {}) {
   const limitArray = (value, limit = 50) => (Array.isArray(value) ? value.slice(0, limit) : []);
+  const language = String(body.language || '').trim().toLowerCase().slice(0, 2);
   return {
     favorites: limitArray(body.favorites),
     readingHistory: limitArray(body.readingHistory),
     listeningHistory: limitArray(body.listeningHistory),
     readingStats: body.readingStats && typeof body.readingStats === 'object' ? body.readingStats : {},
+    language: ['fr', 'en', 'ar'].includes(language) ? language : null,
   };
 }
 
@@ -195,7 +197,8 @@ router.post('/', verifyToken, async (req, res) => {
       [kid.id, kid.age || null]
     );
 
-    const allowedContents = filterAllowedContent(policy, result.rows);
+    const allowedContents = filterAllowedContent(policy, result.rows)
+      .filter((book) => !context.language || !book.language || book.language === context.language);
     const recommendations = await recommendationService.recommendContent({
       kid,
       contents: allowedContents,

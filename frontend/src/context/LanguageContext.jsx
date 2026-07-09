@@ -1,5 +1,12 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { storage } from '../utils/storage';
+import {
+  DEFAULT_LANGUAGE,
+  getLanguageOption,
+  isRtlLanguage,
+  normalizeLanguage,
+  translate,
+} from '../utils/translations';
 
 const LanguageContext = createContext();
 
@@ -12,31 +19,47 @@ export const useLanguage = () => {
 };
 
 export const LanguageProvider = ({ children }) => {
-  const [language, setLanguage] = useState('fr'); // 'fr' ou 'en'
+  const [language, setLanguage] = useState(DEFAULT_LANGUAGE);
 
   useEffect(() => {
-    // Charger la langue depuis les préférences
     const prefs = storage.getPreferences();
     if (prefs.language) {
-      setLanguage(prefs.language);
-    } else {
-      // Détecter la langue du navigateur
-      const browserLang = navigator.language || navigator.userLanguage;
-      const detectedLang = browserLang.startsWith('fr') ? 'fr' : 'en';
-      setLanguage(detectedLang);
-      storage.setPreference('language', detectedLang);
+      setLanguage(normalizeLanguage(prefs.language));
+      return;
     }
+
+    const browserLang = navigator.language || navigator.userLanguage;
+    const detectedLang = normalizeLanguage(browserLang, DEFAULT_LANGUAGE);
+    setLanguage(detectedLang);
+    storage.setPreference('language', detectedLang);
   }, []);
 
-  const changeLanguage = (lang) => {
-    setLanguage(lang);
-    storage.setPreference('language', lang);
-  };
+  useEffect(() => {
+    const option = getLanguageOption(language);
+    document.documentElement.setAttribute('lang', option.htmlLang);
+    document.documentElement.setAttribute('dir', option.dir);
+    document.documentElement.classList.toggle('rtl', option.dir === 'rtl');
+    document.body?.setAttribute('dir', option.dir);
+  }, [language]);
+
+  const value = useMemo(() => {
+    const option = getLanguageOption(language);
+    return {
+      language,
+      direction: option.dir,
+      isRtl: isRtlLanguage(language),
+      changeLanguage: (lang) => {
+        const normalized = normalizeLanguage(lang);
+        setLanguage(normalized);
+        storage.setPreference('language', normalized);
+      },
+      t: (key, replacements) => translate(language, key, replacements),
+    };
+  }, [language]);
 
   return (
-    <LanguageContext.Provider value={{ language, changeLanguage }}>
+    <LanguageContext.Provider value={value}>
       {children}
     </LanguageContext.Provider>
   );
 };
-

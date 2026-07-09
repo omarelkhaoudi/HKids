@@ -110,6 +110,15 @@
     touch-action: manipulation;
   }
 
+  html[dir="rtl"] body {
+    text-align: right;
+    font-family: 'Nunito', 'Segoe UI', Tahoma, Arial, sans-serif;
+  }
+
+  html[dir="ltr"] body {
+    text-align: left;
+  }
+
   .capacitor-android,
   .capacitor-android body,
   .capacitor-android #root {
@@ -412,6 +421,76 @@ html {
 }
 
 @layer utilities {
+  .rtl .rtl\:text-right {
+    text-align: right;
+  }
+
+  .rtl .rtl\:text-left {
+    text-align: left;
+  }
+
+  .rtl .rtl\:flex-row-reverse {
+    flex-direction: row-reverse;
+  }
+
+  .rtl .rtl\:space-x-reverse > :not([hidden]) ~ :not([hidden]) {
+    --tw-space-x-reverse: 1;
+  }
+
+  .rtl .rtl\:rotate-180 {
+    transform: rotate(180deg);
+  }
+
+  .rtl .rtl\:left-3 {
+    left: 0.75rem;
+  }
+
+  .rtl .rtl\:right-3 {
+    right: 0.75rem;
+  }
+
+  .rtl .rtl\:pl-4 {
+    padding-left: 1rem;
+  }
+
+  .rtl .rtl\:pr-10 {
+    padding-right: 2.5rem;
+  }
+
+  .rtl .rtl\:ml-0 {
+    margin-left: 0;
+  }
+
+  .rtl .rtl\:mr-2 {
+    margin-right: 0.5rem;
+  }
+
+  .rtl .rtl\:origin-right {
+    transform-origin: right;
+  }
+
+  .rtl .rtl\:origin-left {
+    transform-origin: left;
+  }
+
+  html[dir="rtl"] .rtl-mirror {
+    transform: scaleX(-1);
+  }
+
+  html[dir="rtl"] input,
+  html[dir="rtl"] textarea,
+  html[dir="rtl"] select {
+    text-align: right;
+  }
+
+  html[dir="rtl"] input[type="email"],
+  html[dir="rtl"] input[type="url"],
+  html[dir="rtl"] input[type="tel"],
+  html[dir="rtl"] input[type="number"] {
+    direction: ltr;
+    text-align: left;
+  }
+
   .glass-panel {
     @apply bg-white/40 dark:bg-[#1e293b]/40 backdrop-blur-xl border border-white/40 shadow-glass;
   }
