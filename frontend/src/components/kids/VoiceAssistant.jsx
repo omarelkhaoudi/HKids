@@ -70,13 +70,49 @@ export function VoiceAssistant({ language: requestedSpeechLanguage }) {
 
     addMessage('kid', transcript);
     setThinking(true);
-    const response = await aiAPI.sendVoiceAssistantRequest(transcript, conversation, speechLanguage);
-    const replyText = response.data?.reply_text || t('assistantFallbackReply');
-    addMessage('assistant', replyText);
+    setMessages((current) => [...current, { role: 'assistant', text: '' }].slice(-8));
+
+    let streamedText = '';
+    let reply;
+    try {
+      reply = await aiAPI.streamVoiceAssistantRequest(
+        transcript,
+        conversation,
+        speechLanguage,
+        {
+          onDelta: (chunk) => {
+            streamedText += chunk;
+            setMessages((current) => current.map((message, index) => (
+              index === current.length - 1 && message.role === 'assistant'
+                ? { ...message, text: streamedText }
+                : message
+            )));
+          }
+        }
+      );
+    } catch (streamError) {
+      // Keep the historical JSON endpoint as a compatibility fallback.
+      if (streamError.response?.data?.code) {
+        setMessages((current) => current.filter((message, index) => (
+          index !== current.length - 1 || message.role !== 'assistant'
+        )));
+        throw streamError;
+      }
+      console.warn('Voice assistant stream unavailable, using JSON fallback:', streamError);
+      const response = await aiAPI.sendVoiceAssistantRequest(transcript, conversation, speechLanguage);
+      reply = response.data;
+    }
+
+    const replyText = reply?.reply_text || streamedText || t('assistantFallbackReply');
+    setMessages((current) => current.map((message, index) => (
+      index === current.length - 1 && message.role === 'assistant'
+        ? { ...message, text: replyText }
+        : message
+    )));
     setThinking(false);
 
     try {
-      await speakText(replyText, { language: response.data?.language || speechLanguage });
+      await speakText(replyText, { language: reply?.language || speechLanguage });
     } catch {
       // Text is already displayed; audio playback is a progressive enhancement.
     }

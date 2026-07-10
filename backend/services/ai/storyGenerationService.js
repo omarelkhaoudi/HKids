@@ -1,14 +1,11 @@
 import { AIProviderFactory } from './AIProviderFactory.js';
-import { aiConfig } from './aiConfig.js';
-import { normalizeAIError, withAITimeout } from './errors.js';
+import { normalizeAIError } from './errors.js';
 
 const allowedDurations = [2, 5, 8, 12, 15];
 const allowedLanguages = ['fr', 'en', 'ar'];
 const allowedValues = ['friendship', 'courage', 'respect', 'curiosity'];
 const maxThemeLength = 80;
 const maxCharacterLength = 60;
-
-const provider = AIProviderFactory.getProvider();
 
 function normalizeText(value, fallback = '') {
   return String(value || fallback).trim().slice(0, 120);
@@ -171,12 +168,12 @@ export function validateStoryRequest(body = {}) {
 }
 
 export class StoryGenerationService {
-  constructor({ aiProvider = provider, timeoutMs = aiConfig.timeoutMs } = {}) {
+  constructor({ aiProvider = null } = {}) {
     this.aiProvider = aiProvider;
-    this.timeoutMs = timeoutMs;
   }
 
   async generatePersonalizedStory({ kid, preferences }) {
+    const aiProvider = this.aiProvider || AIProviderFactory.getProvider();
     const normalizedPreferences = normalizeStoryRequest(preferences, kid);
     const age = normalizeAge(kid.age);
     const ageLevel = getAgeLevel(age);
@@ -194,19 +191,12 @@ export class StoryGenerationService {
     });
 
     try {
-      const response = await withAITimeout(
-        this.aiProvider.generateStory({
-          kid: safeKid,
-          preferences: normalizedPreferences,
-          prompt,
-          outputSchema: buildOutputSchema()
-        }),
-        this.timeoutMs,
-        {
-          provider: this.aiProvider.name,
-          message: 'Story generation timed out. Please try again.'
-        }
-      );
+      const response = await aiProvider.generateStory({
+        kid: safeKid,
+        preferences: normalizedPreferences,
+        prompt,
+        outputSchema: buildOutputSchema()
+      });
       const storyText = normalizeLongText(response.story_text, '', 12000);
       const title = normalizeText(response.title, 'Histoire personnalisee');
       const summary = normalizeLongText(
@@ -240,7 +230,7 @@ export class StoryGenerationService {
             language: safeKid.preferred_language
           }
         },
-        provider: this.aiProvider.name,
+        provider: aiProvider.name,
         provider_metadata: response.provider_metadata || {},
         generation_metadata: {
           service: 'StoryGenerationService',
@@ -255,7 +245,7 @@ export class StoryGenerationService {
       };
     } catch (error) {
       throw normalizeAIError(error, {
-        provider: this.aiProvider.name,
+        provider: aiProvider.name,
         fallbackMessage: 'Story generation failed'
       });
     }

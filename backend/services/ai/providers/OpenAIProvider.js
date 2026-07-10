@@ -7,6 +7,7 @@ import {
   AITimeoutError,
   AIError
 } from '../errors.js';
+import { inferAssistantIntent, parseSSEJson, readSSE } from '../providerUtils.js';
 
 const SAFE_CHILD_SYSTEM_PROMPT = [
   'You are Le Lit Qui Lit, a warm educational AI for children.',
@@ -16,10 +17,6 @@ const SAFE_CHILD_SYSTEM_PROMPT = [
   'Prefer curiosity, kindness, respect, courage, friendship, and emotional safety.',
   'If a child asks for something unsafe, redirect softly to a safe educational answer.'
 ].join('\n');
-
-function sleep(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
 
 function stableStringify(value) {
   if (value === null || typeof value !== 'object') return JSON.stringify(value);
@@ -141,10 +138,11 @@ export class OpenAIProvider extends AIProvider {
     transcriptionModel,
     baseUrl,
     maxRetries = 2,
+    timeoutMs = 15000,
     cacheTtlMs = 300000,
     maxCacheEntries = 200
   } = {}) {
-    super({ name: 'openai' });
+    super({ name: 'openai', timeoutMs, maxRetries });
     this.apiKey = apiKey;
     this.model = model || 'gpt-4o-mini';
     this.transcriptionModel = transcriptionModel || 'whisper-1';
@@ -157,7 +155,10 @@ export class OpenAIProvider extends AIProvider {
 
   assertConfigured() {
     if (!this.apiKey) {
-      throw new AIProviderUnavailableError('OpenAI provider is not configured', { provider: this.name });
+      throw new AIProviderUnavailableError('OpenAI provider is not configured', {
+        provider: this.name,
+        retryable: false
+      });
     }
   }
 
@@ -191,62 +192,31 @@ export class OpenAIProvider extends AIProvider {
     const cached = this.getCached(cacheKey);
     if (cached) return cached;
 
-    let lastError = null;
-
-    for (let attempt = 0; attempt <= this.maxRetries; attempt += 1) {
-      try {
-        const response = await fetch(`${this.baseUrl}${path}`, {
+    const data = await this.execute(`POST ${path}`, async ({ signal }) => {
+      const response = await fetch(`${this.baseUrl}${path}`, {
           method: 'POST',
           headers: {
             Authorization: `Bearer ${this.apiKey}`,
             'Content-Type': 'application/json'
           },
-          body: JSON.stringify(body)
-        });
+          body: JSON.stringify(body),
+          signal
+      });
+      const responseData = await response.json().catch(() => ({}));
+      if (response.ok) return responseData;
 
-        const data = await response.json().catch(() => ({}));
-
-        if (response.ok) {
-          this.setCached(cacheKey, data);
-          return data;
-        }
-
-        const message = data?.error?.message || `OpenAI request failed with status ${response.status}`;
-
-        if (response.status === 401 || response.status === 403) {
-          throw new AIProviderUnavailableError(message, { provider: this.name });
-        }
-
-        if (response.status === 408) {
-          throw new AITimeoutError(message, { provider: this.name });
-        }
-
-        if (response.status === 429) {
-          throw new AIQuotaExceededError(message, { provider: this.name });
-        }
-
-        if (response.status >= 500 && attempt < this.maxRetries) {
-          lastError = new AINetworkError(message, { provider: this.name });
-          await sleep(250 * 2 ** attempt);
-          continue;
-        }
-
-        throw new AIProviderUnavailableError(message, { provider: this.name });
-      } catch (error) {
-        if (error?.isAIError && !(error instanceof AINetworkError)) throw error;
-
-        lastError = error?.isAIError
-          ? error
-          : new AINetworkError(error?.message || 'OpenAI network error', { provider: this.name, cause: error });
-
-        if (attempt < this.maxRetries) {
-          await sleep(250 * 2 ** attempt);
-          continue;
-        }
+      const message = responseData?.error?.message || `OpenAI request failed with status ${response.status}`;
+      if (response.status === 401 || response.status === 403) {
+        throw new AIProviderUnavailableError(message, { provider: this.name, retryable: false });
       }
-    }
+      if (response.status === 408) throw new AITimeoutError(message, { provider: this.name });
+      if (response.status === 429) throw new AIQuotaExceededError(message, { provider: this.name });
+      if (response.status >= 500) throw new AINetworkError(message, { provider: this.name });
+      throw new AIProviderUnavailableError(message, { provider: this.name, retryable: false });
+    });
 
-    throw lastError || new AINetworkError('OpenAI request failed', { provider: this.name });
+    this.setCached(cacheKey, data);
+    return data;
   }
 
   async chatCompletion({ messages, temperature = 0.4, maxTokens = 1200, json = false, cacheKey = null }) {
@@ -330,7 +300,7 @@ export class OpenAIProvider extends AIProvider {
     };
   }
 
-  async chat({ transcript, user, context = {}, conversation = [], language = 'fr' }) {
+  async chat({ transcript, context = {}, conversation = [], language = 'fr' }) {
     const cleanTranscript = String(transcript || '').trim().slice(0, 1000);
     const safeConversation = Array.isArray(conversation)
       ? conversation
@@ -341,19 +311,10 @@ export class OpenAIProvider extends AIProvider {
           content: String(message.content).slice(0, 600)
         }))
       : [];
-    const cacheKey = `chat:${this.model}:${stableStringify({
-      transcript: cleanTranscript,
-      role: user?.role,
-      context,
-      conversation: safeConversation,
-      language
-    })}`;
-
     const { content, usage, response_id, model } = await this.chatCompletion({
       json: true,
       temperature: 0.35,
       maxTokens: 450,
-      cacheKey,
       messages: [
         {
           role: 'system',
@@ -377,6 +338,83 @@ export class OpenAIProvider extends AIProvider {
         model,
         response_id,
         usage
+      }
+    };
+  }
+
+  async chatStream({
+    transcript,
+    user,
+    context = {},
+    conversation = [],
+    language = 'fr'
+  }, { onChunk, signal } = {}) {
+    this.assertConfigured();
+    const cleanTranscript = String(transcript || '').trim().slice(0, 1000);
+    const safeConversation = Array.isArray(conversation)
+      ? conversation
+        .filter((message) => ['user', 'assistant'].includes(message?.role) && message?.content)
+        .slice(-8)
+        .map((message) => ({ role: message.role, content: String(message.content).slice(0, 600) }))
+      : [];
+    let fullText = '';
+    let responseId = null;
+    let responseModel = this.model;
+
+    await this.execute('chat_stream', async ({ signal }) => {
+      const response = await fetch(`${this.baseUrl}/chat/completions`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${this.apiKey}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          model: this.model,
+          temperature: 0.35,
+          max_tokens: 450,
+          stream: true,
+          messages: [
+            {
+              role: 'system',
+              content: buildVoiceAssistantSystemPrompt({ context, language })
+                .replace('Return only JSON with keys: text and intent.', 'Return only the short spoken answer as plain text.')
+            },
+            ...safeConversation,
+            { role: 'user', content: `Child/user request: ${cleanTranscript}` }
+          ]
+        }),
+        signal
+      });
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        const message = data?.error?.message || `OpenAI stream failed with status ${response.status}`;
+        if (response.status === 429) throw new AIQuotaExceededError(message, { provider: this.name });
+        if (response.status >= 500) throw new AINetworkError(message, { provider: this.name });
+        throw new AIProviderUnavailableError(message, { provider: this.name, retryable: false });
+      }
+
+      await readSSE(response, async ({ data }) => {
+        if (data === '[DONE]') return;
+        const event = parseSSEJson(data, this.name);
+        responseId = event.id || responseId;
+        responseModel = event.model || responseModel;
+        const chunk = event?.choices?.[0]?.delta?.content || '';
+        if (!chunk) return;
+        fullText += chunk;
+        if (onChunk) await onChunk(chunk);
+      });
+    }, { maxRetries: 0, signal });
+
+    return {
+      text: fullText.trim(),
+      intent: inferAssistantIntent(cleanTranscript),
+      provider_metadata: {
+        provider: this.name,
+        model: responseModel,
+        response_id: responseId,
+        stream: true,
+        user_role: user?.role || null
       }
     };
   }
@@ -439,10 +477,7 @@ export class OpenAIProvider extends AIProvider {
   async transcribeAudio({ audioBuffer, mimeType, language = 'fr-FR' }) {
     this.assertConfigured();
 
-    let lastError = null;
-
-    for (let attempt = 0; attempt <= this.maxRetries; attempt += 1) {
-      try {
+    return this.execute('transcribe_audio', async ({ signal }) => {
         const formData = new FormData();
         formData.append('model', this.transcriptionModel);
         formData.append('language', normalizeLanguageCode(language));
@@ -453,7 +488,8 @@ export class OpenAIProvider extends AIProvider {
           headers: {
             Authorization: `Bearer ${this.apiKey}`
           },
-          body: formData
+          body: formData,
+          signal
         });
         const data = await response.json().catch(() => ({}));
 
@@ -470,23 +506,9 @@ export class OpenAIProvider extends AIProvider {
 
         const message = data?.error?.message || `OpenAI transcription failed with status ${response.status}`;
         if (response.status === 429) throw new AIQuotaExceededError(message, { provider: this.name });
-        if (response.status >= 500 && attempt < this.maxRetries) {
-          lastError = new AINetworkError(message, { provider: this.name });
-          await sleep(250 * 2 ** attempt);
-          continue;
-        }
-        throw new AIProviderUnavailableError(message, { provider: this.name });
-      } catch (error) {
-        if (error?.isAIError && !(error instanceof AINetworkError)) throw error;
-        lastError = error?.isAIError ? error : new AINetworkError(error?.message || 'OpenAI transcription network error', { provider: this.name, cause: error });
-        if (attempt < this.maxRetries) {
-          await sleep(250 * 2 ** attempt);
-          continue;
-        }
-      }
-    }
-
-    throw lastError || new AINetworkError('OpenAI transcription failed', { provider: this.name });
+        if (response.status >= 500) throw new AINetworkError(message, { provider: this.name });
+        throw new AIProviderUnavailableError(message, { provider: this.name, retryable: false });
+    });
   }
 
   async translate({ text, sourceLanguage = null, targetLanguage, context = {} }) {

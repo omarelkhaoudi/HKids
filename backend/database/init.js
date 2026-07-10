@@ -239,7 +239,7 @@ export async function initDatabase() {
         interactive_choices JSONB DEFAULT '[]'::jsonb,
         illustration_plan JSONB DEFAULT '{}'::jsonb,
         narration_metadata JSONB DEFAULT '{}'::jsonb,
-        provider TEXT NOT NULL DEFAULT 'mock',
+        provider TEXT NOT NULL DEFAULT 'openai',
         saved BOOLEAN DEFAULT FALSE,
         saved_at TIMESTAMPTZ,
         favorite BOOLEAN DEFAULT FALSE,
@@ -459,7 +459,8 @@ export async function initDatabase() {
     await client.query(`ALTER TABLE generated_stories ADD COLUMN IF NOT EXISTS interactive_choices JSONB DEFAULT '[]'::jsonb`);
     await client.query(`ALTER TABLE generated_stories ADD COLUMN IF NOT EXISTS illustration_plan JSONB DEFAULT '{}'::jsonb`);
     await client.query(`ALTER TABLE generated_stories ADD COLUMN IF NOT EXISTS narration_metadata JSONB DEFAULT '{}'::jsonb`);
-    await client.query(`ALTER TABLE generated_stories ADD COLUMN IF NOT EXISTS provider TEXT NOT NULL DEFAULT 'mock'`);
+    await client.query(`ALTER TABLE generated_stories ADD COLUMN IF NOT EXISTS provider TEXT NOT NULL DEFAULT 'openai'`);
+    await client.query(`ALTER TABLE generated_stories ALTER COLUMN provider SET DEFAULT 'openai'`);
     await client.query(`ALTER TABLE generated_stories ADD COLUMN IF NOT EXISTS saved BOOLEAN DEFAULT FALSE`);
     await client.query(`ALTER TABLE generated_stories ADD COLUMN IF NOT EXISTS saved_at TIMESTAMPTZ`);
     await client.query(`ALTER TABLE generated_stories ADD COLUMN IF NOT EXISTS favorite BOOLEAN DEFAULT FALSE`);

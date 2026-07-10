@@ -1,6 +1,5 @@
 import { AIProviderFactory } from './AIProviderFactory.js';
-import { aiConfig } from './aiConfig.js';
-import { normalizeAIError, withAITimeout } from './errors.js';
+import { normalizeAIError } from './errors.js';
 
 const SECTION_LIMIT = 8;
 const DEFAULT_CONTEXT = {
@@ -155,12 +154,12 @@ function createSection(id, title, subtitle, items) {
 }
 
 export class RecommendationService {
-  constructor({ aiProvider = AIProviderFactory.getProvider(), timeoutMs = aiConfig.timeoutMs } = {}) {
+  constructor({ aiProvider = null } = {}) {
     this.aiProvider = aiProvider;
-    this.timeoutMs = timeoutMs;
   }
 
   async recommendContent({ kid, contents = [], context = DEFAULT_CONTEXT }) {
+    const aiProvider = this.aiProvider || AIProviderFactory.getProvider();
     const normalizedContext = normalizeContext(context);
     const favoriteIds = toIdSet(normalizedContext.favorites);
     const historyIds = toIdSet(normalizedContext.readingHistory);
@@ -226,7 +225,7 @@ export class RecommendationService {
         createSection('discovery', 'Decouverte', 'Pour explorer de nouveaux univers.', discovery),
       ].filter((section) => section.items.length > 0),
       metadata: {
-        provider: this.aiProvider.name,
+        provider: aiProvider.name,
         strategy: 'deterministic-score-v1',
         factors: [
           'age',
@@ -243,18 +242,12 @@ export class RecommendationService {
   }
 
   async providerRecommendations({ kid, contents = [], context = DEFAULT_CONTEXT }) {
+    const aiProvider = this.aiProvider || AIProviderFactory.getProvider();
     try {
-      return await withAITimeout(
-        this.aiProvider.recommendContent({ kid, contents, context }),
-        this.timeoutMs,
-        {
-          provider: this.aiProvider.name,
-          message: 'Recommendation request timed out. Please try again.'
-        }
-      );
+      return await aiProvider.recommendContent({ kid, contents, context });
     } catch (error) {
       throw normalizeAIError(error, {
-        provider: this.aiProvider.name,
+        provider: aiProvider.name,
         fallbackMessage: 'Recommendation service failed'
       });
     }
