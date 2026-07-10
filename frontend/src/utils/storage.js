@@ -188,7 +188,14 @@ export const storage = {
     }
   },
 
-  addReadingSession: (bookId, bookTitle, durationSeconds = 0, finished = false) => {
+  addReadingSession: (
+    bookId,
+    bookTitle,
+    durationSeconds = 0,
+    finished = false,
+    currentPage = 0,
+    totalPages = 0
+  ) => {
     try {
       const stats = storage.getReadingStats();
       const safeDuration = Number.isFinite(durationSeconds) && durationSeconds > 0
@@ -218,8 +225,8 @@ export const storage = {
       localStorage.setItem('hkids_reading_stats', JSON.stringify(stats));
       queueMutation('reading_progress', {
         book_id: bookId,
-        current_page: 0,
-        total_pages: 0,
+        current_page: Math.max(0, Number(currentPage) || 0),
+        total_pages: Math.max(0, Number(totalPages) || 0),
         duration_seconds: safeDuration,
         completed: finished
       }, `book:${bookId}:progress`);

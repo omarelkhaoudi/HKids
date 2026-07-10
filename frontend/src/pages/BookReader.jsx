@@ -1,20 +1,22 @@
 import {useState, useEffect, useRef} from 'react';
-import {useParams, useNavigate, useSearchParams} from 'react-router-dom';
+import {useParams, useNavigate, useSearchParams, useLocation} from 'react-router-dom';
 import {motion, AnimatePresence} from 'framer-motion';
-import {Button, ProgressBar, Badge, Skeleton, Modal} from '../components/ui';
+import {Button, Modal} from '../components/ui';
 
 import {createWorker} from 'tesseract.js';
 import * as pdfjsLib from 'pdfjs-dist';
 import {booksAPI} from '../api/books';
 import {subscriptionsAPI} from '../api/subscriptions';
 import {parentalAPI} from '../api/parental';
+import {voicesAPI} from '../api/voices';
 import {storage} from '../utils/storage';
 import {getFileUrl} from '../utils/fileUrl';
 import {useToast} from '../components/ToastProvider';
 import {useAuth} from '../context/AuthContext';
-import {ChevronLeftIcon, ChevronRightIcon, HomeIcon, BookIcon, StarIcon, PlayIcon, PauseIcon, VolumeIcon, XIcon, SettingsIcon} from '../components/Icons';
+import {ChevronLeftIcon, ChevronRightIcon, HomeIcon, BookIcon, StarIcon, PlayIcon, PauseIcon, SettingsIcon} from '../components/Icons';
 import ReadingAidPanel from '../components/ReadingAidPanel';
-import {VoiceAssistant} from '../components/kids/VoiceAssistant';
+import {AudioPlayer} from '../components/audio/AudioPlayer';
+import {useAudioPlayer} from '../hooks/useAudioPlayer';
 
 // Configuration de pdfjs-dist
 if (typeof window !== 'undefined') {
@@ -357,6 +359,7 @@ function BookReader() {
  const {id} = useParams();
  const [searchParams] = useSearchParams();
  const navigate = useNavigate();
+ const location = useLocation();
  const [book, setBook] = useState(null);
  const [currentPage, setCurrentPage] = useState(0);
  const [loading, setLoading] = useState(true);
@@ -364,9 +367,8 @@ function BookReader() {
  const [touchStart, setTouchStart] = useState(null);
  const [touchEnd, setTouchEnd] = useState(null);
  const [showConfetti, setShowConfetti] = useState(false);
+ const [hasReachedEnd, setHasReachedEnd] = useState(false);
  const [pageDirection, setPageDirection] = useState('next');
- const [startTime] = useState(Date.now());
- const [readingTime, setReadingTime] = useState(0);
  const [showReadingAid, setShowReadingAid] = useState(false);
  const [readingSettings, setReadingSettings] = useState({
  font: 'system',
@@ -385,32 +387,50 @@ function BookReader() {
  return voiceProfiles.some((profile) => profile.id === savedProfile) ? savedProfile : 'woman';
 });
  const [availableVoices, setAvailableVoices] = useState([]);
- const [speechUtterance, setSpeechUtterance] = useState(null);
+ const [, setSpeechUtterance] = useState(null);
  const [extractedTexts, setExtractedTexts] = useState({}); // Cache pour les textes extraits par OCR/PDF
  const [isExtracting, setIsExtracting] = useState(false);
- const [pdfDocuments, setPdfDocuments] = useState({}); // Cache pour les documents PDF chargés
- const [pdfPages, setPdfPages] = useState({}); // Cache pour les pages PDF rendues (canvas)
+ const [, setPdfDocuments] = useState({}); // Cache pour les documents PDF chargés
  const [pdfTotalPages, setPdfTotalPages] = useState(null); // Nombre total de pages dans le PDF actuel
  const [currentPdfUrl, setCurrentPdfUrl] = useState(null); // URL du PDF actuellement chargé
  const [isFullscreen, setIsFullscreen] = useState(false); // Mode plein écran
  const workerRef = useRef(null);
  const {showToast} = useToast();
  const {user} = useAuth();
+ const audioPlayer = useAudioPlayer();
+ const [showAudioPlayer, setShowAudioPlayer] = useState(false);
+ const [familyVoiceProfiles, setFamilyVoiceProfiles] = useState([]);
+ const [selectedFamilyVoiceId, setSelectedFamilyVoiceId] = useState('');
+ const sessionRef = useRef({
+ book: null,
+ currentPage: 0,
+ totalPages: 0,
+ user: null,
+ startedAt: Date.now(),
+ completed: false,
+ saved: false
+});
+ const readerExitPath = location.pathname.startsWith('/kids/read/')
+ ? '/kids/library'
+ : '/';
+
+ const getEffectiveTotalPages = (bookValue = book) => {
+ const firstPageData = bookValue?.pages?.[0];
+ const isPDFBook = firstPageData?.image_path?.toLowerCase().endsWith('.pdf');
+ const firstPageUrl = firstPageData?.image_path ? getFileUrl(firstPageData.image_path) : null;
+
+ return (isPDFBook && pdfTotalPages && currentPdfUrl === firstPageUrl)
+ ? pdfTotalPages
+ : (bookValue?.pages?.length || bookValue?.page_count || 0);
+};
 
  const recordKidReadingProgress = (durationSeconds = 0, finished = false, pageOverride = currentPage) => {
  if (user?.role !== 'kid' || !book?.id) return;
 
- const firstPageData = book.pages?.[0];
- const isPDFBook = firstPageData?.image_path?.toLowerCase().endsWith('.pdf');
- const firstPageUrl = firstPageData?.image_path ? getFileUrl(firstPageData.image_path) : null;
- const effectiveTotalPages = (isPDFBook && pdfTotalPages && currentPdfUrl === firstPageUrl)
- ? pdfTotalPages
- : (book.pages?.length || book.page_count || 0);
-
  parentalAPI.recordReadingProgress({
  book_id: book.id,
  current_page: pageOverride,
- total_pages: effectiveTotalPages,
+ total_pages: getEffectiveTotalPages(),
  duration_seconds: durationSeconds,
  completed: finished
 }).catch((error) => {
@@ -419,15 +439,68 @@ function BookReader() {
 };
 
  useEffect(() => {
+ const now = Date.now();
+ setHasReachedEnd(false);
+ setShowAudioPlayer(false);
+ setSelectedFamilyVoiceId('');
+ audioPlayer.stop();
+ sessionRef.current = {
+ book: null,
+ currentPage: 0,
+ totalPages: 0,
+ user,
+ startedAt: now,
+ completed: false,
+ saved: false
+};
  loadBook();
+
+ // A route parameter change closes the previous reading session exactly once.
+ return () => {
+ const session = sessionRef.current;
+ if (!session.book || session.saved) return;
+
+ session.saved = true;
+ const durationSeconds = Math.max(0, Math.floor((Date.now() - session.startedAt) / 1000));
+ const finished = session.completed;
+
+ storage.addReadingSession(
+ session.book.id,
+ session.book.title,
+ durationSeconds,
+ finished,
+ session.currentPage,
+ session.totalPages
+ );
+
+ if (session.user?.role === 'kid') {
+ parentalAPI.recordReadingProgress({
+ book_id: session.book.id,
+ current_page: session.currentPage,
+ total_pages: session.totalPages,
+ duration_seconds: durationSeconds,
+ completed: finished
+ }).catch((error) => {
+ console.warn('Impossible de synchroniser la session enfant:', error);
+});
+}
+};
 }, [id]);
 
  useEffect(() => {
- const interval = setInterval(() => {
- setReadingTime(Math.floor((Date.now() - startTime) / 1000));
-}, 1000);
- return () => clearInterval(interval);
-}, [startTime]);
+ if (!book?.audio_url) {
+ setFamilyVoiceProfiles([]);
+ return;
+}
+
+ setShowAudioPlayer(true);
+ voicesAPI.getAvailableVoices()
+ .then((response) => setFamilyVoiceProfiles(Array.isArray(response.data) ? response.data : []))
+ .catch((error) => {
+ console.warn('Impossible de charger les voix familiales:', error);
+ setFamilyVoiceProfiles([]);
+});
+}, [book?.id, book?.audio_url]);
 
  // Fonctions pour la lecture audio
  const stopAudio = () => {
@@ -498,8 +571,20 @@ function BookReader() {
 
  useEffect(() => {
  if (book && currentPage >= 0) {
+ const effectiveTotalPages = getEffectiveTotalPages();
+ const finished = hasReachedEnd
+ && effectiveTotalPages > 0
+ && currentPage >= effectiveTotalPages - 1;
+
  storage.addToHistory(book.id, book.title, currentPage);
- recordKidReadingProgress(0, false, currentPage);
+ recordKidReadingProgress(0, finished, currentPage);
+
+ // Refs keep the final cleanup independent from page-change re-renders.
+ sessionRef.current.book = book;
+ sessionRef.current.currentPage = currentPage;
+ sessionRef.current.totalPages = effectiveTotalPages;
+ sessionRef.current.user = user;
+ sessionRef.current.completed = sessionRef.current.completed || finished;
 }
  // Arrêter la lecture audio quand on change de page
  if (window.speechSynthesis && window.speechSynthesis.speaking) {
@@ -511,22 +596,11 @@ function BookReader() {
  setIsPlaying(false);
  setSpeechUtterance(null);
 }
-}, [currentPage, book]);
+}, [currentPage, book, hasReachedEnd, pdfTotalPages, currentPdfUrl, user]);
 
- // Enregistrer une session de lecture (durée + livre terminé ou non) au démontage
  useEffect(() => {
  return () => {
- if (!book) return;
-
- const durationSeconds = readingTime || Math.floor((Date.now() - startTime) / 1000);
-
- const totalPages = book?.pages?.length || 0;
- const finished = totalPages > 0 ? currentPage >= totalPages - 1 : false;
-
- storage.addReadingSession(book.id, book.title, durationSeconds, finished);
- recordKidReadingProgress(durationSeconds, finished, currentPage);
-
- // Nettoyer la synthèse vocale
+ // Nettoyer la synthèse vocale sans créer une nouvelle session de lecture.
  if (window.speechSynthesis && window.speechSynthesis.speaking) {
  try {
  window.speechSynthesis.cancel();
@@ -534,10 +608,8 @@ function BookReader() {
  console.error('Erreur lors du nettoyage de l\'audio:', error);
 }
 }
- setIsPlaying(false);
- setSpeechUtterance(null);
 };
-}, [book, currentPage, startTime]);
+}, []);
 
  useEffect(() => {
  const handleKeyPress = (e) => {
@@ -547,17 +619,18 @@ function BookReader() {
  if (isFullscreen) {
  setIsFullscreen(false);
 } else {
- navigate('/');
+ navigate(readerExitPath);
 }
 }
 };
  window.addEventListener('keydown', handleKeyPress);
  return () => window.removeEventListener('keydown', handleKeyPress);
-}, [currentPage, book, isFullscreen]);
+}, [currentPage, book, isFullscreen, navigate, readerExitPath]);
 
  const loadBook = async () => {
  try {
  setLoading(true);
+ setBook(null);
  console.log("Book ID:", id);
  await subscriptionsAPI.unlockBook(id);
  const response = await booksAPI.getBook(id);
@@ -567,10 +640,14 @@ function BookReader() {
  setBook(response.data);
  
  const pageParam = searchParams.get('page');
- const savedPage = pageParam ? parseInt(pageParam) : storage.getLastPage(id);
- setCurrentPage(savedPage || 0);
+ const requestedPage = pageParam !== null ? Number.parseInt(pageParam, 10) : storage.getLastPage(id);
+ const maxPage = Math.max(0, (response.data.pages?.length || response.data.page_count || 1) - 1);
+ const savedPage = Number.isInteger(requestedPage)
+ ? Math.min(Math.max(0, requestedPage), maxPage)
+ : 0;
+ setCurrentPage(savedPage);
  
- storage.addToHistory(id, response.data.title, savedPage || 0);
+ storage.addToHistory(id, response.data.title, savedPage);
 } catch (error) {
  console.error('Error loading book:', error);
  const status = error.response?.status;
@@ -586,7 +663,7 @@ function BookReader() {
  'info',
  3000
  );
- navigate(user?.role === 'kid' ? '/kids' : '/abonnements');
+ navigate(user?.role === 'kid' ? '/kids/library' : '/abonnements');
 }
 } finally {
  setLoading(false);
@@ -642,6 +719,7 @@ function BookReader() {
  const newPage = prev + 1;
  // Vérifier si on atteint la dernière page
  if (newPage === effectiveTotalPages - 1) {
+ setHasReachedEnd(true);
  setShowConfetti(true);
  setTimeout(() => setShowConfetti(false), 3000);
  showToast('Bravo ! Tu as terminé le livre !', 'success', 4000);
@@ -758,55 +836,6 @@ function BookReader() {
  return;
 }
 
- // Attendre que les voix soient chargées
- const waitForVoices = () => {
- return new Promise((resolve) => {
- // Vérifier d'abord si speechSynthesis est toujours disponible
- if (!window.speechSynthesis) {
- resolve([]);
- return;
-}
-
- const voices = window.speechSynthesis.getVoices();
- if (voices.length > 0) {
- resolve(voices);
-} else {
- // Attendre que les voix soient chargées
- let timeoutId;
- const checkVoices = () => {
- if (!window.speechSynthesis) {
- resolve([]);
- return;
-}
- const loadedVoices = window.speechSynthesis.getVoices();
- if (loadedVoices.length > 0) {
- if (window.speechSynthesis.onvoiceschanged === checkVoices) {
- window.speechSynthesis.onvoiceschanged = null;
-}
- if (timeoutId) clearTimeout(timeoutId);
- resolve(loadedVoices);
-}
-};
- 
- // Écouter l'événement onvoiceschanged
- const oldHandler = window.speechSynthesis.onvoiceschanged;
- window.speechSynthesis.onvoiceschanged = checkVoices;
- 
- // Timeout après 2 secondes
- timeoutId = setTimeout(() => {
- if (window.speechSynthesis.onvoiceschanged === checkVoices) {
- window.speechSynthesis.onvoiceschanged = oldHandler;
-}
- if (window.speechSynthesis) {
- resolve(window.speechSynthesis.getVoices());
-} else {
- resolve([]);
-}
-}, 2000);
-}
-});
-};
-
  const voices = await waitForSpeechVoices();
  
  if (voices.length === 0) {
@@ -817,11 +846,6 @@ function BookReader() {
  const utterance = new SpeechSynthesisUtterance(textToRead.trim());
  const selectedProfile = voiceProfiles.find((profile) => profile.id === selectedVoiceProfile) || voiceProfiles[0];
  const narrationVoice = pickNarrationVoice(voices, selectedProfile);
- 
- // Configuration de la voix (essayer de trouver une voix française)
- const frenchVoice = voices.find(voice => 
- voice.lang.startsWith('fr') || voice.name.toLowerCase().includes('french')
- );
  
  if (narrationVoice) {
  utterance.voice = narrationVoice;
@@ -922,6 +946,14 @@ function BookReader() {
 };
 
  const toggleAudio = async () => {
+ // Prefer the recorded narration when the book provides one; keep TTS as fallback.
+ if (book?.audio_url) {
+ await stopAudio();
+ setShowAudioPlayer(true);
+ audioPlayer.toggle(book, {voiceId: selectedFamilyVoiceId || undefined});
+ return;
+}
+
  if (isPlaying) {
  await stopAudio();
 } else {
@@ -1066,6 +1098,28 @@ function BookReader() {
  const [isFavorite, setIsFavorite] = useState(false);
  const [showEndModal, setShowEndModal] = useState(false);
 
+ useEffect(() => {
+ setIsFavorite(book ? storage.isFavorite(book.id) : false);
+}, [book?.id]);
+
+ const toggleBookFavorite = () => {
+ if (!book) return;
+ if (storage.isFavorite(book.id)) {
+ storage.removeFavorite(book.id);
+ setIsFavorite(false);
+} else {
+ storage.addFavorite(book.id);
+ setIsFavorite(true);
+}
+};
+
+ const handleFamilyVoiceChange = async (voiceId) => {
+ setSelectedFamilyVoiceId(voiceId);
+ audioPlayer.stop();
+ setShowAudioPlayer(true);
+ await audioPlayer.play(book, {voiceId: voiceId || undefined});
+};
+
  // Auto-hide menu
  useEffect(() => {
  let timeout;
@@ -1073,7 +1127,7 @@ function BookReader() {
  timeout = setTimeout(() => setShowMenu(false), 3500);
 }
  return () => clearTimeout(timeout);
-}, [showMenu, currentPage, isPlaying]);
+}, [showMenu, currentPage, isPlaying, audioPlayer.playing]);
 
  // Handle End of book
  useEffect(() => {
@@ -1083,10 +1137,12 @@ function BookReader() {
  const effectiveTotalPages = (isPDF && pdfTotalPages) ? pdfTotalPages : book.pages.length;
  const isLastPage = currentPage === effectiveTotalPages - 1;
 
- if (isLastPage) {
- setTimeout(() => setShowEndModal(true), 1500);
+ if (hasReachedEnd && isLastPage) {
+ const timeoutId = setTimeout(() => setShowEndModal(true), 1500);
+ return () => clearTimeout(timeoutId);
 }
-}, [currentPage, book, pdfTotalPages]);
+ return undefined;
+}, [currentPage, book, pdfTotalPages, hasReachedEnd]);
 
  if (loading) {
  return (
@@ -1127,7 +1183,7 @@ function BookReader() {
  <motion.button
  whileHover={{scale: 1.05}}
  whileTap={{scale: 0.95}}
- onClick={() => navigate('/')}
+ onClick={() => navigate(readerExitPath)}
  className="px-8 py-4 bg-gradient-to-r from-purple-500 to-secondary-500 text-white rounded-full font-bold text-lg shadow-lg hover:shadow-xl transition-shadow"
  >
  Retour à la bibliothèque
@@ -1153,7 +1209,7 @@ function BookReader() {
  const isFirstPage = currentPage === 0;
  const isLastPage = currentPage === totalPages - 1;
  const progress = ((currentPage + 1) / totalPages) * 100;
- const selectedNarrationProfile = voiceProfiles.find((profile) => profile.id === selectedVoiceProfile) || voiceProfiles[0];
+ const audioPlaybackActive = book.audio_url ? audioPlayer.playing : isPlaying;
 
  // Handle theme colors
  const themeColors = {
@@ -1194,7 +1250,7 @@ function BookReader() {
   <Button 
     variant="ghost" 
     size="icon" 
-    onClick={() => navigate('/')}
+    onClick={() => navigate(readerExitPath)}
     className={`rounded-full w-14 h-14 bg-white/20 hover:bg-white/40 shadow-sm`}
   >
     <HomeIcon className="w-8 h-8 text-primary-700" />
@@ -1208,7 +1264,7 @@ function BookReader() {
   <Button 
     variant="ghost" 
     size="icon" 
-    onClick={() => setIsFavorite(!isFavorite)}
+    onClick={toggleBookFavorite}
     className={`rounded-full w-14 h-14 bg-white/20 hover:bg-white/40 shadow-sm transition-transform hover:scale-110 ${isFavorite ? 'text-danger-500' : 'text-primary-700'}`}
   >
     <svg className="w-8 h-8" fill={isFavorite ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
@@ -1331,7 +1387,7 @@ function BookReader() {
  {/* Floating Audio Controls */}
  <div className="absolute bottom-24 inset-x-0 flex justify-center z-40 pointer-events-none">
  <AnimatePresence>
- {(showMenu || isPlaying) && (
+ {(showMenu || audioPlaybackActive) && (
  <motion.div
  initial={{y: 50, opacity: 0, scale: 0.9}}
  animate={{y: 0, opacity: 1, scale: 1}}
@@ -1341,19 +1397,19 @@ function BookReader() {
  >
               <button 
                 onClick={toggleAudio}
-                disabled={isExtracting || (!currentPageData?.content && !currentPageData?.image_path)}
-                className={`w-24 h-24 rounded-full flex items-center justify-center shadow-glow transition-transform hover:scale-110 active:scale-95 ${isPlaying ? 'bg-primary-500 text-white' : 'bg-gradient-to-r from-purple-500 to-secondary-500 text-white'} ${isExtracting ? 'opacity-50 cursor-not-allowed' : ''}`}
+                disabled={!book.audio_url && (isExtracting || (!currentPageData?.content && !currentPageData?.image_path))}
+                className={`w-24 h-24 rounded-full flex items-center justify-center shadow-glow transition-transform hover:scale-110 active:scale-95 ${audioPlaybackActive ? 'bg-primary-500 text-white' : 'bg-gradient-to-r from-purple-500 to-secondary-500 text-white'} ${!book.audio_url && isExtracting ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
-                {isExtracting ? (
+                {!book.audio_url && isExtracting ? (
                   <motion.div animate={{rotate: 360}} transition={{repeat: Infinity, ease: 'linear'}} className="w-10 h-10 border-4 border-white border-t-transparent rounded-full" />
-                ) : isPlaying ? (
+                ) : audioPlaybackActive ? (
                   <PauseIcon className="w-12 h-12" />
                 ) : (
                   <PlayIcon className="w-12 h-12 ml-2" />
                 )}
               </button>
 
-              {isPlaying && (
+              {audioPlaybackActive && (
                 <div className="flex items-center gap-3 pr-6">
                   {[1,2,3,4,5].map(i => (
                     <motion.div
@@ -1382,6 +1438,39 @@ function BookReader() {
         </div>
  </div>
 
+ {showAudioPlayer && book.audio_url && (
+ <div onClick={(event) => event.stopPropagation()}>
+ <AudioPlayer
+ book={book}
+ playing={audioPlayer.playing}
+ loading={audioPlayer.loading}
+ currentTime={audioPlayer.currentTime}
+ duration={audioPlayer.duration}
+ volume={audioPlayer.volume}
+ favorite={isFavorite}
+ error={audioPlayer.error}
+ onTogglePlay={() => {
+ if (audioPlayer.playing) {
+ audioPlayer.pause();
+} else {
+ audioPlayer.play(book, {voiceId: selectedFamilyVoiceId || undefined});
+}
+}}
+ onSeekBy={audioPlayer.seekBy}
+ onSeekTo={audioPlayer.seekTo}
+ onVolumeChange={audioPlayer.setVolume}
+ onToggleFavorite={toggleBookFavorite}
+ onClose={() => {
+ audioPlayer.stop();
+ setShowAudioPlayer(false);
+}}
+ voiceProfiles={familyVoiceProfiles}
+ selectedVoiceId={selectedFamilyVoiceId}
+ onVoiceChange={handleFamilyVoiceChange}
+ />
+ </div>
+ )}
+
  {/* End of Book Celebration Modal */}
  <Modal isOpen={showEndModal} onClose={() => setShowEndModal(false)} maxWidth="max-w-md">
  <div className="text-center p-4">
@@ -1397,7 +1486,7 @@ function BookReader() {
           <p className="text-xl font-bold text-foreground-secondary mb-8">Tu as terminé "{book.title}"</p>
  
  <div className="flex flex-col gap-3">
- <Button variant="primary" fullWidth onClick={() => navigate('/')}>
+ <Button variant="primary" fullWidth onClick={() => navigate(readerExitPath)}>
  Lire une autre histoire
  </Button>
  <Button variant="ghost" fullWidth onClick={() => setShowEndModal(false)}>

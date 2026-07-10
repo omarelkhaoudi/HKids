@@ -105,7 +105,7 @@ function BookDetails() {
  const startReading = async () => {
  try {
  await subscriptionsAPI.unlockBook(id);
- navigate(`/book/${id}`);
+ navigate(isKidAccount ? `/kids/read/${id}` : `/book/${id}`);
 } catch (error) {
  handleSubscriptionBlock(error.response?.status);
 }
@@ -115,7 +115,8 @@ function BookDetails() {
  const lastPage = storage.getLastPage(id);
  try {
  await subscriptionsAPI.unlockBook(id);
- navigate(`/book/${id}?page=${lastPage}`);
+ const readerPath = isKidAccount ? `/kids/read/${id}` : `/book/${id}`;
+ navigate(`${readerPath}?page=${lastPage}`);
 } catch (error) {
  handleSubscriptionBlock(error.response?.status, 'continue');
 }

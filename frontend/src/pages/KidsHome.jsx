@@ -102,6 +102,7 @@ function KidsHome() {
         title: continueReading.book_title,
         cover_image: continueReading.cover_image,
         progress: Number(continueReading.progress_percent || 0),
+        currentPage: Number(continueReading.current_page || 0),
         isInProgress: true,
       }
     : recommendedBooks[0]
@@ -122,7 +123,7 @@ function KidsHome() {
     }
 
     const randomBook = recommendedBooks[Math.floor(Math.random() * recommendedBooks.length)];
-    navigate(`/book/${randomBook.id}`);
+    navigate(`/kids/read/${randomBook.id}`);
   };
 
   return (
@@ -151,7 +152,11 @@ function KidsHome() {
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             className="lg:col-span-2 cursor-pointer"
-            onClick={() => featuredBook && navigate(`/book/${featuredBook.id}`)}
+            onClick={() => {
+              if (!featuredBook) return;
+              const pageQuery = featuredBook.isInProgress ? `?page=${featuredBook.currentPage}` : '';
+              navigate(`/kids/read/${featuredBook.id}${pageQuery}`);
+            }}
           >
             <div className="relative h-64 md:h-80 w-full rounded-[2.5rem] overflow-hidden shadow-2xl group">
               {featuredBook?.cover_image && (
@@ -238,7 +243,7 @@ function KidsHome() {
                 key={book.id}
                 whileHover={{ y: -10 }}
                 className="snap-start shrink-0 relative w-48 h-64 md:w-56 md:h-72 rounded-[2rem] overflow-hidden shadow-xl cursor-pointer"
-                onClick={() => navigate(`/book/${book.id}`)}
+                onClick={() => navigate(`/kids/read/${book.id}`)}
               >
                 {book.cover_image && (
                   <img src={getImageUrl(book.cover_image)} alt={book.title} className="absolute inset-0 w-full h-full object-cover" />

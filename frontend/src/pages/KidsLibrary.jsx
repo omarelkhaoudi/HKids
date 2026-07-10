@@ -1,25 +1,22 @@
-﻿import React, { useEffect, useMemo, useState, useRef } from 'react';
+﻿import { useEffect, useMemo, useState, useRef } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { booksAPI } from '../api/books';
 import { recommendationsAPI } from '../api/recommendations';
-import { voicesAPI } from '../api/voices';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../components/ToastProvider';
 import { getImageUrl } from '../utils/imageUrl';
 import { storage } from '../utils/storage';
 import { useLanguage } from '../context/LanguageContext';
 import { localizeKidCategories } from '../constants/kidCategories';
-import { useAudioPlayer } from '../hooks/useAudioPlayer';
 import { useOfflineContent } from '../hooks/useOfflineContent';
-import { getDownloads, offlineContentIds } from '../services/offline/offlineContentService';
+import { getDownloads } from '../services/offline/offlineContentService';
 import { getRestrictionMessage } from '../services/parental/parentalAccessService';
-import { AudioPlayer } from '../components/audio/AudioPlayer';
 import { VoiceAssistant } from '../components/kids/VoiceAssistant';
 import {
-  AudioIcon, BookIcon, DownloadIcon, HeartIcon, PlayIcon, PauseIcon,
+  BookIcon, DownloadIcon, HeartIcon, PlayIcon,
   SearchIcon, SparklesIcon, ChevronLeftIcon, ChevronRightIcon,
-  ClockIcon, InfoIcon, ShieldIcon, HomeIcon, StarIcon
+  ClockIcon, ShieldIcon, HomeIcon, StarIcon
 } from '../components/Icons';
 import { Logo } from '../components/Logo';
 import { BookGridSkeleton } from '../components/SkeletonLoader';
@@ -213,7 +210,6 @@ function KidsLibrary() {
   const [loading, setLoading] = useState(true);
   const [recommendationSections, setRecommendationSections] = useState([]);
   
-  const audioPlayer = useAudioPlayer();
   const offlineContent = useOfflineContent();
 
   useEffect(() => {
@@ -563,8 +559,7 @@ function KidsLibrary() {
 
       </main>
       
-      {/* Audio Player and Voice Assistant */}
-      <AudioPlayer />
+      {/* The book audio player is mounted inside BookReader after navigation. */}
       <VoiceAssistant language={language === 'en' ? 'en-US' : language === 'ar' ? 'ar-MA' : 'fr-FR'} />
     </div>
   );
