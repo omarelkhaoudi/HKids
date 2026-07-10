@@ -84,6 +84,10 @@ export const translations = {
     yourMedals: 'Your medals',
     litMascotName: 'The Bed',
     litMascotGreeting: 'Pick a story with the pictures!',
+    sleepStories: 'Bedtime',
+    settings: 'Settings',
+    profile: 'Profile',
+    friend: 'friend',
 
     library: 'Library',
     favorites: 'Favorites',
@@ -302,6 +306,10 @@ export const translations = {
     yourMedals: 'Tes médailles',
     litMascotName: 'Le Lit',
     litMascotGreeting: 'Choisis une histoire avec les images !',
+    sleepStories: 'Pour dormir',
+    settings: 'Paramètres',
+    profile: 'Profil',
+    friend: 'ami',
 
     library: 'Bibliothèque',
     favorites: 'Favoris',
@@ -520,6 +528,10 @@ export const translations = {
     yourMedals: 'ميدالياتك',
     litMascotName: 'السرير',
     litMascotGreeting: 'اختر قصة بالصور!',
+    sleepStories: 'للنوم',
+    settings: 'الإعدادات',
+    profile: 'الملف',
+    friend: 'صديق',
 
     library: 'المكتبة',
     favorites: 'المفضلة',
