@@ -126,6 +126,11 @@ export async function loadChildAccessPolicy({
       `SELECT
         pr.*,
         COALESCE((
+          SELECT SUM(ksts.duration_seconds)
+          FROM kid_screen_time_sessions ksts
+          WHERE ksts.kid_profile_id = pr.kid_profile_id
+            AND ksts.started_at >= date_trunc('day', NOW())
+        ), (
           SELECT SUM(krs.duration_seconds)
           FROM kid_reading_sessions krs
           WHERE krs.kid_profile_id = pr.kid_profile_id

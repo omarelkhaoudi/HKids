@@ -1,23 +1,19 @@
-import {useState, useEffect} from 'react';
-import {useNavigate, Link} from 'react-router-dom';
+import {useState, useEffect, useRef} from 'react';
+import {useNavigate} from 'react-router-dom';
 import {motion, AnimatePresence} from 'framer-motion';
-import {Card, Button, Badge, ProgressBar, Switch, Input, Skeleton, Avatar, EmptyState} from '../components/ui';
+import {Card, Button, Badge, Input, Skeleton, Avatar, EmptyState} from '../components/ui';
 
 import {useAuth} from '../context/AuthContext';
 import {parentalAPI} from '../api/parental';
-import {categoriesAPI} from '../api/books';
-import {learningAPI} from '../api/learning';
 import {useToast} from '../components/ToastProvider';
 import {CONTENT_LANGUAGES, CONTENT_THEMES} from '../constants/contentOptions';
 import {buildKidPayload, createEmptyKidForm, kidToForm} from '../utils/kidProfiles';
 import {
- UserIcon, LogOutIcon, PlusIcon, XIcon, CheckIcon, 
- ChildIcon, LockIcon, EditIcon, TrashIcon, BookIcon,
- HistoryIcon, MicrophoneIcon, AudioIcon, ClockIcon, BrainIcon, StarIcon
+ PlusIcon, XIcon, LockIcon, EditIcon, TrashIcon
 } from '../components/Icons';
-import {Logo} from '../components/Logo';
 import {KidAvatar} from '../components/parent/KidAvatar';
 import {SettingsCenterModal} from '../components/parent/SettingsCenterModal';
+import {ParentDashboardAnalytics} from '../components/parent/ParentDashboardAnalytics';
 import {SettingsIcon} from '../components/Icons';
 
 const bedtimeLanguages = CONTENT_LANGUAGES.map((language) => ({
@@ -34,30 +30,21 @@ function ParentDashboard() {
  const {user, logout} = useAuth();
  const navigate = useNavigate();
  const {showToast} = useToast();
+ const dashboardRequestRef = useRef(0);
+ const rulesRequestRef = useRef(0);
  const [kids, setKids] = useState([]);
- const [categories, setCategories] = useState([]);
  const [selectedKid, setSelectedKid] = useState(null);
- const [approvals, setApprovals] = useState([]);
- const [kidActivity, setKidActivity] = useState(null);
- const [learningActivity, setLearningActivity] = useState(null);
+ const [dashboardData, setDashboardData] = useState(null);
  const [activityLoading, setActivityLoading] = useState(false);
- const [goalSaving, setGoalSaving] = useState(false);
- const [rulesLoading, setRulesLoading] = useState(false);
  const [rulesSaving, setRulesSaving] = useState(false);
  const [loading, setLoading] = useState(true);
  const [showKidModal, setShowKidModal] = useState(false);
  const [showAccountModal, setShowAccountModal] = useState(false);
  const [showSettingsModal, setShowSettingsModal] = useState(false);
  const [editingKid, setEditingKid] = useState(null);
- const [activeSection, setActiveSection] = useState('overview');
  const emptyKidForm = createEmptyKidForm();
  const [kidForm, setKidForm] = useState(emptyKidForm);
  const [accountForm, setAccountForm] = useState({username: '', password: ''});
- const [goalForm, setGoalForm] = useState({
- goal_type: 'minutes',
- target_value: 20,
- period: 'weekly'
-});
  const [rulesForm, setRulesForm] = useState({
  daily_screen_time_minutes: 30,
  quiet_start_time: '19:00',
@@ -81,22 +68,17 @@ function ParentDashboard() {
  const loadData = async () => {
  try {
  setLoading(true);
- const [kidsRes, categoriesRes] = await Promise.all([
- parentalAPI.getKids(),
- categoriesAPI.getAll()
- ]);
+ const kidsRes = await parentalAPI.getKids();
  const kidsData = kidsRes.data || [];
- const categoriesData = categoriesRes.data || [];
  setKids(kidsData);
- setCategories(categoriesData);
 
- if (!selectedKid && kidsData.length > 0) {
- setSelectedKid(kidsData[0]);
- setActiveSection('overview');
- loadApprovals(kidsData[0].id, categoriesData);
- loadKidActivity(kidsData[0].id);
- loadLearningActivity(kidsData[0].id);
- loadRules(kidsData[0].id);
+ const activeKid = kidsData.find((kid) => kid.id === selectedKid?.id) || kidsData[0] || null;
+ setSelectedKid(activeKid);
+ if (activeKid) {
+ loadKidDashboard(activeKid.id);
+ loadRules(activeKid.id);
+ } else {
+ setDashboardData(null);
 }
 } catch (error) {
  console.error('Error loading data:', error);
@@ -106,59 +88,28 @@ function ParentDashboard() {
 }
 };
 
- const loadApprovals = async (kidId, availableCategories = categories) => {
- try {
- const res = await parentalAPI.getApprovals(kidId);
- const approvalsData = res.data;
- 
- // Create a map of all categories with their approval status
- const approvalsMap = new Map();
- approvalsData.forEach(approval => {
- approvalsMap.set(approval.category_id, approval.approved);
-});
-
- // Create approvals array for all categories
- const allApprovals = availableCategories.map(cat => ({
- category_id: cat.id,
- category_name: cat.name,
- category_description: cat.description || '',
- approved: approvalsMap.get(cat.id) || false
-}));
-
- setApprovals(allApprovals);
-} catch (error) {
- console.error('Error loading approvals:', error);
- showToast('Erreur lors du chargement des approbations', 'error');
-}
-};
-
- const loadKidActivity = async (kidId) => {
+ const loadKidDashboard = async (kidId) => {
+ const requestId = ++dashboardRequestRef.current;
  try {
  setActivityLoading(true);
- const res = await parentalAPI.getKidActivity(kidId);
- setKidActivity(res.data);
- if (res.data?.goal) {
- setGoalForm({
- goal_type: res.data.goal.goal_type || 'minutes',
- target_value: res.data.goal.target_value || 20,
- period: res.data.goal.period || 'weekly'
-});
-} else {
- setGoalForm({goal_type: 'minutes', target_value: 20, period: 'weekly'});
-}
+ const response = await parentalAPI.getKidDashboard(kidId);
+ if (requestId !== dashboardRequestRef.current) return;
+ setDashboardData(response.data);
 } catch (error) {
- console.error('Error loading kid activity:', error);
- setKidActivity(null);
- showToast('Erreur lors du chargement du suivi de lecture', 'error');
+ if (requestId !== dashboardRequestRef.current) return;
+ console.error('Parent dashboard data unavailable:', error);
+ setDashboardData(null);
+ showToast('Impossible de charger les statistiques Supabase', 'error');
 } finally {
- setActivityLoading(false);
+ if (requestId === dashboardRequestRef.current) setActivityLoading(false);
 }
 };
 
  const loadRules = async (kidId) => {
+ const requestId = ++rulesRequestRef.current;
  try {
- setRulesLoading(true);
  const res = await parentalAPI.getRules(kidId);
+ if (requestId !== rulesRequestRef.current) return;
  setRulesForm({
  daily_screen_time_minutes: res.data?.daily_screen_time_minutes ?? 30,
  quiet_start_time: res.data?.quiet_start_time || '19:00',
@@ -167,47 +118,17 @@ function ParentDashboard() {
  allowed_themes: res.data?.allowed_themes || []
 });
 } catch (error) {
+ if (requestId !== rulesRequestRef.current) return;
  console.error('Error loading parental rules:', error);
  showToast('Erreur lors du chargement des regles', 'error');
-} finally {
- setRulesLoading(false);
 }
 };
 
  const handleSelectKid = (kid) => {
  setSelectedKid(kid);
- setActiveSection('overview');
- loadApprovals(kid.id);
- loadKidActivity(kid.id);
- loadLearningActivity(kid.id);
+ setDashboardData(null);
+ loadKidDashboard(kid.id);
  loadRules(kid.id);
-};
-
- const loadLearningActivity = async (kidId) => {
- try {
- const response = await learningAPI.getParentSummary(kidId);
- setLearningActivity(response.data);
-} catch (error) {
- console.warn('Learning activity unavailable:', error);
- setLearningActivity(null);
-}
-};
-
- const handleToggleApproval = async (categoryId, approved) => {
- try {
- await parentalAPI.updateApproval(selectedKid.id, categoryId, approved);
- setApprovals(prev => 
- prev.map(approval => 
- approval.category_id === categoryId 
- ? {...approval, approved}
- : approval
- )
- );
- showToast(`Catégorie ${approved ? 'approuvée' : 'désapprouvée'}`, 'success');
-} catch (error) {
- console.error('Error updating approval:', error);
- showToast('Erreur lors de la mise à jour', 'error');
-}
 };
 
  const handleSaveKid = async () => {
@@ -244,8 +165,7 @@ function ParentDashboard() {
  showToast('Profil supprimé', 'success');
  if (selectedKid?.id === kidId) {
  setSelectedKid(null);
- setApprovals([]);
- setKidActivity(null);
+ setDashboardData(null);
 }
  loadData();
 } catch (error) {
@@ -269,38 +189,6 @@ function ParentDashboard() {
  const handleLogout = () => {
  logout();
  navigate('/parent/login');
-};
-
- const handleSaveGoal = async () => {
- if (!selectedKid) return;
-
- try {
- setGoalSaving(true);
- await parentalAPI.saveReadingGoal(selectedKid.id, goalForm);
- showToast('Objectif de lecture enregistre', 'success');
- await loadKidActivity(selectedKid.id);
-} catch (error) {
- console.error('Error saving reading goal:', error);
- showToast("Erreur lors de l'enregistrement de l'objectif", 'error');
-} finally {
- setGoalSaving(false);
-}
-};
-
- const handleClearGoal = async () => {
- if (!selectedKid) return;
-
- try {
- setGoalSaving(true);
- await parentalAPI.clearReadingGoal(selectedKid.id);
- showToast('Objectif desactive', 'success');
- await loadKidActivity(selectedKid.id);
-} catch (error) {
- console.error('Error clearing reading goal:', error);
- showToast("Erreur lors de la desactivation de l'objectif", 'error');
-} finally {
- setGoalSaving(false);
-}
 };
 
  const toggleRuleValue = (field, value) => {
@@ -328,6 +216,7 @@ function ParentDashboard() {
  allowed_themes: res.data?.allowed_themes || []
 });
  showToast('Regles du coucher enregistrees', 'success');
+ await loadKidDashboard(selectedKid.id);
 } catch (error) {
  console.error('Error saving parental rules:', error);
  showToast("Erreur lors de l'enregistrement des regles", 'error');
@@ -354,135 +243,7 @@ function ParentDashboard() {
 });
 };
 
- const approvedCount = approvals.filter((approval) => approval.approved).length;
- const totalCategories = approvals.length || categories.length || 0;
- const latestActivityDate = kidActivity?.recent_sessions?.[0]?.created_at
- || kidActivity?.progress?.[0]?.last_read_at
- || null;
- const parentSummaryCards = [
- {
- label: 'Enfants',
- value: kids.length,
- detail: kids.length === 1 ? 'profil actif' : 'profils actifs',
- icon: ChildIcon,
- tone: 'bg-primary-50 text-foreground-600 /20 '
-},
- {
- label: 'Derniere activite',
- value: latestActivityDate ? formatDate(latestActivityDate) : 'Aucune',
- detail: selectedKid ? selectedKid.name : 'Selectionnez un enfant',
- icon: HistoryIcon,
- tone: 'bg-primary-50 text-foreground-600 /20 '
-},
- {
- label:"Temps d'ecoute",
- value: formatDuration(kidActivity?.summary?.total_time_seconds),
- detail: selectedKid ? `suivi de ${selectedKid.name}` : 'pas encore de suivi',
- icon: AudioIcon,
- tone: 'bg-green-50 text-green-600 /20 '
-},
- {
- label: 'Regle quotidienne',
- value: `${rulesForm.daily_screen_time_minutes || 0} min`,
- detail: `${rulesForm.quiet_start_time || '--:--'} - ${rulesForm.quiet_end_time || '--:--'}`,
- icon: ClockIcon,
- tone: 'bg-accent-50 text-accent-600 /20 '
-},
- {
- label: 'Jeux educatifs',
- value: learningActivity?.summary?.attempts || 0,
- detail: `${learningActivity?.summary?.successes || 0} reussites`,
- icon: BrainIcon,
- tone: 'bg-violet-50 text-violet-600 /20 '
-}
- ];
- const parentSections = [
- {id: 'overview', label:"Vue d'ensemble"},
- {id: 'account', label: 'Compte enfant'},
- {id: 'access', label: 'Acces aux livres'},
- {id: 'rules', label: 'Regles'},
- {id: 'reading', label: 'Suivi'},
- {id: 'learning', label: 'Jeux'},
- {id: 'subscription', label: 'Abonnement'},
- {id: 'voice', label: 'Voix'},
- {id: 'notifications', label: 'Notifications'}
- ];
-
- const getCategoryGuidance = (approval) => {
- const name = (approval.category_name || '').toLowerCase();
- const guides = [
- {
- match: ['educational', 'education'],
- description: 'Histoires utiles pour apprendre, decouvrir des notions simples et renforcer la curiosite.',
- advice: 'Tres adapte',
- tone: 'green'
-},
- {
- match: ['animals', 'animal'],
- description: 'Recits autour des animaux, de la nature et de l empathie. Souvent rassurant pour les jeunes enfants.',
- advice: 'Tres adapte',
- tone: 'green'
-},
- {
- match: ['fairy tales', 'fairy', 'conte'],
- description: 'Contes imaginaires avec morale, magie et personnages symboliques. A verifier si l histoire est douce.',
- advice: 'Bon avec selection',
- tone: 'blue'
-},
- {
- match: ['adventure', 'aventure'],
- description: 'Histoires dynamiques avec exploration, courage et petits defis. Peut etre excellent si le ton reste calme.',
- advice: 'A accompagner',
- tone: 'amber'
-},
- {
- match: ['comedy', 'humour'],
- description: 'Lectures legeres et amusantes qui motivent l enfant a lire sans pression.',
- advice: 'Tres adapte',
- tone: 'green'
-},
- {
- match: ['fantasy', 'fantaisie'],
- description: 'Univers imaginaires avec magie ou personnages fictifs. Bien pour l imagination, a filtrer selon l age.',
- advice: 'A verifier',
- tone: 'amber'
-},
- {
- match: ['fiction'],
- description: 'Histoires inventees variees. Le niveau depend du theme, du vocabulaire et de la duree du livre.',
- advice: 'Selon le livre',
- tone: 'blue'
-},
- {
- match: ['mystery', 'mystere'],
- description: 'Enquetes et enigmes. Interessant pour reflechir, mais certains sujets peuvent etre moins rassurants.',
- advice: 'A verifier',
- tone: 'amber'
-},
- {
- match: ['science'],
- description: 'Contenus de decouverte pour comprendre le monde avec des mots simples.',
- advice: 'Tres adapte',
- tone: 'green'
-}
- ];
- const guide = guides.find((item) => item.match.some((keyword) => name.includes(keyword)));
- return {
- description: approval.category_description || guide?.description || 'Categorie generale. Le parent peut l autoriser apres avoir verifie que les livres correspondent a l age et au niveau de l enfant.',
- advice: guide?.advice || 'A verifier',
- tone: guide?.tone || 'amber'
-};
-};
-
- const guidanceToneClasses = {
- green: 'bg-green-100 text-green-700 /30 ',
- blue: 'bg-primary-100 text-foreground-700 /30 ',
- amber: 'bg-accent-100 text-accent-700 /30 '
-};
-
-
  const currentDate = new Date().toLocaleDateString('fr-FR', {weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'});
- const totalReadingTime = kidActivity?.summary?.total_time_seconds || 0;
  
  if (loading) {
  return (
@@ -516,7 +277,11 @@ function ParentDashboard() {
  <Badge variant="glass" className="bg-card/20 text-white border-none font-bold">
  {kids.length} {kids.length > 1 ? 'Enfants' : 'Enfant'}
  </Badge>
- <Badge variant="glass" className="bg-green-500/80 text-white border-none font-bold">Abonnement Actif</Badge>
+ {dashboardData?.subscription && (
+ <Badge variant="glass" className="bg-green-500/80 text-white border-none font-bold">
+ {dashboardData.subscription.plan_name}
+ </Badge>
+ )}
  </div>
  </div>
  </div>
@@ -534,41 +299,8 @@ function ParentDashboard() {
 
  <div className="max-w-7xl mx-auto px-4 md:px-12 -mt-16 relative z-20 flex flex-col gap-8">
  
- {/* 2. Quick Statistics */}
- <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
- <Card className="p-6 shadow-floating hover:-translate-y-1 transition-transform border-none overflow-hidden relative">
- <div className="absolute -right-4 -top-4 w-24 h-24 bg-primary-100 /30 rounded-full blur-xl"></div>
- <div className="flex items-center gap-4 mb-4 relative">
- <div className="p-3 bg-primary-100 /50 text-foreground-600 rounded-2xl"><ClockIcon className="w-6 h-6" /></div>
- <h3 className="font-bold text-foreground-muted">Temps de lecture</h3>
- </div>
- <p className="text-3xl font-black relative">{formatDuration(totalReadingTime)}</p>
- </Card>
- <Card className="p-6 shadow-floating hover:-translate-y-1 transition-transform border-none overflow-hidden relative">
- <div className="absolute -right-4 -top-4 w-24 h-24 bg-success-100 /30 rounded-full blur-xl"></div>
- <div className="flex items-center gap-4 mb-4 relative">
- <div className="p-3 bg-success-100 /50 text-success-600 rounded-2xl"><BookIcon className="w-6 h-6" /></div>
- <h3 className="font-bold text-foreground-muted">Histoires lues</h3>
- </div>
- <p className="text-3xl font-black relative">{learningActivity?.summary?.attempts || 0}</p>
- </Card>
- <Card className="p-6 shadow-floating hover:-translate-y-1 transition-transform border-none overflow-hidden relative">
- <div className="absolute -right-4 -top-4 w-24 h-24 bg-secondary-100 /30 rounded-full blur-xl"></div>
- <div className="flex items-center gap-4 mb-4 relative">
- <div className="p-3 bg-secondary-100 /50 text-foreground-secondary-600 rounded-2xl"><StarIcon className="w-6 h-6" /></div>
- <h3 className="font-bold text-foreground-muted">Série de lecture</h3>
- </div>
- <p className="text-3xl font-black relative">3 Jours <span className="text-sm font-medium text-success-500 ml-2">🔥 En cours</span></p>
- </Card>
- <Card className="p-6 shadow-floating hover:-translate-y-1 transition-transform border-none overflow-hidden relative">
- <div className="absolute -right-4 -top-4 w-24 h-24 bg-warning-100 /30 rounded-full blur-xl"></div>
- <div className="flex items-center gap-4 mb-4 relative">
- <div className="p-3 bg-warning-100 /50 text-warning-600 rounded-2xl"><BrainIcon className="w-6 h-6" /></div>
- <h3 className="font-bold text-foreground-muted">Jeux éducatifs</h3>
- </div>
- <p className="text-3xl font-black relative">{learningActivity?.summary?.successes || 0}</p>
- </Card>
- </div>
+ {/* Toutes les métriques et visualisations viennent du snapshot Supabase. */}
+ {selectedKid && <ParentDashboardAnalytics data={dashboardData} loading={activityLoading} />}
 
  {/* 3. Children Profiles Grid */}
  <div>
@@ -596,21 +328,12 @@ function ParentDashboard() {
  <h3 className="text-xl font-bold">{kid.name}</h3>
  <div className="flex gap-2 mt-1">
  {kid.age && <Badge variant="secondary">{kid.age} ans</Badge>}
- <Badge variant="outline">Niveau 2</Badge>
  </div>
  </div>
  </div>
  </div>
  
  <div className="space-y-4">
- <div>
- <div className="flex justify-between text-sm font-bold mb-1">
- <span className="text-foreground-muted">Lecture hebdo</span>
- <span className="text-foreground-600">45 / 60 min</span>
- </div>
- <ProgressBar progress={75} color="bg-primary-500" />
- </div>
- 
  {selectedKid?.id === kid.id && (
  <motion.div initial={{opacity: 0, height: 0}} animate={{opacity: 1, height: 'auto'}} className="pt-4 grid grid-cols-2 gap-2 border-t border-border">
  <Button variant="outline" size="sm" onClick={(e) => {e.stopPropagation(); setEditingKid(kid); setKidForm(kidToForm(kid)); setShowKidModal(true);}} className="font-bold text-xs"><EditIcon className="w-4 h-4 mr-1"/> Modifier</Button>
@@ -630,42 +353,6 @@ function ParentDashboard() {
  <motion.div initial={{opacity: 0, y: 20}} animate={{opacity: 1, y: 0}} className="grid grid-cols-1 lg:grid-cols-3 gap-8">
  
  <div className="lg:col-span-2 flex flex-col gap-8">
- {/* 4. Analytics & Goals */}
- <Card className="p-6 shadow-floating">
- <h2 className="text-xl font-bold mb-6">Activité de {selectedKid.name}</h2>
- <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
- {/* Fake Bar Chart */}
- <div className="flex flex-col h-48 justify-end gap-2 border-b border-l border-border p-4">
- <div className="flex items-end justify-between h-full w-full gap-2">
- {[30, 45, 20, 60, 80, 40, 90].map((h, i) => (
- <div key={i} className="w-full bg-primary-100 /30 rounded-t-md relative group">
- <motion.div initial={{height: 0}} animate={{height: `${h}%`}} className="absolute bottom-0 inset-x-0 bg-primary-500 rounded-t-md" />
- <div className="absolute -top-8 inset-x-0 text-center opacity-0 group-hover:opacity-100 transition-opacity text-xs font-bold bg-surface-800 text-white py-1 rounded">{h}m</div>
- </div>
- ))}
- </div>
- <div className="flex justify-between text-xs text-foreground-muted font-bold mt-2">
- <span>L</span><span>M</span><span>M</span><span>J</span><span>V</span><span>S</span><span>D</span>
- </div>
- </div>
-
- {/* Circular Goal */}
- <div className="flex flex-col items-center justify-center">
- <div className="relative w-32 h-32 flex items-center justify-center">
- <svg className="w-full h-full transform -rotate-90">
- <circle cx="64" cy="64" r="56" fill="transparent" stroke="currentColor" strokeWidth="12" className="text-surface-100" />
- <motion.circle initial={{strokeDashoffset: 351}} animate={{strokeDashoffset: 351 - (351 * 75 / 100)}} transition={{duration: 1, ease: 'easeOut'}} cx="64" cy="64" r="56" fill="transparent" stroke="currentColor" strokeWidth="12" strokeDasharray="351" strokeLinecap="round" className="text-foreground-secondary-500" />
- </svg>
- <div className="absolute flex flex-col items-center justify-center">
- <span className="text-3xl font-black">75%</span>
- <span className="text-xs font-bold text-foreground-muted uppercase tracking-wider">Objectif</span>
- </div>
- </div>
- <p className="mt-4 font-bold text-center text-sm text-foreground-secondary">Objectif de {goalForm.target_value} minutes {goalForm.period === 'daily' ? 'par jour' : 'par semaine'}</p>
- </div>
- </div>
- </Card>
-
  {/* 5. Parental Controls */}
  <Card className="p-6 shadow-floating">
  <h2 className="text-xl font-bold mb-6">Paramètres Parentaux</h2>
@@ -678,7 +365,10 @@ function ParentDashboard() {
  <Input 
  type="number" 
  value={rulesForm.daily_screen_time_minutes} 
- onChange={(e) => setRulesForm({...rulesForm, daily_screen_time_minutes: parseInt(e.target.value) || 30})}
+ onChange={(e) => {
+ const value = Number.parseInt(e.target.value, 10);
+ setRulesForm({...rulesForm, daily_screen_time_minutes: Number.isNaN(value) ? 30 : value});
+ }}
  className="w-24 text-center font-bold"
  />
  </div>
@@ -732,58 +422,17 @@ function ParentDashboard() {
 
  {/* Sidebar (Right) */}
  <div className="flex flex-col gap-8">
- {/* Subscription Card */}
  <div className="bg-gradient-to-br from-gray-900 to-black text-white p-6 rounded-3xl shadow-2xl relative overflow-hidden">
  <div className="absolute top-0 right-0 w-32 h-32 bg-yellow-500/20 rounded-full blur-2xl"></div>
- <Badge variant="glass" className="bg-card/20 text-white border-none font-bold mb-4">Premium</Badge>
- <h2 className="text-2xl font-black mb-1">Illimité</h2>
- <p className="text-white/70 text-sm mb-6">Renouvellement le 14 Août 2026</p>
- <div className="space-y-2 mb-6">
- <div className="flex justify-between text-sm font-bold">
- <span>Livres IA générés</span>
- <span>12 / 100</span>
- </div>
- <ProgressBar progress={12} color="bg-yellow-400" />
- </div>
+ <Badge variant="glass" className="bg-card/20 text-white border-none font-bold mb-4">
+ {dashboardData?.subscription?.status || 'Sans abonnement actif'}
+ </Badge>
+ <h2 className="text-2xl font-black mb-1">{dashboardData?.subscription?.plan_name || 'Formule gratuite'}</h2>
+ {dashboardData?.subscription?.current_period_end && (
+ <p className="text-white/70 text-sm mb-6">Échéance : {formatDate(dashboardData.subscription.current_period_end)}</p>
+ )}
  <Button variant="outline" fullWidth onClick={() => navigate('/abonnements')} className="bg-card hover:bg-surface-secondary text-black border-none font-bold">Gérer l'abonnement</Button>
  </div>
-
- {/* AI Insights & Timeline */}
- <Card className="p-6 shadow-floating">
- <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
- <BrainIcon className="w-6 h-6 text-foreground-500" /> Recommandations IA
- </h2>
- <div className="space-y-4">
- <div className="p-4 bg-primary-50 /20 rounded-2xl border border-primary-100 /50">
- <p className="text-sm font-bold text-foreground-800">💡 {selectedKid.name} adore les histoires sur les animaux en ce moment. Vous devriez lui proposer une histoire sur la jungle.</p>
- </div>
- <div className="p-4 bg-secondary-50 /20 rounded-2xl border border-secondary-100 /50">
- <p className="text-sm font-bold text-foreground-secondary-800">📈 Son vocabulaire progresse bien. Essayez des livres de Niveau 3 la semaine prochaine.</p>
- </div>
- </div>
- </Card>
-
- {/* Timeline */}
- <Card className="p-6 shadow-floating">
- <h2 className="text-xl font-bold mb-6">Activités récentes</h2>
- <div className="relative border-l-2 border-border ml-3 space-y-6">
- <div className="relative pl-6">
- <div className="absolute -left-[9px] top-1 w-4 h-4 rounded-full bg-success-500 ring-4 ring-white dark:ring-surface-800"></div>
- <p className="font-bold text-sm">A terminé"Le Lion Courageux"</p>
- <p className="text-xs text-foreground-muted">Aujourd'hui, 14h30</p>
- </div>
- <div className="relative pl-6">
- <div className="absolute -left-[9px] top-1 w-4 h-4 rounded-full bg-primary-500 ring-4 ring-white dark:ring-surface-800"></div>
- <p className="font-bold text-sm">A gagné le badge Lecteur Assidu</p>
- <p className="text-xs text-foreground-muted">Hier</p>
- </div>
- <div className="relative pl-6">
- <div className="absolute -left-[9px] top-1 w-4 h-4 rounded-full bg-warning-500 ring-4 ring-white dark:ring-surface-800"></div>
- <p className="font-bold text-sm">A joué à"Mots croisés"</p>
- <p className="text-xs text-foreground-muted">Il y a 3 jours</p>
- </div>
- </div>
- </Card>
  </div>
 
  </motion.div>

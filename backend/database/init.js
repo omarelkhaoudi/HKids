@@ -207,6 +207,7 @@ export async function initDatabase() {
         duration_seconds INTEGER NOT NULL DEFAULT 0,
         page_reached INTEGER NOT NULL DEFAULT 0,
         completed BOOLEAN DEFAULT FALSE,
+        client_session_id TEXT,
         created_at TIMESTAMPTZ DEFAULT NOW()
       );`,
       `CREATE TABLE IF NOT EXISTS kid_reading_goals (
@@ -218,6 +219,47 @@ export async function initDatabase() {
         active BOOLEAN DEFAULT TRUE,
         created_at TIMESTAMPTZ DEFAULT NOW(),
         updated_at TIMESTAMPTZ DEFAULT NOW()
+      );`,
+      `CREATE TABLE IF NOT EXISTS kid_screen_time_sessions (
+        id BIGSERIAL PRIMARY KEY,
+        kid_profile_id INTEGER NOT NULL REFERENCES kids_profiles(id) ON DELETE CASCADE,
+        client_session_id TEXT NOT NULL,
+        duration_seconds INTEGER NOT NULL DEFAULT 0,
+        started_at TIMESTAMPTZ NOT NULL,
+        last_heartbeat_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        UNIQUE(kid_profile_id, client_session_id)
+      );`,
+      `CREATE TABLE IF NOT EXISTS kid_book_favorites (
+        id BIGSERIAL PRIMARY KEY,
+        kid_profile_id INTEGER NOT NULL REFERENCES kids_profiles(id) ON DELETE CASCADE,
+        book_id INTEGER NOT NULL REFERENCES books(id) ON DELETE CASCADE,
+        favorited_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        UNIQUE(kid_profile_id, book_id)
+      );`,
+      `CREATE TABLE IF NOT EXISTS kid_book_history (
+        id BIGSERIAL PRIMARY KEY,
+        kid_profile_id INTEGER NOT NULL REFERENCES kids_profiles(id) ON DELETE CASCADE,
+        book_id INTEGER NOT NULL REFERENCES books(id) ON DELETE CASCADE,
+        last_page INTEGER NOT NULL DEFAULT 0,
+        open_count INTEGER NOT NULL DEFAULT 1,
+        listened_seconds INTEGER NOT NULL DEFAULT 0,
+        audio_duration_seconds INTEGER NOT NULL DEFAULT 0,
+        completed BOOLEAN NOT NULL DEFAULT FALSE,
+        last_opened_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        last_listened_at TIMESTAMPTZ,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        UNIQUE(kid_profile_id, book_id)
+      );`,
+      `CREATE TABLE IF NOT EXISTS kid_data_imports (
+        id BIGSERIAL PRIMARY KEY,
+        kid_profile_id INTEGER NOT NULL REFERENCES kids_profiles(id) ON DELETE CASCADE,
+        import_key TEXT NOT NULL,
+        imported_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        UNIQUE(kid_profile_id, import_key)
       );`,
       `CREATE TABLE IF NOT EXISTS generated_stories (
         id SERIAL PRIMARY KEY,
@@ -549,6 +591,7 @@ export async function initDatabase() {
     await client.query(`ALTER TABLE user_subscriptions ADD COLUMN IF NOT EXISTS provider TEXT`);
     await client.query(`ALTER TABLE user_subscriptions ADD COLUMN IF NOT EXISTS provider_subscription_id TEXT`);
     await client.query(`ALTER TABLE user_subscriptions ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW()`);
+    await client.query(`ALTER TABLE kid_reading_sessions ADD COLUMN IF NOT EXISTS client_session_id TEXT`);
     await client.query(`
       UPDATE books
       SET slug = CONCAT(
@@ -572,7 +615,13 @@ export async function initDatabase() {
     await client.query(`CREATE INDEX IF NOT EXISTS newsletter_subscribers_token_idx ON newsletter_subscribers(confirmation_token)`);
     await client.query(`CREATE INDEX IF NOT EXISTS kid_reading_progress_kid_idx ON kid_reading_progress(kid_profile_id, last_read_at DESC)`);
     await client.query(`CREATE INDEX IF NOT EXISTS kid_reading_sessions_kid_idx ON kid_reading_sessions(kid_profile_id, created_at DESC)`);
+    await client.query(`CREATE UNIQUE INDEX IF NOT EXISTS kid_reading_sessions_client_unique_idx ON kid_reading_sessions(kid_profile_id, client_session_id) WHERE client_session_id IS NOT NULL`);
     await client.query(`CREATE INDEX IF NOT EXISTS kid_reading_goals_kid_active_idx ON kid_reading_goals(kid_profile_id, active, updated_at DESC)`);
+    await client.query(`CREATE INDEX IF NOT EXISTS kids_profiles_parent_idx ON kids_profiles(parent_id, created_at DESC)`);
+    await client.query(`CREATE INDEX IF NOT EXISTS kid_screen_sessions_kid_time_idx ON kid_screen_time_sessions(kid_profile_id, started_at DESC)`);
+    await client.query(`CREATE INDEX IF NOT EXISTS kid_favorites_kid_time_idx ON kid_book_favorites(kid_profile_id, favorited_at DESC)`);
+    await client.query(`CREATE INDEX IF NOT EXISTS kid_history_kid_opened_idx ON kid_book_history(kid_profile_id, last_opened_at DESC)`);
+    await client.query(`CREATE INDEX IF NOT EXISTS kid_reading_sessions_book_idx ON kid_reading_sessions(kid_profile_id, book_id, created_at DESC)`);
     await client.query(`CREATE INDEX IF NOT EXISTS parental_rules_kid_idx ON parental_rules(kid_profile_id)`);
     await client.query(`CREATE INDEX IF NOT EXISTS generated_stories_kid_created_idx ON generated_stories(kid_profile_id, created_at DESC)`);
     await client.query(`CREATE INDEX IF NOT EXISTS generated_stories_kid_saved_idx ON generated_stories(kid_profile_id, saved, created_at DESC)`);
@@ -593,6 +642,7 @@ export async function initDatabase() {
     await client.query(`CREATE INDEX IF NOT EXISTS learning_contents_filters_idx ON learning_contents(status, content_type, language, difficulty, age_group_min, age_group_max)`);
     await client.query(`CREATE INDEX IF NOT EXISTS learning_questions_content_idx ON learning_questions(content_id, position)`);
     await client.query(`CREATE INDEX IF NOT EXISTS learning_attempts_kid_idx ON learning_attempts(kid_profile_id, created_at DESC)`);
+    await client.query(`CREATE INDEX IF NOT EXISTS learning_attempts_kid_success_idx ON learning_attempts(kid_profile_id, success, created_at DESC)`);
     await client.query(`
       DELETE FROM kid_challenge_progress duplicate
       USING kid_challenge_progress keeper

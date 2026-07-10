@@ -31,6 +31,7 @@ import { ToastProvider } from './components/ToastProvider';
 import ErrorBoundary from './components/ErrorBoundary';
 import { OfflineStatusBanner } from './components/offline/OfflineStatusBanner';
 import { OfflineSyncBridge } from './components/offline/OfflineSyncBridge';
+import { KidScreenTimeTracker } from './components/kids/KidScreenTimeTracker';
 import ScrollToTop from './components/ScrollToTop';
 import { isNativeAndroid } from './services/mobile/capacitorRuntime';
 import { storage } from './utils/storage';
@@ -189,6 +190,7 @@ function App() {
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
               <ScrollToTop />
+              <KidScreenTimeTracker />
               <OfflineSyncBridge />
               <OfflineStatusBanner />
             </div>

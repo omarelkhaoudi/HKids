@@ -10,6 +10,7 @@ import {
   loadChildAccessPolicy,
   sendParentalAccessError
 } from '../services/parental/parentalAccessService.js';
+import { invalidateParentDashboardCache } from '../services/parentDashboardService.js';
 
 const router = express.Router();
 
@@ -436,6 +437,7 @@ router.post('/contents/:id/attempts', verifyToken, async (req, res) => {
       console.warn('Learning challenge progress could not be updated:', challengeError.message);
     }
 
+    await invalidateParentDashboardCache(kidProfile.id);
     res.status(201).json({
       attempt: attemptResult.rows[0],
       reward,
