@@ -46,52 +46,6 @@ app.set('trust proxy', 1);
 app.disable('x-powered-by');
 app.use(securityHeaders);
 
-// Middleware CORS
-// Normaliser l'origine CORS (enlever le slash final si présent)
-const normalizeOrigin = (origin) => {
-  if (!origin) return origin;
-  return origin.endsWith('/') ? origin.slice(0, -1) : origin;
-};
-
-app.get('/', (req, res) => {
-  res.send('✅ HKids backend is running!');
-});
-
-app.get('/api/test-supabase', async (req, res) => {
-  if (config.nodeEnv === 'production') {
-    return res.status(404).json({ error: 'Not found' });
-  }
-
-  try {
-    if (!supabase) {
-      return res.status(503).json({
-        success: false,
-        error: 'Supabase is not configured'
-      });
-    }
-
-    const { data, error } = await supabase.from('users').select('*').limit(5);
-
-    if (error) {
-      return res.status(500).json({
-        success: false,
-        error: error.message
-      });
-    }
-
-    res.json({
-      success: true,
-      data
-    });
-
-  } catch (err) {
-    res.status(500).json({
-      success: false,
-      error: err.message
-    });
-  }
-});
-
 app.use(cors({
   origin: (origin, callback) => {
     // Autoriser les requêtes sans origin (ex: Postman, same-origin)
@@ -199,58 +153,6 @@ app.get('/uploads/books/:filename', async (req, res) => {
   }
 });
 
-// Legacy fallback kept disabled: serving another book file for a missing path
-// corrupts the reader experience and is unsafe in serverless production.
-app.get('/__disabled_upload_fallback/books/:filename', (req, res, next) => {
-  try {
-    const filename = req.params.filename;
-    const fullPath = path.join(__dirname, 'uploads', 'books', filename);
-    
-    console.log(`📖 Book file request: ${filename}`);
-    console.log(`📂 File exists: ${fs.existsSync(fullPath)}`);
-    
-    // If file exists, serve it directly
-    if (fs.existsSync(fullPath)) {
-      return res.sendFile(fullPath);
-    }
-    
-    // File not found - serve fallback
-    console.log(`🚨 File not found: ${filename}, looking for fallback...`);
-    
-    const uploadsDir = path.join(__dirname, 'uploads', 'books');
-    if (!fs.existsSync(uploadsDir)) {
-      console.log(`❌ Uploads directory not found`);
-      return res.status(404).json({ error: 'Uploads directory not found' });
-    }
-    
-    const files = fs.readdirSync(uploadsDir);
-    console.log(`📋 Available files: ${files.slice(0, 5).join(', ')}...`);
-    
-    if (files.length === 0) {
-      console.log(`❌ No files found in uploads directory`);
-      return res.status(404).json({ error: 'No files available' });
-    }
-    
-    // Try to find file with same extension first
-    const fileExtension = filename.split('.').pop().toLowerCase();
-    let fallbackFile = files.find(file => file.toLowerCase().endsWith(`.${fileExtension}`));
-    
-    // If no file with same extension, get first available file
-    if (!fallbackFile) {
-      fallbackFile = files[0];
-      console.log(`⚠️ No ${fileExtension} files found, using: ${fallbackFile}`);
-    }
-    
-    console.log(`🔄 Fallback: ${filename} → ${fallbackFile}`);
-    const fallbackPath = path.join(__dirname, 'uploads', 'books', fallbackFile);
-    return res.sendFile(fallbackPath);
-    
-  } catch (error) {
-    console.error('❌ Error serving book file:', error);
-    return res.status(500).json({ error: 'Server error' });
-  }
-});
-
 // Static files for other uploads (non-books)
 app.use('/uploads/voices', (req, res) => {
   res.status(403).json({ error: 'Voice files require authenticated API access' });
@@ -262,6 +164,10 @@ let dbInitialized = false;
 let dbInitializationPromise = null;
 
 async function ensureDatabaseInitialized(req, res, next) {
+  if (process.env.NODE_ENV === 'test') {
+    return next();
+  }
+
   try {
     if (dbInitialized) return next();
 
@@ -286,6 +192,16 @@ async function ensureDatabaseInitialized(req, res, next) {
 }
 
 // Routes
+app.get('/api/health', (req, res) => {
+  res.json({
+    status: 'ok',
+    message: 'HKids API is running',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    environment: config.nodeEnv
+  });
+});
+
 app.use('/api', ensureDatabaseInitialized);
 app.use('/api/auth', authRouter);
 app.use('/api/books', booksRouter);
@@ -302,12 +218,6 @@ app.use('/api/learning', learningRouter);
 app.use('/api/privacy', privacyRouter);
 app.use('/api/reports', reportsRouter);
 
-// Log available routes for debugging
-console.log('📋 Available auth routes:');
-console.log('   POST /api/auth/signup');
-console.log('   POST /api/auth/login');
-
-// Root route - API information
 app.get('/', (req, res) => {
   res.json({
     success: true,
@@ -326,18 +236,45 @@ app.get('/', (req, res) => {
   });
 });
 
-// Health check
-app.get('/api/health', (req, res) => {
-  res.json({ 
-    status: 'ok', 
-    message: 'HKids API is running',
-    timestamp: new Date().toISOString(),
-    uptime: process.uptime(),
-    environment: config.nodeEnv
-  });
+// Log available routes for debugging
+console.log('📋 Available auth routes:');
+console.log('   POST /api/auth/signup');
+console.log('   POST /api/auth/login');
+
+app.get('/api/test-supabase', async (req, res) => {
+  if (config.nodeEnv === 'production') {
+    return res.status(404).json({ error: 'Not found' });
+  }
+
+  try {
+    if (!supabase) {
+      return res.status(503).json({
+        success: false,
+        error: 'Supabase is not configured'
+      });
+    }
+
+    const { data, error } = await supabase.from('users').select('*').limit(5);
+
+    if (error) {
+      return res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+
+    res.json({
+      success: true,
+      data
+    });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      error: err.message
+    });
+  }
 });
 
-// Uploads status (useful when Render Shell is unavailable)
 app.get('/api/uploads-status', (req, res) => {
   if (config.nodeEnv === 'production') {
     return res.status(404).json({ error: 'Not found' });
@@ -569,8 +506,7 @@ process.on('unhandledRejection', (reason, promise) => {
 });
 
 // Initialize database and start server (only for non-Vercel environments)
-// On Vercel, this will be handled in the export section
-if (!process.env.VERCEL) {
+if (!process.env.VERCEL && process.env.NODE_ENV !== 'test' && process.env.SKIP_SERVER_START !== '1') {
   initDatabase()
     .then(() => {
       console.log('✅ Database initialization completed');
@@ -589,5 +525,6 @@ if (!process.env.VERCEL) {
 
 // Export app for Vercel serverless functions
 // Must be at the end of the file
+export { app };
 export default app;
 

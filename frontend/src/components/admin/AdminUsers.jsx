@@ -27,6 +27,9 @@ function AdminUsers() {
 }
 };
 
+ loadParents();
+}, []);
+
  const deleteParent = async () => {
  if (!selectedParent) return;
  const reason = window.prompt('Motif de suppression du compte (journalisé)');
@@ -44,8 +47,6 @@ function AdminUsers() {
  setDeleting(false);
 }
 };
- loadParents();
-}, []);
 
  const openParent = async (parent) => {
  try {

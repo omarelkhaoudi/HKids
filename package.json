@@ -2,17 +2,33 @@
   "name": "hkids",
   "version": "1.0.0",
   "description": "HKids - Child-friendly digital reading solution",
-  "main": "index.js",
+  "private": true,
+  "type": "module",
   "scripts": {
-    "dev:backend": "cd backend && npm run dev",
-    "dev:frontend": "cd frontend && npm run dev",
-    "install:all": "npm install && cd backend && npm install && cd ../frontend && npm install",
-    "build": "cd frontend && npm run build",
-    "generate:images": "node scripts/generate-test-images-html.js",
-    "generate:books": "node scripts/generate-multiple-books.js"
+    "dev:backend": "npm run dev --prefix backend",
+    "dev:frontend": "npm run dev --prefix frontend",
+    "install:all": "npm install && npm install --prefix backend && npm install --prefix frontend",
+    "build": "npm run build --prefix frontend",
+    "build:backend": "npm run build --prefix backend",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "typecheck": "tsc --noEmit",
+    "test": "npm run test:backend && npm run test:frontend",
+    "test:backend": "npm test --prefix backend",
+    "test:frontend": "npm test --prefix frontend",
+    "test:e2e": "playwright test",
+    "ci": "npm run lint && npm run typecheck && npm run test && npm run build"
   },
   "keywords": ["reading", "children", "education"],
   "author": "",
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "@eslint/js": "^9.39.2",
+    "@playwright/test": "^1.57.0",
+    "eslint": "^9.39.2",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "eslint-plugin-react-refresh": "^0.4.26",
+    "globals": "^16.5.0",
+    "typescript": "^5.9.3"
+  }
 }
-

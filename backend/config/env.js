@@ -17,6 +17,11 @@ dotenv.config({ path: envPath });
  * Validates required environment variables
  */
 const validateEnv = () => {
+  if (process.env.NODE_ENV === 'test') {
+    process.env.JWT_SECRET ||= 'hkids-test-jwt-secret-with-32-characters-minimum';
+    return;
+  }
+
   const required = ['JWT_SECRET'];
   const missing = required.filter(key => !process.env[key]);
   

@@ -92,20 +92,6 @@ async function sendConfirmationEmail(email, token) {
     body: JSON.stringify({
       from: fromEmail,
       to: [email],
-      subject: 'Confirmez que vous souhaitez recevoir du marketing par e-mail',
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 640px; margin: 0 auto; padding: 32px; color: #111;">
-          <div style="font-size: 44px; font-weight: 700; color: #6ab7a8; margin-bottom: 28px;">H<span style="color:#c8b19d;">kids</span></div>
-          <h1 style="font-size: 32px; line-height: 1.25; margin: 0 0 18px;">Confirmez que vous souhaitez recevoir du marketing par e-mail</h1>
-          <p style="font-size: 18px; line-height: 1.6; color: #666; margin: 0 0 28px;">
-            Vous devez confirmer que vous souhaitez recevoir des messages marketing de notre part.
-            Si vous n'êtes pas abonné(e), vous n'avez rien à faire.
-          </p>
-          <a href="${confirmationUrl}" style="display: block; text-align: center; background: #6ab7a8; color: white; text-decoration: none; font-size: 20px; padding: 18px 24px; border-radius: 6px;">
-            Inscription
-          </a>
-        </div>
-      `,
       subject: 'Bienvenue chez HKids - confirmez votre inscription',
       text: `Bienvenue chez HKids ! Confirmez votre inscription pour recevoir nos nouveautes, nos histoires et nos offres speciales : ${confirmationUrl}`,
       html: `

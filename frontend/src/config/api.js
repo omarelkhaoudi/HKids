@@ -4,7 +4,7 @@ const configuredApiUrl = import.meta.env.VITE_API_URL?.replace(/\/+$/, '');
 
 function resolveDefaultApiUrl() {
   if (configuredApiUrl) return configuredApiUrl;
-  if (import.meta.env.DEV) return 'http://localhost:3001';
+  if (import.meta.env.DEV) return 'http://localhost:3000';
   if (Capacitor.isNativePlatform()) return '';
   return globalThis.location?.origin || '';
 }
@@ -26,22 +26,4 @@ export function buildApiUrl(path) {
   // Add /api prefix if not already present
   const apiPath = sanitizedPath.startsWith('/api') ? sanitizedPath : `/api${sanitizedPath}`;
   return `${API_BASE}${apiPath}`;
-}
-
-export async function loginRequest(username, password) {
-  const response = await fetch(buildApiUrl('/auth/login'), {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ username, password }),
-  });
-  return response.json();
-}
-
-export async function signupRequest(username, password) {
-  const response = await fetch(buildApiUrl('/auth/signup'), {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ username, password }),
-  });
-  return response.json();
 }
