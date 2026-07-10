@@ -9,6 +9,8 @@ import {
 import {Button, Badge, Switch, Input, Avatar} from '../ui';
 import {useAuth} from '../../context/AuthContext';
 import {useToast} from '../ToastProvider';
+import {subscriptionsAPI} from '../../api/subscriptions';
+import {useNavigate} from 'react-router-dom';
 
 const SECTIONS = [
  {id: 'account', label: 'Compte', icon: UserIcon},
@@ -31,6 +33,30 @@ export function SettingsCenterModal({isOpen, onClose}) {
  const sectionRefs = useRef({});
  const {user} = useAuth();
  const {showToast} = useToast();
+ const navigate = useNavigate();
+ const [subscription, setSubscription] = useState(null);
+ const [invoices, setInvoices] = useState([]);
+ const [loadingBilling, setLoadingBilling] = useState(false);
+
+ useEffect(() => {
+ if (!isOpen || user?.role === 'kid') return;
+ const loadBilling = async () => {
+ try {
+ setLoadingBilling(true);
+ const [subResponse, invoicesResponse] = await Promise.all([
+ subscriptionsAPI.getCurrentSubscription(),
+ subscriptionsAPI.getInvoices({ limit: 10, offset: 0 })
+ ]);
+ setSubscription(subResponse.data?.subscription || null);
+ setInvoices(invoicesResponse.data?.items || []);
+ } catch (error) {
+ console.error('Error loading billing settings:', error);
+ } finally {
+ setLoadingBilling(false);
+ }
+ };
+ loadBilling();
+ }, [isOpen, user?.role]);
 
  useEffect(() => {
  if (isOpen) {
@@ -470,8 +496,22 @@ export function SettingsCenterModal({isOpen, onClose}) {
  <div className="relative z-10">
  <div className="flex items-center justify-between mb-8">
  <div>
- <Badge variant="glass" className="bg-card/20 border-none font-bold mb-2">Premium Famille</Badge>
- <h3 className="text-4xl font-black">9.99 € <span className="text-xl font-medium text-white/50">/ mois</span></h3>
+ <Badge variant="glass" className="bg-card/20 border-none font-bold mb-2">
+ {subscription?.plan?.name || 'Sans abonnement actif'}
+ </Badge>
+ <h3 className="text-4xl font-black">
+ {subscription?.plan
+ ? new Intl.NumberFormat('fr-FR', { style: 'currency', currency: subscription.plan.currency || 'EUR' }).format(subscription.plan.monthly_price || 0)
+ : '0,00 €'}
+ <span className="text-xl font-medium text-white/50"> / mois</span>
+ </h3>
+ <p className="text-sm text-white/70 mt-2">
+ {loadingBilling
+ ? 'Chargement...'
+ : subscription?.current_period_end
+ ? `Échéance : ${new Date(subscription.current_period_end).toLocaleDateString('fr-FR')}`
+ : 'Aucune formule active'}
+ </p>
  </div>
  <div className="p-4 bg-card/10 backdrop-blur-md rounded-2xl">
  <StarIcon className="w-8 h-8 text-yellow-400" />
@@ -479,15 +519,18 @@ export function SettingsCenterModal({isOpen, onClose}) {
  </div>
  
  <div className="space-y-3 mb-8">
- <div className="flex items-center gap-3"><CheckCircleIcon className="w-5 h-5 text-green-400"/> <span>Profils enfants illimités</span></div>
- <div className="flex items-center gap-3"><CheckCircleIcon className="w-5 h-5 text-green-400"/> <span>Génération d'histoires IA</span></div>
- <div className="flex items-center gap-3"><CheckCircleIcon className="w-5 h-5 text-green-400"/> <span>Clonage vocal (3 voix)</span></div>
- <div className="flex items-center gap-3"><CheckCircleIcon className="w-5 h-5 text-green-400"/> <span>Statistiques avancées</span></div>
+ <div className="flex items-center gap-3"><CheckCircleIcon className="w-5 h-5 text-green-400"/> <span>{subscription?.plan?.book_limit || 0} livre(s) premium / mois</span></div>
+ <div className="flex items-center gap-3"><CheckCircleIcon className="w-5 h-5 text-green-400"/> <span>Statut : {subscription?.status || 'inactif'}</span></div>
+ <div className="flex items-center gap-3"><CheckCircleIcon className="w-5 h-5 text-green-400"/> <span>{invoices.length} facture(s) récente(s)</span></div>
  </div>
  
  <div className="flex flex-col sm:flex-row gap-4 pt-6 border-t border-white/10">
- <Button className="bg-card text-black hover:bg-surface-secondary font-bold">Gérer la facturation</Button>
- <Button variant="ghost" className="text-white hover:bg-card/10">Voir l'historique des factures</Button>
+ <Button className="bg-card text-black hover:bg-surface-secondary font-bold" onClick={() => navigate('/abonnements')}>
+ Gérer l'abonnement
+ </Button>
+ <Button variant="ghost" className="text-white hover:bg-card/10" onClick={() => navigate('/abonnements')}>
+ Voir l'historique des factures
+ </Button>
  </div>
  </div>
  </div>

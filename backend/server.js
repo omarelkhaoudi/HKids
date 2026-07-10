@@ -17,6 +17,7 @@ import authRouter from './routes/auth.js';
 import categoriesRouter from './routes/categories.js';
 import parentalRouter from './routes/parental.js';
 import subscriptionsRouter from './routes/subscriptions.js';
+import stripeWebhooksRouter from './routes/stripeWebhooks.js';
 import newsletterRouter from './routes/newsletter.js';
 import adminRouter from './routes/admin.js';
 import aiRouter from './routes/ai.js';
@@ -117,8 +118,9 @@ app.use(cors({
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Cache-Control', 'Pragma'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Cache-Control', 'Pragma', 'Stripe-Signature'],
 }));
+app.use('/api/webhooks/stripe', stripeWebhooksRouter);
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 

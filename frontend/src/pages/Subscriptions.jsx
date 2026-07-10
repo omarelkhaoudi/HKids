@@ -131,6 +131,9 @@ function Subscriptions() {
  // Custom Status states to replace simple toasts
  const [viewState, setViewState] = useState('plans'); // 'plans', 'success', 'cancelled', 'error'
  const [errorMessage, setErrorMessage] = useState('');
+ const [invoices, setInvoices] = useState([]);
+ const [history, setHistory] = useState([]);
+ const [billingAction, setBillingAction] = useState('');
 
  const handleExpiredSession = () => {
  logout();
@@ -171,6 +174,23 @@ function Subscriptions() {
 
  loadSubscriptions();
 }, [isAuthenticated]);
+
+ useEffect(() => {
+ if (!isAuthenticated || isKidAccount || !hasUsableSubscription) return;
+ const loadBillingData = async () => {
+ try {
+ const [invoicesResponse, historyResponse] = await Promise.all([
+ subscriptionsAPI.getInvoices({ limit: 20, offset: 0 }),
+ subscriptionsAPI.getHistory({ limit: 50, offset: 0 })
+ ]);
+ setInvoices(invoicesResponse.data?.items || []);
+ setHistory(historyResponse.data?.items || []);
+ } catch (error) {
+ console.error('Error loading billing data:', error);
+ }
+ };
+ loadBillingData();
+}, [isAuthenticated, isKidAccount, hasUsableSubscription, currentSubscription?.id]);
 
  useEffect(() => {
  const checkoutStatus = searchParams.get('checkout');
@@ -275,10 +295,54 @@ function Subscriptions() {
  setErrorMessage(msg);
  setViewState('error');
 }
-} finally {
+ } finally {
  setStartingTrial(false);
 }
 };
+
+ const handleBillingPortal = async () => {
+ try {
+ setBillingAction('portal');
+ const response = await subscriptionsAPI.createBillingPortalSession();
+ if (response.data.portal_url) window.location.href = response.data.portal_url;
+ } catch (error) {
+ showToast(error.response?.data?.error || "Impossible d'ouvrir le portail de facturation.", 'error');
+ } finally {
+ setBillingAction('');
+ }
+ };
+
+ const handleCancelSubscription = async () => {
+ if (!window.confirm('Annuler votre abonnement à la fin de la période en cours ?')) return;
+ try {
+ setBillingAction('cancel');
+ const response = await subscriptionsAPI.cancelSubscription(true);
+ setCurrentSubscription(response.data.subscription);
+ showToast('Annulation programmée à la fin de la période.', 'success');
+ } catch (error) {
+ showToast(error.response?.data?.error || 'Annulation impossible.', 'error');
+ } finally {
+ setBillingAction('');
+ }
+ };
+
+ const handleResumeSubscription = async () => {
+ try {
+ setBillingAction('resume');
+ const response = await subscriptionsAPI.resumeSubscription();
+ setCurrentSubscription(response.data.subscription);
+ showToast('Abonnement réactivé.', 'success');
+ } catch (error) {
+ showToast(error.response?.data?.error || 'Réactivation impossible.', 'error');
+ } finally {
+ setBillingAction('');
+ }
+ };
+
+ const formatMoney = (cents, currency = 'EUR') => new Intl.NumberFormat('fr-FR', {
+ style: 'currency',
+ currency: currency || 'EUR'
+ }).format((Number(cents) || 0) / 100);
 
  if (loading && !checkoutModalPlan && viewState === 'plans') {
  return (
@@ -387,6 +451,94 @@ function Subscriptions() {
  </p>
  </motion.div>
  </section>
+
+ {!isKidAccount && !hasUsableSubscription && isAuthenticated && (
+ <section className="max-w-3xl mx-auto px-4 mb-12">
+ <Card className="rounded-[2rem] p-8 border-2 border-dashed border-primary-200 bg-primary-50/40 text-center">
+ <Badge variant="soft" className="mb-4 bg-primary-100 text-foreground-800 font-bold">Essai gratuit</Badge>
+ <h2 className="text-2xl font-black mb-3">Testez HKids pendant 7 jours</h2>
+ <p className="text-foreground-secondary font-medium mb-6">3 livres premium inclus, sans carte bancaire.</p>
+ <Button onClick={handleStartTrial} disabled={startingTrial} variant="primary" className="rounded-full px-8 font-black">
+ {startingTrial ? 'Activation...' : "Démarrer l'essai gratuit"}
+ </Button>
+ </Card>
+ </section>
+ )}
+
+ {isAuthenticated && hasUsableSubscription && !isKidAccount && (
+ <section className="max-w-5xl mx-auto px-4 mb-16">
+ <Card className="rounded-[2.5rem] p-8 border border-border shadow-sm">
+ <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 mb-8">
+ <div>
+ <Badge variant="soft" className="mb-3 font-bold">Abonnement actif</Badge>
+ <h2 className="text-3xl font-black">{currentSubscription?.plan?.name}</h2>
+ <p className="text-foreground-secondary font-medium mt-2">
+ Statut : {currentSubscription?.status}
+ {currentSubscription?.cancel_at_period_end ? ' (annulation programmée)' : ''}
+ </p>
+ <p className="text-sm text-foreground-muted mt-1">
+ {currentSubscription?.status === 'trialing' && currentSubscription?.trial_end
+ ? `Fin de l'essai : ${new Date(currentSubscription.trial_end).toLocaleDateString('fr-FR')}`
+ : `Prochain renouvellement : ${subscriptionEndsAt ? subscriptionEndsAt.toLocaleDateString('fr-FR') : '-'}`}
+ </p>
+ </div>
+ <div className="flex flex-wrap gap-3">
+ {currentSubscription?.provider === 'stripe' && (
+ <Button onClick={handleBillingPortal} disabled={Boolean(billingAction)} variant="outline" className="rounded-full font-bold">
+ Gérer la facturation
+ </Button>
+ )}
+ {currentSubscription?.provider === 'stripe' && !currentSubscription?.cancel_at_period_end && (
+ <Button onClick={handleCancelSubscription} disabled={Boolean(billingAction)} variant="ghost" className="rounded-full font-bold text-rose-600">
+ Annuler
+ </Button>
+ )}
+ {currentSubscription?.provider === 'stripe' && currentSubscription?.cancel_at_period_end && (
+ <Button onClick={handleResumeSubscription} disabled={Boolean(billingAction)} variant="primary" className="rounded-full font-bold">
+ Réactiver
+ </Button>
+ )}
+ </div>
+ </div>
+
+ <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+ <div>
+ <h3 className="text-lg font-black mb-4 flex items-center gap-2"><HistoryIcon className="w-5 h-5"/> Historique</h3>
+ <div className="space-y-3 max-h-64 overflow-y-auto pr-2">
+ {history.length === 0 ? (
+ <p className="text-sm text-foreground-muted">Aucun événement pour le moment.</p>
+ ) : history.map((item) => (
+ <div key={item.id} className="rounded-2xl border border-border p-4 bg-surface-secondary/40">
+ <p className="font-bold text-sm">{item.event_type}</p>
+ <p className="text-xs text-foreground-muted mt-1">{new Date(item.created_at).toLocaleString('fr-FR')}</p>
+ </div>
+ ))}
+ </div>
+ </div>
+ <div>
+ <h3 className="text-lg font-black mb-4">Factures</h3>
+ <div className="space-y-3 max-h-64 overflow-y-auto pr-2">
+ {invoices.length === 0 ? (
+ <p className="text-sm text-foreground-muted">Aucune facture disponible.</p>
+ ) : invoices.map((invoice) => (
+ <div key={invoice.id} className="rounded-2xl border border-border p-4 flex items-center justify-between gap-4">
+ <div>
+ <p className="font-bold">{formatMoney(invoice.amount_paid, invoice.currency)}</p>
+ <p className="text-xs text-foreground-muted">{invoice.paid_at ? new Date(invoice.paid_at).toLocaleDateString('fr-FR') : invoice.status}</p>
+ </div>
+ {invoice.hosted_invoice_url && (
+ <a href={invoice.hosted_invoice_url} target="_blank" rel="noreferrer" className="text-sm font-bold text-primary-600 hover:underline">
+ Voir
+ </a>
+ )}
+ </div>
+ ))}
+ </div>
+ </div>
+ </div>
+ </Card>
+ </section>
+ )}
 
  {/* PRICING CARDS */}
  <section className="max-w-7xl mx-auto px-4 mb-20">

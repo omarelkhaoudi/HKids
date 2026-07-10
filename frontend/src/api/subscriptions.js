@@ -13,6 +13,16 @@ export const subscriptionsAPI = {
     headers: authHeaders(),
   }),
 
+  getInvoices: (params = {}) => axios.get(buildApiUrl('/subscriptions/invoices'), {
+    headers: authHeaders(),
+    params,
+  }),
+
+  getHistory: (params = {}) => axios.get(buildApiUrl('/subscriptions/history'), {
+    headers: authHeaders(),
+    params,
+  }),
+
   subscribe: (planCode) => axios.post(
     buildApiUrl('/subscriptions/subscribe'),
     { plan_code: planCode },
@@ -33,6 +43,24 @@ export const subscriptionsAPI = {
 
   startTrial: () => axios.post(
     buildApiUrl('/subscriptions/start-trial'),
+    {},
+    { headers: authHeaders() }
+  ),
+
+  cancelSubscription: (atPeriodEnd = true) => axios.post(
+    buildApiUrl('/subscriptions/cancel'),
+    { at_period_end: atPeriodEnd },
+    { headers: authHeaders() }
+  ),
+
+  resumeSubscription: () => axios.post(
+    buildApiUrl('/subscriptions/resume'),
+    {},
+    { headers: authHeaders() }
+  ),
+
+  createBillingPortalSession: () => axios.post(
+    buildApiUrl('/subscriptions/billing-portal'),
     {},
     { headers: authHeaders() }
   ),
