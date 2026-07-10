@@ -11,6 +11,7 @@ import KidsHome from './pages/KidsHome';
 import KidsLibrary from './pages/KidsLibrary';
 import KidsCategoryPage from './pages/KidsCategoryPage';
 import DesignSystem from './pages/DesignSystem';
+import HKidsMockup from './pages/HKidsMockup';
 import ContentLibraryHome from './pages/ContentLibraryHome';
 import ContentCategoryContents from './pages/ContentCategoryContents';
 import Favorites from './pages/Favorites';
@@ -200,6 +201,7 @@ function App() {
                 <Route path="/kids/ai-stories" element={<RequireAuth><LazyRoute><KidsAIStories /></LazyRoute></RequireAuth>} />
                 <Route path="/kids/category/:categoryId" element={<RequireAuth><KidsCategoryPage /></RequireAuth>} />
                 <Route path="/design-system" element={<DesignSystem />} />
+                <Route path="/mockup" element={<HKidsMockup />} />
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
               <ScrollToTop />
