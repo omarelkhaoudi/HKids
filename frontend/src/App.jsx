@@ -179,6 +179,7 @@ function App() {
                 <Route path="/parent/*" element={<RequireRole roles={['parent', 'admin']}><ParentDashboard /></RequireRole>} />
                 <Route path="/kids" element={<RequireAuth><KidsHome /></RequireAuth>} />
                 <Route path="/kids/library" element={<RequireAuth><KidsLibrary /></RequireAuth>} />
+                <Route path="/kids/read/:id" element={<RequireAuth><BookReader /></RequireAuth>} />
                 <Route path="/kids/learning" element={<RequireAuth><KidsLearning /></RequireAuth>} />
                 <Route path="/kids/story-studio" element={<RequireAuth><KidsStoryStudio /></RequireAuth>} />
                 <Route path="/kids/storystudio" element={<Navigate to="/kids/story-studio" replace />} />

@@ -24,6 +24,11 @@ function installBackButtonHandling() {
     const path = window.location.pathname;
     const isPrimaryScreen = ['/', '/kids', '/kids/library'].includes(path);
 
+    if (path.startsWith('/kids/read/') && !canGoBack) {
+      window.location.assign('/kids/library');
+      return;
+    }
+
     if (canGoBack && !isPrimaryScreen) {
       window.history.back();
       return;
