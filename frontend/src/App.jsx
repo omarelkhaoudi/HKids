@@ -201,7 +201,7 @@ function App() {
                 <Route path="/kids/ai-stories" element={<RequireAuth><LazyRoute><KidsAIStories /></LazyRoute></RequireAuth>} />
                 <Route path="/kids/category/:categoryId" element={<RequireAuth><KidsCategoryPage /></RequireAuth>} />
                 <Route path="/design-system" element={<DesignSystem />} />
-                <Route path="/mockup" element={<LazyRoute><HKidsMockup /></LazyRoute>} />
+                <Route path="/mockup" element={<RequireAuth><LazyRoute><HKidsMockup /></LazyRoute></RequireAuth>} />
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
               <ScrollToTop />
