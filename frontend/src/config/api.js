@@ -1,10 +1,21 @@
-// src/config/api.js
+import { Capacitor } from '@capacitor/core';
 
-const defaultApiUrl = import.meta.env.DEV
-  ? 'http://localhost:3001'
-  : globalThis.location?.origin;
+const configuredApiUrl = import.meta.env.VITE_API_URL?.replace(/\/+$/, '');
 
-export const API_URL = import.meta.env.VITE_API_URL?.replace(/\/+$/, '') || defaultApiUrl;
+function resolveDefaultApiUrl() {
+  if (configuredApiUrl) return configuredApiUrl;
+  if (import.meta.env.DEV) return 'http://localhost:3001';
+  if (Capacitor.isNativePlatform()) return '';
+  return globalThis.location?.origin || '';
+}
+
+export const API_URL = resolveDefaultApiUrl();
+
+if (Capacitor.isNativePlatform() && !API_URL) {
+  console.error(
+    'VITE_API_URL is required for Android builds. Example: VITE_API_URL=https://your-backend.example.com'
+  );
+}
 
 // ✅ On restore le /api prefix car les routes backend sont sous /api/
 const API_BASE = API_URL;

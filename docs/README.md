@@ -37,6 +37,12 @@ Modération, validation des livres, utilisateurs, abonnements, signalements, rec
 ### 9. [Sécurité et confidentialité](./PRIVACY_SECURITY.md)
 Audit, export et téléchargement RGPD, suppression définitive, stockage local, journaux et risques résiduels.
 
+### 10. [Android Capacitor](./ANDROID_CAPACITOR.md)
+Intégration tablette, kiosk logiciel, offline natif, commandes build et signature release.
+
+### 11. [Rapport Android Release](./ANDROID_RELEASE_REPORT.md)
+État de préparation production Android, checklist tablette et blocages environnement.
+
 ## Vue d'Ensemble
 
 HKids est une plateforme de lecture numérique pour enfants construite avec:
