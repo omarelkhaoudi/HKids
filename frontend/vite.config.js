@@ -20,10 +20,17 @@ export default defineConfig({
       output: {
         manualChunks(id) {
           if (!id.includes('node_modules')) return undefined;
-          if (id.includes('framer-motion')) return 'motion';
-          if (id.includes('@capacitor')) return 'capacitor';
           if (id.includes('pdfjs-dist') || id.includes('tesseract.js')) return 'heavy';
-          if (id.includes('react-router') || id.includes('react-dom') || id.includes('/react/')) {
+          if (id.includes('@capacitor')) return 'capacitor';
+          if (id.includes('framer-motion')) return 'motion';
+          if (
+            id.includes('react-dom')
+            || id.includes('react-router')
+            || id.includes('/react/')
+            || id.includes('lucide-react')
+            || id.includes('scheduler')
+            || id.includes('use-sync-external-store')
+          ) {
             return 'react';
           }
           return 'vendor';

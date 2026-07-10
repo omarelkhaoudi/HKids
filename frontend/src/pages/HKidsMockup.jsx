@@ -53,7 +53,7 @@ export default function HKidsMockup() {
   };
 
   return (
-    <div className="min-h-screen bg-kids-bg text-surface-900 font-sans selection:bg-primary-200 overflow-hidden flex flex-col relative">
+    <div className="min-h-screen bg-background-kids text-surface-900 font-sans selection:bg-primary-200 overflow-hidden flex flex-col relative">
       
       {/* Dynamic Background Elements */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
