@@ -221,6 +221,17 @@ function AdminDashboard() {
  .catch((error) => console.error('Could not load admin permissions:', error));
 }, [user?.id]);
 
+ useEffect(() => {
+ const handleKeyDown = (e) => {
+ if (e.key === 'k' && (e.metaKey || e.ctrlKey)) {
+ e.preventDefault();
+ setIsSearchOpen(true);
+}
+};
+ window.addEventListener('keydown', handleKeyDown);
+ return () => window.removeEventListener('keydown', handleKeyDown);
+}, []);
+
  if (!user) {
  return <Navigate to="/admin/login" replace />;
 }
@@ -230,7 +241,6 @@ function AdminDashboard() {
  navigate('/admin/login');
 };
 
- const isActive = (path) => location.pathname === path;
  const navItems = [
  {to: '/admin', label:"Vue d'ensemble", icon: HomeIcon, end: true, permission: 'overview.read'},
  {to: '/admin/contents', label: 'Histoires CMS', icon: BookIcon, permission: 'content.read'},
@@ -245,17 +255,7 @@ function AdminDashboard() {
  {to: '/admin/permissions', label: 'Permissions', icon: ShieldIcon, permission: 'permissions.manage'},
  ].filter((item) => permissions == null || permissions.includes(item.permission));
 
- // Listener for CMD+K to open search
- useEffect(() => {
- const handleKeyDown = (e) => {
- if (e.key === 'k' && (e.metaKey || e.ctrlKey)) {
- e.preventDefault();
- setIsSearchOpen(true);
-}
-};
- window.addEventListener('keydown', handleKeyDown);
- return () => window.removeEventListener('keydown', handleKeyDown);
-}, []);
+ const isActive = (path) => location.pathname === path;
 
  return (
  <div className="min-h-screen bg-[#fafafa] text-foreground flex overflow-hidden font-sans">

@@ -143,11 +143,6 @@ export default {
         divider: {
           DEFAULT: 'var(--color-divider)',
         },
-        background: {
-          DEFAULT: 'var(--color-bg)',
-          card: 'var(--color-bg-card)',
-          elevated: 'var(--color-bg-elevated)',
-        },
       },
       boxShadow: {
         'soft': '0 4px 20px -2px rgba(0, 0, 0, 0.05)',

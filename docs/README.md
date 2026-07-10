@@ -43,6 +43,9 @@ Intégration tablette, kiosk logiciel, offline natif, commandes build et signatu
 ### 11. [Rapport Android Release](./ANDROID_RELEASE_REPORT.md)
 État de préparation production Android, checklist tablette et blocages environnement.
 
+### 12. [Production Readiness](./PRODUCTION_READINESS.md)
+Tests, CI, lint, sécurité, bundle et checklist déploiement production.
+
 ## Vue d'Ensemble
 
 HKids est une plateforme de lecture numérique pour enfants construite avec:

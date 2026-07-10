@@ -44,7 +44,7 @@ class ErrorBoundary extends React.Component {
               Désolé, quelque chose d'inattendu s'est produit. Vos données sont en sécurité.
             </p>
 
-            {process.env.NODE_ENV === 'development' && this.state.error && (
+            {import.meta.env.DEV && this.state.error && (
               <details className="mb-6 text-left bg-gray-50 p-4 rounded-2xl">
                 <summary className="cursor-pointer font-semibold text-foreground-600 mb-2">
                   Error Details (Development Only)

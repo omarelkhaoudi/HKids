@@ -26,6 +26,4 @@ try {
   console.error('Could not reset admin credentials:', error.message);
   process.exitCode = 1;
 }
-  }
-);
 
