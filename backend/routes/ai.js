@@ -1,7 +1,10 @@
 import express from 'express';
 import multer from 'multer';
 import { verifyToken } from './auth.js';
-import { getVoiceAssistantReply } from '../services/ai/voiceAssistantService.js';
+import {
+  getVoiceAssistantReply,
+  streamVoiceAssistantReply
+} from '../services/ai/voiceAssistantService.js';
 import { transcribeAudio } from '../services/ai/SpeechToTextService.js';
 import { aiErrorResponse } from '../services/ai/errors.js';
 import {
@@ -117,6 +120,82 @@ router.post('/voice-assistant', verifyToken, async (req, res) => {
 
     console.error('Error in voice assistant:', err);
     res.status(500).json({ error: 'AI assistant error' });
+  }
+});
+
+router.post('/voice-assistant/stream', verifyToken, async (req, res) => {
+  const abortController = new AbortController();
+  const handleClientClose = () => {
+    if (!res.writableEnded) abortController.abort();
+  };
+
+  try {
+    const {
+      transcript,
+      conversation,
+      kid_profile_id: requestedKidProfileId,
+      language: requestedLanguage
+    } = req.body;
+
+    if (typeof transcript !== 'string') {
+      return res.status(400).json({ error: 'transcript is required' });
+    }
+    if (!canUseAI(req.user)) {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+
+    const accessPolicy = await loadChildAccessPolicy({
+      user: req.user,
+      requestedKidProfileId
+    });
+    const restriction = getTextAccessViolation(accessPolicy, transcript);
+    if (restriction) return sendParentalAccessError(res, restriction);
+
+    const assistantContext = await loadVoiceAssistantContext({
+      user: req.user,
+      requestedKidProfileId,
+      requestedLanguage,
+      policy: accessPolicy
+    });
+
+    res.status(200);
+    res.set({
+      'Content-Type': 'text/event-stream; charset=utf-8',
+      'Cache-Control': 'no-cache, no-transform',
+      Connection: 'keep-alive',
+      'X-Accel-Buffering': 'no'
+    });
+    res.on('close', handleClientClose);
+    res.flushHeaders?.();
+
+    const reply = await streamVoiceAssistantReply({
+      transcript,
+      user: req.user,
+      context: assistantContext,
+      conversation: normalizeConversation(conversation),
+      requestedLanguage
+    }, {
+      onChunk: async (chunk) => {
+        if (!res.writableEnded) {
+          res.write(`event: delta\ndata: ${JSON.stringify({ field: 'reply_text', chunk })}\n\n`);
+        }
+      },
+      signal: abortController.signal
+    });
+
+    if (!res.writableEnded) {
+      res.off('close', handleClientClose);
+      res.write(`event: done\ndata: ${JSON.stringify(reply)}\n\n`);
+      res.end();
+    }
+  } catch (err) {
+    res.off('close', handleClientClose);
+    const { status, body } = aiErrorResponse(err);
+    if (!res.headersSent) return res.status(status).json(body);
+    if (!res.writableEnded) {
+      res.write(`event: error\ndata: ${JSON.stringify(body)}\n\n`);
+      res.end();
+    }
   }
 });
 

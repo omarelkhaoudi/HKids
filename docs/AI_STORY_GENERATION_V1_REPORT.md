@@ -19,12 +19,12 @@ It does not implement voice cloning. It uses the existing browser Text-to-Speech
 - `backend/services/ai/storyGenerationService.js`
   - Normalizes story inputs.
   - Builds the provider-independent generation call.
-  - Applies a provider timeout through `AI_STORY_TIMEOUT_MS`.
-  - Selects the provider through `AI_STORY_PROVIDER`.
+  - Applies a provider timeout through `AI_TIMEOUT_MS`.
+  - Selects the provider through `AI_PROVIDER`.
 
-- `backend/services/ai/providers/mockStoryGenerationProvider.js`
-  - Mock provider for deterministic V1 behavior.
-  - Generates age-aware, profile-aware story text without calling an external AI API.
+- `backend/services/ai/providers/`
+  - Implements OpenAI, Gemini, and Anthropic adapters.
+  - Uses the same normalized story contract for every provider.
 
 - `backend/database/init.js`
   - Adds `generated_stories`.
@@ -78,11 +78,13 @@ It does not implement voice cloning. It uses the existing browser Text-to-Speech
 
 The generation service is intentionally provider-independent.
 
-Current provider:
+Supported providers:
 
-- `AI_STORY_PROVIDER=mock`
+- `AI_PROVIDER=openai`
+- `AI_PROVIDER=gemini`
+- `AI_PROVIDER=anthropic`
 
-Future providers can implement the same `generate({ kid, preferences })` contract and return:
+Each provider implements the same `generateStory({ kid, preferences, prompt, outputSchema })` contract and returns:
 
 ```js
 {
@@ -94,7 +96,6 @@ Future providers can implement the same `generate({ kid, preferences })` contrac
 
 ## Next Phases
 
-- Add a real AI provider adapter.
 - Add moderation and child-safety validation before saving or reading stories.
 - Add richer parent controls for allowed themes and values.
 - Add a dedicated saved-story library screen.

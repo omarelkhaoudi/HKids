@@ -1,13 +1,11 @@
 import { AIProviderFactory } from './AIProviderFactory.js';
-import { aiConfig } from './aiConfig.js';
-import { normalizeAIError, withAITimeout } from './errors.js';
+import { normalizeAIError } from './errors.js';
 import {
   createFallbackAssistantContext,
   normalizeConversation,
   resolveAssistantLanguage
 } from './voiceAssistantContextService.js';
 
-const provider = AIProviderFactory.getProvider();
 const EMPTY_REPLIES = {
   fr: "Je n ai pas bien entendu. Tu peux recommencer doucement.",
   en: 'I did not hear you clearly. You can try again slowly.',
@@ -15,9 +13,8 @@ const EMPTY_REPLIES = {
 };
 
 export class VoiceAssistantService {
-  constructor({ aiProvider = provider, timeoutMs = aiConfig.timeoutMs } = {}) {
+  constructor({ aiProvider = null } = {}) {
     this.aiProvider = aiProvider;
-    this.timeoutMs = timeoutMs;
   }
 
   async getReply({
@@ -27,6 +24,7 @@ export class VoiceAssistantService {
     conversation = [],
     requestedLanguage = null
   }) {
+    const aiProvider = this.aiProvider || AIProviderFactory.getProvider();
     const cleanTranscript = String(transcript || '').trim().slice(0, 1000);
     const safeConversation = normalizeConversation(conversation);
     const responseLanguage = resolveAssistantLanguage(context, requestedLanguage);
@@ -36,38 +34,80 @@ export class VoiceAssistantService {
         transcript: '',
         reply_text: EMPTY_REPLIES[responseLanguage] || EMPTY_REPLIES.fr,
         intent: 'empty',
-        provider: this.aiProvider.name,
+        provider: aiProvider.name,
         language: responseLanguage
       };
     }
 
     try {
-      const response = await withAITimeout(
-        this.aiProvider.chat({
-          transcript: cleanTranscript,
-          user,
-          context,
-          conversation: safeConversation,
-          language: responseLanguage
-        }),
-        this.timeoutMs,
-        {
-          provider: this.aiProvider.name,
-          message: 'Voice assistant timed out. Please try again.'
-        }
-      );
+      const response = await aiProvider.chat({
+        transcript: cleanTranscript,
+        user,
+        context,
+        conversation: safeConversation,
+        language: responseLanguage
+      });
 
       return {
         transcript: cleanTranscript,
         reply_text: response.text,
         intent: response.intent || 'unknown',
-        provider: this.aiProvider.name,
+        provider: aiProvider.name,
         language: responseLanguage
       };
     } catch (error) {
       throw normalizeAIError(error, {
-        provider: this.aiProvider.name,
+        provider: aiProvider.name,
         fallbackMessage: 'AI assistant error'
+      });
+    }
+  }
+
+  async getReplyStream({
+    transcript,
+    user,
+    context = createFallbackAssistantContext({ user }),
+    conversation = [],
+    requestedLanguage = null
+  }, { onChunk, signal } = {}) {
+    const aiProvider = this.aiProvider || AIProviderFactory.getProvider();
+    const cleanTranscript = String(transcript || '').trim().slice(0, 1000);
+    const safeConversation = normalizeConversation(conversation);
+    const responseLanguage = resolveAssistantLanguage(context, requestedLanguage);
+
+    if (!cleanTranscript) {
+      const replyText = EMPTY_REPLIES[responseLanguage] || EMPTY_REPLIES.fr;
+      if (onChunk) await onChunk(replyText);
+      return {
+        transcript: '',
+        reply_text: replyText,
+        intent: 'empty',
+        provider: aiProvider.name,
+        language: responseLanguage
+      };
+    }
+
+    try {
+      const response = await aiProvider.chatStream({
+        transcript: cleanTranscript,
+        user,
+        context,
+        conversation: safeConversation,
+        language: responseLanguage
+      }, { onChunk, signal });
+
+      return {
+        transcript: cleanTranscript,
+        reply_text: response.text,
+        intent: response.intent || 'conversation',
+        provider: aiProvider.name,
+        language: responseLanguage,
+        provider_metadata: response.provider_metadata || {}
+      };
+    } catch (error) {
+      throw normalizeAIError(error, {
+        provider: aiProvider.name,
+        fallbackMessage: 'AI assistant streaming error'
       });
     }
   }
@@ -77,4 +117,8 @@ const voiceAssistantService = new VoiceAssistantService();
 
 export async function getVoiceAssistantReply(input) {
   return voiceAssistantService.getReply(input);
+}
+
+export async function streamVoiceAssistantReply(input, options) {
+  return voiceAssistantService.getReplyStream(input, options);
 }
