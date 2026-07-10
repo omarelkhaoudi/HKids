@@ -22,6 +22,9 @@ Documentation complète de l'API REST avec exemples d'utilisation.
 ### 4. [Guide de Déploiement](./DEPLOYMENT.md)
 Instructions pour déployer l'application en développement et en production.
 
+### 5. [Dashboard Parent Supabase](./PARENT_DASHBOARD_SUPABASE.md)
+Architecture du snapshot parental réel, endpoints, cache TTL, schéma SQL, pagination et flux de synchronisation offline.
+
 ## Vue d'Ensemble
 
 HKids est une plateforme de lecture numérique pour enfants construite avec:

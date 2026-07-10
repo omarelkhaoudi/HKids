@@ -11,6 +11,19 @@ import {
   sendParentalAccessError,
   serializePolicyForClient
 } from '../services/parental/parentalAccessService.js';
+import {
+  disableKidReadingGoal,
+  getConnectedKidOverview,
+  getKidActivitySnapshot,
+  getParentDashboardSnapshot,
+  importKidLocalActivity,
+  invalidateParentDashboardCache,
+  recordKidBookHistory,
+  recordKidReadingProgress,
+  recordKidScreenTime,
+  setKidBookFavorite,
+  upsertKidReadingGoal
+} from '../services/parentDashboardService.js';
 
 const router = express.Router();
 
@@ -32,169 +45,24 @@ function verifyParent(req, res, next) {
   next();
 }
 
-function getGoalWindow(period) {
-  if (period === 'daily') {
-    return "date_trunc('day', NOW())";
-  }
-  if (period === 'monthly') {
-    return "date_trunc('month', NOW())";
-  }
-  return "date_trunc('week', NOW())";
+function boundedInteger(value, fallback, min, max) {
+  const parsed = Number.parseInt(value, 10);
+  if (!Number.isFinite(parsed)) return fallback;
+  return Math.max(min, Math.min(max, parsed));
 }
 
-function buildBadges(summary, progressRows) {
-  const totalMinutes = Math.floor(Number(summary.total_time_seconds || 0) / 60);
-  const totalSessions = Number(summary.total_sessions || 0);
-  const completedBooks = Number(summary.completed_books || 0);
-  const activeBooks = Number(summary.active_books || progressRows.length);
-
-  return [
-    {
-      id: 'first_steps',
-      label: 'Premier pas',
-      description: 'Premiere session de lecture terminee',
-      icon: '📖',
-      earned: totalSessions >= 1
-    },
-    {
-      id: 'ten_minutes',
-      label: '10 minutes de lecture',
-      description: 'A lu au moins 10 minutes au total',
-      icon: '⏱️',
-      earned: totalMinutes >= 10
-    },
-    {
-      id: 'first_book',
-      label: 'Premier livre termine',
-      description: 'A termine son premier livre',
-      icon: '📚',
-      earned: completedBooks >= 1
-    },
-    {
-      id: 'regular_reader',
-      label: 'Lecteur regulier',
-      description: 'A realise au moins 5 sessions',
-      icon: '🔥',
-      earned: totalSessions >= 5
-    },
-    {
-      id: 'explorer',
-      label: 'Explorateur',
-      description: 'A commence au moins 3 livres differents',
-      icon: '🧭',
-      earned: activeBooks >= 3
-    }
-  ];
+function optionalIsoDate(value) {
+  if (!value) return null;
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) throw Object.assign(new Error('Invalid activity date'), { status: 400 });
+  return parsed.toISOString();
 }
 
-async function getKidActivitySnapshot(pool, kidProfileId) {
-  const [summaryResult, progressResult, sessionsResult, goalResult] = await Promise.all([
-    pool.query(
-      `SELECT
-        COALESCE(SUM(duration_seconds), 0)::int AS total_time_seconds,
-        COUNT(*)::int AS total_sessions,
-        COALESCE(SUM(CASE WHEN completed THEN 1 ELSE 0 END), 0)::int AS completed_sessions,
-        (
-          SELECT COUNT(*)::int
-          FROM kid_reading_progress
-          WHERE kid_profile_id = $1 AND completed = TRUE
-        ) AS completed_books,
-        (
-          SELECT COUNT(*)::int
-          FROM kid_reading_progress
-          WHERE kid_profile_id = $1
-        ) AS active_books
-      FROM kid_reading_sessions
-      WHERE kid_profile_id = $1`,
-      [kidProfileId]
-    ),
-    pool.query(
-      `SELECT
-        krp.*,
-        b.title AS book_title,
-        b.cover_image,
-        b.page_count
-      FROM kid_reading_progress krp
-      JOIN books b ON b.id = krp.book_id
-      WHERE krp.kid_profile_id = $1
-      ORDER BY krp.last_read_at DESC
-      LIMIT 8`,
-      [kidProfileId]
-    ),
-    pool.query(
-      `SELECT
-        krs.*,
-        b.title AS book_title
-      FROM kid_reading_sessions krs
-      JOIN books b ON b.id = krs.book_id
-      WHERE krs.kid_profile_id = $1
-      ORDER BY krs.created_at DESC
-      LIMIT 10`,
-      [kidProfileId]
-    ),
-    pool.query(
-      `SELECT *
-       FROM kid_reading_goals
-       WHERE kid_profile_id = $1 AND active = TRUE
-       ORDER BY updated_at DESC
-       LIMIT 1`,
-      [kidProfileId]
-    )
-  ]);
-
-  const summary = summaryResult.rows[0];
-  const activeGoal = goalResult.rows[0] || null;
-  let goal = null;
-
-  if (activeGoal) {
-    const windowStart = getGoalWindow(activeGoal.period);
-    let progressValue = 0;
-
-    if (activeGoal.goal_type === 'completed_books') {
-      const goalProgress = await pool.query(
-        `SELECT COUNT(*)::int AS value
-         FROM kid_reading_progress
-         WHERE kid_profile_id = $1
-           AND completed = TRUE
-           AND completed_at >= ${windowStart}`,
-        [kidProfileId]
-      );
-      progressValue = Number(goalProgress.rows[0]?.value || 0);
-    } else if (activeGoal.goal_type === 'sessions') {
-      const goalProgress = await pool.query(
-        `SELECT COUNT(*)::int AS value
-         FROM kid_reading_sessions
-         WHERE kid_profile_id = $1
-           AND created_at >= ${windowStart}`,
-        [kidProfileId]
-      );
-      progressValue = Number(goalProgress.rows[0]?.value || 0);
-    } else {
-      const goalProgress = await pool.query(
-        `SELECT COALESCE(SUM(duration_seconds), 0)::int AS value
-         FROM kid_reading_sessions
-         WHERE kid_profile_id = $1
-           AND created_at >= ${windowStart}`,
-        [kidProfileId]
-      );
-      progressValue = Math.floor(Number(goalProgress.rows[0]?.value || 0) / 60);
-    }
-
-    goal = {
-      ...activeGoal,
-      progress_value: progressValue,
-      progress_percent: Math.min(100, Math.round((progressValue / Number(activeGoal.target_value || 1)) * 100)),
-      achieved: progressValue >= Number(activeGoal.target_value || 1)
-    };
-  }
-
-  return {
-    summary,
-    goal,
-    badges: buildBadges(summary, progressResult.rows),
-    progress: progressResult.rows,
-    recent_sessions: sessionsResult.rows
-  };
+function sendDashboardServiceError(res, error) {
+  return res.status(error?.status || 500).json({
+    error: error?.status ? error.message : 'Parent dashboard service unavailable',
+    code: error?.code || 'PARENT_DASHBOARD_ERROR'
+  });
 }
 
 function normalizeInterests(interests) {
@@ -270,7 +138,9 @@ function normalizeRules(row) {
   return {
     id: row.id,
     kid_profile_id: row.kid_profile_id,
-    daily_screen_time_minutes: Number(row.daily_screen_time_minutes || 30),
+    daily_screen_time_minutes: row.daily_screen_time_minutes == null
+      ? 30
+      : Number(row.daily_screen_time_minutes),
     quiet_start_time: row.quiet_start_time ? String(row.quiet_start_time).slice(0, 5) : '',
     quiet_end_time: row.quiet_end_time ? String(row.quiet_end_time).slice(0, 5) : '',
     allowed_languages: row.allowed_languages || [],
@@ -383,6 +253,7 @@ router.put('/kids/:id', verifyToken, verifyParent, async (req, res) => {
       ]
     );
 
+    await invalidateParentDashboardCache(req.params.id);
     res.json(result.rows[0]);
   } catch (err) {
     console.error('Error updating kid profile:', err);
@@ -414,6 +285,7 @@ router.delete('/kids/:id', verifyToken, verifyParent, async (req, res) => {
       resourceId: req.params.id,
       req
     });
+    await invalidateParentDashboardCache(req.params.id);
     res.json({ message: 'Kid profile deleted successfully' });
   } catch (err) {
     console.error('Error deleting kid profile:', err);
@@ -645,6 +517,7 @@ router.put('/kids/:id/rules', verifyToken, verifyParent, async (req, res) => {
       ]
     );
 
+    await invalidateParentDashboardCache(req.params.id);
     res.json(normalizeRules(result.rows[0]));
   } catch (err) {
     console.error('Error saving parental rules:', err);
@@ -739,6 +612,115 @@ router.post('/kids/:id/create-account', verifyToken, verifyParent, async (req, r
   }
 });
 
+router.get('/kids/:id/dashboard', verifyToken, verifyParent, async (req, res) => {
+  try {
+    const kidProfileId = boundedInteger(req.params.id, 0, 1, Number.MAX_SAFE_INTEGER);
+    if (!kidProfileId) return res.status(400).json({ error: 'Valid kid profile id required' });
+
+    const snapshot = await getParentDashboardSnapshot({
+      user: req.user,
+      kidProfileId,
+      days: boundedInteger(req.query.days, 7, 7, 30),
+      favoritesLimit: boundedInteger(req.query.favorites_limit ?? req.query.limit, 20, 1, 20),
+      favoritesOffset: boundedInteger(req.query.favorites_offset ?? req.query.offset, 0, 0, 10_000),
+      historyLimit: boundedInteger(req.query.history_limit ?? req.query.limit, 50, 1, 50),
+      historyOffset: boundedInteger(req.query.history_offset ?? req.query.offset, 0, 0, 10_000),
+      timelineLimit: boundedInteger(req.query.timeline_limit ?? req.query.limit, 50, 1, 50),
+      timelineOffset: boundedInteger(req.query.timeline_offset ?? req.query.offset, 0, 0, 10_000)
+    });
+    res.json(snapshot);
+  } catch (error) {
+    console.error('Error loading parent dashboard:', error);
+    sendDashboardServiceError(res, error);
+  }
+});
+
+router.post('/me/screen-time', verifyToken, async (req, res) => {
+  try {
+    const clientSessionId = String(req.body.client_session_id || '').trim();
+    const startedAt = new Date(req.body.started_at);
+    const startedAtMs = startedAt.getTime();
+    const now = Date.now();
+    if (
+      !/^[a-zA-Z0-9:_-]{8,120}$/.test(clientSessionId)
+      || Number.isNaN(startedAtMs)
+      || startedAtMs < now - 31 * 24 * 60 * 60 * 1000
+      || startedAtMs > now + 5 * 60 * 1000
+    ) {
+      return res.status(400).json({ error: 'Valid client_session_id and started_at required' });
+    }
+    const result = await recordKidScreenTime({
+      user: req.user,
+      clientSessionId,
+      durationSeconds: boundedInteger(req.body.duration_seconds, 0, 0, 86_400),
+      startedAt: startedAt.toISOString()
+    });
+    res.status(201).json(result);
+  } catch (error) {
+    console.error('Error recording screen time:', error);
+    sendDashboardServiceError(res, error);
+  }
+});
+
+router.post('/me/favorites', verifyToken, async (req, res) => {
+  try {
+    const bookId = boundedInteger(req.body.book_id, 0, 1, Number.MAX_SAFE_INTEGER);
+    if (!bookId || typeof req.body.favorite !== 'boolean') {
+      return res.status(400).json({ error: 'book_id and favorite are required' });
+    }
+    const result = await setKidBookFavorite({
+      user: req.user,
+      bookId,
+      favorite: req.body.favorite,
+      favoritedAt: optionalIsoDate(req.body.favorited_at)
+    });
+    res.status(201).json(result);
+  } catch (error) {
+    console.error('Error saving kid favorite:', error);
+    sendDashboardServiceError(res, error);
+  }
+});
+
+router.post('/me/history', verifyToken, async (req, res) => {
+  try {
+    const bookId = boundedInteger(req.body.book_id, 0, 1, Number.MAX_SAFE_INTEGER);
+    if (!bookId) return res.status(400).json({ error: 'Valid book_id required' });
+    const result = await recordKidBookHistory({
+      user: req.user,
+      bookId,
+      lastPage: boundedInteger(req.body.last_page, 0, 0, 100_000),
+      listenedSeconds: boundedInteger(req.body.listened_seconds, 0, 0, 86_400),
+      audioDurationSeconds: boundedInteger(req.body.audio_duration_seconds, 0, 0, 86_400),
+      completed: req.body.completed === true,
+      occurredAt: optionalIsoDate(req.body.occurred_at)
+    });
+    res.status(201).json(result);
+  } catch (error) {
+    console.error('Error saving kid history:', error);
+    sendDashboardServiceError(res, error);
+  }
+});
+
+router.post('/me/activity-import', verifyToken, async (req, res) => {
+  try {
+    const importKey = String(req.body.import_key || '').trim();
+    if (!/^[a-zA-Z0-9:_-]{3,120}$/.test(importKey)) {
+      return res.status(400).json({ error: 'Valid import_key required' });
+    }
+    const result = await importKidLocalActivity({
+      user: req.user,
+      importKey,
+      favorites: Array.isArray(req.body.favorites) ? req.body.favorites.slice(0, 20) : [],
+      history: Array.isArray(req.body.history) ? req.body.history.slice(0, 50) : [],
+      listeningHistory: Array.isArray(req.body.listening_history) ? req.body.listening_history.slice(0, 50) : []
+    });
+    res.status(result.imported ? 201 : 200).json(result);
+  } catch (error) {
+    console.error('Error importing kid activity:', error);
+    sendDashboardServiceError(res, error);
+  }
+});
+
 // Record reading progress from a kid account
 router.post('/reading-progress', verifyToken, async (req, res) => {
   try {
@@ -751,93 +733,36 @@ router.post('/reading-progress', verifyToken, async (req, res) => {
       current_page = 0,
       total_pages = 0,
       duration_seconds = 0,
-      completed = false
+      completed = false,
+      client_session_id = null
     } = req.body;
 
     if (!book_id) {
       return res.status(400).json({ error: 'book_id is required' });
     }
 
-    const safeCurrentPage = Math.max(0, Number.parseInt(current_page, 10) || 0);
-    const safeTotalPages = Math.max(0, Number.parseInt(total_pages, 10) || 0);
-    const safeDuration = Math.max(0, Number.parseInt(duration_seconds, 10) || 0);
-    const isCompleted = completed === true || completed === 'true';
-    const progressPercent = safeTotalPages > 0
-      ? Math.min(100, Math.round(((safeCurrentPage + 1) / safeTotalPages) * 100))
-      : 0;
-
-    const pool = getPool();
-    const bookCheck = await pool.query(
-      `SELECT b.*, c.name AS category_name
-       FROM books b
-       LEFT JOIN categories c ON c.id = b.category_id
-       WHERE b.id = $1 AND b.is_published = TRUE`,
-      [book_id]
-    );
-
-    if (bookCheck.rows.length === 0) {
-      return res.status(404).json({ error: 'Book not found' });
+    const clientSessionId = client_session_id == null ? null : String(client_session_id).trim();
+    if (clientSessionId && !/^[a-zA-Z0-9:_-]{8,120}$/.test(clientSessionId)) {
+      return res.status(400).json({ error: 'Invalid client_session_id' });
     }
 
-    const policy = await loadChildAccessPolicy({ user: req.user, pool });
-    const violation = getContentAccessViolation(policy, bookCheck.rows[0]);
-    if (violation) return sendParentalAccessError(res, violation);
-
-    const progressResult = await pool.query(
-      `INSERT INTO kid_reading_progress (
-        kid_profile_id,
-        book_id,
-        current_page,
-        total_pages,
-        progress_percent,
-        completed,
-        last_read_at,
-        completed_at,
-        updated_at
-      )
-      VALUES ($1, $2, $3, $4, $5, $6, NOW(), CASE WHEN $6 THEN NOW() ELSE NULL END, NOW())
-      ON CONFLICT (kid_profile_id, book_id)
-      DO UPDATE SET
-        current_page = GREATEST(kid_reading_progress.current_page, EXCLUDED.current_page),
-        total_pages = EXCLUDED.total_pages,
-        progress_percent = GREATEST(kid_reading_progress.progress_percent, EXCLUDED.progress_percent),
-        completed = kid_reading_progress.completed OR EXCLUDED.completed,
-        last_read_at = NOW(),
-        completed_at = CASE
-          WHEN kid_reading_progress.completed_at IS NOT NULL THEN kid_reading_progress.completed_at
-          WHEN EXCLUDED.completed THEN NOW()
-          ELSE NULL
-        END,
-        updated_at = NOW()
-      RETURNING *`,
-      [
-        req.user.kid_profile_id,
-        book_id,
-        safeCurrentPage,
-        safeTotalPages,
-        progressPercent,
-        isCompleted
-      ]
-    );
-
-    if (safeDuration > 0) {
-      await pool.query(
-        `INSERT INTO kid_reading_sessions (
-          kid_profile_id,
-          book_id,
-          duration_seconds,
-          page_reached,
-          completed
-        )
-        VALUES ($1, $2, $3, $4, $5)`,
-        [req.user.kid_profile_id, book_id, safeDuration, safeCurrentPage, isCompleted]
-      );
-    }
-
-    res.status(201).json(progressResult.rows[0]);
+    const progress = await recordKidReadingProgress({
+      user: req.user,
+      kidProfileId: req.user.kid_profile_id,
+      bookId: book_id,
+      currentPage: current_page,
+      totalPages: total_pages,
+      durationSeconds: duration_seconds,
+      completed,
+      clientSessionId
+    });
+    res.status(201).json(progress);
   } catch (err) {
+    if (err?.isParentalAccessError || err?.name === 'ParentalAccessError') {
+      return sendParentalAccessError(res, err);
+    }
     console.error('Error recording reading progress:', err);
-    res.status(500).json({ error: 'Database error' });
+    sendDashboardServiceError(res, err);
   }
 });
 
@@ -848,34 +773,11 @@ router.get('/me/overview', verifyToken, async (req, res) => {
       return res.status(403).json({ error: 'Access denied. Kid account required.' });
     }
 
-    const pool = getPool();
-    const kidResult = await pool.query(
-      `SELECT
-        id,
-        name,
-        avatar,
-        photo_url,
-        age,
-        date_of_birth,
-        preferred_language,
-        interests
-      FROM kids_profiles
-      WHERE id = $1`,
-      [req.user.kid_profile_id]
-    );
-
-    if (kidResult.rows.length === 0) {
-      return res.status(404).json({ error: 'Kid profile not found' });
-    }
-
-    const activity = await getKidActivitySnapshot(pool, req.user.kid_profile_id);
-    res.json({
-      kid: kidResult.rows[0],
-      ...activity
-    });
+    const overview = await getConnectedKidOverview(req.user);
+    res.json(overview);
   } catch (err) {
     console.error('Error fetching connected kid overview:', err);
-    res.status(500).json({ error: 'Database error' });
+    sendDashboardServiceError(res, err);
   }
 });
 
@@ -900,21 +802,14 @@ router.get('/me/access-policy', verifyToken, async (req, res) => {
 // Get reading activity for one child
 router.get('/kids/:id/activity', verifyToken, verifyParent, async (req, res) => {
   try {
-    const pool = getPool();
-
-    const kidCheck = await pool.query(
-      'SELECT * FROM kids_profiles WHERE id = $1 AND parent_id = $2',
-      [req.params.id, req.user.id]
-    );
-
-    if (kidCheck.rows.length === 0) {
-      return res.status(404).json({ error: 'Kid profile not found' });
-    }
-
-    res.json(await getKidActivitySnapshot(pool, req.params.id));
+    const activity = await getKidActivitySnapshot({
+      user: req.user,
+      kidProfileId: req.params.id
+    });
+    res.json(activity);
   } catch (err) {
     console.error('Error fetching reading activity:', err);
-    res.status(500).json({ error: 'Database error' });
+    sendDashboardServiceError(res, err);
   }
 });
 
@@ -934,71 +829,31 @@ router.put('/kids/:id/reading-goal', verifyToken, verifyParent, async (req, res)
     }
 
     const safeTarget = Math.max(1, Math.min(999, Number.parseInt(target_value, 10) || 1));
-    const pool = getPool();
-    const client = await pool.connect();
-
-    try {
-      await client.query('BEGIN');
-
-      const kidCheck = await client.query(
-        'SELECT * FROM kids_profiles WHERE id = $1 AND parent_id = $2',
-        [req.params.id, req.user.id]
-      );
-
-      if (kidCheck.rows.length === 0) {
-        await client.query('ROLLBACK');
-        return res.status(404).json({ error: 'Kid profile not found' });
-      }
-
-      await client.query(
-        'UPDATE kid_reading_goals SET active = FALSE, updated_at = NOW() WHERE kid_profile_id = $1 AND active = TRUE',
-        [req.params.id]
-      );
-
-      const result = await client.query(
-        `INSERT INTO kid_reading_goals (kid_profile_id, goal_type, target_value, period, active, updated_at)
-         VALUES ($1, $2, $3, $4, TRUE, NOW())
-         RETURNING *`,
-        [req.params.id, goal_type, safeTarget, period]
-      );
-
-      await client.query('COMMIT');
-      res.status(201).json(result.rows[0]);
-    } catch (err) {
-      await client.query('ROLLBACK');
-      throw err;
-    } finally {
-      client.release();
-    }
+    const goal = await upsertKidReadingGoal({
+      user: req.user,
+      kidProfileId: req.params.id,
+      goalType: goal_type,
+      targetValue: safeTarget,
+      period
+    });
+    res.status(201).json(goal);
   } catch (err) {
     console.error('Error saving reading goal:', err);
-    res.status(500).json({ error: 'Database error' });
+    sendDashboardServiceError(res, err);
   }
 });
 
 // Disable the active reading goal for one child
 router.delete('/kids/:id/reading-goal', verifyToken, verifyParent, async (req, res) => {
   try {
-    const pool = getPool();
-
-    const kidCheck = await pool.query(
-      'SELECT * FROM kids_profiles WHERE id = $1 AND parent_id = $2',
-      [req.params.id, req.user.id]
-    );
-
-    if (kidCheck.rows.length === 0) {
-      return res.status(404).json({ error: 'Kid profile not found' });
-    }
-
-    await pool.query(
-      'UPDATE kid_reading_goals SET active = FALSE, updated_at = NOW() WHERE kid_profile_id = $1 AND active = TRUE',
-      [req.params.id]
-    );
-
-    res.json({ message: 'Reading goal disabled' });
+    const result = await disableKidReadingGoal({
+      user: req.user,
+      kidProfileId: req.params.id
+    });
+    res.json(result);
   } catch (err) {
     console.error('Error disabling reading goal:', err);
-    res.status(500).json({ error: 'Database error' });
+    sendDashboardServiceError(res, err);
   }
 });
 

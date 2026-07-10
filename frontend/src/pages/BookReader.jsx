@@ -473,17 +473,6 @@ function BookReader() {
  session.totalPages
  );
 
- if (session.user?.role === 'kid') {
- parentalAPI.recordReadingProgress({
- book_id: session.book.id,
- current_page: session.currentPage,
- total_pages: session.totalPages,
- duration_seconds: durationSeconds,
- completed: finished
- }).catch((error) => {
- console.warn('Impossible de synchroniser la session enfant:', error);
-});
-}
 };
 }, [id]);
 

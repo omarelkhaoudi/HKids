@@ -1,19 +1,30 @@
-import { queueOfflineMutation } from '../services/offline/offlineSyncService';
+import { syncOrQueueKidMutation } from '../services/parental/kidActivitySyncService';
 
 // Utilitaires pour le stockage local (localStorage)
 
 function queueMutation(type, payload, conflictKey = null) {
-  if (navigator.onLine) return;
-  queueOfflineMutation(type, payload, conflictKey).catch((error) => {
-    console.warn('Could not queue offline mutation:', error);
+  syncOrQueueKidMutation(type, payload, conflictKey).catch((error) => {
+    console.warn('Could not synchronize kid activity:', error);
   });
+}
+
+function scopedActivityKey(baseKey) {
+  try {
+    const user = JSON.parse(localStorage.getItem('user') || 'null');
+    if (user?.role === 'kid' && user?.kid_profile_id) {
+      return `${baseKey}:kid:${user.kid_profile_id}`;
+    }
+  } catch {
+    // Keep anonymous/parent storage backward compatible.
+  }
+  return baseKey;
 }
 
 export const storage = {
   // Favoris
   getFavorites: () => {
     try {
-      const favorites = localStorage.getItem('hkids_favorites');
+      const favorites = localStorage.getItem(scopedActivityKey('hkids_favorites'));
       return favorites ? JSON.parse(favorites) : [];
     } catch {
       return [];
@@ -25,8 +36,12 @@ export const storage = {
       const favorites = storage.getFavorites();
       if (!favorites.includes(bookId)) {
         favorites.push(bookId);
-        localStorage.setItem('hkids_favorites', JSON.stringify(favorites));
-        queueMutation('favorite_add', { bookId, favorite: true }, `book:${bookId}:favorite`);
+        localStorage.setItem(scopedActivityKey('hkids_favorites'), JSON.stringify(favorites));
+        queueMutation('favorite_add', {
+          bookId,
+          favorite: true,
+          favoritedAt: new Date().toISOString()
+        }, `book:${bookId}:favorite`);
       }
     } catch (error) {
       console.error('Error adding favorite:', error);
@@ -37,7 +52,7 @@ export const storage = {
     try {
       const favorites = storage.getFavorites();
       const filtered = favorites.filter(id => id !== bookId);
-      localStorage.setItem('hkids_favorites', JSON.stringify(filtered));
+      localStorage.setItem(scopedActivityKey('hkids_favorites'), JSON.stringify(filtered));
       queueMutation('favorite_remove', { bookId, favorite: false }, `book:${bookId}:favorite`);
     } catch (error) {
       console.error('Error removing favorite:', error);
@@ -89,7 +104,7 @@ export const storage = {
   // Historique d'ecoute audio
   getListeningHistory: () => {
     try {
-      const history = localStorage.getItem('hkids_listening_history');
+      const history = localStorage.getItem(scopedActivityKey('hkids_listening_history'));
       return history ? JSON.parse(history) : [];
     } catch {
       return [];
@@ -113,7 +128,7 @@ export const storage = {
       };
 
       const filtered = history.filter((item) => item.bookId !== safeEntry.bookId);
-      localStorage.setItem('hkids_listening_history', JSON.stringify([safeEntry, ...filtered].slice(0, 50)));
+      localStorage.setItem(scopedActivityKey('hkids_listening_history'), JSON.stringify([safeEntry, ...filtered].slice(0, 50)));
       queueMutation('listening_history', safeEntry, `book:${safeEntry.bookId}:listening`);
     } catch (error) {
       console.error('Error adding listening history:', error);
@@ -123,7 +138,7 @@ export const storage = {
   // Historique de lecture
   getReadingHistory: () => {
     try {
-      const history = localStorage.getItem('hkids_history');
+      const history = localStorage.getItem(scopedActivityKey('hkids_history'));
       return history ? JSON.parse(history) : [];
     } catch {
       return [];
@@ -150,7 +165,7 @@ export const storage = {
 
       // Garder seulement les 50 derniers
       const limited = history.slice(0, 50);
-      localStorage.setItem('hkids_history', JSON.stringify(limited));
+      localStorage.setItem(scopedActivityKey('hkids_history'), JSON.stringify(limited));
       queueMutation('reading_history', historyItem, `book:${bookId}:history`);
     } catch (error) {
       console.error('Error adding to history:', error);
@@ -166,7 +181,7 @@ export const storage = {
   // Statistiques de lecture (temps, livres terminés, sessions)
   getReadingStats: () => {
     try {
-      const raw = localStorage.getItem('hkids_reading_stats');
+      const raw = localStorage.getItem(scopedActivityKey('hkids_reading_stats'));
       const defaults = {
         totalTimeSeconds: 0,
         totalSessions: 0,
@@ -212,7 +227,11 @@ export const storage = {
         }
       }
 
+      const clientSessionId = globalThis.crypto?.randomUUID
+        ? globalThis.crypto.randomUUID()
+        : `reading-${Date.now()}-${Math.random().toString(36).slice(2)}`;
       const session = {
+        clientSessionId,
         bookId,
         bookTitle,
         durationSeconds: safeDuration,
@@ -222,13 +241,14 @@ export const storage = {
 
       stats.sessions = [session, ...(stats.sessions || [])].slice(0, 50);
 
-      localStorage.setItem('hkids_reading_stats', JSON.stringify(stats));
+      localStorage.setItem(scopedActivityKey('hkids_reading_stats'), JSON.stringify(stats));
       queueMutation('reading_progress', {
         book_id: bookId,
         current_page: Math.max(0, Number(currentPage) || 0),
         total_pages: Math.max(0, Number(totalPages) || 0),
         duration_seconds: safeDuration,
-        completed: finished
+        completed: finished,
+        client_session_id: clientSessionId
       }, `book:${bookId}:progress`);
     } catch (error) {
       console.error('Error adding reading session:', error);

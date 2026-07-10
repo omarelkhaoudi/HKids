@@ -71,6 +71,45 @@ export const parentalAPI = {
     return axios.get(buildApiUrl(`/parental/kids/${kidId}/activity`), { headers: getAuthHeaders() });
   },
 
+  getKidDashboard: (kidId, {
+    days = 7,
+    favoritesLimit = 20,
+    favoritesOffset = 0,
+    historyLimit = 50,
+    historyOffset = 0,
+    timelineLimit = 50,
+    timelineOffset = 0
+  } = {}) => {
+    return axios.get(buildApiUrl(`/parental/kids/${kidId}/dashboard`), {
+      headers: getAuthHeaders(),
+      params: {
+        days,
+        favorites_limit: favoritesLimit,
+        favorites_offset: favoritesOffset,
+        history_limit: historyLimit,
+        history_offset: historyOffset,
+        timeline_limit: timelineLimit,
+        timeline_offset: timelineOffset
+      }
+    });
+  },
+
+  recordScreenTime: (data) => {
+    return axios.post(buildApiUrl('/parental/me/screen-time'), data, { headers: getAuthHeaders() });
+  },
+
+  setKidFavorite: (data) => {
+    return axios.post(buildApiUrl('/parental/me/favorites'), data, { headers: getAuthHeaders() });
+  },
+
+  recordKidHistory: (data) => {
+    return axios.post(buildApiUrl('/parental/me/history'), data, { headers: getAuthHeaders() });
+  },
+
+  importKidActivity: (data) => {
+    return axios.post(buildApiUrl('/parental/me/activity-import'), data, { headers: getAuthHeaders() });
+  },
+
   saveReadingGoal: (kidId, data) => {
     return axios.put(buildApiUrl(`/parental/kids/${kidId}/reading-goal`), data, { headers: getAuthHeaders() });
   },

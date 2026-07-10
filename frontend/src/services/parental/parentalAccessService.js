@@ -15,12 +15,22 @@ const MESSAGES = {
   POLICY_UNAVAILABLE: "Le contrôle parental doit être vérifié avant d'utiliser ce contenu hors connexion."
 };
 
-function currentUserIsKid() {
+function currentKidUser() {
   try {
-    return JSON.parse(localStorage.getItem('user') || 'null')?.role === 'kid';
+    const user = JSON.parse(localStorage.getItem('user') || 'null');
+    return user?.role === 'kid' && user?.kid_profile_id ? user : null;
   } catch {
-    return false;
+    return null;
   }
+}
+
+function currentUserIsKid() {
+  return Boolean(currentKidUser());
+}
+
+function scopedPolicyKey() {
+  const user = currentKidUser();
+  return user ? `${POLICY_KEY}:kid:${user.kid_profile_id}` : POLICY_KEY;
 }
 
 function normalize(value) {
@@ -35,9 +45,16 @@ function timeIsBlocked(start, end) {
 
 function todayOfflineSeconds() {
   const today = new Date().toDateString();
-  return (storage.getReadingStats().sessions || []).reduce((total, session) => (
+  const readingSeconds = (storage.getReadingStats().sessions || []).reduce((total, session) => (
     new Date(session.date).toDateString() === today ? total + Number(session.durationSeconds || 0) : total
   ), 0);
+  const user = currentKidUser();
+  const date = new Date();
+  const day = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+  const screenSeconds = user
+    ? Number(localStorage.getItem(`hkids_screen_time_daily:kid:${user.kid_profile_id}:${day}`) || 0)
+    : 0;
+  return Math.max(readingSeconds, screenSeconds);
 }
 
 function restriction(code, details = {}) {
@@ -51,14 +68,15 @@ function restriction(code, details = {}) {
 export async function synchronizeParentalPolicy() {
   if (!currentUserIsKid()) return null;
   const response = await parentalAPI.getConnectedKidAccessPolicy();
-  const record = { key: POLICY_KEY, policy: response.data, savedAt: new Date().toISOString() };
+  const key = scopedPolicyKey();
+  const record = { key, policy: response.data, savedAt: new Date().toISOString() };
   await offlineDb.put(offlineDb.stores.metadata, record);
   return record.policy;
 }
 
 export async function getCachedParentalPolicy() {
   if (!currentUserIsKid()) return null;
-  return (await offlineDb.get(offlineDb.stores.metadata, POLICY_KEY))?.policy || null;
+  return (await offlineDb.get(offlineDb.stores.metadata, scopedPolicyKey()))?.policy || null;
 }
 
 export async function getCurrentParentalPolicy() {
@@ -98,7 +116,7 @@ export function getParentalViolation(policy, content = null) {
   if (rules.allowed_languages?.length && (!content.language || !rules.allowed_languages.includes(content.language))) {
     return restriction('LANGUAGE_NOT_ALLOWED');
   }
-  if (rules.allowed_themes?.length && content.theme && !rules.allowed_themes.includes(content.theme)) {
+  if (rules.allowed_themes?.length && (!content.theme || !rules.allowed_themes.includes(content.theme))) {
     return restriction('THEME_NOT_ALLOWED');
   }
 
