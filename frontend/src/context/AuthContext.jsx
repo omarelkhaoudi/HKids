@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import axios from 'axios';
 import { buildApiUrl } from '../config/api.js';
+import { clearLocalPrivacyData } from '../services/privacy/privacyStorageService';
 
 const AuthContext = createContext();
 
@@ -13,6 +14,13 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (localStorage.getItem('privacy_purge_pending') === 'true') {
+      void clearLocalPrivacyData({ includeAuthentication: true })
+        .then(() => localStorage.removeItem('privacy_purge_pending'))
+        .catch((error) => {
+          console.warn('Pending local privacy purge is still blocked:', error);
+        });
+    }
     const token = localStorage.getItem('token');
     if (token) {
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
@@ -34,10 +42,29 @@ export function AuthProvider({ children }) {
           localStorage.removeItem('user');
           delete axios.defaults.headers.common['Authorization'];
           setUser(null);
+          void clearLocalPrivacyData({
+            includeAuthentication: true,
+            preservePreferences: true
+          }).catch((purgeError) => {
+            console.warn('Could not fully clear local session data:', purgeError);
+          });
         }
         return Promise.reject(error);
       }
     );
+
+    if (token && navigator.onLine) {
+      axios.get(buildApiUrl('/auth/me'))
+        .then((response) => {
+          const verifiedUser = response.data?.user;
+          if (!verifiedUser) return;
+          localStorage.setItem('user', JSON.stringify(verifiedUser));
+          setUser(verifiedUser);
+        })
+        .catch(() => {
+          // The interceptor clears invalid sessions. Network failures keep offline access.
+        });
+    }
 
     setLoading(false);
 
@@ -110,7 +137,15 @@ export function AuthProvider({ children }) {
     }
   };
 
-  const logout = () => {
+  const logout = ({ purgeLocalData = true } = {}) => {
+    if (purgeLocalData) {
+      void clearLocalPrivacyData({
+        includeAuthentication: true,
+        preservePreferences: true
+      }).catch((error) => {
+        console.warn('Could not fully clear local session data:', error);
+      });
+    }
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     delete axios.defaults.headers.common['Authorization'];

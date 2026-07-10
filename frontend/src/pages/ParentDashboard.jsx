@@ -15,6 +15,7 @@ import {KidAvatar} from '../components/parent/KidAvatar';
 import {SettingsCenterModal} from '../components/parent/SettingsCenterModal';
 import {ParentDashboardAnalytics} from '../components/parent/ParentDashboardAnalytics';
 import {SettingsIcon} from '../components/Icons';
+import {clearKidLocalPrivacyData} from '../services/privacy/privacyStorageService';
 
 const bedtimeLanguages = CONTENT_LANGUAGES.map((language) => ({
  id: language.id,
@@ -158,11 +159,12 @@ function ParentDashboard() {
 };
 
  const handleDeleteKid = async (kidId) => {
- if (!window.confirm('Êtes-vous sûr de vouloir supprimer ce profil ?')) return;
+ if (!window.confirm('Supprimer définitivement ce profil et toutes ses données ?')) return;
  
  try {
  await parentalAPI.deleteKid(kidId);
- showToast('Profil supprimé', 'success');
+ await clearKidLocalPrivacyData(kidId);
+ showToast('Profil supprimé définitivement', 'success');
  if (selectedKid?.id === kidId) {
  setSelectedKid(null);
  setDashboardData(null);
@@ -170,7 +172,7 @@ function ParentDashboard() {
  loadData();
 } catch (error) {
  console.error('Error deleting kid:', error);
- showToast('Erreur lors de la suppression', 'error');
+ showToast(error.response?.data?.error || 'Erreur lors de la suppression', 'error');
 }
 };
 

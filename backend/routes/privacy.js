@@ -1,15 +1,21 @@
 import express from 'express';
-import bcrypt from 'bcryptjs';
-import { getDatabase } from '../database/init.js';
 import { verifyToken } from './auth.js';
-import { logSecurityEvent } from '../services/security/auditLog.js';
-import { purgeUserVoiceData } from '../services/voice/voiceDataDeletionService.js';
+import { rateLimiter } from '../middleware/rateLimiter.js';
+import {
+  buildPrivacyExportFilename,
+  createPrivacyExport,
+  listPrivacyLogs,
+  permanentlyDeleteKid,
+  permanentlyDeleteParentAccount,
+  recordPrivacyEvent,
+  verifyParentPassword
+} from '../services/privacy/privacyService.js';
 
 const router = express.Router();
-
-function getPool() {
-  return getDatabase();
-}
+const sensitivePrivacyRateLimiter = rateLimiter(
+  process.env.NODE_ENV === 'production' ? 10 : 100,
+  15 * 60 * 1000
+);
 
 function requireParentOrAdmin(req, res, next) {
   if (!['parent', 'admin'].includes(req.user?.role)) {
@@ -18,51 +24,94 @@ function requireParentOrAdmin(req, res, next) {
   next();
 }
 
-async function getAuthorizedKid(pool, req, kidProfileId) {
-  const query = req.user.role === 'admin'
-    ? 'SELECT * FROM kids_profiles WHERE id = $1'
-    : 'SELECT * FROM kids_profiles WHERE id = $1 AND parent_id = $2';
-  const params = req.user.role === 'admin' ? [kidProfileId] : [kidProfileId, req.user.id];
-  const result = await pool.query(query, params);
-  return result.rows[0] || null;
+function sendPrivacyError(res, error) {
+  const status = error?.status || 500;
+  if (status >= 500) console.error('Privacy API error:', error);
+  return res.status(status).json({
+    error: status >= 500 ? 'Privacy operation failed' : error.message,
+    code: error?.code || 'PRIVACY_OPERATION_FAILED'
+  });
 }
 
-async function deleteKidData(client, kidProfileId) {
-  await client.query('DELETE FROM generated_stories WHERE kid_profile_id = $1', [kidProfileId]);
-  await client.query('DELETE FROM learning_attempts WHERE kid_profile_id = $1', [kidProfileId]);
-  await client.query('DELETE FROM kid_rewards WHERE kid_profile_id = $1', [kidProfileId]);
-  await client.query('DELETE FROM kid_challenge_progress WHERE kid_profile_id = $1', [kidProfileId]);
-  await client.query('DELETE FROM kid_reading_sessions WHERE kid_profile_id = $1', [kidProfileId]);
-  await client.query('DELETE FROM kid_reading_progress WHERE kid_profile_id = $1', [kidProfileId]);
-  await client.query('DELETE FROM kid_reading_goals WHERE kid_profile_id = $1', [kidProfileId]);
-  await client.query('DELETE FROM parental_rules WHERE kid_profile_id = $1', [kidProfileId]);
-  await client.query('DELETE FROM parent_approvals WHERE kid_profile_id = $1', [kidProfileId]);
-  await client.query('UPDATE users SET kid_profile_id = NULL WHERE kid_profile_id = $1', [kidProfileId]);
-  await client.query('DELETE FROM kids_profiles WHERE id = $1', [kidProfileId]);
-}
-
-router.delete('/kids/:id', verifyToken, requireParentOrAdmin, async (req, res) => {
-  const pool = getPool();
-  const client = await pool.connect();
-
+router.post('/export', verifyToken, sensitivePrivacyRateLimiter, async (req, res) => {
   try {
-    const kid = await getAuthorizedKid(pool, req, req.params.id);
-    if (!kid) return res.status(404).json({ error: 'Kid profile not found' });
-
-    await client.query('BEGIN');
-    await deleteKidData(client, kid.id);
-    await logSecurityEvent(client, {
-      userId: req.user.id,
-      actorRole: req.user.role,
-      action: 'kid_profile_deleted_permanently',
-      resourceType: 'kid_profile',
-      resourceId: kid.id,
+    await verifyParentPassword(req.user.id, req.body?.password);
+    const data = await createPrivacyExport(req.user.id);
+    await recordPrivacyEvent({
+      user: req.user,
+      action: 'privacy_export_viewed',
       req
     });
-    await client.query('COMMIT');
+    res.setHeader('Cache-Control', 'no-store');
+    res.setHeader('Pragma', 'no-cache');
+    return res.json({ data });
+  } catch (error) {
+    return sendPrivacyError(res, error);
+  }
+});
 
-    res.json({
+router.post('/export/download', verifyToken, sensitivePrivacyRateLimiter, async (req, res) => {
+  try {
+    await verifyParentPassword(req.user.id, req.body?.password);
+    const data = await createPrivacyExport(req.user.id);
+    await recordPrivacyEvent({
+      user: req.user,
+      action: 'privacy_export_downloaded',
+      req
+    });
+    const filename = buildPrivacyExportFilename(req.user.id);
+    const payload = JSON.stringify(data, null, 2);
+    res.setHeader('Content-Type', 'application/json; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.setHeader('Cache-Control', 'no-store');
+    res.setHeader('Pragma', 'no-cache');
+    return res.send(payload);
+  } catch (error) {
+    return sendPrivacyError(res, error);
+  }
+});
+
+router.get('/logs', verifyToken, sensitivePrivacyRateLimiter, async (req, res) => {
+  try {
+    if (req.user.role !== 'parent') {
+      return res.status(403).json({ error: 'Parent account required', code: 'PARENT_ACCOUNT_REQUIRED' });
+    }
+    const result = await listPrivacyLogs({
+      userId: req.user.id,
+      limit: req.query.limit,
+      offset: req.query.offset
+    });
+    res.setHeader('Cache-Control', 'no-store');
+    return res.json(result);
+  } catch (error) {
+    return sendPrivacyError(res, error);
+  }
+});
+
+router.post('/local-data-cleared', verifyToken, sensitivePrivacyRateLimiter, async (req, res) => {
+  try {
+    await recordPrivacyEvent({
+      user: req.user,
+      action: 'privacy_local_data_cleared',
+      req,
+      metadata: { scope: 'device' }
+    });
+    return res.json({ logged: true });
+  } catch (error) {
+    return sendPrivacyError(res, error);
+  }
+});
+
+router.delete('/kids/:id', verifyToken, requireParentOrAdmin, sensitivePrivacyRateLimiter, async (req, res) => {
+  try {
+    const result = await permanentlyDeleteKid({
+      actor: req.user,
+      kidProfileId: req.params.id,
+      req
+    });
+    return res.json({
       message: 'Kid profile and linked data deleted permanently',
+      deletion: result,
       sync: {
         clear_local_keys: [
           'hkids_favorites',
@@ -74,65 +123,34 @@ router.delete('/kids/:id', verifyToken, requireParentOrAdmin, async (req, res) =
       }
     });
   } catch (error) {
-    await client.query('ROLLBACK');
-    console.error('Error deleting kid privacy data:', error);
-    res.status(500).json({ error: 'Could not delete kid profile data' });
-  } finally {
-    client.release();
+    return sendPrivacyError(res, error);
   }
 });
 
-router.delete('/account', verifyToken, async (req, res) => {
+router.delete('/account', verifyToken, sensitivePrivacyRateLimiter, async (req, res) => {
   if (req.user.role !== 'parent') {
-    return res.status(403).json({ error: 'Only parent accounts can self-delete here' });
+    return res.status(403).json({
+      error: 'Only parent accounts can self-delete here',
+      code: 'PARENT_ACCOUNT_REQUIRED'
+    });
   }
 
-  const { password } = req.body || {};
-  if (!password) return res.status(400).json({ error: 'Password confirmation required' });
-
-  const pool = getPool();
-  const client = await pool.connect();
-
   try {
-    const userResult = await pool.query('SELECT * FROM users WHERE id = $1 AND role = $2', [req.user.id, 'parent']);
-    const user = userResult.rows[0];
-    if (!user || !bcrypt.compareSync(password, user.password)) {
-      return res.status(401).json({ error: 'Invalid credentials' });
-    }
-
-    await client.query('BEGIN');
-    const kids = await client.query('SELECT id FROM kids_profiles WHERE parent_id = $1', [req.user.id]);
-    for (const kid of kids.rows) {
-      await deleteKidData(client, kid.id);
-    }
-
-    await purgeUserVoiceData({ client, userId: req.user.id });
-    await client.query('DELETE FROM user_subscriptions WHERE user_id = $1', [req.user.id]);
-
-    await logSecurityEvent(client, {
+    const result = await permanentlyDeleteParentAccount({
       userId: req.user.id,
-      actorRole: req.user.role,
-      action: 'parent_account_deleted_permanently',
-      resourceType: 'user',
-      resourceId: req.user.id,
+      password: req.body?.password,
       req
     });
-    await client.query('DELETE FROM users WHERE id = $1', [req.user.id]);
-    await client.query('COMMIT');
-
-    res.json({
+    return res.json({
       message: 'Parent account and linked data deleted permanently',
+      deletion: result,
       sync: {
         clear_local_storage: true,
         clear_indexeddb: true
       }
     });
   } catch (error) {
-    await client.query('ROLLBACK');
-    console.error('Error deleting parent account:', error);
-    res.status(500).json({ error: 'Could not delete account data' });
-  } finally {
-    client.release();
+    return sendPrivacyError(res, error);
   }
 });
 

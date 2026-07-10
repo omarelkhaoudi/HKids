@@ -17,9 +17,10 @@ export async function purgeUserVoiceData({ client, userId }) {
     [userId]
   );
 
-  const provider = VoiceProviderFactory.getProvider();
-  for (const profile of profiles.rows) {
-    if (profile.provider_voice_id) {
+  const providerProfiles = profiles.rows.filter((profile) => profile.provider_voice_id);
+  if (providerProfiles.length > 0) {
+    const provider = VoiceProviderFactory.getProvider();
+    for (const profile of providerProfiles) {
       await provider.deleteVoiceProfile({ providerVoiceId: profile.provider_voice_id });
     }
   }

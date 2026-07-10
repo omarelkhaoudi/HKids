@@ -1,37 +1,31 @@
-import { getDatabase } from '../database/init.js';
+import { getDatabase, initDatabase } from '../database/init.js';
 import bcrypt from 'bcryptjs';
 
-const db = getDatabase();
+const username = process.env.ADMIN_RESET_USERNAME || 'admin';
+const password = process.env.ADMIN_RESET_PASSWORD;
 
-// Reset admin user
-const defaultPassword = bcrypt.hashSync('admin123', 10);
+if (!password || password.length < 12) {
+  console.error('ADMIN_RESET_PASSWORD with at least 12 characters is required.');
+  process.exit(1);
+}
 
-db.run(
-  `DELETE FROM users WHERE username = 'admin'`,
-  (err) => {
-    if (err) {
-      console.error('Error deleting admin user:', err);
-      db.close();
-      process.exit(1);
-    }
-    
-    db.run(
-      `INSERT INTO users (username, password, role) VALUES (?, ?, ?)`,
-      ['admin', defaultPassword, 'admin'],
-      (err) => {
-        if (err) {
-          console.error('Error creating admin user:', err);
-          db.close();
-          process.exit(1);
-        }
-        
-        console.log('✅ Admin user reset successfully');
-        console.log('   Username: admin');
-        console.log('   Password: admin123');
-        db.close();
-        process.exit(0);
-      }
-    );
+try {
+  await initDatabase();
+  const db = getDatabase();
+  const passwordHash = await bcrypt.hash(password, 12);
+  await db.query(
+    `INSERT INTO users (username, password, role)
+     VALUES ($1, $2, 'admin')
+     ON CONFLICT (username)
+     DO UPDATE SET password = EXCLUDED.password, role = 'admin'`,
+    [username, passwordHash]
+  );
+  console.log(`Admin credentials reset for ${username}.`);
+  await db.end();
+} catch (error) {
+  console.error('Could not reset admin credentials:', error.message);
+  process.exitCode = 1;
+}
   }
 );
 

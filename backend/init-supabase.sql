@@ -104,7 +104,7 @@ VALUES
 ON CONFLICT (name) DO NOTHING;
 
 -- Note: L'utilisateur admin sera créé automatiquement par le backend
--- lors du premier démarrage avec le mot de passe: admin123
+-- Le compte administrateur n'est créé en production que si ADMIN_SEED_PASSWORD est défini.
 -- Pas besoin de l'insérer manuellement ici
 
 -- Afficher un message de confirmation

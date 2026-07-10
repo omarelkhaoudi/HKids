@@ -1,10 +1,12 @@
 import express from 'express';
 import multer from 'multer';
 import path from 'path';
+import crypto from 'crypto';
 import { fileURLToPath } from 'url';
 import fs from 'fs-extra';
 import jwt from 'jsonwebtoken';
 import supabase from '../config/supabase.js';
+import config from '../config/env.js';
 import { getDatabase } from '../database/init.js';
 import { verifyToken } from './auth.js';
 import { adminOnly } from '../middleware/adminOnly.js';
@@ -57,8 +59,8 @@ function slugify(value) {
 }
 
 function getStoredFilename(file) {
-  const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-  return uniqueSuffix + path.extname(file.originalname);
+  const uniqueSuffix = `${Date.now()}-${crypto.randomBytes(16).toString('hex')}`;
+  return uniqueSuffix + path.extname(file.originalname).toLowerCase();
 }
 
 async function persistUploadedFile(file) {
@@ -210,10 +212,28 @@ router.get('/published', async (req, res) => {
 
   if (token) {
     try {
-      const JWT_SECRET = process.env.JWT_SECRET || 'hkids-secret-key-change-in-production';
-      const decoded = jwt.verify(token, JWT_SECRET);
-      if (decoded.role === 'kid' && decoded.kid_profile_id) {
-        authenticatedUser = decoded;
+      const decoded = jwt.verify(token, config.jwtSecret, { algorithms: ['HS256'] });
+      const pool = getPool();
+      const userResult = await pool.query(
+        'SELECT id, username, role, kid_profile_id FROM users WHERE id = $1 LIMIT 1',
+        [decoded.id]
+      );
+      const dbUser = userResult.rows[0] || null;
+      if (!dbUser) {
+        return res.status(401).json({ error: 'Invalid or expired token' });
+      }
+      if (dbUser.role === 'kid') {
+        if (!dbUser.kid_profile_id) {
+          return res.status(401).json({ error: 'Invalid or expired token' });
+        }
+        const profileResult = await pool.query(
+          'SELECT id FROM kids_profiles WHERE id = $1 LIMIT 1',
+          [dbUser.kid_profile_id]
+        );
+        if (!profileResult.rows[0]) {
+          return res.status(401).json({ error: 'Invalid or expired token' });
+        }
+        authenticatedUser = dbUser;
       }
     } catch (err) {
       // Invalid token, continue as public user.
@@ -227,6 +247,7 @@ router.get('/published', async (req, res) => {
     LEFT JOIN categories sc ON b.subcategory_id = sc.id
     WHERE b.is_published = TRUE
       AND (b.publish_at IS NULL OR b.publish_at <= NOW())
+      AND COALESCE(b.moderation_status, 'approved') = 'approved'
   `;
   const params = [];
   let index = 1;
@@ -304,18 +325,35 @@ router.get('/:id', async (req, res) => {
     }
 
     const token = req.headers.authorization?.split(' ')[1];
+    let authenticatedUser = null;
     if (token) {
       try {
-        const JWT_SECRET = process.env.JWT_SECRET || 'hkids-secret-key-change-in-production';
-        const decoded = jwt.verify(token, JWT_SECRET);
-        if (decoded.role === 'kid' && decoded.kid_profile_id) {
-          const policy = await loadChildAccessPolicy({ user: decoded, pool });
+        const decoded = jwt.verify(token, config.jwtSecret, { algorithms: ['HS256'] });
+        const userResult = await pool.query(
+          'SELECT id, username, role, kid_profile_id FROM users WHERE id = $1 LIMIT 1',
+          [decoded.id]
+        );
+        authenticatedUser = userResult.rows[0] || null;
+        if (!authenticatedUser) {
+          return res.status(401).json({ error: 'Invalid or expired token' });
+        }
+        if (authenticatedUser.role === 'kid' && authenticatedUser.kid_profile_id) {
+          const policy = await loadChildAccessPolicy({ user: authenticatedUser, pool });
           const violation = getContentAccessViolation(policy, book);
           if (violation) return sendParentalAccessError(res, violation);
         }
       } catch (err) {
         return res.status(401).json({ error: 'Invalid or expired token' });
       }
+    }
+
+    const publiclyAvailable = (
+      book.is_published === true
+      && (!book.publish_at || new Date(book.publish_at) <= new Date())
+      && (!book.moderation_status || book.moderation_status === 'approved')
+    );
+    if (!publiclyAvailable && authenticatedUser?.role !== 'admin') {
+      return res.status(404).json({ error: 'Book not found' });
     }
 
     const pagesResult = await pool.query(

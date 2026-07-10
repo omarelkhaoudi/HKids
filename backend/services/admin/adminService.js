@@ -2,6 +2,9 @@ import { getDatabase } from '../../database/init.js';
 import { logSecurityEvent } from '../security/auditLog.js';
 import { getStripe, isStripeConfigured } from '../stripe/stripeConfig.js';
 import { mapStripeStatus } from '../stripe/subscriptionService.js';
+import { deleteKidData } from '../privacy/privacyService.js';
+import { purgeUserVoiceData } from '../voice/voiceDataDeletionService.js';
+import { invalidateParentDashboardCache } from '../parentDashboardService.js';
 
 export const ADMIN_PERMISSIONS = Object.freeze([
   'overview.read',
@@ -526,6 +529,19 @@ export async function deleteUserAccount({ actor, targetUserId, reason = '', req 
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
+    const kids = await client.query(
+      'SELECT id FROM kids_profiles WHERE parent_id = $1',
+      [targetId]
+    );
+    for (const kid of kids.rows) {
+      await deleteKidData(client, kid.id);
+    }
+    await purgeUserVoiceData({ client, userId: targetId });
+    await client.query('DELETE FROM content_reports WHERE reporter_user_id = $1', [targetId]);
+    await client.query('DELETE FROM subscription_events WHERE user_id = $1', [targetId]);
+    await client.query('DELETE FROM subscription_invoices WHERE user_id = $1', [targetId]);
+    await client.query('DELETE FROM voice_audit_logs WHERE user_id = $1', [targetId]);
+    await client.query('DELETE FROM voice_consent_records WHERE user_id = $1', [targetId]);
     await logSecurityEvent(client, {
       userId: actor.id,
       actorRole: actor.role,
@@ -541,6 +557,7 @@ export async function deleteUserAccount({ actor, targetUserId, reason = '', req 
     });
     await client.query('DELETE FROM users WHERE id = $1', [targetId]);
     await client.query('COMMIT');
+    await Promise.all(kids.rows.map((kid) => invalidateParentDashboardCache(kid.id)));
     return { deleted: true, id: targetId };
   } catch (error) {
     await client.query('ROLLBACK');

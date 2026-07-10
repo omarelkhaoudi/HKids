@@ -11,6 +11,7 @@ import {useAuth} from '../../context/AuthContext';
 import {useToast} from '../ToastProvider';
 import {subscriptionsAPI} from '../../api/subscriptions';
 import {useNavigate} from 'react-router-dom';
+import PrivacyCenter from './PrivacyCenter';
 
 const SECTIONS = [
  {id: 'account', label: 'Compte', icon: UserIcon},
@@ -231,7 +232,12 @@ export function SettingsCenterModal({isOpen, onClose}) {
  <p className="font-bold text-danger-900">Supprimer le compte</p>
  <p className="text-sm text-danger-600/80 /80">Cette action est irréversible et supprimera toutes vos données.</p>
  </div>
- <Button className="bg-danger-500 hover:bg-danger-600 text-white shadow-md">Supprimer</Button>
+ <Button
+ className="bg-danger-500 hover:bg-danger-600 text-white shadow-md"
+ onClick={() => scrollToSection('privacy')}
+ >
+ Supprimer
+ </Button>
  </div>
  </div>
  </div>
@@ -336,33 +342,7 @@ export function SettingsCenterModal({isOpen, onClose}) {
  <p className="text-foreground-muted">Contrôlez vos données et celles de vos enfants de manière transparente.</p>
  </div>
  
- <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
- <div className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-3xl p-6 border border-green-100 /50">
- <div className="w-12 h-12 bg-green-100 /50 rounded-2xl flex items-center justify-center text-green-600 mb-4">
- <ShieldIcon className="w-6 h-6" />
- </div>
- <h4 className="font-bold text-green-900 mb-2">Données des enfants</h4>
- <p className="text-sm text-green-700 mb-4">Les données de lecture et de progression sont strictement confidentielles et ne sont jamais partagées à des tiers.</p>
- <Button variant="outline" className="bg-card/50 text-green-700 border-green-200">Gérer les autorisations</Button>
- </div>
- 
- <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-3xl p-6 border border-blue-100 /50">
- <div className="w-12 h-12 bg-blue-100 /50 rounded-2xl flex items-center justify-center text-blue-600 mb-4">
- <MailIcon className="w-6 h-6" />
- </div>
- <h4 className="font-bold text-blue-900 mb-2">Fichiers vocaux</h4>
- <p className="text-sm text-blue-700 mb-4">Les enregistrements vocaux générés pour la lecture sont stockés de manière sécurisée et vous appartiennent entièrement.</p>
- <Button variant="outline" className="bg-card/50 text-blue-700 border-blue-200">Supprimer les voix</Button>
- </div>
- </div>
- 
- <div className="bg-card rounded-3xl p-6 shadow-sm border border-border flex items-center justify-between">
- <div>
- <h4 className="font-bold">Télécharger vos données</h4>
- <p className="text-sm text-foreground-muted">Obtenez une copie de toutes vos données personnelles au format JSON.</p>
- </div>
- <Button variant="outline">Exporter</Button>
- </div>
+ <PrivacyCenter />
  </section>
  
  <hr className="border-border" />
