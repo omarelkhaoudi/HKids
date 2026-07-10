@@ -1,9 +1,11 @@
 import { getFileUrl } from '../../utils/fileUrl';
 import { getImageUrl } from '../../utils/imageUrl';
+import { storage } from '../../utils/storage';
 import {
   assertParentalAccess,
   filterOfflineContent
 } from '../parental/parentalAccessService';
+import { registerDownloadInCloud } from '../cloud/cloudSyncService';
 import { offlineDb } from './offlineDb';
 
 const DOWNLOAD_VERSION = 1;
@@ -187,6 +189,8 @@ export async function downloadBook(book, { signal, onProgress } = {}) {
     await putDownload(completed);
     await notifyServiceWorker(draft.assets.map((asset) => asset.url));
     await pruneOldDownloads();
+    storage.markDownloaded(draft.id);
+    registerDownloadInCloud(draft.type, draft.sourceId).catch(() => {});
     return completed;
   } catch (error) {
     if (error.name === 'AbortError') {
@@ -222,6 +226,8 @@ export async function saveGeneratedStoryOffline(story) {
   };
   await putDownload(record);
   await pruneOldDownloads();
+  storage.markDownloaded(draft.id);
+  registerDownloadInCloud('generated-story', draft.sourceId).catch(() => {});
   return record;
 }
 
@@ -248,6 +254,8 @@ export async function saveVoiceMessageOffline(message, audioBlob = null) {
 
   await putDownload(record);
   await pruneOldDownloads();
+  storage.markDownloaded(draft.id);
+  registerDownloadInCloud('voice-message', draft.sourceId).catch(() => {});
   return record;
 }
 

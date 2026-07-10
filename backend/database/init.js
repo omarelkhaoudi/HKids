@@ -291,6 +291,16 @@ export async function initDatabase() {
         imported_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
         UNIQUE(kid_profile_id, import_key)
       );`,
+      `CREATE TABLE IF NOT EXISTS kid_download_registry (
+        id BIGSERIAL PRIMARY KEY,
+        kid_profile_id INTEGER NOT NULL REFERENCES kids_profiles(id) ON DELETE CASCADE,
+        content_type TEXT NOT NULL,
+        content_id INTEGER NOT NULL,
+        status TEXT NOT NULL DEFAULT 'downloaded',
+        downloaded_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        UNIQUE(kid_profile_id, content_type, content_id)
+      );`,
       `CREATE TABLE IF NOT EXISTS generated_stories (
         id SERIAL PRIMARY KEY,
         kid_profile_id INTEGER NOT NULL REFERENCES kids_profiles(id) ON DELETE CASCADE,
@@ -629,6 +639,7 @@ export async function initDatabase() {
     await client.query(`CREATE INDEX IF NOT EXISTS subscription_invoices_user_paid_idx ON subscription_invoices(user_id, paid_at DESC)`);
     await client.query(`CREATE INDEX IF NOT EXISTS subscription_events_user_created_idx ON subscription_events(user_id, created_at DESC)`);
     await client.query(`CREATE INDEX IF NOT EXISTS user_subscriptions_provider_sub_idx ON user_subscriptions(provider, provider_subscription_id)`);
+    await client.query(`CREATE INDEX IF NOT EXISTS kid_download_registry_kid_idx ON kid_download_registry(kid_profile_id, downloaded_at DESC)`);
     await client.query(`ALTER TABLE kid_reading_sessions ADD COLUMN IF NOT EXISTS client_session_id TEXT`);
     await client.query(`
       UPDATE books

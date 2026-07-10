@@ -12,6 +12,7 @@ import { getImageUrl } from '../utils/imageUrl';
 import { useToast } from '../components/ToastProvider';
 import { getRestrictionMessage } from '../services/parental/parentalAccessService';
 import { PlayIcon, StarIcon, LockIcon, SparklesIcon } from '../components/Icons';
+import { getCachedKidProfile } from '../services/cloud/cloudSyncService';
 import { Avatar } from '../components/ui';
 
 function getRecommendedBooks(sections = []) {
@@ -69,6 +70,16 @@ function KidsHome() {
         setHomeData(overviewResult.value.data);
       } else {
         console.warn('Connected kid overview unavailable:', overviewResult.reason);
+        if (user?.kid_profile_id) {
+          const cachedProfile = await getCachedKidProfile(user.kid_profile_id);
+          if (cachedProfile && active) {
+            setHomeData((current) => ({
+              ...(current || {}),
+              kid: cachedProfile,
+              progress: current?.progress || []
+            }));
+          }
+        }
       }
 
       if (recommendationsResult.status === 'fulfilled') {
@@ -84,7 +95,7 @@ function KidsHome() {
     return () => {
       active = false;
     };
-  }, [showToast, language]);
+  }, [showToast, language, user?.kid_profile_id]);
 
   const kid = homeData?.kid || null;
   const kidName = kid?.name || user?.username || '';

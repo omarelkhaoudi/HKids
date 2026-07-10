@@ -24,6 +24,7 @@ import {
   setKidBookFavorite,
   upsertKidReadingGoal
 } from '../services/parentDashboardService.js';
+import { pullCloudSync, pushCloudSync } from '../services/cloud/cloudSyncService.js';
 
 const router = express.Router();
 
@@ -717,6 +718,46 @@ router.post('/me/activity-import', verifyToken, async (req, res) => {
     res.status(result.imported ? 201 : 200).json(result);
   } catch (error) {
     console.error('Error importing kid activity:', error);
+    sendDashboardServiceError(res, error);
+  }
+});
+
+router.get('/me/cloud-sync', verifyToken, async (req, res) => {
+  try {
+    const result = await pullCloudSync({
+      user: req.user,
+      clientSyncToken: req.query.sync_token || null
+    });
+    res.json(result);
+  } catch (error) {
+    console.error('Error pulling cloud sync:', error);
+    sendDashboardServiceError(res, error);
+  }
+});
+
+router.post('/me/cloud-sync', verifyToken, async (req, res) => {
+  try {
+    const changes = req.body?.changes || {};
+    const hasChanges = ['favorites', 'progress', 'history', 'downloads'].some(
+      (key) => changes[key] && (
+        Array.isArray(changes[key]) ? changes[key].length > 0 : Object.keys(changes[key]).length > 0
+      )
+    );
+
+    const result = hasChanges
+      ? await pushCloudSync({
+        user: req.user,
+        clientSyncToken: req.body?.sync_token || null,
+        changes
+      })
+      : await pullCloudSync({
+        user: req.user,
+        clientSyncToken: req.body?.sync_token || null
+      });
+
+    res.json(result);
+  } catch (error) {
+    console.error('Error syncing cloud state:', error);
     sendDashboardServiceError(res, error);
   }
 });
