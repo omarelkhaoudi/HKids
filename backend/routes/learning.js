@@ -11,6 +11,7 @@ import {
   sendParentalAccessError
 } from '../services/parental/parentalAccessService.js';
 import { invalidateParentDashboardCache } from '../services/parentDashboardService.js';
+import { requireAdminPermission } from '../services/admin/adminService.js';
 
 const router = express.Router();
 
@@ -538,7 +539,7 @@ router.get('/parent/kids/:kidId/summary', verifyToken, async (req, res) => {
   }
 });
 
-router.use('/admin', verifyToken, adminOnly);
+router.use('/admin', verifyToken, adminOnly, requireAdminPermission('content.moderate'));
 
 router.post('/admin/contents', async (req, res) => {
   try {

@@ -47,7 +47,7 @@ export function normalizeStoryListFilters(query = {}) {
 }
 
 export function buildGeneratedStoryWhereClause({ kidProfileId, filters }) {
-  const clauses = ['kid_profile_id = $1'];
+  const clauses = ['kid_profile_id = $1', 'COALESCE(is_hidden, FALSE) = FALSE'];
   const values = [kidProfileId];
 
   const addValue = (value) => {

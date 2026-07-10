@@ -174,7 +174,7 @@ function App() {
                 <Route path="/admin/signup" element={<SignUp />} />
                 <Route path="/parent/login" element={<ParentLogin />} />
                 <Route path="/parent/signup" element={<ParentSignUp />} />
-                <Route path="/admin/*" element={<AdminDashboard />} />
+                <Route path="/admin/*" element={<RequireRole roles={['admin']}><AdminDashboard /></RequireRole>} />
                 <Route path="/parent/profiles" element={<RequireRole roles={['parent', 'admin']}><ParentKidsProfiles /></RequireRole>} />
                 <Route path="/parent/voices" element={<RequireRole roles={['parent', 'admin']}><FamilyVoices /></RequireRole>} />
                 <Route path="/parent/*" element={<RequireRole roles={['parent', 'admin']}><ParentDashboard /></RequireRole>} />

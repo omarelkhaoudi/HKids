@@ -10,10 +10,15 @@ import AdminUsers from '../components/admin/AdminUsers';
 import AdminStatistics from '../components/admin/AdminStatistics';
 import AdminSubscriptions from '../components/admin/AdminSubscriptions';
 import LearningManagement from '../components/admin/LearningManagement';
+import AdminModeration from '../components/admin/AdminModeration';
+import AdminReports from '../components/admin/AdminReports';
+import AdminAuditLog from '../components/admin/AdminAuditLog';
+import AdminPermissions from '../components/admin/AdminPermissions';
+import {adminAPI} from '../api/admin';
 import {
  BookIcon, TagIcon, UserIcon, LogOutIcon, HomeIcon, HistoryIcon, 
  CheckIcon, BrainIcon, SearchIcon, BellIcon, ChevronLeftIcon, PlusIcon,
- XIcon
+ XIcon, ShieldIcon, WarningIcon
 } from '../components/Icons';
 import {Avatar} from '../components/ui';
 
@@ -105,20 +110,48 @@ const QuickActions = () => {
 // COMMAND PALETTE COMPONENT
 const CommandPalette = ({isOpen, onClose}) => {
  const [query, setQuery] = useState('');
- 
+ const [results, setResults] = useState([]);
+ const [loading, setLoading] = useState(false);
+ const navigate = useNavigate();
+
  useEffect(() => {
  const handleKeyDown = (e) => {
- if (e.key === 'k' && (e.metaKey || e.ctrlKey)) {
- e.preventDefault();
- isOpen ? onClose() : null; // Toggle logic handled by parent usually, but we keep it simple here
-}
  if (e.key === 'Escape') onClose();
 };
  window.addEventListener('keydown', handleKeyDown);
  return () => window.removeEventListener('keydown', handleKeyDown);
-}, [isOpen, onClose]);
+}, [onClose]);
+
+ useEffect(() => {
+ if (!isOpen || query.trim().length < 2) {
+ setResults([]);
+ return undefined;
+}
+ const timer = setTimeout(async () => {
+ try {
+ setLoading(true);
+ const response = await adminAPI.search(query.trim());
+ setResults(response.data?.results || []);
+} catch (error) {
+ console.error('Admin search failed:', error);
+ setResults([]);
+} finally {
+ setLoading(false);
+}
+}, 250);
+ return () => clearTimeout(timer);
+}, [isOpen, query]);
+
+ useEffect(() => {
+ if (!isOpen) setQuery('');
+}, [isOpen]);
 
  if (!isOpen) return null;
+
+ const openResult = (result) => {
+ navigate(result.url);
+ onClose();
+};
 
  return (
  <div className="fixed inset-0 z-[100] flex items-start justify-center pt-32 px-4">
@@ -135,22 +168,34 @@ const CommandPalette = ({isOpen, onClose}) => {
  autoFocus
  value={query}
  onChange={(e) => setQuery(e.target.value)}
- placeholder="Rechercher des histoires, utilisateurs, abonnements..."
+ placeholder="Livres, utilisateurs, abonnements, signalements..."
  className="flex-1 bg-transparent border-none outline-none text-lg text-foreground placeholder-surface-400"
  />
  <div className="flex items-center gap-1 text-xs font-bold text-surface-400 bg-surface-secondary px-2 py-1 rounded">ESC</div>
  </div>
  <div className="p-2 max-h-96 overflow-y-auto">
- {query ? (
- <div className="p-8 text-center text-foreground-muted font-medium">Recherche de"{query}"... (UI Only)</div>
+ {query.trim().length >= 2 ? (
+ loading ? (
+ <div className="p-8 text-center text-foreground-muted">Recherche...</div>
+ ) : results.length === 0 ? (
+ <div className="p-8 text-center text-foreground-muted">Aucun résultat.</div>
+ ) : results.map((result) => (
+ <button key={`${result.type}:${result.id}`} onClick={() => openResult(result)} className="w-full text-left flex items-center gap-3 p-3 rounded-xl hover:bg-surface-secondary transition-colors">
+ <div className="w-9 h-9 rounded-lg bg-primary-50 flex items-center justify-center text-foreground-600"><SearchIcon className="w-4 h-4" /></div>
+ <div className="min-w-0">
+ <p className="font-bold truncate">{result.title}</p>
+ <p className="text-xs text-foreground-muted truncate">{result.type} · {result.subtitle}</p>
+ </div>
+ </button>
+ ))
  ) : (
  <>
  <div className="p-2 text-xs font-bold text-surface-400 uppercase tracking-wider">Raccourcis</div>
- <Link to="/admin/contents" onClick={onClose} className="flex items-center gap-3 p-3 rounded-xl hover:bg-surface-secondary text-foreground-secondary transition-colors">
- <BookIcon className="w-5 h-5 text-surface-400" /> Aller à la gestion des histoires
+ <Link to="/admin/moderation" onClick={onClose} className="flex items-center gap-3 p-3 rounded-xl hover:bg-surface-secondary text-foreground-secondary transition-colors">
+ <BookIcon className="w-5 h-5 text-surface-400" /> File de modération
  </Link>
- <Link to="/admin/users" onClick={onClose} className="flex items-center gap-3 p-3 rounded-xl hover:bg-surface-secondary text-foreground-secondary transition-colors">
- <UserIcon className="w-5 h-5 text-surface-400" /> Aller à la gestion des utilisateurs
+ <Link to="/admin/reports" onClick={onClose} className="flex items-center gap-3 p-3 rounded-xl hover:bg-surface-secondary text-foreground-secondary transition-colors">
+ <WarningIcon className="w-5 h-5 text-surface-400" /> Signalements ouverts
  </Link>
  </>
  )}
@@ -167,6 +212,14 @@ function AdminDashboard() {
  const [isSidebarOpen, setSidebarOpen] = useState(true);
  const [isSearchOpen, setIsSearchOpen] = useState(false);
  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+ const [permissions, setPermissions] = useState(null);
+
+ useEffect(() => {
+ if (!user?.id) return;
+ adminAPI.getMyPermissions()
+ .then((response) => setPermissions(response.data?.permissions || []))
+ .catch((error) => console.error('Could not load admin permissions:', error));
+}, [user?.id]);
 
  if (!user) {
  return <Navigate to="/admin/login" replace />;
@@ -179,14 +232,18 @@ function AdminDashboard() {
 
  const isActive = (path) => location.pathname === path;
  const navItems = [
- {to: '/admin', label:"Vue d'ensemble", icon: HomeIcon, end: true},
- {to: '/admin/contents', label: 'Histoires CMS', icon: BookIcon},
- {to: '/admin/categories', label: 'Catégories', icon: TagIcon},
- {to: '/admin/users', label: 'Utilisateurs', icon: UserIcon},
- {to: '/admin/subscriptions', label: 'Abonnements', icon: CheckIcon},
- {to: '/admin/learning', label: 'Quiz & Jeux', icon: BrainIcon},
- {to: '/admin/statistics', label: 'Analytique', icon: HistoryIcon},
- ];
+ {to: '/admin', label:"Vue d'ensemble", icon: HomeIcon, end: true, permission: 'overview.read'},
+ {to: '/admin/contents', label: 'Histoires CMS', icon: BookIcon, permission: 'content.read'},
+ {to: '/admin/moderation', label: 'Modération', icon: ShieldIcon, permission: 'content.read'},
+ {to: '/admin/reports', label: 'Signalements', icon: WarningIcon, permission: 'reports.read'},
+ {to: '/admin/categories', label: 'Catégories', icon: TagIcon, permission: 'content.read'},
+ {to: '/admin/users', label: 'Utilisateurs', icon: UserIcon, permission: 'users.read'},
+ {to: '/admin/subscriptions', label: 'Abonnements', icon: CheckIcon, permission: 'subscriptions.read'},
+ {to: '/admin/learning', label: 'Quiz & Jeux', icon: BrainIcon, permission: 'content.read'},
+ {to: '/admin/statistics', label: 'Analytique', icon: HistoryIcon, permission: 'overview.read'},
+ {to: '/admin/audit', label: 'Journal actions', icon: HistoryIcon, permission: 'audit.read'},
+ {to: '/admin/permissions', label: 'Permissions', icon: ShieldIcon, permission: 'permissions.manage'},
+ ].filter((item) => permissions == null || permissions.includes(item.permission));
 
  // Listener for CMD+K to open search
  useEffect(() => {
@@ -348,6 +405,10 @@ function AdminDashboard() {
  <Route path="users" element={<AdminUsers />} />
  <Route path="subscriptions" element={<AdminSubscriptions />} />
  <Route path="statistics" element={<AdminStatistics />} />
+ <Route path="moderation" element={<AdminModeration />} />
+ <Route path="reports" element={<AdminReports />} />
+ <Route path="audit" element={<AdminAuditLog />} />
+ <Route path="permissions" element={<AdminPermissions />} />
  <Route path="*" element={<Navigate to="/admin" replace />} />
  </Routes>
  </div>

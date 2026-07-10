@@ -31,6 +31,9 @@ Checkout, webhooks signés, abonnements, annulation, renouvellement, factures, h
 ### 7. [Synchronisation Cloud](./CLOUD_SYNC.md)
 Sync offline-first des profils, favoris, progression, téléchargements et historique avec résolution automatique des conflits.
 
+### 8. [Panneau Admin](./ADMIN_PANEL.md)
+Modération, validation des livres, utilisateurs, abonnements, signalements, recherche, audit et permissions.
+
 ## Vue d'Ensemble
 
 HKids est une plateforme de lecture numérique pour enfants construite avec:

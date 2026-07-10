@@ -104,19 +104,19 @@ function AdminOverview() {
  {/* KPI METRICS */}
  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
  <MetricCard 
- index={0} title="Utilisateurs" value={summary.total_parents || 0} subtitle="Comptes parents créés" icon={UserIcon} trend={12} 
+ index={0} title="Utilisateurs" value={summary.total_parents || 0} subtitle="Comptes parents créés" icon={UserIcon}
  colorClass={{bg: 'bg-blue-50', text: 'text-blue-600'}} 
  />
  <MetricCard 
- index={1} title="Enfants Actifs" value={summary.total_children || 0} subtitle="Profils lecteurs" icon={ChildIcon} trend={8} 
+ index={1} title="Enfants Actifs" value={summary.total_children || 0} subtitle="Profils lecteurs" icon={ChildIcon}
  colorClass={{bg: 'bg-emerald-50', text: 'text-emerald-600'}} 
  />
  <MetricCard 
- index={2} title="Abonnements" value={summary.active_subscriptions || 0} subtitle="Forfaits actifs (MRR)" icon={CheckIcon} trend={15} 
+ index={2} title="Abonnements" value={summary.active_subscriptions || 0} subtitle="Forfaits actifs (MRR)" icon={CheckIcon}
  colorClass={{bg: 'bg-violet-50', text: 'text-violet-600'}} 
  />
  <MetricCard 
- index={3} title="Histoires IA" value={summary.total_stories || 0} subtitle="Générées au total" icon={SparklesIcon} trend={24} 
+ index={3} title="Histoires IA" value={summary.total_stories || 0} subtitle="Générées au total" icon={SparklesIcon}
  colorClass={{bg: 'bg-amber-50', text: 'text-amber-500'}} 
  />
  </div>

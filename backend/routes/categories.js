@@ -3,6 +3,7 @@ import { getDatabase } from '../database/init.js';
 import { verifyToken } from './auth.js';
 import { adminOnly } from '../middleware/adminOnly.js';
 import { asyncHandler } from '../middleware/errorHandler.js';
+import { requireAdminPermission } from '../services/admin/adminService.js';
 
 const router = express.Router();
 
@@ -34,7 +35,7 @@ router.get('/', async (req, res) => {
 });
 
 // Create category (admin only)
-router.post('/', verifyToken, adminOnly, async (req, res) => {
+router.post('/', verifyToken, adminOnly, requireAdminPermission('content.moderate'), async (req, res) => {
   const { name, description, parent_id } = req.body;
   
   if (!name) {
@@ -57,7 +58,7 @@ router.post('/', verifyToken, adminOnly, async (req, res) => {
 });
 
 // Update category (admin only)
-router.put('/:id', verifyToken, adminOnly, async (req, res) => {
+router.put('/:id', verifyToken, adminOnly, requireAdminPermission('content.moderate'), async (req, res) => {
   const { name, description, parent_id } = req.body;
 
   try {
@@ -83,7 +84,7 @@ router.put('/:id', verifyToken, adminOnly, async (req, res) => {
 });
 
 // Delete category (admin only) - wrapped with asyncHandler to catch all errors
-router.delete('/:id', verifyToken, adminOnly, asyncHandler(async (req, res) => {
+router.delete('/:id', verifyToken, adminOnly, requireAdminPermission('content.moderate'), asyncHandler(async (req, res) => {
   let pool;
   try {
     console.log('=== DELETE CATEGORY REQUEST ===');

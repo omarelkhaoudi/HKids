@@ -8,6 +8,7 @@ import supabase from '../config/supabase.js';
 import { getDatabase } from '../database/init.js';
 import { verifyToken } from './auth.js';
 import { adminOnly } from '../middleware/adminOnly.js';
+import { requireAdminPermission } from '../services/admin/adminService.js';
 import {
   filterAllowedContent,
   getGlobalAccessViolation,
@@ -339,7 +340,7 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-router.get('/', verifyToken, adminOnly, async (req, res) => {
+router.get('/', verifyToken, adminOnly, requireAdminPermission('content.read'), async (req, res) => {
   try {
     const pool = getPool();
     const result = await pool.query(
@@ -357,7 +358,7 @@ router.get('/', verifyToken, adminOnly, async (req, res) => {
   }
 });
 
-router.post('/', verifyToken, adminOnly, handleMulterUpload(upload.fields([
+router.post('/', verifyToken, adminOnly, requireAdminPermission('content.moderate'), handleMulterUpload(upload.fields([
   { name: 'cover', maxCount: 1 },
   { name: 'pages', maxCount: 50 },
   { name: 'audio', maxCount: 1 },
@@ -425,9 +426,10 @@ router.post('/', verifyToken, adminOnly, handleMulterUpload(upload.fields([
           title, slug, author, description, cover_image, category_id,
           age_group_min, age_group_max, is_published, file_path, page_count,
           content_type, language, theme, subcategory_id, tags, audio_url,
-          duration_seconds, is_premium, is_recommended, is_popular, is_new, publish_at
+          duration_seconds, is_premium, is_recommended, is_popular, is_new, publish_at,
+          moderation_status
         )
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, FALSE, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, 'pending')
          RETURNING *`,
         [
           title,
@@ -438,7 +440,6 @@ router.post('/', verifyToken, adminOnly, handleMulterUpload(upload.fields([
           category_id || null,
           age_group_min || 0,
           age_group_max || 12,
-          is_published === 'true' || is_published === true,
           pagePaths[0] || 'uploaded',
           pagePaths.length,
           content_type || 'story',
@@ -492,7 +493,7 @@ router.post('/', verifyToken, adminOnly, handleMulterUpload(upload.fields([
   }
 });
 
-router.put('/:id', verifyToken, adminOnly, handleMulterUpload(upload.fields([
+router.put('/:id', verifyToken, adminOnly, requireAdminPermission('content.moderate'), handleMulterUpload(upload.fields([
   { name: 'cover', maxCount: 1 },
   { name: 'audio', maxCount: 1 },
 ])), async (req, res) => {
@@ -566,7 +567,7 @@ router.put('/:id', verifyToken, adminOnly, handleMulterUpload(upload.fields([
           age_group_min !== undefined ? age_group_min : book.age_group_min,
           age_group_max !== undefined ? age_group_max : book.age_group_max,
           is_published !== undefined
-            ? (is_published === 'true' || is_published === true)
+            ? ((is_published === 'true' || is_published === true) && book.moderation_status === 'approved')
             : book.is_published,
           content_type !== undefined ? (content_type || 'story') : book.content_type,
           language !== undefined ? (language || 'fr') : book.language,
@@ -609,7 +610,7 @@ router.put('/:id', verifyToken, adminOnly, handleMulterUpload(upload.fields([
   }
 });
 
-router.delete('/:id', verifyToken, adminOnly, async (req, res) => {
+router.delete('/:id', verifyToken, adminOnly, requireAdminPermission('content.moderate'), async (req, res) => {
   try {
     const pool = getPool();
     const bookResult = await pool.query('SELECT * FROM books WHERE id = $1', [req.params.id]);

@@ -2,8 +2,8 @@ import {useEffect, useState} from 'react';
 import {motion, AnimatePresence} from 'framer-motion';
 import {adminAPI} from '../../api/admin';
 import {formatAdminDate, formatAdminDuration} from './AdminMetricCard';
-import {ChildIcon, ClockIcon, HistoryIcon, UserIcon, SearchIcon, MailIcon, StarIcon, ChevronRightIcon, XIcon} from '../Icons';
-import {Avatar, Badge} from '../ui';
+import {ChildIcon, ClockIcon, UserIcon, SearchIcon, MailIcon, StarIcon, XIcon, TrashIcon} from '../Icons';
+import {Avatar, Badge, Button} from '../ui';
 
 function AdminUsers() {
  const [parents, setParents] = useState([]);
@@ -12,6 +12,7 @@ function AdminUsers() {
  const [loading, setLoading] = useState(true);
  const [detailLoading, setDetailLoading] = useState(false);
  const [search, setSearch] = useState('');
+ const [deleting, setDeleting] = useState(false);
 
  useEffect(() => {
  const loadParents = async () => {
@@ -23,6 +24,24 @@ function AdminUsers() {
  console.error('Error loading admin users:', err);
 } finally {
  setLoading(false);
+}
+};
+
+ const deleteParent = async () => {
+ if (!selectedParent) return;
+ const reason = window.prompt('Motif de suppression du compte (journalisé)');
+ if (reason === null) return;
+ if (!window.confirm(`Supprimer définitivement le compte "${selectedParent.name}" et toutes ses données ?`)) return;
+ try {
+ setDeleting(true);
+ await adminAPI.deleteUser(selectedParent.id, reason);
+ setParents((current) => current.filter((parent) => parent.id !== selectedParent.id));
+ setSelectedParent(null);
+ setDetail(null);
+} catch (err) {
+ window.alert(err.response?.data?.error || 'Suppression impossible.');
+} finally {
+ setDeleting(false);
 }
 };
  loadParents();
@@ -193,6 +212,15 @@ function AdminUsers() {
  <span className="text-foreground-secondary font-bold flex items-center gap-2 text-sm"><ClockIcon className="w-4 h-4 text-surface-400"/> Temps d'écoute</span>
  <Badge variant="soft" className="bg-card text-foreground font-black border border-border">{formatAdminDuration(totalTime)}</Badge>
  </div>
+ <Button
+ variant="outline"
+ fullWidth
+ disabled={deleting}
+ onClick={deleteParent}
+ className="mt-5 border-rose-200 text-rose-600 hover:bg-rose-50"
+ >
+ <TrashIcon className="w-4 h-4 mr-2" /> {deleting ? 'Suppression...' : 'Supprimer ce compte'}
+ </Button>
  </div>
  </div>
  </div>
