@@ -24,10 +24,14 @@ const validateEnv = () => {
     throw new Error(`Missing required environment variables: ${missing.join(', ')}`);
   }
   
-  // Warn about default values in production
+  // Refuse weak signing configuration in production.
   if (process.env.NODE_ENV === 'production') {
-    if (process.env.JWT_SECRET === 'hkids-secret-key-change-in-production') {
-      console.warn('⚠️ WARNING: Using default JWT_SECRET in production! Change it immediately!');
+    const jwtSecret = process.env.JWT_SECRET || '';
+    if (
+      jwtSecret === 'hkids-secret-key-change-in-production'
+      || jwtSecret.length < 32
+    ) {
+      throw new Error('JWT_SECRET must be a unique secret of at least 32 characters in production');
     }
   }
 };

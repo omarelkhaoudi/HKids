@@ -34,6 +34,9 @@ Sync offline-first des profils, favoris, progression, téléchargements et histo
 ### 8. [Panneau Admin](./ADMIN_PANEL.md)
 Modération, validation des livres, utilisateurs, abonnements, signalements, recherche, audit et permissions.
 
+### 9. [Sécurité et confidentialité](./PRIVACY_SECURITY.md)
+Audit, export et téléchargement RGPD, suppression définitive, stockage local, journaux et risques résiduels.
+
 ## Vue d'Ensemble
 
 HKids est une plateforme de lecture numérique pour enfants construite avec:

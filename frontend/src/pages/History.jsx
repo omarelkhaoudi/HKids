@@ -67,7 +67,7 @@ function History() {
 
  const clearHistory = () => {
  if (confirm('Voulez-vous vraiment effacer tout l\'historique ?')) {
- localStorage.removeItem('hkids_history');
+ storage.clearReadingHistory();
  setHistory([]);
  setBooks([]);
  showToast('Historique effacé', 'info', 2000);

@@ -94,5 +94,19 @@ export const offlineDb = {
 
   clear(storeName) {
     return withStore(storeName, 'readwrite', (store) => store.clear());
+  },
+
+  async deleteDatabase() {
+    const db = await dbPromise?.catch(() => null);
+    db?.close();
+    dbPromise = null;
+
+    if (!('indexedDB' in window)) return;
+    await new Promise((resolve, reject) => {
+      const request = indexedDB.deleteDatabase(DB_NAME);
+      request.onsuccess = () => resolve();
+      request.onerror = () => reject(request.error);
+      request.onblocked = () => reject(new Error('IndexedDB deletion is blocked by another tab.'));
+    });
   }
 };

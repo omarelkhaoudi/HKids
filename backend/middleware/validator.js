@@ -101,7 +101,8 @@ export const sanitizeString = (str) => {
 export const sanitizeBody = (req, res, next) => {
   if (req.body) {
     Object.keys(req.body).forEach(key => {
-      if (typeof req.body[key] === 'string') {
+      const sensitiveCredential = /password|token|secret|key/i.test(key);
+      if (!sensitiveCredential && typeof req.body[key] === 'string') {
         req.body[key] = sanitizeString(req.body[key]);
       }
     });

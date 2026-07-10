@@ -126,6 +126,10 @@ self.addEventListener('fetch', (event) => {
   }
 
   if (url.pathname.startsWith('/api/')) {
+    if (request.headers.has('Authorization')) {
+      event.respondWith(fetch(request));
+      return;
+    }
     event.respondWith(networkFirst(request, API_CACHE));
     return;
   }

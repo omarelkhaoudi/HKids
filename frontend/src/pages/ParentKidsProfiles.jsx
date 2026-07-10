@@ -9,6 +9,7 @@ import {KidProfilesList} from '../components/parent/KidProfilesList';
 import {KidProfileFormModal} from '../components/parent/KidProfileFormModal';
 import {LogOutIcon} from '../components/Icons';
 import {buildKidPayload, createEmptyKidForm, kidToForm} from '../utils/kidProfiles';
+import {clearKidLocalPrivacyData} from '../services/privacy/privacyStorageService';
 
 function ParentKidsProfiles() {
  const {user, logout} = useAuth();
@@ -112,16 +113,18 @@ function ParentKidsProfiles() {
 };
 
  const handleDelete = async (kid) => {
- const confirmed = window.confirm(`Supprimer le profil de ${kid.name} ?`);
+ const confirmed = window.confirm(`Supprimer définitivement le profil de ${kid.name} et toutes ses données ?`);
  if (!confirmed) return;
 
  try {
  await parentalAPI.deleteKid(kid.id);
- showToast('Profil enfant supprime', 'success');
+ await clearKidLocalPrivacyData(kid.id);
+ showToast('Profil enfant supprimé définitivement', 'success');
+ if (selectedKid?.id === kid.id) setSelectedKid(null);
  await loadKids();
 } catch (error) {
  console.error('Error deleting kid profile:', error);
- showToast('Erreur lors de la suppression', 'error');
+ showToast(error.response?.data?.error || 'Erreur lors de la suppression', 'error');
 }
 };
 

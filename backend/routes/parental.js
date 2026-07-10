@@ -25,6 +25,7 @@ import {
   upsertKidReadingGoal
 } from '../services/parentDashboardService.js';
 import { pullCloudSync, pushCloudSync } from '../services/cloud/cloudSyncService.js';
+import { permanentlyDeleteKid } from '../services/privacy/privacyService.js';
 
 const router = express.Router();
 
@@ -265,32 +266,31 @@ router.put('/kids/:id', verifyToken, verifyParent, async (req, res) => {
 // Delete a kid profile
 router.delete('/kids/:id', verifyToken, verifyParent, async (req, res) => {
   try {
-    const pool = getPool();
-    
-    // Verify the kid profile belongs to the parent
-    const kidCheck = await pool.query(
-      'SELECT * FROM kids_profiles WHERE id = $1 AND parent_id = $2',
-      [req.params.id, req.user.id]
-    );
-
-    if (kidCheck.rows.length === 0) {
-      return res.status(404).json({ error: 'Kid profile not found' });
-    }
-
-    await pool.query('DELETE FROM kids_profiles WHERE id = $1', [req.params.id]);
-    await logSecurityEvent(pool, {
-      userId: req.user.id,
-      actorRole: req.user.role,
-      action: 'kid_profile_deleted',
-      resourceType: 'kid_profile',
-      resourceId: req.params.id,
+    const deletion = await permanentlyDeleteKid({
+      actor: req.user,
+      kidProfileId: req.params.id,
       req
     });
-    await invalidateParentDashboardCache(req.params.id);
-    res.json({ message: 'Kid profile deleted successfully' });
+    res.json({
+      message: 'Kid profile deleted successfully',
+      deletion,
+      sync: {
+        clear_local_keys: [
+          'hkids_favorites',
+          'hkids_history',
+          'hkids_listening_history',
+          'hkids_reading_stats',
+          'hkids_downloaded_content'
+        ],
+        clear_indexeddb_prefixes: ['book:', 'generated-story:', 'voice-message:']
+      }
+    });
   } catch (err) {
     console.error('Error deleting kid profile:', err);
-    res.status(500).json({ error: 'Database error' });
+    res.status(err?.status || 500).json({
+      error: err?.status ? err.message : 'Database error',
+      code: err?.code || 'KID_DELETE_FAILED'
+    });
   }
 });
 

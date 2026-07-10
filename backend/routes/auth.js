@@ -3,10 +3,11 @@ import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import { getDatabase } from '../database/init.js';
 import { logSecurityEvent } from '../services/security/auditLog.js';
+import config from '../config/env.js';
 
 const router = express.Router();
-const JWT_SECRET = process.env.JWT_SECRET || 'hkids-secret-key-change-in-production';
-const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '30d';
+const JWT_SECRET = config.jwtSecret;
+const JWT_EXPIRES_IN = config.jwtExpiresIn;
 const USERNAME_PATTERN = /^[a-zA-Z0-9_.-]{3,40}$/;
 
 // Helper function to get database pool safely
@@ -144,7 +145,7 @@ router.post('/login', async (req, res) => {
         kid_profile_id: user.kid_profile_id || null
       },
       JWT_SECRET,
-      { expiresIn: JWT_EXPIRES_IN }
+      { expiresIn: JWT_EXPIRES_IN, algorithm: 'HS256' }
     );
 
     console.log(`✅ Successful login for user: ${user.username}`);
@@ -173,7 +174,7 @@ router.post('/login', async (req, res) => {
 });
 
 // Verify token middleware
-export function verifyToken(req, res, next) {
+export async function verifyToken(req, res, next) {
   try {
     const authHeader = req.headers.authorization;
     
@@ -182,26 +183,46 @@ export function verifyToken(req, res, next) {
       return res.status(401).json({ error: 'No token provided' });
     }
 
-    const token = authHeader.split(' ')[1];
+    const [scheme, token] = authHeader.split(' ');
 
-    if (!token) {
+    if (scheme !== 'Bearer' || !token) {
       console.log('No token in authorization header');
       return res.status(401).json({ error: 'No token provided' });
     }
 
-    jwt.verify(token, JWT_SECRET, (err, decoded) => {
-      if (err) {
-        console.log('Token verification failed:', err.message);
-        return res.status(401).json({ error: 'Invalid or expired token' });
-      }
-      req.user = decoded;
-      next();
-    });
+    const decoded = jwt.verify(token, JWT_SECRET, { algorithms: ['HS256'] });
+    const currentUser = await getPool().query(
+      `SELECT id, username, role, kid_profile_id
+       FROM users
+       WHERE id = $1
+       LIMIT 1`,
+      [decoded.id]
+    );
+    const user = currentUser.rows[0];
+    if (!user) {
+      return res.status(401).json({ error: 'Invalid or expired token' });
+    }
+    req.user = {
+      id: user.id,
+      username: user.username,
+      role: user.role,
+      kid_profile_id: user.kid_profile_id || null
+    };
+    return next();
   } catch (error) {
+    if (['JsonWebTokenError', 'TokenExpiredError', 'NotBeforeError'].includes(error?.name)) {
+      console.log('Token verification failed:', error.message);
+      return res.status(401).json({ error: 'Invalid or expired token' });
+    }
     console.error('Error in verifyToken middleware:', error);
     return res.status(500).json({ error: 'Authentication error' });
   }
 }
+
+router.get('/me', verifyToken, (req, res) => {
+  res.setHeader('Cache-Control', 'no-store');
+  res.json({ user: req.user });
+});
 
 export default router;
 

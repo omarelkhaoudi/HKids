@@ -96,7 +96,7 @@ export function hydrateLocalFromCloud(snapshot, kidId) {
   const historyKey = scopedKey('hkids_history', kidId);
   const listeningKey = scopedKey('hkids_listening_history', kidId);
   const statsKey = scopedKey('hkids_reading_stats', kidId);
-  const downloadsKey = 'hkids_downloaded_content';
+  const downloadsKey = scopedKey('hkids_downloaded_content', kidId);
 
   const localFavorites = parseJson(localStorage.getItem(favoritesKey), []);
   const localHistory = parseJson(localStorage.getItem(historyKey), []);
@@ -156,7 +156,7 @@ function collectLocalChanges(kidId) {
   const history = parseJson(localStorage.getItem(scopedKey('hkids_history', kidId)), []);
   const listening = parseJson(localStorage.getItem(scopedKey('hkids_listening_history', kidId)), []);
   const stats = parseJson(localStorage.getItem(scopedKey('hkids_reading_stats', kidId)), { sessions: [] });
-  const downloads = parseJson(localStorage.getItem('hkids_downloaded_content'), []);
+  const downloads = parseJson(localStorage.getItem(scopedKey('hkids_downloaded_content', kidId)), []);
 
   const progress = (stats.sessions || []).slice(0, 50).map((session) => ({
     book_id: session.bookId,

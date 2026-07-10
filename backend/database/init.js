@@ -839,14 +839,22 @@ export async function initDatabase() {
       )
     `);
 
-    // Insérer admin par défaut
-    const defaultPassword = bcrypt.hashSync('admin123', 10);
-    await client.query(
-      `INSERT INTO users (username, password, role)
-       VALUES ($1, $2, $3)
-       ON CONFLICT (username) DO NOTHING`,
-      ['admin', defaultPassword, 'admin']
-    );
+    // Seed credentials are development-only unless an explicit production password exists.
+    const seedAdminPassword = process.env.ADMIN_SEED_PASSWORD
+      || (process.env.NODE_ENV === 'production' ? null : 'admin123');
+    if (seedAdminPassword) {
+      if (seedAdminPassword.length < 12 && process.env.NODE_ENV === 'production') {
+        throw new Error('ADMIN_SEED_PASSWORD must contain at least 12 characters in production');
+      }
+      const seedAdminUsername = process.env.ADMIN_SEED_USERNAME || 'admin';
+      const defaultPassword = bcrypt.hashSync(seedAdminPassword, 12);
+      await client.query(
+        `INSERT INTO users (username, password, role)
+         VALUES ($1, $2, $3)
+         ON CONFLICT (username) DO NOTHING`,
+        [seedAdminUsername, defaultPassword, 'admin']
+      );
+    }
 
     await client.query('COMMIT');
     console.log('✅ Base PostgreSQL initialisée');

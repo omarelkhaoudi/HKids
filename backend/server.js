@@ -10,7 +10,8 @@ import cors from 'cors';
 import path from 'path';
 import fs from 'fs-extra';
 import { fileURLToPath } from 'url';
-import { initDatabase } from './database/init.js';
+import jwt from 'jsonwebtoken';
+import { getDatabase, initDatabase } from './database/init.js';
 import supabase from './config/supabase.js';
 import booksRouter from './routes/books.js';
 import authRouter from './routes/auth.js';
@@ -118,8 +119,9 @@ app.use(cors({
     }
   },
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'Cache-Control', 'Pragma', 'Stripe-Signature'],
+  exposedHeaders: ['Content-Disposition'],
 }));
 app.use('/api/webhooks/stripe', stripeWebhooksRouter);
 app.use(express.json({ limit: '10mb' }));
@@ -137,14 +139,53 @@ app.use('/api', apiRateLimiter);
 
 // Serve book uploads without fallback. If a file is missing, returning 404 is
 // required so the reader never displays unrelated old content.
-app.get('/uploads/books/:filename', (req, res) => {
+app.get('/uploads/books/:filename', async (req, res) => {
   try {
     const filename = req.params.filename;
     const fullPath = path.join(__dirname, 'uploads', 'books', filename);
+    const storedPath = `/uploads/books/${filename}`;
+    const pool = getDatabase();
+    const accessResult = await pool.query(
+      `SELECT
+         EXISTS (
+           SELECT 1
+           FROM books b
+           LEFT JOIN book_pages bp ON bp.book_id = b.id
+           WHERE $1 IN (b.file_path, b.cover_image, b.audio_url)
+              OR bp.image_path = $1
+         ) AS known_asset,
+         EXISTS (
+           SELECT 1
+           FROM books b
+           LEFT JOIN book_pages bp ON bp.book_id = b.id
+           WHERE ($1 IN (b.file_path, b.cover_image, b.audio_url) OR bp.image_path = $1)
+             AND b.is_published = TRUE
+             AND (b.publish_at IS NULL OR b.publish_at <= NOW())
+             AND COALESCE(b.moderation_status, 'approved') = 'approved'
+         ) AS public_asset`,
+      [storedPath]
+    );
+    const access = accessResult.rows[0] || {};
+    if (!access.known_asset) {
+      return res.status(404).json({ error: 'Book file not found' });
+    }
 
-    console.log('Book ID:', req.query.book_id || null);
-    console.log('[uploads] Book file request:', filename);
-    console.log('[uploads] File exists:', fs.existsSync(fullPath));
+    if (!access.public_asset) {
+      const token = req.headers.authorization?.split(' ')[1];
+      if (!token) return res.status(404).json({ error: 'Book file not found' });
+      try {
+        const decoded = jwt.verify(token, config.jwtSecret, { algorithms: ['HS256'] });
+        const admin = await pool.query(
+          `SELECT id FROM users
+           WHERE id = $1 AND role = 'admin'
+           LIMIT 1`,
+          [decoded.id]
+        );
+        if (!admin.rows[0]) return res.status(404).json({ error: 'Book file not found' });
+      } catch {
+        return res.status(404).json({ error: 'Book file not found' });
+      }
+    }
 
     if (fs.existsSync(fullPath)) {
       return res.sendFile(fullPath);

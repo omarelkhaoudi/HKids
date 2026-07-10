@@ -65,7 +65,12 @@ export const storage = {
   // Contenus telecharges (etat prepare pour la future logique offline)
   getDownloadedContent: () => {
     try {
-      const downloaded = localStorage.getItem('hkids_downloaded_content');
+      const key = scopedActivityKey('hkids_downloaded_content');
+      let downloaded = localStorage.getItem(key);
+      if (!downloaded && key !== 'hkids_downloaded_content') {
+        downloaded = localStorage.getItem('hkids_downloaded_content');
+        if (downloaded) localStorage.setItem(key, downloaded);
+      }
       return downloaded ? JSON.parse(downloaded) : [];
     } catch {
       return [];
@@ -77,7 +82,7 @@ export const storage = {
       const downloaded = storage.getDownloadedContent();
       if (!downloaded.includes(contentId)) {
         downloaded.push(contentId);
-        localStorage.setItem('hkids_downloaded_content', JSON.stringify(downloaded));
+        localStorage.setItem(scopedActivityKey('hkids_downloaded_content'), JSON.stringify(downloaded));
       }
     } catch (error) {
       console.error('Error marking downloaded content:', error);
@@ -88,7 +93,7 @@ export const storage = {
     try {
       const downloaded = storage.getDownloadedContent();
       const filtered = downloaded.filter(id => id !== contentId);
-      localStorage.setItem('hkids_downloaded_content', JSON.stringify(filtered));
+      localStorage.setItem(scopedActivityKey('hkids_downloaded_content'), JSON.stringify(filtered));
     } catch (error) {
       console.error('Error unmarking downloaded content:', error);
     }
@@ -174,6 +179,10 @@ export const storage = {
     const history = storage.getReadingHistory();
     const item = history.find(h => h.bookId === bookId);
     return item ? item.page : 0;
+  },
+
+  clearReadingHistory: () => {
+    localStorage.removeItem(scopedActivityKey('hkids_history'));
   },
 
   // Statistiques de lecture (temps, livres terminés, sessions)
