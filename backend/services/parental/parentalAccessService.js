@@ -164,7 +164,7 @@ export async function loadChildAccessPolicy({
          ON sbu.subscription_id = us.id
         AND sbu.period_start = us.current_period_start
        WHERE us.user_id = $1
-         AND us.status IN ('trialing', 'active')
+         AND us.status IN ('trialing', 'active', 'past_due')
          AND us.current_period_start <= NOW()
          AND us.current_period_end > NOW()
        GROUP BY us.id

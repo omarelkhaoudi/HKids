@@ -25,6 +25,9 @@ Instructions pour déployer l'application en développement et en production.
 ### 5. [Dashboard Parent Supabase](./PARENT_DASHBOARD_SUPABASE.md)
 Architecture du snapshot parental réel, endpoints, cache TTL, schéma SQL, pagination et flux de synchronisation offline.
 
+### 6. [Stripe Production](./STRIPE_PRODUCTION.md)
+Checkout, webhooks signés, abonnements, annulation, renouvellement, factures, historique et essai gratuit.
+
 ## Vue d'Ensemble
 
 HKids est une plateforme de lecture numérique pour enfants construite avec:

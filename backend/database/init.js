@@ -178,6 +178,36 @@ export async function initDatabase() {
         unlocked_at TIMESTAMPTZ DEFAULT NOW(),
         UNIQUE(subscription_id, book_id, period_start)
       );`,
+      `CREATE TABLE IF NOT EXISTS subscription_invoices (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+        subscription_id INTEGER REFERENCES user_subscriptions(id) ON DELETE SET NULL,
+        stripe_invoice_id TEXT UNIQUE NOT NULL,
+        stripe_subscription_id TEXT,
+        amount_paid INTEGER NOT NULL DEFAULT 0,
+        currency TEXT NOT NULL DEFAULT 'EUR',
+        status TEXT NOT NULL DEFAULT 'draft',
+        hosted_invoice_url TEXT,
+        invoice_pdf TEXT,
+        period_start TIMESTAMPTZ,
+        period_end TIMESTAMPTZ,
+        paid_at TIMESTAMPTZ,
+        created_at TIMESTAMPTZ DEFAULT NOW()
+      );`,
+      `CREATE TABLE IF NOT EXISTS subscription_events (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+        subscription_id INTEGER REFERENCES user_subscriptions(id) ON DELETE SET NULL,
+        stripe_event_id TEXT UNIQUE,
+        event_type TEXT NOT NULL,
+        payload JSONB DEFAULT '{}'::jsonb,
+        created_at TIMESTAMPTZ DEFAULT NOW()
+      );`,
+      `CREATE TABLE IF NOT EXISTS stripe_webhook_events (
+        stripe_event_id TEXT PRIMARY KEY,
+        event_type TEXT NOT NULL,
+        processed_at TIMESTAMPTZ DEFAULT NOW()
+      );`,
       `CREATE TABLE IF NOT EXISTS newsletter_subscribers (
         id SERIAL PRIMARY KEY,
         email TEXT UNIQUE NOT NULL,
@@ -591,6 +621,14 @@ export async function initDatabase() {
     await client.query(`ALTER TABLE user_subscriptions ADD COLUMN IF NOT EXISTS provider TEXT`);
     await client.query(`ALTER TABLE user_subscriptions ADD COLUMN IF NOT EXISTS provider_subscription_id TEXT`);
     await client.query(`ALTER TABLE user_subscriptions ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW()`);
+    await client.query(`ALTER TABLE user_subscriptions ADD COLUMN IF NOT EXISTS trial_end TIMESTAMPTZ`);
+    await client.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS stripe_customer_id TEXT`);
+    await client.query(`ALTER TABLE subscription_plans ADD COLUMN IF NOT EXISTS stripe_price_id TEXT`);
+    await client.query(`ALTER TABLE subscription_plans ADD COLUMN IF NOT EXISTS trial_days INTEGER NOT NULL DEFAULT 0`);
+    await client.query(`CREATE UNIQUE INDEX IF NOT EXISTS users_stripe_customer_id_unique_idx ON users(stripe_customer_id) WHERE stripe_customer_id IS NOT NULL`);
+    await client.query(`CREATE INDEX IF NOT EXISTS subscription_invoices_user_paid_idx ON subscription_invoices(user_id, paid_at DESC)`);
+    await client.query(`CREATE INDEX IF NOT EXISTS subscription_events_user_created_idx ON subscription_events(user_id, created_at DESC)`);
+    await client.query(`CREATE INDEX IF NOT EXISTS user_subscriptions_provider_sub_idx ON user_subscriptions(provider, provider_subscription_id)`);
     await client.query(`ALTER TABLE kid_reading_sessions ADD COLUMN IF NOT EXISTS client_session_id TEXT`);
     await client.query(`
       UPDATE books
