@@ -9,13 +9,13 @@ function AdminSubscriptions() {
  const [loading, setLoading] = useState(true);
  const [search, setSearch] = useState('');
  const [statusFilter, setStatusFilter] = useState('all');
+ const [busyId, setBusyId] = useState(null);
 
- useEffect(() => {
  const loadSubscriptions = async () => {
  try {
  setLoading(true);
- const response = await adminAPI.getSubscriptions();
- const subsArray = response.data.active_subscriptions || [];
+ const response = await adminAPI.getManagedSubscriptions({status: 'all', limit: 100, offset: 0});
+ const subsArray = response.data?.items || [];
  const formattedSubs = subsArray.map(sub => ({
  ...sub,
  user_name: sub.parent_name,
@@ -29,10 +29,14 @@ function AdminSubscriptions() {
  setLoading(false);
 }
 };
+
+ useEffect(() => {
  loadSubscriptions();
 }, []);
 
- const totalRevenue = subscriptions.reduce((sum, sub) => sum + (sub.mrr || 0), 0);
+ const totalRevenue = subscriptions
+ .filter((sub) => sub.status === 'active' || sub.status === 'trialing')
+ .reduce((sum, sub) => sum + (sub.mrr || 0), 0);
  const activeCount = subscriptions.filter((sub) => sub.status === 'active' || sub.status === 'trialing').length;
  const canceledCount = subscriptions.filter((sub) => sub.status === 'canceled').length;
 
@@ -41,6 +45,19 @@ function AdminSubscriptions() {
  const matchesStatus = statusFilter === 'all' || sub.status === statusFilter;
  return matchesSearch && matchesStatus;
 });
+
+ const manage = async (subscription, action, status = null) => {
+ if (!window.confirm('Confirmer cette action sur l’abonnement ?')) return;
+ try {
+ setBusyId(subscription.id);
+ await adminAPI.manageSubscription(subscription.id, {action, status});
+ await loadSubscriptions();
+} catch (error) {
+ window.alert(error.response?.data?.error || 'Action impossible.');
+} finally {
+ setBusyId(null);
+}
+};
 
  return (
  <div className="space-y-6 pb-12">
@@ -61,7 +78,7 @@ function AdminSubscriptions() {
  </div>
  <div className="relative z-10">
  <span className="text-3xl font-black text-foreground tracking-tight">{totalRevenue.toFixed(2)} €</span>
- <p className="text-xs text-emerald-600 font-bold mt-1 flex items-center gap-1"><TrendingUpIcon className="w-3 h-3"/> +12% ce mois</p>
+ <p className="text-xs text-emerald-600 font-bold mt-1 flex items-center gap-1"><TrendingUpIcon className="w-3 h-3"/> Abonnements actifs et essais</p>
  </div>
  </div>
  
@@ -85,7 +102,7 @@ function AdminSubscriptions() {
  </div>
  <div className="relative z-10">
  <span className="text-3xl font-black text-foreground tracking-tight">{canceledCount}</span>
- <p className="text-xs text-rose-500 font-bold mt-1">Churn: 2.4%</p>
+ <p className="text-xs text-rose-500 font-bold mt-1">Historique complet</p>
  </div>
  </div>
  </div>
@@ -110,6 +127,9 @@ function AdminSubscriptions() {
  <option value="all">Tous statuts</option>
  <option value="active">Actif</option>
  <option value="trialing">Essai gratuit</option>
+ <option value="past_due">Paiement en retard</option>
+ <option value="unpaid">Impayé</option>
+ <option value="paused">Suspendu</option>
  <option value="canceled">Annulé</option>
  </select>
  </div>
@@ -122,16 +142,17 @@ function AdminSubscriptions() {
  <th className="px-6 py-4 text-xs font-bold text-surface-400 uppercase tracking-wider">Plan</th>
  <th className="px-6 py-4 text-xs font-bold text-surface-400 uppercase tracking-wider">Statut</th>
  <th className="px-6 py-4 text-xs font-bold text-surface-400 uppercase tracking-wider text-right">Renouvellement</th>
+ <th className="px-6 py-4 text-xs font-bold text-surface-400 uppercase tracking-wider text-right">Actions</th>
  </tr>
  </thead>
  <tbody className="divide-y divide-border">
  {loading ? (
  <tr>
- <td colSpan="4" className="p-8 text-center text-foreground-muted">Chargement...</td>
+ <td colSpan="5" className="p-8 text-center text-foreground-muted">Chargement...</td>
  </tr>
  ) : filteredSubscriptions.length === 0 ? (
  <tr>
- <td colSpan="4" className="p-8 text-center text-foreground-muted">Aucun abonnement trouvé.</td>
+ <td colSpan="5" className="p-8 text-center text-foreground-muted">Aucun abonnement trouvé.</td>
  </tr>
  ) : (
  filteredSubscriptions.map((sub) => {
@@ -140,6 +161,9 @@ function AdminSubscriptions() {
  
  if (sub.status === 'active') {badgeVariant = 'success'; statusText = 'Actif';}
  else if (sub.status === 'trialing') {badgeVariant = 'primary'; statusText = 'En essai';}
+ else if (sub.status === 'past_due') {badgeVariant = 'danger'; statusText = 'En retard';}
+ else if (sub.status === 'unpaid') {badgeVariant = 'danger'; statusText = 'Impayé';}
+ else if (sub.status === 'paused') {badgeVariant = 'secondary'; statusText = 'Suspendu';}
  else if (sub.status === 'canceled') {badgeVariant = 'danger'; statusText = 'Annulé';}
  
  return (
@@ -162,6 +186,26 @@ function AdminSubscriptions() {
  </td>
  <td className="px-6 py-4 text-right">
  <div className="text-sm font-medium text-foreground-secondary">{formatAdminDate(sub.current_period_end)}</div>
+ </td>
+ <td className="px-6 py-4 text-right">
+ <div className="flex justify-end gap-2">
+ {sub.provider === 'stripe' ? (
+ sub.cancel_at_period_end ? (
+ <Button size="sm" variant="primary" disabled={busyId === sub.id} onClick={() => manage(sub, 'resume')}>Réactiver</Button>
+ ) : (
+ <Button size="sm" variant="outline" disabled={busyId === sub.id} onClick={() => manage(sub, 'cancel_at_period_end')} className="text-rose-600">Annuler</Button>
+ )
+ ) : (
+ <Button
+ size="sm"
+ variant="outline"
+ disabled={busyId === sub.id}
+ onClick={() => manage(sub, 'set_status', sub.status === 'active' ? 'canceled' : 'active')}
+ >
+ {sub.status === 'active' ? 'Désactiver' : 'Activer'}
+ </Button>
+ )}
+ </div>
  </td>
  </tr>
  );

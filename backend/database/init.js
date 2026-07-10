@@ -63,6 +63,7 @@ export async function initDatabase() {
         username TEXT UNIQUE NOT NULL,
         password TEXT NOT NULL,
         role TEXT DEFAULT 'admin',
+        admin_permissions JSONB,
         created_at TIMESTAMPTZ DEFAULT NOW()
       );`,
       `CREATE TABLE IF NOT EXISTS categories (
@@ -328,7 +329,8 @@ export async function initDatabase() {
         favorited_at TIMESTAMPTZ,
         source_story_id INTEGER REFERENCES generated_stories(id) ON DELETE SET NULL,
         version_number INTEGER NOT NULL DEFAULT 1,
-        created_at TIMESTAMPTZ DEFAULT NOW()
+        created_at TIMESTAMPTZ DEFAULT NOW(),
+        updated_at TIMESTAMPTZ DEFAULT NOW()
       );`,
       `CREATE TABLE IF NOT EXISTS voice_profiles (
         id SERIAL PRIMARY KEY,
@@ -414,6 +416,21 @@ export async function initDatabase() {
         user_agent TEXT,
         metadata JSONB DEFAULT '{}'::jsonb,
         created_at TIMESTAMPTZ DEFAULT NOW()
+      );`,
+      `CREATE TABLE IF NOT EXISTS content_reports (
+        id BIGSERIAL PRIMARY KEY,
+        reporter_user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+        target_type TEXT NOT NULL,
+        target_id INTEGER NOT NULL,
+        reason TEXT NOT NULL,
+        details TEXT,
+        status TEXT NOT NULL DEFAULT 'open',
+        priority TEXT NOT NULL DEFAULT 'normal',
+        assigned_admin_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+        resolution_note TEXT,
+        resolved_at TIMESTAMPTZ,
+        created_at TIMESTAMPTZ DEFAULT NOW(),
+        updated_at TIMESTAMPTZ DEFAULT NOW()
       );`,
       `CREATE TABLE IF NOT EXISTS voice_narrations (
         id SERIAL PRIMARY KEY,
@@ -632,6 +649,17 @@ export async function initDatabase() {
     await client.query(`ALTER TABLE user_subscriptions ADD COLUMN IF NOT EXISTS provider_subscription_id TEXT`);
     await client.query(`ALTER TABLE user_subscriptions ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW()`);
     await client.query(`ALTER TABLE user_subscriptions ADD COLUMN IF NOT EXISTS trial_end TIMESTAMPTZ`);
+    await client.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS admin_permissions JSONB`);
+    await client.query(`ALTER TABLE books ADD COLUMN IF NOT EXISTS moderation_status TEXT NOT NULL DEFAULT 'approved'`);
+    await client.query(`ALTER TABLE books ADD COLUMN IF NOT EXISTS moderation_note TEXT`);
+    await client.query(`ALTER TABLE books ADD COLUMN IF NOT EXISTS moderated_by INTEGER REFERENCES users(id) ON DELETE SET NULL`);
+    await client.query(`ALTER TABLE books ADD COLUMN IF NOT EXISTS moderated_at TIMESTAMPTZ`);
+    await client.query(`ALTER TABLE generated_stories ADD COLUMN IF NOT EXISTS moderation_status TEXT NOT NULL DEFAULT 'pending'`);
+    await client.query(`ALTER TABLE generated_stories ADD COLUMN IF NOT EXISTS moderation_note TEXT`);
+    await client.query(`ALTER TABLE generated_stories ADD COLUMN IF NOT EXISTS moderated_by INTEGER REFERENCES users(id) ON DELETE SET NULL`);
+    await client.query(`ALTER TABLE generated_stories ADD COLUMN IF NOT EXISTS moderated_at TIMESTAMPTZ`);
+    await client.query(`ALTER TABLE generated_stories ADD COLUMN IF NOT EXISTS is_hidden BOOLEAN NOT NULL DEFAULT FALSE`);
+    await client.query(`ALTER TABLE generated_stories ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW()`);
     await client.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS stripe_customer_id TEXT`);
     await client.query(`ALTER TABLE subscription_plans ADD COLUMN IF NOT EXISTS stripe_price_id TEXT`);
     await client.query(`ALTER TABLE subscription_plans ADD COLUMN IF NOT EXISTS trial_days INTEGER NOT NULL DEFAULT 0`);
@@ -680,6 +708,10 @@ export async function initDatabase() {
     await client.query(`CREATE INDEX IF NOT EXISTS voice_audit_logs_profile_idx ON voice_audit_logs(voice_profile_id, created_at DESC)`);
     await client.query(`CREATE INDEX IF NOT EXISTS security_audit_logs_user_idx ON security_audit_logs(user_id, created_at DESC)`);
     await client.query(`CREATE INDEX IF NOT EXISTS security_audit_logs_action_idx ON security_audit_logs(action, created_at DESC)`);
+    await client.query(`CREATE INDEX IF NOT EXISTS content_reports_status_idx ON content_reports(status, priority, created_at DESC)`);
+    await client.query(`CREATE INDEX IF NOT EXISTS content_reports_target_idx ON content_reports(target_type, target_id, created_at DESC)`);
+    await client.query(`CREATE INDEX IF NOT EXISTS books_moderation_idx ON books(moderation_status, created_at DESC)`);
+    await client.query(`CREATE INDEX IF NOT EXISTS generated_stories_moderation_idx ON generated_stories(moderation_status, created_at DESC)`);
     await client.query(`CREATE UNIQUE INDEX IF NOT EXISTS voice_narrations_unique_idx ON voice_narrations(voice_profile_id, book_id, text_hash)`);
     await client.query(`CREATE INDEX IF NOT EXISTS voice_narrations_lookup_idx ON voice_narrations(voice_profile_id, book_id, text_hash)`);
     await client.query(`CREATE INDEX IF NOT EXISTS voice_narrations_user_idx ON voice_narrations(user_id, created_at DESC)`);

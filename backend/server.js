@@ -26,6 +26,7 @@ import recommendationsRouter from './routes/recommendations.js';
 import voicesRouter from './routes/voices.js';
 import learningRouter from './routes/learning.js';
 import privacyRouter from './routes/privacy.js';
+import reportsRouter from './routes/reports.js';
 import { errorHandler, notFound } from './middleware/errorHandler.js';
 import { requestLogger } from './middleware/logger.js';
 import { apiRateLimiter, authRateLimiter, resetRateLimit } from './middleware/rateLimiter.js';
@@ -258,6 +259,7 @@ app.use('/api/recommendations', recommendationsRouter);
 app.use('/api/voices', voicesRouter);
 app.use('/api/learning', learningRouter);
 app.use('/api/privacy', privacyRouter);
+app.use('/api/reports', reportsRouter);
 
 // Log available routes for debugging
 console.log('📋 Available auth routes:');

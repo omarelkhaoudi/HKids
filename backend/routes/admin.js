@@ -2,6 +2,22 @@ import express from 'express';
 import { getDatabase } from '../database/init.js';
 import { verifyToken } from './auth.js';
 import { adminOnly } from '../middleware/adminOnly.js';
+import {
+  ADMIN_PERMISSIONS,
+  advancedAdminSearch,
+  deleteUserAccount,
+  getAdminPermissionState,
+  listAdminAccounts,
+  listAuditLogs,
+  listManagedSubscriptions,
+  listModerationQueue,
+  listReports,
+  manageSubscription,
+  moderateContent,
+  requireAdminPermission,
+  setAdminPermissions,
+  updateReport
+} from '../services/admin/adminService.js';
 
 const router = express.Router();
 
@@ -28,7 +44,15 @@ function getSummary(row = {}) {
   };
 }
 
-router.get('/overview', async (req, res) => {
+function sendAdminError(res, error) {
+  return res.status(error?.status || 500).json({
+    error: error?.status ? error.message : 'Admin service unavailable',
+    code: error?.code || 'ADMIN_SERVICE_ERROR',
+    details: error?.details || undefined
+  });
+}
+
+router.get('/overview', requireAdminPermission('overview.read'), async (req, res) => {
   try {
     const pool = getPool();
     const [summary, recentActivity, latestUsers, latestBooks] = await Promise.all([
@@ -93,7 +117,7 @@ router.get('/overview', async (req, res) => {
   }
 });
 
-router.get('/users', async (req, res) => {
+router.get('/users', requireAdminPermission('users.read'), async (req, res) => {
   try {
     const pool = getPool();
     const result = await pool.query(`
@@ -120,7 +144,7 @@ router.get('/users', async (req, res) => {
   }
 });
 
-router.get('/users/:id', async (req, res) => {
+router.get('/users/:id', requireAdminPermission('users.read'), async (req, res) => {
   try {
     const pool = getPool();
     const [parentResult, kidsResult] = await Promise.all([
@@ -166,7 +190,7 @@ router.get('/users/:id', async (req, res) => {
   }
 });
 
-router.get('/statistics', async (req, res) => {
+router.get('/statistics', requireAdminPermission('overview.read'), async (req, res) => {
   try {
     const pool = getPool();
     const [summary, topBooks, topCategories, activeUsers, recentActivity] = await Promise.all([
@@ -245,7 +269,7 @@ router.get('/statistics', async (req, res) => {
   }
 });
 
-router.get('/subscriptions', async (req, res) => {
+router.get('/subscriptions', requireAdminPermission('subscriptions.read'), async (req, res) => {
   try {
     const pool = getPool();
     const [plans, activeSubscriptions, summary] = await Promise.all([
@@ -290,5 +314,206 @@ router.get('/subscriptions', async (req, res) => {
     res.status(500).json({ error: 'Database error' });
   }
 });
+
+router.delete('/users/:id', requireAdminPermission('users.delete'), async (req, res) => {
+  try {
+    const result = await deleteUserAccount({
+      actor: req.user,
+      targetUserId: req.params.id,
+      reason: req.body?.reason || '',
+      req
+    });
+    res.json(result);
+  } catch (error) {
+    console.error('Error deleting admin-managed user:', error);
+    sendAdminError(res, error);
+  }
+});
+
+router.get('/moderation', requireAdminPermission('content.read'), async (req, res) => {
+  try {
+    res.json(await listModerationQueue({
+      type: req.query.type || 'all',
+      status: req.query.status || 'pending',
+      query: req.query.q || '',
+      limit: req.query.limit,
+      offset: req.query.offset
+    }));
+  } catch (error) {
+    console.error('Error fetching moderation queue:', error);
+    sendAdminError(res, error);
+  }
+});
+
+router.patch(
+  '/moderation/:type/:id',
+  requireAdminPermission('content.moderate'),
+  async (req, res) => {
+    try {
+      const requiredPermission = req.params.type === 'book' && req.body.status === 'approved'
+        ? 'books.validate'
+        : 'content.moderate';
+      const permissionState = req.adminPermissions || await getAdminPermissionState(req.user.id);
+      if (!permissionState.permissions.includes(requiredPermission)) {
+        return res.status(403).json({
+          error: 'Admin permission required',
+          code: 'ADMIN_PERMISSION_REQUIRED',
+          permission: requiredPermission
+        });
+      }
+      const item = await moderateContent({
+        actor: req.user,
+        type: req.params.type,
+        id: req.params.id,
+        status: req.body.status,
+        note: req.body.note,
+        publish: req.body.publish === true,
+        req
+      });
+      res.json(item);
+    } catch (error) {
+      console.error('Error moderating content:', error);
+      sendAdminError(res, error);
+    }
+  }
+);
+
+router.get('/reports', requireAdminPermission('reports.read'), async (req, res) => {
+  try {
+    res.json(await listReports({
+      status: req.query.status || 'open',
+      priority: req.query.priority || 'all',
+      type: req.query.type || 'all',
+      query: req.query.q || '',
+      limit: req.query.limit,
+      offset: req.query.offset
+    }));
+  } catch (error) {
+    console.error('Error fetching content reports:', error);
+    sendAdminError(res, error);
+  }
+});
+
+router.patch('/reports/:id', requireAdminPermission('reports.manage'), async (req, res) => {
+  try {
+    res.json(await updateReport({
+      actor: req.user,
+      id: req.params.id,
+      status: req.body.status,
+      priority: req.body.priority,
+      resolutionNote: req.body.resolution_note,
+      assignToSelf: req.body.assign_to_self === true,
+      req
+    }));
+  } catch (error) {
+    console.error('Error updating content report:', error);
+    sendAdminError(res, error);
+  }
+});
+
+router.get('/audit-logs', requireAdminPermission('audit.read'), async (req, res) => {
+  try {
+    res.json(await listAuditLogs({
+      action: req.query.action,
+      actorId: req.query.actor_id,
+      resourceType: req.query.resource_type,
+      from: req.query.from,
+      to: req.query.to,
+      limit: req.query.limit,
+      offset: req.query.offset
+    }));
+  } catch (error) {
+    console.error('Error fetching admin audit logs:', error);
+    sendAdminError(res, error);
+  }
+});
+
+router.get('/search', requireAdminPermission('search.use'), async (req, res) => {
+  try {
+    res.json(await advancedAdminSearch({
+      query: req.query.q,
+      types: req.query.types,
+      limit: req.query.limit
+    }));
+  } catch (error) {
+    console.error('Error running admin search:', error);
+    sendAdminError(res, error);
+  }
+});
+
+router.get(
+  '/managed-subscriptions',
+  requireAdminPermission('subscriptions.read'),
+  async (req, res) => {
+    try {
+      res.json(await listManagedSubscriptions({
+        status: req.query.status || 'all',
+        query: req.query.q || '',
+        limit: req.query.limit,
+        offset: req.query.offset
+      }));
+    } catch (error) {
+      console.error('Error fetching managed subscriptions:', error);
+      sendAdminError(res, error);
+    }
+  }
+);
+
+router.patch(
+  '/managed-subscriptions/:id',
+  requireAdminPermission('subscriptions.manage'),
+  async (req, res) => {
+    try {
+      res.json(await manageSubscription({
+        actor: req.user,
+        id: req.params.id,
+        action: req.body.action,
+        status: req.body.status,
+        req
+      }));
+    } catch (error) {
+      console.error('Error managing subscription:', error);
+      sendAdminError(res, error);
+    }
+  }
+);
+
+router.get('/permissions/me', async (req, res) => {
+  try {
+    res.json(await getAdminPermissionState(req.user.id));
+  } catch (error) {
+    sendAdminError(res, error);
+  }
+});
+
+router.get('/permissions', requireAdminPermission('permissions.manage'), async (req, res) => {
+  try {
+    res.json({
+      available_permissions: ADMIN_PERMISSIONS,
+      admins: await listAdminAccounts()
+    });
+  } catch (error) {
+    console.error('Error fetching admin permissions:', error);
+    sendAdminError(res, error);
+  }
+});
+
+router.put(
+  '/permissions/:id',
+  requireAdminPermission('permissions.manage'),
+  async (req, res) => {
+    try {
+      res.json(await setAdminPermissions({
+        actor: req.user,
+        targetAdminId: req.params.id,
+        permissions: req.body.permissions,
+        req
+      }));
+    } catch (error) {
+      console.error('Error updating admin permissions:', error);
+      sendAdminError(res, error);
+    }
+  }
+);
 
 export default router;
