@@ -1,23 +1,32 @@
 import { useEffect, useState } from 'react';
+import { Capacitor } from '@capacitor/core';
 
 export function useNetworkStatus() {
   const [online, setOnline] = useState(() => navigator.onLine);
   const [changedAt, setChangedAt] = useState(() => Date.now());
 
   useEffect(() => {
-    const update = () => {
-      setOnline(navigator.onLine);
+    const update = (nextOnline = navigator.onLine) => {
+      setOnline(nextOnline);
       setChangedAt(Date.now());
     };
 
-    window.addEventListener('online', update);
-    window.addEventListener('offline', update);
+    const handleOnline = () => update(true);
+    const handleOffline = () => update(false);
+    const handleNativeStatus = (event) => {
+      update(Boolean(event.detail?.online));
+    };
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    window.addEventListener('hkids:network-status', handleNativeStatus);
 
     return () => {
-      window.removeEventListener('online', update);
-      window.removeEventListener('offline', update);
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+      window.removeEventListener('hkids:network-status', handleNativeStatus);
     };
   }, []);
 
-  return { online, offline: !online, changedAt };
+  return { online, offline: !online, changedAt, isNative: Capacitor.isNativePlatform() };
 }

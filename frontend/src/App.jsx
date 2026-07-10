@@ -1,23 +1,16 @@
 import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import Home from './pages/Home';
-import BookReader from './pages/BookReader';
 import BookDetails from './pages/BookDetails';
 import AdminLogin from './pages/AdminLogin';
 import SignUp from './pages/SignUp';
 import ParentLogin from './pages/ParentLogin';
 import ParentSignUp from './pages/ParentSignUp';
-import AdminDashboard from './pages/AdminDashboard';
-import ParentDashboard from './pages/ParentDashboard';
 import ParentKidsProfiles from './pages/ParentKidsProfiles';
-import FamilyVoices from './pages/FamilyVoices';
 import KidsHome from './pages/KidsHome';
 import KidsLibrary from './pages/KidsLibrary';
 import KidsCategoryPage from './pages/KidsCategoryPage';
 import DesignSystem from './pages/DesignSystem';
-import KidsStoryStudio from './pages/KidsStoryStudio';
-import KidsAIStories from './pages/KidsAIStories';
-import KidsLearning from './pages/KidsLearning';
 import ContentLibraryHome from './pages/ContentLibraryHome';
 import ContentCategoryContents from './pages/ContentCategoryContents';
 import Favorites from './pages/Favorites';
@@ -36,7 +29,27 @@ import ScrollToTop from './components/ScrollToTop';
 import { isNativeAndroid } from './services/mobile/capacitorRuntime';
 import { storage } from './utils/storage';
 
+const BookReader = lazy(() => import('./pages/BookReader'));
+const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
+const ParentDashboard = lazy(() => import('./pages/ParentDashboard'));
+const FamilyVoices = lazy(() => import('./pages/FamilyVoices'));
+const KidsStoryStudio = lazy(() => import('./pages/KidsStoryStudio'));
+const KidsAIStories = lazy(() => import('./pages/KidsAIStories'));
+const KidsLearning = lazy(() => import('./pages/KidsLearning'));
+
 const DEFAULT_ANDROID_KIOSK_IDLE_MS = 10 * 60 * 1000;
+
+function RouteFallback() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-white">
+      <div className="inline-block rounded-full h-12 w-12 border-4 border-primary-500 border-t-transparent animate-spin" />
+    </div>
+  );
+}
+
+function LazyRoute({ children }) {
+  return <Suspense fallback={<RouteFallback />}>{children}</Suspense>;
+}
 
 function RequireAuth({ children }) {
   const { user, loading } = useAuth();
@@ -112,7 +125,7 @@ function AndroidKioskIdleReset() {
       }, idleMs);
     };
 
-    const events = ['pointerdown', 'touchstart', 'keydown', 'scroll'];
+    const events = ['pointerdown', 'touchstart', 'keydown', 'scroll', 'click'];
     events.forEach((eventName) => window.addEventListener(eventName, resetTimer, { passive: true }));
     resetTimer();
 
@@ -161,7 +174,7 @@ function App() {
               <AndroidKioskIdleReset />
               <Routes>
                 <Route path="/" element={<Home darkMode={darkMode} setDarkMode={setDarkMode} />} />
-                <Route path="/book/:id" element={<RequireAuth><BookReader /></RequireAuth>} />
+                <Route path="/book/:id" element={<RequireAuth><LazyRoute><BookReader /></LazyRoute></RequireAuth>} />
                 <Route path="/book-details/:id" element={<RequireAuth><BookDetails /></RequireAuth>} />
                 <Route path="/favorites" element={<RequireAuth><Favorites /></RequireAuth>} />
                 <Route path="/history" element={<RequireAuth><History /></RequireAuth>} />
@@ -174,17 +187,17 @@ function App() {
                 <Route path="/admin/signup" element={<SignUp />} />
                 <Route path="/parent/login" element={<ParentLogin />} />
                 <Route path="/parent/signup" element={<ParentSignUp />} />
-                <Route path="/admin/*" element={<RequireRole roles={['admin']}><AdminDashboard /></RequireRole>} />
+                <Route path="/admin/*" element={<RequireRole roles={['admin']}><LazyRoute><AdminDashboard /></LazyRoute></RequireRole>} />
                 <Route path="/parent/profiles" element={<RequireRole roles={['parent', 'admin']}><ParentKidsProfiles /></RequireRole>} />
-                <Route path="/parent/voices" element={<RequireRole roles={['parent', 'admin']}><FamilyVoices /></RequireRole>} />
-                <Route path="/parent/*" element={<RequireRole roles={['parent', 'admin']}><ParentDashboard /></RequireRole>} />
+                <Route path="/parent/voices" element={<RequireRole roles={['parent', 'admin']}><LazyRoute><FamilyVoices /></LazyRoute></RequireRole>} />
+                <Route path="/parent/*" element={<RequireRole roles={['parent', 'admin']}><LazyRoute><ParentDashboard /></LazyRoute></RequireRole>} />
                 <Route path="/kids" element={<RequireAuth><KidsHome /></RequireAuth>} />
                 <Route path="/kids/library" element={<RequireAuth><KidsLibrary /></RequireAuth>} />
-                <Route path="/kids/read/:id" element={<RequireAuth><BookReader /></RequireAuth>} />
-                <Route path="/kids/learning" element={<RequireAuth><KidsLearning /></RequireAuth>} />
-                <Route path="/kids/story-studio" element={<RequireAuth><KidsStoryStudio /></RequireAuth>} />
+                <Route path="/kids/read/:id" element={<RequireAuth><LazyRoute><BookReader /></LazyRoute></RequireAuth>} />
+                <Route path="/kids/learning" element={<RequireAuth><LazyRoute><KidsLearning /></LazyRoute></RequireAuth>} />
+                <Route path="/kids/story-studio" element={<RequireAuth><LazyRoute><KidsStoryStudio /></LazyRoute></RequireAuth>} />
                 <Route path="/kids/storystudio" element={<Navigate to="/kids/story-studio" replace />} />
-                <Route path="/kids/ai-stories" element={<RequireAuth><KidsAIStories /></RequireAuth>} />
+                <Route path="/kids/ai-stories" element={<RequireAuth><LazyRoute><KidsAIStories /></LazyRoute></RequireAuth>} />
                 <Route path="/kids/category/:categoryId" element={<RequireAuth><KidsCategoryPage /></RequireAuth>} />
                 <Route path="/design-system" element={<DesignSystem />} />
                 <Route path="*" element={<Navigate to="/" replace />} />

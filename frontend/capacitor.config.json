@@ -9,7 +9,8 @@
   "android": {
     "allowMixedContent": false,
     "captureInput": true,
-    "webContentsDebuggingEnabled": false
+    "webContentsDebuggingEnabled": false,
+    "backgroundColor": "#fefcfb"
   },
   "plugins": {
     "SplashScreen": {
@@ -17,7 +18,8 @@
       "launchAutoHide": true,
       "backgroundColor": "#fefcfb",
       "androidSplashResourceName": "splash",
-      "showSpinner": false
+      "showSpinner": false,
+      "androidScaleType": "CENTER_CROP"
     },
     "StatusBar": {
       "overlaysWebView": false,

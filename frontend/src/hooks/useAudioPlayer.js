@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { voicesAPI } from '../api/voices';
 import { getFileUrl } from '../utils/fileUrl';
 import { storage } from '../utils/storage';
+import { isAndroidAudioUnlocked, primeAudioElement, unlockAndroidAudio } from '../services/mobile/androidAudio';
 
 const initialState = {
   currentTime: 0,
@@ -116,7 +117,7 @@ export function useAudioPlayer() {
     }
     releaseObjectUrl();
     objectUrlRef.current = nextObjectUrl;
-    const audio = new Audio(audioUrl);
+    const audio = primeAudioElement(new Audio(audioUrl));
     audio.volume = state.volume;
     attachAudioEvents(audio);
 
@@ -166,6 +167,9 @@ export function useAudioPlayer() {
       && audioRef.current;
 
     try {
+      if (!isAndroidAudioUnlocked()) {
+        await unlockAndroidAudio();
+      }
       let audio;
       try {
         audio = shouldReuseCurrentAudio

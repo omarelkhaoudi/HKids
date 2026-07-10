@@ -3,10 +3,13 @@ import { App } from '@capacitor/app';
 import { Haptics, ImpactStyle } from '@capacitor/haptics';
 import { SplashScreen } from '@capacitor/splash-screen';
 import { StatusBar, Style } from '@capacitor/status-bar';
+import { unlockAndroidAudio } from './androidAudio';
+import { cleanupAndroidNetwork, initAndroidNetwork } from './androidNetwork';
 
 let initialized = false;
 let removeBackButtonListener = null;
 let removeClickListener = null;
+let removeResumeListener = null;
 
 export function isNativeAndroid() {
   return Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'android';
@@ -48,6 +51,8 @@ function installTouchFeedback() {
     const target = event.target?.closest?.('button, a, [role="button"]');
     if (!target || target.getAttribute('aria-disabled') === 'true' || target.disabled) return;
 
+    await unlockAndroidAudio();
+
     try {
       await Haptics.impact({ style: ImpactStyle.Light });
     } catch {
@@ -56,6 +61,15 @@ function installTouchFeedback() {
   };
 
   document.addEventListener('click', removeClickListener, { passive: true });
+  document.addEventListener('touchstart', () => {
+    unlockAndroidAudio();
+  }, { passive: true, once: false });
+}
+
+function installResumeHandling() {
+  removeResumeListener = App.addListener('appStateChange', ({ isActive }) => {
+    if (isActive) unlockAndroidAudio();
+  });
 }
 
 export async function initCapacitorRuntime() {
@@ -67,12 +81,14 @@ export async function initCapacitorRuntime() {
 
   try {
     await configureAndroidChrome();
+    await initAndroidNetwork();
   } catch (error) {
     console.warn('Android chrome configuration unavailable:', error);
   }
 
   installBackButtonHandling();
   installTouchFeedback();
+  installResumeHandling();
 }
 
 export async function cleanupCapacitorRuntime() {
@@ -82,10 +98,17 @@ export async function cleanupCapacitorRuntime() {
     removeBackButtonListener = null;
   }
 
+  if (removeResumeListener) {
+    const listener = await removeResumeListener;
+    listener?.remove?.();
+    removeResumeListener = null;
+  }
+
   if (removeClickListener) {
     document.removeEventListener('click', removeClickListener);
     removeClickListener = null;
   }
 
+  await cleanupAndroidNetwork();
   initialized = false;
 }

@@ -11,6 +11,24 @@ export default defineConfig({
         changeOrigin: true
       }
     }
+  },
+  build: {
+    target: 'es2020',
+    sourcemap: false,
+    chunkSizeWarningLimit: 700,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (!id.includes('node_modules')) return undefined;
+          if (id.includes('framer-motion')) return 'motion';
+          if (id.includes('@capacitor')) return 'capacitor';
+          if (id.includes('pdfjs-dist') || id.includes('tesseract.js')) return 'heavy';
+          if (id.includes('react-router') || id.includes('react-dom') || id.includes('/react/')) {
+            return 'react';
+          }
+          return 'vendor';
+        }
+      }
+    }
   }
 });
-
