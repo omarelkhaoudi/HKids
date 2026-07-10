@@ -158,6 +158,33 @@ export class RecommendationService {
     this.aiProvider = aiProvider;
   }
 
+  isProviderConfigured(provider) {
+    return Boolean(String(provider?.apiKey || '').trim());
+  }
+
+  applyAiRanking(scoredContents, aiRecommendations = []) {
+    if (!Array.isArray(aiRecommendations) || aiRecommendations.length === 0) {
+      return scoredContents;
+    }
+
+    const aiRankWeights = new Map(
+      aiRecommendations
+        .map((book, index) => [Number(book.id), aiRecommendations.length - index])
+        .filter(([id]) => Number.isFinite(id))
+    );
+
+    return scoredContents.map((book) => {
+      const aiRank = aiRankWeights.get(Number(book.id));
+      if (!aiRank) return book;
+
+      return {
+        ...book,
+        recommendation_score: Number(book.recommendation_score || 0) + aiRank * 15,
+        recommendation_reasons: [...(book.recommendation_reasons || []), 'ai_ranked'],
+      };
+    });
+  }
+
   async recommendContent({ kid, contents = [], context = DEFAULT_CONTEXT }) {
     const aiProvider = this.aiProvider || AIProviderFactory.getProvider();
     const normalizedContext = normalizeContext(context);
@@ -186,6 +213,31 @@ export class RecommendationService {
         recommendation_reasons: reasons,
       };
     });
+
+    let strategy = 'deterministic-score-v1';
+    let aiMetadata = null;
+
+    if (this.isProviderConfigured(aiProvider) && contents.length > 0) {
+      try {
+        const aiResult = await this.providerRecommendations({
+          kid,
+          contents,
+          context: normalizedContext,
+        });
+        const aiRecommendations = Array.isArray(aiResult.recommendations) ? aiResult.recommendations : [];
+        if (aiRecommendations.length > 0) {
+          scoredContents.splice(
+            0,
+            scoredContents.length,
+            ...this.applyAiRanking(scoredContents, aiRecommendations)
+          );
+          strategy = 'ai-ranked-with-deterministic-fallback-v1';
+          aiMetadata = aiResult.provider_metadata || null;
+        }
+      } catch {
+        // Rule-based scoring remains the safe fallback for kids content.
+      }
+    }
 
     const sorted = sortByScore(scoredContents);
     const continueReading = sortByScore(
@@ -226,7 +278,8 @@ export class RecommendationService {
       ].filter((section) => section.items.length > 0),
       metadata: {
         provider: aiProvider.name,
-        strategy: 'deterministic-score-v1',
+        strategy,
+        ai_metadata: aiMetadata,
         factors: [
           'age',
           'language',
