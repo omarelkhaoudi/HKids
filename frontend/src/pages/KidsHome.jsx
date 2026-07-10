@@ -6,6 +6,9 @@ import { useLanguage } from '../context/LanguageContext';
 import { localizeKidCategories } from '../constants/kidCategories';
 import { VoiceAssistant } from '../components/kids/VoiceAssistant';
 import { LitMascot } from '../components/kids/LitMascot';
+import { KidsPageShell } from '../components/kids/KidsPageShell';
+import { KidsBookCarousel } from '../components/kids/KidsBookCarousel';
+import { KidCategoryCard } from '../components/kids/KidCategoryCard';
 import { Logo } from '../components/Logo';
 import { parentalAPI } from '../api/parental';
 import { recommendationsAPI } from '../api/recommendations';
@@ -139,17 +142,14 @@ function KidsHome() {
   };
 
   return (
-    <div className="min-h-screen bg-[#f8fbff] text-foreground overflow-x-hidden font-sans pb-32" dir={isRtl ? 'rtl' : 'ltr'}>
-      <div className="fixed inset-0 pointer-events-none z-0">
-        <motion.div animate={{ x: [0, 30, 0], y: [0, -20, 0] }} transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut' }} className="absolute top-10 left-10 w-96 h-96 bg-sky-200/40 rounded-full blur-3xl" />
-        <motion.div animate={{ x: [0, -30, 0], y: [0, 30, 0] }} transition={{ duration: 15, repeat: Infinity, ease: 'easeInOut' }} className="absolute top-20 right-20 w-[30rem] h-[30rem] bg-amber-200/30 rounded-full blur-3xl" />
-      </div>
-
+    <KidsPageShell isRtl={isRtl} variant="home" className="pb-32">
       <header className="relative z-10 px-6 py-4 flex items-center justify-between gap-4">
         <div className="flex items-center gap-4 min-w-0">
           <Avatar src={avatarSrc} initials={avatarInitials} alt={kidName} size="lg" className="w-16 h-16 border-4 border-white shadow-lg bg-gradient-to-br from-primary-400 to-secondary-500 text-white shrink-0" />
           <div className="min-w-0">
-            <h1 className="text-xl md:text-2xl font-black text-foreground-700 truncate">{greeting} <span className="text-primary-600">{kidName}</span></h1>
+            <h1 className="text-xl md:text-2xl font-black text-foreground truncate">
+              {greeting} <span className="text-primary-600">{kidName}</span>
+            </h1>
             <p className="text-sm font-bold text-foreground-muted">{t('readyToPlay')}</p>
           </div>
         </div>
@@ -177,7 +177,7 @@ function KidsHome() {
               navigate(`/kids/read/${featuredBook.id}${pageQuery}`);
             }}
           >
-            <div className="relative h-64 md:h-80 w-full rounded-[2.5rem] overflow-hidden shadow-2xl group">
+            <div className="relative h-64 md:h-80 w-full rounded-[2.5rem] overflow-hidden shadow-2xl group border-4 border-white/40">
               {featuredBook?.cover_image && (
                 <img src={getImageUrl(featuredBook.cover_image)} alt={featuredBook.title} className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
               )}
@@ -197,7 +197,7 @@ function KidsHome() {
                 <div className="h-4 w-full bg-black/40 rounded-full overflow-hidden border border-white/20 backdrop-blur-sm">
                   <motion.div initial={{ width: 0 }} animate={{ width: `${featuredBook?.progress || 0}%` }} className="h-full bg-gradient-to-r from-green-400 to-emerald-500 rounded-full" />
                 </div>
-                <h2 className="text-white text-2xl font-black drop-shadow-lg opacity-90">{featuredBook?.title || t('noReadingAvailable')}</h2>
+                <h2 className="text-white text-2xl font-black drop-shadow-lg opacity-90 hidden md:block">{featuredBook?.title || t('noReadingAvailable')}</h2>
               </div>
             </div>
           </motion.div>
@@ -226,7 +226,7 @@ function KidsHome() {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={handleSurprise}
-            className="group relative flex items-center gap-4 bg-gradient-to-r from-purple-500 via-fuchsia-500 to-pink-500 p-4 pr-8 rounded-[3rem] shadow-2xl border-4 border-white overflow-hidden"
+            className="group relative flex items-center gap-4 bg-gradient-to-r from-primary-500 via-fuchsia-500 to-accent-500 p-4 pr-8 rounded-[3rem] shadow-2xl border-4 border-white overflow-hidden"
           >
             <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4IiBoZWlnaHQ9IjgiPgo8cmVjdCB3aWR0aD0iOCIgaGVpZ2h0PSI4IiBmaWxsPSIjZmZmIiBmaWxsLW9wYWNpdHk9IjAuMiIvPgo8L3N2Zz4=')] opacity-30 mix-blend-overlay" />
             <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-inner relative z-10 group-hover:rotate-12 transition-transform">
@@ -239,46 +239,22 @@ function KidsHome() {
         <section>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-6">
             {kidCategories.map((category) => (
-              <motion.div
-                key={category.id}
-                whileHover={{ scale: 1.05, rotate: Math.random() * 4 - 2 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => navigate(`/kids/library?theme=${category.id}`)}
-                className={`cursor-pointer rounded-[2.5rem] bg-gradient-to-br ${category.gradient} p-6 flex flex-col items-center justify-center text-center aspect-square shadow-xl relative overflow-hidden border-4 border-white/40`}
-              >
-                <div className="absolute top-0 right-0 w-24 h-24 bg-white/20 rounded-full blur-xl" />
-                <span className="text-6xl md:text-7xl mb-4 filter drop-shadow-lg transform transition-transform group-hover:scale-110">{category.pictogram}</span>
-                <span className="text-white font-black text-xl md:text-2xl drop-shadow-md leading-tight">{category.shortLabel || category.label}</span>
-              </motion.div>
+              <KidCategoryCard key={category.id} category={category} />
             ))}
           </div>
         </section>
 
-        <section>
-          <h2 className="text-2xl font-black text-foreground-700 mb-6 pl-2">⭐ {t('forYou')}</h2>
-          <div className="flex gap-4 overflow-x-auto pb-8 pt-2 px-2 snap-x snap-mandatory custom-scrollbar">
-            {recommendedBooks.map((book) => (
-              <motion.div
-                key={book.id}
-                whileHover={{ y: -10 }}
-                className="snap-start shrink-0 relative w-48 h-64 md:w-56 md:h-72 rounded-[2rem] overflow-hidden shadow-xl cursor-pointer group"
-                onClick={() => navigate(`/kids/read/${book.id}`)}
-                aria-label={book.title}
-              >
-                {book.cover_image && (
-                  <img src={getImageUrl(book.cover_image)} alt="" className="absolute inset-0 w-full h-full object-cover" />
-                )}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 bg-white/30 backdrop-blur-md rounded-full flex items-center justify-center opacity-80 group-hover:opacity-100 transition-opacity">
-                  <PlayIcon className={`w-8 h-8 text-white ${isRtl ? 'mr-1 rotate-180' : 'ml-1'}`} filled />
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </section>
+        <KidsBookCarousel
+          title={t('forYou')}
+          emoji="⭐"
+          books={recommendedBooks}
+          isRtl={isRtl}
+          showActions={false}
+          onPlay={(book) => navigate(`/kids/read/${book.id}`)}
+        />
 
         <section className="mb-12">
-          <h2 className="text-2xl font-black text-foreground-700 mb-6 pl-2">🏆 {t('yourMedals')}</h2>
+          <h2 className="text-2xl font-black text-foreground mb-6 pl-2">🏆 {t('yourMedals')}</h2>
           <div className="flex flex-wrap gap-6 justify-center md:justify-start px-2">
             {badges.map((badge) => (
               <motion.div
@@ -302,7 +278,7 @@ function KidsHome() {
       </main>
 
       <VoiceAssistant />
-    </div>
+    </KidsPageShell>
   );
 }
 
