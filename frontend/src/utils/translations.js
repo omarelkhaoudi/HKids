@@ -82,6 +82,8 @@ export const translations = {
     magicChest: 'Magic chest',
     surpriseMe: 'Surprise me!',
     yourMedals: 'Your medals',
+    litMascotName: 'The Bed',
+    litMascotGreeting: 'Pick a story with the pictures!',
 
     library: 'Library',
     favorites: 'Favorites',
@@ -290,6 +292,8 @@ export const translations = {
     magicChest: 'Coffre magique',
     surpriseMe: 'Surprends-moi !',
     yourMedals: 'Tes médailles',
+    litMascotName: 'Le Lit',
+    litMascotGreeting: 'Choisis une histoire avec les images !',
 
     library: 'Bibliothèque',
     favorites: 'Favoris',
@@ -498,6 +502,8 @@ export const translations = {
     magicChest: 'الصندوق السحري',
     surpriseMe: 'فاجئني!',
     yourMedals: 'ميدالياتك',
+    litMascotName: 'السرير',
+    litMascotGreeting: 'اختر قصة بالصور!',
 
     library: 'المكتبة',
     favorites: 'المفضلة',

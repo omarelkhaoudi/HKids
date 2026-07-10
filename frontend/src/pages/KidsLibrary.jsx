@@ -15,7 +15,7 @@ import { getRestrictionMessage } from '../services/parental/parentalAccessServic
 import { VoiceAssistant } from '../components/kids/VoiceAssistant';
 import {
   BookIcon, DownloadIcon, HeartIcon, PlayIcon,
-  SearchIcon, SparklesIcon, ChevronLeftIcon, ChevronRightIcon,
+  SparklesIcon, ChevronLeftIcon, ChevronRightIcon,
   ClockIcon, ShieldIcon, HomeIcon, StarIcon
 } from '../components/Icons';
 import { Logo } from '../components/Logo';
@@ -47,12 +47,13 @@ function getRecommendationContext() {
 }
 
 // --- PREMIUM COMPONENTS FOR KIDS ---
-const CinematicCard = ({ book, isFavorite, offlineReady, onPlay, onFavorite, onDownload, isRtl = false }) => {
+const CinematicCard = ({ book, isFavorite, offlineReady, onPlay, onFavorite, onDownload, isRtl = false, hideTitle = true }) => {
   return (
     <motion.div
       whileHover={{ y: -10, scale: 1.02 }}
       className="group relative h-80 w-56 md:h-96 md:w-64 shrink-0 cursor-pointer overflow-hidden rounded-[2rem] bg-surface-secondary shadow-lg transition-shadow hover:shadow-2xl border-4 border-white/20"
       onClick={() => onPlay(book)}
+      aria-label={book.title}
     >
       {/* Cover Image */}
       <img
@@ -111,9 +112,11 @@ const CinematicCard = ({ book, isFavorite, offlineReady, onPlay, onFavorite, onD
 
       {/* Bottom Info */}
       <div className="absolute bottom-0 left-0 right-0 p-5 transition-transform duration-300">
-        <h3 className="line-clamp-2 text-xl font-black leading-tight text-white drop-shadow-lg mb-2">
-          {book.title}
-        </h3>
+        {!hideTitle && (
+          <h3 className="line-clamp-2 text-xl font-black leading-tight text-white drop-shadow-lg mb-2">
+            {book.title}
+          </h3>
+        )}
         <div className="flex items-center gap-4 text-sm font-black text-white/90">
           {book.duration_seconds > 0 && (
             <span className="flex items-center gap-1 bg-black/40 px-2 py-1 rounded-lg backdrop-blur-sm">
@@ -202,7 +205,6 @@ function KidsLibrary() {
   ], [language, t]);
   
   const [books, setBooks] = useState([]);
-  const [searchQuery, setSearchQuery] = useState('');
   
   const urlTheme = searchParams.get('theme') || 'all';
   const [selectedTheme, setSelectedTheme] = useState(urlTheme);
@@ -260,27 +262,18 @@ function KidsLibrary() {
     setSearchParams({ theme: themeId });
   };
 
-  const visibleBooks = useMemo(() => {
-    const query = searchQuery.trim().toLowerCase();
-    return books.filter((book) => {
-      const bookTheme = inferTheme(book, childThemes);
-      const matchesLanguage = !book.language || book.language === language;
-      const matchesTheme = selectedTheme === 'all' || bookTheme === selectedTheme;
-      const matchesSearch = !query || [book.title, book.author, book.description, book.category_name]
-        .filter(Boolean)
-        .some((value) => value.toLowerCase().includes(query));
-      return matchesLanguage && matchesTheme && matchesSearch;
-    });
-  }, [books, searchQuery, selectedTheme, childThemes, language]);
-
   // Sections data
   const favoritesIds = storage.getFavorites();
   const localizedBooks = books.filter((book) => !book.language || book.language === language);
   const favoriteBooks = localizedBooks.filter(b => favoritesIds.includes(b.id));
   const newBooks = [...localizedBooks].sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0)).slice(0, 15);
   const downloadedBooks = localizedBooks.filter(b => offlineContent.getBookStatus(b.id)?.status === 'downloaded');
-  const recommendedBooks = recommendationSections.length > 0 && recommendationSections[0].items 
-    ? localizedBooks.filter(b => recommendationSections[0].items.some(item => item.book_id === b.id))
+  const recommendedSection = recommendationSections.find((section) => section.id === 'recommended_for_you');
+  const recommendedIds = new Set(
+    (recommendedSection?.items || []).map((item) => Number(item.id ?? item.book_id)).filter(Number.isFinite)
+  );
+  const recommendedBooks = recommendedIds.size > 0
+    ? localizedBooks.filter((book) => recommendedIds.has(Number(book.id)))
     : localizedBooks.slice(0, 10);
   
   // Featured book is either the first of the selected theme, or a general recommendation
@@ -331,23 +324,13 @@ function KidsLibrary() {
           <button
             onClick={() => navigate('/kids')}
             className="grid h-12 w-12 place-items-center rounded-full bg-white text-primary-500 shadow-md transition hover:scale-105 border-2 border-primary-100"
+            aria-label={t('home')}
           >
             <HomeIcon className="h-6 w-6" />
           </button>
           <Link to="/kids" className="shrink-0 transition-transform hover:scale-105 active:scale-95">
             <Logo size="default" showText={false} />
           </Link>
-        </div>
-        
-        {/* DISCREET PARENT SEARCH */}
-        <div className="relative w-48 md:w-64">
-          <SearchIcon className={`absolute top-1/2 -translate-y-1/2 h-5 w-5 text-foreground-muted/50 ${isRtl ? 'right-3' : 'left-3'}`} />
-          <input
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className={`h-10 w-full rounded-full bg-white/60 border border-white text-sm font-bold outline-none transition focus:bg-white focus:ring-2 focus:ring-primary-300 placeholder:text-foreground-muted/50 shadow-inner ${isRtl ? 'pl-4 pr-10' : 'pl-10 pr-4'}`}
-            placeholder={t('searchParents')}
-          />
         </div>
       </header>
 
@@ -364,14 +347,15 @@ function KidsLibrary() {
                   whileHover={{ scale: 1.05, y: -2 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => handleThemeChange(theme.id)}
-                  className={`snap-start shrink-0 flex items-center gap-3 px-6 py-4 rounded-[2rem] font-black text-lg shadow-lg border-4 transition-all ${
+                  className={`snap-start shrink-0 flex items-center justify-center gap-2 md:gap-3 px-4 md:px-6 py-4 rounded-[2rem] font-black text-lg shadow-lg border-4 transition-all ${
                     isActive 
                       ? `bg-gradient-to-r ${theme.gradient} text-white border-white/50 scale-105 shadow-xl` 
                       : 'bg-white text-foreground-600 border-transparent hover:bg-surface-50 hover:text-primary-500'
                   }`}
+                  aria-label={theme.shortLabel || theme.label}
                 >
-                  <span className="text-3xl filter drop-shadow-sm">{theme.pictogram}</span>
-                  <span>{theme.shortLabel || theme.label}</span>
+                  <span className="text-4xl md:text-3xl filter drop-shadow-sm">{theme.pictogram}</span>
+                  <span className="hidden md:inline">{theme.shortLabel || theme.label}</span>
                 </motion.button>
               );
             })}
@@ -379,7 +363,7 @@ function KidsLibrary() {
         </section>
 
         {/* IMMERSIVE HERO SECTION */}
-        {featuredBook && !searchQuery && (
+        {featuredBook && (
           <motion.section 
             key={selectedTheme}
             initial={{ opacity: 0, scale: 0.95 }}
@@ -416,7 +400,7 @@ function KidsLibrary() {
                   <StarIcon className="h-5 w-5 text-yellow-300" filled />
                   <span>{t('featured')} {activeThemeData?.label}</span>
                 </div>
-                <h1 className="text-4xl md:text-6xl font-black leading-tight mb-4 filter drop-shadow-lg text-white">
+                <h1 className="text-3xl md:text-6xl font-black leading-tight mb-4 filter drop-shadow-lg text-white hidden md:block">
                   {featuredBook.title}
                 </h1>
                 
@@ -448,38 +432,6 @@ function KidsLibrary() {
           <div className="px-4">
             <BookGridSkeleton count={8} />
           </div>
-        ) : searchQuery ? (
-          /* SEARCH RESULTS (If parent is typing) */
-          <section className="mb-12">
-            <h2 className="text-3xl font-black mb-8 text-foreground drop-shadow-sm flex items-center gap-3">
-              <SearchIcon className="w-8 h-8 text-primary-500" />
-              {t('results')}
-            </h2>
-            {visibleBooks.length === 0 ? (
-              <div className="rounded-[3rem] bg-white border-4 border-white/50 p-16 text-center shadow-xl">
-                <div className="text-8xl mb-6">🤷‍♂️</div>
-                <h3 className="text-3xl font-black mb-2 text-foreground">{t('nothingFound')}</h3>
-                <p className="text-foreground-muted font-bold text-xl">{t('tryAnotherWord')}</p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-                <AnimatePresence>
-                  {visibleBooks.map(book => (
-                    <CinematicCard 
-                      key={book.id} 
-                      book={book} 
-                      isFavorite={favoritesIds.includes(book.id)} 
-                      offlineReady={offlineContent.getBookStatus(book.id)?.status === 'downloaded'} 
-                      onPlay={handlePlayBook}
-                      onFavorite={toggleFavorite}
-                      onDownload={handleDownloadBook}
-                      isRtl={isRtl}
-                    />
-                  ))}
-                </AnimatePresence>
-              </div>
-            )}
-          </section>
         ) : selectedTheme !== 'all' ? (
           /* THEME SPECIFIC GRID */
           <section className="mb-12">

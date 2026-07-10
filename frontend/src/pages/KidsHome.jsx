@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { localizeKidCategories } from '../constants/kidCategories';
 import { VoiceAssistant } from '../components/kids/VoiceAssistant';
+import { LitMascot } from '../components/kids/LitMascot';
 import { Logo } from '../components/Logo';
 import { parentalAPI } from '../api/parental';
 import { recommendationsAPI } from '../api/recommendations';
@@ -144,18 +145,25 @@ function KidsHome() {
         <motion.div animate={{ x: [0, -30, 0], y: [0, 30, 0] }} transition={{ duration: 15, repeat: Infinity, ease: 'easeInOut' }} className="absolute top-20 right-20 w-[30rem] h-[30rem] bg-amber-200/30 rounded-full blur-3xl" />
       </div>
 
-      <header className="relative z-10 px-6 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Avatar src={avatarSrc} initials={avatarInitials} alt={kidName} size="lg" className="w-16 h-16 border-4 border-white shadow-lg bg-gradient-to-br from-primary-400 to-secondary-500 text-white" />
-          <div>
-            <h1 className="text-2xl font-black text-foreground-700">{greeting} <span className="text-primary-600">{kidName}</span></h1>
+      <header className="relative z-10 px-6 py-4 flex items-center justify-between gap-4">
+        <div className="flex items-center gap-4 min-w-0">
+          <Avatar src={avatarSrc} initials={avatarInitials} alt={kidName} size="lg" className="w-16 h-16 border-4 border-white shadow-lg bg-gradient-to-br from-primary-400 to-secondary-500 text-white shrink-0" />
+          <div className="min-w-0">
+            <h1 className="text-xl md:text-2xl font-black text-foreground-700 truncate">{greeting} <span className="text-primary-600">{kidName}</span></h1>
             <p className="text-sm font-bold text-foreground-muted">{t('readyToPlay')}</p>
           </div>
         </div>
-        <Link to="/kids" className="shrink-0 transition-transform hover:scale-105 active:scale-95">
-          <Logo size="default" showText={false} />
-        </Link>
+        <div className="flex items-center gap-3 shrink-0">
+          <LitMascot showBubble={false} className="hidden sm:flex" />
+          <Link to="/kids" className="shrink-0 transition-transform hover:scale-105 active:scale-95">
+            <Logo size="default" showText={false} />
+          </Link>
+        </div>
       </header>
+
+      <div className="relative z-10 px-6 -mt-2 mb-2 sm:hidden">
+        <LitMascot size="large" />
+      </div>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-20 space-y-12 mt-4">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -253,17 +261,15 @@ function KidsHome() {
               <motion.div
                 key={book.id}
                 whileHover={{ y: -10 }}
-                className="snap-start shrink-0 relative w-48 h-64 md:w-56 md:h-72 rounded-[2rem] overflow-hidden shadow-xl cursor-pointer"
+                className="snap-start shrink-0 relative w-48 h-64 md:w-56 md:h-72 rounded-[2rem] overflow-hidden shadow-xl cursor-pointer group"
                 onClick={() => navigate(`/kids/read/${book.id}`)}
+                aria-label={book.title}
               >
                 {book.cover_image && (
-                  <img src={getImageUrl(book.cover_image)} alt={book.title} className="absolute inset-0 w-full h-full object-cover" />
+                  <img src={getImageUrl(book.cover_image)} alt="" className="absolute inset-0 w-full h-full object-cover" />
                 )}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
-                <div className="absolute bottom-0 inset-x-0 p-4">
-                  <h3 className="text-white font-black text-lg leading-tight drop-shadow-md">{book.title}</h3>
-                </div>
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 bg-white/30 backdrop-blur-md rounded-full flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
+                <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 bg-white/30 backdrop-blur-md rounded-full flex items-center justify-center opacity-80 group-hover:opacity-100 transition-opacity">
                   <PlayIcon className={`w-8 h-8 text-white ${isRtl ? 'mr-1 rotate-180' : 'ml-1'}`} filled />
                 </div>
               </motion.div>
