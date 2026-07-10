@@ -3,11 +3,19 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs-extra';
 import crypto from 'crypto';
-import { fileURLToPath } from 'url';
 import { getDatabase } from '../database/init.js';
 import { verifyToken } from './auth.js';
 import { VoiceCloneService } from '../services/ai/VoiceCloneService.js';
-import { aiErrorResponse } from '../services/ai/errors.js';
+import { aiErrorResponse, AIQuotaExceededError } from '../services/ai/errors.js';
+import { voiceConfig } from '../services/voice/voiceConfig.js';
+import { isAllowedAudioMetadata, validateAudioUpload } from '../services/voice/audioValidation.js';
+import {
+  deleteStoredVoiceFile,
+  deleteStoredVoiceFiles,
+  saveVoiceAudioFile as saveAudioFile,
+  voiceFileUrl,
+  voiceStorageDir
+} from '../services/voice/voiceStorage.js';
 import {
   getContentAccessViolation,
   loadChildAccessPolicy,
@@ -21,15 +29,17 @@ const upload = multer({
     fileSize: 12 * 1024 * 1024,
   },
   fileFilter: (req, file, cb) => {
-    if (/^audio\//i.test(file.mimetype)) return cb(null, true);
-    cb(new Error('Only audio files are allowed'));
+    if (isAllowedAudioMetadata(file)) return cb(null, true);
+    const error = new Error('Unsupported audio format');
+    error.status = 415;
+    cb(error);
   },
 });
 const voiceCloneService = new VoiceCloneService();
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const voiceStorageDir = path.join(__dirname, '..', 'uploads', 'voices');
 const narrationJobs = new Map();
+const CONSENT_VERSION = 'voice-cloning-v1';
+const CONSENT_TEXT = 'Explicit consent for ElevenLabs voice cloning, text-to-speech, secure storage and deletion.';
+const CONSENT_TEXT_HASH = crypto.createHash('sha256').update(CONSENT_TEXT).digest('hex');
 
 function getPool() {
   try {
@@ -84,40 +94,6 @@ function sanitizeText(value, fallback = '') {
   return String(value || fallback).trim().slice(0, 160);
 }
 
-function fileExtension(file) {
-  const ext = path.extname(file.originalname || '').toLowerCase();
-  if (ext) return ext;
-  if (file.mimetype.includes('webm')) return '.webm';
-  if (file.mimetype.includes('mpeg')) return '.mp3';
-  if (file.mimetype.includes('wav')) return '.wav';
-  if (file.mimetype.includes('ogg')) return '.ogg';
-  return '.audio';
-}
-
-async function saveAudioFile(file, userId, kind) {
-  await fs.ensureDir(voiceStorageDir);
-  const filename = `${kind}-${userId}-${Date.now()}-${crypto.randomBytes(12).toString('hex')}${fileExtension(file)}`;
-  const absolutePath = path.join(voiceStorageDir, filename);
-  await fs.writeFile(absolutePath, file.buffer);
-  return `/uploads/voices/${filename}`;
-}
-
-async function deleteStoredVoiceFile(audioPath) {
-  if (!audioPath || !audioPath.startsWith('/uploads/voices/')) return;
-  const absolutePath = path.join(voiceStorageDir, path.basename(audioPath));
-  try {
-    await fs.remove(absolutePath);
-  } catch (error) {
-    console.warn('Stored voice file could not be removed:', error.message);
-  }
-}
-
-function voiceFileUrl(audioPath) {
-  if (!audioPath) return null;
-  const filename = path.basename(audioPath);
-  return `/api/voices/files/${encodeURIComponent(filename)}`;
-}
-
 async function canAccessVoiceFile(pool, req, audioPath) {
   if (!audioPath || !audioPath.startsWith('/uploads/voices/')) return false;
 
@@ -153,7 +129,7 @@ async function canAccessVoiceFile(pool, req, audioPath) {
              WHERE vp.user_id = kp.parent_id
                AND vp.deleted_at IS NULL
                AND vp.consent_given = TRUE
-               AND (vp.sample_audio_path = $2 OR vp.preview_audio_path = $2)
+               AND vp.preview_audio_path = $2
            )
            OR EXISTS (
              SELECT 1 FROM voice_narrations vn
@@ -180,6 +156,118 @@ async function logVoiceAction(pool, { userId, voiceProfileId = null, action, met
   );
 }
 
+async function recordConsent(pool, { req, voiceProfileId, locale }) {
+  await pool.query(
+    `INSERT INTO voice_consent_records (
+       user_id, voice_profile_id, consent_version, legal_text_hash, scope,
+       locale, ip_address, user_agent
+     )
+     VALUES ($1, $2, $3, $4, 'voice_clone_tts_storage', $5, $6, $7)`,
+    [
+      req.user.id,
+      voiceProfileId,
+      CONSENT_VERSION,
+      CONSENT_TEXT_HASH,
+      locale || 'fr',
+      req.ip || null,
+      req.get('user-agent') || null
+    ]
+  );
+}
+
+async function revokeConsentRecord(pool, profileId) {
+  await pool.query(
+    `UPDATE voice_consent_records
+     SET revoked_at = COALESCE(revoked_at, NOW())
+     WHERE voice_profile_id = $1 AND revoked_at IS NULL`,
+    [profileId]
+  );
+}
+
+async function assertVoiceUsageWithinLimit(pool, userId, characterCount) {
+  if (!voiceConfig.monthlyCharacterLimit) return;
+  const result = await pool.query(
+    `SELECT COALESCE(SUM(character_count), 0)::int AS used
+     FROM voice_usage_records
+     WHERE user_id = $1
+       AND operation <> 'speech_to_text'
+       AND created_at >= date_trunc('month', NOW())`,
+    [userId]
+  );
+  const used = Number(result.rows[0]?.used || 0);
+  if (used + characterCount > voiceConfig.monthlyCharacterLimit) {
+    throw new AIQuotaExceededError('Monthly voice synthesis limit reached', {
+      provider: 'elevenlabs',
+      retryable: false
+    });
+  }
+}
+
+async function recordVoiceUsage(pool, {
+  userId,
+  voiceProfileId,
+  operation,
+  characterCount,
+  requestHash = null
+}) {
+  await pool.query(
+    `INSERT INTO voice_usage_records (
+       user_id, voice_profile_id, operation, provider, character_count, request_hash
+     )
+     VALUES ($1, $2, $3, 'elevenlabs', $4, $5)
+     ON CONFLICT DO NOTHING`,
+    [userId, voiceProfileId, operation, characterCount, requestHash]
+  );
+}
+
+async function deleteNarrationFiles(pool, userId, voiceProfileId) {
+  const files = await pool.query(
+    `SELECT audio_path FROM voice_narrations
+     WHERE user_id = $1 AND voice_profile_id = $2`,
+    [userId, voiceProfileId]
+  );
+  await deleteStoredVoiceFiles(files.rows.map((row) => row.audio_path));
+}
+
+async function enqueueProviderDeletion(pool, { userId, providerVoiceId, error }) {
+  if (!providerVoiceId) return;
+  await pool.query(
+    `INSERT INTO voice_provider_deletion_queue (
+       user_id, provider, provider_voice_id, retry_count, last_error
+     )
+     VALUES ($1, 'elevenlabs', $2, 1, $3)
+     ON CONFLICT (provider_voice_id)
+     DO UPDATE SET retry_count = voice_provider_deletion_queue.retry_count + 1,
+                   last_error = EXCLUDED.last_error,
+                   updated_at = NOW()`,
+    [userId, providerVoiceId, String(error?.code || error?.message || 'provider_deletion_failed').slice(0, 500)]
+  );
+}
+
+async function retryPendingProviderDeletions(pool, userId) {
+  const pending = await pool.query(
+    `SELECT id, provider_voice_id
+     FROM voice_provider_deletion_queue
+     WHERE user_id = $1
+     ORDER BY updated_at ASC
+     LIMIT 3`,
+    [userId]
+  );
+  for (const item of pending.rows) {
+    try {
+      await voiceCloneService.deleteVoiceProfile({ providerVoiceId: item.provider_voice_id });
+      await pool.query('DELETE FROM voice_provider_deletion_queue WHERE id = $1', [item.id]);
+    } catch (error) {
+      await pool.query(
+        `UPDATE voice_provider_deletion_queue
+         SET retry_count = retry_count + 1, last_error = $2, updated_at = NOW()
+         WHERE id = $1`,
+        [item.id, String(error?.code || error?.message || 'provider_deletion_failed').slice(0, 500)]
+      );
+    }
+  }
+}
+
 function sendAIError(res, error) {
   const response = aiErrorResponse(error);
   return res.status(response.status).json(response.body);
@@ -197,7 +285,14 @@ function createAudioUploadFromSynthesis(synthesis, filename = 'voice-audio.mp3')
 function hashNarration({ text, voiceProfileId, providerVoiceId }) {
   return crypto
     .createHash('sha256')
-    .update([text, voiceProfileId, providerVoiceId || 'mock'].join('|'))
+    .update([
+      text,
+      voiceProfileId,
+      providerVoiceId,
+      voiceConfig.providers.elevenlabs.model,
+      voiceConfig.providers.elevenlabs.outputFormat,
+      'stability=.55|similarity=.75|style=.2|speaker_boost=1'
+    ].join('|'))
     .digest('hex');
 }
 
@@ -248,7 +343,8 @@ async function getAccessibleVoiceProfile(pool, req, profileId) {
        JOIN kids_profiles kp ON kp.parent_id = vp.user_id
        WHERE vp.id = $1
          AND kp.id = $2
-         AND vp.deleted_at IS NULL`,
+         AND vp.deleted_at IS NULL
+         AND vp.consent_given = TRUE`,
       [profileId, req.user.kid_profile_id]
     );
     return result.rows[0] || null;
@@ -267,6 +363,9 @@ router.get('/profiles', verifyToken, requireParent, async (req, res) => {
       [req.user.id]
     );
     res.json(result.rows.map(mapVoiceProfile));
+    void retryPendingProviderDeletions(pool, req.user.id).catch((error) => {
+      console.warn('Pending ElevenLabs deletions could not be retried:', error.message);
+    });
   } catch (err) {
     console.error('Error loading voice profiles:', err);
     res.status(500).json({ error: 'Could not load voice profiles' });
@@ -323,6 +422,10 @@ router.get('/files/:filename', verifyToken, async (req, res) => {
     const absolutePath = path.join(voiceStorageDir, filename);
     if (!fs.existsSync(absolutePath)) return res.status(404).json({ error: 'Voice file not found' });
 
+    res.set({
+      'Cache-Control': 'private, no-store, max-age=0',
+      'X-Content-Type-Options': 'nosniff'
+    });
     res.sendFile(absolutePath);
   } catch (err) {
     console.error('Error serving voice file:', err);
@@ -331,8 +434,13 @@ router.get('/files/:filename', verifyToken, async (req, res) => {
 });
 
 router.post('/profiles', verifyToken, requireParent, upload.single('sample'), async (req, res) => {
+  let samplePath = null;
+  let previewPath = null;
+  let providerVoiceId = null;
+  let client = null;
   try {
     const pool = getPool();
+    const validatedAudio = validateAudioUpload(req.file, { minBytes: 40000 });
     const consentGiven = req.body.consent_given === 'true' || req.body.consent_given === true;
 
     if (!consentGiven) {
@@ -347,61 +455,115 @@ router.post('/profiles', verifyToken, requireParent, upload.single('sample'), as
       return res.status(400).json({ error: 'Name and relation are required' });
     }
 
-    const samplePath = req.file ? await saveAudioFile(req.file, req.user.id, 'sample') : null;
     const quality = voiceCloneService.evaluateAudioQuality({
-      audioBuffer: req.file?.buffer,
-      mimeType: req.file?.mimetype,
+      audioBuffer: req.file.buffer,
+      mimeType: validatedAudio.mimeType,
     });
+    if (quality.quality_status === 'low') {
+      return res.status(422).json({
+        error: 'Audio sample is too short for reliable voice cloning',
+        quality
+      });
+    }
+
     const clonePreparation = await voiceCloneService.prepareVoiceProfile({
-      audioSample: req.file?.buffer || null,
-      mimeType: req.file?.mimetype,
+      audioSample: req.file.buffer,
+      mimeType: validatedAudio.mimeType,
       consent: consentGiven,
       metadata: { name, relation, language },
     });
-    const status = quality.quality_status === 'low' ? 'needs_new_sample' : clonePreparation.status;
+    providerVoiceId = clonePreparation.provider_voice_id;
+    if (!providerVoiceId) {
+      return res.status(502).json({ error: 'ElevenLabs did not create a usable voice profile' });
+    }
 
-    const result = await pool.query(
+    const previewText = language.startsWith('en')
+      ? `Hello, I am ${name}. I am ready to tell you a wonderful story.`
+      : language.startsWith('ar')
+        ? `مرحباً، أنا ${name}. أنا مستعد لأحكي لك قصة رائعة.`
+        : `Bonjour, je suis ${name}. Je suis prêt à te raconter une merveilleuse histoire.`;
+    await assertVoiceUsageWithinLimit(pool, req.user.id, previewText.length);
+    const previewSynthesis = await voiceCloneService.synthesizeSpeech({
+      providerVoiceId,
+      text: previewText
+    });
+    const previewFile = createAudioUploadFromSynthesis(previewSynthesis, 'voice-preview.mp3');
+    if (!previewFile) throw new Error('ElevenLabs returned no preview audio');
+
+    samplePath = await saveAudioFile(req.file, req.user.id, 'sample', validatedAudio);
+    previewPath = await saveAudioFile(previewFile, req.user.id, 'preview');
+    client = await pool.connect();
+    await client.query('BEGIN');
+
+    const result = await client.query(
       `INSERT INTO voice_profiles (
         user_id, name, relation, language, status, provider, provider_voice_id,
         sample_audio_path, preview_audio_path, consent_given, consent_at,
         quality_score, quality_status, quality_notes
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $8, TRUE, NOW(), $9, $10, $11)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, TRUE, NOW(), $10, $11, $12)
       RETURNING *`,
       [
         req.user.id,
         name,
         relation,
         language,
-        status,
+        clonePreparation.status,
         clonePreparation.provider,
-        clonePreparation.provider_voice_id,
+        providerVoiceId,
         samplePath,
+        previewPath,
         quality.quality_score,
         quality.quality_status,
         quality.quality_notes,
       ]
     );
 
-    await logVoiceAction(pool, {
+    await recordConsent(client, {
+      req,
+      voiceProfileId: result.rows[0].id,
+      locale: language
+    });
+    await recordVoiceUsage(client, {
+      userId: req.user.id,
+      voiceProfileId: result.rows[0].id,
+      operation: 'voice_preview',
+      characterCount: previewText.length,
+      requestHash: crypto.createHash('sha256').update(`preview|${providerVoiceId}|${previewText}`).digest('hex')
+    });
+    await logVoiceAction(client, {
       userId: req.user.id,
       voiceProfileId: result.rows[0].id,
       action: 'voice_profile_created',
       metadata: {
         quality_status: quality.quality_status,
         provider: clonePreparation.provider,
-        status,
+        status: clonePreparation.status,
+        consent_version: CONSENT_VERSION
       },
     });
+    await client.query('COMMIT');
 
     res.status(201).json(mapVoiceProfile(result.rows[0]));
   } catch (err) {
+    if (client) await client.query('ROLLBACK').catch(() => {});
+    await deleteStoredVoiceFiles([samplePath, previewPath]);
+    if (providerVoiceId) {
+      await voiceCloneService.deleteVoiceProfile({ providerVoiceId }).catch(() => {});
+    }
     console.error('Error creating voice profile:', err);
-    res.status(500).json({ error: 'Could not create voice profile' });
+    if (err?.isAIError) return sendAIError(res, err);
+    res.status(err?.status || 500).json({ error: err?.status ? err.message : 'Could not create voice profile' });
+  } finally {
+    client?.release();
   }
 });
 
 router.put('/profiles/:id', verifyToken, requireParent, upload.single('sample'), async (req, res) => {
+  let newSamplePath = null;
+  let newPreviewPath = null;
+  let newProviderVoiceId = null;
+  let client = null;
   try {
     const pool = getPool();
     const profile = await getOwnedVoiceProfile(pool, req.user.id, req.params.id);
@@ -410,62 +572,132 @@ router.put('/profiles/:id', verifyToken, requireParent, upload.single('sample'),
     const name = sanitizeText(req.body.name, profile.name);
     const relation = sanitizeText(req.body.relation, profile.relation);
     const language = sanitizeText(req.body.language, profile.language).slice(0, 12);
-    const samplePath = req.file ? await saveAudioFile(req.file, req.user.id, 'sample') : profile.sample_audio_path;
+    const explicitConsent = req.body.consent_given === 'true' || req.body.consent_given === true;
+    if (req.file && (!profile.consent_given || !explicitConsent)) {
+      return res.status(400).json({ error: 'Explicit consent is required for a new voice sample' });
+    }
+    const validatedAudio = req.file ? validateAudioUpload(req.file, { minBytes: 40000 }) : null;
     const quality = req.file
-      ? voiceCloneService.evaluateAudioQuality({ audioBuffer: req.file.buffer, mimeType: req.file.mimetype })
+      ? voiceCloneService.evaluateAudioQuality({ audioBuffer: req.file.buffer, mimeType: validatedAudio.mimeType })
       : {
           quality_score: profile.quality_score,
           quality_status: profile.quality_status,
           quality_notes: profile.quality_notes,
         };
+    if (req.file && quality.quality_status === 'low') {
+      return res.status(422).json({ error: 'Audio sample is too short for reliable voice cloning', quality });
+    }
     const clonePreparation = req.file && quality.quality_status !== 'low'
       ? await voiceCloneService.prepareVoiceProfile({
           audioSample: req.file.buffer,
-          mimeType: req.file.mimetype,
-          consent: profile.consent_given,
+          mimeType: validatedAudio.mimeType,
+          consent: explicitConsent,
           metadata: { name, relation, language },
         })
       : null;
+    newProviderVoiceId = clonePreparation?.provider_voice_id || null;
+    if (req.file && !newProviderVoiceId) {
+      throw new Error('ElevenLabs did not create a usable voice profile');
+    }
+    if (req.file) {
+      const previewText = `Bonjour, je suis ${name}. Je suis prêt à te raconter une merveilleuse histoire.`;
+      await assertVoiceUsageWithinLimit(pool, req.user.id, previewText.length);
+      const previewSynthesis = await voiceCloneService.synthesizeSpeech({
+        providerVoiceId: newProviderVoiceId,
+        text: previewText
+      });
+      const previewFile = createAudioUploadFromSynthesis(previewSynthesis, 'voice-preview.mp3');
+      if (!previewFile) throw new Error('ElevenLabs returned no preview audio');
+      newSamplePath = await saveAudioFile(req.file, req.user.id, 'sample', validatedAudio);
+      newPreviewPath = await saveAudioFile(previewFile, req.user.id, 'preview');
+    }
     const status = req.file
       ? (quality.quality_status === 'low' ? 'needs_new_sample' : clonePreparation?.status || 'sample_received')
       : (req.body.status || profile.status);
 
-    const result = await pool.query(
+    client = await pool.connect();
+    await client.query('BEGIN');
+    const result = await client.query(
       `UPDATE voice_profiles
        SET name = $1, relation = $2, language = $3, sample_audio_path = $4,
-           preview_audio_path = COALESCE($4, preview_audio_path),
-           status = $5, provider = $6, provider_voice_id = $7,
-           quality_score = $8, quality_status = $9,
-           quality_notes = $10, updated_at = NOW()
-       WHERE id = $11 AND user_id = $12 AND deleted_at IS NULL
+           preview_audio_path = $5,
+           status = $6, provider = $7, provider_voice_id = $8,
+           quality_score = $9, quality_status = $10,
+           quality_notes = $11,
+           consent_given = CASE WHEN $12 THEN TRUE ELSE consent_given END,
+           consent_at = CASE WHEN $12 THEN NOW() ELSE consent_at END,
+           updated_at = NOW()
+       WHERE id = $13 AND user_id = $14 AND deleted_at IS NULL
        RETURNING *`,
       [
         name,
         relation,
         language,
-        samplePath,
+        newSamplePath || profile.sample_audio_path,
+        newPreviewPath || profile.preview_audio_path,
         status,
         clonePreparation?.provider || profile.provider,
-        clonePreparation?.provider_voice_id || profile.provider_voice_id,
+        newProviderVoiceId || profile.provider_voice_id,
         quality.quality_score,
         quality.quality_status,
         quality.quality_notes,
+        Boolean(req.file),
         req.params.id,
         req.user.id,
       ]
     );
 
-    await logVoiceAction(pool, {
+    if (req.file) {
+      await recordConsent(client, { req, voiceProfileId: req.params.id, locale: language });
+      await recordVoiceUsage(client, {
+        userId: req.user.id,
+        voiceProfileId: req.params.id,
+        operation: 'voice_preview',
+        characterCount: `Bonjour, je suis ${name}. Je suis prêt à te raconter une merveilleuse histoire.`.length,
+        requestHash: crypto.createHash('sha256').update(`preview|${newProviderVoiceId}|${Date.now()}`).digest('hex')
+      });
+    }
+
+    await logVoiceAction(client, {
       userId: req.user.id,
       voiceProfileId: req.params.id,
       action: req.file ? 'voice_profile_sample_updated' : 'voice_profile_updated',
       metadata: clonePreparation ? { provider: clonePreparation.provider, status } : {},
     });
+    await client.query('COMMIT');
+
+    if (req.file) {
+      const committedProviderVoiceId = newProviderVoiceId;
+      newSamplePath = null;
+      newPreviewPath = null;
+      newProviderVoiceId = null;
+      await deleteStoredVoiceFiles([profile.sample_audio_path, profile.preview_audio_path]);
+      if (profile.provider_voice_id && profile.provider_voice_id !== committedProviderVoiceId) {
+        await voiceCloneService.deleteVoiceProfile({ providerVoiceId: profile.provider_voice_id }).catch((error) => {
+          console.warn('Previous provider voice could not be deleted:', error.message);
+          return enqueueProviderDeletion(pool, {
+            userId: req.user.id,
+            providerVoiceId: profile.provider_voice_id,
+            error
+          }).catch((queueError) => {
+            console.error('Provider deletion could not be queued:', queueError.message);
+          });
+        });
+      }
+    }
 
     res.json(mapVoiceProfile(result.rows[0]));
   } catch (err) {
+    if (client) await client.query('ROLLBACK').catch(() => {});
+    await deleteStoredVoiceFiles([newSamplePath, newPreviewPath]);
+    if (newProviderVoiceId) {
+      await voiceCloneService.deleteVoiceProfile({ providerVoiceId: newProviderVoiceId }).catch(() => {});
+    }
     console.error('Error updating voice profile:', err);
-    res.status(500).json({ error: 'Could not update voice profile' });
+    if (err?.isAIError) return sendAIError(res, err);
+    res.status(err?.status || 500).json({ error: err?.status ? err.message : 'Could not update voice profile' });
+  } finally {
+    client?.release();
   }
 });
 
@@ -492,21 +724,24 @@ router.post('/profiles/:id/revoke-consent', verifyToken, requireParent, async (r
     const result = await pool.query(
       `UPDATE voice_profiles
        SET consent_given = FALSE,
-           status = 'consent_revoked',
-           provider_voice_id = NULL,
+           status = CASE WHEN $3 THEN 'consent_revoked' ELSE 'provider_deletion_pending' END,
+           provider_voice_id = CASE WHEN $3 THEN NULL ELSE provider_voice_id END,
+           sample_audio_path = NULL,
            preview_audio_path = NULL,
            updated_at = NOW()
        WHERE id = $1 AND user_id = $2 AND deleted_at IS NULL
        RETURNING *`,
-      [req.params.id, req.user.id]
+      [req.params.id, req.user.id, providerDeletion?.deleted !== false]
     );
 
-    await deleteStoredVoiceFile(profile.preview_audio_path);
+    await deleteStoredVoiceFiles([profile.sample_audio_path, profile.preview_audio_path]);
+    await deleteNarrationFiles(pool, req.user.id, req.params.id);
     await pool.query(
       `DELETE FROM voice_narrations
        WHERE voice_profile_id = $1 AND user_id = $2`,
       [req.params.id, req.user.id]
     );
+    await revokeConsentRecord(pool, req.params.id);
 
     await logVoiceAction(pool, {
       userId: req.user.id,
@@ -530,17 +765,9 @@ router.delete('/profiles/:id', verifyToken, requireParent, async (req, res) => {
 
     let providerDeletion = null;
     if (profile.provider_voice_id) {
-      try {
-        providerDeletion = await voiceCloneService.deleteVoiceProfile({
-          providerVoiceId: profile.provider_voice_id,
-        });
-      } catch (error) {
-        console.warn('Provider voice deletion failed, continuing local deletion:', error);
-        providerDeletion = {
-          deleted: false,
-          reason: error?.code || error?.message || 'provider_deletion_failed',
-        };
-      }
+      providerDeletion = await voiceCloneService.deleteVoiceProfile({
+        providerVoiceId: profile.provider_voice_id,
+      });
     }
 
     await deleteStoredVoiceFile(profile.sample_audio_path);
@@ -551,6 +778,7 @@ router.delete('/profiles/:id', verifyToken, requireParent, async (req, res) => {
       [req.params.id, req.user.id]
     );
     await Promise.all(messageFiles.rows.map((row) => deleteStoredVoiceFile(row.audio_path)));
+    await deleteNarrationFiles(pool, req.user.id, req.params.id);
 
     await pool.query(
       `UPDATE voice_profiles
@@ -570,6 +798,7 @@ router.delete('/profiles/:id', verifyToken, requireParent, async (req, res) => {
        WHERE voice_profile_id = $1 AND user_id = $2`,
       [req.params.id, req.user.id]
     );
+    await revokeConsentRecord(pool, req.params.id);
     await logVoiceAction(pool, {
       userId: req.user.id,
       voiceProfileId: req.params.id,
@@ -580,6 +809,7 @@ router.delete('/profiles/:id', verifyToken, requireParent, async (req, res) => {
     res.json({ message: 'Voice profile deleted permanently' });
   } catch (err) {
     console.error('Error deleting voice profile:', err);
+    if (err?.isAIError) return sendAIError(res, err);
     res.status(500).json({ error: 'Could not delete voice profile' });
   }
 });
@@ -615,8 +845,11 @@ router.get('/messages', verifyToken, requireParent, async (req, res) => {
 });
 
 router.post('/messages', verifyToken, requireParent, upload.single('audio'), async (req, res) => {
+  let audioPath = null;
+  let messagePersisted = false;
   try {
     const pool = getPool();
+    const validatedAudio = req.file ? validateAudioUpload(req.file, { required: false }) : null;
     const voiceProfileId = req.body.voice_profile_id || null;
     let profile = null;
 
@@ -629,10 +862,11 @@ router.post('/messages', verifyToken, requireParent, upload.single('audio'), asy
     if (!title) return res.status(400).json({ error: 'Message title is required' });
 
     const messageText = sanitizeText(req.body.message_text);
-    let audioPath = req.file ? await saveAudioFile(req.file, req.user.id, 'message') : null;
+    audioPath = req.file ? await saveAudioFile(req.file, req.user.id, 'message', validatedAudio) : null;
     let generatedWithProvider = false;
 
     if (!audioPath && profile?.provider_voice_id && profile?.consent_given && messageText) {
+      await assertVoiceUsageWithinLimit(pool, req.user.id, messageText.length);
       const synthesis = await voiceCloneService.synthesizeSpeech({
         providerVoiceId: profile.provider_voice_id,
         text: messageText,
@@ -660,6 +894,16 @@ router.post('/messages', verifyToken, requireParent, upload.single('audio'), asy
         Math.max(0, Number.parseInt(req.body.duration_seconds || '0', 10) || 0),
       ]
     );
+    messagePersisted = true;
+    if (generatedWithProvider) {
+      await recordVoiceUsage(pool, {
+        userId: req.user.id,
+        voiceProfileId,
+        operation: 'voice_message',
+        characterCount: messageText.length,
+        requestHash: crypto.createHash('sha256').update(`message|${result.rows[0].id}|${profile.provider_voice_id}`).digest('hex')
+      });
+    }
 
     await logVoiceAction(pool, {
       userId: req.user.id,
@@ -674,6 +918,7 @@ router.post('/messages', verifyToken, requireParent, upload.single('audio'), asy
 
     res.status(201).json(mapVoiceMessage(result.rows[0]));
   } catch (err) {
+    if (!messagePersisted) await deleteStoredVoiceFile(audioPath);
     console.error('Error creating voice message:', err);
     if (err?.isAIError) return sendAIError(res, err);
     res.status(500).json({ error: 'Could not create voice message' });
@@ -811,6 +1056,7 @@ router.post('/narrations', verifyToken, async (req, res) => {
     const jobKey = `${profile.id}:${book.id}:${textHash}`;
     const reusedExistingJob = narrationJobs.has(jobKey);
     const generationJob = narrationJobs.get(jobKey) || (async () => {
+      await assertVoiceUsageWithinLimit(pool, req.user.id, narrationText.length);
       const synthesis = await voiceCloneService.synthesizeSpeech({
         providerVoiceId: profile.provider_voice_id,
         text: narrationText,
@@ -827,13 +1073,13 @@ router.post('/narrations', verifyToken, async (req, res) => {
         )
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
         ON CONFLICT (voice_profile_id, book_id, text_hash)
-        DO UPDATE SET updated_at = NOW()
+        DO NOTHING
         RETURNING *`,
         [
           req.user.id,
           profile.id,
           book.id,
-          profile.provider || 'mock',
+          profile.provider || 'elevenlabs',
           profile.provider_voice_id,
           textHash,
           audioPath,
@@ -844,6 +1090,25 @@ router.post('/narrations', verifyToken, async (req, res) => {
           },
         ]
       );
+      let storedNarration = insertResult.rows[0] || null;
+      if (!storedNarration) {
+        await deleteStoredVoiceFile(audioPath);
+        const winner = await pool.query(
+          `SELECT * FROM voice_narrations
+           WHERE voice_profile_id = $1 AND book_id = $2 AND text_hash = $3
+           LIMIT 1`,
+          [profile.id, book.id, textHash]
+        );
+        storedNarration = winner.rows[0] || null;
+      } else {
+        await recordVoiceUsage(pool, {
+          userId: req.user.id,
+          voiceProfileId: profile.id,
+          operation: 'book_narration',
+          characterCount: narrationText.length,
+          requestHash: `narration|${profile.id}|${book.id}|${textHash}`
+        });
+      }
 
       await logVoiceAction(pool, {
         userId: req.user.id,
@@ -852,7 +1117,7 @@ router.post('/narrations', verifyToken, async (req, res) => {
         metadata: { book_id: book.id, provider: profile.provider, cached: false },
       });
 
-      return insertResult.rows[0];
+      return storedNarration;
     })();
 
     if (!narrationJobs.has(jobKey)) {
@@ -885,6 +1150,148 @@ router.post('/narrations', verifyToken, async (req, res) => {
     console.error('Error creating voice narration:', err);
     if (err?.isAIError) return sendAIError(res, err);
     res.status(500).json({ error: 'Could not create voice narration' });
+  }
+});
+
+router.post('/narrations/stream', verifyToken, async (req, res) => {
+  const abortController = new AbortController();
+  res.on('close', () => {
+    if (!res.writableEnded) abortController.abort();
+  });
+
+  try {
+    const pool = getPool();
+    const bookId = Number.parseInt(req.body.book_id, 10);
+    const voiceProfileId = Number.parseInt(req.body.voice_profile_id, 10);
+    if (!Number.isInteger(bookId) || bookId <= 0 || !Number.isInteger(voiceProfileId) || voiceProfileId <= 0) {
+      return res.status(400).json({ error: 'Valid book_id and voice_profile_id are required' });
+    }
+
+    const book = await getAccessibleBook(pool, req, bookId);
+    if (!book) return res.status(404).json({ error: 'Book not found' });
+    if (req.user.role === 'kid') {
+      const policy = await loadChildAccessPolicy({ user: req.user, pool });
+      const violation = getContentAccessViolation(policy, book);
+      if (violation) return sendParentalAccessError(res, violation);
+    }
+
+    const profile = await getAccessibleVoiceProfile(pool, req, voiceProfileId);
+    if (!profile || !profile.consent_given || !profile.provider_voice_id) {
+      return res.status(409).json({ error: 'Cloned voice is unavailable' });
+    }
+    const narrationText = await getBookNarrationText(pool, book);
+    if (!narrationText) return res.status(422).json({ error: 'No readable text available for narration' });
+
+    const textHash = hashNarration({
+      text: narrationText,
+      voiceProfileId: profile.id,
+      providerVoiceId: profile.provider_voice_id
+    });
+    const cachedResult = await pool.query(
+      `SELECT * FROM voice_narrations
+       WHERE voice_profile_id = $1 AND book_id = $2 AND text_hash = $3
+       LIMIT 1`,
+      [profile.id, book.id, textHash]
+    );
+    const cachedPath = cachedResult.rows[0]?.audio_path;
+    if (cachedPath) {
+      const absolutePath = path.join(voiceStorageDir, path.basename(cachedPath));
+      if (fs.existsSync(absolutePath)) {
+        res.set({
+          'Content-Type': 'audio/mpeg',
+          'Cache-Control': 'private, no-store, max-age=0',
+          'X-Voice-Cache': 'hit',
+          'X-Content-Type-Options': 'nosniff'
+        });
+        await logVoiceAction(pool, {
+          userId: req.user.id,
+          voiceProfileId: profile.id,
+          action: 'voice_narration_stream_cache_hit',
+          metadata: { book_id: book.id, provider: profile.provider }
+        });
+        return fs.createReadStream(absolutePath).pipe(res);
+      }
+    }
+
+    await assertVoiceUsageWithinLimit(pool, req.user.id, narrationText.length);
+    res.status(200);
+    res.set({
+      'Content-Type': 'audio/mpeg',
+      'Cache-Control': 'private, no-store, max-age=0',
+      'X-Voice-Cache': 'miss',
+      'X-Content-Type-Options': 'nosniff'
+    });
+    res.flushHeaders();
+
+    const synthesis = await voiceCloneService.synthesizeSpeechStream({
+      providerVoiceId: profile.provider_voice_id,
+      text: narrationText,
+      signal: abortController.signal,
+      onChunk: async (chunk) => {
+        if (abortController.signal.aborted || res.destroyed) return;
+        if (!res.write(chunk)) {
+          await new Promise((resolve) => {
+            const done = () => {
+              res.off('drain', done);
+              res.off('close', done);
+              resolve();
+            };
+            res.once('drain', done);
+            res.once('close', done);
+          });
+        }
+      }
+    });
+
+    if (!abortController.signal.aborted && synthesis?.audioBuffer?.length) {
+      const synthesizedFile = createAudioUploadFromSynthesis(synthesis, `book-${book.id}-stream.mp3`);
+      const audioPath = await saveAudioFile(synthesizedFile, req.user.id, 'narration');
+      const insertResult = await pool.query(
+        `INSERT INTO voice_narrations (
+           user_id, voice_profile_id, book_id, provider, provider_voice_id,
+           text_hash, audio_path, duration_seconds, metadata
+         )
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+         ON CONFLICT (voice_profile_id, book_id, text_hash) DO NOTHING
+         RETURNING id`,
+        [
+          req.user.id,
+          profile.id,
+          book.id,
+          profile.provider || 'elevenlabs',
+          profile.provider_voice_id,
+          textHash,
+          audioPath,
+          Math.max(0, Number.parseInt(book.duration_seconds || '0', 10) || 0),
+          {
+            text_length: narrationText.length,
+            streamed: true,
+            provider_metadata: synthesis.provider_metadata || {}
+          }
+        ]
+      );
+      if (insertResult.rows.length === 0) {
+        await deleteStoredVoiceFile(audioPath);
+      } else {
+        await recordVoiceUsage(pool, {
+          userId: req.user.id,
+          voiceProfileId: profile.id,
+          operation: 'book_narration_stream',
+          characterCount: narrationText.length,
+          requestHash: `narration|${profile.id}|${book.id}|${textHash}`
+        });
+      }
+    }
+
+    if (!res.writableEnded) res.end();
+  } catch (err) {
+    console.error('Error streaming voice narration:', err);
+    if (res.headersSent) {
+      if (!res.writableEnded) res.destroy(err);
+      return;
+    }
+    if (err?.isAIError) return sendAIError(res, err);
+    res.status(err?.status || 500).json({ error: err?.status ? err.message : 'Could not stream voice narration' });
   }
 });
 

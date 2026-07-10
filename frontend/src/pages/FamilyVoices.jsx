@@ -36,6 +36,8 @@ function statusLabel(status) {
  ready: 'Prêt',
  needs_new_sample: 'Nouvel enregistrement requis',
  consent_required: 'Consentement requis',
+ consent_revoked: 'Consentement révoqué',
+ provider_deletion_pending: 'Suppression ElevenLabs à réessayer',
  deleted: 'Supprimé',
 };
  return labels[status] || status || 'En attente';
@@ -109,7 +111,14 @@ function useAudioRecorder() {
 
 function blobToFile(blob, filename) {
  if (!blob) return null;
- return new File([blob], filename, {type: blob.type || 'audio/webm'});
+ const mimeType = (blob.type || 'audio/webm').split(';')[0];
+ const extension = mimeType.includes('mp4') ? '.m4a'
+ : mimeType.includes('ogg') ? '.ogg'
+ : mimeType.includes('wav') ? '.wav'
+ : mimeType.includes('mpeg') ? '.mp3'
+ : '.webm';
+ const baseName = filename.replace(/\.[^.]+$/, '');
+ return new File([blob], `${baseName}${extension}`, {type: mimeType});
 }
 
 function FamilyVoices() {
@@ -244,6 +253,22 @@ function FamilyVoices() {
 }
 };
 
+ const revokeConsent = async (profile) => {
+ if (!window.confirm(`Révoquer le consentement et supprimer les données vocales de ${profile.name} ?`)) return;
+ try {
+ const response = await voicesAPI.revokeConsent(profile.id);
+ showToast(
+ response.data?.status === 'provider_deletion_pending'
+ ? 'Consentement révoqué. La suppression ElevenLabs doit être réessayée.'
+ : 'Consentement révoqué et données vocales supprimées',
+ response.data?.status === 'provider_deletion_pending' ? 'warning' : 'info'
+ );
+ loadData();
+ } catch (error) {
+ showToast(error.response?.data?.error || 'Impossible de révoquer le consentement', 'error');
+ }
+};
+
  const playPreview = async (profile) => {
  try {
  const response = await voicesAPI.getPreviewBlob(profile.id);
@@ -373,7 +398,7 @@ function FamilyVoices() {
  <div className="bg-emerald-500 text-white p-3 rounded-full h-fit"><ShieldIcon className="w-6 h-6"/></div>
  <div>
  <h3 className="font-bold text-emerald-900">Stockage Sécurisé</h3>
- <p className="text-sm text-emerald-700 mt-1">Vos données vocales sont chiffrées de bout en bout et privées.</p>
+ <p className="text-sm text-emerald-700 mt-1">Vos données vocales sont protégées par authentification et traitées par ElevenLabs avec votre consentement.</p>
  </div>
  </div>
  <div className="bg-sky-50 rounded-2xl p-5 border border-sky-100 flex gap-4">
@@ -435,6 +460,9 @@ function FamilyVoices() {
  <Badge variant="soft" className={`${qualityTone(profile.quality_status)} font-bold text-xs`}>
  Qualité {profile.quality_score || '85'}%
  </Badge>
+{!profile.consent_given && (
+<Badge variant="soft" className="bg-rose-50 text-rose-700 font-bold text-xs">Consentement révoqué</Badge>
+)}
  </div>
 
  <div className="grid grid-cols-2 gap-2 mt-auto">
@@ -445,6 +473,11 @@ function FamilyVoices() {
  <Button variant="outline" onClick={() => editProfile(profile)} className="rounded-full w-full px-0 font-bold text-sm bg-surface-secondary border-border text-foreground-secondary hover:bg-surface-secondary">
  <EditIcon className="w-4 h-4" />
  </Button>
+{(profile.consent_given || profile.status === 'provider_deletion_pending') && (
+<Button variant="outline" title={profile.consent_given ? 'Révoquer le consentement' : 'Réessayer la suppression ElevenLabs'} onClick={() => revokeConsent(profile)} className="rounded-full w-full px-0 font-bold text-sm bg-amber-50 border-amber-100 text-amber-700 hover:bg-amber-100">
+<ShieldIcon className="w-4 h-4" />
+</Button>
+)}
  <Button variant="outline" onClick={() => deleteProfile(profile)} className="rounded-full w-full px-0 font-bold text-sm bg-rose-50 border-rose-100 text-rose-600 hover:bg-rose-100">
  <TrashIcon className="w-4 h-4" />
  </Button>
@@ -592,7 +625,7 @@ function FamilyVoices() {
  </div>
  <h2 className="text-3xl font-black text-foreground mb-4">Créez votre Clone Vocal</h2>
  <p className="text-lg text-foreground-secondary font-medium mb-8 max-w-md mx-auto">
- Votre voix peut lire des histoires à vos enfants, même quand vous êtes absent. C'est magique, sécurisé et 100% privé.
+ Votre voix peut lire des histoires à vos enfants, même quand vous êtes absent. Vous gardez le contrôle du consentement et de la suppression.
  </p>
  
  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-left mb-8">
@@ -602,7 +635,7 @@ function FamilyVoices() {
  </div>
  <div className="bg-surface-secondary p-4 rounded-2xl flex gap-3 items-start">
  <ShieldIcon className="w-6 h-6 text-emerald-500 shrink-0" />
- <div><h4 className="font-bold">Totalement Privé</h4><p className="text-sm text-foreground-muted">Chiffré et stocké en sécurité.</p></div>
+ <div><h4 className="font-bold">Accès protégé</h4><p className="text-sm text-foreground-muted">Stocké avec un accès authentifié et supprimable à tout moment.</p></div>
  </div>
  </div>
 
@@ -703,7 +736,7 @@ function FamilyVoices() {
 
  <div className="flex justify-end gap-3 pt-4">
  <Button type="button" onClick={resetProfileForm} variant="ghost" className="font-bold">Annuler</Button>
- <Button type="submit" form="voice-form" disabled={!profileForm.consent_given || !profileRecorder.audioBlob || profileRecorder.recording} variant="primary" className="rounded-full px-8 font-black shadow-lg">
+ <Button type="submit" form="voice-form" disabled={!profileForm.consent_given || (!editingProfile && !profileRecorder.audioBlob) || profileRecorder.recording} variant="primary" className="rounded-full px-8 font-black shadow-lg">
  Générer la voix IA
  </Button>
  </div>

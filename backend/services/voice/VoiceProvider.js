@@ -1,8 +1,9 @@
+import { AIProvider } from '../ai/AIProvider.js';
 import { AIProviderMethodNotImplementedError } from '../ai/errors.js';
 
-export class VoiceProvider {
-  constructor({ name }) {
-    this.name = name;
+export class VoiceProvider extends AIProvider {
+  constructor(options) {
+    super(options);
   }
 
   async createVoiceProfile() {
@@ -15,6 +16,14 @@ export class VoiceProvider {
 
   async synthesizeSpeech() {
     throw new AIProviderMethodNotImplementedError('synthesizeSpeech', { provider: this.name });
+  }
+
+  async synthesizeSpeechStream() {
+    throw new AIProviderMethodNotImplementedError('synthesizeSpeechStream', { provider: this.name });
+  }
+
+  async transcribeAudio() {
+    throw new AIProviderMethodNotImplementedError('transcribeAudio', { provider: this.name });
   }
 
   async deleteVoiceProfile() {

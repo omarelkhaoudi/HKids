@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import { getDatabase } from '../database/init.js';
 import { verifyToken } from './auth.js';
 import { logSecurityEvent } from '../services/security/auditLog.js';
+import { purgeUserVoiceData } from '../services/voice/voiceDataDeletionService.js';
 
 const router = express.Router();
 
@@ -105,9 +106,7 @@ router.delete('/account', verifyToken, async (req, res) => {
       await deleteKidData(client, kid.id);
     }
 
-    await client.query('UPDATE voice_profiles SET deleted_at = NOW(), status = $2, sample_audio_path = NULL, preview_audio_path = NULL, provider_voice_id = NULL WHERE user_id = $1', [req.user.id, 'deleted']);
-    await client.query('UPDATE voice_messages SET deleted_at = NOW(), audio_path = NULL WHERE user_id = $1', [req.user.id]);
-    await client.query('DELETE FROM voice_narrations WHERE user_id = $1', [req.user.id]);
+    await purgeUserVoiceData({ client, userId: req.user.id });
     await client.query('DELETE FROM user_subscriptions WHERE user_id = $1', [req.user.id]);
 
     await logSecurityEvent(client, {

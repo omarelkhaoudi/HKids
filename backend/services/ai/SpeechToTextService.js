@@ -1,6 +1,7 @@
 import { AIProviderFactory } from './AIProviderFactory.js';
 import { aiConfig } from './aiConfig.js';
 import { normalizeAIError } from './errors.js';
+import { VoiceProviderFactory } from '../voice/VoiceProviderFactory.js';
 
 const maxAudioBytes = 8 * 1024 * 1024;
 
@@ -10,8 +11,11 @@ export class SpeechToTextService {
   }
 
   async transcribe({ audioBuffer, mimeType, language = 'fr-FR' }) {
-    const aiProvider = this.aiProvider || AIProviderFactory.getProvider(
-      aiConfig.transcriptionProvider || aiConfig.provider
+    const transcriptionProvider = aiConfig.transcriptionProvider || aiConfig.provider;
+    const aiProvider = this.aiProvider || (
+      transcriptionProvider === 'elevenlabs'
+        ? VoiceProviderFactory.getProvider('elevenlabs')
+        : AIProviderFactory.getProvider(transcriptionProvider)
     );
     if (!Buffer.isBuffer(audioBuffer) || audioBuffer.length === 0) {
       const error = new Error('Audio file is required');

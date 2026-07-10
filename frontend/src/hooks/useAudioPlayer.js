@@ -15,6 +15,8 @@ const initialState = {
 export function useAudioPlayer() {
   const audioRef = useRef(null);
   const activeBookRef = useRef(null);
+  const objectUrlRef = useRef(null);
+  const playRequestRef = useRef(0);
   const listenedFromRef = useRef(0);
   const [activeBook, setActiveBook] = useState(null);
   const [state, setState] = useState(initialState);
@@ -26,6 +28,7 @@ export function useAudioPlayer() {
         audioRef.current.pause();
         audioRef.current = null;
       }
+      if (objectUrlRef.current) URL.revokeObjectURL(objectUrlRef.current);
     };
   }, []);
 
@@ -85,16 +88,34 @@ export function useAudioPlayer() {
     };
   };
 
-  const loadBook = (book, audioUrlOverride = null) => {
-    recordListening(false);
+  const releaseObjectUrl = () => {
+    if (objectUrlRef.current) {
+      URL.revokeObjectURL(objectUrlRef.current);
+      objectUrlRef.current = null;
+    }
+  };
 
+  const loadBook = async (book, audioUrlOverride = null, requestId = playRequestRef.current) => {
+    const sourceUrl = audioUrlOverride || book.audio_url;
+    let audioUrl = getFileUrl(sourceUrl);
+    let nextObjectUrl = null;
+    if (String(sourceUrl || '').includes('/api/voices/files/')) {
+      const response = await voicesAPI.getAudioBlob(sourceUrl);
+      nextObjectUrl = URL.createObjectURL(response.data);
+      audioUrl = nextObjectUrl;
+    }
+    if (requestId !== playRequestRef.current) {
+      if (nextObjectUrl) URL.revokeObjectURL(nextObjectUrl);
+      return null;
+    }
+
+    recordListening(false);
     if (audioRef.current) {
       audioRef.current.pause();
       audioRef.current = null;
     }
-
-    const sourceUrl = audioUrlOverride || book.audio_url;
-    const audioUrl = getFileUrl(sourceUrl);
+    releaseObjectUrl();
+    objectUrlRef.current = nextObjectUrl;
     const audio = new Audio(audioUrl);
     audio.volume = state.volume;
     attachAudioEvents(audio);
@@ -126,12 +147,14 @@ export function useAudioPlayer() {
   };
 
   const play = async (book = activeBookRef.current, options = {}) => {
+    const requestId = ++playRequestRef.current;
     if (!book) {
       patchState({ error: 'Audio indisponible' });
       return false;
     }
 
     const resolvedAudioUrl = await resolveAudioSource(book, options);
+    if (requestId !== playRequestRef.current) return false;
 
     if (!resolvedAudioUrl) {
       patchState({ error: 'Audio indisponible' });
@@ -142,16 +165,28 @@ export function useAudioPlayer() {
       && activeBookRef.current?.audio_url === resolvedAudioUrl
       && audioRef.current;
 
-    const audio = shouldReuseCurrentAudio
-      ? audioRef.current
-      : loadBook(book, resolvedAudioUrl);
-
     try {
+      let audio;
+      try {
+        audio = shouldReuseCurrentAudio
+          ? audioRef.current
+          : await loadBook(book, resolvedAudioUrl, requestId);
+        if (!audio) return false;
+      } catch (error) {
+        console.warn('Protected narration could not be loaded, falling back to original audio:', error);
+        if (!book.audio_url || book.audio_url === resolvedAudioUrl) throw error;
+        audio = await loadBook(book, book.audio_url, requestId);
+        if (!audio) return false;
+      }
       listenedFromRef.current = Number.isFinite(audio.currentTime) ? audio.currentTime : 0;
       await audio.play();
       return true;
-    } catch {
-      patchState({ playing: false, loading: false, error: "Le navigateur a bloque la lecture audio" });
+    } catch (error) {
+      patchState({
+        playing: false,
+        loading: false,
+        error: error?.response ? "Impossible de charger l'audio" : "Le navigateur a bloque la lecture audio"
+      });
       return false;
     }
   };
@@ -193,11 +228,13 @@ export function useAudioPlayer() {
   };
 
   const stop = () => {
+    playRequestRef.current += 1;
     recordListening(false);
     if (audioRef.current) {
       audioRef.current.pause();
       audioRef.current.currentTime = 0;
     }
+    releaseObjectUrl();
     activeBookRef.current = null;
     setActiveBook(null);
     patchState({ ...initialState, volume: state.volume });
