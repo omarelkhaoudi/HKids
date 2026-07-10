@@ -28,6 +28,9 @@ Architecture du snapshot parental réel, endpoints, cache TTL, schéma SQL, pagi
 ### 6. [Stripe Production](./STRIPE_PRODUCTION.md)
 Checkout, webhooks signés, abonnements, annulation, renouvellement, factures, historique et essai gratuit.
 
+### 7. [Synchronisation Cloud](./CLOUD_SYNC.md)
+Sync offline-first des profils, favoris, progression, téléchargements et historique avec résolution automatique des conflits.
+
 ## Vue d'Ensemble
 
 HKids est une plateforme de lecture numérique pour enfants construite avec:

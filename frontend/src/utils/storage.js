@@ -1,7 +1,5 @@
 import { syncOrQueueKidMutation } from '../services/parental/kidActivitySyncService';
 
-// Utilitaires pour le stockage local (localStorage)
-
 function queueMutation(type, payload, conflictKey = null) {
   syncOrQueueKidMutation(type, payload, conflictKey).catch((error) => {
     console.warn('Could not synchronize kid activity:', error);

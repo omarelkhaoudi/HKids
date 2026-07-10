@@ -8,6 +8,7 @@ import {
   kidActivityMutationHandlers,
   migrateLegacyKidActivity
 } from '../../services/parental/kidActivitySyncService';
+import { performCloudSync } from '../../services/cloud/cloudSyncService';
 import { useAuth } from '../../context/AuthContext';
 
 const syncHandlers = {
@@ -38,6 +39,13 @@ export function OfflineSyncBridge() {
         }
       }
       await synchronizePendingMutations(syncHandlers);
+      if (user?.role === 'kid') {
+        try {
+          await performCloudSync();
+        } catch (error) {
+          console.warn('Cloud sync failed:', error);
+        }
+      }
     };
     synchronize().catch((error) => {
       console.warn('Offline synchronization failed:', error);

@@ -110,6 +110,17 @@ export const parentalAPI = {
     return axios.post(buildApiUrl('/parental/me/activity-import'), data, { headers: getAuthHeaders() });
   },
 
+  pullCloudSync: (syncToken = null) => {
+    return axios.get(buildApiUrl('/parental/me/cloud-sync'), {
+      headers: getAuthHeaders(),
+      params: syncToken ? { sync_token: syncToken } : undefined
+    });
+  },
+
+  pushCloudSync: (data) => {
+    return axios.post(buildApiUrl('/parental/me/cloud-sync'), data, { headers: getAuthHeaders() });
+  },
+
   saveReadingGoal: (kidId, data) => {
     return axios.put(buildApiUrl(`/parental/kids/${kidId}/reading-goal`), data, { headers: getAuthHeaders() });
   },

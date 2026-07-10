@@ -8,6 +8,7 @@ import * as pdfjsLib from 'pdfjs-dist';
 import {booksAPI} from '../api/books';
 import {subscriptionsAPI} from '../api/subscriptions';
 import {parentalAPI} from '../api/parental';
+import {syncOrQueueKidMutation} from '../services/parental/kidActivitySyncService';
 import {voicesAPI} from '../api/voices';
 import {storage} from '../utils/storage';
 import {getFileUrl} from '../utils/fileUrl';
@@ -427,15 +428,13 @@ function BookReader() {
  const recordKidReadingProgress = (durationSeconds = 0, finished = false, pageOverride = currentPage) => {
  if (user?.role !== 'kid' || !book?.id) return;
 
- parentalAPI.recordReadingProgress({
+ syncOrQueueKidMutation('reading_progress', {
  book_id: book.id,
  current_page: pageOverride,
  total_pages: getEffectiveTotalPages(),
  duration_seconds: durationSeconds,
  completed: finished
-}).catch((error) => {
- console.warn('Impossible de synchroniser la progression enfant:', error);
-});
+ }, `book:${book.id}:progress`);
 };
 
  useEffect(() => {
