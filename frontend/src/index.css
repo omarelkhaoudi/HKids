@@ -16,6 +16,9 @@
     --color-text-primary: #111827;
     --color-text-secondary: #4b5563;
     --color-text-muted: #9ca3af;
+    --color-kids-bg: #f8fbff;
+    --color-kids-glow-sky: rgba(125, 211, 252, 0.35);
+    --color-kids-glow-amber: rgba(252, 211, 77, 0.28);
 
 
     /* Primary: Magical Purple/Indigo */
@@ -81,6 +84,9 @@
     --color-text-primary: #F8FAFC;
     --color-text-secondary: #CBD5E1;
     --color-text-muted: #94A3B8;
+    --color-kids-bg: #0f172a;
+    --color-kids-glow-sky: rgba(56, 189, 248, 0.15);
+    --color-kids-glow-amber: rgba(251, 191, 36, 0.12);
 
     /* Base colors update for dark mode */
     --color-primary-500: #8B5CF6;

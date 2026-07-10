@@ -42,6 +42,9 @@ export default {
           DEFAULT: 'var(--color-text-primary)',
           secondary: 'var(--color-text-secondary)',
           muted: 'var(--color-text-muted)',
+          500: 'var(--color-primary-600)',
+          600: 'var(--color-primary-700)',
+          700: 'var(--color-text-primary)',
         }
       },
 
@@ -118,6 +121,7 @@ export default {
           DEFAULT: 'var(--color-bg)',
           card: 'var(--color-bg-card)',
           elevated: 'var(--color-bg-elevated)',
+          kids: 'var(--color-kids-bg)',
         },
         surface: {
           DEFAULT: 'var(--color-surface)',
