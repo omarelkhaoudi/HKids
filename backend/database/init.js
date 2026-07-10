@@ -255,7 +255,7 @@ export async function initDatabase() {
         relation TEXT NOT NULL,
         language TEXT NOT NULL DEFAULT 'fr',
         status TEXT NOT NULL DEFAULT 'draft',
-        provider TEXT NOT NULL DEFAULT 'mock',
+        provider TEXT NOT NULL DEFAULT 'elevenlabs',
         provider_voice_id TEXT,
         sample_audio_path TEXT,
         preview_audio_path TEXT,
@@ -288,6 +288,39 @@ export async function initDatabase() {
         metadata JSONB DEFAULT '{}'::jsonb,
         created_at TIMESTAMPTZ DEFAULT NOW()
       );`,
+      `CREATE TABLE IF NOT EXISTS voice_consent_records (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+        voice_profile_id INTEGER REFERENCES voice_profiles(id) ON DELETE SET NULL,
+        consent_version TEXT NOT NULL,
+        legal_text_hash TEXT NOT NULL,
+        scope TEXT NOT NULL DEFAULT 'voice_clone_tts_storage',
+        locale TEXT NOT NULL DEFAULT 'fr',
+        ip_address TEXT,
+        user_agent TEXT,
+        granted_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        revoked_at TIMESTAMPTZ
+      );`,
+      `CREATE TABLE IF NOT EXISTS voice_usage_records (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+        voice_profile_id INTEGER REFERENCES voice_profiles(id) ON DELETE SET NULL,
+        operation TEXT NOT NULL,
+        provider TEXT NOT NULL DEFAULT 'elevenlabs',
+        character_count INTEGER NOT NULL DEFAULT 0,
+        request_hash TEXT,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );`,
+      `CREATE TABLE IF NOT EXISTS voice_provider_deletion_queue (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+        provider TEXT NOT NULL DEFAULT 'elevenlabs',
+        provider_voice_id TEXT NOT NULL UNIQUE,
+        retry_count INTEGER NOT NULL DEFAULT 0,
+        last_error TEXT,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );`,
       `CREATE TABLE IF NOT EXISTS security_audit_logs (
         id SERIAL PRIMARY KEY,
         user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
@@ -305,7 +338,7 @@ export async function initDatabase() {
         user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
         voice_profile_id INTEGER REFERENCES voice_profiles(id) ON DELETE CASCADE,
         book_id INTEGER REFERENCES books(id) ON DELETE CASCADE,
-        provider TEXT NOT NULL DEFAULT 'mock',
+        provider TEXT NOT NULL DEFAULT 'elevenlabs',
         provider_voice_id TEXT,
         text_hash TEXT NOT NULL,
         audio_path TEXT NOT NULL,
@@ -468,7 +501,8 @@ export async function initDatabase() {
     await client.query(`ALTER TABLE generated_stories ADD COLUMN IF NOT EXISTS source_story_id INTEGER REFERENCES generated_stories(id) ON DELETE SET NULL`);
     await client.query(`ALTER TABLE generated_stories ADD COLUMN IF NOT EXISTS version_number INTEGER NOT NULL DEFAULT 1`);
     await client.query(`ALTER TABLE generated_stories ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW()`);
-    await client.query(`ALTER TABLE voice_profiles ADD COLUMN IF NOT EXISTS provider TEXT NOT NULL DEFAULT 'mock'`);
+    await client.query(`ALTER TABLE voice_profiles ADD COLUMN IF NOT EXISTS provider TEXT NOT NULL DEFAULT 'elevenlabs'`);
+    await client.query(`ALTER TABLE voice_profiles ALTER COLUMN provider SET DEFAULT 'elevenlabs'`);
     await client.query(`ALTER TABLE voice_profiles ADD COLUMN IF NOT EXISTS provider_voice_id TEXT`);
     await client.query(`ALTER TABLE voice_profiles ADD COLUMN IF NOT EXISTS preview_audio_path TEXT`);
     await client.query(`ALTER TABLE voice_profiles ADD COLUMN IF NOT EXISTS consent_given BOOLEAN NOT NULL DEFAULT FALSE`);
@@ -479,7 +513,8 @@ export async function initDatabase() {
     await client.query(`ALTER TABLE voice_profiles ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ`);
     await client.query(`ALTER TABLE voice_messages ADD COLUMN IF NOT EXISTS duration_seconds INTEGER NOT NULL DEFAULT 0`);
     await client.query(`ALTER TABLE voice_messages ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ`);
-    await client.query(`ALTER TABLE voice_narrations ADD COLUMN IF NOT EXISTS provider TEXT NOT NULL DEFAULT 'mock'`);
+    await client.query(`ALTER TABLE voice_narrations ADD COLUMN IF NOT EXISTS provider TEXT NOT NULL DEFAULT 'elevenlabs'`);
+    await client.query(`ALTER TABLE voice_narrations ALTER COLUMN provider SET DEFAULT 'elevenlabs'`);
     await client.query(`ALTER TABLE voice_narrations ADD COLUMN IF NOT EXISTS provider_voice_id TEXT`);
     await client.query(`ALTER TABLE voice_narrations ADD COLUMN IF NOT EXISTS metadata JSONB DEFAULT '{}'::jsonb`);
     await client.query(`ALTER TABLE voice_narrations ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW()`);
@@ -550,6 +585,10 @@ export async function initDatabase() {
     await client.query(`CREATE UNIQUE INDEX IF NOT EXISTS voice_narrations_unique_idx ON voice_narrations(voice_profile_id, book_id, text_hash)`);
     await client.query(`CREATE INDEX IF NOT EXISTS voice_narrations_lookup_idx ON voice_narrations(voice_profile_id, book_id, text_hash)`);
     await client.query(`CREATE INDEX IF NOT EXISTS voice_narrations_user_idx ON voice_narrations(user_id, created_at DESC)`);
+    await client.query(`CREATE INDEX IF NOT EXISTS voice_consent_profile_idx ON voice_consent_records(voice_profile_id, granted_at DESC)`);
+    await client.query(`CREATE INDEX IF NOT EXISTS voice_usage_user_month_idx ON voice_usage_records(user_id, created_at DESC)`);
+    await client.query(`CREATE UNIQUE INDEX IF NOT EXISTS voice_usage_request_unique_idx ON voice_usage_records(request_hash) WHERE request_hash IS NOT NULL`);
+    await client.query(`CREATE INDEX IF NOT EXISTS voice_deletion_queue_user_idx ON voice_provider_deletion_queue(user_id, updated_at)`);
     await client.query(`CREATE INDEX IF NOT EXISTS generated_stories_source_idx ON generated_stories(source_story_id, version_number)`);
     await client.query(`CREATE INDEX IF NOT EXISTS learning_contents_filters_idx ON learning_contents(status, content_type, language, difficulty, age_group_min, age_group_max)`);
     await client.query(`CREATE INDEX IF NOT EXISTS learning_questions_content_idx ON learning_questions(content_id, position)`);

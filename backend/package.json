@@ -4,6 +4,9 @@
   "description": "HKids Backend API",
   "main": "server.js",
   "type": "module",
+  "engines": {
+    "node": ">=18"
+  },
   "scripts": {
     "dev": "node --watch server.js",
     "start": "node server.js",

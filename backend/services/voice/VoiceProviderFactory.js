@@ -1,22 +1,21 @@
 import { AIProviderUnavailableError } from '../ai/errors.js';
 import { voiceConfig } from './voiceConfig.js';
 import { ElevenLabsProvider } from './providers/ElevenLabsProvider.js';
-import { MockVoiceProvider } from './providers/MockVoiceProvider.js';
 
 const providers = new Map();
 
 function createProvider(providerName) {
-  if (providerName === 'mock') return new MockVoiceProvider();
   if (providerName === 'elevenlabs') return new ElevenLabsProvider(voiceConfig.providers.elevenlabs);
 
   throw new AIProviderUnavailableError(`Unknown voice provider: ${providerName}`, {
-    provider: providerName
+    provider: providerName,
+    retryable: false
   });
 }
 
 export class VoiceProviderFactory {
   static getProvider(providerName = voiceConfig.provider) {
-    const normalizedName = String(providerName || 'mock').toLowerCase();
+    const normalizedName = String(providerName || voiceConfig.provider).toLowerCase();
     if (!providers.has(normalizedName)) {
       providers.set(normalizedName, createProvider(normalizedName));
     }

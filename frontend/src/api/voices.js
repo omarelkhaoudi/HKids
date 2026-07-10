@@ -16,6 +16,7 @@ export const voicesAPI = {
   getAvailableVoices: () => axios.get(buildApiUrl('/voices/available'), { headers: authHeaders() }),
   createProfile: (formData) => axios.post(buildApiUrl('/voices/profiles'), formData, { headers: multipartHeaders() }),
   updateProfile: (id, formData) => axios.put(buildApiUrl(`/voices/profiles/${id}`), formData, { headers: multipartHeaders() }),
+  revokeConsent: (id) => axios.post(buildApiUrl(`/voices/profiles/${id}/revoke-consent`), {}, { headers: authHeaders() }),
   deleteProfile: (id) => axios.delete(buildApiUrl(`/voices/profiles/${id}`), { headers: authHeaders() }),
   getPreviewUrl: (id) => buildApiUrl(`/voices/profiles/${id}/preview`),
   getPreviewBlob: (id) => axios.get(buildApiUrl(`/voices/profiles/${id}/preview`), {
@@ -32,6 +33,22 @@ export const voicesAPI = {
   generateNarration: ({ book_id, voice_profile_id }) => axios.post(
     buildApiUrl('/voices/narrations'),
     { book_id, voice_profile_id },
-    { headers: authHeaders(), timeout: 30000 }
+    { headers: authHeaders(), timeout: 45000 }
+  ),
+  getAudioBlob: (audioUrl) => axios.get(buildApiUrl(audioUrl), {
+    headers: authHeaders(),
+    responseType: 'blob',
+  }),
+  streamNarration: ({ book_id, voice_profile_id, signal }) => fetch(
+    buildApiUrl('/voices/narrations/stream'),
+    {
+      method: 'POST',
+      headers: {
+        ...authHeaders(),
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ book_id, voice_profile_id }),
+      signal,
+    }
   ),
 };

@@ -64,7 +64,10 @@ async function build() {
         if (stat.isDirectory()) {
           await fs.copy(sourcePath, destPath, {
             filter: (src) => {
-              const relativePath = path.relative(SOURCE_DIR, src);
+              const relativePath = path.relative(SOURCE_DIR, src).replace(/\\/g, '/');
+              if (relativePath === 'uploads/voices' || relativePath.startsWith('uploads/voices/')) {
+                return false;
+              }
               return !EXCLUDE_PATTERNS.some(exclude => 
                 relativePath.includes(exclude) || 
                 relativePath.match(new RegExp(exclude.replace('*', '.*')))

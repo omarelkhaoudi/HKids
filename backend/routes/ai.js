@@ -6,7 +6,11 @@ import {
   streamVoiceAssistantReply
 } from '../services/ai/voiceAssistantService.js';
 import { transcribeAudio } from '../services/ai/SpeechToTextService.js';
-import { aiErrorResponse } from '../services/ai/errors.js';
+import { aiErrorResponse, AIQuotaExceededError } from '../services/ai/errors.js';
+import { isAllowedAudioMetadata, validateAudioUpload } from '../services/voice/audioValidation.js';
+import { voiceConfig } from '../services/voice/voiceConfig.js';
+import { aiConfig } from '../services/ai/aiConfig.js';
+import { getDatabase } from '../database/init.js';
 import {
   loadVoiceAssistantContext,
   normalizeConversation
@@ -24,11 +28,47 @@ const upload = multer({
   limits: {
     fileSize: 8 * 1024 * 1024,
     files: 1
+  },
+  fileFilter: (req, file, cb) => {
+    if (isAllowedAudioMetadata(file)) return cb(null, true);
+    const error = new Error('Unsupported audio format');
+    error.status = 415;
+    cb(error);
   }
 });
 
 function canUseAI(user) {
   return ['kid', 'parent', 'admin'].includes(user?.role);
+}
+
+async function assertElevenLabsSttQuota(userId, audioBytes) {
+  if (aiConfig.transcriptionProvider !== 'elevenlabs' || !voiceConfig.monthlySttBytesLimit) return;
+  const pool = getDatabase();
+  const result = await pool.query(
+    `SELECT COALESCE(SUM(character_count), 0)::bigint AS used
+     FROM voice_usage_records
+     WHERE user_id = $1
+       AND operation = 'speech_to_text'
+       AND created_at >= date_trunc('month', NOW())`,
+    [userId]
+  );
+  if (Number(result.rows[0]?.used || 0) + audioBytes > voiceConfig.monthlySttBytesLimit) {
+    throw new AIQuotaExceededError('Monthly speech-to-text limit reached', {
+      provider: 'elevenlabs',
+      retryable: false
+    });
+  }
+}
+
+async function recordElevenLabsSttUsage(userId, audioBytes) {
+  if (aiConfig.transcriptionProvider !== 'elevenlabs') return;
+  await getDatabase().query(
+    `INSERT INTO voice_usage_records (
+       user_id, operation, provider, character_count
+     )
+     VALUES ($1, 'speech_to_text', 'elevenlabs', $2)`,
+    [userId, audioBytes]
+  );
 }
 
 router.post('/transcribe', verifyToken, upload.single('audio'), enforceParentalAccess(), async (req, res) => {
@@ -37,15 +77,15 @@ router.post('/transcribe', verifyToken, upload.single('audio'), enforceParentalA
       return res.status(403).json({ error: 'Access denied' });
     }
 
-    if (!req.file?.buffer) {
-      return res.status(400).json({ error: 'audio file is required' });
-    }
+    const validatedAudio = validateAudioUpload(req.file, { maxBytes: 8 * 1024 * 1024 });
+    await assertElevenLabsSttQuota(req.user.id, validatedAudio.size);
 
     const result = await transcribeAudio({
       audioBuffer: req.file.buffer,
-      mimeType: req.file.mimetype,
+      mimeType: validatedAudio.mimeType,
       language: req.body.language || 'fr-FR'
     });
+    await recordElevenLabsSttUsage(req.user.id, validatedAudio.size);
 
     if (!result.transcript) {
       return res.status(422).json({
