@@ -1,5 +1,6 @@
-import {motion} from 'framer-motion';
+import { motion } from 'framer-motion';
 import {CONTENT_LANGUAGES} from '../../constants/contentOptions';
+import {useLanguage} from '../../context/LanguageContext';
 import {XIcon} from '../Icons';
 import {KidAvatar} from './KidAvatar';
 
@@ -12,10 +13,11 @@ export function KidProfileFormModal({
  onSubmit,
  saving = false,
 }) {
+ const { t } = useLanguage();
  if (!open) return null;
 
  const previewKid = {
- name: form.name || 'Enfant',
+ name: form.name || t('parentChild'),
  avatar: form.avatar,
  photo_url: form.photo_url,
 };
@@ -53,16 +55,16 @@ export function KidProfileFormModal({
  <div className="mb-5 flex items-center justify-between gap-4">
  <div>
  <h3 className="text-xl font-bold text-foreground">
- {editingKid ? 'Modifier le profil' : 'Ajouter un enfant'}
+ {editingKid ? t('parentKidFormEdit') : t('parentKidFormAdd')}
  </h3>
  <p className="text-sm text-foreground-muted">
- Profil associe au parent connecte.
+ {t('parentKidFormSubtitle')}
  </p>
  </div>
  <button
  onClick={onClose}
  className="rounded-2xl p-2 text-foreground-muted transition hover:bg-surface-secondary"
- aria-label="Fermer"
+ aria-label={t('parentKidFormClose')}
  >
  <XIcon className="h-5 w-5" />
  </button>
@@ -72,7 +74,7 @@ export function KidProfileFormModal({
  <KidAvatar kid={previewKid} size="lg" />
  <div>
  <p className="font-bold text-foreground">
- {form.name || 'Nouveau profil'}
+ {form.name || t('parentKidFormNewProfile')}
  </p>
  <p className="text-sm text-foreground-muted">
  {form.preferred_language?.toUpperCase() || 'FR'}
@@ -83,20 +85,20 @@ export function KidProfileFormModal({
  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
  <div>
  <label className="mb-2 block text-sm font-bold text-foreground-secondary">
- Prenom
+ {t('parentKidFormFirstName')}
  </label>
  <input
  type="text"
  value={form.name}
  onChange={(event) => updateField('name', event.target.value)}
  className="w-full rounded-2xl border border-surface-300 px-4 py-2 outline-none transition focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20"
- placeholder="Prenom de l'enfant"
+ placeholder={t('parentKidFormFirstNamePlaceholder')}
  />
  </div>
 
  <div>
  <label className="mb-2 block text-sm font-bold text-foreground-secondary">
- Age
+ {t('parentKidFormAge')}
  </label>
  <input
  type="number"
@@ -105,13 +107,13 @@ export function KidProfileFormModal({
  className="w-full rounded-2xl border border-surface-300 px-4 py-2 outline-none transition focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20"
  min="0"
  max="18"
- placeholder="Age"
+ placeholder={t('parentKidFormAge')}
  />
  </div>
 
  <div>
  <label className="mb-2 block text-sm font-bold text-foreground-secondary">
- Date de naissance
+ {t('parentKidFormBirthDate')}
  </label>
  <input
  type="date"
@@ -123,7 +125,7 @@ export function KidProfileFormModal({
 
  <div>
  <label className="mb-2 block text-sm font-bold text-foreground-secondary">
- Langue preferee
+ {t('parentKidFormLanguage')}
  </label>
  <select
  value={form.preferred_language}
@@ -140,21 +142,21 @@ export function KidProfileFormModal({
 
  <div>
  <label className="mb-2 block text-sm font-bold text-foreground-secondary">
- Avatar
+ {t('parentKidFormAvatar')}
  </label>
  <input
  type="text"
  value={form.avatar}
  onChange={(event) => updateField('avatar', event.target.value)}
  className="w-full rounded-2xl border border-surface-300 px-4 py-2 outline-none transition focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20"
- placeholder="Initiale ou petit nom"
+ placeholder={t('parentKidFormAvatarPlaceholder')}
  maxLength={24}
  />
  </div>
 
  <div>
  <label className="mb-2 block text-sm font-bold text-foreground-secondary">
- Photo
+ {t('parentKidFormPhoto')}
  </label>
  <input
  type="file"
@@ -173,14 +175,14 @@ export function KidProfileFormModal({
 
  <div className="md:col-span-2">
  <label className="mb-2 block text-sm font-bold text-foreground-secondary">
- Centres d'interet
+ {t('parentKidFormInterests')}
  </label>
  <input
  type="text"
  value={form.interests}
  onChange={(event) => updateField('interests', event.target.value)}
  className="w-full rounded-2xl border border-surface-300 px-4 py-2 outline-none transition focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20"
- placeholder="dinosaures, espace, animaux..."
+ placeholder={t('parentKidFormInterestsPlaceholder')}
  />
  </div>
  </div>
@@ -190,14 +192,14 @@ export function KidProfileFormModal({
  onClick={onClose}
  className="rounded-2xl bg-surface-200 px-5 py-2 font-bold text-foreground transition hover:bg-surface-300"
  >
- Annuler
+ {t('parentCancel')}
  </button>
  <button
  onClick={onSubmit}
  disabled={saving}
  className="rounded-2xl bg-primary-500 px-5 py-2 font-bold text-white transition hover:bg-primary-600 disabled:cursor-not-allowed disabled:opacity-60"
  >
- {saving ? 'Enregistrement...' : editingKid ? 'Modifier' : 'Ajouter'}
+ {saving ? t('parentSaving') : editingKid ? t('parentModify') : t('parentCreate')}
  </button>
  </div>
  </motion.div>

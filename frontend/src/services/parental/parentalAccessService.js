@@ -10,6 +10,7 @@ const MESSAGES = {
   CATEGORY_NOT_ALLOWED: "Ce contenu n'appartient pas à une catégorie autorisée.",
   LANGUAGE_NOT_ALLOWED: "Cette langue n'est pas autorisée par le contrôle parental.",
   THEME_NOT_ALLOWED: "Ce thème n'est pas autorisé par le contrôle parental.",
+  CONTENT_TYPE_NOT_ALLOWED: "Ce type de contenu n'est pas autorisé par le contrôle parental.",
   AGE_NOT_ALLOWED: "Ce contenu n'est pas adapté à ton âge.",
   PREMIUM_NOT_ALLOWED: "Ce contenu premium doit être débloqué par ton parent.",
   POLICY_UNAVAILABLE: "Le contrôle parental doit être vérifié avant d'utiliser ce contenu hors connexion."
@@ -118,6 +119,9 @@ export function getParentalViolation(policy, content = null) {
   }
   if (rules.allowed_themes?.length && (!content.theme || !rules.allowed_themes.includes(content.theme))) {
     return restriction('THEME_NOT_ALLOWED');
+  }
+  if (rules.allowed_content_types?.length && content.content_type && !rules.allowed_content_types.includes(content.content_type)) {
+    return restriction('CONTENT_TYPE_NOT_ALLOWED');
   }
 
   if (content.category_id != null) {

@@ -207,7 +207,8 @@ export async function loadChildAccessPolicy({
       quiet_start_time: rules?.quiet_start_time ? String(rules.quiet_start_time).slice(0, 5) : null,
       quiet_end_time: rules?.quiet_end_time ? String(rules.quiet_end_time).slice(0, 5) : null,
       allowed_languages: normalizeList(rules?.allowed_languages),
-      allowed_themes: normalizeList(rules?.allowed_themes)
+      allowed_themes: normalizeList(rules?.allowed_themes),
+      allowed_content_types: normalizeList(rules?.allowed_content_types)
     },
     categoryRestrictionsActive: true,
     allowedCategoryIds: allowedCategories.map((category) => Number(category.id)),
@@ -274,6 +275,14 @@ export function getContentAccessViolation(policy, content = {}, { includeGlobal 
     return new ParentalAccessError('THEME_NOT_ALLOWED', {
       theme: content.theme || null,
       allowed_themes: allowedThemes
+    });
+  }
+
+  const allowedContentTypes = policy.rules?.allowed_content_types || [];
+  if (allowedContentTypes.length > 0 && content.content_type && !allowedContentTypes.includes(content.content_type)) {
+    return new ParentalAccessError('CONTENT_TYPE_NOT_ALLOWED', {
+      content_type: content.content_type,
+      allowed_content_types: allowedContentTypes
     });
   }
 

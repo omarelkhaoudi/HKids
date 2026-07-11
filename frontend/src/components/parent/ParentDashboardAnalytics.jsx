@@ -15,9 +15,9 @@ function duration(seconds = 0) {
   return `${Math.floor(minutes / 60)}h ${minutes % 60}min`;
 }
 
-function dateLabel(value) {
-  if (!value) return 'Date inconnue';
-  return new Date(value).toLocaleString('fr-FR', {
+function dateLabel(value, locale) {
+  if (!value) return '—';
+  return new Date(value).toLocaleString(locale, {
     day: 'numeric',
     month: 'short',
     hour: '2-digit',
@@ -38,17 +38,13 @@ function MetricCard({ icon, label, value, detail }) {
   );
 }
 
-function DailyActivityChart({ items = [] }) {
+function DailyActivityChart({ items = [], locale = 'fr-FR' }) {
   const maxSeconds = Math.max(1, ...items.map((item) => (
     Number(item.screen_seconds) || (Number(item.reading_seconds) + Number(item.quiz_seconds))
   )));
-  const description = items.map((item) => {
-    const day = new Date(item.day).toLocaleDateString('fr-FR', { weekday: 'long' });
-    return `${day}: ${duration(item.screen_seconds)} d'écran`;
-  }).join(', ');
 
   return (
-    <div role="img" aria-label={`Activité quotidienne. ${description}`}>
+    <div role="img" aria-label="Daily activity chart">
       <div className="h-56 flex items-end gap-2 border-b border-s border-border px-3 pt-4">
         {items.map((item) => {
           const total = Number(item.screen_seconds)
@@ -64,10 +60,10 @@ function DailyActivityChart({ items = [] }) {
                 initial={{ height: 0 }}
                 animate={{ height: `${height}%` }}
                 className="w-full max-w-10 rounded-t-lg bg-gradient-to-t from-primary-600 to-secondary-400 outline-none focus:ring-2 focus:ring-primary-400"
-                title={`${duration(item.screen_seconds)} écran, ${duration(item.reading_seconds)} lecture, ${item.quiz_attempts} quiz`}
+                title={`${duration(item.screen_seconds)} / ${duration(item.reading_seconds)}`}
               />
               <span className="text-[10px] font-bold text-foreground-muted mt-2">
-                {new Date(item.day).toLocaleDateString('fr-FR', { weekday: 'short' }).slice(0, 2)}
+                {new Date(item.day).toLocaleDateString(locale, { weekday: 'short' }).slice(0, 2)}
               </span>
             </div>
           );
@@ -82,7 +78,7 @@ function DailyActivityChart({ items = [] }) {
   );
 }
 
-function GoalRing({ goal }) {
+function GoalRing({ goal, t }) {
   const percent = Math.max(0, Math.min(100, Number(goal?.progress_percent || 0)));
   const circumference = 351;
   return (
@@ -107,7 +103,7 @@ function GoalRing({ goal }) {
         <span className="absolute text-3xl font-black">{percent}%</span>
       </div>
       <p className="mt-3 text-center text-sm font-bold text-foreground-secondary">
-        {goal ? `${goal.progress_value} / ${goal.target_value} ${goal.goal_type === 'minutes' ? 'minutes' : ''}` : 'Aucun objectif actif'}
+        {goal ? `${goal.progress_value} / ${goal.target_value} ${goal.goal_type === 'minutes' ? t('parentGoalMinutes').toLowerCase() : ''}` : t('parentAnalyticsNoGoal')}
       </p>
     </div>
   );
@@ -117,7 +113,9 @@ function EmptyBlock({ children }) {
   return <p className="py-8 text-center text-sm text-foreground-muted">{children}</p>;
 }
 
-export function ParentDashboardAnalytics({ data, loading }) {
+export function ParentDashboardAnalytics({ data, loading, language = 'fr', t = (key) => key }) {
+  const locale = language === 'ar' ? 'ar-MA' : language === 'en' ? 'en-US' : 'fr-FR';
+
   if (loading && !data) {
     return (
       <div className="space-y-6">
@@ -128,7 +126,7 @@ export function ParentDashboardAnalytics({ data, loading }) {
       </div>
     );
   }
-  if (!data) return <Card className="p-8"><EmptyBlock>Aucune statistique disponible.</EmptyBlock></Card>;
+  if (!data) return <Card className="p-8"><EmptyBlock>{t('parentAnalyticsNoData')}</EmptyBlock></Card>;
 
   const summary = data.summary || {};
   const screenLimitSeconds = Number(summary.daily_screen_limit_minutes || 0) * 60;
@@ -142,26 +140,26 @@ export function ParentDashboardAnalytics({ data, loading }) {
   return (
     <div className="space-y-8">
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
-        <MetricCard icon={<ClockIcon className="w-5 h-5" />} label="Temps de lecture" value={duration(summary.reading_seconds)} detail={`${summary.reading_sessions || 0} sessions`} />
-        <MetricCard icon={<ClockIcon className="w-5 h-5" />} label="Temps écran aujourd'hui" value={duration(summary.screen_seconds_today)} detail={`${duration(summary.screen_remaining_seconds_today)} restantes`} />
-        <MetricCard icon={<BookIcon className="w-5 h-5" />} label="Progression moyenne" value={`${summary.average_progress_percent || 0}%`} detail={`${summary.books_completed || 0} livres terminés`} />
-        <MetricCard icon={<BrainIcon className="w-5 h-5" />} label="Quiz" value={`${summary.quiz_attempts || 0}`} detail={`${summary.quiz_successes || 0} réussites, score moyen ${summary.average_quiz_score || 0}%`} />
-        <MetricCard icon={<StarIcon className="w-5 h-5" />} label="Livres favoris" value={data.favorites?.total || 0} detail={`Liste limitée à ${data.favorites?.limit || 20}`} />
-        <MetricCard icon={<HistoryIcon className="w-5 h-5" />} label="Série d'activité" value={`${summary.reading_streak_days || 0} jours`} detail={`${data.history?.total || 0} livres dans l'historique`} />
+        <MetricCard icon={<ClockIcon className="w-5 h-5" />} label={t('parentAnalyticsReading')} value={duration(summary.reading_seconds)} detail={`${summary.reading_sessions || 0} sessions`} />
+        <MetricCard icon={<ClockIcon className="w-5 h-5" />} label={t('parentAnalyticsScreen')} value={duration(summary.screen_seconds_today)} detail={`${duration(summary.screen_remaining_seconds_today)}`} />
+        <MetricCard icon={<BookIcon className="w-5 h-5" />} label={t('parentAnalyticsProgress')} value={`${summary.average_progress_percent || 0}%`} detail={`${summary.books_completed || 0}`} />
+        <MetricCard icon={<BrainIcon className="w-5 h-5" />} label={t('parentAnalyticsQuiz')} value={`${summary.quiz_attempts || 0}`} detail={`${summary.quiz_successes || 0} / ${summary.average_quiz_score || 0}%`} />
+        <MetricCard icon={<StarIcon className="w-5 h-5" />} label={t('parentAnalyticsFavorites')} value={data.favorites?.total || 0} detail="" />
+        <MetricCard icon={<HistoryIcon className="w-5 h-5" />} label={t('parentAnalyticsStreak')} value={`${summary.reading_streak_days || 0}`} detail={`${data.history?.total || 0}`} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <Card className="p-6 lg:col-span-2 shadow-floating">
-          <h2 className="text-xl font-black mb-1">Activité quotidienne réelle</h2>
-          <p className="text-sm text-foreground-muted mb-5">Temps actif, lecture et quiz sur {data.period?.days || 7} jours.</p>
-          <DailyActivityChart items={data.daily_activity || []} />
+          <h2 className="text-xl font-black mb-1">{t('parentAnalyticsDaily')}</h2>
+          <p className="text-sm text-foreground-muted mb-5">{t('parentAnalyticsDailyDesc', { days: data.period?.days || 7 })}</p>
+          <DailyActivityChart items={data.daily_activity || []} locale={locale} />
         </Card>
         <Card className="p-6 shadow-floating flex flex-col justify-center">
-          <h2 className="text-xl font-black mb-5 text-center">Objectif de lecture</h2>
-          <GoalRing goal={data.goal} />
+          <h2 className="text-xl font-black mb-5 text-center">{t('parentAnalyticsGoal')}</h2>
+          <GoalRing goal={data.goal} t={t} />
           <div className="mt-6">
             <div className="flex justify-between text-xs font-bold mb-2">
-              <span>Temps écran</span><span>{screenPercent}% de la limite</span>
+              <span>{t('parentAnalyticsScreen')}</span><span>{t('parentAnalyticsScreenLimit', { percent: screenPercent })}</span>
             </div>
             <ProgressBar progress={screenPercent} />
           </div>
@@ -170,10 +168,10 @@ export function ParentDashboardAnalytics({ data, loading }) {
 
       <Card className="p-6 shadow-floating">
         <div className="flex items-center justify-between mb-5">
-          <h2 className="text-xl font-black">Progression des livres</h2>
-          <span className="text-sm font-bold text-foreground-muted">{summary.books_started || 0} commencés</span>
+          <h2 className="text-xl font-black">{t('parentAnalyticsBookProgress')}</h2>
+          <span className="text-sm font-bold text-foreground-muted">{t('parentAnalyticsStarted', { count: summary.books_started || 0 })}</span>
         </div>
-        {(data.progress?.items || []).length === 0 ? <EmptyBlock>Aucun livre commencé.</EmptyBlock> : (
+        {(data.progress?.items || []).length === 0 ? <EmptyBlock>{t('parentAnalyticsNoBooks')}</EmptyBlock> : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {data.progress.items.map((book) => (
               <div key={book.book_id} className="p-4 rounded-2xl bg-surface-secondary">
@@ -190,8 +188,8 @@ export function ParentDashboardAnalytics({ data, loading }) {
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
         <Card className="p-6 shadow-floating">
-          <h2 className="text-xl font-black mb-5">Livres favoris</h2>
-          {(data.favorites?.items || []).length === 0 ? <EmptyBlock>Aucun favori synchronisé.</EmptyBlock> : (
+          <h2 className="text-xl font-black mb-5">{t('parentAnalyticsFavorites')}</h2>
+          {(data.favorites?.items || []).length === 0 ? <EmptyBlock>{t('parentAnalyticsNoFavorites')}</EmptyBlock> : (
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
               {data.favorites.items.map((book) => (
                 <div key={book.book_id} className="min-w-0">
@@ -204,35 +202,35 @@ export function ParentDashboardAnalytics({ data, loading }) {
         </Card>
 
         <Card className="p-6 shadow-floating">
-          <h2 className="text-xl font-black mb-5">Quiz et apprentissage</h2>
+          <h2 className="text-xl font-black mb-5">{t('parentAnalyticsQuizLearning')}</h2>
           <div className="grid grid-cols-3 gap-3 text-center">
-            <div className="rounded-2xl bg-surface-secondary p-4"><p className="text-2xl font-black">{summary.quiz_attempts || 0}</p><p className="text-xs text-foreground-muted">Tentatives</p></div>
-            <div className="rounded-2xl bg-surface-secondary p-4"><p className="text-2xl font-black">{quizRate}%</p><p className="text-xs text-foreground-muted">Réussite</p></div>
-            <div className="rounded-2xl bg-surface-secondary p-4"><p className="text-2xl font-black">{duration(summary.quiz_seconds)}</p><p className="text-xs text-foreground-muted">Temps</p></div>
+            <div className="rounded-2xl bg-surface-secondary p-4"><p className="text-2xl font-black">{summary.quiz_attempts || 0}</p><p className="text-xs text-foreground-muted">{t('parentAnalyticsAttempts')}</p></div>
+            <div className="rounded-2xl bg-surface-secondary p-4"><p className="text-2xl font-black">{quizRate}%</p><p className="text-xs text-foreground-muted">{t('parentAnalyticsSuccess')}</p></div>
+            <div className="rounded-2xl bg-surface-secondary p-4"><p className="text-2xl font-black">{duration(summary.quiz_seconds)}</p><p className="text-xs text-foreground-muted">{t('parentAnalyticsTime')}</p></div>
           </div>
         </Card>
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
         <Card className="p-6 shadow-floating">
-          <h2 className="text-xl font-black mb-5">Historique</h2>
+          <h2 className="text-xl font-black mb-5">{t('parentAnalyticsHistory')}</h2>
           <div className="max-h-[32rem] overflow-y-auto space-y-3 pe-2">
-            {(data.history?.items || []).length === 0 ? <EmptyBlock>Aucun historique synchronisé.</EmptyBlock> : data.history.items.map((item) => (
+            {(data.history?.items || []).length === 0 ? <EmptyBlock>{t('parentAnalyticsNoHistory')}</EmptyBlock> : data.history.items.map((item) => (
               <div key={item.book_id} className="p-4 rounded-2xl bg-surface-secondary flex justify-between gap-3">
-                <div className="min-w-0"><p className="font-bold truncate">{item.title}</p><p className="text-xs text-foreground-muted">{dateLabel(item.last_opened_at)}</p></div>
-                <span className="text-sm font-black shrink-0">Page {item.last_page}</span>
+                <div className="min-w-0"><p className="font-bold truncate">{item.title}</p><p className="text-xs text-foreground-muted">{dateLabel(item.last_opened_at, locale)}</p></div>
+                <span className="text-sm font-black shrink-0">{t('parentAnalyticsPage', { page: item.last_page })}</span>
               </div>
             ))}
           </div>
         </Card>
 
         <Card className="p-6 shadow-floating">
-          <h2 className="text-xl font-black mb-5">Activité récente</h2>
+          <h2 className="text-xl font-black mb-5">{t('parentAnalyticsRecent')}</h2>
           <div className="max-h-[32rem] overflow-y-auto space-y-4 pe-2">
-            {(data.timeline?.items || []).length === 0 ? <EmptyBlock>Aucune activité enregistrée.</EmptyBlock> : data.timeline.items.map((event, index) => (
+            {(data.timeline?.items || []).length === 0 ? <EmptyBlock>{t('parentAnalyticsNoActivity')}</EmptyBlock> : data.timeline.items.map((event, index) => (
               <div key={`${event.type}-${event.occurred_at}-${index}`} className="border-s-2 border-primary-300 ps-4">
-                <p className="font-bold">{event.type === 'quiz' ? 'Quiz' : event.type === 'favorite' ? 'Favori' : 'Lecture'} : {event.title}</p>
-                <p className="text-xs text-foreground-muted">{dateLabel(event.occurred_at)}</p>
+                <p className="font-bold">{event.type === 'quiz' ? t('parentAnalyticsEventQuiz') : event.type === 'favorite' ? t('parentAnalyticsEventFavorite') : t('parentAnalyticsEventReading')} : {event.title}</p>
+                <p className="text-xs text-foreground-muted">{dateLabel(event.occurred_at, locale)}</p>
               </div>
             ))}
           </div>

@@ -3,20 +3,24 @@ import { motion } from 'framer-motion';
 import { categoriesAPI } from '../../api/books';
 import { parentalAPI } from '../../api/parental';
 import { useToast } from '../ToastProvider';
-import { Button } from '../ui';
+import { useLanguage } from '../../context/LanguageContext';
+import { Button, EmptyState, Skeleton } from '../ui';
 import { CheckIcon, LockIcon } from '../Icons';
 
 export function ParentCategoryApprovals({ kidId }) {
   const { showToast } = useToast();
+  const { t } = useLanguage();
   const [categories, setCategories] = useState([]);
   const [approvals, setApprovals] = useState({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState(false);
 
   const loadData = useCallback(async () => {
     if (!kidId) return;
     try {
       setLoading(true);
+      setError(false);
       const [categoriesRes, approvalsRes] = await Promise.all([
         categoriesAPI.getAll(),
         parentalAPI.getApprovals(kidId),
@@ -28,13 +32,14 @@ export function ParentCategoryApprovals({ kidId }) {
         approvalMap[row.category_id] = row.approved === true;
       });
       setApprovals(approvalMap);
-    } catch (error) {
-      console.error('Could not load category approvals:', error);
-      showToast('Impossible de charger les autorisations de catégories', 'error');
+    } catch (loadError) {
+      console.error('Could not load category approvals:', loadError);
+      setError(true);
+      showToast(t('parentLoadError'), 'error');
     } finally {
       setLoading(false);
     }
-  }, [kidId, showToast]);
+  }, [kidId, showToast, t]);
 
   useEffect(() => {
     loadData();
@@ -47,6 +52,14 @@ export function ParentCategoryApprovals({ kidId }) {
     }));
   };
 
+  const approveAll = () => {
+    const next = {};
+    categories.forEach((category) => {
+      next[category.id] = true;
+    });
+    setApprovals(next);
+  };
+
   const handleSave = async () => {
     if (!kidId) return;
     try {
@@ -56,11 +69,11 @@ export function ParentCategoryApprovals({ kidId }) {
         approved: approvals[category.id] === true,
       }));
       await parentalAPI.bulkUpdateApprovals(kidId, payload);
-      showToast('Autorisations de catégories enregistrées', 'success');
+      showToast(t('parentApprovalsSaved'), 'success');
       await loadData();
-    } catch (error) {
-      console.error('Could not save category approvals:', error);
-      showToast('Erreur lors de la sauvegarde des autorisations', 'error');
+    } catch (saveError) {
+      console.error('Could not save category approvals:', saveError);
+      showToast(t('parentApprovalsError'), 'error');
     } finally {
       setSaving(false);
     }
@@ -70,23 +83,50 @@ export function ParentCategoryApprovals({ kidId }) {
 
   if (loading) {
     return (
-      <div className="rounded-3xl border border-border bg-card p-6 text-sm text-foreground-muted">
-        Chargement des catégories autorisées...
+      <div className="rounded-3xl border border-border bg-card p-6 space-y-3">
+        <Skeleton className="h-6 w-48" />
+        <Skeleton className="h-4 w-full" />
+        <div className="flex flex-wrap gap-2">
+          {[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-12 w-28 rounded-2xl" />)}
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="rounded-3xl border border-border bg-card p-6">
+        <EmptyState
+          title={t('parentLoadError')}
+          description={t('parentCategoryApprovalsDesc')}
+          actionLabel={t('parentRetry')}
+          onAction={loadData}
+        />
       </div>
     );
   }
 
   return (
     <div className="rounded-3xl border border-border bg-card p-6 shadow-sm space-y-4">
-      <div>
-        <h3 className="text-xl font-black text-foreground">Catégories autorisées</h3>
-        <p className="text-sm text-foreground-muted font-medium mt-1">
-          Choisissez les catégories de livres visibles pour cet enfant.
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+        <div>
+          <h3 className="text-xl font-black text-foreground">{t('parentCategoryApprovalsTitle')}</h3>
+          <p className="text-sm text-foreground-muted font-medium mt-1">
+            {t('parentCategoryApprovalsDesc')}
+          </p>
+          <p className="text-xs text-amber-700 dark:text-amber-300 font-bold mt-2">
+            {t('parentCategoryDefaultHint')}
+          </p>
+        </div>
+        {categories.length > 0 && (
+          <Button variant="outline" size="sm" onClick={approveAll}>
+            {t('parentApproveAll')}
+          </Button>
+        )}
       </div>
 
       {categories.length === 0 ? (
-        <p className="text-sm text-foreground-muted">Aucune catégorie disponible pour le moment.</p>
+        <EmptyState title={t('parentNoCategories')} description={t('parentCategoryApprovalsDesc')} />
       ) : (
         <div className="flex flex-wrap gap-3">
           {categories.map((category) => {
@@ -116,7 +156,7 @@ export function ParentCategoryApprovals({ kidId }) {
       )}
 
       <Button variant="primary" onClick={handleSave} loading={saving} disabled={saving || categories.length === 0}>
-        Enregistrer les autorisations
+        {t('parentSaveApprovals')}
       </Button>
     </div>
   );
