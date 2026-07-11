@@ -13,6 +13,7 @@ import {
 } from '../components/Icons';
 import {KidAvatar} from '../components/parent/KidAvatar';
 import {SettingsCenterModal} from '../components/parent/SettingsCenterModal';
+import {ParentCategoryApprovals} from '../components/parent/ParentCategoryApprovals';
 import {ParentDashboardAnalytics} from '../components/parent/ParentDashboardAnalytics';
 import {SettingsIcon} from '../components/Icons';
 import {clearKidLocalPrivacyData} from '../services/privacy/privacyStorageService';
@@ -420,6 +421,8 @@ function ParentDashboard() {
  </div>
  </div>
  </Card>
+
+ <ParentCategoryApprovals kidId={selectedKid?.id} />
  </div>
 
  {/* Sidebar (Right) */}

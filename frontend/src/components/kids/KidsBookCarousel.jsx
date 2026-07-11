@@ -46,6 +46,7 @@ export function KidsBookCarousel({
   onFavorite,
   onDownload,
   showActions = true,
+  hideTitle = true,
 }) {
   const carouselRef = useRef(null);
 
@@ -77,6 +78,7 @@ export function KidsBookCarousel({
             <KidsMediaCard
               book={book}
               variant={showActions ? 'poster' : 'carousel'}
+              hideTitle={hideTitle}
               showActions={showActions}
               isFavorite={favorites.includes(book.id)}
               offlineReady={offlineContent?.getBookStatus?.(book.id)?.status === 'downloaded'}

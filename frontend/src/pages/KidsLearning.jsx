@@ -7,6 +7,8 @@ import { useAuth } from '../context/AuthContext';
 import { useToast } from '../components/ToastProvider';
 import { Logo } from '../components/Logo';
 import { VoiceAssistant } from '../components/kids/VoiceAssistant';
+import { KidsBottomNav } from '../components/kids/KidsBottomNav';
+import { useLanguage } from '../context/LanguageContext';
 import { getRestrictionMessage } from '../services/parental/parentalAccessService';
 import {
   AudioIcon, BookIcon, ChevronLeftIcon, CheckIcon, HomeIcon, 
@@ -57,6 +59,7 @@ function KidsLearning() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const { showToast } = useToast();
+  const { language } = useLanguage();
   
   const [contents, setContents] = useState([]);
   const [challenges, setChallenges] = useState([]);
@@ -618,6 +621,11 @@ function KidsLearning() {
         </AnimatePresence>
 
       </div>
+      <KidsBottomNav />
+      <VoiceAssistant
+        language={language === 'en' ? 'en-US' : language === 'ar' ? 'ar-MA' : 'fr-FR'}
+        onNavigate={(path) => navigate(path)}
+      />
     </div>
   );
 }

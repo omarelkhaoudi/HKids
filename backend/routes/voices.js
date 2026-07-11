@@ -139,6 +139,12 @@ async function canAccessVoiceFile(pool, req, audioPath) {
                AND vp.consent_given = TRUE
                AND vn.audio_path = $2
            )
+           OR EXISTS (
+             SELECT 1 FROM voice_messages vm
+             WHERE vm.user_id = kp.parent_id
+               AND vm.deleted_at IS NULL
+               AND vm.audio_path = $2
+           )
          )`,
       [req.user.kid_profile_id, audioPath]
     );
@@ -828,6 +834,42 @@ router.get('/profiles/:id/preview', verifyToken, async (req, res) => {
   }
 });
 
+async function getKidParentUserId(pool, kidProfileId) {
+  const result = await pool.query(
+    'SELECT parent_id FROM kids_profiles WHERE id = $1',
+    [kidProfileId]
+  );
+  return result.rows[0]?.parent_id || null;
+}
+
+router.get('/messages/available', verifyToken, async (req, res) => {
+  try {
+    const pool = getPool();
+    let ownerUserId = null;
+
+    if (['parent', 'admin'].includes(req.user?.role)) {
+      ownerUserId = req.user.id;
+    } else if (req.user?.role === 'kid' && req.user.kid_profile_id) {
+      ownerUserId = await getKidParentUserId(pool, req.user.kid_profile_id);
+    }
+
+    if (!ownerUserId) {
+      return res.status(403).json({ error: 'Voice message access denied' });
+    }
+
+    const result = await pool.query(
+      `SELECT * FROM voice_messages
+       WHERE user_id = $1 AND deleted_at IS NULL AND audio_path IS NOT NULL
+       ORDER BY created_at DESC`,
+      [ownerUserId]
+    );
+    res.json(result.rows.map(mapVoiceMessage));
+  } catch (err) {
+    console.error('Error loading available voice messages:', err);
+    res.status(500).json({ error: 'Could not load voice messages' });
+  }
+});
+
 router.get('/messages', verifyToken, requireParent, async (req, res) => {
   try {
     const pool = getPool();
@@ -925,17 +967,32 @@ router.post('/messages', verifyToken, requireParent, upload.single('audio'), asy
   }
 });
 
-router.get('/messages/:id/audio', verifyToken, requireParent, async (req, res) => {
+router.get('/messages/:id/audio', verifyToken, async (req, res) => {
   try {
     const pool = getPool();
+    let ownerUserId = null;
+
+    if (['parent', 'admin'].includes(req.user?.role)) {
+      ownerUserId = req.user.id;
+    } else if (req.user?.role === 'kid' && req.user.kid_profile_id) {
+      ownerUserId = await getKidParentUserId(pool, req.user.kid_profile_id);
+    }
+
+    if (!ownerUserId) {
+      return res.status(403).json({ error: 'Voice message access denied' });
+    }
+
     const result = await pool.query(
       `SELECT audio_path FROM voice_messages
        WHERE id = $1 AND user_id = $2 AND deleted_at IS NULL`,
-      [req.params.id, req.user.id]
+      [req.params.id, ownerUserId]
     );
 
     const audioPath = result.rows[0]?.audio_path;
     if (!audioPath) return res.status(404).json({ error: 'Message audio not found' });
+
+    const allowed = await canAccessVoiceFile(pool, req, audioPath);
+    if (!allowed) return res.status(404).json({ error: 'Message audio not found' });
 
     res.redirect(voiceFileUrl(audioPath));
   } catch (err) {

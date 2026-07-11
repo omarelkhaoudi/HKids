@@ -24,6 +24,7 @@ export const voicesAPI = {
     responseType: 'blob',
   }),
   getMessages: () => axios.get(buildApiUrl('/voices/messages'), { headers: authHeaders() }),
+  getAvailableMessages: () => axios.get(buildApiUrl('/voices/messages/available'), { headers: authHeaders() }),
   createMessage: (formData) => axios.post(buildApiUrl('/voices/messages'), formData, { headers: multipartHeaders() }),
   getMessageAudioBlob: (id) => axios.get(buildApiUrl(`/voices/messages/${id}/audio`), {
     headers: authHeaders(),

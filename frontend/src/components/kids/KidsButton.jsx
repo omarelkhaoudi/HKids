@@ -1,13 +1,15 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 
-export default function KidsButton({ 
-  children, 
-  onClick, 
-  variant = 'primary', 
-  icon: Icon, 
-  className = '', 
-  size = 'md' 
+export default function KidsButton({
+  children,
+  onClick,
+  variant = 'primary',
+  icon: Icon,
+  className = '',
+  size = 'md',
+  'aria-label': ariaLabel,
+  type = 'button',
 }) {
   const baseClasses = "relative flex items-center justify-center font-extrabold select-none transition-all duration-150 touch-manipulation";
   
@@ -27,12 +29,14 @@ export default function KidsButton({
 
   return (
     <motion.button
+      type={type}
       whileHover={{ scale: 1.02 }}
       whileTap={{ scale: 0.95 }}
       onClick={onClick}
+      aria-label={ariaLabel}
       className={`${baseClasses} ${sizeClasses[size]} ${variants[variant]} ${className}`}
     >
-      {Icon && <Icon className="w-8 h-8 mr-3" strokeWidth={2.5} />}
+      {Icon && <Icon className="w-6 h-6 md:w-8 md:h-8 mr-2 md:mr-3 shrink-0" strokeWidth={2.5} />}
       {children}
     </motion.button>
   );
