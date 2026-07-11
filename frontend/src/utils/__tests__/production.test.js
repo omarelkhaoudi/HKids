@@ -7,6 +7,7 @@ import {
   kidToForm
 } from '../kidProfiles.js';
 import { formatContentDuration, contentMatchesCategory } from '../contentLibrary.js';
+import { translate } from '../translations.js';
 
 describe('buildApiUrl', () => {
   it('prefixes API paths with /api', () => {
@@ -65,5 +66,18 @@ describe('contentLibrary utils', () => {
   it('matches content categories by type', () => {
     expect(contentMatchesCategory({ content_type: 'story' }, { contentTypes: ['story'] })).toBe(true);
     expect(contentMatchesCategory({ content_type: 'audio' }, { contentTypes: ['story'] })).toBe(false);
+  });
+});
+
+describe('parent space translations', () => {
+  it('exposes analytics keys in FR, EN and AR', () => {
+    expect(translate('fr', 'parentAnalyticsBookProgress')).toBe('Progression des livres');
+    expect(translate('en', 'parentAnalyticsBookProgress')).toBe('Book progress');
+    expect(translate('ar', 'parentAnalyticsBookProgress')).toBe('تقدم الكتب');
+  });
+
+  it('interpolates parent profile delete confirmation', () => {
+    expect(translate('en', 'parentProfilesDeleteConfirm', { name: 'Lina' }))
+      .toContain('Lina');
   });
 });

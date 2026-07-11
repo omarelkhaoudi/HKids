@@ -573,6 +573,7 @@ export async function initDatabase() {
     await client.query(`ALTER TABLE parental_rules ADD COLUMN IF NOT EXISTS quiet_end_time TIME`);
     await client.query(`ALTER TABLE parental_rules ADD COLUMN IF NOT EXISTS allowed_languages TEXT[] DEFAULT '{}'`);
     await client.query(`ALTER TABLE parental_rules ADD COLUMN IF NOT EXISTS allowed_themes TEXT[] DEFAULT '{}'`);
+    await client.query(`ALTER TABLE parental_rules ADD COLUMN IF NOT EXISTS allowed_content_types TEXT[] DEFAULT '{}'`);
     await client.query(`ALTER TABLE parental_rules ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW()`);
     await client.query(`ALTER TABLE generated_stories ADD COLUMN IF NOT EXISTS user_id INTEGER REFERENCES users(id) ON DELETE SET NULL`);
     await client.query(`ALTER TABLE generated_stories ADD COLUMN IF NOT EXISTS title TEXT NOT NULL DEFAULT 'Histoire personnalisee'`);

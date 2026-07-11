@@ -2,6 +2,7 @@ import {motion} from 'framer-motion';
 import {EditIcon, PlusIcon, TrashIcon} from '../Icons';
 import {CONTENT_LANGUAGES} from '../../constants/contentOptions';
 import {formatKidBirthDate} from '../../utils/kidProfiles';
+import {useLanguage} from '../../context/LanguageContext';
 import {KidAvatar} from './KidAvatar';
 
 function getLanguageLabel(languageId) {
@@ -9,15 +10,17 @@ function getLanguageLabel(languageId) {
 }
 
 export function KidProfilesList({kids, selectedKidId, onSelect, onAdd, onEdit, onDelete}) {
+ const { t } = useLanguage();
+
  return (
  <div className="rounded-3xl bg-card p-6 shadow-lg">
  <div className="mb-5 flex items-center justify-between gap-4">
  <div>
  <h2 className="text-xl font-bold text-foreground">
- Profils enfants
+ {t('parentProfilesTitle')}
  </h2>
  <p className="text-sm text-foreground-muted">
- {kids.length} {kids.length > 1 ? 'profils' : 'profil'}
+ {t('parentKidsCount', { count: kids.length })}
  </p>
  </div>
  <button
@@ -25,21 +28,21 @@ export function KidProfilesList({kids, selectedKidId, onSelect, onAdd, onEdit, o
  className="inline-flex items-center gap-2 rounded-2xl bg-primary-500 px-4 py-2 font-bold text-white transition hover:bg-primary-600"
  >
  <PlusIcon className="h-5 w-5" />
- <span>Ajouter un enfant</span>
+ <span>{t('parentKidFormAdd')}</span>
  </button>
  </div>
 
  {kids.length === 0 ? (
  <div className="rounded-3xl border-2 border-dashed border-border p-8 text-center">
  <p className="font-semibold text-foreground-secondary">
- Aucun profil enfant
+ {t('parentProfilesEmpty')}
  </p>
  <button
  onClick={onAdd}
  className="mt-4 inline-flex items-center gap-2 rounded-2xl bg-primary-500 px-4 py-2 font-bold text-white transition hover:bg-primary-600"
  >
  <PlusIcon className="h-5 w-5" />
- <span>Ajouter un enfant</span>
+ <span>{t('parentKidFormAdd')}</span>
  </button>
  </div>
  ) : (
@@ -70,11 +73,11 @@ export function KidProfilesList({kids, selectedKidId, onSelect, onAdd, onEdit, o
  {kid.name}
  </h3>
  <p className="text-sm text-foreground-muted">
- {kid.age ? `${kid.age} ans` : 'Age non renseigne'} - {getLanguageLabel(kid.preferred_language)}
+ {kid.age ? t('parentKidAgeYears', { age: kid.age }) : t('parentKidAgeUnknown')} - {getLanguageLabel(kid.preferred_language)}
  </p>
  {birthDate && (
  <p className="mt-1 text-sm text-foreground-muted">
- Naissance: {birthDate}
+ {t('parentKidBirthLabel', { date: birthDate })}
  </p>
  )}
  </div>
@@ -100,14 +103,14 @@ export function KidProfilesList({kids, selectedKidId, onSelect, onAdd, onEdit, o
  className="inline-flex flex-1 items-center justify-center gap-2 rounded-2xl bg-card px-3 py-2 text-sm font-bold text-foreground-600 transition hover:bg-primary-50"
  >
  <EditIcon className="h-4 w-4" />
- <span>Modifier</span>
+ <span>{t('parentModify')}</span>
  </button>
  <button
  onClick={() => onDelete(kid)}
  className="inline-flex flex-1 items-center justify-center gap-2 rounded-2xl bg-card px-3 py-2 text-sm font-bold text-foreground-600 transition hover:bg-primary-50"
  >
  <TrashIcon className="h-4 w-4" />
- <span>Supprimer</span>
+ <span>{t('parentDeleteKid')}</span>
  </button>
  </div>
  </motion.div>

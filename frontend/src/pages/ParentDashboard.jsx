@@ -4,17 +4,21 @@ import {motion, AnimatePresence} from 'framer-motion';
 import {Card, Button, Badge, Input, Skeleton, Avatar, EmptyState} from '../components/ui';
 
 import {useAuth} from '../context/AuthContext';
+import {useLanguage} from '../context/LanguageContext';
 import {parentalAPI} from '../api/parental';
 import {useToast} from '../components/ToastProvider';
-import {CONTENT_LANGUAGES, CONTENT_THEMES} from '../constants/contentOptions';
+import {CONTENT_LANGUAGES, CONTENT_THEMES, CONTENT_TYPE_OPTIONS, localizeContentOptions} from '../constants/contentOptions';
 import {buildKidPayload, createEmptyKidForm, kidToForm} from '../utils/kidProfiles';
 import {
  PlusIcon, XIcon, LockIcon, EditIcon, TrashIcon
 } from '../components/Icons';
 import {KidAvatar} from '../components/parent/KidAvatar';
+import {KidProfileFormModal} from '../components/parent/KidProfileFormModal';
 import {SettingsCenterModal} from '../components/parent/SettingsCenterModal';
 import {ParentCategoryApprovals} from '../components/parent/ParentCategoryApprovals';
 import {ParentDashboardAnalytics} from '../components/parent/ParentDashboardAnalytics';
+import {ParentHubNav} from '../components/parent/ParentHubNav';
+import {ParentReadingGoalCard} from '../components/parent/ParentReadingGoalCard';
 import {SettingsIcon} from '../components/Icons';
 import {clearKidLocalPrivacyData} from '../services/privacy/privacyStorageService';
 
@@ -32,6 +36,8 @@ function ParentDashboard() {
  const {user, logout} = useAuth();
  const navigate = useNavigate();
  const {showToast} = useToast();
+ const { language, t, isRtl } = useLanguage();
+ const contentTypeOptions = localizeContentOptions(CONTENT_TYPE_OPTIONS, language);
  const dashboardRequestRef = useRef(0);
  const rulesRequestRef = useRef(0);
  const [kids, setKids] = useState([]);
@@ -47,12 +53,14 @@ function ParentDashboard() {
  const emptyKidForm = createEmptyKidForm();
  const [kidForm, setKidForm] = useState(emptyKidForm);
  const [accountForm, setAccountForm] = useState({username: '', password: ''});
+ const [kidSaving, setKidSaving] = useState(false);
  const [rulesForm, setRulesForm] = useState({
  daily_screen_time_minutes: 30,
  quiet_start_time: '19:00',
  quiet_end_time: '21:00',
  allowed_languages: [],
- allowed_themes: []
+ allowed_themes: [],
+ allowed_content_types: []
 });
 
  useEffect(() => {
@@ -84,7 +92,7 @@ function ParentDashboard() {
 }
 } catch (error) {
  console.error('Error loading data:', error);
- showToast('Erreur lors du chargement des données', 'error');
+ showToast(t('parentLoadDataError'), 'error');
 } finally {
  setLoading(false);
 }
@@ -101,7 +109,7 @@ function ParentDashboard() {
  if (requestId !== dashboardRequestRef.current) return;
  console.error('Parent dashboard data unavailable:', error);
  setDashboardData(null);
- showToast('Impossible de charger les statistiques Supabase', 'error');
+ showToast(t('parentStatsError'), 'error');
 } finally {
  if (requestId === dashboardRequestRef.current) setActivityLoading(false);
 }
@@ -117,12 +125,13 @@ function ParentDashboard() {
  quiet_start_time: res.data?.quiet_start_time || '19:00',
  quiet_end_time: res.data?.quiet_end_time || '21:00',
  allowed_languages: res.data?.allowed_languages || [],
- allowed_themes: res.data?.allowed_themes || []
+ allowed_themes: res.data?.allowed_themes || [],
+ allowed_content_types: res.data?.allowed_content_types || []
 });
 } catch (error) {
  if (requestId !== rulesRequestRef.current) return;
  console.error('Error loading parental rules:', error);
- showToast('Erreur lors du chargement des regles', 'error');
+ showToast(t('parentRulesError'), 'error');
 }
 };
 
@@ -137,17 +146,18 @@ function ParentDashboard() {
  const payload = buildKidPayload(kidForm);
 
  if (!payload.name) {
- showToast('Le prenom est obligatoire', 'error');
+ showToast(t('parentFirstNameRequired'), 'error');
  return;
 }
 
  try {
+ setKidSaving(true);
  if (editingKid) {
  await parentalAPI.updateKid(editingKid.id, payload);
- showToast('Profil enfant mis à jour', 'success');
+ showToast(t('parentKidSaved'), 'success');
 } else {
  await parentalAPI.createKid(payload);
- showToast('Profil enfant créé', 'success');
+ showToast(t('parentKidSaved'), 'success');
 }
  setShowKidModal(false);
  setEditingKid(null);
@@ -155,7 +165,9 @@ function ParentDashboard() {
  loadData();
 } catch (error) {
  console.error('Error saving kid:', error);
- showToast(error.response?.data?.error || 'Erreur lors de la sauvegarde', 'error');
+ showToast(error.response?.data?.error || t('parentRulesError'), 'error');
+} finally {
+ setKidSaving(false);
 }
 };
 
@@ -165,7 +177,7 @@ function ParentDashboard() {
  try {
  await parentalAPI.deleteKid(kidId);
  await clearKidLocalPrivacyData(kidId);
- showToast('Profil supprimé définitivement', 'success');
+ showToast(t('parentKidDeleted'), 'success');
  if (selectedKid?.id === kidId) {
  setSelectedKid(null);
  setDashboardData(null);
@@ -180,7 +192,7 @@ function ParentDashboard() {
  const handleCreateAccount = async () => {
  try {
  await parentalAPI.createKidAccount(selectedKid.id, accountForm.username, accountForm.password);
- showToast('Compte enfant créé avec succès', 'success');
+ showToast(t('parentAccountCreated'), 'success');
  setShowAccountModal(false);
  setAccountForm({username: '', password: ''});
 } catch (error) {
@@ -216,29 +228,23 @@ function ParentDashboard() {
  quiet_start_time: res.data?.quiet_start_time || rulesForm.quiet_start_time,
  quiet_end_time: res.data?.quiet_end_time || rulesForm.quiet_end_time,
  allowed_languages: res.data?.allowed_languages || [],
- allowed_themes: res.data?.allowed_themes || []
+ allowed_themes: res.data?.allowed_themes || [],
+ allowed_content_types: res.data?.allowed_content_types || []
 });
- showToast('Regles du coucher enregistrees', 'success');
+ showToast(t('parentRulesSaved'), 'success');
  await loadKidDashboard(selectedKid.id);
 } catch (error) {
  console.error('Error saving parental rules:', error);
- showToast("Erreur lors de l'enregistrement des regles", 'error');
+ showToast(t('parentRulesError'), 'error');
 } finally {
  setRulesSaving(false);
 }
 };
 
- const formatDuration = (seconds = 0) => {
- const totalMinutes = Math.floor(Number(seconds || 0) / 60);
- if (totalMinutes < 1) return '0 min';
- const hours = Math.floor(totalMinutes / 60);
- const minutes = totalMinutes % 60;
- return hours > 0 ? `${hours}h ${minutes}min` : `${minutes} min`;
-};
-
  const formatDate = (value) => {
- if (!value) return 'Jamais';
- return new Date(value).toLocaleDateString('fr-FR', {
+ if (!value) return t('parentNever');
+ const locale = language === 'ar' ? 'ar-MA' : language === 'en' ? 'en-US' : 'fr-FR';
+ return new Date(value).toLocaleDateString(locale, {
  day: '2-digit',
  month: 'short',
  hour: '2-digit',
@@ -246,7 +252,10 @@ function ParentDashboard() {
 });
 };
 
- const currentDate = new Date().toLocaleDateString('fr-FR', {weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'});
+ const currentDate = new Date().toLocaleDateString(
+ language === 'ar' ? 'ar-MA' : language === 'en' ? 'en-US' : 'fr-FR',
+ {weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'}
+);
  
  if (loading) {
  return (
@@ -263,7 +272,7 @@ function ParentDashboard() {
 }
 
  return (
- <div className="min-h-screen bg-surface-secondary text-foreground font-sans pb-24">
+ <div className="min-h-screen bg-surface-secondary text-foreground font-sans pb-24" dir={isRtl ? 'rtl' : 'ltr'}>
  {/* 1. Dashboard Hero */}
  <div className="relative bg-gradient-to-r from-primary-600 via-secondary-500 to-accent-500 text-white pb-24 pt-8 px-6 md:px-12 overflow-hidden shadow-lg">
  {/* Animated background elements */}
@@ -275,10 +284,10 @@ function ParentDashboard() {
  <Avatar src={null} fallback={user?.username?.[0] || 'P'} size="xl" className="border-4 border-white/20 shadow-xl" />
  <div>
  <p className="text-white/80 font-medium capitalize">{currentDate}</p>
- <h1 className="text-3xl md:text-5xl font-black tracking-tight mb-2">Bonjour, {user?.username || 'Parent'} !</h1>
+ <h1 className="text-3xl md:text-5xl font-black tracking-tight mb-2">{t('parentGreeting')}, {user?.username || 'Parent'} !</h1>
  <div className="flex items-center gap-3">
  <Badge variant="glass" className="bg-card/20 text-white border-none font-bold">
- {kids.length} {kids.length > 1 ? 'Enfants' : 'Enfant'}
+ {t('parentKidsCount').replace('{count}', String(kids.length))}
  </Badge>
  {dashboardData?.subscription && (
  <Badge variant="glass" className="bg-green-500/80 text-white border-none font-bold">
@@ -290,29 +299,30 @@ function ParentDashboard() {
  </div>
  <div className="flex flex-col sm:flex-row gap-3">
  <Button variant="glass" onClick={() => setShowSettingsModal(true)} className="bg-card/10 hover:bg-card/20 text-white font-bold border-none shrink-0">
- <SettingsIcon className="w-5 h-5 mr-2" /> Paramètres
+ <SettingsIcon className="w-5 h-5 mr-2" /> {t('parentSettings')}
  </Button>
- <Button variant="glass" onClick={handleLogout} className="bg-card/10 hover:bg-card/20 text-white font-bold border-none shrink-0">Déconnexion</Button>
+ <Button variant="glass" onClick={handleLogout} className="bg-card/10 hover:bg-card/20 text-white font-bold border-none shrink-0">{t('parentLogout')}</Button>
  <Button variant="glass" onClick={() => {setEditingKid(null); setKidForm(emptyKidForm); setShowKidModal(true);}} className="bg-card hover:bg-surface-secondary text-foreground-600 font-bold border-none shadow-xl shrink-0">
- <PlusIcon className="w-5 h-5 mr-2" /> Ajouter un enfant
+ <PlusIcon className="w-5 h-5 mr-2" /> {t('parentAddKid')}
  </Button>
  </div>
  </div>
  </div>
 
  <div className="max-w-7xl mx-auto px-4 md:px-12 -mt-16 relative z-20 flex flex-col gap-8">
- 
- {/* Toutes les métriques et visualisations viennent du snapshot Supabase. */}
- {selectedKid && <ParentDashboardAnalytics data={dashboardData} loading={activityLoading} />}
+
+ <ParentHubNav />
+
+ {selectedKid && <ParentDashboardAnalytics data={dashboardData} loading={activityLoading} language={language} t={t} />}
 
  {/* 3. Children Profiles Grid */}
  <div>
- <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">Profils Enfants</h2>
+ <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">{t('parentKidProfiles')}</h2>
  {kids.length === 0 ? (
  <EmptyState 
- title="Aucun profil enfant" 
- description="Créez un profil pour votre enfant afin de suivre sa progression et personnaliser son expérience." 
- actionLabel="Ajouter un enfant" 
+ title={t('parentNoKids')} 
+ description={t('parentNoKidsDesc')} 
+ actionLabel={t('parentAddKid')} 
  onAction={() => {setEditingKid(null); setKidForm(emptyKidForm); setShowKidModal(true);}}
  />
  ) : (
@@ -339,9 +349,9 @@ function ParentDashboard() {
  <div className="space-y-4">
  {selectedKid?.id === kid.id && (
  <motion.div initial={{opacity: 0, height: 0}} animate={{opacity: 1, height: 'auto'}} className="pt-4 grid grid-cols-2 gap-2 border-t border-border">
- <Button variant="outline" size="sm" onClick={(e) => {e.stopPropagation(); setEditingKid(kid); setKidForm(kidToForm(kid)); setShowKidModal(true);}} className="font-bold text-xs"><EditIcon className="w-4 h-4 mr-1"/> Modifier</Button>
- <Button variant="outline" size="sm" onClick={(e) => {e.stopPropagation(); setShowAccountModal(true);}} className="font-bold text-xs"><LockIcon className="w-4 h-4 mr-1"/> Compte</Button>
- <Button variant="ghost" size="sm" onClick={(e) => {e.stopPropagation(); handleDeleteKid(kid.id);}} className="font-bold text-xs text-danger-500 hover:bg-danger-50 hover:text-danger-600 col-span-2 border border-transparent hover:border-danger-200"><TrashIcon className="w-4 h-4 mr-1"/> Supprimer</Button>
+ <Button variant="outline" size="sm" onClick={(e) => {e.stopPropagation(); setEditingKid(kid); setKidForm(kidToForm(kid)); setShowKidModal(true);}} className="font-bold text-xs"><EditIcon className="w-4 h-4 mr-1"/> {t('parentEditKid')}</Button>
+ <Button variant="outline" size="sm" onClick={(e) => {e.stopPropagation(); setShowAccountModal(true);}} className="font-bold text-xs"><LockIcon className="w-4 h-4 mr-1"/> {t('parentKidAccount')}</Button>
+ <Button variant="ghost" size="sm" onClick={(e) => {e.stopPropagation(); handleDeleteKid(kid.id);}} className="font-bold text-xs text-danger-500 hover:bg-danger-50 hover:text-danger-600 col-span-2 border border-transparent hover:border-danger-200"><TrashIcon className="w-4 h-4 mr-1"/> {t('parentDeleteKid')}</Button>
  </motion.div>
  )}
  </div>
@@ -358,12 +368,12 @@ function ParentDashboard() {
  <div className="lg:col-span-2 flex flex-col gap-8">
  {/* 5. Parental Controls */}
  <Card className="p-6 shadow-floating">
- <h2 className="text-xl font-bold mb-6">Paramètres Parentaux</h2>
+ <h2 className="text-xl font-bold mb-6">{t('parentRulesTitle')}</h2>
  <div className="space-y-6">
  <div className="flex items-center justify-between p-4 bg-surface-secondary /50 rounded-2xl">
  <div>
- <h4 className="font-bold">Temps d'écran quotidien</h4>
- <p className="text-sm text-foreground-muted">Limite de lecture (minutes)</p>
+ <h4 className="font-bold">{t('parentScreenTime')}</h4>
+ <p className="text-sm text-foreground-muted">{t('parentScreenTimeDesc')}</p>
  </div>
  <Input 
  type="number" 
@@ -378,18 +388,18 @@ function ParentDashboard() {
 
  <div className="grid grid-cols-2 gap-4">
  <div className="p-4 bg-surface-secondary /50 rounded-2xl">
- <h4 className="font-bold mb-2">Début pause</h4>
+ <h4 className="font-bold mb-2">{t('parentQuietStart')}</h4>
  <Input type="time" value={rulesForm.quiet_start_time} onChange={(e) => setRulesForm({...rulesForm, quiet_start_time: e.target.value})} className="w-full font-bold" />
  </div>
  <div className="p-4 bg-surface-secondary /50 rounded-2xl">
- <h4 className="font-bold mb-2">Fin pause</h4>
+ <h4 className="font-bold mb-2">{t('parentQuietEnd')}</h4>
  <Input type="time" value={rulesForm.quiet_end_time} onChange={(e) => setRulesForm({...rulesForm, quiet_end_time: e.target.value})} className="w-full font-bold" />
  </div>
  </div>
 
  <div className="pt-4 border-t border-border flex justify-end">
  <Button variant="primary" onClick={handleSaveRules} disabled={rulesSaving}>
- {rulesSaving ? 'Enregistrement...' : 'Enregistrer les règles'}
+ {rulesSaving ? t('parentSaving') : t('parentSaveRules')}
  </Button>
  </div>
  </div>
@@ -397,10 +407,10 @@ function ParentDashboard() {
 
  {/* Theme & Language Permissions */}
  <Card className="p-6 shadow-floating">
- <h2 className="text-xl font-bold mb-6">Autorisations de lecture</h2>
+ <h2 className="text-xl font-bold mb-6">{t('parentReadingPermissions')}</h2>
  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
  <div>
- <h4 className="font-bold mb-3">Langues autorisées</h4>
+ <h4 className="font-bold mb-3">{t('parentAllowedLanguages')}</h4>
  <div className="flex flex-wrap gap-2">
  {bedtimeLanguages.map(lang => (
  <div key={lang.id} onClick={() => toggleRuleValue('allowed_languages', lang.id)} className={`px-4 py-2 rounded-full text-sm font-bold cursor-pointer transition-colors border-2 ${rulesForm.allowed_languages.includes(lang.id) ? 'bg-primary-500 border-primary-500 text-white' : 'bg-transparent border-border text-foreground-secondary hover:border-primary-300'}`}>
@@ -410,7 +420,7 @@ function ParentDashboard() {
  </div>
  </div>
  <div>
- <h4 className="font-bold mb-3">Thèmes autorisés</h4>
+ <h4 className="font-bold mb-3">{t('parentAllowedThemes')}</h4>
  <div className="flex flex-wrap gap-2">
  {bedtimeThemes.map(theme => (
  <div key={theme.id} onClick={() => toggleRuleValue('allowed_themes', theme.id)} className={`px-4 py-2 rounded-full text-sm font-bold cursor-pointer transition-colors border-2 ${rulesForm.allowed_themes.includes(theme.id) ? 'bg-secondary-500 border-secondary-500 text-white' : 'bg-transparent border-border text-foreground-secondary hover:border-secondary-300'}`}>
@@ -420,7 +430,28 @@ function ParentDashboard() {
  </div>
  </div>
  </div>
+ <div className="mt-6">
+ <h4 className="font-bold mb-3">{t('parentAllowedContentTypes')}</h4>
+ <div className="flex flex-wrap gap-2">
+ {contentTypeOptions.map((type) => (
+ <div key={type.id} onClick={() => toggleRuleValue('allowed_content_types', type.id)} className={`px-4 py-2 rounded-full text-sm font-bold cursor-pointer transition-colors border-2 ${rulesForm.allowed_content_types.includes(type.id) ? 'bg-emerald-500 border-emerald-600 text-white' : 'bg-transparent border-border text-foreground-secondary hover:border-emerald-300'}`}>
+ {type.label}
+ </div>
+ ))}
+ </div>
+ </div>
+ <div className="pt-4 border-t border-border flex justify-end">
+ <Button variant="primary" onClick={handleSaveRules} disabled={rulesSaving}>
+ {rulesSaving ? t('parentSaving') : t('parentSaveRules')}
+ </Button>
+ </div>
  </Card>
+
+ <ParentReadingGoalCard
+ kidId={selectedKid?.id}
+ goal={dashboardData?.goal}
+ onSaved={() => loadKidDashboard(selectedKid.id)}
+ />
 
  <ParentCategoryApprovals kidId={selectedKid?.id} />
  </div>
@@ -432,11 +463,11 @@ function ParentDashboard() {
  <Badge variant="glass" className="bg-card/20 text-white border-none font-bold mb-4">
  {dashboardData?.subscription?.status || 'Sans abonnement actif'}
  </Badge>
- <h2 className="text-2xl font-black mb-1">{dashboardData?.subscription?.plan_name || 'Formule gratuite'}</h2>
+ <h2 className="text-2xl font-black mb-1">{dashboardData?.subscription?.plan_name || t('parentFreePlan')}</h2>
  {dashboardData?.subscription?.current_period_end && (
- <p className="text-white/70 text-sm mb-6">Échéance : {formatDate(dashboardData.subscription.current_period_end)}</p>
+ <p className="text-white/70 text-sm mb-6">{t('parentSubscriptionExpiry')} : {formatDate(dashboardData.subscription.current_period_end)}</p>
  )}
- <Button variant="outline" fullWidth onClick={() => navigate('/abonnements')} className="bg-card hover:bg-surface-secondary text-black border-none font-bold">Gérer l'abonnement</Button>
+ <Button variant="outline" fullWidth onClick={() => navigate('/abonnements')} className="bg-card hover:bg-surface-secondary text-black border-none font-bold">{t('parentManageSubscription')}</Button>
  </div>
  </div>
 
@@ -444,54 +475,37 @@ function ParentDashboard() {
  )}
  </div>
 
- {/* Modals from old implementation */}
- <AnimatePresence>
- {showKidModal && (
- <motion.div initial={{opacity: 0}} animate={{opacity: 1}} exit={{opacity: 0}} className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setShowKidModal(false)}>
- <motion.div initial={{scale: 0.9, opacity: 0}} animate={{scale: 1, opacity: 1}} exit={{scale: 0.9, opacity: 0}} onClick={(e) => e.stopPropagation()} className="bg-card rounded-3xl p-6 w-full max-w-md shadow-2xl">
- <div className="flex items-center justify-between mb-6">
- <h3 className="text-2xl font-black">{editingKid ? 'Modifier le profil' : 'Créer un profil'}</h3>
- <button onClick={() => setShowKidModal(false)} className="p-2 hover:bg-surface-secondary rounded-full transition-colors"><XIcon className="w-5 h-5" /></button>
- </div>
- <div className="space-y-4">
- <div>
- <label className="block text-sm font-bold mb-2">Prénom</label>
- <Input type="text" value={kidForm.name} onChange={(e) => setKidForm({...kidForm, name: e.target.value})} placeholder="Prénom" className="w-full" />
- </div>
- <div>
- <label className="block text-sm font-bold mb-2">Âge (optionnel)</label>
- <Input type="number" value={kidForm.age} onChange={(e) => setKidForm({...kidForm, age: e.target.value})} placeholder="Âge" className="w-full" />
- </div>
- <div className="flex gap-3 pt-4">
- <Button variant="ghost" className="flex-1" onClick={() => setShowKidModal(false)}>Annuler</Button>
- <Button variant="primary" className="flex-1" onClick={handleSaveKid}>{editingKid ? 'Modifier' : 'Créer'}</Button>
- </div>
- </div>
- </motion.div>
- </motion.div>
- )}
- </AnimatePresence>
+ {/* Kid profile modal */}
+ <KidProfileFormModal
+ open={showKidModal}
+ editingKid={editingKid}
+ form={kidForm}
+ onChange={setKidForm}
+ onClose={() => { setShowKidModal(false); setEditingKid(null); }}
+ onSubmit={handleSaveKid}
+ saving={kidSaving}
+ />
 
  <AnimatePresence>
  {showAccountModal && (
  <motion.div initial={{opacity: 0}} animate={{opacity: 1}} exit={{opacity: 0}} className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setShowAccountModal(false)}>
  <motion.div initial={{scale: 0.9, opacity: 0}} animate={{scale: 1, opacity: 1}} exit={{scale: 0.9, opacity: 0}} onClick={(e) => e.stopPropagation()} className="bg-card rounded-3xl p-6 w-full max-w-md shadow-2xl">
  <div className="flex items-center justify-between mb-6">
- <h3 className="text-2xl font-black">Compte de {selectedKid?.name}</h3>
+ <h3 className="text-2xl font-black">{t('parentAccountTitle').replace('{name}', selectedKid?.name || '')}</h3>
  <button onClick={() => setShowAccountModal(false)} className="p-2 hover:bg-surface-secondary rounded-full transition-colors"><XIcon className="w-5 h-5" /></button>
  </div>
  <div className="space-y-4">
  <div>
- <label className="block text-sm font-bold mb-2">Nom d'utilisateur</label>
+ <label className="block text-sm font-bold mb-2">{t('parentUsername')}</label>
  <Input type="text" value={accountForm.username} onChange={(e) => setAccountForm({...accountForm, username: e.target.value})} placeholder="Nom d'utilisateur" className="w-full" />
  </div>
  <div>
- <label className="block text-sm font-bold mb-2">Mot de passe</label>
+ <label className="block text-sm font-bold mb-2">{t('parentPassword')}</label>
  <Input type="password" value={accountForm.password} onChange={(e) => setAccountForm({...accountForm, password: e.target.value})} placeholder="Mot de passe (min. 6 caractères)" className="w-full" />
  </div>
  <div className="flex gap-3 pt-4">
- <Button variant="ghost" className="flex-1" onClick={() => setShowAccountModal(false)}>Annuler</Button>
- <Button variant="primary" className="flex-1 bg-green-500 hover:bg-green-600 text-white" onClick={handleCreateAccount}>Créer le compte</Button>
+ <Button variant="ghost" className="flex-1" onClick={() => setShowAccountModal(false)}>{t('parentCancel')}</Button>
+ <Button variant="primary" className="flex-1 bg-green-500 hover:bg-green-600 text-white" onClick={handleCreateAccount}>{t('parentCreateAccount')}</Button>
  </div>
  </div>
  </motion.div>

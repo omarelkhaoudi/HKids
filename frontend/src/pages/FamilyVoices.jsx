@@ -3,6 +3,7 @@ import {Link, useNavigate} from 'react-router-dom';
 import {motion, AnimatePresence} from 'framer-motion';
 import {voicesAPI} from '../api/voices';
 import {useAuth} from '../context/AuthContext';
+import {useLanguage} from '../context/LanguageContext';
 import {useToast} from '../components/ToastProvider';
 import {useOfflineContent} from '../hooks/useOfflineContent';
 import {getDownloads, getOfflineBlobUrl, offlineContentIds, saveVoiceMessageOffline} from '../services/offline/offlineContentService';
@@ -125,6 +126,7 @@ function FamilyVoices() {
  const {user} = useAuth();
  const navigate = useNavigate();
  const {showToast} = useToast();
+ const { t, isRtl } = useLanguage();
  const [profiles, setProfiles] = useState([]);
  const [messages, setMessages] = useState([]);
  const [profileForm, setProfileForm] = useState(emptyProfileForm);
@@ -170,9 +172,9 @@ function FamilyVoices() {
  .filter((item) => item.type === 'voice-message' && item.status === 'downloaded')
  .map((item) => item.payload)
  );
- showToast('Mode hors connexion activé', 'info');
+ showToast(t('parentVoiceOffline'), 'info');
 } else {
- showToast('Impossible de charger les voix familiales', 'error');
+ showToast(t('parentVoiceLoadError'), 'error');
 }
 } finally {
  setLoading(false);
@@ -246,7 +248,7 @@ function FamilyVoices() {
  if (!window.confirm(`Supprimer définitivement la voix de ${profile.name} ?`)) return;
  try {
  await voicesAPI.deleteProfile(profile.id);
- showToast('Profil vocal supprimé', 'info');
+ showToast(t('parentVoiceProfileDeleted'), 'info');
  loadData();
 } catch (error) {
  showToast('Impossible de supprimer cette voix', 'error');
@@ -277,7 +279,7 @@ function FamilyVoices() {
  audio.onended = () => URL.revokeObjectURL(audioUrl);
  await audio.play();
 } catch (error) {
- showToast("Aperçu audio indisponible", 'info');
+ showToast(t('parentVoicePreviewUnavailable'), 'info');
 }
 };
 
@@ -299,10 +301,10 @@ function FamilyVoices() {
  await voicesAPI.createMessage(formData);
  setMessageForm(emptyMessageForm);
  messageRecorder.clear();
- showToast('Message enregistré avec succès', 'success');
+ showToast(t('parentVoiceMessageSaved'), 'success');
  loadData();
 } catch (error) {
- showToast('Impossible de sauvegarder le message', 'error');
+ showToast(t('parentVoiceMessageSaveError'), 'error');
 } finally {
  setSavingMessage(false);
 }
@@ -312,10 +314,10 @@ function FamilyVoices() {
  if (!window.confirm(`Supprimer le message"${message.title}" ?`)) return;
  try {
  await voicesAPI.deleteMessage(message.id);
- showToast('Message supprimé', 'info');
+ showToast(t('parentVoiceMessageDeleted'), 'info');
  loadData();
 } catch (error) {
- showToast('Erreur', 'error');
+ showToast(t('parentVoiceMessageSaveError'), 'error');
 }
 };
 
@@ -329,7 +331,7 @@ function FamilyVoices() {
  audio.onended = () => URL.revokeObjectURL(audioUrl);
  await audio.play();
 } catch (error) {
- showToast('Audio indisponible', 'info');
+ showToast(t('parentVoiceAudioUnavailable'), 'info');
 }
 };
 
@@ -338,36 +340,36 @@ function FamilyVoices() {
  const audioBlob = message.has_audio ? (await voicesAPI.getMessageAudioBlob(message.id)).data : null;
  await saveVoiceMessageOffline(message, audioBlob);
  await offlineContent.refreshDownloads();
- showToast('Disponible hors ligne', 'success');
+ showToast(t('parentVoiceDownloaded'), 'success');
 } catch (error) {
- showToast('Téléchargement impossible', 'error');
+ showToast(t('parentVoiceDownloadError'), 'error');
 }
 };
 
  const removeMessageDownload = async (message) => {
  try {
  await offlineContent.deleteDownload(offlineContentIds.voiceMessage(message.id));
- showToast('Message retiré du mode hors ligne', 'info');
+ showToast(t('parentVoiceRemovedOffline'), 'info');
 } catch (error) {
- showToast('Suppression impossible', 'error');
+ showToast(t('parentVoiceRemoveError'), 'error');
 }
 };
 
  if (loading && profiles.length === 0) {
  return (
- <div className="min-h-screen bg-[#f8fbff] flex items-center justify-center">
+ <div className="min-h-screen bg-[#f8fbff] flex items-center justify-center" dir={isRtl ? 'rtl' : 'ltr'}>
  <div className="flex flex-col items-center">
  <motion.div animate={{rotate: 360}} transition={{duration: 2, repeat: Infinity, ease: 'linear'}}>
  <SparklesIcon className="w-12 h-12 text-foreground-500" />
  </motion.div>
- <p className="mt-4 font-bold text-foreground-secondary">Chargement de votre studio vocal...</p>
+ <p className="mt-4 font-bold text-foreground-secondary">{t('parentVoiceLoading')}</p>
  </div>
  </div>
  );
 }
 
  return (
- <div className="min-h-screen bg-[#f8fbff] text-foreground overflow-x-hidden font-sans">
+ <div className="min-h-screen bg-[#f8fbff] text-foreground overflow-x-hidden font-sans" dir={isRtl ? 'rtl' : 'ltr'}>
  
  {/* HEADER */}
  <header className="sticky top-0 z-40 bg-card/80 backdrop-blur-xl border-b border-border shadow-sm px-4 py-4 flex items-center justify-between">
@@ -381,11 +383,11 @@ function FamilyVoices() {
  <div className="h-6 w-px bg-surface-300 hidden md:block"></div>
  <h1 className="text-xl md:text-2xl font-black bg-clip-text text-transparent bg-gradient-to-r from-primary-600 to-violet-600 flex items-center gap-2">
  <MicrophoneIcon className="w-6 h-6 text-foreground-500" />
- Voice Studio
+ {t('parentVoiceStudio')}
  </h1>
  </div>
  <Button onClick={() => setWizardStep(1)} variant="primary" className="rounded-full shadow-lg hover:scale-105">
- <PlusIcon className="w-5 h-5 mr-1"/> Ajouter une voix
+ <PlusIcon className="w-5 h-5 mr-1"/> {t('parentVoiceAdd')}
  </Button>
  </header>
 
@@ -420,8 +422,8 @@ function FamilyVoices() {
  {/* VOICE LIBRARY */}
  <section>
  <div className="flex items-center justify-between mb-6">
- <h2 className="text-2xl font-black text-foreground">Mes Voix Familiales</h2>
- <Badge variant="soft" className="bg-primary-100 text-foreground-800">{activeProfiles.length} Voix</Badge>
+ <h2 className="text-2xl font-black text-foreground">{t('parentVoiceLibrary')}</h2>
+ <Badge variant="soft" className="bg-primary-100 text-foreground-800">{t('parentVoiceCount', { count: activeProfiles.length })}</Badge>
  </div>
 
  {activeProfiles.length === 0 ? (
@@ -429,12 +431,12 @@ function FamilyVoices() {
  <div className="w-24 h-24 bg-primary-50 rounded-full flex items-center justify-center mb-4">
  <MicrophoneIcon className="w-12 h-12 text-foreground-400" />
  </div>
- <h3 className="text-2xl font-black text-foreground mb-2">Aucune voix créée</h3>
+ <h3 className="text-2xl font-black text-foreground mb-2">{t('parentVoiceEmptyTitle')}</h3>
  <p className="text-foreground-muted max-w-md mx-auto mb-6 font-medium">
- Créez un clone magique de votre voix pour raconter des histoires à vos enfants même quand vous n'êtes pas là.
+ {t('parentVoiceEmptyDesc')}
  </p>
  <Button onClick={() => setWizardStep(1)} variant="primary" size="lg" className="rounded-full shadow-lg">
- Créer ma première voix
+ {t('parentVoiceCreateFirst')}
  </Button>
  </Card>
  ) : (
@@ -495,21 +497,21 @@ function FamilyVoices() {
  
  {/* Create Message Form */}
  <div className="lg:w-1/3">
- <h2 className="text-2xl font-black text-foreground mb-2">Messages Magiques</h2>
- <p className="text-foreground-muted mb-6 font-medium">Laissez de petits mots doux ou des encouragements personnalisés pour vos enfants.</p>
+ <h2 className="text-2xl font-black text-foreground mb-2">{t('parentVoiceMessagesTitle')}</h2>
+ <p className="text-foreground-muted mb-6 font-medium">{t('parentVoiceMessagesDesc')}</p>
  
  <form onSubmit={submitMessage} className="space-y-4">
  <input
  value={messageForm.title}
  onChange={(event) => setMessageForm({...messageForm, title: event.target.value})}
- placeholder="Titre (ex: Bonne nuit mon cœur)"
+ placeholder={t('parentVoiceMessageTitlePlaceholder')}
  className="w-full rounded-2xl border-2 border-border px-4 py-3 font-bold outline-none focus:border-primary-400 bg-surface-secondary focus:bg-card transition-colors"
  required
  />
  <textarea
  value={messageForm.message_text}
  onChange={(event) => setMessageForm({...messageForm, message_text: event.target.value})}
- placeholder="Texte du message (optionnel)"
+ placeholder={t('parentVoiceMessageTextPlaceholder')}
  className="w-full rounded-2xl border-2 border-border px-4 py-3 font-bold outline-none focus:border-primary-400 min-h-[100px] bg-surface-secondary focus:bg-card transition-colors"
  />
  <select
@@ -517,27 +519,27 @@ function FamilyVoices() {
  onChange={(event) => setMessageForm({...messageForm, voice_profile_id: event.target.value})}
  className="w-full rounded-2xl border-2 border-border px-4 py-3 font-bold outline-none focus:border-primary-400 bg-surface-secondary focus:bg-card transition-colors"
  >
- <option value="">Sans voix associée (Voix système)</option>
+ <option value="">{t('parentVoiceMessageNoVoice')}</option>
  {activeProfiles.map((profile) => (
- <option key={profile.id} value={profile.id}>Voix: {profile.name}</option>
+ <option key={profile.id} value={profile.id}>{t('parentVoiceMessageVoiceOption', { name: profile.name })}</option>
  ))}
  </select>
  
  {/* Compact Recorder */}
  <div className="bg-surface-secondary border-2 border-border rounded-2xl p-4">
  <div className="flex items-center justify-between mb-3">
- <span className="font-bold text-sm text-foreground-secondary">Audio direct (Optionnel)</span>
+ <span className="font-bold text-sm text-foreground-secondary">{t('parentVoiceMessageDirectAudio')}</span>
  {messageRecorder.recording && <span className="flex h-3 w-3 relative"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span><span className="relative inline-flex rounded-full h-3 w-3 bg-rose-500"></span></span>}
  </div>
  
  <div className="flex gap-2">
  {!messageRecorder.recording ? (
  <Button type="button" onClick={messageRecorder.start} variant="outline" className="w-full bg-card border-border text-rose-600 hover:bg-rose-50 rounded-xl font-bold">
- <MicrophoneIcon className="w-4 h-4 mr-2"/> Enregistrer
+ <MicrophoneIcon className="w-4 h-4 mr-2"/> {t('parentVoiceRecord')}
  </Button>
  ) : (
  <Button type="button" onClick={messageRecorder.stop} variant="primary" className="w-full bg-surface-900 hover:bg-surface-800 rounded-xl font-bold">
- <PauseIcon className="w-4 h-4 mr-2"/> Stop ({messageRecorder.durationSeconds}s)
+ <PauseIcon className="w-4 h-4 mr-2"/> {t('parentVoiceStop')} ({messageRecorder.durationSeconds}s)
  </Button>
  )}
  {messageRecorder.audioBlob && (
@@ -550,19 +552,19 @@ function FamilyVoices() {
  </div>
 
  <Button type="submit" disabled={savingMessage || messageRecorder.recording} variant="primary" className="w-full rounded-2xl py-4 shadow-lg hover:shadow-xl font-black text-lg bg-gradient-to-r from-primary-500 to-violet-500 border-none">
- {savingMessage ? 'Enregistrement...' : 'Sauvegarder le message'}
+ {savingMessage ? t('parentVoiceSavingMessage') : t('parentVoiceSaveMessage')}
  </Button>
  </form>
  </div>
 
  {/* Message List */}
  <div className="lg:w-2/3 bg-surface-secondary rounded-3xl p-6 border border-border">
- <h3 className="text-lg font-black text-foreground mb-4">Messages Sauvegardés</h3>
+ <h3 className="text-lg font-black text-foreground mb-4">{t('parentVoiceSavedMessages')}</h3>
  <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2">
  {messages.length === 0 ? (
  <div className="text-center py-10 opacity-50">
  <AudioIcon className="w-12 h-12 mx-auto mb-2" />
- <p className="font-bold">Aucun message pour le moment</p>
+ <p className="font-bold">{t('parentVoiceNoMessages')}</p>
  </div>
  ) : messages.map((message) => {
  const offlineReady = offlineContent.downloadsById[offlineContentIds.voiceMessage(message.id)]?.status === 'downloaded';

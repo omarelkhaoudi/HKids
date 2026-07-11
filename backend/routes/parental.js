@@ -107,6 +107,7 @@ function normalizeAge(value) {
 
 const allowedLanguages = ['fr', 'ar', 'en'];
 const allowedThemes = ['dinosaurs', 'space', 'animals', 'princesses', 'jobs', 'world'];
+const allowedContentTypes = ['story', 'audio_story', 'educational', 'song', 'quiz'];
 
 function normalizeAllowedList(value, allowedValues) {
   const items = Array.isArray(value)
@@ -133,7 +134,8 @@ function normalizeRules(row) {
       quiet_start_time: '',
       quiet_end_time: '',
       allowed_languages: [],
-      allowed_themes: []
+      allowed_themes: [],
+      allowed_content_types: []
     };
   }
 
@@ -147,6 +149,7 @@ function normalizeRules(row) {
     quiet_end_time: row.quiet_end_time ? String(row.quiet_end_time).slice(0, 5) : '',
     allowed_languages: row.allowed_languages || [],
     allowed_themes: row.allowed_themes || [],
+    allowed_content_types: row.allowed_content_types || [],
     updated_at: row.updated_at
   };
 }
@@ -465,7 +468,8 @@ router.put('/kids/:id/rules', verifyToken, verifyParent, async (req, res) => {
       quiet_start_time,
       quiet_end_time,
       allowed_languages,
-      allowed_themes
+      allowed_themes,
+      allowed_content_types
     } = req.body;
 
     const safeDailyMinutes = Math.max(
@@ -474,6 +478,7 @@ router.put('/kids/:id/rules', verifyToken, verifyParent, async (req, res) => {
     );
     const normalizedLanguages = normalizeAllowedList(allowed_languages, allowedLanguages);
     const normalizedThemes = normalizeAllowedList(allowed_themes, allowedThemes);
+    const normalizedContentTypes = normalizeAllowedList(allowed_content_types, allowedContentTypes);
     const startTime = normalizeTime(quiet_start_time);
     const endTime = normalizeTime(quiet_end_time);
 
@@ -496,9 +501,10 @@ router.put('/kids/:id/rules', verifyToken, verifyParent, async (req, res) => {
         quiet_end_time,
         allowed_languages,
         allowed_themes,
+        allowed_content_types,
         updated_at
       )
-      VALUES ($1, $2, $3, $4, $5, $6, NOW())
+      VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())
       ON CONFLICT (kid_profile_id)
       DO UPDATE SET
         daily_screen_time_minutes = EXCLUDED.daily_screen_time_minutes,
@@ -506,6 +512,7 @@ router.put('/kids/:id/rules', verifyToken, verifyParent, async (req, res) => {
         quiet_end_time = EXCLUDED.quiet_end_time,
         allowed_languages = EXCLUDED.allowed_languages,
         allowed_themes = EXCLUDED.allowed_themes,
+        allowed_content_types = EXCLUDED.allowed_content_types,
         updated_at = NOW()
       RETURNING *`,
       [
@@ -514,7 +521,8 @@ router.put('/kids/:id/rules', verifyToken, verifyParent, async (req, res) => {
         startTime,
         endTime,
         normalizedLanguages,
-        normalizedThemes
+        normalizedThemes,
+        normalizedContentTypes
       ]
     );
 

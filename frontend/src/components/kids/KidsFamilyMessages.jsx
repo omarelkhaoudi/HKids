@@ -77,7 +77,30 @@ export function KidsFamilyMessages({ className = '' }) {
     }
   };
 
-  if (loading || messages.length === 0) return null;
+  if (loading) {
+    return (
+      <section className={className}>
+        <h2 className="text-2xl font-black text-foreground mb-4 pl-2 flex items-center gap-2">
+          <span aria-hidden="true">💌</span>
+          {t('familyMessagesTitle')}
+        </h2>
+        <div className="flex gap-4">
+          {[1, 2].map((i) => (
+            <div key={i} className="h-40 w-56 rounded-[2rem] bg-surface-secondary animate-pulse" />
+          ))}
+        </div>
+      </section>
+    );
+  }
+
+  if (messages.length === 0) {
+    return (
+      <section className={`${className} rounded-[2rem] border border-dashed border-border bg-card/60 p-6 text-center`}>
+        <p className="text-4xl mb-2" aria-hidden="true">🎙️</p>
+        <p className="font-bold text-foreground-muted">{t('parentFamilyMessagesEmpty')}</p>
+      </section>
+    );
+  }
 
   return (
     <section className={className}>

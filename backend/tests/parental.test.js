@@ -1,6 +1,16 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { resolveChildAge } from '../services/parental/parentalAccessService.js';
+import { resolveChildAge, getContentAccessViolation } from '../services/parental/parentalAccessService.js';
+
+const contentTypePolicy = {
+  applies: true,
+  rules: { allowed_content_types: ['story', 'audio_story'] },
+  allowedCategoryIds: [],
+  allowedCategoryNames: [],
+  premiumUnlockedBookIds: [],
+  hasActiveSubscription: false,
+  child: { age: 8 }
+};
 
 test('resolveChildAge prefers stored age when valid', () => {
   assert.equal(resolveChildAge({ age: 7, date_of_birth: '2015-01-01' }), 7);
@@ -17,4 +27,14 @@ test('resolveChildAge returns null for invalid data', () => {
   assert.equal(resolveChildAge({ age: 'invalid' }), null);
   assert.equal(resolveChildAge({ date_of_birth: 'invalid-date' }), null);
   assert.equal(resolveChildAge(null), null);
+});
+
+test('getContentAccessViolation blocks disallowed content types', () => {
+  const violation = getContentAccessViolation(contentTypePolicy, { content_type: 'quiz', id: 1 });
+  assert.equal(violation?.code, 'CONTENT_TYPE_NOT_ALLOWED');
+});
+
+test('getContentAccessViolation allows listed content types', () => {
+  const violation = getContentAccessViolation(contentTypePolicy, { content_type: 'story', id: 1 });
+  assert.equal(violation, null);
 });

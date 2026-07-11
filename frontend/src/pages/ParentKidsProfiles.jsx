@@ -3,10 +3,12 @@ import {Link, useNavigate} from 'react-router-dom';
 import {AnimatePresence} from 'framer-motion';
 import {parentalAPI} from '../api/parental';
 import {useAuth} from '../context/AuthContext';
+import {useLanguage} from '../context/LanguageContext';
 import {useToast} from '../components/ToastProvider';
 import {Logo} from '../components/Logo';
 import {KidProfilesList} from '../components/parent/KidProfilesList';
 import {KidProfileFormModal} from '../components/parent/KidProfileFormModal';
+import {ParentHubNav} from '../components/parent/ParentHubNav';
 import {LogOutIcon} from '../components/Icons';
 import {buildKidPayload, createEmptyKidForm, kidToForm} from '../utils/kidProfiles';
 import {clearKidLocalPrivacyData} from '../services/privacy/privacyStorageService';
@@ -15,6 +17,7 @@ function ParentKidsProfiles() {
  const {user, logout} = useAuth();
  const navigate = useNavigate();
  const {showToast} = useToast();
+ const { t, isRtl } = useLanguage();
  const [kids, setKids] = useState([]);
  const [selectedKid, setSelectedKid] = useState(null);
  const [loading, setLoading] = useState(true);
@@ -44,11 +47,11 @@ function ParentKidsProfiles() {
  const withInterests = kids.filter((kid) => Array.isArray(kid.interests) && kid.interests.length > 0).length;
 
  return [
- {label: 'Profils', value: kids.length},
- {label: 'Avec avatar', value: withPhoto},
- {label: 'Interets renseignes', value: withInterests},
+ {label: t('parentProfilesStatProfiles'), value: kids.length},
+ {label: t('parentProfilesStatAvatar'), value: withPhoto},
+ {label: t('parentProfilesStatInterests'), value: withInterests},
  ];
-}, [kids]);
+}, [kids, t]);
 
  const loadKids = async () => {
  try {
@@ -62,7 +65,7 @@ function ParentKidsProfiles() {
 });
 } catch (error) {
  console.error('Error loading kids profiles:', error);
- showToast('Erreur lors du chargement des profils enfants', 'error');
+ showToast(t('parentProfilesLoadError'), 'error');
 } finally {
  setLoading(false);
 }
@@ -90,7 +93,7 @@ function ParentKidsProfiles() {
  const payload = buildKidPayload(form);
 
  if (!payload.name) {
- showToast('Le prenom est obligatoire', 'error');
+ showToast(t('parentFirstNameRequired'), 'error');
  return;
 }
 
@@ -100,31 +103,31 @@ function ParentKidsProfiles() {
  ? await parentalAPI.updateKid(editingKid.id, payload)
  : await parentalAPI.createKid(payload);
 
- showToast(editingKid ? 'Profil enfant mis a jour' : 'Profil enfant cree', 'success');
+ showToast(t('parentKidSaved'), 'success');
  closeModal();
  await loadKids();
  setSelectedKid(response.data);
 } catch (error) {
  console.error('Error saving kid profile:', error);
- showToast(error.response?.data?.error || 'Erreur lors de la sauvegarde', 'error');
+ showToast(error.response?.data?.error || t('parentProfilesSaveError'), 'error');
 } finally {
  setSaving(false);
 }
 };
 
  const handleDelete = async (kid) => {
- const confirmed = window.confirm(`Supprimer définitivement le profil de ${kid.name} et toutes ses données ?`);
+ const confirmed = window.confirm(t('parentProfilesDeleteConfirm', { name: kid.name }));
  if (!confirmed) return;
 
  try {
  await parentalAPI.deleteKid(kid.id);
  await clearKidLocalPrivacyData(kid.id);
- showToast('Profil enfant supprimé définitivement', 'success');
+ showToast(t('parentKidDeleted'), 'success');
  if (selectedKid?.id === kid.id) setSelectedKid(null);
  await loadKids();
 } catch (error) {
  console.error('Error deleting kid profile:', error);
- showToast(error.response?.data?.error || 'Erreur lors de la suppression', 'error');
+ showToast(error.response?.data?.error || t('parentProfilesSaveError'), 'error');
 }
 };
 
@@ -135,17 +138,17 @@ function ParentKidsProfiles() {
 
  if (loading) {
  return (
- <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-surface-50 to-surface-100 dark:from-surface-900 dark:to-surface-800">
+ <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-surface-50 to-surface-100 dark:from-surface-900 dark:to-surface-800" dir={isRtl ? 'rtl' : 'ltr'}>
  <div className="text-center">
  <div className="mx-auto h-12 w-12 animate-spin rounded-full border-b-2 border-primary-500"></div>
- <p className="mt-4 text-foreground-secondary">Chargement...</p>
+ <p className="mt-4 text-foreground-secondary">{t('parentProfilesLoading')}</p>
  </div>
  </div>
  );
 }
 
  return (
- <div className="min-h-screen bg-gradient-to-br from-surface-50 to-surface-100 dark:from-surface-900 dark:to-surface-800">
+ <div className="min-h-screen bg-gradient-to-br from-surface-50 to-surface-100 dark:from-surface-900 dark:to-surface-800" dir={isRtl ? 'rtl' : 'ltr'}>
  <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
  <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
  <div className="flex items-center gap-4">
@@ -154,10 +157,10 @@ function ParentKidsProfiles() {
  </Link>
  <div>
  <h1 className="text-2xl font-bold text-foreground">
- Profils enfants
+ {t('parentProfilesTitle')}
  </h1>
  <p className="text-sm text-foreground-muted">
- Gerer les profils associes au parent connecte.
+ {t('parentProfilesDesc')}
  </p>
  </div>
  </div>
@@ -166,17 +169,19 @@ function ParentKidsProfiles() {
  to="/parent"
  className="rounded-2xl bg-card px-4 py-2 font-bold text-foreground-secondary shadow-sm transition hover:bg-surface-secondary"
  >
- Dashboard
+ {t('parentProfilesDashboard')}
  </Link>
  <button
  onClick={handleLogout}
  className="inline-flex items-center gap-2 rounded-2xl bg-primary-500 px-4 py-2 font-bold text-white transition hover:bg-primary-600"
  >
  <LogOutIcon className="h-5 w-5" />
- <span>Deconnexion</span>
+ <span>{t('parentProfilesLogout')}</span>
  </button>
  </div>
  </div>
+
+ <ParentHubNav className="mb-6" />
 
  <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-3">
  {stats.map((item) => (
