@@ -69,8 +69,13 @@ function BookManagement() {
 
  const handleSubmit = async (e) => {
  e.preventDefault();
- if (!editingBook && pageFiles.length === 0) {
- alert('Veuillez sélectionner au moins une page pour le livre!');
+ const audioOnly = ['song', 'audio_story'].includes(formData.content_type);
+ if (!editingBook && pageFiles.length === 0 && !audioOnly && !audioFile) {
+ alert('Veuillez sélectionner au moins une page ou un fichier audio!');
+ return;
+}
+ if (!editingBook && audioOnly && !audioFile && !formData.audio_url) {
+ alert('Veuillez ajouter un fichier audio pour ce type de contenu.');
  return;
 }
  setSubmitting(true);
@@ -385,7 +390,6 @@ function BookManagement() {
  </div>
  <div className="p-6 overflow-y-auto flex-1">
  <form id="bookForm" onSubmit={handleSubmit} className="space-y-6">
- {/* Form fields here (Title, Author, Desc, etc). Kept minimal for script size, would typically map existing formData inputs */}
  <div className="grid grid-cols-2 gap-4">
  <div>
  <label className="block text-sm font-bold text-foreground-secondary mb-1">Titre</label>
@@ -400,8 +404,69 @@ function BookManagement() {
  <label className="block text-sm font-bold text-foreground-secondary mb-1">Description</label>
  <textarea rows="3" value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} className="w-full p-3 rounded-xl bg-surface-secondary border border-border font-medium focus:border-primary-400 focus:outline-none"></textarea>
  </div>
- <div className="bg-amber-50 text-amber-700 p-4 rounded-xl text-sm font-bold border border-amber-200">
- Note: Les autres champs complexes (Pages, Audio) ont été temporairement réduits dans cet aperçu pour s'adapter au layout CMS Premium.
+ <div className="grid grid-cols-2 gap-4">
+ <div>
+ <label className="block text-sm font-bold text-foreground-secondary mb-1">Type de contenu</label>
+ <select value={formData.content_type} onChange={e => setFormData({...formData, content_type: e.target.value})} className="w-full p-3 rounded-xl bg-surface-secondary border border-border font-bold">
+ {CONTENT_TYPE_OPTIONS.map((opt) => <option key={opt.id} value={opt.id}>{opt.label}</option>)}
+ </select>
+ </div>
+ <div>
+ <label className="block text-sm font-bold text-foreground-secondary mb-1">Langue</label>
+ <select value={formData.language} onChange={e => setFormData({...formData, language: e.target.value})} className="w-full p-3 rounded-xl bg-surface-secondary border border-border font-bold">
+ {CONTENT_LANGUAGES.map((lang) => <option key={lang.id} value={lang.id}>{lang.label}</option>)}
+ </select>
+ </div>
+ <div>
+ <label className="block text-sm font-bold text-foreground-secondary mb-1">Catégorie</label>
+ <select value={formData.category_id} onChange={e => setFormData({...formData, category_id: e.target.value})} className="w-full p-3 rounded-xl bg-surface-secondary border border-border font-bold">
+ <option value="">Aucune</option>
+ {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+ </select>
+ </div>
+ <div>
+ <label className="block text-sm font-bold text-foreground-secondary mb-1">Thème</label>
+ <select value={formData.theme} onChange={e => setFormData({...formData, theme: e.target.value})} className="w-full p-3 rounded-xl bg-surface-secondary border border-border font-bold">
+ <option value="">Aucun</option>
+ {CONTENT_THEMES.map((theme) => <option key={theme.id} value={theme.id}>{theme.label}</option>)}
+ </select>
+ </div>
+ <div>
+ <label className="block text-sm font-bold text-foreground-secondary mb-1">Âge min</label>
+ <input type="number" min={0} max={12} value={formData.age_group_min} onChange={e => setFormData({...formData, age_group_min: Number(e.target.value)})} className="w-full p-3 rounded-xl bg-surface-secondary border border-border" />
+ </div>
+ <div>
+ <label className="block text-sm font-bold text-foreground-secondary mb-1">Âge max</label>
+ <input type="number" min={0} max={12} value={formData.age_group_max} onChange={e => setFormData({...formData, age_group_max: Number(e.target.value)})} className="w-full p-3 rounded-xl bg-surface-secondary border border-border" />
+ </div>
+ <div>
+ <label className="block text-sm font-bold text-foreground-secondary mb-1">Durée (sec)</label>
+ <input type="number" min={0} value={formData.duration_seconds} onChange={e => setFormData({...formData, duration_seconds: Number(e.target.value)})} className="w-full p-3 rounded-xl bg-surface-secondary border border-border" />
+ </div>
+ <div>
+ <label className="block text-sm font-bold text-foreground-secondary mb-1">Publié</label>
+ <select value={formData.is_published ? 'true' : 'false'} onChange={e => setFormData({...formData, is_published: e.target.value === 'true'})} className="w-full p-3 rounded-xl bg-surface-secondary border border-border font-bold">
+ <option value="false">Brouillon</option>
+ <option value="true">Publié</option>
+ </select>
+ </div>
+ </div>
+ <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+ <div>
+ <label className="block text-sm font-bold text-foreground-secondary mb-1">Couverture</label>
+ <input type="file" accept="image/*" onChange={(e) => { const file = e.target.files?.[0]; setCoverFile(file || null); if (file) setCoverPreview(URL.createObjectURL(file)); }} className="w-full text-sm" />
+ {coverPreview && <img src={coverPreview} alt="" className="mt-2 h-24 rounded-lg object-cover" />}
+ </div>
+ <div>
+ <label className="block text-sm font-bold text-foreground-secondary mb-1">Audio</label>
+ <input type="file" accept="audio/*" onChange={(e) => setAudioFile(e.target.files?.[0] || null)} className="w-full text-sm" />
+ {formData.audio_url && !audioFile && <p className="text-xs text-emerald-600 mt-1 font-bold">Audio existant</p>}
+ </div>
+ <div>
+ <label className="block text-sm font-bold text-foreground-secondary mb-1">Pages (images)</label>
+ <input type="file" accept="image/*" multiple onChange={(e) => setPageFiles(Array.from(e.target.files || []))} className="w-full text-sm" />
+ <p className="text-xs text-foreground-muted mt-1">{pageFiles.length} fichier(s)</p>
+ </div>
  </div>
  </form>
  </div>

@@ -8,6 +8,7 @@ import { useToast } from '../components/ToastProvider';
 import { Logo } from '../components/Logo';
 import { VoiceAssistant } from '../components/kids/VoiceAssistant';
 import { KidsBottomNav } from '../components/kids/KidsBottomNav';
+import { LearningQuizQuestion, LearningMemoryGame } from '../components/kids/LearningQuizQuestion';
 import { useLanguage } from '../context/LanguageContext';
 import { getRestrictionMessage } from '../services/parental/parentalAccessService';
 import {
@@ -169,10 +170,12 @@ function KidsLearning() {
 
     const payload = {
       ...(selectedKidProfileId ? { kid_profile_id: selectedKidProfileId } : {}),
-      answers: (selectedContent.questions || []).map((question) => ({
-        question_id: question.id,
-        answer: { value: answers[question.id] },
-      })),
+      answers: selectedContent.content_type === 'game'
+        ? [{ question_id: 0, answer: { value: answers.memory_game || [] } }]
+        : (selectedContent.questions || []).map((question) => ({
+            question_id: question.id,
+            answer: { value: answers[question.id] },
+          })),
       time_spent_seconds: Math.max(1, Math.round((Date.now() - startedAt) / 1000)),
     };
 
@@ -270,32 +273,28 @@ function KidsLearning() {
               </div>
 
               <div className="space-y-6 relative z-10">
-                {(selectedContent.questions || []).map((question) => (
-                  <div key={question.id} className="rounded-[2rem] bg-surface-secondary/50 p-6 md:p-8 border border-border">
-                    <p className="mb-6 text-3xl font-black text-center text-foreground">{question.prompt}</p>
-                    <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
-                      {(question.options || []).map((option) => {
-                        const active = answers[question.id] === option.id;
-                        return (
-                          <motion.button
-                            key={option.id}
-                            whileHover={{ scale: 1.02 }}
-                            whileTap={{ scale: 0.92 }}
-                            onClick={() => !result && chooseAnswer(question.id, option.id)}
-                            disabled={!!result}
-                            className={`flex flex-col items-center justify-center min-h-32 rounded-[1.75rem] border-4 p-4 text-center transition-all shadow-sm ${
-                              active ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 scale-105 shadow-md' : 'border-transparent bg-card hover:border-primary-300'
-                            }`}
-                            aria-label={option.label}
-                          >
-                            <span className="text-6xl mb-2">{option.pictogram || option.label}</span>
-                            {option.pictogram && <span className="text-xl font-black">{option.label}</span>}
-                          </motion.button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                ))}
+                {selectedContent.content_type === 'game' ? (
+                  <LearningMemoryGame
+                    pairs={selectedContent.metadata?.pairs || [
+                      { id: '1', pictogram: '🐶' }, { id: '2', pictogram: '🐱' },
+                      { id: '3', pictogram: '🐻' }, { id: '4', pictogram: '🦊' },
+                    ]}
+                    answers={answers}
+                    onChoose={chooseAnswer}
+                    disabled={!!result}
+                  />
+                ) : (
+                  (selectedContent.questions || []).map((question) => (
+                    <LearningQuizQuestion
+                      key={question.id}
+                      question={question}
+                      answers={answers}
+                      onChoose={chooseAnswer}
+                      disabled={!!result}
+                      listenLabel="Écouter"
+                    />
+                  ))
+                )}
               </div>
 
               {!result ? (

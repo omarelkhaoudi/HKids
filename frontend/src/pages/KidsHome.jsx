@@ -48,6 +48,7 @@ function getMissionText(goal, summary, t) {
 }
 
 const QUICK_LINKS = [
+  { id: 'audio', path: '/kids/audio', emoji: '🎧', labelKey: 'kidsQuickAudio', gradient: 'from-violet-500 to-indigo-600' },
   { id: 'learning', path: '/kids/learning', emoji: '🎮', labelKey: 'kidsQuickLearning', gradient: 'from-sky-400 to-emerald-500' },
   { id: 'studio', path: '/kids/story-studio', emoji: '✨', labelKey: 'kidsQuickStudio', gradient: 'from-fuchsia-500 to-primary-500' },
   { id: 'stories', path: '/kids/ai-stories', emoji: '📖', labelKey: 'kidsQuickStories', gradient: 'from-amber-400 to-rose-500' },
@@ -260,7 +261,7 @@ function KidsHome() {
         </div>
 
         <section>
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {QUICK_LINKS.map((link) => (
               <motion.button
                 key={link.id}

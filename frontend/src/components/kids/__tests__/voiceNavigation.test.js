@@ -18,6 +18,11 @@ describe('resolveVoiceNavigation', () => {
     expect(resolveVoiceNavigation('je veux une histoire')).toBeNull();
   });
 
+  it('routes audio library intents', () => {
+    expect(resolveVoiceNavigation('ouvre les comptines')).toBe('/kids/audio');
+    expect(resolveVoiceNavigation('je veux ecouter')).toBe('/kids/audio');
+  });
+
   it('returns null for unrelated prompts', () => {
     expect(resolveVoiceNavigation('bonjour comment vas tu')).toBeNull();
   });

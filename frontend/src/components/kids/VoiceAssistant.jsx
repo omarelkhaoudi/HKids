@@ -28,6 +28,7 @@ const NAVIGATION_INTENTS = [
   { path: '/kids/library?theme=dinosaurs', keywords: ['dinosaure', 'dinosaur', 'dino', 'ديناصور'] },
   { path: '/kids/library?theme=space', keywords: ['espace', 'space', 'fusee', 'fusée', 'rocket', 'فضاء'] },
   { path: '/kids/learning', keywords: ['jouer', 'jeux', 'games', 'quiz', 'learning', 'لعب'] },
+  { path: '/kids/audio', keywords: ['audio', 'ecouter', 'écouter', 'comptine', 'comptines', 'chanson', 'musique', 'استمع'] },
   { path: '/kids/story-studio', keywords: ['story studio', 'studio', 'creer une histoire', 'créer une histoire', 'استوديو'] },
   { path: '/kids/ai-stories', keywords: ['mes histoires', 'ai stories', 'histoires ia', 'قصصي'] },
   { path: '/kids#medals', keywords: ['medailles', 'médailles', 'medals', 'badge', 'ميداليات'] },

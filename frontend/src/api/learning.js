@@ -20,6 +20,10 @@ export const learningAPI = {
     params,
   }),
   getParentSummary: (kidId) => axios.get(buildApiUrl(`/learning/parent/kids/${kidId}/summary`), { headers: authHeaders() }),
+  getAdminContents: (params = {}) => axios.get(buildApiUrl('/learning/contents'), {
+    headers: authHeaders(),
+    params: { include_draft: 'true', ...params },
+  }),
   createContent: (data) => axios.post(buildApiUrl('/learning/admin/contents'), data, { headers: authHeaders() }),
   updateContent: (id, data) => axios.put(buildApiUrl(`/learning/admin/contents/${id}`), data, { headers: authHeaders() }),
   deleteContent: (id) => axios.delete(buildApiUrl(`/learning/admin/contents/${id}`), { headers: authHeaders() }),

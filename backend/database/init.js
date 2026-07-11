@@ -798,7 +798,8 @@ export async function initDatabase() {
         ('Compte les etoiles', 'Compter jusqu a 3.', 'numbers', 'multiple_choice', 'numbers', 3, 6, 'fr', 'easy', 'star_small', '{"pictogram":"🔢"}'),
         ('Quelle couleur ?', 'Reconnaitre le rouge.', 'colors', 'find_image', 'colors', 2, 6, 'fr', 'easy', 'star_small', '{"pictogram":"🎨"}'),
         ('La bonne forme', 'Reconnaitre un cercle.', 'shapes', 'multiple_choice', 'shapes', 3, 7, 'fr', 'easy', 'star_small', '{"pictogram":"🔵"}'),
-        ('Hello ou Bonjour', 'Apprendre un mot simple.', 'languages', 'listen_answer', 'languages', 5, 10, 'fr', 'easy', 'star_big', '{"pictogram":"🌍"}')
+        ('Hello ou Bonjour', 'Apprendre un mot simple.', 'languages', 'listen_answer', 'languages', 5, 10, 'fr', 'easy', 'star_big', '{"pictogram":"🌍"}'),
+        ('Jeu de memoire', 'Trouve les paires identiques.', 'game', NULL, 'animals', 3, 7, 'fr', 'easy', 'star_small', '{"pictogram":"🎮","game_type":"memory","pairs":[{"id":"1","pictogram":"🐶"},{"id":"2","pictogram":"🐱"},{"id":"3","pictogram":"🐻"},{"id":"4","pictogram":"🦊"}]}')
       ) AS seed(title, description, content_type, quiz_type, category_code, age_group_min, age_group_max, language, difficulty, reward_code, metadata)
       JOIN learning_categories lc ON lc.code = seed.category_code
       JOIN learning_rewards lr ON lr.code = seed.reward_code
