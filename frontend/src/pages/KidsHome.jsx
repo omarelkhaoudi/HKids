@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
@@ -58,6 +58,7 @@ function KidsHome() {
   const { showToast } = useToast();
   const { language, isRtl, t } = useLanguage();
   const navigate = useNavigate();
+  const location = useLocation();
   const [greeting, setGreeting] = useState(t('goodMorning'));
   const [homeData, setHomeData] = useState(null);
   const [recommendationSections, setRecommendationSections] = useState([]);
@@ -71,11 +72,10 @@ function KidsHome() {
   }, [t]);
 
   useEffect(() => {
-    if (window.location.hash === '#medals') {
-      const medalsSection = document.getElementById('kids-medals');
-      medalsSection?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-  }, [loading]);
+    if (loading || location.hash !== '#medals') return;
+    const medalsSection = document.getElementById('kids-medals');
+    medalsSection?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, [loading, location.hash, location.pathname]);
 
   useEffect(() => {
     let active = true;

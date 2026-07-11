@@ -9,6 +9,7 @@ import {
  ChevronLeftIcon, PlayIcon, PauseIcon, BrainIcon, HeartIcon, HistoryIcon
 } from '../components/Icons';
 import {Logo} from '../components/Logo';
+import {KidsBottomNav} from '../components/kids/KidsBottomNav';
 import {Button, Card, Badge, Avatar} from '../components/ui';
 
 // MOCK DATA FOR MAGIC UI
@@ -301,7 +302,7 @@ function KidsStoryStudio() {
 }
 
  return (
- <div className="min-h-screen bg-[#1c0f42] text-white overflow-x-hidden font-sans relative">
+ <div className="min-h-screen bg-[#1c0f42] text-white overflow-x-hidden font-sans relative pb-32">
  <FloatingStars />
  {showSuccess && <Confetti />}
 
@@ -587,6 +588,7 @@ function KidsStoryStudio() {
  )}
 
  </main>
+ <KidsBottomNav />
  </div>
  );
 }

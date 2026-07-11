@@ -5,6 +5,7 @@ import {getKidCategory} from '../constants/kidCategories';
 import {BookIcon, ChevronLeftIcon, LogOutIcon} from '../components/Icons';
 import {Logo} from '../components/Logo';
 import {VoiceAssistant} from '../components/kids/VoiceAssistant';
+import {KidsBottomNav} from '../components/kids/KidsBottomNav';
 
 function KidsCategoryPage() {
  const {categoryId} = useParams();
@@ -22,7 +23,7 @@ function KidsCategoryPage() {
 };
 
  return (
- <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-rose-50">
+ <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-rose-50 pb-32">
  <div className="mx-auto max-w-5xl px-4 py-6 sm:px-6 lg:px-8">
  <header className="mb-8 flex items-center justify-between gap-4">
  <Link to="/kids" className="shrink-0">
@@ -73,7 +74,8 @@ function KidsCategoryPage() {
  </div>
  </motion.main>
  </div>
- <VoiceAssistant />
+ <VoiceAssistant onNavigate={navigate} />
+ <KidsBottomNav />
  </div>
  );
 }
