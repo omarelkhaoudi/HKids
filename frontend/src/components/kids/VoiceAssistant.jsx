@@ -28,7 +28,7 @@ const NAVIGATION_INTENTS = [
   { path: '/kids/library?theme=dinosaurs', keywords: ['dinosaure', 'dinosaur', 'dino', 'ديناصور'] },
   { path: '/kids/library?theme=space', keywords: ['espace', 'space', 'fusee', 'fusée', 'rocket', 'فضاء'] },
   { path: '/kids/learning', keywords: ['jouer', 'jeux', 'games', 'quiz', 'learning', 'لعب'] },
-  { path: '/kids/story-studio', keywords: ['studio', 'creer', 'créer', 'create', 'histoire', 'استوديو'] },
+  { path: '/kids/story-studio', keywords: ['story studio', 'studio', 'creer une histoire', 'créer une histoire', 'استوديو'] },
   { path: '/kids/ai-stories', keywords: ['mes histoires', 'ai stories', 'histoires ia', 'قصصي'] },
   { path: '/kids#medals', keywords: ['medailles', 'médailles', 'medals', 'badge', 'ميداليات'] },
 ];
@@ -234,7 +234,7 @@ export function VoiceAssistant({ language: requestedSpeechLanguage, onNavigate }
           }
           handleAsk();
         }}
-        className={`fixed bottom-28 z-50 grid h-20 w-20 place-items-center rounded-full text-white shadow-2xl ${isRtl ? 'left-6' : 'right-6'} ${
+        className={`fixed bottom-40 z-50 grid h-20 w-20 place-items-center rounded-full text-white shadow-2xl ${isRtl ? 'left-6' : 'right-6'} ${
           listening
             ? 'bg-gradient-to-br from-accent-400 to-accent-500'
             : 'bg-gradient-to-br from-primary-500 via-secondary-500 to-purple-500'
@@ -251,7 +251,7 @@ export function VoiceAssistant({ language: requestedSpeechLanguage, onNavigate }
             initial={{ opacity: 0, y: 24, scale: 0.96 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 24, scale: 0.96 }}
-            className={`fixed bottom-40 z-50 w-[min(92vw,420px)] overflow-hidden rounded-[2rem] bg-white shadow-2xl ring-1 ring-primary-100 ${isRtl ? 'left-4' : 'right-4'}`}
+            className={`fixed bottom-52 z-50 w-[min(92vw,420px)] overflow-hidden rounded-[2rem] bg-white shadow-2xl ring-1 ring-primary-100 ${isRtl ? 'left-4' : 'right-4'}`}
             dir={isRtl ? 'rtl' : 'ltr'}
           >
             <div className="bg-gradient-to-r from-primary-500 via-secondary-500 to-purple-500 p-4 text-white">

@@ -12,6 +12,7 @@ import {
 } from '../components/Icons';
 import { Logo } from '../components/Logo';
 import { VoiceAssistant } from '../components/kids/VoiceAssistant';
+import { KidsBottomNav } from '../components/kids/KidsBottomNav';
 import { useLanguage } from '../context/LanguageContext';
 
 // --- MAGIC CELEBRATION PARTICLES ---
@@ -472,7 +473,7 @@ function KidsAIStories() {
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground overflow-hidden" dir={isRtl ? 'rtl' : 'ltr'}>
+    <div className="min-h-screen bg-background text-foreground overflow-hidden pb-32" dir={isRtl ? 'rtl' : 'ltr'}>
       {/* Immersive Magical Background */}
       <div className="fixed inset-0 pointer-events-none z-0">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary-900/20 via-background to-background" />
@@ -759,6 +760,7 @@ function KidsAIStories() {
         </main>
       </div>
       <VoiceAssistant />
+      <KidsBottomNav />
     </div>
   );
 }

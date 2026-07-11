@@ -36,7 +36,6 @@ const FamilyVoices = lazy(() => import('./pages/FamilyVoices'));
 const KidsStoryStudio = lazy(() => import('./pages/KidsStoryStudio'));
 const KidsAIStories = lazy(() => import('./pages/KidsAIStories'));
 const KidsLearning = lazy(() => import('./pages/KidsLearning'));
-const HKidsMockup = lazy(() => import('./pages/HKidsMockup'));
 
 const DEFAULT_ANDROID_KIOSK_IDLE_MS = 10 * 60 * 1000;
 
@@ -201,7 +200,7 @@ function App() {
                 <Route path="/kids/ai-stories" element={<RequireAuth><LazyRoute><KidsAIStories /></LazyRoute></RequireAuth>} />
                 <Route path="/kids/category/:categoryId" element={<RequireAuth><KidsCategoryPage /></RequireAuth>} />
                 <Route path="/design-system" element={<DesignSystem />} />
-                <Route path="/mockup" element={<RequireAuth><LazyRoute><HKidsMockup /></LazyRoute></RequireAuth>} />
+                <Route path="/mockup" element={<Navigate to="/kids" replace />} />
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
               <ScrollToTop />

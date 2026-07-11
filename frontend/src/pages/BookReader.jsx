@@ -414,7 +414,7 @@ function BookReader() {
  completed: false,
  saved: false
 });
- const readerExitPath = isKidReader ? '/kids' : (location.pathname.startsWith('/kids/read/') ? '/kids/library' : '/');
+ const readerExitPath = isKidReader ? '/kids' : '/';
 
  const getEffectiveTotalPages = (bookValue = book) => {
  const firstPageData = bookValue?.pages?.[0];
