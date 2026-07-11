@@ -14,6 +14,7 @@ import {storage} from '../utils/storage';
 import {getFileUrl} from '../utils/fileUrl';
 import {useToast} from '../components/ToastProvider';
 import {useAuth} from '../context/AuthContext';
+import {useLanguage} from '../context/LanguageContext';
 import {ChevronLeftIcon, ChevronRightIcon, HomeIcon, BookIcon, StarIcon, PlayIcon, PauseIcon, SettingsIcon} from '../components/Icons';
 import ReadingAidPanel from '../components/ReadingAidPanel';
 import {AudioPlayer} from '../components/audio/AudioPlayer';
@@ -361,6 +362,8 @@ function BookReader() {
  const [searchParams] = useSearchParams();
  const navigate = useNavigate();
  const location = useLocation();
+ const isKidReader = location.pathname.startsWith('/kids/read/');
+ const { t, isRtl } = useLanguage();
  const [book, setBook] = useState(null);
  const [currentPage, setCurrentPage] = useState(0);
  const [loading, setLoading] = useState(true);
@@ -411,9 +414,7 @@ function BookReader() {
  completed: false,
  saved: false
 });
- const readerExitPath = location.pathname.startsWith('/kids/read/')
- ? '/kids/library'
- : '/';
+ const readerExitPath = isKidReader ? '/kids' : (location.pathname.startsWith('/kids/read/') ? '/kids/library' : '/');
 
  const getEffectiveTotalPages = (bookValue = book) => {
  const firstPageData = bookValue?.pages?.[0];
@@ -1082,7 +1083,7 @@ function BookReader() {
 };
 
  const [themeMode, setThemeMode] = useState('day'); // 'day' | 'sepia' | 'night'
- const [showMenu, setShowMenu] = useState(true);
+ const [showMenu, setShowMenu] = useState(!isKidReader);
  const [isFavorite, setIsFavorite] = useState(false);
  const [showEndModal, setShowEndModal] = useState(false);
 
@@ -1225,14 +1226,14 @@ function BookReader() {
  
  {/* Top Navbar (Glassmorphism) */}
  <AnimatePresence>
- {showMenu && (
+ {(showMenu || isKidReader) && (
  <motion.header
  initial={{y: -100, opacity: 0}}
  animate={{y: 0, opacity: 1}}
  exit={{y: -100, opacity: 0}}
  transition={{duration: 0.3, ease:"easeOut"}}
  onClick={(e) => e.stopPropagation()}
- className={`absolute top-0 inset-x-0 z-40 px-6 py-4 flex items-center justify-between backdrop-blur-xl border-b border-white/10 ${navThemeColors[themeMode]} shadow-soft`}
+ className={`absolute top-0 inset-x-0 z-40 px-6 py-4 flex items-center ${isKidReader ? 'justify-start' : 'justify-between'} backdrop-blur-xl border-b border-white/10 ${navThemeColors[themeMode]} shadow-soft`}
  >
  <div className="flex items-center gap-4">
   <Button 
@@ -1240,14 +1241,18 @@ function BookReader() {
     size="icon" 
     onClick={() => navigate(readerExitPath)}
     className={`rounded-full w-14 h-14 bg-white/20 hover:bg-white/40 shadow-sm`}
+    aria-label={t('kidReaderHome')}
   >
     <HomeIcon className="w-8 h-8 text-primary-700" />
   </Button>
+  {!isKidReader && (
   <div>
     <h1 className="text-2xl font-black text-primary-800 line-clamp-1">{book.title}</h1>
   </div>
+  )}
 </div>
 
+{!isKidReader && (
 <div className="flex items-center gap-4">
   <Button 
     variant="ghost" 
@@ -1269,10 +1274,12 @@ function BookReader() {
     <SettingsIcon className="w-8 h-8" />
   </Button>
 </div>
+)}
  </motion.header>
  )}
  </AnimatePresence>
 
+ {!isKidReader && (
  <ReadingAidPanel
  isOpen={showReadingAid}
  onClose={() => setShowReadingAid(false)}
@@ -1283,11 +1290,14 @@ function BookReader() {
  onVoiceProfileChange={handleVoiceProfileChange}
  availableVoices={availableVoices}
  />
+ )}
 
  {/* Main Content Area */}
  <div className="relative flex-1 w-full h-full flex items-center justify-center p-4 md:p-12 overflow-hidden">
  
  {/* Big Visible Arrows for Navigation */}
+  {!isKidReader && (
+  <>
   <div className="absolute left-4 inset-y-0 z-20 flex items-center justify-start pointer-events-none">
     {!isFirstPage && (
       <button onClick={(e) => {e.stopPropagation(); prevPage();}} className="pointer-events-auto w-20 h-20 bg-white/60 backdrop-blur-md rounded-full flex items-center justify-center shadow-lg hover:bg-white hover:scale-110 active:scale-95 transition-all border-4 border-white/40">
@@ -1302,6 +1312,8 @@ function BookReader() {
       </button>
     )}
   </div>
+  </>
+  )}
 
  {/* The Book Canvas */}
  <div className="relative w-full max-w-5xl h-full flex items-center justify-center" style={{perspective: '1200px'}}>
@@ -1373,6 +1385,7 @@ function BookReader() {
  </div>
 
  {/* Floating Audio Controls */}
+ {!isKidReader && (
  <div className="absolute bottom-24 inset-x-0 flex justify-center z-40 pointer-events-none">
  <AnimatePresence>
  {(showMenu || audioPlaybackActive) && (
@@ -1413,6 +1426,50 @@ function BookReader() {
  )}
  </AnimatePresence>
  </div>
+ )}
+
+ {isKidReader && (
+ <div
+   className="absolute bottom-8 inset-x-0 z-50 flex justify-center pointer-events-none"
+   onClick={(e) => e.stopPropagation()}
+ >
+   <div className="pointer-events-auto flex items-center gap-4 md:gap-6 px-4 py-3 rounded-[3rem] bg-white/85 backdrop-blur-xl border-4 border-white/60 shadow-floating">
+     <button
+       type="button"
+       onClick={prevPage}
+       disabled={isFirstPage}
+       aria-label={t('kidReaderPrev')}
+       className="w-20 h-20 rounded-full flex items-center justify-center bg-primary-100 text-primary-700 disabled:opacity-40 border-4 border-white shadow-md active:scale-95 transition-transform"
+     >
+       <ChevronLeftIcon className={`w-10 h-10 ${isRtl ? 'rotate-180' : ''}`} />
+     </button>
+     <button
+       type="button"
+       onClick={toggleAudio}
+       disabled={!book.audio_url && (isExtracting || (!currentPageData?.content && !currentPageData?.image_path))}
+       aria-label={t('kidReaderPlay')}
+       className={`w-24 h-24 rounded-full flex items-center justify-center text-white shadow-glow border-4 border-white active:scale-95 transition-transform ${audioPlaybackActive ? 'bg-primary-500' : 'bg-gradient-to-r from-purple-500 to-secondary-500'}`}
+     >
+       {!book.audio_url && isExtracting ? (
+         <motion.div animate={{rotate: 360}} transition={{repeat: Infinity, ease: 'linear'}} className="w-10 h-10 border-4 border-white border-t-transparent rounded-full" />
+       ) : audioPlaybackActive ? (
+         <PauseIcon className="w-12 h-12" />
+       ) : (
+         <PlayIcon className={`w-12 h-12 ${isRtl ? '' : 'ml-1'}`} />
+       )}
+     </button>
+     <button
+       type="button"
+       onClick={nextPage}
+       disabled={isLastPage}
+       aria-label={t('kidReaderNext')}
+       className="w-20 h-20 rounded-full flex items-center justify-center bg-primary-100 text-primary-700 disabled:opacity-40 border-4 border-white shadow-md active:scale-95 transition-transform"
+     >
+       <ChevronRightIcon className={`w-10 h-10 ${isRtl ? 'rotate-180' : ''}`} />
+     </button>
+   </div>
+ </div>
+ )}
 
  {/* Persistent Bottom Progress Bar */}
  <div className="absolute bottom-0 inset-x-0 z-30 px-4 md:px-12 pb-6 pt-10 bg-gradient-to-t from-black/20 to-transparent flex flex-col justify-end pointer-events-none">
@@ -1426,7 +1483,7 @@ function BookReader() {
         </div>
  </div>
 
- {showAudioPlayer && book.audio_url && (
+ {showAudioPlayer && book.audio_url && !isKidReader && (
  <div onClick={(event) => event.stopPropagation()}>
  <AudioPlayer
  book={book}

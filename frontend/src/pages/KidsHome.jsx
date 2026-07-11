@@ -9,6 +9,9 @@ import { LitMascot } from '../components/kids/LitMascot';
 import { KidsPageShell } from '../components/kids/KidsPageShell';
 import { KidsBookCarousel } from '../components/kids/KidsBookCarousel';
 import { KidCategoryCard } from '../components/kids/KidCategoryCard';
+import { KidsBottomNav } from '../components/kids/KidsBottomNav';
+import { KidsEmptyState } from '../components/kids/KidsEmptyState';
+import { KidsFamilyMessages } from '../components/kids/KidsFamilyMessages';
 import { Logo } from '../components/Logo';
 import { parentalAPI } from '../api/parental';
 import { recommendationsAPI } from '../api/recommendations';
@@ -18,6 +21,7 @@ import { getRestrictionMessage } from '../services/parental/parentalAccessServic
 import { PlayIcon, StarIcon, LockIcon, SparklesIcon } from '../components/Icons';
 import { getCachedKidProfile } from '../services/cloud/cloudSyncService';
 import { Avatar } from '../components/ui';
+import { BookGridSkeleton } from '../components/SkeletonLoader';
 
 function getRecommendedBooks(sections = []) {
   const recommendedSection = sections.find((section) => section.id === 'recommended_for_you');
@@ -43,6 +47,12 @@ function getMissionText(goal, summary, t) {
   return t('noReadingRecorded');
 }
 
+const QUICK_LINKS = [
+  { id: 'learning', path: '/kids/learning', emoji: '🎮', labelKey: 'kidsQuickLearning', gradient: 'from-sky-400 to-emerald-500' },
+  { id: 'studio', path: '/kids/story-studio', emoji: '✨', labelKey: 'kidsQuickStudio', gradient: 'from-fuchsia-500 to-primary-500' },
+  { id: 'stories', path: '/kids/ai-stories', emoji: '📖', labelKey: 'kidsQuickStories', gradient: 'from-amber-400 to-rose-500' },
+];
+
 function KidsHome() {
   const { user } = useAuth();
   const { showToast } = useToast();
@@ -51,6 +61,7 @@ function KidsHome() {
   const [greeting, setGreeting] = useState(t('goodMorning'));
   const [homeData, setHomeData] = useState(null);
   const [recommendationSections, setRecommendationSections] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const hour = new Date().getHours();
@@ -60,38 +71,50 @@ function KidsHome() {
   }, [t]);
 
   useEffect(() => {
+    if (window.location.hash === '#medals') {
+      const medalsSection = document.getElementById('kids-medals');
+      medalsSection?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, [loading]);
+
+  useEffect(() => {
     let active = true;
 
     const loadKidsHome = async () => {
-      const [overviewResult, recommendationsResult] = await Promise.allSettled([
-        parentalAPI.getConnectedKidOverview(),
-        recommendationsAPI.getForKid({ language }),
-      ]);
+      try {
+        setLoading(true);
+        const [overviewResult, recommendationsResult] = await Promise.allSettled([
+          parentalAPI.getConnectedKidOverview(),
+          recommendationsAPI.getForKid({ language }),
+        ]);
 
-      if (!active) return;
+        if (!active) return;
 
-      if (overviewResult.status === 'fulfilled') {
-        setHomeData(overviewResult.value.data);
-      } else {
-        console.warn('Connected kid overview unavailable:', overviewResult.reason);
-        if (user?.kid_profile_id) {
-          const cachedProfile = await getCachedKidProfile(user.kid_profile_id);
-          if (cachedProfile && active) {
-            setHomeData((current) => ({
-              ...(current || {}),
-              kid: cachedProfile,
-              progress: current?.progress || []
-            }));
+        if (overviewResult.status === 'fulfilled') {
+          setHomeData(overviewResult.value.data);
+        } else {
+          console.warn('Connected kid overview unavailable:', overviewResult.reason);
+          if (user?.kid_profile_id) {
+            const cachedProfile = await getCachedKidProfile(user.kid_profile_id);
+            if (cachedProfile && active) {
+              setHomeData((current) => ({
+                ...(current || {}),
+                kid: cachedProfile,
+                progress: current?.progress || [],
+              }));
+            }
           }
         }
-      }
 
-      if (recommendationsResult.status === 'fulfilled') {
-        setRecommendationSections(recommendationsResult.value.data?.sections || []);
-      } else {
-        console.warn('Kid recommendations unavailable:', recommendationsResult.reason);
-        const message = getRestrictionMessage(recommendationsResult.reason);
-        if (message) showToast(message, 'info');
+        if (recommendationsResult.status === 'fulfilled') {
+          setRecommendationSections(recommendationsResult.value.data?.sections || []);
+        } else {
+          console.warn('Kid recommendations unavailable:', recommendationsResult.reason);
+          const message = getRestrictionMessage(recommendationsResult.reason);
+          if (message) showToast(message, 'info');
+        }
+      } finally {
+        if (active) setLoading(false);
       }
     };
 
@@ -141,8 +164,18 @@ function KidsHome() {
     navigate(`/kids/read/${randomBook.id}`);
   };
 
+  if (loading) {
+    return (
+      <KidsPageShell isRtl={isRtl} variant="home" className="pb-32" footer={<KidsBottomNav />}>
+        <div className="px-6 py-8">
+          <BookGridSkeleton count={4} />
+        </div>
+      </KidsPageShell>
+    );
+  }
+
   return (
-    <KidsPageShell isRtl={isRtl} variant="home" className="pb-32">
+    <KidsPageShell isRtl={isRtl} variant="home" className="pb-32" footer={<KidsBottomNav />}>
       <header className="relative z-10 px-6 py-4 flex items-center justify-between gap-4">
         <div className="flex items-center gap-4 min-w-0">
           <Avatar src={avatarSrc} initials={avatarInitials} alt={kidName} size="lg" className="w-16 h-16 border-4 border-white shadow-lg bg-gradient-to-br from-primary-400 to-secondary-500 text-white shrink-0" />
@@ -154,15 +187,15 @@ function KidsHome() {
           </div>
         </div>
         <div className="flex items-center gap-3 shrink-0">
-          <LitMascot showBubble={false} className="hidden sm:flex" />
+          <LitMascot showBubble={false} size="small" className="hidden sm:flex" />
           <Link to="/kids" className="shrink-0 transition-transform hover:scale-105 active:scale-95">
             <Logo size="default" showText={false} />
           </Link>
         </div>
       </header>
 
-      <div className="relative z-10 px-6 -mt-2 mb-2 sm:hidden">
-        <LitMascot size="large" />
+      <div className="relative z-10 px-6 -mt-2 mb-2 sm:hidden flex justify-center">
+        <LitMascot size="large" showBubble message={t('litMascotGreeting')} />
       </div>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-20 space-y-12 mt-4">
@@ -172,14 +205,19 @@ function KidsHome() {
             whileTap={{ scale: 0.98 }}
             className="lg:col-span-2 cursor-pointer"
             onClick={() => {
-              if (!featuredBook) return;
+              if (!featuredBook) {
+                navigate('/kids/library');
+                return;
+              }
               const pageQuery = featuredBook.isInProgress ? `?page=${featuredBook.currentPage}` : '';
               navigate(`/kids/read/${featuredBook.id}${pageQuery}`);
             }}
           >
             <div className="relative h-64 md:h-80 w-full rounded-[2.5rem] overflow-hidden shadow-2xl group border-4 border-white/40">
-              {featuredBook?.cover_image && (
-                <img src={getImageUrl(featuredBook.cover_image)} alt={featuredBook.title} className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+              {featuredBook?.cover_image ? (
+                <img src={getImageUrl(featuredBook.cover_image)} alt="" className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+              ) : (
+                <div className="absolute inset-0 bg-gradient-to-br from-primary-400 to-secondary-500" />
               )}
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
               <div className="absolute inset-0 flex items-center justify-center">
@@ -197,7 +235,6 @@ function KidsHome() {
                 <div className="h-4 w-full bg-black/40 rounded-full overflow-hidden border border-white/20 backdrop-blur-sm">
                   <motion.div initial={{ width: 0 }} animate={{ width: `${featuredBook?.progress || 0}%` }} className="h-full bg-gradient-to-r from-green-400 to-emerald-500 rounded-full" />
                 </div>
-                <h2 className="text-white text-2xl font-black drop-shadow-lg opacity-90 hidden md:block">{featuredBook?.title || t('noReadingAvailable')}</h2>
               </div>
             </div>
           </motion.div>
@@ -209,6 +246,7 @@ function KidsHome() {
                 animate={{ y: [0, -10, 0], rotate: [0, 5, -5, 0] }}
                 transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
                 className="text-8xl filter drop-shadow-2xl mb-4"
+                aria-hidden="true"
               >
                 🎁
               </motion.div>
@@ -221,14 +259,35 @@ function KidsHome() {
           </motion.div>
         </div>
 
-        <div className="flex justify-center my-8">
+        <section>
+          <div className="grid grid-cols-3 gap-4">
+            {QUICK_LINKS.map((link) => (
+              <motion.button
+                key={link.id}
+                type="button"
+                whileHover={{ scale: 1.04 }}
+                whileTap={{ scale: 0.96 }}
+                onClick={() => navigate(link.path)}
+                className={`rounded-[2rem] bg-gradient-to-br ${link.gradient} p-5 md:p-6 text-white shadow-xl border-4 border-white/40 min-h-[120px] flex flex-col items-center justify-center gap-2`}
+                aria-label={t(link.labelKey)}
+              >
+                <span className="text-4xl" aria-hidden="true">{link.emoji}</span>
+                <span className="font-black text-lg">{t(link.labelKey)}</span>
+              </motion.button>
+            ))}
+          </div>
+        </section>
+
+        <KidsFamilyMessages />
+
+        <div className="flex justify-center my-4">
           <motion.button
+            type="button"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={handleSurprise}
             className="group relative flex items-center gap-4 bg-gradient-to-r from-primary-500 via-fuchsia-500 to-accent-500 p-4 pr-8 rounded-[3rem] shadow-2xl border-4 border-white overflow-hidden"
           >
-            <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4IiBoZWlnaHQ9IjgiPgo8cmVjdCB3aWR0aD0iOCIgaGVpZ2h0PSI4IiBmaWxsPSIjZmZmIiBmaWxsLW9wYWNpdHk9IjAuMiIvPgo8L3N2Zz4=')] opacity-30 mix-blend-overlay" />
             <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-inner relative z-10 group-hover:rotate-12 transition-transform">
               <SparklesIcon className="w-8 h-8 text-fuchsia-500" />
             </div>
@@ -244,40 +303,61 @@ function KidsHome() {
           </div>
         </section>
 
-        <KidsBookCarousel
-          title={t('forYou')}
-          emoji="⭐"
-          books={recommendedBooks}
-          isRtl={isRtl}
-          showActions={false}
-          onPlay={(book) => navigate(`/kids/read/${book.id}`)}
-        />
+        {recommendedBooks.length > 0 ? (
+          <KidsBookCarousel
+            title={t('forYou')}
+            emoji="⭐"
+            books={recommendedBooks}
+            isRtl={isRtl}
+            showActions={false}
+            hideTitle
+            onPlay={(book) => navigate(`/kids/read/${book.id}`)}
+          />
+        ) : (
+          <KidsEmptyState
+            emoji="📚"
+            title={t('emptyBooksTitle')}
+            description={t('emptyBooksDescription')}
+            actionLabel={t('goToLibrary')}
+            onAction={() => navigate('/kids/library')}
+          />
+        )}
 
-        <section className="mb-12">
+        <section id="kids-medals" className="mb-12 scroll-mt-24">
           <h2 className="text-2xl font-black text-foreground mb-6 pl-2">🏆 {t('yourMedals')}</h2>
-          <div className="flex flex-wrap gap-6 justify-center md:justify-start px-2">
-            {badges.map((badge) => (
-              <motion.div
-                key={badge.id}
-                whileHover={{ scale: 1.1, rotate: [0, -10, 10, -10, 10, 0] }}
-                title={`${badge.label} — ${badge.description}`}
-                className={`relative w-28 h-28 md:w-32 md:h-32 rounded-full flex items-center justify-center text-5xl md:text-6xl shadow-2xl border-8 ${badge.earned ? 'bg-gradient-to-br from-yellow-300 via-amber-400 to-orange-500 border-yellow-200' : 'bg-surface-200 border-surface-300 grayscale opacity-60'}`}
-              >
-                {badge.earned ? (
-                  <>
-                    <span className="filter drop-shadow-lg z-10 relative">{badge.icon}</span>
-                    <motion.div animate={{ rotate: 360 }} transition={{ duration: 10, repeat: Infinity, ease: 'linear' }} className="absolute inset-0 rounded-full border-4 border-dashed border-white/40" />
-                  </>
-                ) : (
-                  <LockIcon className="w-10 h-10 text-surface-400" />
-                )}
-              </motion.div>
-            ))}
-          </div>
+          {badges.length === 0 ? (
+            <KidsEmptyState
+              emoji="🏅"
+              title={t('emptyBadgesTitle')}
+              description={t('emptyBadgesDescription')}
+              actionLabel={t('goToLibrary')}
+              onAction={() => navigate('/kids/library')}
+            />
+          ) : (
+            <div className="flex flex-wrap gap-6 justify-center md:justify-start px-2">
+              {badges.map((badge) => (
+                <motion.div
+                  key={badge.id}
+                  whileHover={{ scale: 1.1, rotate: [0, -10, 10, -10, 10, 0] }}
+                  title={`${badge.label} — ${badge.description}`}
+                  className={`relative w-28 h-28 md:w-32 md:h-32 rounded-full flex items-center justify-center text-5xl md:text-6xl shadow-2xl border-8 ${badge.earned ? 'bg-gradient-to-br from-yellow-300 via-amber-400 to-orange-500 border-yellow-200' : 'bg-surface-200 border-surface-300 grayscale opacity-60'}`}
+                >
+                  {badge.earned ? (
+                    <>
+                      <span className="filter drop-shadow-lg z-10 relative">{badge.icon}</span>
+                      <motion.div animate={{ rotate: 360 }} transition={{ duration: 10, repeat: Infinity, ease: 'linear' }} className="absolute inset-0 rounded-full border-4 border-dashed border-white/40" />
+                    </>
+                  ) : (
+                    <LockIcon className="w-10 h-10 text-surface-400" />
+                  )}
+                </motion.div>
+              ))}
+            </div>
+          )}
         </section>
       </main>
 
-      <VoiceAssistant />
+      <VoiceAssistant onNavigate={(path) => navigate(path)} />
     </KidsPageShell>
   );
 }

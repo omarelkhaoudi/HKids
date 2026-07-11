@@ -23,6 +23,9 @@ import {
 } from '../components/Icons';
 import { Logo } from '../components/Logo';
 import { BookGridSkeleton } from '../components/SkeletonLoader';
+import { KidsBottomNav } from '../components/kids/KidsBottomNav';
+import { KidsEmptyState } from '../components/kids/KidsEmptyState';
+import { KidsFamilyMessages } from '../components/kids/KidsFamilyMessages';
 
 function inferTheme(book, childThemes) {
   if (book.theme) return book.theme;
@@ -161,7 +164,7 @@ function KidsLibrary() {
   };
 
   return (
-    <KidsPageShell isRtl={isRtl} variant="library" className="pb-24 lg:pb-0">
+    <KidsPageShell isRtl={isRtl} variant="library" className="pb-32" footer={<KidsBottomNav />}>
       <header className="relative z-10 px-6 py-4 flex items-center justify-between bg-white/60 dark:bg-surface-900/60 backdrop-blur-md border-b border-white/60 dark:border-white/10 shadow-sm sticky top-0">
         <div className="flex items-center gap-4">
           <button
@@ -224,7 +227,7 @@ function KidsLibrary() {
                   <StarIcon className="h-5 w-5 text-yellow-300" filled />
                   <span>{t('featured')} {activeThemeData?.label}</span>
                 </div>
-                <h1 className="text-3xl md:text-6xl font-black leading-tight mb-4 filter drop-shadow-lg text-white hidden md:block">
+                <h1 className="text-3xl md:text-6xl font-black leading-tight mb-4 filter drop-shadow-lg text-white hidden lg:block">
                   {featuredBook.title}
                 </h1>
 
@@ -254,12 +257,31 @@ function KidsLibrary() {
           </motion.section>
         )}
 
+        <KidsFamilyMessages />
+
         {loading ? (
           <div className="px-4">
             <BookGridSkeleton count={8} />
           </div>
+        ) : localizedBooks.length === 0 ? (
+          <KidsEmptyState
+            emoji="📚"
+            title={t('emptyBooksTitle')}
+            description={t('emptyBooksDescription')}
+            actionLabel={t('goToLibrary')}
+            onAction={() => handleThemeChange('all')}
+          />
         ) : selectedTheme !== 'all' ? (
           <section className="mb-12">
+            {themeBooks.length === 0 ? (
+              <KidsEmptyState
+                emoji="🔍"
+                title={t('nothingFound')}
+                description={t('tryAnotherWord')}
+                actionLabel={t('allCategories')}
+                onAction={() => handleThemeChange('all')}
+              />
+            ) : (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 justify-items-center">
               <AnimatePresence>
                 {themeBooks.map((book) => (
@@ -267,6 +289,7 @@ function KidsLibrary() {
                     key={book.id}
                     book={book}
                     variant="poster"
+                    hideTitle
                     isFavorite={favoritesIds.includes(book.id)}
                     offlineReady={offlineContent.getBookStatus(book.id)?.status === 'downloaded'}
                     showActions
@@ -278,22 +301,23 @@ function KidsLibrary() {
                 ))}
               </AnimatePresence>
             </div>
+            )}
           </section>
         ) : (
           <div className="space-y-16">
-            <KidsBookCarousel title={t('forYou')} icon={SparklesIcon} books={recommendedBooks} {...carouselProps} />
-            <KidsBookCarousel title={t('newBooks')} icon={BookIcon} books={newBooks} {...carouselProps} />
+            <KidsBookCarousel title={t('forYou')} icon={SparklesIcon} books={recommendedBooks} hideTitle {...carouselProps} />
+            <KidsBookCarousel title={t('newBooks')} icon={BookIcon} books={newBooks} hideTitle {...carouselProps} />
             {favoriteBooks.length > 0 && (
-              <KidsBookCarousel title={t('yourFavorites')} icon={HeartIcon} books={favoriteBooks} {...carouselProps} />
+              <KidsBookCarousel title={t('yourFavorites')} icon={HeartIcon} books={favoriteBooks} hideTitle {...carouselProps} />
             )}
             {downloadedBooks.length > 0 && (
-              <KidsBookCarousel title={t('offline')} icon={DownloadIcon} books={downloadedBooks} {...carouselProps} />
+              <KidsBookCarousel title={t('offline')} icon={DownloadIcon} books={downloadedBooks} hideTitle {...carouselProps} />
             )}
           </div>
         )}
       </main>
 
-      <VoiceAssistant language={language === 'en' ? 'en-US' : language === 'ar' ? 'ar-MA' : 'fr-FR'} />
+      <VoiceAssistant language={language === 'en' ? 'en-US' : language === 'ar' ? 'ar-MA' : 'fr-FR'} onNavigate={(path) => navigate(path)} />
     </KidsPageShell>
   );
 }
