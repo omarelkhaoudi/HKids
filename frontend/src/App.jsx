@@ -36,6 +36,8 @@ const FamilyVoices = lazy(() => import('./pages/FamilyVoices'));
 const KidsStoryStudio = lazy(() => import('./pages/KidsStoryStudio'));
 const KidsAIStories = lazy(() => import('./pages/KidsAIStories'));
 const KidsLearning = lazy(() => import('./pages/KidsLearning'));
+const KidsListen = lazy(() => import('./pages/KidsListen'));
+const KidsAudioLibrary = lazy(() => import('./pages/KidsAudioLibrary'));
 
 const DEFAULT_ANDROID_KIOSK_IDLE_MS = 10 * 60 * 1000;
 
@@ -193,6 +195,8 @@ function App() {
                 <Route path="/parent/*" element={<RequireRole roles={['parent', 'admin']}><LazyRoute><ParentDashboard /></LazyRoute></RequireRole>} />
                 <Route path="/kids" element={<RequireAuth><KidsHome /></RequireAuth>} />
                 <Route path="/kids/library" element={<RequireAuth><KidsLibrary /></RequireAuth>} />
+                <Route path="/kids/audio" element={<RequireAuth><LazyRoute><KidsAudioLibrary /></LazyRoute></RequireAuth>} />
+                <Route path="/kids/listen/:id" element={<RequireAuth><LazyRoute><KidsListen /></LazyRoute></RequireAuth>} />
                 <Route path="/kids/read/:id" element={<RequireAuth><LazyRoute><BookReader /></LazyRoute></RequireAuth>} />
                 <Route path="/kids/learning" element={<RequireAuth><LazyRoute><KidsLearning /></LazyRoute></RequireAuth>} />
                 <Route path="/kids/story-studio" element={<RequireAuth><LazyRoute><KidsStoryStudio /></LazyRoute></RequireAuth>} />

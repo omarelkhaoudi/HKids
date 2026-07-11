@@ -26,6 +26,7 @@ import { BookGridSkeleton } from '../components/SkeletonLoader';
 import { KidsBottomNav } from '../components/kids/KidsBottomNav';
 import { KidsEmptyState } from '../components/kids/KidsEmptyState';
 import { KidsFamilyMessages } from '../components/kids/KidsFamilyMessages';
+import { getKidsContentPath } from '../utils/contentRouting';
 
 function inferTheme(book, childThemes) {
   if (book.theme) return book.theme;
@@ -150,7 +151,7 @@ function KidsLibrary() {
   };
 
   const handlePlayBook = (book) => {
-    navigate(`/kids/read/${book.id}`);
+    navigate(getKidsContentPath(book));
   };
 
   const carouselProps = {
