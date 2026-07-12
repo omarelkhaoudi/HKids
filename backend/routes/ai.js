@@ -21,6 +21,10 @@ import {
   loadChildAccessPolicy,
   sendParentalAccessError
 } from '../services/parental/parentalAccessService.js';
+import {
+  isServerTextToSpeechConfigured,
+  synthesizeAssistantSpeech
+} from '../services/ai/textToSpeechService.js';
 
 const router = express.Router();
 const upload = multer({
@@ -236,6 +240,43 @@ router.post('/voice-assistant/stream', verifyToken, async (req, res) => {
       res.write(`event: error\ndata: ${JSON.stringify(body)}\n\n`);
       res.end();
     }
+  }
+});
+
+router.post('/speak', verifyToken, enforceParentalAccess(), async (req, res) => {
+  try {
+    const { text, language = 'fr' } = req.body || {};
+    if (!canUseAI(req.user)) {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+    if (!isServerTextToSpeechConfigured()) {
+      return res.status(503).json({
+        error: 'Server text-to-speech is not configured',
+        code: 'TTS_UNAVAILABLE'
+      });
+    }
+
+    const accessPolicy = await loadChildAccessPolicy({
+      user: req.user,
+      requestedKidProfileId: req.body?.kid_profile_id
+    });
+    const restriction = getTextAccessViolation(accessPolicy, text);
+    if (restriction) return sendParentalAccessError(res, restriction);
+
+    const result = await synthesizeAssistantSpeech({ text, language });
+    res.set({
+      'Content-Type': result.mimeType,
+      'Cache-Control': 'no-store',
+      'X-TTS-Provider': result.provider
+    });
+    res.send(result.audioBuffer);
+  } catch (err) {
+    if (err?.isAIError) {
+      const { status, body } = aiErrorResponse(err);
+      return res.status(status).json(body);
+    }
+    console.error('Error synthesizing assistant speech:', err);
+    res.status(err.status || 500).json({ error: err.message || 'Text-to-speech failed' });
   }
 });
 

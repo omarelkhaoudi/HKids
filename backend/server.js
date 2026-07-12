@@ -28,6 +28,7 @@ import voicesRouter from './routes/voices.js';
 import learningRouter from './routes/learning.js';
 import privacyRouter from './routes/privacy.js';
 import reportsRouter from './routes/reports.js';
+import offlineRouter from './routes/offline.js';
 import { errorHandler, notFound } from './middleware/errorHandler.js';
 import { requestLogger } from './middleware/logger.js';
 import { apiRateLimiter, authRateLimiter, resetRateLimit } from './middleware/rateLimiter.js';
@@ -217,6 +218,7 @@ app.use('/api/voices', voicesRouter);
 app.use('/api/learning', learningRouter);
 app.use('/api/privacy', privacyRouter);
 app.use('/api/reports', reportsRouter);
+app.use('/api/offline', offlineRouter);
 
 app.get('/', (req, res) => {
   res.json({

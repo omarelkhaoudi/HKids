@@ -7,9 +7,6 @@ import SignUp from './pages/SignUp';
 import ParentLogin from './pages/ParentLogin';
 import ParentSignUp from './pages/ParentSignUp';
 import ParentKidsProfiles from './pages/ParentKidsProfiles';
-import KidsHome from './pages/KidsHome';
-import KidsLibrary from './pages/KidsLibrary';
-import KidsCategoryPage from './pages/KidsCategoryPage';
 import DesignSystem from './pages/DesignSystem';
 import ContentLibraryHome from './pages/ContentLibraryHome';
 import ContentCategoryContents from './pages/ContentCategoryContents';
@@ -29,6 +26,9 @@ import ScrollToTop from './components/ScrollToTop';
 import { isNativeAndroid } from './services/mobile/capacitorRuntime';
 import { storage } from './utils/storage';
 
+const KidsHome = lazy(() => import('./pages/KidsHome'));
+const KidsLibrary = lazy(() => import('./pages/KidsLibrary'));
+const KidsCategoryPage = lazy(() => import('./pages/KidsCategoryPage'));
 const BookReader = lazy(() => import('./pages/BookReader'));
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
 const ParentDashboard = lazy(() => import('./pages/ParentDashboard'));
@@ -193,8 +193,8 @@ function App() {
                 <Route path="/parent/profiles" element={<RequireRole roles={['parent', 'admin']}><ParentKidsProfiles /></RequireRole>} />
                 <Route path="/parent/voices" element={<RequireRole roles={['parent', 'admin']}><LazyRoute><FamilyVoices /></LazyRoute></RequireRole>} />
                 <Route path="/parent/*" element={<RequireRole roles={['parent', 'admin']}><LazyRoute><ParentDashboard /></LazyRoute></RequireRole>} />
-                <Route path="/kids" element={<RequireAuth><KidsHome /></RequireAuth>} />
-                <Route path="/kids/library" element={<RequireAuth><KidsLibrary /></RequireAuth>} />
+                <Route path="/kids" element={<RequireAuth><LazyRoute><KidsHome /></LazyRoute></RequireAuth>} />
+                <Route path="/kids/library" element={<RequireAuth><LazyRoute><KidsLibrary /></LazyRoute></RequireAuth>} />
                 <Route path="/kids/audio" element={<RequireAuth><LazyRoute><KidsAudioLibrary /></LazyRoute></RequireAuth>} />
                 <Route path="/kids/listen/:id" element={<RequireAuth><LazyRoute><KidsListen /></LazyRoute></RequireAuth>} />
                 <Route path="/kids/read/:id" element={<RequireAuth><LazyRoute><BookReader /></LazyRoute></RequireAuth>} />
@@ -202,7 +202,7 @@ function App() {
                 <Route path="/kids/story-studio" element={<RequireAuth><LazyRoute><KidsStoryStudio /></LazyRoute></RequireAuth>} />
                 <Route path="/kids/storystudio" element={<Navigate to="/kids/story-studio" replace />} />
                 <Route path="/kids/ai-stories" element={<RequireAuth><LazyRoute><KidsAIStories /></LazyRoute></RequireAuth>} />
-                <Route path="/kids/category/:categoryId" element={<RequireAuth><KidsCategoryPage /></RequireAuth>} />
+                <Route path="/kids/category/:categoryId" element={<RequireAuth><LazyRoute><KidsCategoryPage /></LazyRoute></RequireAuth>} />
                 <Route path="/design-system" element={<DesignSystem />} />
                 <Route path="/mockup" element={<Navigate to="/kids" replace />} />
                 <Route path="*" element={<Navigate to="/" replace />} />

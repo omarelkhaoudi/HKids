@@ -5,7 +5,7 @@ import {
   assertParentalAccess,
   filterOfflineContent
 } from '../parental/parentalAccessService';
-import { registerDownloadInCloud } from '../cloud/cloudSyncService';
+import { registerDownloadInCloud, unregisterDownloadInCloud } from '../cloud/cloudSyncService';
 import { offlineDb } from './offlineDb';
 
 const DOWNLOAD_VERSION = 1;
@@ -265,6 +265,11 @@ export async function removeDownload(id) {
     await Promise.all(record.assetKeys.map((assetKey) => offlineDb.delete(offlineDb.stores.blobs, assetKey)));
   }
   await offlineDb.delete(offlineDb.stores.downloads, id);
+
+  if (record?.type && record?.sourceId) {
+    storage.unmarkDownloaded(record.id);
+    unregisterDownloadInCloud(record.type, record.sourceId).catch(() => {});
+  }
 }
 
 export async function getOfflineBlobUrl(blobId) {

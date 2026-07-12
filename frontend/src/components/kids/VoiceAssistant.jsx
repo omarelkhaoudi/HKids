@@ -4,6 +4,7 @@ import { aiAPI } from '../../api/ai';
 import { MicrophoneIcon, SparklesIcon, XIcon } from '../Icons';
 import { useLanguage } from '../../context/LanguageContext';
 import { isAudioRecordingSupported, recordAudioClip } from '../../services/ai/browserSpeechRecognition';
+import { ensureMicrophonePermission } from '../../services/mobile/androidPermissions';
 import { speakText, stopSpeaking } from '../../services/ai/browserTextToSpeech';
 
 function isExpectedVoiceRecordingError(error) {
@@ -159,6 +160,13 @@ export function VoiceAssistant({ language: requestedSpeechLanguage, onNavigate }
 
     try {
       setListening(true);
+      const micAllowed = await ensureMicrophonePermission();
+      if (!micAllowed) {
+        setVoiceUnavailable(true);
+        setError(t('assistantMicUnavailable'));
+        setListening(false);
+        return;
+      }
       const result = await recordAudioClip({
         onRecordingStart: () => setTranscriptPreview(''),
       });

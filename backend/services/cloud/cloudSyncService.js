@@ -19,7 +19,7 @@ async function requireConnectedKid(pool, user) {
   }
   const result = await pool.query(
     `SELECT id, parent_id, name, avatar, photo_url, age, date_of_birth,
-            preferred_language, interests, updated_at
+            preferred_language, interests, app_preferences, updated_at
      FROM kids_profiles WHERE id = $1`,
     [user.kid_profile_id]
   );
@@ -124,6 +124,7 @@ async function loadSnapshot(kidProfileId, kidProfile) {
       interests: kidProfile.interests,
       updated_at: kidProfile.updated_at
     },
+    preferences: kidProfile.app_preferences || {},
     favorites: favorites.rows.map((row) => ({
       book_id: row.book_id,
       book_title: row.book_title,
@@ -258,6 +259,29 @@ async function applyDownloadChanges(kidProfileId, downloads = []) {
   return resolved;
 }
 
+async function applyPreferencesChanges(kidProfileId, preferences = {}) {
+  if (!preferences || typeof preferences !== 'object') return 0;
+  const pool = getDatabase();
+  const clean = Object.fromEntries(
+    Object.entries({
+      language: preferences.language ?? null,
+      darkMode: preferences.darkMode ?? null,
+      reading_mode: preferences.reading_mode ?? null,
+      synced_at: new Date().toISOString()
+    }).filter(([, value]) => value !== null && value !== undefined)
+  );
+  if (!Object.keys(clean).length) return 0;
+
+  await pool.query(
+    `UPDATE kids_profiles
+     SET app_preferences = COALESCE(app_preferences, '{}'::jsonb) || $2::jsonb,
+         updated_at = NOW()
+     WHERE id = $1`,
+    [kidProfileId, JSON.stringify(clean)]
+  );
+  return 1;
+}
+
 export async function pushCloudSync({ user, clientSyncToken = null, changes = {} }) {
   const pool = getDatabase();
   const kid = await requireConnectedKid(pool, user);
@@ -267,6 +291,7 @@ export async function pushCloudSync({ user, clientSyncToken = null, changes = {}
   conflictsResolved += await applyProgressChanges(user, changes.progress);
   conflictsResolved += await applyHistoryChanges(user, changes.history);
   conflictsResolved += await applyDownloadChanges(kid.id, changes.downloads);
+  conflictsResolved += await applyPreferencesChanges(kid.id, changes.preferences);
 
   await invalidateParentDashboardCache(kid.id);
 

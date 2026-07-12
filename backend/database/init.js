@@ -568,6 +568,7 @@ export async function initDatabase() {
     await client.query(`ALTER TABLE kids_profiles ADD COLUMN IF NOT EXISTS date_of_birth DATE`);
     await client.query(`ALTER TABLE kids_profiles ADD COLUMN IF NOT EXISTS preferred_language TEXT NOT NULL DEFAULT 'fr'`);
     await client.query(`ALTER TABLE kids_profiles ADD COLUMN IF NOT EXISTS interests TEXT[] DEFAULT '{}'`);
+    await client.query(`ALTER TABLE kids_profiles ADD COLUMN IF NOT EXISTS app_preferences JSONB DEFAULT '{}'::jsonb`);
     await client.query(`ALTER TABLE parental_rules ADD COLUMN IF NOT EXISTS daily_screen_time_minutes INTEGER NOT NULL DEFAULT 30`);
     await client.query(`ALTER TABLE parental_rules ADD COLUMN IF NOT EXISTS quiet_start_time TIME`);
     await client.query(`ALTER TABLE parental_rules ADD COLUMN IF NOT EXISTS quiet_end_time TIME`);
