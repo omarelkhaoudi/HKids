@@ -32,7 +32,8 @@ export const kidActivityMutationHandlers = {
     completed: Boolean(payload.completed),
     occurred_at: payload.listenedAt
   }),
-  screen_time: (payload) => parentalAPI.recordScreenTime(payload)
+  screen_time: (payload) => parentalAPI.recordScreenTime(payload),
+  reading_progress: (payload) => parentalAPI.recordReadingProgress(payload),
 };
 
 export async function syncOrQueueKidMutation(type, payload, conflictKey = null) {
