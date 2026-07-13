@@ -2,6 +2,7 @@ import {useEffect, useState} from 'react';
 import {motion} from 'framer-motion';
 import {adminAPI} from '../../api/admin';
 import {formatAdminDate, formatAdminDuration} from './AdminMetricCard';
+import {metricToneAtIndex} from '../../constants/brandTheme';
 import {AudioIcon, BookIcon, ClockIcon, HistoryIcon, UserIcon, ArrowRightIcon, SparklesIcon} from '../Icons';
 
 function BarRow({label, value, max, detail, colorClass ="bg-primary-500", icon: Icon}) {
@@ -96,10 +97,10 @@ function AdminStatistics() {
  </div>
 
  <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-4">
- <StatCard index={0} title="Écoutes" value={summary.total_listens || 0} detail="Sessions totales démarrées" icon={AudioIcon} tone="bg-purple-100 text-purple-600" />
- <StatCard index={1} title="Temps Total" value={formatAdminDuration(summary.total_listening_seconds)} detail="Volume d'écoute cumulé" icon={ClockIcon} tone="bg-emerald-100 text-emerald-600" />
- <StatCard index={2} title="Temps Moyen" value={formatAdminDuration(summary.average_listening_seconds)} detail="Durée moyenne par session" icon={HistoryIcon} tone="bg-blue-100 text-blue-600" />
- <StatCard index={3} title="Enfants Actifs" value={summary.active_children || 0} detail="Profils ayant une activité" icon={UserIcon} tone="bg-amber-100 text-amber-600" />
+ <StatCard index={0} title="Écoutes" value={summary.total_listens || 0} detail="Sessions totales démarrées" icon={AudioIcon} tone={`${metricToneAtIndex(0).bg} ${metricToneAtIndex(0).text}`} />
+ <StatCard index={1} title="Temps Total" value={formatAdminDuration(summary.total_listening_seconds)} detail="Volume d'écoute cumulé" icon={ClockIcon} tone={`${metricToneAtIndex(1).bg} ${metricToneAtIndex(1).text}`} />
+ <StatCard index={2} title="Temps Moyen" value={formatAdminDuration(summary.average_listening_seconds)} detail="Durée moyenne par session" icon={HistoryIcon} tone={`${metricToneAtIndex(2).bg} ${metricToneAtIndex(2).text}`} />
+ <StatCard index={3} title="Enfants Actifs" value={summary.active_children || 0} detail="Profils ayant une activité" icon={UserIcon} tone={`${metricToneAtIndex(3).bg} ${metricToneAtIndex(3).text}`} />
  </div>
 
  <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
@@ -117,7 +118,7 @@ function AdminStatistics() {
  value={book.listens_count}
  max={maxBookListens}
  detail={`Temps total: ${formatAdminDuration(book.listening_seconds)}`}
- colorClass={`bg-gradient-to-r from-primary-400 to-violet-500`}
+ colorClass="bg-gradient-to-r from-primary-400 to-primary-600"
  icon={BookIcon}
  />
  ))}
@@ -128,7 +129,7 @@ function AdminStatistics() {
  <motion.div initial={{opacity: 0, y: 20}} animate={{opacity: 1, y: 0}} transition={{delay: 0.5}} className="bg-card rounded-[2rem] p-8 border border-border shadow-sm">
  <div className="flex items-center justify-between mb-8">
  <h2 className="text-xl font-black text-foreground">Catégories phares</h2>
- <button className="text-emerald-600 hover:text-emerald-700 bg-emerald-50 p-2 rounded-xl transition-colors"><ArrowRightIcon className="w-5 h-5"/></button>
+ <button className="text-secondary-600 hover:text-secondary-700 bg-secondary-50 p-2 rounded-xl transition-colors"><ArrowRightIcon className="w-5 h-5"/></button>
  </div>
  <div className="space-y-6">
  {(data?.top_categories || []).slice(0,5).map((category) => (
@@ -138,7 +139,7 @@ function AdminStatistics() {
  value={category.listens_count}
  max={maxCategoryListens}
  detail={`Temps total: ${formatAdminDuration(category.listening_seconds)}`}
- colorClass={`bg-gradient-to-r from-emerald-400 to-teal-500`}
+ colorClass="bg-gradient-to-r from-secondary-400 to-secondary-600"
  icon={SparklesIcon}
  />
  ))}

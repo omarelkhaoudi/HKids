@@ -58,3 +58,50 @@ export const BRAND_FEATURE_TILES = [
   { title: 'Créé avec amour', desc: 'Conçu par des parents pour accompagner chaque famille.', icon: '💜', tone: 'secondary' },
   { title: 'Contrôle parental', desc: "Temps d'écran, contenus autorisés et suivi de lecture depuis votre tableau de bord.", icon: '👨‍👩‍👧', tone: 'accent' },
 ];
+
+export const BRAND_SOFT_SURFACES = [
+  'bg-primary-50',
+  'bg-secondary-50',
+  'bg-accent-50',
+  'bg-primary-50/70',
+];
+
+export const BRAND_METRIC_TONES = [
+  { bg: 'bg-primary-50', text: 'text-primary-600' },
+  { bg: 'bg-secondary-50', text: 'text-secondary-600' },
+  { bg: 'bg-accent-50', text: 'text-accent-600' },
+  { bg: 'bg-primary-100', text: 'text-primary-700' },
+];
+
+export const BRAND_SEMANTIC = {
+  success: { bg: 'bg-secondary-50', text: 'text-secondary-700', solid: 'bg-secondary-500', border: 'border-secondary-200' },
+  warning: { bg: 'bg-accent-50', text: 'text-accent-700', solid: 'bg-accent-500', border: 'border-accent-200' },
+  danger: { bg: 'bg-danger-50', text: 'text-danger-700', solid: 'bg-danger-500', border: 'border-danger-200' },
+  info: { bg: 'bg-primary-50', text: 'text-primary-700', solid: 'bg-primary-500', border: 'border-primary-200' },
+};
+
+export const BRAND_CONFETTI = ['bg-primary-500', 'bg-secondary-500', 'bg-accent-500', 'bg-primary-400', 'bg-secondary-400'];
+
+export function softSurfaceAtIndex(index) {
+  return BRAND_SOFT_SURFACES[index % BRAND_SOFT_SURFACES.length];
+}
+
+export function metricToneAtIndex(index) {
+  return BRAND_METRIC_TONES[index % BRAND_METRIC_TONES.length];
+}
+
+/** Gradients thématiques pour couvertures d'histoires (cycle brand) */
+export const BRAND_STORY_GRADIENTS = [
+  'from-primary-600 to-primary-800',
+  'from-secondary-600 to-secondary-800',
+  'from-accent-600 to-accent-800',
+  'from-primary-500 to-secondary-700',
+  'from-secondary-500 to-accent-700',
+  'from-accent-500 to-primary-700',
+  'from-primary-600 to-accent-800',
+  'from-secondary-600 to-primary-800',
+];
+
+export function storyGradientAtIndex(index) {
+  return BRAND_STORY_GRADIENTS[index % BRAND_STORY_GRADIENTS.length];
+}

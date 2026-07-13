@@ -12,6 +12,7 @@ import { getRestrictionMessage } from '../services/parental/parentalAccessServic
 import { KidsBottomNav } from '../components/kids/KidsBottomNav';
 import { VoiceAssistant } from '../components/kids/VoiceAssistant';
 import { Logo } from '../components/Logo';
+import { BRAND_HERO_GRADIENT } from '../constants/brandTheme';
 import {
   AudioIcon, ChevronLeftIcon, HeartIcon, HomeIcon, LogOutIcon,
   PauseIcon, PlayIcon, ChevronRightIcon,
@@ -92,7 +93,7 @@ function KidsListen() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-fuchsia-900 flex items-center justify-center pb-32">
+      <div className={`min-h-screen bg-gradient-to-br ${BRAND_HERO_GRADIENT} flex items-center justify-center pb-32`}>
         <div className="text-white text-2xl font-black animate-pulse">{t('loading')}</div>
         <KidsBottomNav />
       </div>
@@ -102,10 +103,10 @@ function KidsListen() {
   if (!book) return null;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-fuchsia-900 text-white pb-32 overflow-hidden relative" dir={isRtl ? 'rtl' : 'ltr'}>
+    <div className={`min-h-screen bg-gradient-to-br ${BRAND_HERO_GRADIENT} text-white pb-32 overflow-hidden relative`} dir={isRtl ? 'rtl' : 'ltr'}>
       <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute top-20 left-10 w-64 h-64 bg-pink-500/20 rounded-full blur-3xl" />
-        <div className="absolute bottom-20 right-10 w-80 h-80 bg-cyan-500/20 rounded-full blur-3xl" />
+        <div className="absolute top-20 left-10 w-64 h-64 bg-primary-500/20 rounded-full blur-3xl" />
+        <div className="absolute bottom-20 right-10 w-80 h-80 bg-secondary-500/20 rounded-full blur-3xl" />
       </div>
 
       <div className="relative z-10 mx-auto max-w-3xl px-4 py-6">
@@ -162,7 +163,7 @@ function KidsListen() {
           )}
 
           {!book.audio_url && (
-            <p className="mb-6 rounded-2xl bg-amber-500/30 px-4 py-3 font-bold border border-amber-300/40">
+            <p className="mb-6 rounded-2xl bg-accent-500/30 px-4 py-3 font-bold border border-accent-300/40">
               {t('audioUnavailable')}
             </p>
           )}
@@ -174,7 +175,7 @@ function KidsListen() {
               max={progressMax || 1}
               value={progressValue}
               onChange={(e) => player.seekTo(e.target.value)}
-              className="w-full h-3 rounded-full appearance-none bg-white/20 accent-emerald-400"
+              className="w-full h-3 rounded-full appearance-none bg-white/20 accent-secondary-400"
               aria-label="Progression"
             />
             <div className="flex justify-between text-sm font-bold text-white/70 mt-2">

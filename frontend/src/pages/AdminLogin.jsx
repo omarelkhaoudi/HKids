@@ -4,6 +4,7 @@ import {motion, AnimatePresence} from 'framer-motion';
 import {useAuth} from '../context/AuthContext';
 import {LockIcon, UserIcon, EyeIcon, EyeOffIcon, AlertIcon, LoadingSpinnerIcon, ChevronLeftIcon, StarIcon} from '../components/Icons';
 import {Logo} from '../components/Logo';
+import {MagicalBackground} from '../components/layout/PlatformShell';
 import {API_URL, buildApiUrl} from '../config/api.js';
 
 // Composant pour les étoiles animées
@@ -13,7 +14,7 @@ function StarParticles({count = 20}) {
  {Array.from({length: count}).map((_, i) => (
  <motion.div
  key={i}
- className="absolute text-yellow-400"
+ className="absolute text-accent-400"
  style={{
  left: `${Math.random() * 100}%`,
  top: `${Math.random() * 100}%`,
@@ -107,6 +108,7 @@ function AdminLogin({audience = 'admin'}) {
 
  return (
  <div className="min-h-screen bg-gradient-to-br from-white via-primary-50/30 to-secondary-50/30 flex items-center justify-center px-4 py-6 relative overflow-hidden">
+ <MagicalBackground preset="platform" />
  {/* Étoiles animées en arrière-plan */}
  <StarParticles count={15} />
 

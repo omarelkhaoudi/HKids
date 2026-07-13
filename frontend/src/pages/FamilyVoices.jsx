@@ -14,6 +14,8 @@ import {
 } from '../components/Icons';
 import {Logo} from '../components/Logo';
 import {Button, Card, Badge, Avatar, ProgressBar, Skeleton} from '../components/ui';
+import { MagicalBackground } from '../components/layout/PlatformShell';
+import { BRAND_HERO_GRADIENT, BRAND_SEMANTIC } from '../constants/brandTheme';
 
 // Original empty forms
 const emptyProfileForm = {
@@ -45,8 +47,8 @@ function statusLabel(status) {
 }
 
 function qualityTone(status) {
- if (status === 'good') return 'bg-emerald-100 text-emerald-800';
- if (status === 'medium') return 'bg-amber-100 text-amber-800';
+ if (status === 'good') return `${BRAND_SEMANTIC.success.bg} ${BRAND_SEMANTIC.success.text}`;
+ if (status === 'medium') return `${BRAND_SEMANTIC.warning.bg} ${BRAND_SEMANTIC.warning.text}`;
  return 'bg-rose-100 text-rose-800';
 }
 
@@ -357,7 +359,7 @@ function FamilyVoices() {
 
  if (loading && profiles.length === 0) {
  return (
- <div className="min-h-screen bg-[#f8fbff] flex items-center justify-center" dir={isRtl ? 'rtl' : 'ltr'}>
+ <div className="min-h-screen bg-background flex items-center justify-center" dir={isRtl ? 'rtl' : 'ltr'}>
  <div className="flex flex-col items-center">
  <motion.div animate={{rotate: 360}} transition={{duration: 2, repeat: Infinity, ease: 'linear'}}>
  <SparklesIcon className="w-12 h-12 text-foreground-500" />
@@ -369,7 +371,8 @@ function FamilyVoices() {
 }
 
  return (
- <div className="min-h-screen bg-[#f8fbff] text-foreground overflow-x-hidden font-sans" dir={isRtl ? 'rtl' : 'ltr'}>
+ <div className="min-h-screen bg-background text-foreground overflow-x-hidden font-sans" dir={isRtl ? 'rtl' : 'ltr'}>
+ <MagicalBackground preset="platform" />
  
  {/* HEADER */}
  <header className="sticky top-0 z-40 bg-card/80 backdrop-blur-xl border-b border-border shadow-sm px-4 py-4 flex items-center justify-between">
@@ -381,7 +384,7 @@ function FamilyVoices() {
  <Logo size="default" showText={true} />
  </Link>
  <div className="h-6 w-px bg-surface-300 hidden md:block"></div>
- <h1 className="text-xl md:text-2xl font-black bg-clip-text text-transparent bg-gradient-to-r from-primary-600 to-violet-600 flex items-center gap-2">
+ <h1 className="text-xl md:text-2xl font-black bg-clip-text text-transparent bg-gradient-to-r from-primary-600 to-secondary-600 flex items-center gap-2">
  <MicrophoneIcon className="w-6 h-6 text-foreground-500" />
  {t('parentVoiceStudio')}
  </h1>
@@ -396,11 +399,11 @@ function FamilyVoices() {
  
  {/* SAFETY CARDS */}
  <section className="grid grid-cols-1 md:grid-cols-3 gap-4">
- <div className="bg-emerald-50 rounded-2xl p-5 border border-emerald-100 flex gap-4">
- <div className="bg-emerald-500 text-white p-3 rounded-full h-fit"><ShieldIcon className="w-6 h-6"/></div>
+ <div className="bg-secondary-50 rounded-2xl p-5 border border-secondary-100 flex gap-4">
+ <div className="bg-secondary-500 text-white p-3 rounded-full h-fit"><ShieldIcon className="w-6 h-6"/></div>
  <div>
- <h3 className="font-bold text-emerald-900">Stockage Sécurisé</h3>
- <p className="text-sm text-emerald-700 mt-1">Vos données vocales sont protégées par authentification et traitées par ElevenLabs avec votre consentement.</p>
+ <h3 className="font-bold text-secondary-900">Stockage Sécurisé</h3>
+ <p className="text-sm text-secondary-700 mt-1">Vos données vocales sont protégées par authentification et traitées par ElevenLabs avec votre consentement.</p>
  </div>
  </div>
  <div className="bg-sky-50 rounded-2xl p-5 border border-sky-100 flex gap-4">
@@ -443,18 +446,18 @@ function FamilyVoices() {
  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
  {activeProfiles.map((profile) => (
  <motion.div key={profile.id} whileHover={{y: -5}} className="bg-card rounded-3xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-border relative group overflow-hidden">
- <div className="absolute top-0 inset-x-0 h-2 bg-gradient-to-r from-primary-400 to-violet-500"></div>
+ <div className="absolute top-0 inset-x-0 h-2 bg-gradient-to-r from-primary-400 to-secondary-500"></div>
  
  <div className="flex items-start justify-between mb-4 mt-2">
  <div className="flex items-center gap-3">
- <Avatar src={null} fallback={profile.name.charAt(0).toUpperCase()} className="w-14 h-14 bg-gradient-to-br from-primary-400 to-violet-500 text-white font-bold text-xl" />
+ <Avatar src={null} fallback={profile.name.charAt(0).toUpperCase()} className="w-14 h-14 bg-gradient-to-br from-primary-400 to-secondary-500 text-white font-bold text-xl" />
  <div>
  <h3 className="font-black text-lg text-foreground leading-tight">{profile.name}</h3>
  <p className="text-sm font-bold text-foreground-muted">{profile.relation}</p>
  </div>
  </div>
  {/* Fake default badge */}
- <div className="bg-amber-100 text-amber-700 p-1.5 rounded-full"><StarIcon className="w-4 h-4"/></div>
+ <div className="bg-accent-100 text-accent-700 p-1.5 rounded-full"><StarIcon className="w-4 h-4"/></div>
  </div>
 
  <div className="flex flex-wrap gap-2 mb-6">
@@ -476,7 +479,7 @@ function FamilyVoices() {
  <EditIcon className="w-4 h-4" />
  </Button>
 {(profile.consent_given || profile.status === 'provider_deletion_pending') && (
-<Button variant="outline" title={profile.consent_given ? 'Révoquer le consentement' : 'Réessayer la suppression ElevenLabs'} onClick={() => revokeConsent(profile)} className="rounded-full w-full px-0 font-bold text-sm bg-amber-50 border-amber-100 text-amber-700 hover:bg-amber-100">
+<Button variant="outline" title={profile.consent_given ? 'Révoquer le consentement' : 'Réessayer la suppression ElevenLabs'} onClick={() => revokeConsent(profile)} className="rounded-full w-full px-0 font-bold text-sm bg-accent-50 border-accent-100 text-accent-700 hover:bg-accent-100">
 <ShieldIcon className="w-4 h-4" />
 </Button>
 )}
@@ -551,7 +554,7 @@ function FamilyVoices() {
  )}
  </div>
 
- <Button type="submit" disabled={savingMessage || messageRecorder.recording} variant="primary" className="w-full rounded-2xl py-4 shadow-lg hover:shadow-xl font-black text-lg bg-gradient-to-r from-primary-500 to-violet-500 border-none">
+ <Button type="submit" disabled={savingMessage || messageRecorder.recording} variant="primary" className="w-full rounded-2xl py-4 shadow-lg hover:shadow-xl font-black text-lg bg-gradient-to-r from-primary-500 to-secondary-500 border-none">
  {savingMessage ? t('parentVoiceSavingMessage') : t('parentVoiceSaveMessage')}
  </Button>
  </form>
@@ -583,7 +586,7 @@ function FamilyVoices() {
  <Button variant="outline" onClick={() => playMessage(message)} disabled={!message.has_audio} className="rounded-full bg-surface-secondary border-border">
  <PlayIcon className="w-4 h-4"/>
  </Button>
- <Button variant="outline" onClick={() => offlineReady ? removeMessageDownload(message) : downloadMessage(message)} className={`rounded-full border-border ${offlineReady ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-surface-secondary'}`}>
+ <Button variant="outline" onClick={() => offlineReady ? removeMessageDownload(message) : downloadMessage(message)} className={`rounded-full border-border ${offlineReady ? 'bg-secondary-50 text-secondary-700 border-secondary-200' : 'bg-surface-secondary'}`}>
  <DownloadIcon className="w-4 h-4"/>
  </Button>
  <Button variant="outline" onClick={() => deleteMessage(message)} className="rounded-full bg-surface-secondary border-border text-rose-600 hover:bg-rose-50 hover:border-rose-200">
@@ -632,11 +635,11 @@ function FamilyVoices() {
  
  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-left mb-8">
  <div className="bg-surface-secondary p-4 rounded-2xl flex gap-3 items-start">
- <MicrophoneIcon className="w-6 h-6 text-violet-500 shrink-0" />
+ <MicrophoneIcon className="w-6 h-6 text-primary-500 shrink-0" />
  <div><h4 className="font-bold">30 secondes suffisent</h4><p className="text-sm text-foreground-muted">Lisez un court texte avec naturel.</p></div>
  </div>
  <div className="bg-surface-secondary p-4 rounded-2xl flex gap-3 items-start">
- <ShieldIcon className="w-6 h-6 text-emerald-500 shrink-0" />
+ <ShieldIcon className="w-6 h-6 text-secondary-500 shrink-0" />
  <div><h4 className="font-bold">Accès protégé</h4><p className="text-sm text-foreground-muted">Stocké avec un accès authentifié et supprimable à tout moment.</p></div>
  </div>
  </div>
@@ -675,11 +678,11 @@ function FamilyVoices() {
  <div className="bg-gradient-to-b from-surface-50 to-surface-100 rounded-3xl p-6 md:p-8 border-2 border-border text-center relative overflow-hidden">
  {/* Quality Meter Mockup */}
  <div className="absolute top-4 left-4 flex gap-2">
- <div className={`h-2 w-8 rounded-full ${profileRecorder.recording ? 'bg-emerald-400' : 'bg-surface-300'}`}></div>
- <div className={`h-2 w-8 rounded-full ${profileRecorder.recording ? 'bg-emerald-400' : 'bg-surface-300'}`}></div>
- <div className={`h-2 w-8 rounded-full ${profileRecorder.recording && profileRecorder.durationSeconds > 5 ? 'bg-emerald-400' : 'bg-surface-300'}`}></div>
+ <div className={`h-2 w-8 rounded-full ${profileRecorder.recording ? 'bg-secondary-400' : 'bg-surface-300'}`}></div>
+ <div className={`h-2 w-8 rounded-full ${profileRecorder.recording ? 'bg-secondary-400' : 'bg-surface-300'}`}></div>
+ <div className={`h-2 w-8 rounded-full ${profileRecorder.recording && profileRecorder.durationSeconds > 5 ? 'bg-secondary-400' : 'bg-surface-300'}`}></div>
  </div>
- {profileRecorder.recording && <span className="absolute top-3 right-4 text-xs font-black text-emerald-600 bg-emerald-100 px-2 py-1 rounded-full uppercase">Qualité Optimale</span>}
+ {profileRecorder.recording && <span className="absolute top-3 right-4 text-xs font-black text-secondary-600 bg-secondary-100 px-2 py-1 rounded-full uppercase">Qualité Optimale</span>}
 
  <h3 className="text-lg font-black text-foreground mb-2 mt-4">Enregistrez un échantillon</h3>
  <p className="text-sm font-medium text-foreground-muted mb-8 max-w-sm mx-auto">
@@ -731,7 +734,7 @@ function FamilyVoices() {
  type="checkbox"
  checked={profileForm.consent_given}
  onChange={(e) => setProfileForm({...profileForm, consent_given: e.target.checked})}
- className="mt-1 w-5 h-5 accent-emerald-500"
+ className="mt-1 w-5 h-5 accent-secondary-500"
  />
  <span className="text-sm font-bold text-foreground-secondary">Je donne mon consentement explicite pour cloner ma voix et je confirme être un adulte. J'accepte les conditions de confidentialité.</span>
  </label>
@@ -750,7 +753,7 @@ function FamilyVoices() {
  {wizardStep === 3 && (
  <div className="text-center py-12">
  <div className="relative w-32 h-32 mx-auto mb-8">
- <motion.div animate={{rotate: 360}} transition={{duration: 4, repeat: Infinity, ease: 'linear'}} className="absolute inset-0 rounded-full border-4 border-border border-t-primary-500 border-r-violet-500"></motion.div>
+ <motion.div animate={{rotate: 360}} transition={{duration: 4, repeat: Infinity, ease: 'linear'}} className="absolute inset-0 rounded-full border-4 border-border border-t-primary-500 border-r-secondary-500"></motion.div>
  <MicrophoneIcon className="w-12 h-12 text-surface-400 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" />
  </div>
  
@@ -758,16 +761,16 @@ function FamilyVoices() {
  
  <div className="max-w-xs mx-auto space-y-4 text-left">
  <div className={`flex items-center gap-3 font-bold ${aiProgress >= 10 ? 'text-foreground-600' : 'text-surface-400'}`}>
- {aiProgress >= 25 ? <CheckIcon className="w-5 h-5 text-emerald-500"/> : <div className="w-5 h-5 rounded-full border-2 border-current"></div>} Transfert sécurisé
+ {aiProgress >= 25 ? <CheckIcon className="w-5 h-5 text-secondary-500"/> : <div className="w-5 h-5 rounded-full border-2 border-current"></div>} Transfert sécurisé
  </div>
  <div className={`flex items-center gap-3 font-bold ${aiProgress >= 30 ? 'text-foreground-600' : 'text-surface-400'}`}>
- {aiProgress >= 50 ? <CheckIcon className="w-5 h-5 text-emerald-500"/> : <div className="w-5 h-5 rounded-full border-2 border-current"></div>} Nettoyage de l'audio
+ {aiProgress >= 50 ? <CheckIcon className="w-5 h-5 text-secondary-500"/> : <div className="w-5 h-5 rounded-full border-2 border-current"></div>} Nettoyage de l'audio
  </div>
  <div className={`flex items-center gap-3 font-bold ${aiProgress >= 60 ? 'text-foreground-600' : 'text-surface-400'}`}>
- {aiProgress >= 80 ? <CheckIcon className="w-5 h-5 text-emerald-500"/> : <div className="w-5 h-5 rounded-full border-2 border-current"></div>} Entraînement du modèle IA
+ {aiProgress >= 80 ? <CheckIcon className="w-5 h-5 text-secondary-500"/> : <div className="w-5 h-5 rounded-full border-2 border-current"></div>} Entraînement du modèle IA
  </div>
  <div className={`flex items-center gap-3 font-bold ${aiProgress >= 90 ? 'text-foreground-600' : 'text-surface-400'}`}>
- {aiProgress >= 100 ? <CheckIcon className="w-5 h-5 text-emerald-500"/> : <div className="w-5 h-5 rounded-full border-2 border-current"></div>} Finalisation
+ {aiProgress >= 100 ? <CheckIcon className="w-5 h-5 text-secondary-500"/> : <div className="w-5 h-5 rounded-full border-2 border-current"></div>} Finalisation
  </div>
  </div>
  </div>
@@ -776,7 +779,7 @@ function FamilyVoices() {
  {/* STEP 5: SUCCESS */}
  {wizardStep === 5 && (
  <div className="text-center py-8">
- <motion.div initial={{scale: 0}} animate={{scale: 1}} transition={{type: 'spring', bounce: 0.5}} className="w-24 h-24 bg-emerald-100 text-emerald-500 rounded-full flex items-center justify-center mx-auto mb-6">
+ <motion.div initial={{scale: 0}} animate={{scale: 1}} transition={{type: 'spring', bounce: 0.5}} className="w-24 h-24 bg-secondary-100 text-secondary-500 rounded-full flex items-center justify-center mx-auto mb-6">
  <CheckIcon className="w-12 h-12" />
  </motion.div>
  <h2 className="text-3xl font-black text-foreground mb-4">Succès !</h2>
@@ -786,7 +789,7 @@ function FamilyVoices() {
  
  <div className="flex flex-col sm:flex-row justify-center gap-4">
  <Button onClick={resetProfileForm} variant="outline" className="rounded-full font-bold">Retour au studio</Button>
- <Button onClick={() => {resetProfileForm(); navigate('/kids');}} variant="primary" className="rounded-full shadow-lg bg-emerald-500 hover:bg-emerald-600 border-none font-black text-white">
+ <Button onClick={() => {resetProfileForm(); navigate('/kids');}} variant="primary" className="rounded-full shadow-lg bg-secondary-500 hover:bg-secondary-600 border-none font-black text-white">
  Utiliser cette voix
  </Button>
  </div>

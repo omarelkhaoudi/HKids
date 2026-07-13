@@ -1481,8 +1481,25 @@ function BookReader() {
  )}
 
  {/* Persistent Bottom Progress Bar */}
- <div className="absolute bottom-0 inset-x-0 z-30 px-4 md:px-12 pb-6 pt-10 bg-gradient-to-t from-black/20 to-transparent flex flex-col justify-end pointer-events-none">
-        <div className="w-full max-w-4xl mx-auto h-4 bg-black/10 rounded-full overflow-hidden border border-white/20 shadow-inner">
+ <div className={`absolute bottom-0 inset-x-0 z-30 px-4 md:px-12 ${isKidReader ? 'pb-4' : 'pb-6'} pt-10 bg-gradient-to-t from-black/20 to-transparent flex flex-col justify-end pointer-events-none gap-3`}>
+        {isKidReader && totalPages > 1 && (
+          <div className="w-full max-w-4xl mx-auto flex items-center justify-center gap-2 flex-wrap">
+            {Array.from({ length: totalPages }).map((_, index) => (
+              <span
+                key={index}
+                className={`rounded-full transition-all duration-300 ${
+                  index === currentPage
+                    ? 'h-3 w-8 bg-white shadow-glow'
+                    : index < currentPage
+                      ? 'h-3 w-3 bg-secondary-400'
+                      : 'h-3 w-3 bg-white/40'
+                }`}
+                aria-hidden="true"
+              />
+            ))}
+          </div>
+        )}
+        <div className={`w-full max-w-4xl mx-auto ${isKidReader ? 'h-6' : 'h-4'} bg-black/10 rounded-full overflow-hidden border border-white/20 shadow-inner`}>
           <motion.div 
             className="h-full bg-gradient-to-r from-primary-400 to-secondary-400 rounded-full"
             initial={{width: 0}}
@@ -1532,7 +1549,7 @@ function BookReader() {
  initial={{scale: 0}}
  animate={{scale: 1, rotate: 360}}
  transition={{type:"spring", bounce: 0.5, delay: 0.2}}
- className="w-24 h-24 bg-gradient-to-br from-yellow-400 to-amber-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-glow"
+ className="w-24 h-24 bg-gradient-to-br from-accent-400 to-accent-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-glow"
  >
  <StarIcon className="w-12 h-12 text-white" />
  </motion.div>

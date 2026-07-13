@@ -11,6 +11,8 @@ import {
  SparklesIcon, ShieldIcon, XIcon, InfoIcon, BrainIcon, AudioIcon, HistoryIcon, ChevronUpIcon 
 } from '../components/Icons';
 import {Button, Card, Badge, Skeleton} from '../components/ui';
+import { MagicalBackground } from '../components/layout/PlatformShell';
+import { BRAND_HERO_GRADIENT, BRAND_SEMANTIC } from '../constants/brandTheme';
 
 const fallbackPlans = [
  {
@@ -59,7 +61,7 @@ const Confetti = () => {
  x: Math.random() * window.innerWidth,
  y: -20,
  size: Math.random() * 10 + 5,
- color: ['#10b981', '#3b82f6', '#8b5cf6', '#ec4899', '#f59e0b'][Math.floor(Math.random() * 5)],
+ color: ['#7b3eb8', '#389d85', '#f76219', '#9b5fc9', '#5bb89e'][Math.floor(Math.random() * 5)],
  duration: Math.random() * 2 + 1,
  delay: Math.random() * 0.5
 }));
@@ -348,7 +350,7 @@ function Subscriptions() {
 
  if (loading && !checkoutModalPlan && viewState === 'plans') {
  return (
- <div className="min-h-screen bg-[#f8fbff] py-12 px-4">
+ <div className="min-h-screen bg-background py-12 px-4">
  <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6">
  <Skeleton className="h-[500px] rounded-[2.5rem]" />
  <Skeleton className="h-[520px] rounded-[2.5rem]" />
@@ -361,10 +363,11 @@ function Subscriptions() {
  // RENDER POST-CHECKOUT STATES
  if (viewState === 'success') {
  return (
- <div className="min-h-screen bg-[#f8fbff] flex flex-col items-center justify-center p-4">
+ <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
+ <MagicalBackground preset="platform" />
  <Confetti />
- <motion.div initial={{scale: 0.8, opacity: 0}} animate={{scale: 1, opacity: 1}} className="bg-card rounded-[3rem] p-10 md:p-16 max-w-2xl w-full text-center shadow-2xl border border-emerald-100">
- <div className="w-24 h-24 bg-emerald-100 text-emerald-500 rounded-full flex items-center justify-center mx-auto mb-8">
+ <motion.div initial={{scale: 0.8, opacity: 0}} animate={{scale: 1, opacity: 1}} className={`bg-card rounded-[3rem] p-10 md:p-16 max-w-2xl w-full text-center shadow-2xl border ${BRAND_SEMANTIC.success.border}`}>
+ <div className={`w-24 h-24 ${BRAND_SEMANTIC.success.bg} text-secondary-500 rounded-full flex items-center justify-center mx-auto mb-8`}>
  <CheckIcon className="w-12 h-12" />
  </div>
  <h1 className="text-4xl md:text-5xl font-black text-foreground mb-4">{t('subscriptionsPaymentSuccess')}</h1>
@@ -381,7 +384,7 @@ function Subscriptions() {
  </div>
  </div>
 
- <Button onClick={() => navigate('/parent')} variant="primary" size="lg" className="rounded-full shadow-xl shadow-emerald-500/20 bg-emerald-500 hover:bg-emerald-600 border-none font-black text-white px-12">
+ <Button onClick={() => navigate('/parent')} variant="primary" size="lg" className="rounded-full shadow-xl shadow-secondary-500/20 bg-secondary-500 hover:bg-secondary-600 border-none font-black text-white px-12">
  {t('subscriptionsContinueLibrary')}
  </Button>
  </motion.div>
@@ -391,9 +394,9 @@ function Subscriptions() {
 
  if (viewState === 'cancelled') {
  return (
- <div className="min-h-screen bg-[#f8fbff] flex flex-col items-center justify-center p-4">
+ <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
  <motion.div initial={{y: 20, opacity: 0}} animate={{y: 0, opacity: 1}} className="bg-card rounded-[3rem] p-10 max-w-lg w-full text-center shadow-xl border border-border">
- <div className="w-20 h-20 bg-amber-100 text-amber-500 rounded-full flex items-center justify-center mx-auto mb-6">
+ <div className={`w-20 h-20 ${BRAND_SEMANTIC.warning.bg} text-accent-500 rounded-full flex items-center justify-center mx-auto mb-6`}>
  <InfoIcon className="w-10 h-10" />
  </div>
  <h1 className="text-3xl font-black text-foreground mb-4">{t('subscriptionsPaymentCancelled')}</h1>
@@ -406,7 +409,7 @@ function Subscriptions() {
 
  if (viewState === 'error') {
  return (
- <div className="min-h-screen bg-[#f8fbff] flex flex-col items-center justify-center p-4">
+ <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
  <motion.div initial={{y: 20, opacity: 0}} animate={{y: 0, opacity: 1}} className="bg-card rounded-[3rem] p-10 max-w-lg w-full text-center shadow-xl border border-rose-200">
  <div className="w-20 h-20 bg-rose-100 text-rose-500 rounded-full flex items-center justify-center mx-auto mb-6">
  <XIcon className="w-10 h-10" />
@@ -421,7 +424,8 @@ function Subscriptions() {
 
  // DEFAULT PLANS VIEW
  return (
- <div className="min-h-screen bg-[#f8fbff] text-foreground overflow-x-hidden font-sans pb-24">
+ <div className="min-h-screen bg-background text-foreground overflow-x-hidden font-sans pb-24">
+ <MagicalBackground preset="platform" />
  
  {/* HEADER */}
  <header className="sticky top-0 z-40 bg-card/80 backdrop-blur-xl border-b border-border shadow-sm">
@@ -434,7 +438,7 @@ function Subscriptions() {
  </Link>
  <div className="hidden md:flex gap-4">
  <div className="flex items-center gap-2 text-sm font-bold text-foreground-muted">
- <ShieldIcon className="w-4 h-4 text-emerald-500"/> {t('subscriptionsSecurePayments')}
+ <ShieldIcon className="w-4 h-4 text-secondary-500"/> {t('subscriptionsSecurePayments')}
  </div>
  </div>
  </div>
@@ -563,7 +567,7 @@ function Subscriptions() {
 }`}
  >
  {isFeatured && (
- <div className="absolute -top-5 left-1/2 -translate-x-1/2 bg-gradient-to-r from-primary-500 to-violet-500 text-white font-black text-sm uppercase tracking-widest py-1.5 px-6 rounded-full shadow-lg">
+ <div className="absolute -top-5 left-1/2 -translate-x-1/2 bg-gradient-to-r from-primary-500 to-secondary-500 text-white font-black text-sm uppercase tracking-widest py-1.5 px-6 rounded-full shadow-lg">
  Recommandé
  </div>
  )}
@@ -580,19 +584,19 @@ function Subscriptions() {
 
  <div className="flex-1 space-y-4 mb-8">
  <div className="flex items-center gap-3">
- <div className="p-1 rounded-full bg-emerald-100 text-emerald-600"><CheckIcon className="w-4 h-4"/></div>
+ <div className={`p-1 rounded-full ${BRAND_SEMANTIC.success.bg} ${BRAND_SEMANTIC.success.text}`}><CheckIcon className="w-4 h-4"/></div>
  <span className="font-bold text-foreground-secondary">{plan.book_limit} livres Premium inclus</span>
  </div>
  <div className="flex items-center gap-3">
- <div className="p-1 rounded-full bg-emerald-100 text-emerald-600"><CheckIcon className="w-4 h-4"/></div>
+ <div className={`p-1 rounded-full ${BRAND_SEMANTIC.success.bg} ${BRAND_SEMANTIC.success.text}`}><CheckIcon className="w-4 h-4"/></div>
  <span className="font-bold text-foreground-secondary">Génération d'histoires IA</span>
  </div>
  <div className="flex items-center gap-3">
- <div className="p-1 rounded-full bg-emerald-100 text-emerald-600"><CheckIcon className="w-4 h-4"/></div>
+ <div className={`p-1 rounded-full ${BRAND_SEMANTIC.success.bg} ${BRAND_SEMANTIC.success.text}`}><CheckIcon className="w-4 h-4"/></div>
  <span className="font-bold text-foreground-secondary">Studio Vocal (Clonage)</span>
  </div>
  <div className="flex items-center gap-3">
- <div className="p-1 rounded-full bg-emerald-100 text-emerald-600"><CheckIcon className="w-4 h-4"/></div>
+ <div className={`p-1 rounded-full ${BRAND_SEMANTIC.success.bg} ${BRAND_SEMANTIC.success.text}`}><CheckIcon className="w-4 h-4"/></div>
  <span className="font-bold text-foreground-secondary">Mode Hors Ligne</span>
  </div>
  </div>
@@ -601,7 +605,7 @@ function Subscriptions() {
  onClick={() => openCheckoutModal(plan)}
  disabled={isKidAccount || isCurrent}
  variant={isFeatured ? 'primary' : 'outline'}
- className={`w-full rounded-full py-4 text-lg font-black ${isFeatured ? 'shadow-xl shadow-primary-500/30' : 'border-border'} ${isCurrent ? 'opacity-50 cursor-not-allowed bg-emerald-50 text-emerald-700 border-emerald-200' : ''}`}
+ className={`w-full rounded-full py-4 text-lg font-black ${isFeatured ? 'shadow-xl shadow-primary-500/30' : 'border-border'} ${isCurrent ? `opacity-50 cursor-not-allowed ${BRAND_SEMANTIC.success.bg} ${BRAND_SEMANTIC.success.text} ${BRAND_SEMANTIC.success.border}` : ''}`}
  >
  {isCurrent ? 'Formule Actuelle' : isKidAccount ? 'Réservé aux parents' : 'Choisir cette formule'}
  </Button>
@@ -630,10 +634,10 @@ function Subscriptions() {
  <tbody>
  {[
  {label:"Livres générés par mois", keys: plans.map(p => p.book_limit)},
- {label:"Clonage Vocal IA", keys: [<CheckIcon className="w-5 h-5 mx-auto text-emerald-500"/>, <CheckIcon className="w-5 h-5 mx-auto text-emerald-500"/>, <CheckIcon className="w-5 h-5 mx-auto text-emerald-500"/>]},
- {label:"Mode hors ligne", keys: [<CheckIcon className="w-5 h-5 mx-auto text-emerald-500"/>, <CheckIcon className="w-5 h-5 mx-auto text-emerald-500"/>, <CheckIcon className="w-5 h-5 mx-auto text-emerald-500"/>]},
- {label:"Statistiques de lecture", keys: [<span className="text-surface-300">-</span>, <CheckIcon className="w-5 h-5 mx-auto text-emerald-500"/>, <CheckIcon className="w-5 h-5 mx-auto text-emerald-500"/>]},
- {label:"Profils enfants multiples", keys: [<span className="text-surface-300">-</span>, <span className="text-surface-300">-</span>, <CheckIcon className="w-5 h-5 mx-auto text-emerald-500"/>]},
+ {label:"Clonage Vocal IA", keys: [<CheckIcon className="w-5 h-5 mx-auto text-secondary-500"/>, <CheckIcon className="w-5 h-5 mx-auto text-secondary-500"/>, <CheckIcon className="w-5 h-5 mx-auto text-secondary-500"/>]},
+ {label:"Mode hors ligne", keys: [<CheckIcon className="w-5 h-5 mx-auto text-secondary-500"/>, <CheckIcon className="w-5 h-5 mx-auto text-secondary-500"/>, <CheckIcon className="w-5 h-5 mx-auto text-secondary-500"/>]},
+ {label:"Statistiques de lecture", keys: [<span className="text-surface-300">-</span>, <CheckIcon className="w-5 h-5 mx-auto text-secondary-500"/>, <CheckIcon className="w-5 h-5 mx-auto text-secondary-500"/>]},
+ {label:"Profils enfants multiples", keys: [<span className="text-surface-300">-</span>, <span className="text-surface-300">-</span>, <CheckIcon className="w-5 h-5 mx-auto text-secondary-500"/>]},
  ].map((row, i) => (
  <tr key={i} className="border-b border-border hover:bg-surface-secondary transition-colors">
  <td className="p-4 pl-6 font-bold text-foreground-secondary sticky left-0 bg-card/80 backdrop-blur z-10">{row.label}</td>
@@ -651,7 +655,7 @@ function Subscriptions() {
  <section className="bg-surface-900 text-white py-16 mb-24">
  <div className="max-w-6xl mx-auto px-4 grid grid-cols-1 md:grid-cols-4 gap-8 text-center">
  <div className="flex flex-col items-center">
- <ShieldIcon className="w-10 h-10 text-emerald-400 mb-4" />
+ <ShieldIcon className="w-10 h-10 text-secondary-400 mb-4" />
  <h4 className="font-black mb-2">Paiements Sécurisés</h4>
  <p className="text-sm text-surface-400 font-medium">Transactions chiffrées gérées par Stripe.</p>
  </div>
@@ -661,12 +665,12 @@ function Subscriptions() {
  <p className="text-sm text-surface-400 font-medium">Annulez votre abonnement à tout moment en 1 clic.</p>
  </div>
  <div className="flex flex-col items-center">
- <LockIcon className="w-10 h-10 text-violet-400 mb-4" />
+ <LockIcon className="w-10 h-10 text-primary-400 mb-4" />
  <h4 className="font-black mb-2">Confidentialité</h4>
  <p className="text-sm text-surface-400 font-medium">Vos données et voix sont strictement privées.</p>
  </div>
  <div className="flex flex-col items-center">
- <SparklesIcon className="w-10 h-10 text-amber-400 mb-4" />
+ <SparklesIcon className="w-10 h-10 text-accent-400 mb-4" />
  <h4 className="font-black mb-2">Sans Frais Cachés</h4>
  <p className="text-sm text-surface-400 font-medium">Vous payez exactement le prix affiché.</p>
  </div>
@@ -731,7 +735,7 @@ function Subscriptions() {
  type="checkbox"
  checked={termsAccepted}
  onChange={(e) => setTermsAccepted(e.target.checked)}
- className="mt-1 w-5 h-5 accent-emerald-500"
+ className="mt-1 w-5 h-5 accent-secondary-500"
  />
  <span className="text-sm font-bold text-foreground-secondary leading-tight">
  J'accepte les conditions générales de vente et je consens à ce que le paiement récurrent soit débité chaque mois. Je peux annuler à tout moment.
@@ -742,7 +746,7 @@ function Subscriptions() {
  onClick={handleSubscribe} 
  disabled={!termsAccepted || subscribingPlan === checkoutModalPlan.code} 
  variant="primary" 
- className="w-full rounded-full py-4 text-lg font-black shadow-xl shadow-primary-500/20 bg-gradient-to-r from-primary-500 to-violet-500 border-none"
+ className="w-full rounded-full py-4 text-lg font-black shadow-xl shadow-primary-500/20 bg-gradient-to-r from-primary-500 to-secondary-500 border-none"
  >
  {subscribingPlan === checkoutModalPlan.code ? 'Redirection sécurisée...' : 'Procéder au paiement sécurisé'}
  </Button>

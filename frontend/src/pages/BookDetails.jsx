@@ -165,12 +165,12 @@ function BookDetails() {
 
  const getCategoryColor = (categoryName) => {
  const colorMap = {
- 'Nature': 'from-green-500 to-emerald-500',
- 'Aventure': 'from-secondary-500 to-rose-500',
- 'Animaux': 'from-accent-500 to-accent-500',
- 'Espace': 'from-indigo-500 to-purple-500',
- 'Fiction': 'from-purple-500 to-secondary-500',
- 'Educational': 'from-primary-500 to-cyan-500',
+ 'Nature': 'from-secondary-500 to-secondary-600',
+ 'Aventure': 'from-accent-500 to-accent-600',
+ 'Animaux': 'from-secondary-500 to-primary-500',
+ 'Espace': 'from-primary-500 to-primary-700',
+ 'Fiction': 'from-primary-500 to-secondary-500',
+ 'Educational': 'from-primary-500 to-secondary-500',
 };
  return colorMap[categoryName] || 'from-primary-500 to-secondary-500';
 };
@@ -221,7 +221,7 @@ function BookDetails() {
  {Array.from({length: 20}).map((_, i) => (
  <motion.div
  key={i}
- className="absolute text-yellow-400"
+ className="absolute text-accent-400"
  style={{
  left: `${Math.random() * 100}%`,
  top: `${Math.random() * 100}%`,
@@ -354,7 +354,7 @@ function BookDetails() {
  className="bg-card/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/50"
  >
  <h3 className="font-bold text-foreground mb-3 text-lg flex items-center gap-2">
- <StarIcon className="w-5 h-5 text-yellow-500" />
+ <StarIcon className="w-5 h-5 text-accent-500" />
  À propos de ce livre
  </h3>
  <p className="text-foreground-secondary leading-relaxed text-base">
@@ -475,7 +475,7 @@ function BookDetails() {
  transition={{duration: 0.6}}
  >
  <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-8 flex items-center gap-3">
- <StarIcon className="w-8 h-8 text-yellow-500" />
+ <StarIcon className="w-8 h-8 text-accent-500" />
  Livres similaires
  </h2>
  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">

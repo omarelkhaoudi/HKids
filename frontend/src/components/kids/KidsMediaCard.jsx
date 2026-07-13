@@ -79,13 +79,13 @@ export const KidsMediaCard = memo(function KidsMediaCard({
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
               onClick={(e) => { e.stopPropagation(); onDownload?.(book); }}
-              className="rounded-full bg-white/20 backdrop-blur-md p-3 text-white shadow-xl border-2 border-white/30 hover:bg-emerald-500 hover:border-emerald-400 transition-colors"
+              className="rounded-full bg-white/20 backdrop-blur-md p-3 text-white shadow-xl border-2 border-white/30 hover:bg-secondary-500 hover:border-secondary-400 transition-colors"
               aria-label="Download"
             >
               <DownloadIcon className="h-6 w-6" />
             </motion.button>
           ) : (
-            <div className="rounded-full bg-emerald-500 p-3 text-white shadow-xl border-2 border-emerald-400">
+            <div className="rounded-full bg-secondary-500 p-3 text-white shadow-xl border-2 border-secondary-400">
               <DownloadIcon className="h-6 w-6" />
             </div>
           )}
@@ -121,7 +121,7 @@ export const KidsMediaCard = memo(function KidsMediaCard({
             )}
             {book.age_level && (
               <span className="flex items-center gap-1 bg-black/40 px-2 py-1 rounded-lg backdrop-blur-sm">
-                <ShieldIcon className="h-4 w-4 text-green-400" />
+                <ShieldIcon className="h-4 w-4 text-secondary-400" />
                 {book.age_level}
               </span>
             )}

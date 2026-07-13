@@ -4,6 +4,7 @@ import {motion, AnimatePresence} from 'framer-motion';
 import {useAuth} from '../context/AuthContext';
 import {EyeIcon, EyeOffIcon, LockIcon, UserIcon, ChevronLeftIcon, AlertIcon, LoadingSpinnerIcon, StarIcon} from '../components/Icons';
 import {Logo} from '../components/Logo';
+import {MagicalBackground} from '../components/layout/PlatformShell';
 
 export default function ParentLogin() {
  const [username, setUsername] = useState('');
@@ -50,7 +51,8 @@ export default function ParentLogin() {
 };
 
  return (
- <div className="min-h-screen bg-card flex flex-col lg:flex-row overflow-hidden font-sans">
+ <div className="min-h-screen bg-card flex flex-col lg:flex-row overflow-hidden font-sans relative">
+ <MagicalBackground preset="platform" />
  
  {/* Back Button - Fixed positioning for both mobile and desktop */}
  <div className="absolute top-6 left-6 z-50">
@@ -77,7 +79,7 @@ export default function ParentLogin() {
  {mounted && Array.from({length: 8}).map((_, i) => (
  <motion.div
  key={i}
- className="absolute text-yellow-400 opacity-60"
+ className="absolute text-accent-400 opacity-60"
  style={{
  left: `${15 + Math.random() * 70}%`,
  top: `${15 + Math.random() * 70}%`,

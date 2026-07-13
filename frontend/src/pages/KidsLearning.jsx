@@ -6,8 +6,10 @@ import { generatedStoriesAPI } from '../api/generatedStories';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../components/ToastProvider';
 import { Logo } from '../components/Logo';
-import { VoiceAssistant } from '../components/kids/VoiceAssistant';
+import { KidsPageShell } from '../components/kids/KidsPageShell';
+import { BRAND_CONFETTI, BRAND_HERO_GRADIENT, BRAND_SEMANTIC } from '../constants/brandTheme';
 import { KidsBottomNav } from '../components/kids/KidsBottomNav';
+import { VoiceAssistant } from '../components/kids/VoiceAssistant';
 import { LearningQuizQuestion, LearningMemoryGame } from '../components/kids/LearningQuizQuestion';
 import { useLanguage } from '../context/LanguageContext';
 import { getRestrictionMessage } from '../services/parental/parentalAccessService';
@@ -18,21 +20,11 @@ import {
 
 // --- HELPER COMPONENTS ---
 
-const Particles = () => (
-  <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
-    <div className="absolute top-20 left-10 w-3 h-3 bg-yellow-300 rounded-full blur-[2px] animate-pulse" />
-    <div className="absolute top-40 right-20 w-4 h-4 bg-cyan-300 rounded-full blur-[2px] animate-pulse delay-700" />
-    <div className="absolute top-80 left-1/4 w-2 h-2 bg-pink-300 rounded-full blur-[1px] animate-ping" />
-    <div className="absolute top-1/2 right-1/3 w-3 h-3 bg-emerald-400 rounded-full blur-[2px] animate-pulse delay-1000" />
-  </div>
-);
-
 const Confetti = () => {
   return (
     <div className="absolute inset-0 pointer-events-none z-50 flex items-center justify-center overflow-hidden">
       {Array.from({ length: 50 }).map((_, i) => {
-        const colors = ['bg-rose-500', 'bg-blue-500', 'bg-emerald-500', 'bg-yellow-400', 'bg-purple-500'];
-        const randomColor = colors[Math.floor(Math.random() * colors.length)];
+        const randomColor = BRAND_CONFETTI[Math.floor(Math.random() * BRAND_CONFETTI.length)];
         return (
           <motion.div
             key={i}
@@ -204,20 +196,8 @@ function KidsLearning() {
   const selectedProfile = kidProfiles.find(k => k.id === selectedKidProfileId);
 
   return (
-    <div className="min-h-screen bg-background text-foreground pb-32 overflow-hidden relative">
-      
-      {/* MAGICAL BACKGROUND */}
-      <div className="fixed inset-0 pointer-events-none z-0">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-900/10 via-background to-background dark:from-blue-900/30" />
-        <motion.div 
-          animate={{ opacity: [0.2, 0.4, 0.2], scale: [1, 1.05, 1] }} 
-          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute top-0 inset-x-0 h-[600px] bg-gradient-to-b from-indigo-500/5 via-purple-500/5 to-transparent blur-[100px]"
-        />
-        <Particles />
-      </div>
-
-      <div className="relative z-10 mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+    <KidsPageShell footer={<KidsBottomNav />}>
+      <div className="relative z-10 mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8 pb-8">
         
         {/* HEADER */}
         <header className="mb-6 flex items-center justify-between gap-4">
@@ -227,7 +207,7 @@ function KidsLearning() {
           <div className="flex items-center gap-3">
             <Link
               to="/kids"
-              className="grid h-14 w-14 place-items-center rounded-[1.25rem] bg-card text-emerald-600 shadow-sm border border-border hover:bg-emerald-50 hover:border-emerald-200 transition"
+              className="grid h-14 w-14 place-items-center rounded-[1.25rem] bg-card text-secondary-600 shadow-sm border border-border hover:bg-secondary-50 hover:border-secondary-200 transition"
               aria-label="Accueil"
             >
               <HomeIcon className="h-6 w-6" />
@@ -306,7 +286,7 @@ function KidsLearning() {
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={submit}
-                  className="mt-8 inline-flex h-20 w-full items-center justify-center gap-3 rounded-[2rem] bg-gradient-to-r from-emerald-400 to-emerald-600 text-2xl font-black text-white shadow-xl hover:shadow-2xl transition"
+                  className="mt-8 inline-flex h-20 w-full items-center justify-center gap-3 rounded-[2rem] bg-gradient-to-r from-secondary-400 to-secondary-600 text-2xl font-black text-white shadow-xl hover:shadow-2xl transition"
                 >
                   <CheckIcon className="h-8 w-8" />
                   Valider mes réponses !
@@ -315,11 +295,11 @@ function KidsLearning() {
                 <motion.div 
                   initial={{ opacity: 0, scale: 0.8 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  className={`mt-8 rounded-[2rem] p-8 text-center shadow-xl border ${result.attempt?.success ? 'bg-emerald-50 border-emerald-200 dark:bg-emerald-900/20' : 'bg-amber-50 border-amber-200 dark:bg-amber-900/20'}`}
+                  className={`mt-8 rounded-[2rem] p-8 text-center shadow-xl border ${result.attempt?.success ? `${BRAND_SEMANTIC.success.bg} ${BRAND_SEMANTIC.success.border}` : `${BRAND_SEMANTIC.warning.bg} ${BRAND_SEMANTIC.warning.border}`}`}
                 >
                   <div className="text-8xl mb-4 drop-shadow-md">{result.attempt?.success ? '🎉' : '⭐'}</div>
                   <p className="text-4xl font-black text-foreground mb-4">
-                    Score : <span className={result.attempt?.success ? 'text-emerald-600' : 'text-amber-600'}>{result.attempt?.score} / {result.attempt?.max_score}</span>
+                    Score : <span className={result.attempt?.success ? BRAND_SEMANTIC.success.text : BRAND_SEMANTIC.warning.text}>{result.attempt?.score} / {result.attempt?.max_score}</span>
                   </p>
                   {result.reward?.icon && (
                     <div className="inline-flex items-center gap-3 rounded-full bg-white/80 px-6 py-3 shadow-sm border border-border font-black text-2xl">
@@ -350,13 +330,13 @@ function KidsLearning() {
             >
               
               {/* PREMIUM HERO */}
-              <section className="mb-10 relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-indigo-500 via-purple-500 to-fuchsia-500 p-8 md:p-12 text-white shadow-2xl">
+              <section className={`mb-10 relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br ${BRAND_HERO_GRADIENT} p-8 md:p-12 text-white shadow-2xl`}>
                 <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4IiBoZWlnaHQ9IjgiPgo8cmVjdCB3aWR0aD0iOCIgaGVpZ2h0PSI4IiBmaWxsPSIjZmZmIiBmaWxsLW9wYWNpdHk9IjAuMDUiLz4KPC9zdmc+')] opacity-20 mix-blend-overlay"></div>
                 
                 <div className="relative z-10 flex flex-col md:flex-row justify-between items-center gap-8">
                   <div className="max-w-xl">
                     <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/20 px-4 py-2 text-sm font-black backdrop-blur-md border border-white/30 shadow-glass">
-                      <SparklesIcon className="h-5 w-5 text-yellow-300" />
+                      <SparklesIcon className="h-5 w-5 text-accent-200" />
                       <span>Centre d'apprentissage</span>
                     </div>
                     <h1 className="text-4xl md:text-5xl lg:text-6xl font-black leading-tight mb-4 filter drop-shadow-lg">
@@ -364,10 +344,10 @@ function KidsLearning() {
                     </h1>
                     <div className="flex flex-wrap gap-3 mt-6">
                       <span className="flex items-center gap-1.5 rounded-full bg-black/20 px-3 py-1.5 text-xs font-black backdrop-blur-sm">
-                        <TrophyIcon className="w-4 h-4 text-yellow-400" /> Missions
+                        <TrophyIcon className="w-4 h-4 text-accent-300" /> Missions
                       </span>
                       <span className="flex items-center gap-1.5 rounded-full bg-black/20 px-3 py-1.5 text-xs font-black backdrop-blur-sm">
-                        <StarIcon className="w-4 h-4 text-emerald-400" /> Récompenses
+                        <StarIcon className="w-4 h-4 text-secondary-300" /> Récompenses
                       </span>
                     </div>
                   </div>
@@ -446,28 +426,28 @@ function KidsLearning() {
               {/* QUICK STATS (KPIs) */}
               <section className="mb-10 grid grid-cols-2 md:grid-cols-4 gap-4">
                 <motion.div whileHover={{ y: -5 }} className="bg-card/60 backdrop-blur-md rounded-[2rem] p-5 shadow-glass border border-border relative overflow-hidden group">
-                  <div className="absolute right-0 top-0 w-16 h-16 bg-blue-500/10 rounded-bl-full transition-transform group-hover:scale-150" />
-                  <BookIcon className="w-8 h-8 text-blue-500 mb-3 relative z-10" />
+                  <div className="absolute right-0 top-0 w-16 h-16 bg-primary-500/10 rounded-bl-full transition-transform group-hover:scale-150" />
+                  <BookIcon className="w-8 h-8 text-primary-500 mb-3 relative z-10" />
                   <p className="text-xs font-bold text-foreground-muted uppercase tracking-wider mb-1">Activités</p>
                   <p className="text-3xl font-black text-foreground">{contents.length}</p>
                 </motion.div>
                 <motion.div whileHover={{ y: -5 }} className="bg-card/60 backdrop-blur-md rounded-[2rem] p-5 shadow-glass border border-border relative overflow-hidden group">
-                  <div className="absolute right-0 top-0 w-16 h-16 bg-emerald-500/10 rounded-bl-full transition-transform group-hover:scale-150" />
-                  <TrophyIcon className="w-8 h-8 text-emerald-500 mb-3 relative z-10" />
+                  <div className="absolute right-0 top-0 w-16 h-16 bg-secondary-500/10 rounded-bl-full transition-transform group-hover:scale-150" />
+                  <TrophyIcon className="w-8 h-8 text-secondary-500 mb-3 relative z-10" />
                   <p className="text-xs font-bold text-foreground-muted uppercase tracking-wider mb-1">Missions</p>
                   <p className="text-3xl font-black text-foreground">{challenges.length}</p>
                 </motion.div>
                 <motion.div whileHover={{ y: -5 }} className="bg-card/60 backdrop-blur-md rounded-[2rem] p-5 shadow-glass border border-border relative overflow-hidden group">
-                  <div className="absolute right-0 top-0 w-16 h-16 bg-amber-500/10 rounded-bl-full transition-transform group-hover:scale-150" />
-                  <StarIcon className="w-8 h-8 text-amber-500 mb-3 relative z-10" />
+                  <div className="absolute right-0 top-0 w-16 h-16 bg-accent-500/10 rounded-bl-full transition-transform group-hover:scale-150" />
+                  <StarIcon className="w-8 h-8 text-accent-500 mb-3 relative z-10" />
                   <p className="text-xs font-bold text-foreground-muted uppercase tracking-wider mb-1">XP Total</p>
-                  <p className="text-lg font-black text-amber-600 dark:text-amber-400 mt-1">À venir</p>
+                  <p className="text-lg font-black text-accent-600 dark:text-accent-400 mt-1">À venir</p>
                 </motion.div>
                 <motion.div whileHover={{ y: -5 }} className="bg-card/60 backdrop-blur-md rounded-[2rem] p-5 shadow-glass border border-border relative overflow-hidden group">
-                  <div className="absolute right-0 top-0 w-16 h-16 bg-rose-500/10 rounded-bl-full transition-transform group-hover:scale-150" />
-                  <SparklesIcon className="w-8 h-8 text-rose-500 mb-3 relative z-10" />
+                  <div className="absolute right-0 top-0 w-16 h-16 bg-primary-500/10 rounded-bl-full transition-transform group-hover:scale-150" />
+                  <SparklesIcon className="w-8 h-8 text-primary-500 mb-3 relative z-10" />
                   <p className="text-xs font-bold text-foreground-muted uppercase tracking-wider mb-1">Série</p>
-                  <p className="text-lg font-black text-rose-600 dark:text-rose-400 mt-1">Bientôt dispo.</p>
+                  <p className="text-lg font-black text-primary-600 dark:text-primary-400 mt-1">Bientôt dispo.</p>
                 </motion.div>
               </section>
 
@@ -475,7 +455,7 @@ function KidsLearning() {
               {challenges.length > 0 && (
                 <section className="mb-10">
                   <h2 className="mb-6 text-2xl font-black flex items-center gap-3">
-                    <TrophyIcon className="w-7 h-7 text-emerald-500" />
+                    <TrophyIcon className="w-7 h-7 text-secondary-500" />
                     Missions Quotidiennes
                   </h2>
                   <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -486,15 +466,15 @@ function KidsLearning() {
                         <motion.div 
                           key={challenge.id} 
                           whileHover={{ y: -4, scale: 1.01 }}
-                          className={`rounded-[2rem] p-5 shadow-md relative overflow-hidden ${isComplete ? 'bg-emerald-50 border border-emerald-200 dark:bg-emerald-900/20' : 'bg-card border border-border'}`}
+                          className={`rounded-[2rem] p-5 shadow-md relative overflow-hidden ${isComplete ? `${BRAND_SEMANTIC.success.bg} ${BRAND_SEMANTIC.success.border}` : 'bg-card border border-border'}`}
                         >
-                          {isComplete && <div className="absolute -right-6 -top-6 w-24 h-24 bg-emerald-400/20 rounded-full blur-xl" />}
+                          {isComplete && <div className="absolute -right-6 -top-6 w-24 h-24 bg-secondary-400/20 rounded-full blur-xl" />}
                           <div className="flex items-start gap-4 relative z-10">
                             <div className="text-4xl drop-shadow-sm">{challenge.metadata?.pictogram || challenge.reward_icon || '🏅'}</div>
                             <div className="flex-1">
                               <p className="text-lg font-black text-foreground mb-1">{challenge.title}</p>
                               <div className="flex justify-between text-xs font-bold mb-2">
-                                <span className={isComplete ? 'text-emerald-600' : 'text-foreground-muted'}>
+                                <span className={isComplete ? BRAND_SEMANTIC.success.text : 'text-foreground-muted'}>
                                   {isComplete ? 'Terminé !' : 'En cours'}
                                 </span>
                                 <span className="text-foreground-muted">{challenge.progress_value || 0} / {challenge.target_value || 1}</span>
@@ -504,7 +484,7 @@ function KidsLearning() {
                                   initial={{ width: 0 }}
                                   animate={{ width: `${progress}%` }}
                                   transition={{ duration: 1, ease: "easeOut" }}
-                                  className={`h-full rounded-full shadow-md ${isComplete ? 'bg-gradient-to-r from-emerald-400 to-emerald-600' : 'bg-gradient-to-r from-amber-400 to-orange-500'}`}
+                                  className={`h-full rounded-full shadow-md ${isComplete ? 'bg-gradient-to-r from-secondary-400 to-secondary-600' : 'bg-gradient-to-r from-accent-400 to-accent-600'}`}
                                 />
                               </div>
                             </div>
@@ -624,12 +604,11 @@ function KidsLearning() {
         </AnimatePresence>
 
       </div>
-      <KidsBottomNav />
       <VoiceAssistant
         language={language === 'en' ? 'en-US' : language === 'ar' ? 'ar-MA' : 'fr-FR'}
         onNavigate={(path) => navigate(path)}
       />
-    </div>
+    </KidsPageShell>
   );
 }
 
