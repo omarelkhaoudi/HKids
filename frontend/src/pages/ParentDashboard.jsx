@@ -291,7 +291,7 @@ function ParentDashboard() {
  {t('parentKidsCount').replace('{count}', String(kids.length))}
  </Badge>
  {dashboardData?.subscription && (
- <Badge variant="glass" className="bg-green-500/80 text-white border-none font-bold">
+ <Badge variant="glass" className="bg-secondary-500/80 text-white border-none font-bold">
  {dashboardData.subscription.plan_name}
  </Badge>
  )}
@@ -435,7 +435,7 @@ function ParentDashboard() {
  <h4 className="font-bold mb-3">{t('parentAllowedContentTypes')}</h4>
  <div className="flex flex-wrap gap-2">
  {contentTypeOptions.map((type) => (
- <div key={type.id} onClick={() => toggleRuleValue('allowed_content_types', type.id)} className={`px-4 py-2 rounded-full text-sm font-bold cursor-pointer transition-colors border-2 ${rulesForm.allowed_content_types.includes(type.id) ? 'bg-emerald-500 border-emerald-600 text-white' : 'bg-transparent border-border text-foreground-secondary hover:border-emerald-300'}`}>
+ <div key={type.id} onClick={() => toggleRuleValue('allowed_content_types', type.id)} className={`px-4 py-2 rounded-full text-sm font-bold cursor-pointer transition-colors border-2 ${rulesForm.allowed_content_types.includes(type.id) ? 'bg-secondary-500 border-secondary-600 text-white' : 'bg-transparent border-border text-foreground-secondary hover:border-secondary-300'}`}>
  {type.label}
  </div>
  ))}
@@ -460,7 +460,7 @@ function ParentDashboard() {
  {/* Sidebar (Right) */}
  <div className="flex flex-col gap-8">
  <div className={`bg-gradient-to-br ${BRAND_HERO_GRADIENT} text-white p-6 rounded-3xl shadow-2xl relative overflow-hidden`}>
- <div className="absolute top-0 right-0 w-32 h-32 bg-yellow-500/20 rounded-full blur-2xl"></div>
+ <div className="absolute top-0 right-0 w-32 h-32 bg-accent-500/20 rounded-full blur-2xl"></div>
  <Badge variant="glass" className="bg-card/20 text-white border-none font-bold mb-4">
  {dashboardData?.subscription?.status || 'Sans abonnement actif'}
  </Badge>

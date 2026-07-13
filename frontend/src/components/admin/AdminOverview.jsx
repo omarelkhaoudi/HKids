@@ -2,6 +2,7 @@ import {useEffect, useState} from 'react';
 import {motion} from 'framer-motion';
 import {adminAPI} from '../../api/admin';
 import {formatAdminDate, formatAdminDuration} from './AdminMetricCard';
+import {metricToneAtIndex, BRAND_SEMANTIC} from '../../constants/brandTheme';
 import {
  AudioIcon, BookIcon, CheckIcon, ChildIcon, ClockIcon, HistoryIcon, UserIcon,
  TrendingUpIcon, ActivityIcon, SparklesIcon
@@ -37,7 +38,7 @@ const MetricCard = ({title, value, subtitle, icon: Icon, trend, colorClass, inde
  <div className="flex items-baseline gap-3">
  <span className="text-3xl font-black text-foreground tracking-tight">{value}</span>
  {trend && (
- <span className={`text-xs font-bold px-2 py-1 rounded-full flex items-center gap-1 ${trend > 0 ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'}`}>
+ <span className={`text-xs font-bold px-2 py-1 rounded-full flex items-center gap-1 ${trend > 0 ? `${BRAND_SEMANTIC.success.bg} ${BRAND_SEMANTIC.success.text}` : `${BRAND_SEMANTIC.danger.bg} ${BRAND_SEMANTIC.danger.text}`}`}>
  <TrendingUpIcon className={`w-3 h-3 ${trend < 0 && 'rotate-180'}`} /> {Math.abs(trend)}%
  </span>
  )}
@@ -96,7 +97,7 @@ function AdminOverview() {
  <p className="text-foreground-muted font-medium mt-1">Voici ce qui se passe sur HKids aujourd'hui.</p>
  </div>
  <div className="flex items-center gap-2 text-sm font-bold bg-card px-4 py-2 rounded-xl border border-border shadow-sm text-foreground-secondary">
- <ActivityIcon className="w-4 h-4 text-emerald-500" />
+ <ActivityIcon className="w-4 h-4 text-secondary-500" />
  Système Opérationnel
  </div>
  </div>
@@ -105,19 +106,19 @@ function AdminOverview() {
  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
  <MetricCard 
  index={0} title="Utilisateurs" value={summary.total_parents || 0} subtitle="Comptes parents créés" icon={UserIcon}
- colorClass={{bg: 'bg-blue-50', text: 'text-blue-600'}} 
+ colorClass={metricToneAtIndex(0)} 
  />
  <MetricCard 
  index={1} title="Enfants Actifs" value={summary.total_children || 0} subtitle="Profils lecteurs" icon={ChildIcon}
- colorClass={{bg: 'bg-emerald-50', text: 'text-emerald-600'}} 
+ colorClass={metricToneAtIndex(1)} 
  />
  <MetricCard 
  index={2} title="Abonnements" value={summary.active_subscriptions || 0} subtitle="Forfaits actifs (MRR)" icon={CheckIcon}
- colorClass={{bg: 'bg-violet-50', text: 'text-violet-600'}} 
+ colorClass={metricToneAtIndex(2)} 
  />
  <MetricCard 
  index={3} title="Histoires IA" value={summary.total_ai_stories || 0} subtitle="Générées au total" icon={SparklesIcon}
- colorClass={{bg: 'bg-amber-50', text: 'text-amber-500'}} 
+ colorClass={metricToneAtIndex(3)} 
  />
  </div>
 

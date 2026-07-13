@@ -6,7 +6,7 @@ export default function BookOfTheWeekSection({ book, t, getImageUrl, imageError,
   if (!book) return null;
 
   return (
-    <section className="bg-white py-12 md:py-20 relative z-20">
+    <section className="bg-background py-12 md:py-20 relative z-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
@@ -14,21 +14,19 @@ export default function BookOfTheWeekSection({ book, t, getImageUrl, imageError,
           viewport={{ once: true, margin: "-100px" }}
           transition={{ duration: 0.6 }}
         >
-          <div className="bg-[#fff9e6] rounded-[2.5rem] p-8 md:p-12 lg:p-16 shadow-sm border border-[#f5eeda] relative overflow-hidden">
-            {/* Soft background glows */}
-            <div className="absolute -top-40 -left-40 w-96 h-96 bg-yellow-200/40 rounded-full blur-3xl pointer-events-none"></div>
-            <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-primary-200/20 rounded-full blur-3xl pointer-events-none"></div>
+          <div className="bg-gradient-to-br from-primary-50 via-secondary-50/60 to-accent-50/40 rounded-[2.5rem] p-8 md:p-12 lg:p-16 shadow-soft border border-primary-100 relative overflow-hidden">
+            <div className="absolute -top-40 -left-40 w-96 h-96 bg-primary-200/30 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-secondary-200/25 rounded-full blur-3xl pointer-events-none" />
             
             <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
               
-              {/* Left Column: Text & CTA */}
               <div className="lg:col-span-5 flex flex-col items-start text-left">
-                <div className="inline-flex items-center gap-2 px-4 py-2 bg-yellow-100 text-yellow-700 rounded-full text-sm font-bold mb-6">
-                  <StarIcon className="w-4 h-4 text-yellow-500" />
+                <div className="inline-flex items-center gap-2 px-4 py-2 bg-accent-100 text-accent-700 rounded-full text-sm font-bold mb-6">
+                  <StarIcon className="w-4 h-4 text-accent-500" />
                   Le livre de la semaine
                 </div>
                 
-                <h2 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-surface-900 mb-6 leading-tight">
+                <h2 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-foreground mb-6 leading-tight">
                   {book.title}
                 </h2>
                 

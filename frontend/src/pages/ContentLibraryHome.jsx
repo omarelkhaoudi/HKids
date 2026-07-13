@@ -15,6 +15,8 @@ import {
   SearchIcon, SparklesIcon, ChevronLeftIcon, ChevronRightIcon,
   ClockIcon, ShieldIcon, HomeIcon, StarIcon, LightBulbIcon, PaletteIcon
 } from '../components/Icons';
+import { PlatformShell } from '../components/layout/PlatformShell';
+import { BRAND_HERO_GRADIENT, hubGradientAtIndex, storyGradientAtIndex } from '../constants/brandTheme';
 
 const defaultFilters = {
   search: '',
@@ -51,7 +53,7 @@ const CinematicCard = ({ content, isFavorite, playing, onToggleAudio, onToggleFa
       {/* Top Badges */}
       <div className="absolute left-3 top-3 right-3 flex flex-wrap gap-2">
         {content.is_premium && (
-          <span className="flex items-center gap-1 rounded-full bg-gradient-to-r from-amber-400 to-orange-500 px-2 py-0.5 text-[10px] font-black text-white shadow-md">
+          <span className="flex items-center gap-1 rounded-full bg-gradient-to-r from-accent-400 to-accent-600 px-2 py-0.5 text-[10px] font-black text-white shadow-md">
             <SparklesIcon className="h-3 w-3" /> PRO
           </span>
         )}
@@ -227,20 +229,7 @@ function ContentLibraryHome() {
   const isFiltering = filters.search || filters.category || filters.age || filters.language;
 
   return (
-    <div className="min-h-screen bg-background text-foreground pb-36 overflow-hidden" dir={isRtl ? 'rtl' : 'ltr'}>
-      {/* MAGICAL IMMERSIVE BACKGROUND */}
-      <div className="fixed inset-0 pointer-events-none z-0">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-900/10 via-background to-background dark:from-indigo-900/30" />
-        <motion.div 
-          animate={{ opacity: [0.3, 0.5, 0.3], scale: [1, 1.1, 1] }} 
-          transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute top-0 inset-x-0 h-[600px] bg-gradient-to-b from-primary-500/5 via-purple-500/5 to-transparent blur-[120px]"
-        />
-        {/* Magic Particles */}
-        <div className="absolute top-32 left-20 w-2 h-2 bg-yellow-300 rounded-full blur-[1px] animate-pulse" />
-        <div className="absolute top-52 right-32 w-3 h-3 bg-cyan-300 rounded-full blur-[2px] animate-pulse delay-700" />
-      </div>
-
+    <PlatformShell variant="library" className="pb-36">
       <div className="relative z-10 mx-auto max-w-7xl px-0 md:px-6 lg:px-8 pt-4">
         
         {/* HEADER */}
@@ -260,14 +249,14 @@ function ContentLibraryHome() {
         {/* PREMIUM HERO SECTION */}
         <motion.section 
           initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-          className="relative mb-12 overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-indigo-600 via-purple-600 to-fuchsia-600 p-8 md:p-14 text-white shadow-2xl mx-4 md:mx-0"
+          className={`relative mb-12 overflow-hidden rounded-[2.5rem] bg-gradient-to-br ${BRAND_HERO_GRADIENT} p-8 md:p-14 text-white shadow-2xl mx-4 md:mx-0`}
         >
           <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4IiBoZWlnaHQ9IjgiPgo8cmVjdCB3aWR0aD0iOCIgaGVpZ2h0PSI4IiBmaWxsPSIjZmZmIiBmaWxsLW9wYWNpdHk9IjAuMDUiLz4KPC9zdmc+')] opacity-30 mix-blend-overlay"></div>
           
           <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-8">
             <div className="max-w-2xl">
               <div className="inline-flex items-center gap-2 rounded-full bg-white/20 backdrop-blur-md border border-white/30 px-4 py-2 text-sm font-black mb-6 shadow-glass">
-                <SparklesIcon className="h-5 w-5 text-yellow-300" />
+                <SparklesIcon className="h-5 w-5 text-accent-200" />
                 <span>Bibliothèque Magique</span>
               </div>
               <h1 className="text-4xl md:text-6xl font-black leading-tight mb-4 filter drop-shadow-lg">
@@ -281,7 +270,7 @@ function ContentLibraryHome() {
             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="shrink-0">
               <button
                 onClick={handleSurpriseMe}
-                className="inline-flex w-full md:w-auto items-center justify-center gap-3 rounded-3xl bg-white px-8 py-5 text-xl font-black text-purple-700 shadow-xl hover:shadow-2xl transition"
+                className="inline-flex w-full md:w-auto items-center justify-center gap-3 rounded-3xl bg-white px-8 py-5 text-xl font-black text-primary-700 shadow-xl hover:shadow-2xl transition"
               >
                 <SparklesIcon className="h-6 w-6" />
                 <span>Surprise-moi !</span>
@@ -321,22 +310,22 @@ function ContentLibraryHome() {
 
         {/* QUICK STATS */}
         <section className="mb-12 grid grid-cols-2 md:grid-cols-4 gap-4 px-4 md:px-0">
-          <motion.div whileHover={{ y: -5 }} className="bg-gradient-to-br from-blue-500 to-cyan-500 rounded-3xl p-6 text-white shadow-floating relative overflow-hidden">
+          <motion.div whileHover={{ y: -5 }} className={`bg-gradient-to-br ${hubGradientAtIndex(0)} rounded-3xl p-6 text-white shadow-floating relative overflow-hidden`}>
             <BookIcon className="w-12 h-12 text-white/30 absolute right-4 bottom-4" />
             <p className="text-sm font-bold text-white/80 uppercase tracking-wider mb-1">Total contenus</p>
             <p className="text-4xl font-black">{contents.length}</p>
           </motion.div>
-          <motion.div whileHover={{ y: -5 }} className="bg-gradient-to-br from-rose-500 to-pink-500 rounded-3xl p-6 text-white shadow-floating relative overflow-hidden">
+          <motion.div whileHover={{ y: -5 }} className={`bg-gradient-to-br ${hubGradientAtIndex(1)} rounded-3xl p-6 text-white shadow-floating relative overflow-hidden`}>
             <HeartIcon className="w-12 h-12 text-white/30 absolute right-4 bottom-4" filled />
             <p className="text-sm font-bold text-white/80 uppercase tracking-wider mb-1">Favoris</p>
             <p className="text-4xl font-black">{favoriteBooks.length}</p>
           </motion.div>
-          <motion.div whileHover={{ y: -5 }} className="bg-gradient-to-br from-amber-500 to-orange-500 rounded-3xl p-6 text-white shadow-floating relative overflow-hidden">
+          <motion.div whileHover={{ y: -5 }} className={`bg-gradient-to-br ${hubGradientAtIndex(2)} rounded-3xl p-6 text-white shadow-floating relative overflow-hidden`}>
             <StarIcon className="w-12 h-12 text-white/30 absolute right-4 bottom-4" />
             <p className="text-sm font-bold text-white/80 uppercase tracking-wider mb-1">Nouveautés</p>
             <p className="text-4xl font-black">{newBooks.length}</p>
           </motion.div>
-          <motion.div whileHover={{ y: -5 }} className="bg-gradient-to-br from-emerald-500 to-teal-500 rounded-3xl p-6 text-white shadow-floating relative overflow-hidden">
+          <motion.div whileHover={{ y: -5 }} className={`bg-gradient-to-br ${storyGradientAtIndex(3)} rounded-3xl p-6 text-white shadow-floating relative overflow-hidden`}>
             <ClockIcon className="w-12 h-12 text-white/30 absolute right-4 bottom-4" />
             <p className="text-sm font-bold text-white/80 uppercase tracking-wider mb-1">Minutes écoutées</p>
             <p className="text-4xl font-black">{totalMinutes}</p>
@@ -405,7 +394,7 @@ function ContentLibraryHome() {
               <div className="w-full md:w-1/2 p-8 md:p-12 flex flex-col justify-center bg-card md:bg-transparent relative z-10">
                 <div className="flex gap-2 mb-4">
                   {featuredBook.category_name && <span className="rounded-full bg-primary-50 px-3 py-1 text-xs font-black text-primary-700 uppercase">{featuredBook.category_name}</span>}
-                  {featuredBook.language && <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-black text-emerald-700 uppercase">{featuredBook.language}</span>}
+                  {featuredBook.language && <span className="rounded-full bg-secondary-50 px-3 py-1 text-xs font-black text-secondary-700 uppercase">{featuredBook.language}</span>}
                 </div>
                 <h3 className="text-3xl md:text-4xl font-black text-foreground mb-4 leading-tight">{featuredBook.title}</h3>
                 <p className="text-foreground-muted font-bold line-clamp-3 mb-8 text-lg">{featuredBook.description}</p>
@@ -531,7 +520,7 @@ function ContentLibraryHome() {
         }}
         onClose={audioPlayer.stop}
       />
-    </div>
+    </PlatformShell>
   );
 }
 

@@ -13,7 +13,11 @@ import {
 import { Logo } from '../components/Logo';
 import { VoiceAssistant } from '../components/kids/VoiceAssistant';
 import { KidsBottomNav } from '../components/kids/KidsBottomNav';
+import { KidsPageShell } from '../components/kids/KidsPageShell';
 import { useLanguage } from '../context/LanguageContext';
+import {
+  BRAND_HERO_GRADIENT, BRAND_SEMANTIC, hubGradientAtIndex, storyGradientAtIndex,
+} from '../constants/brandTheme';
 
 // --- MAGIC CELEBRATION PARTICLES ---
 function MagicCelebration({ active, onComplete }) {
@@ -36,8 +40,8 @@ function MagicCelebration({ active, onComplete }) {
         const distance = 100 + Math.random() * 200;
         const x = Math.cos((angle * Math.PI) / 180) * distance;
         const y = Math.sin((angle * Math.PI) / 180) * distance;
-        const colors = ['#8B5CF6', '#3B82F6', '#10B981', '#F59E0B', '#EC4899'];
-        const color = colors[Math.floor(Math.random() * colors.length)];
+        const colorClasses = ['text-primary-500', 'text-secondary-500', 'text-accent-500', 'text-primary-400', 'text-secondary-400'];
+        const color = colorClasses[Math.floor(Math.random() * colorClasses.length)];
         const size = 10 + Math.random() * 20;
 
         return (
@@ -52,8 +56,7 @@ function MagicCelebration({ active, onComplete }) {
               rotate: Math.random() * 360 
             }}
             transition={{ duration: 1.5 + Math.random(), ease: "easeOut" }}
-            className="absolute"
-            style={{ color }}
+            className={`absolute ${color}`}
           >
             {i % 3 === 0 ? '✨' : i % 2 === 0 ? '⭐' : '🎊'}
           </motion.div>
@@ -66,26 +69,18 @@ function MagicCelebration({ active, onComplete }) {
 // --- DYNAMIC COVER GENERATOR ---
 function getThemeAssets(theme) {
   const t = (theme || '').toLowerCase();
-  if (t.includes('espace') || t.includes('space') || t.includes('etoile')) {
-    return { gradient: 'from-indigo-900 via-purple-900 to-slate-900', emoji: '🚀', icon: '⭐' };
-  }
-  if (t.includes('foret') || t.includes('nature') || t.includes('animaux')) {
-    return { gradient: 'from-emerald-600 via-teal-700 to-green-900', emoji: '🦊', icon: '🍃' };
-  }
-  if (t.includes('magie') || t.includes('sorcier') || t.includes('fee')) {
-    return { gradient: 'from-fuchsia-600 via-purple-600 to-pink-700', emoji: '🪄', icon: '✨' };
-  }
-  if (t.includes('ocean') || t.includes('mer') || t.includes('poisson')) {
-    return { gradient: 'from-cyan-500 via-blue-600 to-indigo-800', emoji: '🐋', icon: '🌊' };
-  }
-  if (t.includes('chevalier') || t.includes('chateau') || t.includes('dragon')) {
-    return { gradient: 'from-amber-600 via-orange-700 to-red-900', emoji: '🐉', icon: '🛡️' };
-  }
-  if (t.includes('reve') || t.includes('nuit') || t.includes('sommeil')) {
-    return { gradient: 'from-blue-900 via-indigo-900 to-purple-900', emoji: '🌙', icon: '☁️' };
-  }
-  // Default magical gradient
-  return { gradient: 'from-violet-500 via-fuchsia-500 to-cyan-500', emoji: '📚', icon: '✨' };
+  let index = 0;
+  if (t.includes('espace') || t.includes('space') || t.includes('etoile')) index = 0;
+  else if (t.includes('foret') || t.includes('nature') || t.includes('animaux')) index = 1;
+  else if (t.includes('magie') || t.includes('sorcier') || t.includes('fee')) index = 2;
+  else if (t.includes('ocean') || t.includes('mer') || t.includes('poisson')) index = 3;
+  else if (t.includes('chevalier') || t.includes('chateau') || t.includes('dragon')) index = 4;
+  else if (t.includes('reve') || t.includes('nuit') || t.includes('sommeil')) index = 5;
+  else index = 6;
+
+  const emojis = ['🚀', '🦊', '🪄', '🐋', '🐉', '🌙', '📚'];
+  const icons = ['⭐', '🍃', '✨', '🌊', '🛡️', '☁️', '✨'];
+  return { gradient: storyGradientAtIndex(index), emoji: emojis[index] || '📚', icon: icons[index] || '✨' };
 }
 
 function DynamicCover({ story, className = "" }) {
@@ -386,7 +381,7 @@ function KidsAIStories() {
               </span>
             )}
             {offlineReady && (
-              <span className="bg-white/20 backdrop-blur-md p-1.5 rounded-full text-emerald-300">
+              <span className="bg-white/20 backdrop-blur-md p-1.5 rounded-full text-secondary-300">
                 <DownloadIcon className="w-5 h-5" />
               </span>
             )}
@@ -414,10 +409,10 @@ function KidsAIStories() {
             <span className="px-2.5 py-1 bg-primary-50 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 rounded-full text-xs font-bold">
               {story.theme || 'Aventure'}
             </span>
-            <span className="px-2.5 py-1 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded-full text-xs font-bold">
+            <span className={`px-2.5 py-1 ${BRAND_SEMANTIC.success.bg} ${BRAND_SEMANTIC.success.text} rounded-full text-xs font-bold`}>
               {story.language?.toUpperCase() || 'FR'}
             </span>
-            <span className="px-2.5 py-1 bg-orange-50 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 flex items-center gap-1 rounded-full text-xs font-bold">
+            <span className={`px-2.5 py-1 ${BRAND_SEMANTIC.warning.bg} ${BRAND_SEMANTIC.warning.text} flex items-center gap-1 rounded-full text-xs font-bold`}>
               <ClockIcon className="w-3.5 h-3.5" />
               {story.estimated_duration_minutes || 3} min
             </span>
@@ -445,7 +440,7 @@ function KidsAIStories() {
               <button 
                 onClick={() => handleRemoveStoryDownload(story)} 
                 disabled={busyStoryId === story.id}
-                className="p-2 rounded-xl bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400 transition"
+                className={`p-2 rounded-xl ${BRAND_SEMANTIC.success.bg} ${BRAND_SEMANTIC.success.text} transition`}
               >
                 <TrashIcon className="w-5 h-5" />
               </button>
@@ -453,7 +448,7 @@ function KidsAIStories() {
               <button 
                 onClick={() => handleDownloadStory(story)} 
                 disabled={busyStoryId === story.id}
-                className="p-2 rounded-xl bg-surface-secondary text-foreground-muted hover:bg-emerald-50 hover:text-emerald-500 transition"
+                className="p-2 rounded-xl bg-surface-secondary text-foreground-muted hover:bg-secondary-50 hover:text-secondary-500 transition"
               >
                 <DownloadIcon className="w-5 h-5" />
               </button>
@@ -473,13 +468,7 @@ function KidsAIStories() {
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground overflow-hidden pb-32" dir={isRtl ? 'rtl' : 'ltr'}>
-      {/* Immersive Magical Background */}
-      <div className="fixed inset-0 pointer-events-none z-0">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary-900/20 via-background to-background" />
-        <div className="absolute top-0 inset-x-0 h-96 bg-gradient-to-b from-primary-500/10 to-transparent blur-3xl opacity-50" />
-      </div>
-
+    <KidsPageShell footer={<KidsBottomNav />} isRtl={isRtl}>
       <MagicCelebration active={showCelebration} onComplete={() => setShowCelebration(false)} />
 
       <div className="relative z-10 mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
@@ -500,16 +489,16 @@ function KidsAIStories() {
         <motion.section 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="relative mb-12 overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-indigo-600 via-purple-600 to-fuchsia-600 p-8 md:p-12 text-white shadow-2xl"
+          className={`relative mb-12 overflow-hidden rounded-[2.5rem] bg-gradient-to-br ${BRAND_HERO_GRADIENT} p-8 md:p-12 text-white shadow-2xl`}
         >
           <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4IiBoZWlnaHQ9IjgiPgo8cmVjdCB3aWR0aD0iOCIgaGVpZ2h0PSI4IiBmaWxsPSIjZmZmIiBmaWxsLW9wYWNpdHk9IjAuMDUiLz4KPC9zdmc+')] opacity-30 mix-blend-overlay"></div>
           <div className="absolute -top-24 -right-24 w-96 h-96 bg-white/20 blur-3xl rounded-full pointer-events-none"></div>
-          <div className="absolute -bottom-24 -left-24 w-72 h-72 bg-cyan-400/20 blur-3xl rounded-full pointer-events-none"></div>
+          <div className="absolute -bottom-24 -left-24 w-72 h-72 bg-secondary-400/20 blur-3xl rounded-full pointer-events-none"></div>
           
           <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-8">
             <div className="max-w-xl">
               <div className="inline-flex items-center gap-2 rounded-full bg-white/20 backdrop-blur-md border border-white/30 px-4 py-2 text-sm font-black mb-6 shadow-glass">
-                <SparklesIcon className="h-5 w-5 text-yellow-300" />
+                <SparklesIcon className="h-5 w-5 text-accent-200" />
                 <span>Le Lit Qui Lit Magique</span>
               </div>
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-black leading-tight mb-4 filter drop-shadow-lg">
@@ -523,7 +512,7 @@ function KidsAIStories() {
             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
               <Link
                 to="/kids/story-studio"
-                className="inline-flex items-center justify-center gap-3 rounded-3xl bg-white px-8 py-5 text-xl font-black text-purple-700 shadow-xl hover:shadow-2xl transition"
+                className="inline-flex items-center justify-center gap-3 rounded-3xl bg-white px-8 py-5 text-xl font-black text-primary-700 shadow-xl hover:shadow-2xl transition"
               >
                 <SparklesIcon className="h-6 w-6" />
                 <span>Créer une histoire</span>
@@ -534,22 +523,22 @@ function KidsAIStories() {
 
         {/* Quick KPI Statistics */}
         <section className="mb-12 grid grid-cols-2 md:grid-cols-4 gap-4">
-          <motion.div whileHover={{ y: -5 }} className="bg-gradient-to-br from-blue-500 to-cyan-500 rounded-3xl p-6 text-white shadow-floating relative overflow-hidden">
+          <motion.div whileHover={{ y: -5 }} className={`bg-gradient-to-br ${hubGradientAtIndex(0)} rounded-3xl p-6 text-white shadow-floating relative overflow-hidden`}>
             <BookIcon className="w-12 h-12 text-white/30 absolute right-4 bottom-4" />
             <p className="text-sm font-bold text-white/80 uppercase tracking-wider mb-1">Bibliothèque</p>
             <p className="text-4xl font-black">{stories.length}</p>
           </motion.div>
-          <motion.div whileHover={{ y: -5 }} className="bg-gradient-to-br from-rose-500 to-pink-500 rounded-3xl p-6 text-white shadow-floating relative overflow-hidden">
+          <motion.div whileHover={{ y: -5 }} className={`bg-gradient-to-br ${hubGradientAtIndex(1)} rounded-3xl p-6 text-white shadow-floating relative overflow-hidden`}>
             <HeartIcon className="w-12 h-12 text-white/30 absolute right-4 bottom-4" filled />
             <p className="text-sm font-bold text-white/80 uppercase tracking-wider mb-1">Favoris</p>
             <p className="text-4xl font-black">{favoriteStories.length}</p>
           </motion.div>
-          <motion.div whileHover={{ y: -5 }} className="bg-gradient-to-br from-emerald-500 to-green-500 rounded-3xl p-6 text-white shadow-floating relative overflow-hidden">
+          <motion.div whileHover={{ y: -5 }} className={`bg-gradient-to-br ${hubGradientAtIndex(2)} rounded-3xl p-6 text-white shadow-floating relative overflow-hidden`}>
             <DownloadIcon className="w-12 h-12 text-white/30 absolute right-4 bottom-4" />
             <p className="text-sm font-bold text-white/80 uppercase tracking-wider mb-1">Sauvegardées</p>
             <p className="text-4xl font-black">{savedStories.length}</p>
           </motion.div>
-          <motion.div whileHover={{ y: -5 }} className="bg-gradient-to-br from-amber-500 to-orange-500 rounded-3xl p-6 text-white shadow-floating relative overflow-hidden">
+          <motion.div whileHover={{ y: -5 }} className={`bg-gradient-to-br ${storyGradientAtIndex(3)} rounded-3xl p-6 text-white shadow-floating relative overflow-hidden`}>
             <SparklesIcon className="w-12 h-12 text-white/30 absolute right-4 bottom-4" />
             <p className="text-sm font-bold text-white/80 uppercase tracking-wider mb-1">Récents</p>
             <p className="text-4xl font-black">{recentStories.length}</p>
@@ -560,7 +549,7 @@ function KidsAIStories() {
         {recentStories.length > 0 && (
           <section className="mb-12">
             <h2 className="text-2xl font-black mb-6 flex items-center gap-3">
-              <SparklesIcon className="w-7 h-7 text-amber-500" />
+              <SparklesIcon className="w-7 h-7 text-accent-500" />
               Créations récentes
             </h2>
             <div className="flex gap-6 overflow-x-auto pb-8 pt-2 px-2 -mx-2 snap-x custom-scrollbar">
@@ -698,7 +687,7 @@ function KidsAIStories() {
                   {/* Detailed Information Grid */}
                   <div className="grid grid-cols-2 gap-4 mb-6">
                     <div className="bg-surface-secondary rounded-2xl p-4 flex items-center gap-3">
-                      <ClockIcon className="w-6 h-6 text-orange-500" />
+                      <ClockIcon className="w-6 h-6 text-accent-500" />
                       <div>
                         <p className="text-xs font-bold text-foreground-muted uppercase tracking-wider">Durée</p>
                         <p className="font-black text-foreground">{selectedStory.estimated_duration_minutes || 3} min</p>
@@ -712,14 +701,14 @@ function KidsAIStories() {
                       </div>
                     </div>
                     <div className="bg-surface-secondary rounded-2xl p-4 flex items-center gap-3">
-                      <LanguageIcon className="w-6 h-6 text-emerald-500" />
+                      <LanguageIcon className="w-6 h-6 text-secondary-500" />
                       <div>
                         <p className="text-xs font-bold text-foreground-muted uppercase tracking-wider">Langue</p>
                         <p className="font-black text-foreground uppercase">{selectedStory.language || 'FR'}</p>
                       </div>
                     </div>
                     <div className="bg-surface-secondary rounded-2xl p-4 flex items-center gap-3">
-                      <ChildIcon className="w-6 h-6 text-violet-500" />
+                      <ChildIcon className="w-6 h-6 text-primary-500" />
                       <div>
                         <p className="text-xs font-bold text-foreground-muted uppercase tracking-wider">Âge</p>
                         <p className="font-black text-foreground">{selectedStory.age_level || 'Libre'}</p>
@@ -740,7 +729,7 @@ function KidsAIStories() {
                   
                   {/* Actions Bar */}
                   <div className="mt-6 flex flex-wrap gap-3 justify-center">
-                    <button onClick={() => handleSave(selectedStory)} disabled={selectedStory.saved || busyStoryId === selectedStory.id} className="flex-1 min-w-[120px] rounded-2xl bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 px-4 py-3 text-sm font-black disabled:opacity-60 hover:opacity-80 transition flex items-center justify-center gap-2">
+                    <button onClick={() => handleSave(selectedStory)} disabled={selectedStory.saved || busyStoryId === selectedStory.id} className={`flex-1 min-w-[120px] rounded-2xl ${BRAND_SEMANTIC.success.bg} ${BRAND_SEMANTIC.success.text} px-4 py-3 text-sm font-black disabled:opacity-60 hover:opacity-80 transition flex items-center justify-center gap-2`}>
                       <DownloadIcon className="w-5 h-5" />
                       {selectedStory.saved ? 'Sauvée' : 'Sauver'}
                     </button>
@@ -760,8 +749,7 @@ function KidsAIStories() {
         </main>
       </div>
       <VoiceAssistant />
-      <KidsBottomNav />
-    </div>
+    </KidsPageShell>
   );
 }
 

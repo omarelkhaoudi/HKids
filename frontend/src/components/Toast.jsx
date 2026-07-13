@@ -1,6 +1,7 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { useEffect } from 'react';
 import { CheckIcon, XCircleIcon, InfoIcon, AlertIcon, XIcon } from './Icons';
+import { BRAND_SEMANTIC } from '../constants/brandTheme';
 
 function Toast({ message, type = 'success', isVisible, onClose, duration = 3000 }) {
   useEffect(() => {
@@ -20,10 +21,10 @@ function Toast({ message, type = 'success', isVisible, onClose, duration = 3000 
   };
 
   const colors = {
-    success: 'bg-green-500',
-    error: 'bg-primary-500',
-    info: 'bg-primary-500',
-    warning: 'bg-yellow-500'
+    success: BRAND_SEMANTIC.success.solid,
+    error: BRAND_SEMANTIC.danger.solid,
+    info: BRAND_SEMANTIC.info.solid,
+    warning: BRAND_SEMANTIC.warning.solid,
   };
 
   return (

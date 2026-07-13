@@ -23,7 +23,7 @@ export default function StoryPreviewSection({ books, getImageUrl }) {
   };
 
   return (
-    <section id="popular-stories" className="bg-white py-12 md:py-16 relative z-10">
+    <section id="popular-stories" className="bg-background py-12 md:py-16 relative z-10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         
         <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 gap-4">
@@ -33,7 +33,7 @@ export default function StoryPreviewSection({ books, getImageUrl }) {
             viewport={{ once: true }}
             transition={{ duration: 0.5 }}
           >
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-surface-900">
+            <h2 className="brand-section-title">
               Histoires populaires
             </h2>
           </motion.div>
@@ -46,7 +46,7 @@ export default function StoryPreviewSection({ books, getImageUrl }) {
           >
             <Link 
               to="/stories"
-              className="text-foreground-600 font-bold hover:text-foreground-700 flex items-center gap-1 text-sm sm:text-base transition-colors"
+              className="text-primary-600 font-bold hover:text-primary-700 flex items-center gap-1 text-sm sm:text-base transition-colors"
             >
               Voir toute la bibliothèque <ChevronRightIcon className="w-4 h-4" />
             </Link>

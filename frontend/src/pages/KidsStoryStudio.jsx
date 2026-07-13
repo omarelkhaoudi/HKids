@@ -10,19 +10,24 @@ import {
 } from '../components/Icons';
 import {Logo} from '../components/Logo';
 import {KidsBottomNav} from '../components/kids/KidsBottomNav';
+import {KidsPageShell} from '../components/kids/KidsPageShell';
 import {Button, Card, Badge, Avatar} from '../components/ui';
+import { BRAND_HERO_GRADIENT, BRAND_SEMANTIC, storyGradientAtIndex } from '../constants/brandTheme';
 
-// MOCK DATA FOR MAGIC UI
-const themeOptions = [
- {id: 'aventure', label: 'Aventure', pictogram: '🗺️', gradient: 'from-orange-400 to-red-500'},
- {id: 'animaux', label: 'Animaux', pictogram: '🦊', gradient: 'from-green-400 to-emerald-600'},
- {id: 'espace', label: 'Espace', pictogram: '🚀', gradient: 'from-blue-500 to-indigo-700'},
- {id: 'princesses', label: 'Princesses', pictogram: '👑', gradient: 'from-pink-400 to-rose-500'},
- {id: 'dinosaures', label: 'Dinosaures', pictogram: '🦖', gradient: 'from-lime-400 to-green-600'},
- {id: 'magie', label: 'Magie', pictogram: '🪄', gradient: 'from-violet-400 to-purple-600'},
- {id: 'nature', label: 'Nature', pictogram: '🌿', gradient: 'from-emerald-400 to-teal-500'},
- {id: 'amitie', label: 'Amitié', pictogram: '🤝', gradient: 'from-yellow-400 to-amber-500'}
+const themeOptionDefs = [
+ {id: 'aventure', label: 'Aventure', pictogram: '🗺️'},
+ {id: 'animaux', label: 'Animaux', pictogram: '🦊'},
+ {id: 'espace', label: 'Espace', pictogram: '🚀'},
+ {id: 'princesses', label: 'Princesses', pictogram: '👑'},
+ {id: 'dinosaures', label: 'Dinosaures', pictogram: '🦖'},
+ {id: 'magie', label: 'Magie', pictogram: '🪄'},
+ {id: 'nature', label: 'Nature', pictogram: '🌿'},
+ {id: 'amitie', label: 'Amitié', pictogram: '🤝'}
 ];
+const themeOptions = themeOptionDefs.map((theme, index) => ({
+ ...theme,
+ gradient: storyGradientAtIndex(index),
+}));
 
 const characterOptions = [
  {id: 'un dragon', label: 'Dragon', pictogram: '🐉'},
@@ -71,7 +76,7 @@ const FloatingStars = () => {
  {[...Array(20)].map((_, i) => (
  <motion.div
  key={i}
- className="absolute text-yellow-300 opacity-50"
+ className="absolute text-accent-300 opacity-50"
  initial={{
  x: Math.random() * window.innerWidth, 
  y: Math.random() * window.innerHeight,
@@ -104,7 +109,7 @@ const Confetti = () => {
  x: window.innerWidth / 2,
  y: window.innerHeight / 2,
  size: Math.random() * 8 + 4,
- color: ['#10b981', '#3b82f6', '#8b5cf6', '#ec4899', '#f59e0b', '#ef4444'][Math.floor(Math.random() * 6)],
+ color: ['#7b3eb8', '#389d85', '#f76219', '#9b5fc9', '#5bb89e', '#f98a4a'][Math.floor(Math.random() * 6)],
  duration: Math.random() * 2 + 1,
  angle: Math.random() * Math.PI * 2,
  velocity: Math.random() * 300 + 100
@@ -290,7 +295,7 @@ function KidsStoryStudio() {
 
  if (!canUseStoryStudio) {
  return (
- <div className="flex min-h-screen items-center justify-center bg-[#1c0f42] px-4">
+ <div className="flex min-h-screen items-center justify-center bg-primary-900 px-4">
  <div className="max-w-md rounded-[2.5rem] bg-card p-8 text-center shadow-2xl">
  <p className="mb-6 text-xl font-black text-foreground">Espace enfant ou parent requis pour la magie ! ✨</p>
  <Button onClick={() => navigate('/kids')} variant="primary" className="rounded-full w-full font-black">
@@ -302,12 +307,12 @@ function KidsStoryStudio() {
 }
 
  return (
- <div className="min-h-screen bg-[#1c0f42] text-white overflow-x-hidden font-sans relative pb-32">
+ <KidsPageShell variant="library" className="bg-primary-900 text-white" footer={<KidsBottomNav />}>
  <FloatingStars />
  {showSuccess && <Confetti />}
 
  {/* HEADER */}
- <header className="sticky top-0 z-40 bg-[#1c0f42]/80 backdrop-blur-xl border-b border-white/10 shadow-lg px-4 py-4 flex items-center justify-between">
+ <header className="sticky top-0 z-40 bg-primary-900/80 backdrop-blur-xl border-b border-white/10 shadow-lg px-4 py-4 flex items-center justify-between">
  <Link to="/kids" className="flex items-center gap-2 group">
  <div className="p-2 rounded-full bg-card/10 group-hover:bg-card/20 transition-colors">
  <ChevronLeftIcon className="w-6 h-6 text-white" />
@@ -316,7 +321,7 @@ function KidsStoryStudio() {
  </Link>
  <div className="flex items-center gap-3">
  <div className="hidden md:flex items-center gap-2 px-4 py-2 bg-card/10 rounded-full">
- <Avatar src={null} fallback={selectedKidProfile?.name?.charAt(0) ||"K"} className="w-8 h-8 bg-gradient-to-br from-primary-400 to-violet-500 text-white font-bold" />
+ <Avatar src={null} fallback={selectedKidProfile?.name?.charAt(0) ||"K"} className="w-8 h-8 bg-gradient-to-br from-primary-400 to-secondary-500 text-white font-bold" />
  <span className="font-bold text-sm">{selectedKidProfile?.name ||"Enfant"}</span>
  </div>
  <Link to="/kids/ai-stories">
@@ -330,11 +335,11 @@ function KidsStoryStudio() {
  {/* MAGIC LOADING OVERLAY */}
  <AnimatePresence>
  {loading && (
- <motion.div initial={{opacity: 0}} animate={{opacity: 1}} exit={{opacity: 0}} className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#1c0f42]/90 backdrop-blur-md">
+ <motion.div initial={{opacity: 0}} animate={{opacity: 1}} exit={{opacity: 0}} className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-primary-900/90 backdrop-blur-md">
  <div className="text-center">
  <motion.div animate={{rotate: 360}} transition={{duration: 8, repeat: Infinity, ease: 'linear'}} className="w-32 h-32 mx-auto relative mb-8">
- <div className="absolute inset-0 rounded-full border-4 border-white/10 border-t-primary-500 border-r-violet-500"></div>
- <div className="absolute inset-2 rounded-full border-4 border-white/5 border-b-cyan-500 border-l-rose-500" style={{animation: 'spin 4s linear infinite reverse'}}></div>
+ <div className="absolute inset-0 rounded-full border-4 border-white/10 border-t-primary-500 border-r-secondary-500"></div>
+ <div className="absolute inset-2 rounded-full border-4 border-white/5 border-b-accent-500 border-l-primary-400" style={{animation: 'spin 4s linear infinite reverse'}}></div>
  <SparklesIcon className="w-12 h-12 text-foreground-400 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" />
  </motion.div>
  
@@ -359,7 +364,7 @@ function KidsStoryStudio() {
  
  {/* HERO TITLE */}
  <div className="text-center mb-12">
- <motion.div initial={{scale: 0}} animate={{scale: 1}} transition={{type: 'spring'}} className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-primary-500/20 to-violet-500/20 border border-primary-500/30 rounded-full text-foreground-300 font-bold mb-6">
+ <motion.div initial={{scale: 0}} animate={{scale: 1}} transition={{type: 'spring'}} className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-primary-500/20 to-secondary-500/20 border border-primary-500/30 rounded-full text-foreground-300 font-bold mb-6">
  <SparklesIcon className="w-4 h-4" /> Le Chaudron Magique
  </motion.div>
  <h1 className="text-4xl md:text-6xl font-black text-white leading-tight mb-4 drop-shadow-[0_0_15px_rgba(139,92,246,0.3)]">
@@ -383,7 +388,7 @@ function KidsStoryStudio() {
  {/* THEME SELECTION */}
  <div className="bg-card/5 backdrop-blur-xl border border-white/10 rounded-[2.5rem] p-6 md:p-8">
  <h2 className="text-2xl font-black mb-6 flex items-center gap-3">
- <span className="w-8 h-8 rounded-full bg-gradient-to-br from-primary-400 to-violet-500 flex items-center justify-center text-sm">1</span> 
+ <span className="w-8 h-8 rounded-full bg-gradient-to-br from-primary-400 to-secondary-500 flex items-center justify-center text-sm">1</span> 
  Choisis un Thème
  </h2>
  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
@@ -407,7 +412,7 @@ function KidsStoryStudio() {
  {/* CHARACTER SELECTION */}
  <div className="bg-card/5 backdrop-blur-xl border border-white/10 rounded-[2.5rem] p-6 md:p-8">
  <h2 className="text-2xl font-black mb-6 flex items-center gap-3">
- <span className="w-8 h-8 rounded-full bg-gradient-to-br from-cyan-400 to-blue-500 flex items-center justify-center text-sm">2</span> 
+ <span className="w-8 h-8 rounded-full bg-gradient-to-br from-secondary-400 to-accent-500 flex items-center justify-center text-sm">2</span> 
  Qui sera dans l'histoire ?
  </h2>
  <div className="grid grid-cols-3 sm:grid-cols-6 gap-3 mb-6">
@@ -457,14 +462,14 @@ function KidsStoryStudio() {
  </div>
  <div>
  <h2 className="text-xl font-black mb-4 flex items-center gap-3">
- <BrainIcon className="w-6 h-6 text-amber-400" /> Morale
+ <BrainIcon className="w-6 h-6 text-accent-400" /> Morale
  </h2>
  <div className="flex flex-wrap gap-2">
  {valueOptions.map(val => (
  <button
  key={val.id}
  onClick={() => patchForm('educational_value', val.id)}
- className={`px-4 py-2 rounded-full font-bold text-sm border-2 transition-all ${form.educational_value === val.id ? 'border-amber-400 bg-amber-400/20 text-amber-200' : 'border-white/10 text-white/60 hover:bg-card/10 hover:text-white'}`}
+ className={`px-4 py-2 rounded-full font-bold text-sm border-2 transition-all ${form.educational_value === val.id ? 'border-accent-400 bg-accent-400/20 text-accent-200' : 'border-white/10 text-white/60 hover:bg-card/10 hover:text-white'}`}
  >
  {val.label}
  </button>
@@ -481,9 +486,9 @@ function KidsStoryStudio() {
  disabled={loading || profilesLoading || !selectedKidProfileId}
  className="w-full relative group overflow-hidden rounded-[2.5rem] p-1"
  >
- <div className="absolute inset-0 bg-gradient-to-r from-primary-500 via-fuchsia-500 to-rose-500 rounded-[2.5rem] opacity-70 group-hover:opacity-100 transition-opacity blur-md"></div>
- <div className="absolute inset-0 bg-gradient-to-r from-primary-500 via-fuchsia-500 to-rose-500 rounded-[2.5rem] opacity-90 group-hover:opacity-100 transition-opacity"></div>
- <div className="relative bg-[#1c0f42]/20 backdrop-blur-sm rounded-[2.3rem] py-6 flex items-center justify-center gap-4 border border-white/20">
+ <div className={`absolute inset-0 bg-gradient-to-r ${BRAND_HERO_GRADIENT} rounded-[2.5rem] opacity-70 group-hover:opacity-100 transition-opacity blur-md`}></div>
+ <div className={`absolute inset-0 bg-gradient-to-r ${BRAND_HERO_GRADIENT} rounded-[2.5rem] opacity-90 group-hover:opacity-100 transition-opacity`}></div>
+ <div className="relative bg-primary-900/20 backdrop-blur-sm rounded-[2.3rem] py-6 flex items-center justify-center gap-4 border border-white/20">
  <SparklesIcon className="w-8 h-8 text-white" />
  <span className="text-3xl font-black text-white tracking-wide">Créer la Magie</span>
  </div>
@@ -514,11 +519,11 @@ function KidsStoryStudio() {
  className="bg-[#fff9f0] text-foreground rounded-[2.5rem] shadow-2xl overflow-hidden relative"
  >
  {/* Story Header */}
- <div className="bg-gradient-to-br from-primary-100 to-violet-100 p-8 border-b border-border">
+ <div className="bg-gradient-to-br from-primary-100 to-secondary-100 p-8 border-b border-border">
  <div className="flex flex-wrap gap-2 mb-4">
  <Badge variant="soft" className="bg-card/60 font-black">{story.theme}</Badge>
  <Badge variant="soft" className="bg-card/60 font-black">{story.estimated_duration_minutes} min</Badge>
- <Badge variant="soft" className="bg-emerald-100 text-emerald-800 font-black">{story.educational_value}</Badge>
+ <Badge variant="soft" className={`${BRAND_SEMANTIC.success.bg} ${BRAND_SEMANTIC.success.text} font-black`}>{story.educational_value}</Badge>
  </div>
  <h2 className="text-3xl font-black leading-tight mb-2 text-foreground-900">{story.title}</h2>
  {story.summary && <p className="text-sm font-bold text-foreground-secondary leading-snug">{story.summary}</p>}
@@ -544,7 +549,7 @@ function KidsStoryStudio() {
  onClick={handleSave} 
  disabled={story.saved || saving}
  variant="outline" 
- className={`px-6 rounded-2xl font-black border-border shadow-sm ${story.saved ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : 'bg-surface-secondary text-foreground-secondary hover:bg-surface-secondary'}`}
+ className={`px-6 rounded-2xl font-black border-border shadow-sm ${story.saved ? `${BRAND_SEMANTIC.success.bg} ${BRAND_SEMANTIC.success.text} ${BRAND_SEMANTIC.success.border}` : 'bg-surface-secondary text-foreground-secondary hover:bg-surface-secondary'}`}
  >
  <HeartIcon className="w-5 h-5" filled={story.saved} />
  </Button>
@@ -588,8 +593,7 @@ function KidsStoryStudio() {
  )}
 
  </main>
- <KidsBottomNav />
- </div>
+ </KidsPageShell>
  );
 }
 
