@@ -116,7 +116,7 @@ function AdminOverview() {
  colorClass={{bg: 'bg-violet-50', text: 'text-violet-600'}} 
  />
  <MetricCard 
- index={3} title="Histoires IA" value={summary.total_stories || 0} subtitle="Générées au total" icon={SparklesIcon}
+ index={3} title="Histoires IA" value={summary.total_ai_stories || 0} subtitle="Générées au total" icon={SparklesIcon}
  colorClass={{bg: 'bg-amber-50', text: 'text-amber-500'}} 
  />
  </div>

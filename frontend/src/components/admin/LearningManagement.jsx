@@ -12,14 +12,20 @@ import {
 } from '../../constants/learningOptions';
 
 function LearningManagement() {
+  const [activeTab, setActiveTab] = useState('contents');
   const [contents, setContents] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [challenges, setChallenges] = useState([]);
+  const [rewards, setRewards] = useState([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [search, setSearch] = useState('');
   const [formData, setFormData] = useState(EMPTY_LEARNING_FORM);
+  const [categoryForm, setCategoryForm] = useState({ code: '', name: '', description: '', pictogram: '⭐', color: 'from-sky-500 to-cyan-400' });
+  const [challengeForm, setChallengeForm] = useState({ title: '', description: '', challenge_type: 'quiz_success_count', target_value: 3, category_id: '', status: 'active' });
+  const [rewardForm, setRewardForm] = useState({ code: '', name: '', reward_type: 'stars', icon: '⭐', value: 5, description: '' });
 
   useEffect(() => {
     loadData();
@@ -28,12 +34,16 @@ function LearningManagement() {
   const loadData = async () => {
     try {
       setLoading(true);
-      const [contentsRes, categoriesRes] = await Promise.all([
+      const [contentsRes, categoriesRes, challengesRes, rewardsRes] = await Promise.all([
         learningAPI.getAdminContents(),
         learningAPI.getCategories(),
+        learningAPI.getChallenges(),
+        learningAPI.getRewards(),
       ]);
       setContents(contentsRes.data || []);
       setCategories(categoriesRes.data || []);
+      setChallenges(challengesRes.data || []);
+      setRewards(rewardsRes.data || []);
     } catch (error) {
       console.error('Learning admin load error:', error);
       alert('Erreur de chargement des contenus éducatifs');
@@ -101,18 +111,53 @@ function LearningManagement() {
     });
   };
 
-  const addQuestion = () => {
-    setFormData((current) => ({
-      ...current,
-      questions: [...current.questions, { ...EMPTY_QUESTION(), position: current.questions.length + 1 }],
-    }));
+  const createCategory = async (e) => {
+    e.preventDefault();
+    setSubmitting(true);
+    try {
+      await learningAPI.createCategory(categoryForm);
+      setCategoryForm({ code: '', name: '', description: '', pictogram: '⭐', color: 'from-sky-500 to-cyan-400' });
+      loadData();
+    } catch (error) {
+      alert(error.response?.data?.error || 'Création impossible');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
-  const removeQuestion = (index) => {
-    setFormData((current) => ({
-      ...current,
-      questions: current.questions.filter((_, i) => i !== index),
-    }));
+  const createChallenge = async (e) => {
+    e.preventDefault();
+    setSubmitting(true);
+    try {
+      await learningAPI.createChallenge({
+        ...challengeForm,
+        category_id: challengeForm.category_id || null,
+        target_value: Number(challengeForm.target_value),
+      });
+      setChallengeForm({ title: '', description: '', challenge_type: 'quiz_success_count', target_value: 3, category_id: '', status: 'active' });
+      loadData();
+    } catch (error) {
+      alert(error.response?.data?.error || 'Création impossible');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const createReward = async (e) => {
+    e.preventDefault();
+    setSubmitting(true);
+    try {
+      await learningAPI.createReward({
+        ...rewardForm,
+        value: Number(rewardForm.value),
+      });
+      setRewardForm({ code: '', name: '', reward_type: 'stars', icon: '⭐', value: 5, description: '' });
+      loadData();
+    } catch (error) {
+      alert(error.response?.data?.error || 'Création impossible');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -147,9 +192,30 @@ function LearningManagement() {
     }
   };
 
+  const addQuestion = () => {
+    setFormData((current) => ({
+      ...current,
+      questions: [...current.questions, { ...EMPTY_QUESTION(), position: current.questions.length + 1 }],
+    }));
+  };
+
+  const removeQuestion = (index) => {
+    setFormData((current) => ({
+      ...current,
+      questions: current.questions.filter((_, i) => i !== index),
+    }));
+  };
+
   const filteredContents = contents.filter((item) =>
     item.title?.toLowerCase().includes(search.toLowerCase())
   );
+
+  const tabs = [
+    { id: 'contents', label: 'Contenus' },
+    { id: 'categories', label: 'Catégories' },
+    { id: 'challenges', label: 'Défis' },
+    { id: 'rewards', label: 'Récompenses' },
+  ];
 
   return (
     <div className="space-y-6 pb-12">
@@ -158,9 +224,25 @@ function LearningManagement() {
           <h1 className="text-3xl font-black text-foreground tracking-tight">Quiz & Jeux</h1>
           <p className="text-foreground-muted font-medium mt-1">Gérez le contenu ludo-éducatif.</p>
         </div>
-        <Button variant="primary" onClick={openCreate}>Créer un contenu</Button>
+        <Button variant="primary" onClick={openCreate} disabled={activeTab !== 'contents'}>Créer un contenu</Button>
       </div>
 
+      <div className="flex flex-wrap gap-2">
+        {tabs.map((tab) => (
+          <button
+            key={tab.id}
+            type="button"
+            onClick={() => setActiveTab(tab.id)}
+            className={`px-4 py-2 rounded-xl font-bold text-sm transition-colors ${
+              activeTab === tab.id ? 'bg-surface-900 text-white' : 'bg-card border border-border text-foreground-secondary hover:bg-surface-secondary'
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      {activeTab === 'contents' && (
       <div className="bg-card rounded-2xl p-4 border border-border shadow-sm flex items-center gap-4">
         <div className="relative flex-1 max-w-md">
           <SearchIcon className="w-5 h-5 text-surface-400 absolute left-3 top-1/2 -translate-y-1/2" />
@@ -173,8 +255,9 @@ function LearningManagement() {
           />
         </div>
       </div>
+      )}
 
-      {loading ? (
+      {activeTab === 'contents' && (loading ? (
         <div className="space-y-3">
           {[1, 2, 3].map((i) => <div key={i} className="h-20 bg-card rounded-2xl animate-pulse border border-border" />)}
         </div>
@@ -228,6 +311,74 @@ function LearningManagement() {
                 ))}
               </tbody>
             </table>
+          </div>
+        </div>
+      ))}
+
+      {activeTab === 'categories' && (
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+          <form onSubmit={createCategory} className="bg-card rounded-2xl border border-border p-6 space-y-4">
+            <h2 className="font-black text-lg">Nouvelle catégorie</h2>
+            <input required placeholder="Code" value={categoryForm.code} onChange={(e) => setCategoryForm({ ...categoryForm, code: e.target.value })} className="w-full p-3 rounded-xl bg-surface-secondary border border-border" />
+            <input required placeholder="Nom" value={categoryForm.name} onChange={(e) => setCategoryForm({ ...categoryForm, name: e.target.value })} className="w-full p-3 rounded-xl bg-surface-secondary border border-border" />
+            <textarea placeholder="Description" value={categoryForm.description} onChange={(e) => setCategoryForm({ ...categoryForm, description: e.target.value })} className="w-full p-3 rounded-xl bg-surface-secondary border border-border" />
+            <Button type="submit" variant="primary" disabled={submitting}>Créer</Button>
+          </form>
+          <div className="bg-card rounded-2xl border border-border p-6 space-y-3">
+            <h2 className="font-black text-lg">Catégories ({categories.length})</h2>
+            {categories.map((category) => (
+              <div key={category.id} className="p-3 rounded-xl bg-surface-secondary border border-border">
+                <p className="font-bold">{category.name}</p>
+                <p className="text-xs text-foreground-muted">{category.code}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'challenges' && (
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+          <form onSubmit={createChallenge} className="bg-card rounded-2xl border border-border p-6 space-y-4">
+            <h2 className="font-black text-lg">Nouveau défi</h2>
+            <input required placeholder="Titre" value={challengeForm.title} onChange={(e) => setChallengeForm({ ...challengeForm, title: e.target.value })} className="w-full p-3 rounded-xl bg-surface-secondary border border-border" />
+            <textarea placeholder="Description" value={challengeForm.description} onChange={(e) => setChallengeForm({ ...challengeForm, description: e.target.value })} className="w-full p-3 rounded-xl bg-surface-secondary border border-border" />
+            <input type="number" min={1} placeholder="Objectif" value={challengeForm.target_value} onChange={(e) => setChallengeForm({ ...challengeForm, target_value: e.target.value })} className="w-full p-3 rounded-xl bg-surface-secondary border border-border" />
+            <select value={challengeForm.category_id} onChange={(e) => setChallengeForm({ ...challengeForm, category_id: e.target.value })} className="w-full p-3 rounded-xl bg-surface-secondary border border-border font-bold">
+              <option value="">Catégorie optionnelle</option>
+              {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+            </select>
+            <Button type="submit" variant="primary" disabled={submitting}>Créer</Button>
+          </form>
+          <div className="bg-card rounded-2xl border border-border p-6 space-y-3">
+            <h2 className="font-black text-lg">Défis ({challenges.length})</h2>
+            {challenges.map((challenge) => (
+              <div key={challenge.id} className="p-3 rounded-xl bg-surface-secondary border border-border">
+                <p className="font-bold">{challenge.title}</p>
+                <p className="text-xs text-foreground-muted">Objectif : {challenge.target_value} · {challenge.status}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'rewards' && (
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+          <form onSubmit={createReward} className="bg-card rounded-2xl border border-border p-6 space-y-4">
+            <h2 className="font-black text-lg">Nouvelle récompense</h2>
+            <input required placeholder="Code" value={rewardForm.code} onChange={(e) => setRewardForm({ ...rewardForm, code: e.target.value })} className="w-full p-3 rounded-xl bg-surface-secondary border border-border" />
+            <input required placeholder="Nom" value={rewardForm.name} onChange={(e) => setRewardForm({ ...rewardForm, name: e.target.value })} className="w-full p-3 rounded-xl bg-surface-secondary border border-border" />
+            <input type="number" min={1} placeholder="Valeur" value={rewardForm.value} onChange={(e) => setRewardForm({ ...rewardForm, value: e.target.value })} className="w-full p-3 rounded-xl bg-surface-secondary border border-border" />
+            <textarea placeholder="Description" value={rewardForm.description} onChange={(e) => setRewardForm({ ...rewardForm, description: e.target.value })} className="w-full p-3 rounded-xl bg-surface-secondary border border-border" />
+            <Button type="submit" variant="primary" disabled={submitting}>Créer</Button>
+          </form>
+          <div className="bg-card rounded-2xl border border-border p-6 space-y-3">
+            <h2 className="font-black text-lg">Récompenses ({rewards.length})</h2>
+            {rewards.map((reward) => (
+              <div key={reward.id} className="p-3 rounded-xl bg-surface-secondary border border-border">
+                <p className="font-bold">{reward.icon} {reward.name}</p>
+                <p className="text-xs text-foreground-muted">{reward.code} · {reward.value} {reward.reward_type}</p>
+              </div>
+            ))}
           </div>
         </div>
       )}

@@ -14,11 +14,12 @@ import AdminModeration from '../components/admin/AdminModeration';
 import AdminReports from '../components/admin/AdminReports';
 import AdminAuditLog from '../components/admin/AdminAuditLog';
 import AdminPermissions from '../components/admin/AdminPermissions';
+import AdminSupport from '../components/admin/AdminSupport';
 import {adminAPI} from '../api/admin';
 import {
  BookIcon, TagIcon, UserIcon, LogOutIcon, HomeIcon, HistoryIcon, 
  CheckIcon, BrainIcon, SearchIcon, BellIcon, ChevronLeftIcon, PlusIcon,
- XIcon, ShieldIcon, WarningIcon
+ XIcon, ShieldIcon, WarningIcon, MailIcon
 } from '../components/Icons';
 import {Avatar} from '../components/ui';
 
@@ -205,6 +206,16 @@ const CommandPalette = ({isOpen, onClose}) => {
  );
 };
 
+function RequireAdminPermission({permission, permissions, children}) {
+ if (permissions == null) return children;
+ if (permissions.includes(permission)) return children;
+ return (
+ <div className="rounded-2xl bg-amber-50 border border-amber-200 p-6 font-bold text-amber-800">
+ Accès refusé : permission « {permission} » requise.
+ </div>
+ );
+}
+
 function AdminDashboard() {
  const {user, logout} = useAuth();
  const navigate = useNavigate();
@@ -213,12 +224,20 @@ function AdminDashboard() {
  const [isSearchOpen, setIsSearchOpen] = useState(false);
  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
  const [permissions, setPermissions] = useState(null);
+ const [notifications, setNotifications] = useState({items: [], unread_count: 0});
 
  useEffect(() => {
  if (!user?.id) return;
  adminAPI.getMyPermissions()
  .then((response) => setPermissions(response.data?.permissions || []))
  .catch((error) => console.error('Could not load admin permissions:', error));
+}, [user?.id]);
+
+ useEffect(() => {
+ if (!user?.id) return;
+ adminAPI.getNotifications()
+ .then((response) => setNotifications(response.data || {items: [], unread_count: 0}))
+ .catch((error) => console.error('Could not load admin notifications:', error));
 }, [user?.id]);
 
  useEffect(() => {
@@ -246,6 +265,7 @@ function AdminDashboard() {
  {to: '/admin/contents', label: 'Histoires CMS', icon: BookIcon, permission: 'content.read'},
  {to: '/admin/moderation', label: 'Modération', icon: ShieldIcon, permission: 'content.read'},
  {to: '/admin/reports', label: 'Signalements', icon: WarningIcon, permission: 'reports.read'},
+ {to: '/admin/support', label: 'Support', icon: MailIcon, permission: 'support.read'},
  {to: '/admin/categories', label: 'Catégories', icon: TagIcon, permission: 'content.read'},
  {to: '/admin/users', label: 'Utilisateurs', icon: UserIcon, permission: 'users.read'},
  {to: '/admin/subscriptions', label: 'Abonnements', icon: CheckIcon, permission: 'subscriptions.read'},
@@ -351,11 +371,20 @@ function AdminDashboard() {
 
  <div className="relative">
  <button 
- onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
+ onClick={() => {
+ setIsNotificationsOpen(!isNotificationsOpen);
+ if (!isNotificationsOpen) {
+ adminAPI.getNotifications()
+ .then((response) => setNotifications(response.data || {items: [], unread_count: 0}))
+ .catch((error) => console.error('Could not refresh notifications:', error));
+ }
+ }}
  className="p-2 text-foreground-muted hover:bg-surface-secondary rounded-full relative transition-colors"
  >
  <BellIcon className="w-5 h-5" />
+ {notifications.unread_count > 0 && (
  <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-rose-500 rounded-full border-2 border-white"></span>
+ )}
  </button>
  <AnimatePresence>
  {isNotificationsOpen && (
@@ -365,19 +394,23 @@ function AdminDashboard() {
  >
  <div className="p-4 border-b border-border flex justify-between items-center bg-surface-secondary">
  <h3 className="font-bold text-foreground">Notifications</h3>
- <button className="text-xs text-foreground-600 font-bold hover:underline">Tout marquer lu</button>
+ <span className="text-xs text-surface-400 font-bold">{notifications.unread_count} alerte(s)</span>
  </div>
  <div className="max-h-64 overflow-y-auto">
- <div className="p-4 border-b border-border hover:bg-surface-secondary cursor-pointer">
- <p className="text-sm font-bold text-foreground">Nouvel abonnement 🎉</p>
- <p className="text-xs text-foreground-muted mt-1">Un parent vient de souscrire à la Formule Lecture.</p>
- <p className="text-xs text-surface-400 mt-2">Il y a 2 min</p>
- </div>
- <div className="p-4 border-b border-border hover:bg-surface-secondary cursor-pointer">
- <p className="text-sm font-bold text-foreground">Alerte Système</p>
- <p className="text-xs text-foreground-muted mt-1">Mise à jour des modèles vocaux terminée avec succès.</p>
- <p className="text-xs text-surface-400 mt-2">Il y a 1h</p>
- </div>
+ {notifications.items?.length > 0 ? notifications.items.map((item) => (
+ <Link
+ key={item.id}
+ to={item.href}
+ onClick={() => setIsNotificationsOpen(false)}
+ className="block p-4 border-b border-border hover:bg-surface-secondary cursor-pointer"
+ >
+ <p className="text-sm font-bold text-foreground">{item.title}</p>
+ <p className="text-xs text-foreground-muted mt-1">{item.message}</p>
+ <p className="text-xs text-surface-400 mt-2">{formatNotificationDate(item.created_at)}</p>
+ </Link>
+ )) : (
+ <div className="p-6 text-center text-sm text-foreground-muted">Aucune alerte en attente.</div>
+ )}
  </div>
  </motion.div>
  )}
@@ -398,17 +431,18 @@ function AdminDashboard() {
  <main className="flex-1 overflow-y-auto bg-[#fafafa]">
  <div className="p-6 md:p-8 w-full max-w-[1600px] mx-auto">
  <Routes>
- <Route index element={<AdminOverview />} />
- <Route path="contents" element={<BookManagement />} />
- <Route path="categories" element={<CategoryManagement />} />
- <Route path="learning" element={<LearningManagement />} />
- <Route path="users" element={<AdminUsers />} />
- <Route path="subscriptions" element={<AdminSubscriptions />} />
- <Route path="statistics" element={<AdminStatistics />} />
- <Route path="moderation" element={<AdminModeration />} />
- <Route path="reports" element={<AdminReports />} />
- <Route path="audit" element={<AdminAuditLog />} />
- <Route path="permissions" element={<AdminPermissions />} />
+ <Route index element={<RequireAdminPermission permission="overview.read" permissions={permissions}><AdminOverview /></RequireAdminPermission>} />
+ <Route path="contents" element={<RequireAdminPermission permission="content.read" permissions={permissions}><BookManagement /></RequireAdminPermission>} />
+ <Route path="categories" element={<RequireAdminPermission permission="content.read" permissions={permissions}><CategoryManagement /></RequireAdminPermission>} />
+ <Route path="learning" element={<RequireAdminPermission permission="content.read" permissions={permissions}><LearningManagement /></RequireAdminPermission>} />
+ <Route path="users" element={<RequireAdminPermission permission="users.read" permissions={permissions}><AdminUsers /></RequireAdminPermission>} />
+ <Route path="subscriptions" element={<RequireAdminPermission permission="subscriptions.read" permissions={permissions}><AdminSubscriptions /></RequireAdminPermission>} />
+ <Route path="statistics" element={<RequireAdminPermission permission="overview.read" permissions={permissions}><AdminStatistics /></RequireAdminPermission>} />
+ <Route path="moderation" element={<RequireAdminPermission permission="content.read" permissions={permissions}><AdminModeration /></RequireAdminPermission>} />
+ <Route path="reports" element={<RequireAdminPermission permission="reports.read" permissions={permissions}><AdminReports /></RequireAdminPermission>} />
+ <Route path="support" element={<RequireAdminPermission permission="support.read" permissions={permissions}><AdminSupport /></RequireAdminPermission>} />
+ <Route path="audit" element={<RequireAdminPermission permission="audit.read" permissions={permissions}><AdminAuditLog /></RequireAdminPermission>} />
+ <Route path="permissions" element={<RequireAdminPermission permission="permissions.manage" permissions={permissions}><AdminPermissions /></RequireAdminPermission>} />
  <Route path="*" element={<Navigate to="/admin" replace />} />
  </Routes>
  </div>
@@ -422,3 +456,10 @@ function AdminDashboard() {
 }
 
 export default AdminDashboard;
+
+function formatNotificationDate(value) {
+ if (!value) return '';
+ const date = new Date(value);
+ if (Number.isNaN(date.getTime())) return '';
+ return date.toLocaleString('fr-FR', {day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'});
+}

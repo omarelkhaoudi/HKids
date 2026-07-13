@@ -28,16 +28,16 @@ function AdminReports() {
  return () => clearTimeout(timer);
 }, [loadReports]);
 
- const update = async (report, status) => {
+ const update = async (report, status, priority = report.priority) => {
  const resolutionNote = ['resolved', 'dismissed'].includes(status)
  ? window.prompt('Note de résolution', report.resolution_note || '')
  : '';
- if (resolutionNote === null) return;
+ if (resolutionNote === null && ['resolved', 'dismissed'].includes(status)) return;
  try {
  await adminAPI.updateReport(report.id, {
  status,
- priority: report.priority,
- resolution_note: resolutionNote,
+ priority,
+ resolution_note: resolutionNote || report.resolution_note || '',
  assign_to_self: status === 'reviewing'
 });
  await loadReports();
@@ -95,6 +95,15 @@ function AdminReports() {
  </div>
  </div>
  <div className="flex flex-wrap gap-2">
+ <select
+ value={report.priority}
+ onChange={(event) => update(report, report.status, event.target.value)}
+ className="bg-surface-secondary border border-border rounded-xl px-3 py-2 text-sm font-bold"
+ >
+ {['urgent', 'high', 'normal', 'low'].map((value) => (
+ <option key={value} value={value}>{value}</option>
+ ))}
+ </select>
  {report.status === 'open' && <Button variant="outline" onClick={() => update(report, 'reviewing')}>Prendre en charge</Button>}
  {!['resolved', 'dismissed'].includes(report.status) && (
  <>

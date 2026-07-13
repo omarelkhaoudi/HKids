@@ -146,6 +146,57 @@ function AdminStatistics() {
  </motion.div>
  </div>
 
+ <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+ <motion.div initial={{opacity: 0, y: 20}} animate={{opacity: 1, y: 0}} transition={{delay: 0.6}} className="bg-card rounded-[2rem] p-8 border border-border shadow-sm">
+ <div className="flex items-center justify-between mb-8">
+ <h2 className="text-xl font-black text-foreground">Utilisateurs actifs</h2>
+ </div>
+ <div className="space-y-4">
+ {(data?.active_users || []).slice(0, 6).map((user) => (
+ <div key={user.id} className="flex items-center justify-between p-4 rounded-2xl bg-surface-secondary/50 border border-border">
+ <div>
+ <p className="font-bold text-foreground text-sm">{user.name}</p>
+ <p className="text-xs text-foreground-muted">Parent : {user.parent_name}</p>
+ </div>
+ <div className="text-right">
+ <p className="text-sm font-black text-foreground">{user.sessions_count || 0} sessions</p>
+ <p className="text-xs text-surface-400">{formatAdminDate(user.last_activity_at)}</p>
+ </div>
+ </div>
+ ))}
+ {(data?.active_users || []).length === 0 && (
+ <p className="text-sm text-foreground-muted text-center py-6">Aucune activité enregistrée.</p>
+ )}
+ </div>
+ </motion.div>
+
+ <motion.div initial={{opacity: 0, y: 20}} animate={{opacity: 1, y: 0}} transition={{delay: 0.7}} className="bg-card rounded-[2rem] p-8 border border-border shadow-sm">
+ <div className="flex items-center justify-between mb-8">
+ <h2 className="text-xl font-black text-foreground">Activité récente</h2>
+ </div>
+ <div className="space-y-4">
+ {(data?.recent_activity || []).slice(0, 6).map((item) => (
+ <div key={item.id} className="flex items-start gap-3 p-3 rounded-2xl hover:bg-surface-secondary transition-colors">
+ <div className="w-9 h-9 rounded-full bg-primary-50 flex items-center justify-center text-foreground-600 shrink-0">
+ <AudioIcon className="w-4 h-4" />
+ </div>
+ <div className="min-w-0">
+ <p className="font-bold text-sm text-foreground">
+ <span className="text-foreground-600">{item.kid_name}</span> · {item.book_title}
+ </p>
+ <p className="text-xs text-surface-400 mt-1">
+ {formatAdminDuration(item.duration_seconds)} · {formatAdminDate(item.created_at)}
+ </p>
+ </div>
+ </div>
+ ))}
+ {(data?.recent_activity || []).length === 0 && (
+ <p className="text-sm text-foreground-muted text-center py-6">Aucune session récente.</p>
+ )}
+ </div>
+ </motion.div>
+ </div>
+
  </div>
  );
 }

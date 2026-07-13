@@ -14,7 +14,9 @@ test('admin permission catalog is unique and covers sensitive operations', () =>
     'subscriptions.manage',
     'reports.manage',
     'audit.read',
-    'permissions.manage'
+    'permissions.manage',
+    'support.read',
+    'support.manage'
   ]) {
     assert.ok(ADMIN_PERMISSIONS.includes(permission));
   }

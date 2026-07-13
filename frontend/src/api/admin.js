@@ -40,4 +40,7 @@ export const adminAPI = {
   getMyPermissions: () => adminGet('/permissions/me'),
   getPermissions: () => adminGet('/permissions'),
   setPermissions: (id, permissions) => adminPut(`/permissions/${id}`, { permissions }),
+  getNotifications: () => adminGet('/notifications'),
+  getSupportTickets: (params = {}) => adminGet('/support-tickets', params),
+  updateSupportTicket: (id, data) => adminPatch(`/support-tickets/${id}`, data),
 };

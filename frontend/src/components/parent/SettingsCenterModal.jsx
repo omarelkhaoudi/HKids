@@ -10,6 +10,7 @@ import {Button, Badge, Switch, Input, Avatar} from '../ui';
 import {useAuth} from '../../context/AuthContext';
 import {useToast} from '../ToastProvider';
 import {subscriptionsAPI} from '../../api/subscriptions';
+import {supportAPI} from '../../api/support';
 import {useNavigate} from 'react-router-dom';
 import PrivacyCenter from './PrivacyCenter';
 
@@ -38,6 +39,10 @@ export function SettingsCenterModal({isOpen, onClose}) {
  const [subscription, setSubscription] = useState(null);
  const [invoices, setInvoices] = useState([]);
  const [loadingBilling, setLoadingBilling] = useState(false);
+ const [supportForm, setSupportForm] = useState({ subject: '', message: '', category: 'general' });
+ const [supportTickets, setSupportTickets] = useState([]);
+ const [loadingSupport, setLoadingSupport] = useState(false);
+ const [submittingSupport, setSubmittingSupport] = useState(false);
 
  useEffect(() => {
  if (!isOpen || user?.role === 'kid') return;
@@ -58,6 +63,42 @@ export function SettingsCenterModal({isOpen, onClose}) {
  };
  loadBilling();
  }, [isOpen, user?.role]);
+
+ useEffect(() => {
+ if (!isOpen || user?.role === 'kid') return;
+ const loadSupport = async () => {
+ try {
+ setLoadingSupport(true);
+ const response = await supportAPI.getMyTickets({ limit: 10 });
+ setSupportTickets(response.data?.items || []);
+ } catch (error) {
+ console.error('Could not load support tickets:', error);
+ } finally {
+ setLoadingSupport(false);
+ }
+ };
+ loadSupport();
+ }, [isOpen, user?.role]);
+
+ const submitSupportTicket = async (event) => {
+ event.preventDefault();
+ if (!supportForm.subject.trim() || !supportForm.message.trim()) {
+ showToast('Veuillez remplir le sujet et le message.', 'error');
+ return;
+ }
+ try {
+ setSubmittingSupport(true);
+ await supportAPI.createTicket(supportForm);
+ showToast('Votre demande a été envoyée au support.', 'success');
+ setSupportForm({ subject: '', message: '', category: 'general' });
+ const response = await supportAPI.getMyTickets({ limit: 10 });
+ setSupportTickets(response.data?.items || []);
+ } catch (error) {
+ showToast(error.response?.data?.error || 'Envoi impossible.', 'error');
+ } finally {
+ setSubmittingSupport(false);
+ }
+ };
 
  useEffect(() => {
  if (isOpen) {
@@ -522,23 +563,71 @@ export function SettingsCenterModal({isOpen, onClose}) {
  <section id="support" ref={el => sectionRefs.current['support'] = el} className="scroll-mt-24 space-y-6">
  <div>
  <h2 className="text-2xl font-black tracking-tight mb-2">Support</h2>
- <p className="text-foreground-muted">Besoin d'aide ? Nous sommes là pour vous.</p>
+ <p className="text-foreground-muted">Besoin d'aide ? Contactez notre équipe.</p>
  </div>
- 
- <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
- {[
- {title:"Centre d'aide", desc:"Guides et FAQ complets", icon: BookIcon},
- {title:"Contact", desc:"Envoyez-nous un email", icon: MailIcon},
- {title:"Signaler un bug", desc:"Aidez-nous à améliorer", icon: AlertIcon},
- ].map((item, i) => (
- <div key={i} className="bg-card p-6 rounded-3xl border border-border shadow-sm hover:shadow-md transition-shadow cursor-pointer group">
- <div className="w-10 h-10 bg-surface-secondary rounded-xl flex items-center justify-center text-foreground-secondary mb-4 group-hover:bg-primary-50 group-hover:text-foreground-600 transition-colors">
- <item.icon className="w-5 h-5" />
+
+ <form onSubmit={submitSupportTicket} className="bg-card p-6 rounded-3xl border border-border shadow-sm space-y-4">
+ <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+ <div className="md:col-span-2">
+ <label className="block text-sm font-bold mb-1">Sujet</label>
+ <Input
+ required
+ value={supportForm.subject}
+ onChange={(e) => setSupportForm({ ...supportForm, subject: e.target.value })}
+ placeholder="Décrivez brièvement votre demande"
+ />
  </div>
- <h4 className="font-bold mb-1">{item.title}</h4>
- <p className="text-xs text-foreground-muted">{item.desc}</p>
+ <div>
+ <label className="block text-sm font-bold mb-1">Catégorie</label>
+ <select
+ value={supportForm.category}
+ onChange={(e) => setSupportForm({ ...supportForm, category: e.target.value })}
+ className="w-full p-3 rounded-xl bg-surface-secondary border border-border font-bold"
+ >
+ <option value="general">Général</option>
+ <option value="billing">Facturation</option>
+ <option value="technical">Technique</option>
+ <option value="content">Contenu</option>
+ <option value="bug">Signaler un bug</option>
+ </select>
+ </div>
+ <div className="md:col-span-2">
+ <label className="block text-sm font-bold mb-1">Message</label>
+ <textarea
+ required
+ rows={5}
+ value={supportForm.message}
+ onChange={(e) => setSupportForm({ ...supportForm, message: e.target.value })}
+ placeholder="Détaillez votre demande..."
+ className="w-full p-3 rounded-xl bg-surface-secondary border border-border"
+ />
+ </div>
+ </div>
+ <Button type="submit" disabled={submittingSupport}>
+ {submittingSupport ? 'Envoi...' : 'Envoyer au support'}
+ </Button>
+ </form>
+
+ <div className="bg-card p-6 rounded-3xl border border-border shadow-sm">
+ <h3 className="font-black mb-4">Mes demandes</h3>
+ {loadingSupport ? (
+ <p className="text-sm text-foreground-muted">Chargement...</p>
+ ) : supportTickets.length === 0 ? (
+ <p className="text-sm text-foreground-muted">Aucune demande envoyée pour le moment.</p>
+ ) : (
+ <div className="space-y-3">
+ {supportTickets.map((ticket) => (
+ <div key={ticket.id} className="p-4 rounded-2xl bg-surface-secondary border border-border">
+ <div className="flex flex-wrap gap-2 mb-2">
+ <Badge variant="soft">{ticket.category}</Badge>
+ <Badge variant={ticket.status === 'resolved' || ticket.status === 'closed' ? 'success' : 'primary'}>{ticket.status}</Badge>
+ </div>
+ <p className="font-bold text-sm">{ticket.subject}</p>
+ <p className="text-xs text-foreground-muted mt-1 line-clamp-2">{ticket.message}</p>
  </div>
  ))}
+ </div>
+ )}
  </div>
  
  <div className="flex justify-center pt-8">

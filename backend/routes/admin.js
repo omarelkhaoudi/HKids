@@ -18,6 +18,11 @@ import {
   setAdminPermissions,
   updateReport
 } from '../services/admin/adminService.js';
+import {
+  getAdminNotificationSummary,
+  listSupportTickets,
+  updateSupportTicket
+} from '../services/support/supportTicketService.js';
 
 const router = express.Router();
 
@@ -36,7 +41,9 @@ function getSummary(row = {}) {
   return {
     total_parents: Number(row.total_parents || 0),
     total_children: Number(row.total_children || 0),
-    total_stories: Number(row.total_stories || 0),
+    total_books: Number(row.total_books || 0),
+    total_ai_stories: Number(row.total_ai_stories || 0),
+    total_stories: Number(row.total_books || 0),
     total_listens: Number(row.total_listens || 0),
     active_subscriptions: Number(row.active_subscriptions || 0),
     total_listening_seconds: Number(row.total_listening_seconds || 0),
@@ -60,7 +67,8 @@ router.get('/overview', requireAdminPermission('overview.read'), async (req, res
         SELECT
           (SELECT COUNT(*) FROM users WHERE role = 'parent')::int AS total_parents,
           (SELECT COUNT(*) FROM kids_profiles)::int AS total_children,
-          (SELECT COUNT(*) FROM books)::int AS total_stories,
+          (SELECT COUNT(*) FROM books)::int AS total_books,
+          (SELECT COUNT(*) FROM generated_stories)::int AS total_ai_stories,
           (SELECT COUNT(*) FROM kid_reading_sessions)::int AS total_listens,
           (SELECT COUNT(*) FROM user_subscriptions WHERE status IN ('trialing', 'active'))::int AS active_subscriptions,
           (SELECT COALESCE(SUM(duration_seconds), 0) FROM kid_reading_sessions)::int AS total_listening_seconds,
@@ -515,5 +523,46 @@ router.put(
     }
   }
 );
+
+router.get('/notifications', requireAdminPermission('overview.read'), async (req, res) => {
+  try {
+    res.json(await getAdminNotificationSummary());
+  } catch (error) {
+    console.error('Error fetching admin notifications:', error);
+    sendAdminError(res, error);
+  }
+});
+
+router.get('/support-tickets', requireAdminPermission('support.read'), async (req, res) => {
+  try {
+    res.json(await listSupportTickets({
+      status: req.query.status || 'open',
+      priority: req.query.priority || 'all',
+      category: req.query.category || 'all',
+      query: req.query.q || '',
+      limit: req.query.limit,
+      offset: req.query.offset
+    }));
+  } catch (error) {
+    console.error('Error fetching support tickets:', error);
+    sendAdminError(res, error);
+  }
+});
+
+router.patch('/support-tickets/:id', requireAdminPermission('support.manage'), async (req, res) => {
+  try {
+    res.json(await updateSupportTicket({
+      ticketId: req.params.id,
+      admin: req.user,
+      status: req.body.status,
+      priority: req.body.priority,
+      adminNote: req.body.admin_note,
+      assignToSelf: req.body.assign_to_self === true
+    }));
+  } catch (error) {
+    console.error('Error updating support ticket:', error);
+    sendAdminError(res, error);
+  }
+});
 
 export default router;
