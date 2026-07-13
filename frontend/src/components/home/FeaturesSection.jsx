@@ -41,6 +41,14 @@ export default function FeaturesSection({ t }) {
       color: 'text-purple-600',
       bgColor: 'bg-purple-100',
       borderColor: 'border-purple-50'
+    },
+    {
+      title: 'Contrôle parental',
+      desc: 'Temps d\'écran, contenus autorisés et suivi de lecture depuis votre tableau de bord.',
+      icon: '👨‍👩‍👧',
+      color: 'text-orange-600',
+      bgColor: 'bg-orange-100',
+      borderColor: 'border-orange-50'
     }
   ];
 
