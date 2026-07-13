@@ -66,6 +66,17 @@ function restriction(code, details = {}) {
   return error;
 }
 
+const LEARNING_ACTIVITY_TYPES = new Set([
+  'quiz', 'game', 'challenge', 'alphabet', 'numbers', 'colors', 'shapes', 'languages'
+]);
+
+function isLearningActivityAllowedByParent(content, allowedContentTypes = []) {
+  if (content?.source !== 'learning' || !LEARNING_ACTIVITY_TYPES.has(content.content_type)) {
+    return false;
+  }
+  return allowedContentTypes.includes('quiz') || allowedContentTypes.includes('educational');
+}
+
 export async function synchronizeParentalPolicy() {
   if (!currentUserIsKid()) return null;
   const response = await parentalAPI.getConnectedKidAccessPolicy();
@@ -120,7 +131,12 @@ export function getParentalViolation(policy, content = null) {
   if (rules.allowed_themes?.length && (!content.theme || !rules.allowed_themes.includes(content.theme))) {
     return restriction('THEME_NOT_ALLOWED');
   }
-  if (rules.allowed_content_types?.length && content.content_type && !rules.allowed_content_types.includes(content.content_type)) {
+  if (
+    rules.allowed_content_types?.length
+    && content.content_type
+    && !rules.allowed_content_types.includes(content.content_type)
+    && !isLearningActivityAllowedByParent(content, rules.allowed_content_types)
+  ) {
     return restriction('CONTENT_TYPE_NOT_ALLOWED');
   }
 
