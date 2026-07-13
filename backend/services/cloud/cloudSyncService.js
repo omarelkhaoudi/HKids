@@ -29,17 +29,18 @@ async function requireConnectedKid(pool, user) {
 
 export async function computeSyncToken(kidProfileId) {
   const pool = getDatabase();
+  const kidId = Number(kidProfileId);
   const result = await pool.query(
     `SELECT md5(concat_ws('|',
-      $1::text,
-      COALESCE((SELECT MAX(favorited_at)::text FROM kid_book_favorites WHERE kid_profile_id = $1), ''),
+      $1::integer::text,
+      COALESCE((SELECT MAX(favorited_at)::text FROM kid_book_favorites WHERE kid_profile_id = $1::integer), ''),
       COALESCE((SELECT MAX(GREATEST(last_opened_at, COALESCE(last_listened_at, last_opened_at)))::text
-                FROM kid_book_history WHERE kid_profile_id = $1), ''),
-      COALESCE((SELECT MAX(updated_at)::text FROM kid_reading_progress WHERE kid_profile_id = $1), ''),
-      COALESCE((SELECT MAX(updated_at)::text FROM kid_download_registry WHERE kid_profile_id = $1), ''),
-      COALESCE((SELECT updated_at::text FROM kids_profiles WHERE id = $1), '')
+                FROM kid_book_history WHERE kid_profile_id = $1::integer), ''),
+      COALESCE((SELECT MAX(updated_at)::text FROM kid_reading_progress WHERE kid_profile_id = $1::integer), ''),
+      COALESCE((SELECT MAX(updated_at)::text FROM kid_download_registry WHERE kid_profile_id = $1::integer), ''),
+      COALESCE((SELECT updated_at::text FROM kids_profiles WHERE id = $1::integer), '')
     )) AS sync_token`,
-    [kidProfileId]
+    [kidId]
   );
   return result.rows[0]?.sync_token || '0';
 }
