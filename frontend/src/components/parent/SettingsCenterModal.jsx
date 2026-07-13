@@ -13,6 +13,7 @@ import {subscriptionsAPI} from '../../api/subscriptions';
 import {supportAPI} from '../../api/support';
 import {useNavigate} from 'react-router-dom';
 import PrivacyCenter from './PrivacyCenter';
+import { storage } from '../../utils/storage';
 
 const SECTIONS = [
  {id: 'account', label: 'Compte', icon: UserIcon},
@@ -136,9 +137,10 @@ export function SettingsCenterModal({isOpen, onClose}) {
 }
 };
 
- const handleSaveSimulated = (settingName) => {
- showToast(`${settingName} mis à jour avec succès`, 'success');
-};
+ const persistPreference = (key, value, label) => {
+ storage.setPreference(key, value);
+ showToast(`${label} enregistrée`, 'success');
+ };
 
  if (!isOpen) return null;
 
@@ -252,7 +254,7 @@ export function SettingsCenterModal({isOpen, onClose}) {
  </div>
  </div>
  <div className="flex justify-end pt-2">
- <Button onClick={() => handleSaveSimulated('Profil')} className="shadow-md">Enregistrer les modifications</Button>
+ <Button onClick={() => showToast('Gérez les profils enfants depuis le tableau de bord parent.', 'info')} className="shadow-md">Enregistrer les modifications</Button>
  </div>
  </div>
  </div>
@@ -357,18 +359,21 @@ export function SettingsCenterModal({isOpen, onClose}) {
  
  <div className="bg-card rounded-3xl p-2 shadow-sm border border-border divide-y divide-border /50">
  {[
- {title:"Rapports hebdomadaires", desc:"Recevez un résumé de l'activité de lecture de vos enfants.", default: true},
- {title:"Rappels de lecture", desc:"Soyez notifié si l'objectif de lecture n'est pas atteint.", default: true},
- {title:"Nouvelles histoires IA", desc:"Alertes lorsqu'une nouvelle histoire générée est prête.", default: true},
- {title:"Mises à jour des abonnements", desc:"Factures, renouvellements et offres.", default: false},
- {title:"Nouveautés catalogue", desc:"Soyez le premier informé des nouveaux livres ajoutés.", default: true},
- ].map((item, i) => (
- <div key={i} className="flex items-center justify-between p-4 hover:bg-surface-secondary /30 transition-colors rounded-2xl">
+ {title:"Rapports hebdomadaires", desc:"Recevez un résumé de l'activité de lecture de vos enfants.", key: 'notify_weekly_reports', default: true},
+ {title:"Rappels de lecture", desc:"Soyez notifié si l'objectif de lecture n'est pas atteint.", key: 'notify_reading_reminders', default: true},
+ {title:"Nouvelles histoires IA", desc:"Alertes lorsqu'une nouvelle histoire générée est prête.", key: 'notify_ai_stories', default: true},
+ {title:"Mises à jour des abonnements", desc:"Factures, renouvellements et offres.", key: 'notify_billing', default: false},
+ {title:"Nouveautés catalogue", desc:"Soyez le premier informé des nouveaux livres ajoutés.", key: 'notify_catalog', default: true},
+ ].map((item) => (
+ <div key={item.key} className="flex items-center justify-between p-4 hover:bg-surface-secondary /30 transition-colors rounded-2xl">
  <div>
  <p className="font-bold text-foreground">{item.title}</p>
  <p className="text-sm text-foreground-muted">{item.desc}</p>
  </div>
- <Switch defaultChecked={item.default} onChange={() => handleSaveSimulated('Préférence de notification')} />
+ <Switch
+ defaultChecked={storage.getPreferences()[item.key] ?? item.default}
+ onChange={(checked) => persistPreference(item.key, checked, item.title)}
+ />
  </div>
  ))}
  </div>
@@ -488,7 +493,10 @@ export function SettingsCenterModal({isOpen, onClose}) {
  <div>
  <div className="flex items-center justify-between mb-4">
  <h4 className="font-bold">Interligne large</h4>
- <Switch defaultChecked={true} onChange={() => handleSaveSimulated('Interligne')} />
+ <Switch
+ defaultChecked={storage.getPreferences().reading_wide_spacing ?? true}
+ onChange={(checked) => persistPreference('reading_wide_spacing', checked, 'Interligne')}
+ />
  </div>
  <p className="text-sm text-foreground-muted">Augmente l'espace entre les lignes pour faciliter la lecture.</p>
  </div>
@@ -496,7 +504,10 @@ export function SettingsCenterModal({isOpen, onClose}) {
  <div>
  <div className="flex items-center justify-between mb-4">
  <h4 className="font-bold">Lecture audio automatique</h4>
- <Switch defaultChecked={false} onChange={() => handleSaveSimulated('Lecture audio')} />
+ <Switch
+ defaultChecked={storage.getPreferences().reading_auto_audio ?? false}
+ onChange={(checked) => persistPreference('reading_auto_audio', checked, 'Lecture audio')}
+ />
  </div>
  <p className="text-sm text-foreground-muted">Démarre la voix off automatiquement à l'ouverture d'un livre.</p>
  </div>

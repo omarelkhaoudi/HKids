@@ -7,7 +7,7 @@ Branche de référence: `main` (post production-readiness `d9b8615`)
 
 ## Résumé exécutif
 
-Le repo HKids couvre **environ 78 %** du cahier des charges « Le Lit Qui Lit ». La base technique est solide (auth, contenu, admin, IA, offline, Android, GDPR, CI). Les écarts restants sont surtout **produit** : expérience non-lecteur, mascotte, UI parentale complète, recommandations IA réelles, kiosk matériel Android, et volume de contenu audio multilingue en production.
+Le repo HKids couvre **environ 85 %** du cahier des charges « Le Lit Qui Lit » (juillet 2026, post phases 1–7). La base technique est solide (auth, contenu, admin, IA, offline, Android, GDPR, CI). Les écarts restants sont surtout **produit** : expérience non-lecteur, mascotte, UI parentale complète, recommandations IA réelles, kiosk matériel Android, et volume de contenu audio multilingue en production.
 
 **Aucun domaine n'est à 100 %** selon le cahier des charges complet. **15 domaines** sont partiels ou avancés.
 
@@ -22,7 +22,7 @@ Le repo HKids couvre **environ 78 %** du cahier des charges « Le Lit Qui Lit »
 | 3 | **Assistant vocal IA** | `frontend/src/components/kids/VoiceAssistant.jsx`, `backend/routes/ai.js`, `services/ai/voiceAssistantService.js` | **85** | STT → LLM → TTS navigateur. Garde-fous parentaux. Pas de TTS serveur natif ; nécessite clés IA + micro. |
 | 4 | **Clonage vocal parental** | `frontend/src/pages/FamilyVoices.jsx`, `backend/routes/voices.js`, `services/ai/VoiceCloneService.js` | **88** | Consentement, enregistrement, narration, suppression GDPR. Requiert `ELEVENLABS_API_KEY`. |
 | 5 | **Profils enfants complets** | `frontend/src/components/parent/KidProfileFormModal.jsx`, `backend/routes/parental.js`, table `kids_profiles` | **78** | Nom, âge, avatar, intérêts, langue, photo. Photo en base64 côté client — pas d'upload dédié robuste. |
-| 6 | **Contrôle parental avancé** | `backend/routes/parental.js`, `middleware/parentalAccess.js`, `KidScreenTimeTracker.jsx`, `ParentDashboard.jsx` | **72** | Temps d'écran, horaires, langues/thèmes. API `parent_approvals` (catégories) **sans UI parent**. |
+| 6 | **Contrôle parental avancé** | `backend/routes/parental.js`, `middleware/parentalAccess.js`, `KidScreenTimeTracker.jsx`, `ParentDashboard.jsx`, `ParentCategoryApprovals.jsx` | **85** | Temps d'écran, horaires, langues/thèmes. **UI approbations catégories** branchée (Phase 3). |
 | 7 | **Multilingue ar/fr/en** | `context/LanguageContext.jsx`, `utils/translations.js`, champ `books.language` | **75** | Parcours enfant trilingue. Parent/admin/studio souvent en français fixe. Pas de `content_localizations` par item. |
 | 8 | **Hors connexion / PWA** | `public/sw.js`, `services/offline/offlineContentService.js`, `hooks/useOfflineContent.js` | **80** | SW + IndexedDB + téléchargements. Pas d'auth offline complète ni sync universelle. |
 | 9 | **Abonnements** | `backend/routes/subscriptions.js`, `routes/stripeWebhooks.js`, `pages/Subscriptions.jsx` | **85** | Stripe checkout, webhooks, gating premium. Production = clés Stripe + webhooks configurés. |
@@ -47,7 +47,7 @@ Le repo HKids couvre **environ 78 %** du cahier des charges « Le Lit Qui Lit »
 | Clonage voix parent | ✅ | `FamilyVoices.jsx` + ElevenLabs |
 | Profil enfant riche | ⚠️ | Champs DB + formulaire ; photo fragile |
 | Temps d'écran / horaires | ✅ | `parental.js` + tracker |
-| Approbation catégories parent | ⚠️ | API seulement |
+| Approbation catégories parent | ✅ | `ParentCategoryApprovals.jsx` |
 | FR / EN / AR UI enfant | ✅ | `translations.js` |
 | Contenu par langue | ⚠️ | Filtre `language` ; pas de localisations multiples |
 | Offline favoris / téléchargements | ✅ | `offlineContentService.js` |
@@ -82,17 +82,17 @@ Légende : ✅ livré · ⚠️ partiel · ❌ manquant
 
 ## P0 restants (prochaine vague)
 
-1. UI parent pour approbations de catégories (`parent_approvals`)
-2. Réduire texte sur `BookReader` et cartes « Pour toi » (`KidsHome`)
-3. Kiosk Android Lock Task / mode device owner
-4. Catalogue audio multilingue en volume (données + admin)
-5. TTS serveur pour assistant (hors `speechSynthesis` navigateur)
+1. Réduire texte sur `BookReader` et cartes « Pour toi » (`KidsHome`)
+2. Kiosk Android Lock Task / mode device owner
+3. Catalogue audio multilingue en volume (données + admin)
+4. UI signalement contenu côté parent
+5. Bannière consentement cookies (si analytics)
 
 ---
 
 ## Références
 
 - Analyse initiale (juillet 2026, partiellement obsolète) : `docs/LE_LIT_QUI_LIT_GAP_ANALYSIS.md`
-- Production : `docs/PRODUCTION_READINESS.md`
+- Production : `docs/PRODUCTION_READINESS.md`, `docs/PRODUCTION_LAUNCH.md`
 - Android : `docs/ANDROID_CAPACITOR.md`, `docs/ANDROID_RELEASE_REPORT.md`
 - Confidentialité : `docs/PRIVACY_SECURITY.md`

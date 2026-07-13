@@ -25,6 +25,9 @@ Installation, variables d'environnement, tests, contribution et checklist produc
 ### 5. [Production Readiness](./PRODUCTION_READINESS.md)
 Statut qualité, sécurité, performance et tests.
 
+### 5.1. [Lancement production (Phase 7)](./PRODUCTION_LAUNCH.md)
+Verdict go-live, conformité cahier des charges, checklist et risques.
+
 ### 6. [Guide de Déploiement](./DEPLOYMENT.md)
 Instructions pour déployer l'application en développement et en production.
 
@@ -69,7 +72,7 @@ HKids est une plateforme de lecture numérique pour enfants construite avec:
 - ✅ Interface de lecture immersive avec animations
 - ✅ Système de gestion de contenu complet
 - ✅ Sécurisé avec authentification JWT
-- ⚠ Base POC solide, mais le nouveau MVP "Le Lit Qui Lit" demande encore audio, IA vocale, clonage vocal, offline et consentement avance
+- ✅ MVP « Le Lit Qui Lit » : audio, IA vocale, clonage vocal, offline, abonnements Stripe et RGPD implémentés (voir [PRODUCTION_LAUNCH.md](./PRODUCTION_LAUNCH.md))
 
 ## Démarrage Rapide
 

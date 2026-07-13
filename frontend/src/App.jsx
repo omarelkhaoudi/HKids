@@ -1,19 +1,11 @@
 import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { useState, useEffect, lazy, Suspense } from 'react';
 import Home from './pages/Home';
-import BookDetails from './pages/BookDetails';
 import AdminLogin from './pages/AdminLogin';
 import SignUp from './pages/SignUp';
 import ParentLogin from './pages/ParentLogin';
 import ParentSignUp from './pages/ParentSignUp';
 import ParentKidsProfiles from './pages/ParentKidsProfiles';
-import DesignSystem from './pages/DesignSystem';
-import ContentLibraryHome from './pages/ContentLibraryHome';
-import ContentCategoryContents from './pages/ContentCategoryContents';
-import Favorites from './pages/Favorites';
-import History from './pages/History';
-import FeatureDetails from './pages/FeatureDetails';
-import StoriesGallery from './pages/StoriesGallery';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { LanguageProvider, useLanguage } from './context/LanguageContext';
 import { ToastProvider } from './components/ToastProvider';
@@ -39,6 +31,16 @@ const KidsLearning = lazy(() => import('./pages/KidsLearning'));
 const KidsListen = lazy(() => import('./pages/KidsListen'));
 const KidsAudioLibrary = lazy(() => import('./pages/KidsAudioLibrary'));
 const Subscriptions = lazy(() => import('./pages/Subscriptions'));
+const BookDetails = lazy(() => import('./pages/BookDetails'));
+const Favorites = lazy(() => import('./pages/Favorites'));
+const History = lazy(() => import('./pages/History'));
+const StoriesGallery = lazy(() => import('./pages/StoriesGallery'));
+const ContentLibraryHome = lazy(() => import('./pages/ContentLibraryHome'));
+const ContentCategoryContents = lazy(() => import('./pages/ContentCategoryContents'));
+const FeatureDetails = lazy(() => import('./pages/FeatureDetails'));
+const DesignSystem = lazy(() => import('./pages/DesignSystem'));
+
+const isProductionBuild = import.meta.env.PROD;
 
 const DEFAULT_ANDROID_KIOSK_IDLE_MS = 10 * 60 * 1000;
 
@@ -179,14 +181,14 @@ function App() {
               <Routes>
                 <Route path="/" element={<Home darkMode={darkMode} setDarkMode={setDarkMode} />} />
                 <Route path="/book/:id" element={<RequireAuth><LazyRoute><BookReader /></LazyRoute></RequireAuth>} />
-                <Route path="/book-details/:id" element={<RequireAuth><BookDetails /></RequireAuth>} />
-                <Route path="/favorites" element={<RequireAuth><Favorites /></RequireAuth>} />
-                <Route path="/history" element={<RequireAuth><History /></RequireAuth>} />
-                <Route path="/stories" element={<StoriesGallery />} />
-                <Route path="/content-library" element={<RequireAuth><ContentLibraryHome /></RequireAuth>} />
-                <Route path="/content-library/:categoryId" element={<RequireAuth><ContentCategoryContents /></RequireAuth>} />
+                <Route path="/book-details/:id" element={<RequireAuth><LazyRoute><BookDetails /></LazyRoute></RequireAuth>} />
+                <Route path="/favorites" element={<RequireAuth><LazyRoute><Favorites /></LazyRoute></RequireAuth>} />
+                <Route path="/history" element={<RequireAuth><LazyRoute><History /></LazyRoute></RequireAuth>} />
+                <Route path="/stories" element={<LazyRoute><StoriesGallery /></LazyRoute>} />
+                <Route path="/content-library" element={<RequireAuth><LazyRoute><ContentLibraryHome /></LazyRoute></RequireAuth>} />
+                <Route path="/content-library/:categoryId" element={<RequireAuth><LazyRoute><ContentCategoryContents /></LazyRoute></RequireAuth>} />
                 <Route path="/abonnements" element={<LazyRoute><Subscriptions /></LazyRoute>} />
-                <Route path="/features/:featureId" element={<FeatureDetails />} />
+                <Route path="/features/:featureId" element={<LazyRoute><FeatureDetails /></LazyRoute>} />
                 <Route path="/admin/login" element={<AdminLogin />} />
                 <Route path="/admin/signup" element={<SignUp />} />
                 <Route path="/parent/login" element={<ParentLogin />} />
@@ -205,7 +207,7 @@ function App() {
                 <Route path="/kids/storystudio" element={<Navigate to="/kids/story-studio" replace />} />
                 <Route path="/kids/ai-stories" element={<RequireAuth><LazyRoute><KidsAIStories /></LazyRoute></RequireAuth>} />
                 <Route path="/kids/category/:categoryId" element={<RequireAuth><LazyRoute><KidsCategoryPage /></LazyRoute></RequireAuth>} />
-                <Route path="/design-system" element={<DesignSystem />} />
+                <Route path="/design-system" element={isProductionBuild ? <Navigate to="/" replace /> : <LazyRoute><DesignSystem /></LazyRoute>} />
                 <Route path="/mockup" element={<Navigate to="/kids" replace />} />
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
