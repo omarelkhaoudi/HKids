@@ -19,7 +19,6 @@ const SECTIONS = [
  {id: 'account', label: 'Compte', icon: UserIcon},
  {id: 'appearance', label: 'Apparence', icon: SmartphoneIcon},
  {id: 'profile', label: 'Profil', icon: ChildIcon},
- {id: 'notifications', label: 'Notifications', icon: BellIcon},
  {id: 'privacy', label: 'Confidentialité', icon: ShieldIcon},
  {id: 'security', label: 'Sécurité', icon: LockIcon},
  {id: 'language', label: 'Langues', icon: LanguageIcon},
@@ -345,37 +344,6 @@ export function SettingsCenterModal({isOpen, onClose}) {
  <option>Belgique</option>
  </select>
  </div>
- </div>
- </section>
- 
- <hr className="border-border" />
- 
- {/* NOTIFICATIONS */}
- <section id="notifications" ref={el => sectionRefs.current['notifications'] = el} className="scroll-mt-24 space-y-6">
- <div>
- <h2 className="text-2xl font-black tracking-tight mb-2">Notifications</h2>
- <p className="text-foreground-muted">Choisissez comment et quand vous souhaitez être contacté.</p>
- </div>
- 
- <div className="bg-card rounded-3xl p-2 shadow-sm border border-border divide-y divide-border /50">
- {[
- {title:"Rapports hebdomadaires", desc:"Recevez un résumé de l'activité de lecture de vos enfants.", key: 'notify_weekly_reports', default: true},
- {title:"Rappels de lecture", desc:"Soyez notifié si l'objectif de lecture n'est pas atteint.", key: 'notify_reading_reminders', default: true},
- {title:"Nouvelles histoires IA", desc:"Alertes lorsqu'une nouvelle histoire générée est prête.", key: 'notify_ai_stories', default: true},
- {title:"Mises à jour des abonnements", desc:"Factures, renouvellements et offres.", key: 'notify_billing', default: false},
- {title:"Nouveautés catalogue", desc:"Soyez le premier informé des nouveaux livres ajoutés.", key: 'notify_catalog', default: true},
- ].map((item) => (
- <div key={item.key} className="flex items-center justify-between p-4 hover:bg-surface-secondary /30 transition-colors rounded-2xl">
- <div>
- <p className="font-bold text-foreground">{item.title}</p>
- <p className="text-sm text-foreground-muted">{item.desc}</p>
- </div>
- <Switch
- defaultChecked={storage.getPreferences()[item.key] ?? item.default}
- onChange={(checked) => persistPreference(item.key, checked, item.title)}
- />
- </div>
- ))}
  </div>
  </section>
  

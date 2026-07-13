@@ -63,7 +63,21 @@ jobs:
 
   e2e:
     runs-on: ubuntu-latest
-    needs: frontend
+    needs: [backend, frontend]
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: hkids
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -72,16 +86,22 @@ jobs:
           cache: npm
           cache-dependency-path: |
             package-lock.json
+            backend/package-lock.json
             frontend/package-lock.json
-      - name: Install dependencies
+      - name: Install root dependencies
+        run: npm ci
+      - name: Install backend dependencies
+        working-directory: backend
         run: npm ci
       - name: Install frontend dependencies
         working-directory: frontend
         run: npm ci
       - name: Install Playwright browser
         run: npx playwright install --with-deps chromium
-      - name: Run E2E smoke tests
+      - name: Run E2E tests with backend
         env:
           CI: true
-          VITE_API_URL: https://hkids.example.com
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/hkids
+          JWT_SECRET: hkids-test-jwt-secret-with-32-characters-minimum
+          VITE_API_URL: http://localhost:3000
         run: npm run test:e2e

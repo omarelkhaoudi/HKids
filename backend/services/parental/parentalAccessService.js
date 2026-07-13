@@ -210,7 +210,8 @@ export async function loadChildAccessPolicy({
       allowed_themes: normalizeList(rules?.allowed_themes),
       allowed_content_types: normalizeList(rules?.allowed_content_types)
     },
-    categoryRestrictionsActive: true,
+    categoryRestrictionsActive: explicitApprovals.length > 0,
+    explicitCategoryApprovals: explicitApprovals.length > 0,
     allowedCategoryIds: allowedCategories.map((category) => Number(category.id)),
     allowedCategoryNames: allowedCategories.map((category) => String(category.name)),
     forbiddenCategoryNames: forbiddenCategories.map((category) => String(category.name)),
@@ -286,7 +287,12 @@ export function getContentAccessViolation(policy, content = {}, { includeGlobal 
     });
   }
 
-  if (content.category_id !== null && content.category_id !== undefined) {
+  if (
+    content.source !== 'learning'
+    && policy.explicitCategoryApprovals
+    && content.category_id !== null
+    && content.category_id !== undefined
+  ) {
     const categoryId = Number(content.category_id);
     const categoryName = normalizeText(content.category_name || content.category_code);
     const categoryAliases = Array.isArray(content.category_aliases)
@@ -373,6 +379,7 @@ export function serializePolicyForClient(policy) {
     allowed_category_ids: policy.allowedCategoryIds,
     allowed_category_names: policy.allowedCategoryNames,
     forbidden_category_names: policy.forbiddenCategoryNames,
+    explicit_category_approvals: policy.explicitCategoryApprovals === true,
     premium_unlocked_book_ids: policy.premiumUnlockedBookIds,
     generated_at: new Date().toISOString()
   };

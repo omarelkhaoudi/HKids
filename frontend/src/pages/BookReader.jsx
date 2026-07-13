@@ -374,14 +374,17 @@ function BookReader() {
  const [hasReachedEnd, setHasReachedEnd] = useState(false);
  const [pageDirection, setPageDirection] = useState('next');
  const [showReadingAid, setShowReadingAid] = useState(false);
- const [readingSettings, setReadingSettings] = useState({
+ const [readingSettings, setReadingSettings] = useState(() => {
+ const prefs = storage.getPreferences();
+ return {
  font: 'system',
  fontSize: 16,
  backgroundColor: '#FFFFFF',
  textColor: '#000000',
  syllabification: false,
- lineSpacing: false,
+ lineSpacing: prefs.reading_wide_spacing ?? false,
  wordHighlight: false
+};
 });
  const [isPlaying, setIsPlaying] = useState(false);
  const [speechRate, setSpeechRate] = useState(1.0);
@@ -489,6 +492,12 @@ function BookReader() {
  console.warn('Impossible de charger les voix familiales:', error);
  setFamilyVoiceProfiles([]);
 });
+
+ const prefs = storage.getPreferences();
+ if (prefs.reading_auto_audio) {
+ audioPlayer.play(book, { voiceId: selectedFamilyVoiceId || undefined })
+ .catch((error) => console.warn('Lecture audio automatique indisponible:', error));
+ }
 }, [book?.id, book?.audio_url]);
 
  // Fonctions pour la lecture audio

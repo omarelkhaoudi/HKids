@@ -1,5 +1,6 @@
 import { AIProviderFactory } from './AIProviderFactory.js';
 import { normalizeAIError } from './errors.js';
+import { aiConfig } from './aiConfig.js';
 import {
   createFallbackAssistantContext,
   normalizeConversation,
@@ -11,6 +12,30 @@ const EMPTY_REPLIES = {
   en: 'I did not hear you clearly. You can try again slowly.',
   ar: 'لم أسمعك جيدًا. يمكنك المحاولة مرة أخرى بهدوء.'
 };
+
+const DEMO_REPLIES = {
+  fr: 'Je suis Le Lit en mode demonstration. Pour une vraie conversation, il faut configurer la cle IA sur le serveur.',
+  en: 'I am Le Lit in demo mode. Configure the AI API key on the server for a full conversation.',
+  ar: 'أنا Le Lit في وضع العرض. لتفعيل المحادثة الكاملة، يجب إعداد مفتاح الذكاء الاصطناعي على الخادم.'
+};
+
+function isAiProviderConfigured() {
+  const providerName = (aiConfig.provider || 'openai').toLowerCase();
+  const normalizedName = providerName === 'claude' ? 'anthropic' : providerName;
+  const providerConfig = aiConfig.providers[normalizedName];
+  return Boolean(providerConfig?.apiKey);
+}
+
+function buildDemoReply(transcript, responseLanguage) {
+  return {
+    transcript,
+    reply_text: DEMO_REPLIES[responseLanguage] || DEMO_REPLIES.fr,
+    intent: 'demo_mode',
+    provider: 'demo',
+    language: responseLanguage,
+    demo_mode: true
+  };
+}
 
 export class VoiceAssistantService {
   constructor({ aiProvider = null } = {}) {
@@ -34,9 +59,13 @@ export class VoiceAssistantService {
         transcript: '',
         reply_text: EMPTY_REPLIES[responseLanguage] || EMPTY_REPLIES.fr,
         intent: 'empty',
-        provider: aiProvider.name,
+        provider: isAiProviderConfigured() ? aiProvider.name : 'demo',
         language: responseLanguage
       };
+    }
+
+    if (!isAiProviderConfigured()) {
+      return buildDemoReply(cleanTranscript, responseLanguage);
     }
 
     try {
@@ -82,9 +111,15 @@ export class VoiceAssistantService {
         transcript: '',
         reply_text: replyText,
         intent: 'empty',
-        provider: aiProvider.name,
+        provider: isAiProviderConfigured() ? aiProvider.name : 'demo',
         language: responseLanguage
       };
+    }
+
+    if (!isAiProviderConfigured()) {
+      const demoReply = buildDemoReply(cleanTranscript, responseLanguage);
+      if (onChunk) await onChunk(demoReply.reply_text);
+      return demoReply;
     }
 
     try {

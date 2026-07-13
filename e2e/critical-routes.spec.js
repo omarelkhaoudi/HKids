@@ -4,7 +4,7 @@ test.describe('HKids critical routes', () => {
   test('subscriptions page loads', async ({ page }) => {
     await page.goto('/abonnements');
     await expect(page).toHaveURL(/\/abonnements/);
-    await expect(page.locator('main, body')).toBeVisible();
+    await expect(page.locator('main#main-content')).toBeVisible();
   });
 
   test('admin login route is reachable', async ({ page }) => {
