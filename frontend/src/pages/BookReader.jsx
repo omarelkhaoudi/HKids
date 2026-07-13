@@ -251,8 +251,8 @@ function PDFPageViewer({pdfUrl, pageNumber, onLoad, onPdfLoaded, imageClassName 
  if (loading) {
  return (
  <div className="text-center p-8 w-full">
- <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-purple-500 border-t-transparent"></div>
- <p className="mt-4 text-purple-600">Chargement du PDF...</p>
+ <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-primary-500 border-t-transparent"></div>
+ <p className="mt-4 text-primary-600">Chargement du PDF...</p>
  </div>
  );
 }
@@ -260,14 +260,14 @@ function PDFPageViewer({pdfUrl, pageNumber, onLoad, onPdfLoaded, imageClassName 
  if (error || !imageUrl) {
  return (
  <div className="text-center p-8 w-full">
- <BookIcon className="w-16 h-16 text-purple-400 mx-auto mb-4" />
- <p className="text-purple-600 mb-2">Erreur de chargement</p>
- {error && <p className="text-sm text-purple-400">{error}</p>}
+ <BookIcon className="w-16 h-16 text-primary-400 mx-auto mb-4" />
+ <p className="text-primary-600 mb-2">Erreur de chargement</p>
+ {error && <p className="text-sm text-primary-400">{error}</p>}
  <button
  onClick={() => {
  setReloadKey(prev => prev + 1);
 }}
- className="mt-4 px-4 py-2 bg-purple-500 text-white rounded-2xl hover:bg-purple-600 transition-colors"
+ className="mt-4 px-4 py-2 bg-primary-500 text-white rounded-2xl hover:bg-primary-600 transition-colors"
  >
  Réessayer
  </button>
@@ -1144,7 +1144,7 @@ function BookReader() {
 
  if (loading) {
  return (
- <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-100 via-secondary-50 to-accent-100">
+ <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-100 via-secondary-50 to-accent-100">
  <motion.div
  initial={{scale: 0}}
  animate={{scale: 1, rotate: 360}}
@@ -1155,7 +1155,7 @@ function BookReader() {
  <motion.p
  animate={{opacity: [0.5, 1, 0.5]}}
  transition={{duration: 1.5, repeat: Infinity}}
- className="text-xl font-bold text-purple-600 mt-4"
+ className="text-xl font-bold text-primary-600 mt-4"
  >
  Chargement de l'histoire...
  </motion.p>
@@ -1166,7 +1166,7 @@ function BookReader() {
 
  if (!book || !book.pages || book.pages.length === 0) {
  return (
- <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-100 via-secondary-50 to-accent-100">
+ <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-100 via-secondary-50 to-accent-100">
  <div className="text-center">
  <motion.div
  initial={{scale: 0}}
@@ -1174,15 +1174,15 @@ function BookReader() {
  className="mb-6 flex justify-center"
  >
  <div className="p-6 bg-card rounded-full shadow-lg">
- <BookIcon className="w-16 h-16 text-purple-400" />
+ <BookIcon className="w-16 h-16 text-primary-400" />
  </div>
  </motion.div>
- <p className="text-2xl font-bold text-purple-700 mb-6">Livre non trouvé</p>
+ <p className="text-2xl font-bold text-primary-700 mb-6">Livre non trouvé</p>
  <motion.button
  whileHover={{scale: 1.05}}
  whileTap={{scale: 0.95}}
  onClick={() => navigate(readerExitPath)}
- className="px-8 py-4 bg-gradient-to-r from-purple-500 to-secondary-500 text-white rounded-full font-bold text-lg shadow-lg hover:shadow-xl transition-shadow"
+ className="px-8 py-4 bg-gradient-to-r from-primary-500 to-secondary-500 text-white rounded-full font-bold text-lg shadow-lg hover:shadow-xl transition-shadow"
  >
  Retour à la bibliothèque
  </motion.button>
@@ -1408,7 +1408,7 @@ function BookReader() {
               <button 
                 onClick={toggleAudio}
                 disabled={!book.audio_url && (isExtracting || (!currentPageData?.content && !currentPageData?.image_path))}
-                className={`w-24 h-24 rounded-full flex items-center justify-center shadow-glow transition-transform hover:scale-110 active:scale-95 ${audioPlaybackActive ? 'bg-primary-500 text-white' : 'bg-gradient-to-r from-purple-500 to-secondary-500 text-white'} ${!book.audio_url && isExtracting ? 'opacity-50 cursor-not-allowed' : ''}`}
+                className={`w-24 h-24 rounded-full flex items-center justify-center shadow-glow transition-transform hover:scale-110 active:scale-95 ${audioPlaybackActive ? 'bg-primary-500 text-white' : 'bg-gradient-to-r from-primary-500 to-secondary-500 text-white'} ${!book.audio_url && isExtracting ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
                 {!book.audio_url && isExtracting ? (
                   <motion.div animate={{rotate: 360}} transition={{repeat: Infinity, ease: 'linear'}} className="w-10 h-10 border-4 border-white border-t-transparent rounded-full" />
@@ -1457,7 +1457,7 @@ function BookReader() {
        onClick={toggleAudio}
        disabled={!book.audio_url && (isExtracting || (!currentPageData?.content && !currentPageData?.image_path))}
        aria-label={t('kidReaderPlay')}
-       className={`w-24 h-24 rounded-full flex items-center justify-center text-white shadow-glow border-4 border-white active:scale-95 transition-transform ${audioPlaybackActive ? 'bg-primary-500' : 'bg-gradient-to-r from-purple-500 to-secondary-500'}`}
+       className={`w-24 h-24 rounded-full flex items-center justify-center text-white shadow-glow border-4 border-white active:scale-95 transition-transform ${audioPlaybackActive ? 'bg-primary-500' : 'bg-gradient-to-r from-primary-500 to-secondary-500'}`}
      >
        {!book.audio_url && isExtracting ? (
          <motion.div animate={{rotate: 360}} transition={{repeat: Infinity, ease: 'linear'}} className="w-10 h-10 border-4 border-white border-t-transparent rounded-full" />

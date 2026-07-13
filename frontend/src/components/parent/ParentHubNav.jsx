@@ -3,11 +3,12 @@ import { motion } from 'framer-motion';
 import { Card } from '../ui';
 import { useLanguage } from '../../context/LanguageContext';
 import { BookIcon, AudioIcon, SettingsIcon } from '../Icons';
+import { hubGradientAtIndex } from '../../constants/brandTheme';
 
 const LINKS = [
-  { id: 'profiles', path: '/parent/profiles', labelKey: 'parentNavProfiles', descKey: 'parentNavProfilesDesc', icon: BookIcon, gradient: 'from-sky-500 to-cyan-500' },
-  { id: 'voices', path: '/parent/voices', labelKey: 'parentNavVoices', descKey: 'parentNavVoicesDesc', icon: AudioIcon, gradient: 'from-violet-500 to-fuchsia-500' },
-  { id: 'subscription', path: '/abonnements', labelKey: 'parentNavSubscription', descKey: 'parentNavSubscriptionDesc', icon: SettingsIcon, gradient: 'from-amber-500 to-orange-500' },
+  { id: 'profiles', path: '/parent/profiles', labelKey: 'parentNavProfiles', descKey: 'parentNavProfilesDesc', icon: BookIcon },
+  { id: 'voices', path: '/parent/voices', labelKey: 'parentNavVoices', descKey: 'parentNavVoicesDesc', icon: AudioIcon },
+  { id: 'subscription', path: '/abonnements', labelKey: 'parentNavSubscription', descKey: 'parentNavSubscriptionDesc', icon: SettingsIcon },
 ];
 
 export function ParentHubNav({ className = '' }) {
@@ -17,9 +18,10 @@ export function ParentHubNav({ className = '' }) {
 
   return (
     <div className={`grid grid-cols-1 md:grid-cols-3 gap-4 ${className}`.trim()}>
-      {LINKS.map((link) => {
+      {LINKS.map((link, index) => {
         const Icon = link.icon;
         const isActive = location.pathname === link.path;
+        const gradient = hubGradientAtIndex(index);
         return (
           <motion.button
             key={link.id}
@@ -30,7 +32,7 @@ export function ParentHubNav({ className = '' }) {
             className="text-left"
             aria-current={isActive ? 'page' : undefined}
           >
-            <Card className={`p-5 bg-gradient-to-br ${link.gradient} text-white border-none shadow-lg h-full ${isActive ? 'ring-4 ring-white/50' : ''}`}>
+            <Card className={`p-5 bg-gradient-to-br ${gradient} text-white border-none shadow-lg h-full ${isActive ? 'ring-4 ring-primary-200/60 dark:ring-primary-500/40' : ''}`}>
               <Icon className="w-8 h-8 mb-3 opacity-90" />
               <p className="font-black text-lg">{t(link.labelKey)}</p>
               <p className="text-sm text-white/80 font-medium mt-1">{t(link.descKey)}</p>

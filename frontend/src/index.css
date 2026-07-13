@@ -31,6 +31,10 @@
     --color-kids-glow-sky: rgba(125, 211, 252, 0.35);
     --color-kids-glow-amber: rgba(252, 211, 77, 0.28);
 
+    /* Aliases for Tailwind background.* tokens */
+    --color-bg-card: var(--color-card);
+    --color-bg-elevated: var(--color-elevated);
+
 
     /* Primary: Magical Purple/Indigo */
     --color-primary-50: #f0ebf8;
@@ -218,6 +222,19 @@
     @apply px-4 py-2 text-surface-600 dark:text-surface-300 hover:text-surface-900 dark:hover:text-white hover:bg-surface-100 dark:hover:bg-surface-800 rounded-2xl transition-all duration-200 font-bold;
   }
   
+  /* Platform identity utilities */
+  .brand-surface-card {
+    @apply bg-card rounded-3xl border border-border shadow-soft;
+  }
+
+  .brand-nav-active {
+    @apply bg-primary-500 text-white shadow-md;
+  }
+
+  .brand-section-title {
+    @apply text-2xl sm:text-3xl font-extrabold text-foreground tracking-tight;
+  }
+
   /* Cards */
   .book-card {
     @apply bg-background-card rounded-3xl transform transition-all duration-300 border-2 border-transparent hover:border-primary-200 dark:hover:border-primary-700 overflow-hidden;
