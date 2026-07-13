@@ -124,7 +124,11 @@ export function getParentalViolation(policy, content = null) {
     return restriction('CONTENT_TYPE_NOT_ALLOWED');
   }
 
-  if (content.category_id != null) {
+  if (
+    content.source !== 'learning'
+    && policy.explicit_category_approvals
+    && content.category_id != null
+  ) {
     const allowedIds = policy.allowed_category_ids || [];
     const allowedNames = (policy.allowed_category_names || []).map(normalize);
     if (!allowedIds.includes(Number(content.category_id)) && !allowedNames.includes(normalize(content.category_name))) {

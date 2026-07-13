@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-const API = process.env.QA_API_URL || 'http://127.0.0.1:3000';
+const API = process.env.QA_API_URL || 'http://localhost:3000';
 
 async function apiLogin(request, username, password) {
   const response = await request.post(`${API}/api/auth/login`, {
@@ -34,7 +34,7 @@ async function injectSession(page, session) {
 test.describe('QA UI — routes publiques', () => {
   test('[PUBLIC][Critique] Accueil marketing', async ({ page }) => {
     await page.goto('/');
-    await expect(page.locator('main#main-content, body')).toBeVisible();
+    await expect(page.locator('main#main-content')).toBeVisible();
     await expect(page).toHaveTitle(/HKids/i);
   });
 
@@ -73,8 +73,6 @@ test.describe('QA UI — garde auth', () => {
 });
 
 test.describe('QA UI — parcours authentifié (API requise)', () => {
-  test.skip(!process.env.QA_API_URL, 'Définir QA_API_URL=http://127.0.0.1:3000 pour activer');
-
   test('[PARENT][Critique] Dashboard parent charge', async ({ page, request }) => {
     const session = await seedParentAccount(request);
     test.skip(!session, 'Backend indisponible pour seed parent');
@@ -82,7 +80,7 @@ test.describe('QA UI — parcours authentifié (API requise)', () => {
     await injectSession(page, session);
     await page.goto('/parent/dashboard');
     await expect(page.locator('body')).toBeVisible({ timeout: 15000 });
-    await expect(page.locator('body')).not.toHaveURL(/\/parent\/login/);
+    await expect(page).not.toHaveURL(/\/parent\/login/);
   });
 
   test('[ADMIN][Critique] Dashboard admin charge', async ({ page, request }) => {
@@ -149,7 +147,6 @@ test.describe('QA UI — enfant (structure)', () => {
     await injectSession(page, kidSession);
     await page.goto('/kids');
     await page.waitForLoadState('networkidle');
-    const quickLinks = page.locator('a[href*="/kids/audio"], a[href*="/kids/learning"]');
-    await expect(quickLinks.first()).toBeVisible({ timeout: 20000 });
+    await expect(page.getByRole('button', { name: /écouter|jouer|listen|play/i }).first()).toBeVisible({ timeout: 20000 });
   });
 });

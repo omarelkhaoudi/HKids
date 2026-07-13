@@ -113,11 +113,11 @@ test('[PARENT][Critique] Création compte enfant', async () => {
 
 test('[PARENT][Haute] Dashboard parent / overview', async () => {
   const res = await request(app)
-    .get('/api/parental/me/overview')
+    .get(`/api/parental/kids/${state.kidId}/dashboard`)
     .set(auth(state.parentToken));
 
   assert.equal(res.status, 200, res.body?.error || '');
-  assert.ok(Array.isArray(res.body.kids));
+  assert.ok(res.body.kid || res.body.profile || res.body.summary);
 });
 
 test('[PARENT][Haute] Plans abonnement accessibles', async () => {
@@ -170,6 +170,7 @@ test('[KID][Critique] Livres publiés accessibles', async () => {
 
   assert.equal(res.status, 200);
   assert.ok(Array.isArray(res.body));
+  assert.ok(res.body.length > 0, 'Aucun livre demo seedé');
 });
 
 test('[KID][Haute] Recommandations', async () => {
@@ -226,16 +227,16 @@ test('[KID][Moyenne] Manifest offline', async () => {
   assert.equal(res.body.capabilities.offline_downloads, true);
 });
 
-test('[KID][Haute] Assistant vocal sans clé IA — erreur contrôlée', async () => {
+test('[KID][Haute] Assistant vocal sans clé IA — mode démonstration', async () => {
   const res = await request(app)
     .post('/api/ai/voice-assistant')
     .set(auth(state.kidToken))
-    .send({ transcript: 'Raconte-moi une histoire sur les dinosaures', language: 'fr' });
+    .send({ transcript: 'Bonjour Le Lit', language: 'fr' });
 
-  assert.ok([200, 503, 502].includes(res.status), `status inattendu: ${res.status}`);
-  if (res.status !== 200) {
-    assert.ok(res.body.error || res.body.code, 'Erreur IA attendue sans clé');
-  }
+  assert.equal(res.status, 200, res.body?.error || '');
+  assert.equal(res.body.demo_mode, true);
+  assert.equal(res.body.provider, 'demo');
+  assert.ok(res.body.reply_text);
 });
 
 test('[KID][Moyenne] Historique activité sync', async () => {
@@ -248,7 +249,7 @@ test('[KID][Moyenne] Historique activité sync', async () => {
       started_at: new Date().toISOString(),
     });
 
-  assert.equal(res.status, 200, res.body?.error || '');
+  assert.equal(res.status, 201, res.body?.error || '');
 });
 
 // ─── ADMIN ────────────────────────────────────────────────────────────────

@@ -858,6 +858,56 @@ export async function initDatabase() {
       )
     `);
 
+    await client.query(`
+      INSERT INTO categories (name, description)
+      VALUES
+        ('Histoires', 'Histoires illustrees et audio pour enfants'),
+        ('Comptines', 'Comptines et chansons douces'),
+        ('Dinosaures', 'Univers dinosaures'),
+        ('Espace', 'Decouverte de l espace')
+      ON CONFLICT (name) DO NOTHING
+    `);
+
+    await client.query(`
+      INSERT INTO books (
+        title, slug, author, description, cover_image, file_path, content_type, language, theme,
+        category_id, age_group_min, age_group_max, audio_url, duration_seconds,
+        is_published, moderation_status, page_count
+      )
+      SELECT
+        seed.title, seed.slug, seed.author, seed.description, seed.cover_image, seed.file_path,
+        seed.content_type, seed.language, seed.theme, c.id, seed.age_group_min, seed.age_group_max,
+        seed.audio_url, seed.duration_seconds, TRUE, 'approved', seed.page_count
+      FROM (VALUES
+        ('Le petit dinosaure courageux', 'demo-dino-courage', 'HKids', 'Une petite histoire sur la confiance.', NULL, 'demo/dino-courage.story', 'story', 'fr', 'dinosaurs', 'Dinosaures', 3, 6, NULL, 0, 1),
+        ('Voyage sur la lune', 'demo-voyage-lune', 'HKids', 'Un voyage doux dans l espace.', NULL, 'demo/voyage-lune.story', 'story', 'fr', 'space', 'Espace', 4, 8, NULL, 0, 1),
+        ('Comptine des etoiles', 'demo-comptine-etoiles', 'HKids', 'Une comptine pour le coucher.', NULL, 'demo/comptine-etoiles.audio', 'audio_story', 'fr', 'space', 'Comptines', 2, 6, 'demo/comptine-etoiles.mp3', 95, 0),
+        ('Bonne nuit petit ours', 'demo-bonne-nuit-ours', 'HKids', 'Une berceuse douce.', NULL, 'demo/bonne-nuit-ours.audio', 'audio_story', 'fr', 'animals', 'Comptines', 2, 5, 'demo/bonne-nuit-ours.mp3', 110, 0),
+        ('Les trois petits cochons', 'demo-trois-cochons', 'HKids', 'Un classique adapte aux tout-petits.', NULL, 'demo/trois-cochons.story', 'story', 'fr', 'world', 'Histoires', 3, 7, NULL, 0, 2)
+      ) AS seed(title, slug, author, description, cover_image, file_path, content_type, language, theme, category_name, age_group_min, age_group_max, audio_url, duration_seconds, page_count)
+      JOIN categories c ON c.name = seed.category_name
+      WHERE NOT EXISTS (
+        SELECT 1 FROM books existing WHERE existing.slug = seed.slug
+      )
+    `);
+
+    await client.query(`
+      INSERT INTO book_pages (book_id, page_number, image_path, content)
+      SELECT b.id, page.page_number, NULL, page.content
+      FROM books b
+      JOIN (VALUES
+        ('demo-dino-courage', 1, 'Il etait une fois un petit dinosaure qui avait peur du noir.'),
+        ('demo-voyage-lune', 1, 'Ce soir, la fusee decolle doucement vers la lune.'),
+        ('demo-trois-cochons', 1, 'Trois petits cochons construisent chacun une maison.'),
+        ('demo-trois-cochons', 2, 'Le loup souffle, mais la maison de briques tient bon.')
+      ) AS page(slug, page_number, content)
+        ON page.slug = b.slug
+      WHERE NOT EXISTS (
+        SELECT 1 FROM book_pages existing
+        WHERE existing.book_id = b.id AND existing.page_number = page.page_number
+      )
+    `);
+
     // Seed credentials are development-only unless an explicit production password exists.
     const seedAdminPassword = process.env.ADMIN_SEED_PASSWORD
       || (process.env.NODE_ENV === 'production' ? null : 'admin123');

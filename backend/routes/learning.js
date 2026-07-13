@@ -124,6 +124,7 @@ async function getKidProfileForRequest(pool, req, requestedKidProfileId = null) 
 function learningContentDescriptor(content) {
   return {
     ...content,
+    source: 'learning',
     category_aliases: [content.category_name, content.category_code, 'Education', 'Educatif'],
     is_premium: false
   };

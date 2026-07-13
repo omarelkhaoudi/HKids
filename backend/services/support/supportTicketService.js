@@ -45,7 +45,7 @@ export async function createSupportTicket({ user, subject, message, category = '
     [user.id, cleanSubject, cleanMessage, cleanCategory]
   );
 
-  await logSecurityEvent({
+  await logSecurityEvent(pool, {
     userId: user.id,
     actorRole: user.role,
     action: 'support_ticket_created',
@@ -165,7 +165,7 @@ export async function updateSupportTicket({
     [ticketId, nextStatus, nextPriority, nextNote, assignedAdminId, resolvedAt]
   );
 
-  await logSecurityEvent({
+  await logSecurityEvent(pool, {
     userId: admin.id,
     actorRole: admin.role,
     action: 'support_ticket_updated',

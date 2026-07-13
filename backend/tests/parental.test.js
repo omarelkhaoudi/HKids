@@ -38,3 +38,53 @@ test('getContentAccessViolation allows listed content types', () => {
   const violation = getContentAccessViolation(contentTypePolicy, { content_type: 'story', id: 1 });
   assert.equal(violation, null);
 });
+
+test('getContentAccessViolation skips category filter without explicit approvals', () => {
+  const policy = {
+    applies: true,
+    child: { age: 6 },
+    rules: {},
+    explicitCategoryApprovals: false,
+    allowedCategoryIds: [],
+    allowedCategoryNames: [],
+    premiumUnlockedBookIds: [],
+    hasActiveSubscription: false,
+  };
+  const violation = getContentAccessViolation(policy, { category_id: 99, id: 1, content_type: 'story' });
+  assert.equal(violation, null);
+});
+
+test('getContentAccessViolation blocks unapproved book categories when explicit approvals exist', () => {
+  const policy = {
+    applies: true,
+    child: { age: 6 },
+    rules: {},
+    explicitCategoryApprovals: true,
+    allowedCategoryIds: [1],
+    allowedCategoryNames: ['Histoires'],
+    premiumUnlockedBookIds: [],
+    hasActiveSubscription: false,
+  };
+  const violation = getContentAccessViolation(policy, { category_id: 99, id: 1, content_type: 'story' });
+  assert.equal(violation?.code, 'CATEGORY_NOT_ALLOWED');
+});
+
+test('getContentAccessViolation bypasses category filter for learning content', () => {
+  const policy = {
+    applies: true,
+    child: { age: 6 },
+    rules: {},
+    explicitCategoryApprovals: true,
+    allowedCategoryIds: [1],
+    allowedCategoryNames: ['Histoires'],
+    premiumUnlockedBookIds: [],
+    hasActiveSubscription: false,
+  };
+  const violation = getContentAccessViolation(policy, {
+    source: 'learning',
+    category_id: 99,
+    content_type: 'quiz',
+    id: 1,
+  });
+  assert.equal(violation, null);
+});
