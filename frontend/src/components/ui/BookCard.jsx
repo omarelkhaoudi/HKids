@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { motion } from 'framer-motion';
 import { Badge } from './Badge';
+import { useReducedMotion } from '../../hooks/useReducedMotion';
 
-export function BookCard({ 
+export const BookCard = memo(function BookCard({
  book, 
  onClick, 
  progress = null, 
@@ -10,10 +11,13 @@ export function BookCard({
  isRecommended = false,
  className = ''
 }) {
+ const reducedMotion = useReducedMotion();
+ const hoverMotion = reducedMotion ? {} : { whileHover: { y: -8, scale: 1.02 } };
+
  return (
  <motion.div
  onClick={onClick}
- whileHover={{ y: -8, scale: 1.02 }}
+ {...hoverMotion}
  className={`group relative flex flex-col w-[160px] sm:w-[180px] lg:w-[220px] rounded-3xl overflow-hidden cursor-pointer bg-surface-secondary shadow-soft hover:shadow-floating transition-all ${className}`}
  >
  <div className="relative aspect-[3/4] overflow-hidden rounded-t-3xl bg-surface-200">
@@ -75,4 +79,4 @@ export function BookCard({
  </div>
  </motion.div>
  );
-}
+});

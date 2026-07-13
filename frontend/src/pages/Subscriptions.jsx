@@ -3,6 +3,7 @@ import {Link, useNavigate, useSearchParams} from 'react-router-dom';
 import {motion, AnimatePresence} from 'framer-motion';
 import {subscriptionsAPI} from '../api/subscriptions';
 import {useAuth} from '../context/AuthContext';
+import {useLanguage} from '../context/LanguageContext';
 import {useToast} from '../components/ToastProvider';
 import {Logo} from '../components/Logo';
 import {
@@ -109,6 +110,7 @@ function Subscriptions() {
  const [subscribingPlan, setSubscribingPlan] = useState('');
  const [startingTrial, setStartingTrial] = useState(false);
  const {user, logout} = useAuth();
+ const {t, language} = useLanguage();
  const {showToast} = useToast();
  const navigate = useNavigate();
  const [searchParams, setSearchParams] = useSearchParams();
@@ -210,7 +212,7 @@ function Subscriptions() {
  if (error.response?.status === 401) {
  handleExpiredSession();
 } else {
- setErrorMessage("Paiement reçu, mais la confirmation n'a pas pu aboutir immédiatement.");
+ setErrorMessage(t('subscriptionsPaymentPending'));
  setViewState('error');
 }
 } finally {
@@ -232,7 +234,7 @@ function Subscriptions() {
  return;
 }
  if (isKidAccount) {
- showToast("Demande à ton parent de choisir une formule pour toi.", 'info', 3500);
+ showToast(t('subscriptionsKidAskParent'), 'info', 3500);
  return;
 }
  setCheckoutModalPlan(plan);
@@ -256,16 +258,16 @@ function Subscriptions() {
  if (error.response?.status === 401) {
  handleExpiredSession();
 } else if (error.response?.data?.parent_required) {
- setErrorMessage("Le paiement doit être fait par un compte parent.");
+ setErrorMessage(t('subscriptionsParentPaymentOnly'));
  setViewState('error');
 } else if (error.response?.data?.setup_required) {
- setErrorMessage("Stripe doit être configuré sur le serveur avant le paiement.");
+ setErrorMessage(t('subscriptionsStripeRequired'));
  setViewState('error');
 } else if (error.response?.data?.error) {
  setErrorMessage(error.response.data.error);
  setViewState('error');
 } else {
- setErrorMessage("Le paiement n'a pas pu démarrer.");
+ setErrorMessage(t('subscriptionsPaymentFailed'));
  setViewState('error');
 }
 } finally {
@@ -275,7 +277,7 @@ function Subscriptions() {
 
  const handleStartTrial = async () => {
  if (!isAuthenticated) {
- showToast("Connectez-vous pour démarrer l'essai gratuit.", 'info', 2500);
+ showToast(t('subscriptionsLoginToTrial'), 'info', 2500);
  navigate('/parent/login');
  return;
 }
@@ -291,7 +293,7 @@ function Subscriptions() {
  if (error.response?.status === 401) {
  handleExpiredSession();
 } else {
- const msg = error.response?.data?.error ||"Impossible de démarrer l'essai gratuit.";
+ const msg = error.response?.data?.error || t('subscriptionsTrialError');
  setErrorMessage(msg);
  setViewState('error');
 }
@@ -306,7 +308,7 @@ function Subscriptions() {
  const response = await subscriptionsAPI.createBillingPortalSession();
  if (response.data.portal_url) window.location.href = response.data.portal_url;
  } catch (error) {
- showToast(error.response?.data?.error || "Impossible d'ouvrir le portail de facturation.", 'error');
+ showToast(error.response?.data?.error || t('subscriptionsPortalError'), 'error');
  } finally {
  setBillingAction('');
  }
@@ -365,22 +367,22 @@ function Subscriptions() {
  <div className="w-24 h-24 bg-emerald-100 text-emerald-500 rounded-full flex items-center justify-center mx-auto mb-8">
  <CheckIcon className="w-12 h-12" />
  </div>
- <h1 className="text-4xl md:text-5xl font-black text-foreground mb-4">Paiement Réussi !</h1>
- <p className="text-xl text-foreground-secondary font-medium mb-8">Votre abonnement est maintenant actif. Préparez-vous à des histoires magiques.</p>
+ <h1 className="text-4xl md:text-5xl font-black text-foreground mb-4">{t('subscriptionsPaymentSuccess')}</h1>
+ <p className="text-xl text-foreground-secondary font-medium mb-8">{t('subscriptionsPaymentSuccessBody')}</p>
  
  <div className="bg-surface-secondary rounded-2xl p-6 mb-8 text-left grid grid-cols-2 gap-4 border border-border">
  <div>
- <p className="text-sm font-bold text-surface-400 uppercase">Formule Actuelle</p>
- <p className="text-lg font-black text-foreground">{currentSubscription?.plan?.name ||"Abonnement HKids"}</p>
+ <p className="text-sm font-bold text-surface-400 uppercase">{t('subscriptionsCurrentPlan')}</p>
+ <p className="text-lg font-black text-foreground">{currentSubscription?.plan?.name || 'HKids'}</p>
  </div>
  <div>
- <p className="text-sm font-bold text-surface-400 uppercase">Prochain Renouvellement</p>
- <p className="text-lg font-black text-foreground">{subscriptionEndsAt ? subscriptionEndsAt.toLocaleDateString('fr-FR') : '-'}</p>
+ <p className="text-sm font-bold text-surface-400 uppercase">{t('subscriptionsNextRenewal')}</p>
+ <p className="text-lg font-black text-foreground">{subscriptionEndsAt ? subscriptionEndsAt.toLocaleDateString(language === 'ar' ? 'ar-EG' : language === 'en' ? 'en-GB' : 'fr-FR') : '-'}</p>
  </div>
  </div>
 
  <Button onClick={() => navigate('/parent')} variant="primary" size="lg" className="rounded-full shadow-xl shadow-emerald-500/20 bg-emerald-500 hover:bg-emerald-600 border-none font-black text-white px-12">
- Continuer vers la bibliothèque
+ {t('subscriptionsContinueLibrary')}
  </Button>
  </motion.div>
  </div>
@@ -394,9 +396,9 @@ function Subscriptions() {
  <div className="w-20 h-20 bg-amber-100 text-amber-500 rounded-full flex items-center justify-center mx-auto mb-6">
  <InfoIcon className="w-10 h-10" />
  </div>
- <h1 className="text-3xl font-black text-foreground mb-4">Paiement Annulé</h1>
- <p className="text-foreground-secondary font-medium mb-8">Vous n'avez pas été débité. Vous pouvez choisir une formule quand vous serez prêt.</p>
- <Button onClick={() => setViewState('plans')} variant="primary" className="rounded-full px-8 shadow-lg">Voir les offres</Button>
+ <h1 className="text-3xl font-black text-foreground mb-4">{t('subscriptionsPaymentCancelled')}</h1>
+ <p className="text-foreground-secondary font-medium mb-8">{t('subscriptionsPaymentCancelledBody')}</p>
+ <Button onClick={() => setViewState('plans')} variant="primary" className="rounded-full px-8 shadow-lg">{t('subscriptionsViewOffers')}</Button>
  </motion.div>
  </div>
  );
@@ -409,9 +411,9 @@ function Subscriptions() {
  <div className="w-20 h-20 bg-rose-100 text-rose-500 rounded-full flex items-center justify-center mx-auto mb-6">
  <XIcon className="w-10 h-10" />
  </div>
- <h1 className="text-3xl font-black text-foreground mb-4">Erreur</h1>
+ <h1 className="text-3xl font-black text-foreground mb-4">{t('subscriptionsErrorTitle')}</h1>
  <p className="text-foreground-secondary font-medium mb-8">{errorMessage}</p>
- <Button onClick={() => setViewState('plans')} variant="outline" className="rounded-full px-8 border-border font-bold">Retour aux abonnements</Button>
+ <Button onClick={() => setViewState('plans')} variant="outline" className="rounded-full px-8 border-border font-bold">{t('subscriptionsBackToPlans')}</Button>
  </motion.div>
  </div>
  );
@@ -432,22 +434,22 @@ function Subscriptions() {
  </Link>
  <div className="hidden md:flex gap-4">
  <div className="flex items-center gap-2 text-sm font-bold text-foreground-muted">
- <ShieldIcon className="w-4 h-4 text-emerald-500"/> Paiements Sécurisés
+ <ShieldIcon className="w-4 h-4 text-emerald-500"/> {t('subscriptionsSecurePayments')}
  </div>
  </div>
  </div>
  </header>
 
- <main className="relative">
+ <main id="main-content" className="relative">
  {/* HERO SECTION */}
  <section className="pt-16 pb-12 px-4 text-center max-w-4xl mx-auto">
  <motion.div initial={{opacity: 0, y: 20}} animate={{opacity: 1, y: 0}}>
- <Badge variant="soft" className="bg-primary-100 text-foreground-700 font-bold uppercase tracking-widest mb-6">Abonnements HKids</Badge>
+ <Badge variant="soft" className="bg-primary-100 text-foreground-700 font-bold uppercase tracking-widest mb-6">{t('subscriptionsHeroBadge')}</Badge>
  <h1 className="text-4xl md:text-6xl font-black text-foreground leading-tight mb-6">
- Investissez dans l'imagination de vos enfants.
+ {t('subscriptionsHeroTitle')}
  </h1>
  <p className="text-lg md:text-xl text-foreground-secondary font-medium max-w-2xl mx-auto">
- Des histoires personnalisées illimitées, le clonage vocal, et des fonctionnalités éducatives premium. Annulable à tout moment.
+ {t('subscriptionsHeroBody')}
  </p>
  </motion.div>
  </section>
@@ -455,8 +457,8 @@ function Subscriptions() {
  {!isKidAccount && !hasUsableSubscription && isAuthenticated && (
  <section className="max-w-3xl mx-auto px-4 mb-12">
  <Card className="rounded-[2rem] p-8 border-2 border-dashed border-primary-200 bg-primary-50/40 text-center">
- <Badge variant="soft" className="mb-4 bg-primary-100 text-foreground-800 font-bold">Essai gratuit</Badge>
- <h2 className="text-2xl font-black mb-3">Testez HKids pendant 7 jours</h2>
+ <Badge variant="soft" className="mb-4 bg-primary-100 text-foreground-800 font-bold">{t('subscriptionsFreeTrialBadge')}</Badge>
+ <h2 className="text-2xl font-black mb-3">{t('subscriptionsFreeTrialTitle')}</h2>
  <p className="text-foreground-secondary font-medium mb-6">3 livres premium inclus, sans carte bancaire.</p>
  <Button onClick={handleStartTrial} disabled={startingTrial} variant="primary" className="rounded-full px-8 font-black">
  {startingTrial ? 'Activation...' : "Démarrer l'essai gratuit"}

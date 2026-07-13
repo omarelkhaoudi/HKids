@@ -1,5 +1,7 @@
+import { memo } from 'react';
 import { motion } from 'framer-motion';
 import { getImageUrl } from '../../utils/imageUrl';
+import { useReducedMotion } from '../../hooks/useReducedMotion';
 import { PlayIcon, HeartIcon, DownloadIcon, SparklesIcon, ClockIcon, ShieldIcon } from '../Icons';
 
 function formatDuration(seconds = 0) {
@@ -15,7 +17,7 @@ const SIZE_MAP = {
   poster: 'relative h-80 w-56 md:h-96 md:w-64 shrink-0',
 };
 
-export function KidsMediaCard({
+export const KidsMediaCard = memo(function KidsMediaCard({
   book,
   variant = 'carousel',
   hideTitle = true,
@@ -28,12 +30,16 @@ export function KidsMediaCard({
   onDownload,
   className = '',
 }) {
+  const reducedMotion = useReducedMotion();
   const sizeClass = SIZE_MAP[variant] || SIZE_MAP.carousel;
+  const hoverMotion = reducedMotion ? {} : {
+    whileHover: { y: -10, scale: variant === 'poster' ? 1.02 : 1 },
+    whileTap: { scale: 0.98 },
+  };
 
   return (
     <motion.div
-      whileHover={{ y: -10, scale: variant === 'poster' ? 1.02 : 1 }}
-      whileTap={{ scale: 0.98 }}
+      {...hoverMotion}
       className={`group cursor-pointer overflow-hidden rounded-[2rem] bg-surface-secondary shadow-lg transition-shadow hover:shadow-2xl border-4 border-white/30 dark:border-white/10 ${sizeClass} ${className}`}
       onClick={() => onPlay?.(book)}
       aria-label={book.title}
@@ -124,4 +130,4 @@ export function KidsMediaCard({
       )}
     </motion.div>
   );
-}
+});

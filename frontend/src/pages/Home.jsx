@@ -466,6 +466,7 @@ function Home({darkMode, setDarkMode}) {
  )}
  </AnimatePresence>
  </motion.header>
+ <main id="main-content">
  <HeroSection t={t} totalBooks={totalBooks} />
  <BookOfTheWeekSection book={allBooks[0]} t={t} getImageUrl={getImageUrl} imageError={imageError} setImageError={setImageError} />
  <BrowseByAgeSection t={t} selectedAge={selectedAge} setSelectedAge={setSelectedAge} />
@@ -480,6 +481,7 @@ function Home({darkMode, setDarkMode}) {
  newsletterLoading={newsletterLoading} 
  />
  <FooterSection t={t} />
+ </main>
  </div>
  );
 }

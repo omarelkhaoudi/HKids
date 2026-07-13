@@ -19,7 +19,13 @@ Justification détaillée des choix technologiques basée sur la scalabilité, m
 ### 3. [Documentation API](./API_DOCUMENTATION.md)
 Documentation complète de l'API REST avec exemples d'utilisation.
 
-### 4. [Guide de Déploiement](./DEPLOYMENT.md)
+### 4. [Guide Développeur](./DEVELOPER_GUIDE.md)
+Installation, variables d'environnement, tests, contribution et checklist production.
+
+### 5. [Production Readiness](./PRODUCTION_READINESS.md)
+Statut qualité, sécurité, performance et tests.
+
+### 6. [Guide de Déploiement](./DEPLOYMENT.md)
 Instructions pour déployer l'application en développement et en production.
 
 ### 5. [Dashboard Parent Supabase](./PARENT_DASHBOARD_SUPABASE.md)

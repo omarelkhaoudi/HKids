@@ -135,32 +135,36 @@ Default admin credentials:
 - Publication control
 - User management
 
+## Testing & Quality
+
+```bash
+npm run lint          # ESLint
+npm run typecheck     # TypeScript
+npm run test          # Backend + frontend unit tests
+npm run test:e2e      # Playwright E2E
+npm run ci            # lint + typecheck + test + build
+```
+
+See [docs/DEVELOPER_GUIDE.md](./docs/DEVELOPER_GUIDE.md) and [docs/PRODUCTION_READINESS.md](./docs/PRODUCTION_READINESS.md).
+
 ## Documentation
 
 ### Technical Documentation
-- **[docs/LE_LIT_QUI_LIT_GAP_ANALYSIS.md](./docs/LE_LIT_QUI_LIT_GAP_ANALYSIS.md)** - Analyse du nouveau cahier des charges Le Lit Qui Lit
-- **[docs/LE_LIT_QUI_LIT_STEP_BY_STEP_ROADMAP.md](./docs/LE_LIT_QUI_LIT_STEP_BY_STEP_ROADMAP.md)** - Feuille de route fichier par fichier pour le MVP Le Lit Qui Lit
-- **[docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md)** - Architecture technique
-- **[docs/STACK_JUSTIFICATION.md](./docs/STACK_JUSTIFICATION.md)** - Justification du stack
-- **[docs/API_DOCUMENTATION.md](./docs/API_DOCUMENTATION.md)** - Documentation API
-- **[docs/DEPLOYMENT.md](./docs/DEPLOYMENT.md)** - Guide de déploiement
+- **[docs/DEVELOPER_GUIDE.md](./docs/DEVELOPER_GUIDE.md)** - Installation, env vars, tests, contribution
+- **[docs/PRODUCTION_READINESS.md](./docs/PRODUCTION_READINESS.md)** - Production checklist
+- **[docs/ADMIN_PANEL.md](./docs/ADMIN_PANEL.md)** - Admin guide
 
 ## Project Status
 
-**POC lecture avance - nouvelle roadmap produit a cadrer**
+**MVP production-ready — Phases 1 à 6 complétées**
 
-Le projet couvre deja une base importante de lecture numerique, d'administration, de profils parents/enfants, de controle par categories, de suivi de lecture et d'abonnements. Le nouveau cahier des charges "Le Lit Qui Lit" ajoute des exigences majeures qui ne sont pas encore terminees: audio, assistant vocal IA, clonage vocal parental, mode hors connexion, contenus multilingues structures, consentement vocal et experience enfant non lectrice.
+Plateforme complète : lecture enfant, espace parent, admin, IA, voix familiales, offline/sync, abonnements Stripe, RGPD, i18n FR/EN/AR, tests et CI.
 
-Voir l'analyse detaillee: [docs/LE_LIT_QUI_LIT_GAP_ANALYSIS.md](./docs/LE_LIT_QUI_LIT_GAP_ANALYSIS.md).
+Documentation détaillée : [docs/README.md](./docs/README.md)
 
-Base POC deja implementee:
-- ✅ Functional POC with immersive reading interface
-- ✅ Content management back-office
-- ✅ Complete technical documentation
-- ✅ Stack justification
-- ✅ Parent/kid/admin roles
-- ✅ Parent controls by categories
-- ✅ Reading progress and subscription foundation
+- **[docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md)** - Architecture technique
+- **[docs/API_DOCUMENTATION.md](./docs/API_DOCUMENTATION.md)** - Documentation API
+- **[docs/DEPLOYMENT.md](./docs/DEPLOYMENT.md)** - Guide de déploiement
 
 ## Features Implemented
 

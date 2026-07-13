@@ -14,11 +14,11 @@ import Favorites from './pages/Favorites';
 import History from './pages/History';
 import FeatureDetails from './pages/FeatureDetails';
 import StoriesGallery from './pages/StoriesGallery';
-import Subscriptions from './pages/Subscriptions';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { LanguageProvider, useLanguage } from './context/LanguageContext';
 import { ToastProvider } from './components/ToastProvider';
 import ErrorBoundary from './components/ErrorBoundary';
+import { SkipToContent } from './components/SkipToContent';
 import { OfflineStatusBanner } from './components/offline/OfflineStatusBanner';
 import { OfflineSyncBridge } from './components/offline/OfflineSyncBridge';
 import { KidScreenTimeTracker } from './components/kids/KidScreenTimeTracker';
@@ -38,6 +38,7 @@ const KidsAIStories = lazy(() => import('./pages/KidsAIStories'));
 const KidsLearning = lazy(() => import('./pages/KidsLearning'));
 const KidsListen = lazy(() => import('./pages/KidsListen'));
 const KidsAudioLibrary = lazy(() => import('./pages/KidsAudioLibrary'));
+const Subscriptions = lazy(() => import('./pages/Subscriptions'));
 
 const DEFAULT_ANDROID_KIOSK_IDLE_MS = 10 * 60 * 1000;
 
@@ -173,6 +174,7 @@ function App() {
         <AuthProvider>
           <ToastProvider>
             <div className={darkMode ? 'dark' : ''}>
+              <SkipToContent />
               <AndroidKioskIdleReset />
               <Routes>
                 <Route path="/" element={<Home darkMode={darkMode} setDarkMode={setDarkMode} />} />
@@ -183,7 +185,7 @@ function App() {
                 <Route path="/stories" element={<StoriesGallery />} />
                 <Route path="/content-library" element={<RequireAuth><ContentLibraryHome /></RequireAuth>} />
                 <Route path="/content-library/:categoryId" element={<RequireAuth><ContentCategoryContents /></RequireAuth>} />
-                <Route path="/abonnements" element={<Subscriptions />} />
+                <Route path="/abonnements" element={<LazyRoute><Subscriptions /></LazyRoute>} />
                 <Route path="/features/:featureId" element={<FeatureDetails />} />
                 <Route path="/admin/login" element={<AdminLogin />} />
                 <Route path="/admin/signup" element={<SignUp />} />
