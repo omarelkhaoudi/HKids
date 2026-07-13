@@ -1,5 +1,7 @@
 # Le Lit Qui Lit - Analyse du cahier des charges
 
+> **Note (2026-07-13)** : Ce document date de juillet 2026 et décrit l'état **avant** les phases 1–7. Pour l'audit actuel, voir [`CAHIER_DES_CHARGES_AUDIT.md`](./CAHIER_DES_CHARGES_AUDIT.md) et [`PRODUCTION_LAUNCH.md`](./PRODUCTION_LAUNCH.md).
+
 Version: 1.0  
 Date: 2026-07-01  
 Projet: H-Kids / HKids

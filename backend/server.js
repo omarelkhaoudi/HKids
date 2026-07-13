@@ -9,6 +9,7 @@ import express from 'express';
 import cors from 'cors';
 import path from 'path';
 import fs from 'fs-extra';
+import { exec } from 'child_process';
 import { fileURLToPath } from 'url';
 import jwt from 'jsonwebtoken';
 import { getDatabase, initDatabase } from './database/init.js';

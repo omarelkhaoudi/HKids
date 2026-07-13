@@ -164,3 +164,16 @@ Apres deploiement:
 - Ouvrir `/parent/login` pour verifier le dashboard parent.
 - Tester un livre PDF/image dans `/book/:id`.
 - Verifier que seuls les livres publies apparaissent cote lecture.
+
+### Checklist pre-lancement
+
+Voir [PRODUCTION_LAUNCH.md](./PRODUCTION_LAUNCH.md) pour la checklist complete (secrets, Stripe, Supabase, IA, monitoring).
+
+Commandes de validation locale avant deploiement:
+
+```bash
+npm run ci
+npm run test:e2e
+```
+
+Variables supplementaires (Stripe, IA, voix) — voir `backend/env.example` et [DEVELOPER_GUIDE.md](./DEVELOPER_GUIDE.md).

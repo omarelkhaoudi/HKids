@@ -160,7 +160,7 @@ See [docs/DEVELOPER_GUIDE.md](./docs/DEVELOPER_GUIDE.md) and [docs/PRODUCTION_RE
 
 Plateforme complète : lecture enfant, espace parent, admin, IA, voix familiales, offline/sync, abonnements Stripe, RGPD, i18n FR/EN/AR, tests et CI.
 
-Documentation détaillée : [docs/README.md](./docs/README.md)
+**Lancement production :** [docs/PRODUCTION_LAUNCH.md](./docs/PRODUCTION_LAUNCH.md)
 
 - **[docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md)** - Architecture technique
 - **[docs/API_DOCUMENTATION.md](./docs/API_DOCUMENTATION.md)** - Documentation API

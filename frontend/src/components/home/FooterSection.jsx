@@ -70,10 +70,9 @@ export default function FooterSection({ t }) {
             <div>
               <h4 className="font-bold text-surface-900 mb-4">Légal</h4>
               <ul className="space-y-3 text-sm text-surface-500 font-medium">
-                <li><span className="cursor-pointer hover:text-foreground-600 transition-colors">Confidentialité</span></li>
-                <li><span className="cursor-pointer hover:text-foreground-600 transition-colors">Conditions d'utilisation</span></li>
-                <li><span className="cursor-pointer hover:text-foreground-600 transition-colors">CGU</span></li>
-                <li><span className="cursor-pointer hover:text-foreground-600 transition-colors">Politique cookies</span></li>
+                <li><Link to="/parent/login" className="hover:text-foreground-600 transition-colors">Confidentialité</Link></li>
+                <li><Link to="/abonnements" className="hover:text-foreground-600 transition-colors">Conditions d'utilisation</Link></li>
+                <li><Link to="/parent/login" className="hover:text-foreground-600 transition-colors">Centre RGPD</Link></li>
               </ul>
             </div>
           </div>

@@ -90,7 +90,9 @@ SKIP_SERVER_START=1
 4. Migration JWT vers httpOnly cookies (optionnel, renforce XSS)
 5. Tests charge / monitoring (Sentry, Datadog)
 
-## Avancement estimé
+## Avancement estimé (Phase 7)
 
-- **Phase 6** : ~88%
-- **Projet global** : ~97%
+- **Phase 7** : audit, nettoyage, optimisation, validation — **terminée**
+- **Projet global** : ~97 %
+- **Conformité cahier des charges** : ~85 % (détail dans [PRODUCTION_LAUNCH.md](./PRODUCTION_LAUNCH.md))
+- **Verdict** : **Prêt pour production staged** (config env + catalogue contenu requis)
