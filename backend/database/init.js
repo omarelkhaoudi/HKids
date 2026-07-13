@@ -432,6 +432,20 @@ export async function initDatabase() {
         created_at TIMESTAMPTZ DEFAULT NOW(),
         updated_at TIMESTAMPTZ DEFAULT NOW()
       );`,
+      `CREATE TABLE IF NOT EXISTS support_tickets (
+        id BIGSERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        subject TEXT NOT NULL,
+        message TEXT NOT NULL,
+        category TEXT NOT NULL DEFAULT 'general',
+        status TEXT NOT NULL DEFAULT 'open',
+        priority TEXT NOT NULL DEFAULT 'normal',
+        admin_note TEXT,
+        assigned_admin_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+        created_at TIMESTAMPTZ DEFAULT NOW(),
+        updated_at TIMESTAMPTZ DEFAULT NOW(),
+        resolved_at TIMESTAMPTZ
+      );`,
       `CREATE TABLE IF NOT EXISTS voice_narrations (
         id SERIAL PRIMARY KEY,
         user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
@@ -712,6 +726,8 @@ export async function initDatabase() {
     await client.query(`CREATE INDEX IF NOT EXISTS security_audit_logs_action_idx ON security_audit_logs(action, created_at DESC)`);
     await client.query(`CREATE INDEX IF NOT EXISTS content_reports_status_idx ON content_reports(status, priority, created_at DESC)`);
     await client.query(`CREATE INDEX IF NOT EXISTS content_reports_target_idx ON content_reports(target_type, target_id, created_at DESC)`);
+    await client.query(`CREATE INDEX IF NOT EXISTS support_tickets_status_idx ON support_tickets(status, priority, created_at DESC)`);
+    await client.query(`CREATE INDEX IF NOT EXISTS support_tickets_user_idx ON support_tickets(user_id, created_at DESC)`);
     await client.query(`CREATE INDEX IF NOT EXISTS books_moderation_idx ON books(moderation_status, created_at DESC)`);
     await client.query(`CREATE INDEX IF NOT EXISTS generated_stories_moderation_idx ON generated_stories(moderation_status, created_at DESC)`);
     await client.query(`CREATE UNIQUE INDEX IF NOT EXISTS voice_narrations_unique_idx ON voice_narrations(voice_profile_id, book_id, text_hash)`);

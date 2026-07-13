@@ -37,7 +37,7 @@ function BookManagement() {
 });
  
  const [filters, setFilters] = useState({
- search: '', status: 'all', access: 'all', language: 'all', category_id: 'all', flag: 'all'
+ search: '', status: 'all', access: 'all', language: 'all', category_id: 'all', flag: 'all', moderation: 'all'
 });
  
  const [selectedBook, setSelectedBook] = useState(null); // Used for Side Drawer Preview
@@ -176,7 +176,9 @@ function BookManagement() {
  const matchesStatus = filters.status === 'all' || (filters.status === 'published' && isPublished) || (filters.status === 'draft' && !isPublished);
  const matchesAccess = filters.access === 'all' || (filters.access === 'premium' && isPremium) || (filters.access === 'free' && !isPremium);
  const matchesCategory = filters.category_id === 'all' || String(book.category_id || '') === String(filters.category_id);
- return matchesSearch && matchesStatus && matchesAccess && matchesCategory;
+ const moderationStatus = book.moderation_status || 'approved';
+ const matchesModeration = filters.moderation === 'all' || moderationStatus === filters.moderation;
+ return matchesSearch && matchesStatus && matchesAccess && matchesCategory && matchesModeration;
 });
 
  return (
@@ -217,6 +219,16 @@ function BookManagement() {
  <option value="all">Tous statuts</option>
  <option value="published">Publiés</option>
  <option value="draft">Brouillons</option>
+ </select>
+ <select
+ value={filters.moderation}
+ onChange={(e) => setFilters({...filters, moderation: e.target.value})}
+ className="bg-surface-secondary border border-border rounded-xl px-4 py-2 font-bold text-sm focus:outline-none focus:border-primary-400"
+ >
+ <option value="all">Toute modération</option>
+ <option value="pending">En attente</option>
+ <option value="approved">Approuvé</option>
+ <option value="rejected">Rejeté</option>
  </select>
  <select
  value={filters.category_id}
@@ -279,6 +291,12 @@ function BookManagement() {
  {filteredBooks.map((book) => {
  const isPublished = book.is_published === true || book.is_published === 1;
  const isPremium = book.is_premium === true || book.is_premium === 1;
+ const moderationStatus = book.moderation_status || 'approved';
+ const moderationTone = moderationStatus === 'pending'
+ ? 'bg-amber-100 text-amber-800'
+ : moderationStatus === 'rejected'
+ ? 'bg-rose-100 text-rose-800'
+ : 'bg-emerald-100 text-emerald-800';
  const isSelected = selectedItems.includes(book.id);
  const imageUrl = book.cover_image ? getImageUrl(book.cover_image) : null;
  
@@ -304,6 +322,9 @@ function BookManagement() {
  <td className="p-4">
  <Badge variant="soft" className={`font-bold ${isPublished ? 'bg-emerald-100 text-emerald-800' : 'bg-surface-secondary text-foreground-secondary'}`}>
  {isPublished ? 'Publié' : 'Brouillon'}
+ </Badge>
+ <Badge variant="soft" className={`font-bold ml-2 ${moderationTone}`}>
+ {moderationStatus === 'pending' ? 'Modération' : moderationStatus === 'rejected' ? 'Rejeté' : 'Validé'}
  </Badge>
  {isPremium && <Badge variant="soft" className="bg-violet-100 text-violet-800 font-bold ml-2">Premium</Badge>}
  </td>

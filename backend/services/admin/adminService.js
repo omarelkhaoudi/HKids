@@ -17,6 +17,8 @@ export const ADMIN_PERMISSIONS = Object.freeze([
   'subscriptions.manage',
   'reports.read',
   'reports.manage',
+  'support.read',
+  'support.manage',
   'audit.read',
   'permissions.manage',
   'search.use'
