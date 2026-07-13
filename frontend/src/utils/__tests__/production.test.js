@@ -74,6 +74,8 @@ describe('parent space translations', () => {
     expect(translate('fr', 'parentAnalyticsBookProgress')).toBe('Progression des livres');
     expect(translate('en', 'parentAnalyticsBookProgress')).toBe('Book progress');
     expect(translate('ar', 'parentAnalyticsBookProgress')).toBe('تقدم الكتب');
+    expect(translate('en', 'skipToContent')).toBe('Skip to main content');
+    expect(translate('fr', 'subscriptionsPaymentSuccess')).toBe('Paiement réussi !');
   });
 
   it('interpolates parent profile delete confirmation', () => {

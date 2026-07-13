@@ -9,5 +9,8 @@ export function securityHeaders(req, res, next) {
     res.setHeader('Strict-Transport-Security', 'max-age=15552000; includeSubDomains');
   }
 
+  res.setHeader('Content-Security-Policy', "default-src 'none'; frame-ancestors 'none'");
+  res.setHeader('X-Permitted-Cross-Domain-Policies', 'none');
+
   next();
 }

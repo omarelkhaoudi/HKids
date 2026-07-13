@@ -53,4 +53,5 @@ test('security headers are present on API responses', async () => {
 
   assert.equal(response.headers['x-content-type-options'], 'nosniff');
   assert.equal(response.headers['x-frame-options'], 'DENY');
+  assert.match(response.headers['content-security-policy'] || '', /default-src 'none'/);
 });

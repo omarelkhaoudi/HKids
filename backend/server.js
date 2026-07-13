@@ -35,7 +35,7 @@ import { requestLogger } from './middleware/logger.js';
 import { apiRateLimiter, authRateLimiter, resetRateLimit } from './middleware/rateLimiter.js';
 import { securityHeaders } from './middleware/securityHeaders.js';
 import { sanitizeBody } from './middleware/validator.js';
-import { exec } from 'child_process';
+import { isDevOnlyEndpointEnabled } from './utils/productionGuards.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -303,7 +303,7 @@ app.get('/api/uploads-status', (req, res) => {
 // Reset rate limit endpoint (available in all environments)
 // This helps users who hit rate limits during testing
 app.post('/api/reset-rate-limit', (req, res) => {
-  if (config.nodeEnv === 'production') {
+  if (!isDevOnlyEndpointEnabled(config.nodeEnv)) {
     return res.status(404).json({ error: 'Not found' });
   }
 
