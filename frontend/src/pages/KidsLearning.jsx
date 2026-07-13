@@ -188,7 +188,11 @@ function KidsLearning() {
       loadLearning();
     } catch (error) {
       console.error('Learning submit error:', error);
-      showToast('Réponse impossible à enregistrer', 'error');
+      const serverMessage = error?.response?.data?.error;
+      showToast(
+        getRestrictionMessage(error, serverMessage || 'Réponse impossible à enregistrer'),
+        'error'
+      );
     }
   };
 

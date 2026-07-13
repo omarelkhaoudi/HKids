@@ -194,6 +194,36 @@ function scoreAnswers(questions, answers = []) {
   };
 }
 
+function scoreGameAttempt(content, answers = []) {
+  const gameAnswer = answers.find((entry) => Number(entry.question_id) === 0);
+  const selected = answerValue(gameAnswer?.answer);
+  const selectedIds = Array.isArray(selected) ? selected.map(String) : [];
+  const pairs = Array.isArray(content.metadata?.pairs) ? content.metadata.pairs : [];
+  const expectedIds = pairs.map((pair) => String(pair.id));
+  const matchedCount = expectedIds.filter((id) => selectedIds.includes(id)).length;
+  const maxScore = Math.max(1, expectedIds.length);
+  const success = expectedIds.length > 0 && matchedCount >= expectedIds.length;
+
+  return {
+    score: matchedCount,
+    maxScore,
+    success,
+    evaluatedAnswers: [{
+      question_id: 0,
+      answer: selectedIds,
+      correct: success,
+      expected: expectedIds,
+    }],
+  };
+}
+
+function scoreLearningAttempt(content, answers = []) {
+  if (content.content_type === 'game') {
+    return scoreGameAttempt(content, answers);
+  }
+  return scoreAnswers(content.questions, answers);
+}
+
 async function updateChallengeProgress(pool, kidProfileId, attempt, content) {
   const challengeResult = await pool.query(
     `SELECT ch.*, lr.icon AS reward_icon, lr.name AS reward_name
@@ -392,7 +422,10 @@ router.post('/contents/:id/attempts', verifyToken, async (req, res) => {
     const violation = getContentAccessViolation(policy, learningContentDescriptor(content));
     if (violation) return sendParentalAccessError(res, violation);
 
-    const scoring = scoreAnswers(content.questions, Array.isArray(req.body.answers) ? req.body.answers : []);
+    const scoring = scoreLearningAttempt(
+      content,
+      Array.isArray(req.body.answers) ? req.body.answers : []
+    );
     const rewardPayload = scoring.success && content.reward ? {
       icon: content.reward.icon,
       name: content.reward.name,

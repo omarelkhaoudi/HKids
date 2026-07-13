@@ -88,3 +88,22 @@ test('getContentAccessViolation bypasses category filter for learning content', 
   });
   assert.equal(violation, null);
 });
+
+test('getContentAccessViolation allows learning games when parent allows quiz', () => {
+  const policy = {
+    applies: true,
+    child: { age: 6 },
+    rules: { allowed_content_types: ['quiz'] },
+    explicitCategoryApprovals: false,
+    allowedCategoryIds: [],
+    allowedCategoryNames: [],
+    premiumUnlockedBookIds: [],
+    hasActiveSubscription: false,
+  };
+  const violation = getContentAccessViolation(policy, {
+    source: 'learning',
+    content_type: 'game',
+    id: 1,
+  });
+  assert.equal(violation, null);
+});
