@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { localizeKidCategories } from '../constants/kidCategories';
+import { quickGradientAtIndex } from '../constants/brandTheme';
 import { VoiceAssistant } from '../components/kids/VoiceAssistant';
 import { LitMascot } from '../components/kids/LitMascot';
 import { KidsPageShell } from '../components/kids/KidsPageShell';
@@ -48,10 +49,10 @@ function getMissionText(goal, summary, t) {
 }
 
 const QUICK_LINKS = [
-  { id: 'audio', path: '/kids/audio', emoji: '🎧', labelKey: 'kidsQuickAudio', gradient: 'from-violet-500 to-indigo-600' },
-  { id: 'learning', path: '/kids/learning', emoji: '🎮', labelKey: 'kidsQuickLearning', gradient: 'from-sky-400 to-emerald-500' },
-  { id: 'studio', path: '/kids/story-studio', emoji: '✨', labelKey: 'kidsQuickStudio', gradient: 'from-fuchsia-500 to-primary-500' },
-  { id: 'stories', path: '/kids/ai-stories', emoji: '📖', labelKey: 'kidsQuickStories', gradient: 'from-amber-400 to-rose-500' },
+  { id: 'audio', path: '/kids/audio', emoji: '🎧', labelKey: 'kidsQuickAudio' },
+  { id: 'learning', path: '/kids/learning', emoji: '🎮', labelKey: 'kidsQuickLearning' },
+  { id: 'studio', path: '/kids/story-studio', emoji: '✨', labelKey: 'kidsQuickStudio' },
+  { id: 'stories', path: '/kids/ai-stories', emoji: '📖', labelKey: 'kidsQuickStories' },
 ];
 
 function KidsHome() {
@@ -262,14 +263,14 @@ function KidsHome() {
 
         <section>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {QUICK_LINKS.map((link) => (
+            {QUICK_LINKS.map((link, index) => (
               <motion.button
                 key={link.id}
                 type="button"
                 whileHover={{ scale: 1.04 }}
                 whileTap={{ scale: 0.96 }}
                 onClick={() => navigate(link.path)}
-                className={`rounded-[2rem] bg-gradient-to-br ${link.gradient} p-5 md:p-6 text-white shadow-xl border-4 border-white/40 min-h-[120px] flex flex-col items-center justify-center gap-2`}
+                className={`rounded-[2rem] bg-gradient-to-br ${quickGradientAtIndex(index)} p-5 md:p-6 text-white shadow-xl border-4 border-white/40 min-h-[120px] flex flex-col items-center justify-center gap-2`}
                 aria-label={t(link.labelKey)}
               >
                 <span className="text-4xl" aria-hidden="true">{link.emoji}</span>

@@ -5,7 +5,7 @@ import LanguageSelector from '../../components/LanguageSelector';
 
 export default function FooterSection({ t }) {
   return (
-    <footer className="bg-white pt-16 pb-8 border-t border-surface-100 mt-auto relative z-10">
+    <footer className="bg-background pt-16 pb-8 border-t border-border mt-auto relative z-10 dark:bg-surface-900">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         <div className="flex flex-col lg:flex-row justify-between gap-12 lg:gap-8 mb-12">
           

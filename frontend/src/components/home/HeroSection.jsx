@@ -67,15 +67,15 @@ export default function HeroSection({ t, totalBooks }) {
 
             <div className="flex flex-wrap items-center justify-center lg:justify-start gap-6 text-sm font-semibold text-foreground-muted">
               <div className="flex items-center gap-2">
-                <div className="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center text-green-600">✓</div>
+                <div className="w-5 h-5 rounded-full bg-secondary-100 flex items-center justify-center text-secondary-600">✓</div>
                 {t.trustSecure}
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-5 h-5 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">✓</div>
+                <div className="w-5 h-5 rounded-full bg-primary-100 flex items-center justify-center text-primary-600">✓</div>
                 {t.trustEducational}
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-5 h-5 rounded-full bg-orange-100 flex items-center justify-center text-orange-600">✓</div>
+                <div className="w-5 h-5 rounded-full bg-accent-100 flex items-center justify-center text-accent-600">✓</div>
                 {t.trustNoAds}
               </div>
             </div>

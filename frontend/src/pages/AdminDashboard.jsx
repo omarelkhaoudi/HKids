@@ -21,6 +21,7 @@ import {
  CheckIcon, BrainIcon, SearchIcon, BellIcon, ChevronLeftIcon, PlusIcon,
  XIcon, ShieldIcon, WarningIcon, MailIcon
 } from '../components/Icons';
+import { MagicalBackground } from '../components/layout/PlatformShell';
 import {Avatar} from '../components/ui';
 
 // QUICK ACTIONS FAB COMPONENT
@@ -84,10 +85,10 @@ const QuickActions = () => {
  <div className="bg-primary-50 p-2 rounded-lg text-foreground-600 shrink-0"><BookIcon className="w-4 h-4"/></div> Créer une histoire
  </Link>
  <Link to="/admin/categories" onClick={() => setIsOpen(false)} className="flex items-center gap-3 w-full p-3 rounded-xl hover:bg-surface-secondary text-foreground-secondary font-medium transition-colors whitespace-nowrap">
- <div className="bg-emerald-50 p-2 rounded-lg text-emerald-600 shrink-0"><TagIcon className="w-4 h-4"/></div> Ajouter une catégorie
+ <div className="bg-secondary-50 p-2 rounded-lg text-secondary-600 shrink-0"><TagIcon className="w-4 h-4"/></div> Ajouter une catégorie
  </Link>
  <Link to="/admin/subscriptions" onClick={() => setIsOpen(false)} className="flex items-center gap-3 w-full p-3 rounded-xl hover:bg-surface-secondary text-foreground-secondary font-medium transition-colors whitespace-nowrap">
- <div className="bg-blue-50 p-2 rounded-lg text-blue-600 shrink-0"><CheckIcon className="w-4 h-4"/></div> Gérer les abonnements
+ <div className="bg-accent-50 p-2 rounded-lg text-accent-600 shrink-0"><CheckIcon className="w-4 h-4"/></div> Gérer les abonnements
  </Link>
  </motion.div>
  )}
@@ -99,7 +100,7 @@ const QuickActions = () => {
  <button 
  ref={buttonRef}
  onClick={() => setIsOpen(!isOpen)}
- className="fixed bottom-6 right-6 md:bottom-8 md:right-8 z-[9990] w-14 h-14 bg-surface-900 text-white rounded-full flex items-center justify-center shadow-[0_8px_30px_rgb(0,0,0,0.12)] hover:scale-105 transition-transform"
+ className="fixed bottom-6 right-6 md:bottom-8 md:right-8 z-[9990] w-14 h-14 bg-primary-500 text-white rounded-full flex items-center justify-center shadow-glow hover:scale-105 transition-transform"
  >
  <motion.div animate={{rotate: isOpen ? 45 : 0}}><PlusIcon className="w-6 h-6" /></motion.div>
  </button>
@@ -278,13 +279,14 @@ function AdminDashboard() {
  const isActive = (path) => location.pathname === path;
 
  return (
- <div className="min-h-screen bg-[#fafafa] text-foreground flex overflow-hidden font-sans">
+ <div className="min-h-screen bg-gradient-home text-foreground flex overflow-hidden font-sans relative">
+ <MagicalBackground preset="platform" />
  
  {/* SIDEBAR */}
  <motion.aside
  initial={false}
  animate={{width: isSidebarOpen ? 260 : 72}}
- className="bg-card border-r border-border z-40 hidden md:flex flex-col h-screen shrink-0 transition-all duration-300"
+ className="bg-card border-r border-border z-40 hidden md:flex flex-col h-screen shrink-0 transition-all duration-300 relative"
  >
  <div className="h-16 flex items-center justify-between px-4 border-b border-border">
  {isSidebarOpen && <span className="font-black text-xl tracking-tight">HKids <span className="text-foreground-500">Admin</span></span>}
@@ -305,7 +307,7 @@ function AdminDashboard() {
  to={item.to}
  className={`group flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium transition-all ${
  active
- ? 'bg-surface-900 text-white shadow-md'
+ ? 'brand-nav-active'
  : 'text-foreground-secondary hover:bg-surface-secondary hover:text-foreground'
 }`}
  title={!isSidebarOpen ? item.label : ''}
@@ -325,7 +327,7 @@ function AdminDashboard() {
  <ChevronLeftIcon className={`w-5 h-5 transition-transform ${!isSidebarOpen ? 'rotate-180' : ''}`} />
  </button>
  <div className={`flex items-center gap-3 p-2 rounded-xl bg-surface-secondary border border-border ${!isSidebarOpen && 'justify-center'}`}>
- <Avatar fallback={user.username.charAt(0).toUpperCase()} className="w-8 h-8 bg-gradient-to-br from-primary-400 to-violet-500 text-white font-bold shrink-0" />
+ <Avatar fallback={user.username.charAt(0).toUpperCase()} className="w-8 h-8 bg-gradient-to-br from-primary-400 to-secondary-500 text-white font-bold shrink-0" />
  {isSidebarOpen && (
  <div className="overflow-hidden flex-1">
  <p className="text-sm font-bold text-foreground truncate">{user.username}</p>
@@ -337,7 +339,7 @@ function AdminDashboard() {
  </motion.aside>
 
  {/* MAIN LAYOUT */}
- <div className="flex-1 flex flex-col h-screen overflow-hidden relative">
+ <div className="flex-1 flex flex-col h-screen overflow-hidden relative z-10">
  
  {/* TOP BAR */}
  <header className="h-16 bg-card/80 backdrop-blur-md border-b border-border flex items-center justify-between px-6 z-30 shrink-0">
@@ -428,7 +430,7 @@ function AdminDashboard() {
  </header>
 
  {/* MAIN SCROLLABLE AREA */}
- <main className="flex-1 overflow-y-auto bg-[#fafafa]">
+ <main className="flex-1 overflow-y-auto bg-background">
  <div className="p-6 md:p-8 w-full max-w-[1600px] mx-auto">
  <Routes>
  <Route index element={<RequireAdminPermission permission="overview.read" permissions={permissions}><AdminOverview /></RequireAdminPermission>} />

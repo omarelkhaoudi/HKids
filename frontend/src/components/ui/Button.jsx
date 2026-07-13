@@ -17,6 +17,7 @@ export function Button({
  secondary:"bg-secondary-500 text-white hover:bg-secondary-600 focus:ring-secondary-500 shadow-md shadow-secondary-500/20",
  danger:"bg-danger-500 text-white hover:bg-danger-600 focus:ring-danger-500 shadow-md shadow-danger-500/20",
  ghost:"bg-transparent text-foreground-secondary hover:bg-surface-secondary dark:hover:bg-surface-800",
+ outline:"bg-card text-primary-600 border-2 border-primary-200 hover:bg-primary-50 hover:border-primary-300 dark:text-primary-300 dark:border-primary-800 dark:hover:bg-primary-900/30 focus:ring-primary-500",
  glass:"bg-card/20 backdrop-blur-md border border-white/30 text-white hover:bg-card/30",
  };
 

@@ -308,7 +308,7 @@ function Home({darkMode, setDarkMode}) {
  const storyPreviewBooks = (allBooks || []).slice(0, 8);
 
  return (
- <div className="min-h-screen bg-card">
+ <div className="min-h-screen bg-gradient-home">
  {/* Header */}
  <motion.header 
  initial={{y: -100, opacity: 0}}

@@ -20,7 +20,8 @@ import {ParentDashboardAnalytics} from '../components/parent/ParentDashboardAnal
 import {ParentHubNav} from '../components/parent/ParentHubNav';
 import {ParentReadingGoalCard} from '../components/parent/ParentReadingGoalCard';
 import {SettingsIcon} from '../components/Icons';
-import {clearKidLocalPrivacyData} from '../services/privacy/privacyStorageService';
+import { PlatformShell } from '../components/layout/PlatformShell';
+import { BRAND_HERO_GRADIENT } from '../constants/brandTheme';
 
 const bedtimeLanguages = CONTENT_LANGUAGES.map((language) => ({
  id: language.id,
@@ -259,7 +260,7 @@ function ParentDashboard() {
  
  if (loading) {
  return (
- <div className="min-h-screen bg-surface-secondary p-8 flex flex-col gap-6">
+ <PlatformShell variant="platform" className="p-8 flex flex-col gap-6">
  <Skeleton className="h-48 w-full rounded-3xl" />
  <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
  <Skeleton className="h-32 w-full rounded-3xl" />
@@ -267,14 +268,14 @@ function ParentDashboard() {
  <Skeleton className="h-32 w-full rounded-3xl" />
  <Skeleton className="h-32 w-full rounded-3xl" />
  </div>
- </div>
+ </PlatformShell>
  );
 }
 
  return (
- <div className="min-h-screen bg-surface-secondary text-foreground font-sans pb-24" dir={isRtl ? 'rtl' : 'ltr'}>
+ <PlatformShell variant="platform" isRtl={isRtl} className="pb-24">
  {/* 1. Dashboard Hero */}
- <div className="relative bg-gradient-to-r from-primary-600 via-secondary-500 to-accent-500 text-white pb-24 pt-8 px-6 md:px-12 overflow-hidden shadow-lg">
+ <div className={`relative bg-gradient-to-r ${BRAND_HERO_GRADIENT} text-white pb-24 pt-8 px-6 md:px-12 overflow-hidden shadow-lg`}>
  {/* Animated background elements */}
  <motion.div animate={{rotate: 360}} transition={{duration: 150, repeat: Infinity, ease: 'linear'}} className="absolute -top-32 -right-32 w-96 h-96 bg-card/10 rounded-full blur-3xl pointer-events-none" />
  <motion.div animate={{rotate: -360}} transition={{duration: 200, repeat: Infinity, ease: 'linear'}} className="absolute -bottom-32 -left-32 w-[500px] h-[500px] bg-card/10 rounded-full blur-3xl pointer-events-none" />
@@ -370,7 +371,7 @@ function ParentDashboard() {
  <Card className="p-6 shadow-floating">
  <h2 className="text-xl font-bold mb-6">{t('parentRulesTitle')}</h2>
  <div className="space-y-6">
- <div className="flex items-center justify-between p-4 bg-surface-secondary /50 rounded-2xl">
+ <div className="flex items-center justify-between p-4 bg-surface-secondary/50 rounded-2xl">
  <div>
  <h4 className="font-bold">{t('parentScreenTime')}</h4>
  <p className="text-sm text-foreground-muted">{t('parentScreenTimeDesc')}</p>
@@ -387,11 +388,11 @@ function ParentDashboard() {
  </div>
 
  <div className="grid grid-cols-2 gap-4">
- <div className="p-4 bg-surface-secondary /50 rounded-2xl">
+ <div className="p-4 bg-surface-secondary/50 rounded-2xl">
  <h4 className="font-bold mb-2">{t('parentQuietStart')}</h4>
  <Input type="time" value={rulesForm.quiet_start_time} onChange={(e) => setRulesForm({...rulesForm, quiet_start_time: e.target.value})} className="w-full font-bold" />
  </div>
- <div className="p-4 bg-surface-secondary /50 rounded-2xl">
+ <div className="p-4 bg-surface-secondary/50 rounded-2xl">
  <h4 className="font-bold mb-2">{t('parentQuietEnd')}</h4>
  <Input type="time" value={rulesForm.quiet_end_time} onChange={(e) => setRulesForm({...rulesForm, quiet_end_time: e.target.value})} className="w-full font-bold" />
  </div>
@@ -458,7 +459,7 @@ function ParentDashboard() {
 
  {/* Sidebar (Right) */}
  <div className="flex flex-col gap-8">
- <div className="bg-gradient-to-br from-gray-900 to-black text-white p-6 rounded-3xl shadow-2xl relative overflow-hidden">
+ <div className={`bg-gradient-to-br ${BRAND_HERO_GRADIENT} text-white p-6 rounded-3xl shadow-2xl relative overflow-hidden`}>
  <div className="absolute top-0 right-0 w-32 h-32 bg-yellow-500/20 rounded-full blur-2xl"></div>
  <Badge variant="glass" className="bg-card/20 text-white border-none font-bold mb-4">
  {dashboardData?.subscription?.status || 'Sans abonnement actif'}
@@ -505,7 +506,7 @@ function ParentDashboard() {
  </div>
  <div className="flex gap-3 pt-4">
  <Button variant="ghost" className="flex-1" onClick={() => setShowAccountModal(false)}>{t('parentCancel')}</Button>
- <Button variant="primary" className="flex-1 bg-green-500 hover:bg-green-600 text-white" onClick={handleCreateAccount}>{t('parentCreateAccount')}</Button>
+ <Button variant="primary" className="flex-1" onClick={handleCreateAccount}>{t('parentCreateAccount')}</Button>
  </div>
  </div>
  </motion.div>
@@ -517,7 +518,7 @@ function ParentDashboard() {
  isOpen={showSettingsModal}
  onClose={() => setShowSettingsModal(false)}
  />
- </div>
+ </PlatformShell>
  );
 }
 
