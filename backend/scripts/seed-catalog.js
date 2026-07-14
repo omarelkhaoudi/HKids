@@ -1,6 +1,7 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import fs from 'fs-extra';
+import '../config/env.js';
 import { initDatabase, getDatabase } from '../database/init.js';
 import { CATALOG } from '../content/catalog.js';
 import { renderCoverSvg, renderPageSvg } from '../content/svgAssets.js';

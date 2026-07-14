@@ -4,7 +4,8 @@ const configuredApiUrl = import.meta.env.VITE_API_URL?.replace(/\/+$/, '');
 
 function resolveDefaultApiUrl() {
   if (configuredApiUrl) return configuredApiUrl;
-  if (import.meta.env.DEV) return 'http://localhost:3000';
+  // Dev: relative /api URLs go through the Vite proxy (see vite.config.js).
+  if (import.meta.env.DEV) return '';
   if (Capacitor.isNativePlatform()) return '';
   return globalThis.location?.origin || '';
 }
