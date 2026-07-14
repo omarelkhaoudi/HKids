@@ -52,6 +52,9 @@ Intégration tablette, kiosk logiciel, offline natif, commandes build et signatu
 ### 10b. [Mode kiosk Android](./ANDROID_KIOSK.md)
 Kiosk logiciel vs Lock Task / Device Owner, checklist démo et limites connues.
 
+### 10c. [Catalogue contenu réel](./CONTENT_CATALOG.md)
+Seed du catalogue démo (histoires SVG, comptines TTS, multilingue FR/EN/AR).
+
 ### 11. [Rapport Android Release](./ANDROID_RELEASE_REPORT.md)
 État de préparation production Android, checklist tablette et blocages environnement.
 
