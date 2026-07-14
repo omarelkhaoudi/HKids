@@ -135,7 +135,7 @@ function KidsHome() {
     !item.completed && Number(item.progress_percent || 0) > 0
   )) || null;
   const recommendedBooks = getRecommendedBooks(recommendationSections)
-    .filter((book) => !book.language || book.language === language);
+    .filter((book) => !book.resolved_locale || book.resolved_locale === language || book.language === language);
   const featuredBook = continueReading
     ? {
         id: continueReading.book_id,
@@ -185,7 +185,7 @@ function KidsHome() {
             <h1 className="text-xl md:text-2xl font-black text-foreground truncate">
               {greeting} <span className="text-primary-600">{kidName}</span>
             </h1>
-            <p className="text-sm font-bold text-foreground-muted">{t('readyToPlay')}</p>
+            <p className="hidden sm:block text-sm font-bold text-foreground-muted">{t('readyToPlay')}</p>
           </div>
         </div>
         <div className="flex items-center gap-3 shrink-0">
@@ -197,7 +197,7 @@ function KidsHome() {
       </header>
 
       <div className="relative z-10 px-6 -mt-2 mb-2 sm:hidden flex justify-center">
-        <LitMascot size="large" showBubble message={t('litMascotGreeting')} />
+        <LitMascot size="large" showBubble message={t('litMascotGreetingShort')} />
       </div>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-20 space-y-12 mt-4">
@@ -232,7 +232,7 @@ function KidsHome() {
                   <span className="bg-white/20 backdrop-blur-md px-3 py-1 rounded-full text-white text-xs font-black border border-white/30 uppercase tracking-wider">
                     {featuredBook?.isInProgress ? t('resume') : t('discover')}
                   </span>
-                  <span className="text-white font-black drop-shadow-md">{featuredBook?.progress || 0}%</span>
+                  <span className="hidden sm:inline text-white font-black drop-shadow-md">{featuredBook?.progress || 0}%</span>
                 </div>
                 <div className="h-4 w-full bg-black/40 rounded-full overflow-hidden border border-white/20 backdrop-blur-sm">
                   <motion.div initial={{ width: 0 }} animate={{ width: `${featuredBook?.progress || 0}%` }} className="h-full bg-gradient-to-r from-secondary-400 to-secondary-500 rounded-full" />
@@ -252,10 +252,10 @@ function KidsHome() {
               >
                 🎁
               </motion.div>
-              <h3 className="text-white text-2xl font-black drop-shadow-md mb-2">{t('magicChest')}</h3>
-              <div className="flex items-center gap-2 bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full border border-white/30 text-white font-bold">
+              <h3 className="hidden sm:block text-white text-2xl font-black drop-shadow-md mb-2">{t('magicChest')}</h3>
+              <div className="flex items-center gap-2 bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full border border-white/30 text-white font-bold" aria-label={missionText}>
                 <StarIcon className="w-5 h-5 text-accent-300" />
-                <span>{missionText}</span>
+                <span className="hidden sm:inline">{missionText}</span>
               </div>
             </div>
           </motion.div>
@@ -274,7 +274,7 @@ function KidsHome() {
                 aria-label={t(link.labelKey)}
               >
                 <span className="text-4xl" aria-hidden="true">{link.emoji}</span>
-                <span className="font-black text-lg">{t(link.labelKey)}</span>
+                <span className="font-black text-lg hidden sm:inline">{t(link.labelKey)}</span>
               </motion.button>
             ))}
           </div>
@@ -288,12 +288,13 @@ function KidsHome() {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={handleSurprise}
-            className="group relative flex items-center gap-4 bg-gradient-to-r from-primary-500 via-primary-500 to-accent-500 p-4 pr-8 rounded-[3rem] shadow-2xl border-4 border-white overflow-hidden"
+            className="group relative flex items-center gap-4 bg-gradient-to-r from-primary-500 via-primary-500 to-accent-500 p-4 pr-4 sm:pr-8 rounded-[3rem] shadow-2xl border-4 border-white overflow-hidden"
+            aria-label={t('surpriseMe')}
           >
             <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-inner relative z-10 group-hover:rotate-12 transition-transform">
               <SparklesIcon className="w-8 h-8 text-primary-500" />
             </div>
-            <span className="text-white font-black text-2xl relative z-10 drop-shadow-md">{t('surpriseMe')}</span>
+            <span className="hidden sm:inline text-white font-black text-2xl relative z-10 drop-shadow-md">{t('surpriseMe')}</span>
           </motion.button>
         </div>
 
@@ -313,25 +314,26 @@ function KidsHome() {
             isRtl={isRtl}
             showActions={false}
             hideTitle
+            hideSectionTitle
             onPlay={(book) => navigate(`/kids/read/${book.id}`)}
           />
         ) : (
           <KidsEmptyState
             emoji="📚"
             title={t('emptyBooksTitle')}
-            description={t('emptyBooksDescription')}
+            compact
             actionLabel={t('goToLibrary')}
             onAction={() => navigate('/kids/library')}
           />
         )}
 
         <section id="kids-medals" className="mb-12 scroll-mt-24">
-          <h2 className="text-2xl font-black text-foreground mb-6 pl-2">🏆 {t('yourMedals')}</h2>
+          <h2 className="text-2xl font-black text-foreground mb-6 pl-2"><span aria-hidden="true">🏆</span><span className="hidden sm:inline"> {t('yourMedals')}</span></h2>
           {badges.length === 0 ? (
             <KidsEmptyState
               emoji="🏅"
               title={t('emptyBadgesTitle')}
-              description={t('emptyBadgesDescription')}
+              compact
               actionLabel={t('goToLibrary')}
               onAction={() => navigate('/kids/library')}
             />

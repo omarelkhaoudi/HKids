@@ -111,7 +111,7 @@ function KidsLibrary() {
   };
 
   const favoritesIds = storage.getFavorites();
-  const localizedBooks = books.filter((book) => !book.language || book.language === language);
+  const localizedBooks = books.filter((book) => !book.resolved_locale || book.resolved_locale === language || book.language === language);
   const favoriteBooks = localizedBooks.filter((b) => favoritesIds.includes(b.id));
   const newBooks = [...localizedBooks].sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0)).slice(0, 15);
   const downloadedBooks = localizedBooks.filter((b) => offlineContent.getBookStatus(b.id)?.status === 'downloaded');

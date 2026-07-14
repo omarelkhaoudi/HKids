@@ -7,7 +7,40 @@ const DEFAULT_CONTEXT = {
   readingHistory: [],
   listeningHistory: [],
   readingStats: {},
+  language: 'fr',
 };
+
+const SECTION_LABELS = {
+  fr: {
+    recommended_for_you: ['Recommandé pour toi', "Selon ton âge, ta langue et tes centres d'intérêt."],
+    continue_reading: ['Continue ton histoire', 'Reprends les histoires déjà commencées.'],
+    popular: ['Les plus populaires', 'Les contenus les plus écoutés par les enfants.'],
+    new: ['Nouveautés', 'Les dernières histoires ajoutées.'],
+    because_you_liked: ['Parce que tu as aimé...', 'Des histoires proches de tes favoris et habitudes.'],
+    discovery: ['Découverte', 'Pour explorer de nouveaux univers.'],
+  },
+  en: {
+    recommended_for_you: ['Recommended for you', 'Based on your age, language and interests.'],
+    continue_reading: ['Continue your story', 'Pick up where you left off.'],
+    popular: ['Most popular', 'Top picks among kids.'],
+    new: ['New releases', 'The latest stories added.'],
+    because_you_liked: ['Because you liked...', 'Stories close to your favorites.'],
+    discovery: ['Discovery', 'Explore new worlds.'],
+  },
+  ar: {
+    recommended_for_you: ['مقترح لك', 'حسب عمرك ولغتك واهتماماتك.'],
+    continue_reading: ['تابع قصتك', 'استأنف القصص التي بدأتها.'],
+    popular: ['الأكثر شعبية', 'محتوى يحبه الأطفال.'],
+    new: ['جديد', 'أحدث القصص المضافة.'],
+    because_you_liked: ['لأنك أحببت...', 'قصص قريبة من مفضلاتك.'],
+    discovery: ['اكتشاف', 'استكشف عوالم جديدة.'],
+  },
+};
+
+function sectionLabels(language = 'fr') {
+  const lang = ['fr', 'en', 'ar'].includes(language) ? language : 'fr';
+  return SECTION_LABELS[lang];
+}
 
 function toIdSet(values = []) {
   return new Set(
@@ -22,11 +55,13 @@ function normalizeText(value) {
 }
 
 function normalizeContext(context = {}) {
+  const language = String(context.language || 'fr').trim().toLowerCase().slice(0, 2);
   return {
     favorites: Array.isArray(context.favorites) ? context.favorites : [],
     readingHistory: Array.isArray(context.readingHistory) ? context.readingHistory : [],
     listeningHistory: Array.isArray(context.listeningHistory) ? context.listeningHistory : [],
     readingStats: context.readingStats && typeof context.readingStats === 'object' ? context.readingStats : {},
+    language: ['fr', 'en', 'ar'].includes(language) ? language : 'fr',
   };
 }
 
@@ -267,14 +302,16 @@ export class RecommendationService {
       ))
     );
 
+    const labels = sectionLabels(normalizedContext.language);
+
     return {
       sections: [
-        createSection('recommended_for_you', 'Recommande pour toi', "Selon ton age, ta langue et tes centres d'interet.", sorted),
-        createSection('continue_reading', 'Continue ton histoire', 'Reprends les histoires deja commencees.', continueReading),
-        createSection('popular', 'Les plus populaires', 'Les contenus les plus ecoutes par les enfants.', popular),
-        createSection('new', 'Nouveautes', 'Les dernieres histoires ajoutees.', newest),
-        createSection('because_you_liked', 'Parce que tu as aime...', 'Des histoires proches de tes favoris et habitudes.', becauseLiked),
-        createSection('discovery', 'Decouverte', 'Pour explorer de nouveaux univers.', discovery),
+        createSection('recommended_for_you', ...labels.recommended_for_you, sorted),
+        createSection('continue_reading', ...labels.continue_reading, continueReading),
+        createSection('popular', ...labels.popular, popular),
+        createSection('new', ...labels.new, newest),
+        createSection('because_you_liked', ...labels.because_you_liked, becauseLiked),
+        createSection('discovery', ...labels.discovery, discovery),
       ].filter((section) => section.items.length > 0),
       metadata: {
         provider: aiProvider.name,

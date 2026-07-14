@@ -2,13 +2,13 @@ import { useRef } from 'react';
 import { ChevronLeftIcon, ChevronRightIcon } from '../Icons';
 import { KidsMediaCard } from './KidsMediaCard';
 
-export function KidsSectionHeader({ title, icon: Icon, emoji, isRtl = false, onScrollLeft, onScrollRight }) {
+export function KidsSectionHeader({ title, icon: Icon, emoji, isRtl = false, onScrollLeft, onScrollRight, hideTitle = false }) {
   return (
     <div className="mb-6 flex items-center justify-between px-2 md:px-4">
       <h2 className="flex items-center gap-3 text-2xl md:text-3xl font-black text-foreground">
         {emoji && <span className="text-3xl" aria-hidden="true">{emoji}</span>}
         {Icon && <Icon className="h-8 w-8 text-primary-500" />}
-        {title}
+        {!hideTitle && title && <span>{title}</span>}
       </h2>
       {(onScrollLeft || onScrollRight) && (
         <div className="hidden md:flex items-center gap-3">
@@ -47,6 +47,7 @@ export function KidsBookCarousel({
   onDownload,
   showActions = true,
   hideTitle = true,
+  hideSectionTitle = false,
 }) {
   const carouselRef = useRef(null);
 
@@ -66,6 +67,7 @@ export function KidsBookCarousel({
         icon={icon}
         emoji={emoji}
         isRtl={isRtl}
+        hideTitle={hideSectionTitle}
         onScrollLeft={() => scroll('left')}
         onScrollRight={() => scroll('right')}
       />

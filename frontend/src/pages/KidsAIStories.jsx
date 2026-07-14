@@ -8,13 +8,15 @@ import { getDownloads, offlineContentIds } from '../services/offline/offlineCont
 import { queueOfflineMutation } from '../services/offline/offlineSyncService';
 import { 
   AudioIcon, BookIcon, ChevronLeftIcon, ClockIcon, DownloadIcon, 
-  HeartIcon, HistoryIcon, RefreshIcon, SearchIcon, SparklesIcon, TrashIcon 
+  HeartIcon, HistoryIcon, RefreshIcon, SearchIcon, SparklesIcon, TrashIcon, WarningIcon
 } from '../components/Icons';
 import { Logo } from '../components/Logo';
 import { VoiceAssistant } from '../components/kids/VoiceAssistant';
 import { KidsBottomNav } from '../components/kids/KidsBottomNav';
 import { KidsPageShell } from '../components/kids/KidsPageShell';
 import { useLanguage } from '../context/LanguageContext';
+import { useAuth } from '../context/AuthContext';
+import { ContentReportModal } from '../components/parent/ContentReportModal';
 import {
   BRAND_HERO_GRADIENT, BRAND_SEMANTIC, hubGradientAtIndex, storyGradientAtIndex,
 } from '../constants/brandTheme';
@@ -135,7 +137,8 @@ function speechLanguage(language) {
 }
 
 function KidsAIStories() {
-  const { language, isRtl } = useLanguage();
+  const { language, t, isRtl } = useLanguage();
+  const { user } = useAuth();
   const [kidProfiles, setKidProfiles] = useState([]);
   const [selectedKidProfileId, setSelectedKidProfileId] = useState('');
   const [stories, setStories] = useState([]);
@@ -150,6 +153,8 @@ function KidsAIStories() {
 
   // Celebration state
   const [showCelebration, setShowCelebration] = useState(false);
+  const [showReportModal, setShowReportModal] = useState(false);
+  const canReport = user && (user.role === 'parent' || user.role === 'admin');
 
   const selectedKid = kidProfiles.find((kid) => String(kid.id) === String(selectedKidProfileId));
   const themes = useMemo(() => Array.from(new Set(stories.map((s) => s.theme).filter(Boolean))).sort(), [stories]);
@@ -741,6 +746,16 @@ function KidsAIStories() {
                       <RefreshIcon className="w-5 h-5" />
                       Variante
                     </button>
+                    {canReport && (
+                      <button
+                        type="button"
+                        onClick={() => setShowReportModal(true)}
+                        className="flex-1 min-w-[140px] rounded-2xl bg-accent-50 text-accent-700 dark:bg-accent-900/30 dark:text-accent-400 px-4 py-3 text-sm font-black hover:opacity-80 transition flex items-center justify-center gap-2"
+                      >
+                        <WarningIcon className="w-5 h-5" />
+                        {t('reportContentAction')}
+                      </button>
+                    )}
                   </div>
                 </div>
               </motion.article>
@@ -749,6 +764,13 @@ function KidsAIStories() {
         </main>
       </div>
       <VoiceAssistant />
+      <ContentReportModal
+        isOpen={showReportModal}
+        onClose={() => setShowReportModal(false)}
+        targetType="generated_story"
+        targetId={selectedStory?.id}
+        targetTitle={selectedStory?.title}
+      />
     </KidsPageShell>
   );
 }
