@@ -1,4 +1,5 @@
 import {useEffect, useMemo, useState} from 'react';
+import {useLanguage} from '../context/LanguageContext';
 import {Link, useNavigate} from 'react-router-dom';
 import {motion, AnimatePresence} from 'framer-motion';
 import {generatedStoriesAPI} from '../api/generatedStories';
@@ -24,10 +25,16 @@ const themeOptionDefs = [
  {id: 'nature', label: 'Nature', pictogram: '🌿'},
  {id: 'amitie', label: 'Amitié', pictogram: '🤝'}
 ];
-const themeOptions = themeOptionDefs.map((theme, index) => ({
- ...theme,
- gradient: storyGradientAtIndex(index),
-}));
+const THEME_LABEL_KEYS = {
+ aventure: 'studioTheme_adventure',
+ animaux: 'studioTheme_animals',
+ espace: 'studioTheme_space',
+ princesses: 'studioTheme_princesses',
+ dinosaures: 'studioTheme_dinosaurs',
+ magie: 'studioTheme_magic',
+ nature: 'studioTheme_nature',
+ amitie: 'studioTheme_friendship',
+};
 
 const characterOptions = [
  {id: 'un dragon', label: 'Dragon', pictogram: '🐉'},
@@ -138,10 +145,19 @@ const Confetti = () => {
 
 function KidsStoryStudio() {
  const {user} = useAuth();
+ const {t} = useLanguage();
  const navigate = useNavigate();
- 
+ const themeOptions = useMemo(
+  () => themeOptionDefs.map((theme, index) => ({
+   ...theme,
+   label: t(THEME_LABEL_KEYS[theme.id] || theme.id),
+   gradient: storyGradientAtIndex(index),
+  })),
+  [t]
+ );
+
  const [form, setForm] = useState({
- theme: themeOptions[0].id,
+ theme: themeOptionDefs[0].id,
  estimated_duration_minutes: 5,
  educational_value: 'friendship'
 });

@@ -8,6 +8,7 @@ export function KidsEmptyState({
   actionLabel,
   onAction,
   className = '',
+  compact = false,
 }) {
   return (
     <motion.div
@@ -16,12 +17,12 @@ export function KidsEmptyState({
       className={`w-full rounded-[2rem] bg-white/80 dark:bg-surface-800/80 border border-surface-200 dark:border-surface-700 p-10 md:p-12 text-center shadow-sm ${className}`}
     >
       <div className="text-6xl mb-4" aria-hidden="true">{emoji}</div>
-      <h3 className="text-2xl font-black text-foreground mb-2">{title}</h3>
-      {description && (
+      {title && <h3 className={`font-black text-foreground mb-2 ${compact ? 'text-xl' : 'text-2xl'}`}>{title}</h3>}
+      {!compact && description && (
         <p className="text-surface-500 font-bold mb-6 max-w-md mx-auto">{description}</p>
       )}
       {actionLabel && onAction && (
-        <KidsButton onClick={onAction}>{actionLabel}</KidsButton>
+        <KidsButton onClick={onAction}>{compact ? '📚' : actionLabel}</KidsButton>
       )}
     </motion.div>
   );

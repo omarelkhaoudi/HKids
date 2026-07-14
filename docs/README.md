@@ -49,6 +49,9 @@ Audit, export et téléchargement RGPD, suppression définitive, stockage local,
 ### 10. [Android Capacitor](./ANDROID_CAPACITOR.md)
 Intégration tablette, kiosk logiciel, offline natif, commandes build et signature release.
 
+### 10b. [Mode kiosk Android](./ANDROID_KIOSK.md)
+Kiosk logiciel vs Lock Task / Device Owner, checklist démo et limites connues.
+
 ### 11. [Rapport Android Release](./ANDROID_RELEASE_REPORT.md)
 État de préparation production Android, checklist tablette et blocages environnement.
 

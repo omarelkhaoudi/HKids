@@ -15,8 +15,9 @@ import {getFileUrl} from '../utils/fileUrl';
 import {useToast} from '../components/ToastProvider';
 import {useAuth} from '../context/AuthContext';
 import {useLanguage} from '../context/LanguageContext';
-import {ChevronLeftIcon, ChevronRightIcon, HomeIcon, BookIcon, StarIcon, PlayIcon, PauseIcon, SettingsIcon} from '../components/Icons';
+import {ChevronLeftIcon, ChevronRightIcon, HomeIcon, BookIcon, StarIcon, PlayIcon, PauseIcon, SettingsIcon, WarningIcon} from '../components/Icons';
 import ReadingAidPanel from '../components/ReadingAidPanel';
+import {ContentReportModal} from '../components/parent/ContentReportModal';
 import {AudioPlayer} from '../components/audio/AudioPlayer';
 import {useAudioPlayer} from '../hooks/useAudioPlayer';
 
@@ -148,7 +149,7 @@ function waitForSpeechVoices() {
 }
 
 // Composant pour afficher une page PDF
-function PDFPageViewer({pdfUrl, pageNumber, onLoad, onPdfLoaded, imageClassName = 'max-w-full max-h-full object-contain'}) {
+function PDFPageViewer({pdfUrl, pageNumber, onLoad, onPdfLoaded, imageClassName = 'max-w-full max-h-full object-contain', isKidMinimal = false}) {
  const [imageUrl, setImageUrl] = useState(null);
  const [loading, setLoading] = useState(true);
  const [error, setError] = useState(null);
@@ -252,7 +253,7 @@ function PDFPageViewer({pdfUrl, pageNumber, onLoad, onPdfLoaded, imageClassName 
  return (
  <div className="text-center p-8 w-full">
  <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-primary-500 border-t-transparent"></div>
- <p className="mt-4 text-primary-600">Chargement du PDF...</p>
+ {!isKidMinimal && <p className="mt-4 text-primary-600">Chargement du PDF...</p>}
  </div>
  );
 }
@@ -261,15 +262,20 @@ function PDFPageViewer({pdfUrl, pageNumber, onLoad, onPdfLoaded, imageClassName 
  return (
  <div className="text-center p-8 w-full">
  <BookIcon className="w-16 h-16 text-primary-400 mx-auto mb-4" />
- <p className="text-primary-600 mb-2">Erreur de chargement</p>
- {error && <p className="text-sm text-primary-400">{error}</p>}
+ {!isKidMinimal && (
+  <>
+   <p className="text-primary-600 mb-2">Erreur de chargement</p>
+   {error && <p className="text-sm text-primary-400">{error}</p>}
+  </>
+ )}
  <button
  onClick={() => {
  setReloadKey(prev => prev + 1);
 }}
  className="mt-4 px-4 py-2 bg-primary-500 text-white rounded-2xl hover:bg-primary-600 transition-colors"
+ aria-label={isKidMinimal ? 'Retry' : undefined}
  >
- Réessayer
+ {isKidMinimal ? '↻' : 'Réessayer'}
  </button>
  </div>
  );
@@ -651,10 +657,10 @@ function BookReader() {
  const status = error.response?.status;
  if (status === 402 || status === 403) {
  showToast(
- user?.role === 'kid'
+ isKidReader || user?.role === 'kid'
  ? status === 402
- ? 'Demande a ton parent d activer une formule pour lire ce livre.'
- : 'La limite de livres du mois est atteinte. Demande a ton parent.'
+ ? t('kidAskParent')
+ : t('kidAskParent')
  : status === 402
  ? 'Choisissez un abonnement pour lire ce livre.'
  : 'Votre quota de livres du mois est atteint.',
@@ -720,7 +726,9 @@ function BookReader() {
  setHasReachedEnd(true);
  setShowConfetti(true);
  setTimeout(() => setShowConfetti(false), 3000);
- showToast('Bravo ! Tu as terminé le livre !', 'success', 4000);
+ if (!isKidReader) {
+  showToast('Bravo ! Tu as terminé le livre !', 'success', 4000);
+ }
 }
  return newPage;
 });
@@ -1095,6 +1103,8 @@ function BookReader() {
  const [showMenu, setShowMenu] = useState(!isKidReader);
  const [isFavorite, setIsFavorite] = useState(false);
  const [showEndModal, setShowEndModal] = useState(false);
+ const [showReportModal, setShowReportModal] = useState(false);
+ const canReport = user && (user.role === 'parent' || user.role === 'admin') && !isKidReader;
 
  useEffect(() => {
  setIsFavorite(book ? storage.isFavorite(book.id) : false);
@@ -1135,12 +1145,12 @@ function BookReader() {
  const effectiveTotalPages = (isPDF && pdfTotalPages) ? pdfTotalPages : book.pages.length;
  const isLastPage = currentPage === effectiveTotalPages - 1;
 
- if (hasReachedEnd && isLastPage) {
+ if (hasReachedEnd && isLastPage && !isKidReader) {
  const timeoutId = setTimeout(() => setShowEndModal(true), 1500);
  return () => clearTimeout(timeoutId);
 }
  return undefined;
-}, [currentPage, book, pdfTotalPages, hasReachedEnd]);
+}, [currentPage, book, pdfTotalPages, hasReachedEnd, isKidReader]);
 
  if (loading) {
  return (
@@ -1152,6 +1162,7 @@ function BookReader() {
  className="text-center"
  >
  <div className="text-6xl mb-4">📚</div>
+ {!isKidReader && (
  <motion.p
  animate={{opacity: [0.5, 1, 0.5]}}
  transition={{duration: 1.5, repeat: Infinity}}
@@ -1159,6 +1170,7 @@ function BookReader() {
  >
  Chargement de l'histoire...
  </motion.p>
+ )}
  </motion.div>
  </div>
  );
@@ -1177,14 +1189,17 @@ function BookReader() {
  <BookIcon className="w-16 h-16 text-primary-400" />
  </div>
  </motion.div>
- <p className="text-2xl font-bold text-primary-700 mb-6">Livre non trouvé</p>
+ {!isKidReader && (
+  <p className="text-2xl font-bold text-primary-700 mb-6">{t('kidBookNotFound')}</p>
+ )}
  <motion.button
  whileHover={{scale: 1.05}}
  whileTap={{scale: 0.95}}
  onClick={() => navigate(readerExitPath)}
- className="px-8 py-4 bg-gradient-to-r from-primary-500 to-secondary-500 text-white rounded-full font-bold text-lg shadow-lg hover:shadow-xl transition-shadow"
+ className={`${isKidReader ? 'p-6' : 'px-8 py-4'} bg-gradient-to-r from-primary-500 to-secondary-500 text-white rounded-full font-bold text-lg shadow-lg hover:shadow-xl transition-shadow flex items-center justify-center mx-auto`}
+ aria-label={t('kidReaderHome')}
  >
- Retour à la bibliothèque
+ {isKidReader ? <HomeIcon className="w-10 h-10" /> : 'Retour à la bibliothèque'}
  </motion.button>
  </div>
  </div>
@@ -1282,6 +1297,18 @@ function BookReader() {
   >
     <SettingsIcon className="w-8 h-8" />
   </Button>
+
+  {canReport && (
+    <Button
+      variant="ghost"
+      size="icon"
+      onClick={() => setShowReportModal(true)}
+      className="rounded-full w-14 h-14 bg-white/20 hover:bg-white/40 shadow-sm text-accent-600"
+      aria-label={t('reportContentAction')}
+    >
+      <WarningIcon className="w-8 h-8" />
+    </Button>
+  )}
 </div>
 )}
  </motion.header>
@@ -1349,6 +1376,7 @@ function BookReader() {
  pdfUrl={fileUrl} 
  pageNumber={currentPage + 1}
  imageClassName="w-full h-full object-contain"
+ isKidMinimal={isKidReader}
  onPdfLoaded={(numPages) => {
  if (numPages > 0) {
  setPdfTotalPages(numPages);
@@ -1566,6 +1594,14 @@ function BookReader() {
  </div>
  </div>
  </Modal>
+
+ <ContentReportModal
+  isOpen={showReportModal}
+  onClose={() => setShowReportModal(false)}
+  targetType="book"
+  targetId={book?.id}
+  targetTitle={book?.title}
+ />
 
  </div>
  );

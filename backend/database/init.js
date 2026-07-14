@@ -700,6 +700,37 @@ export async function initDatabase() {
     await client.query(`CREATE UNIQUE INDEX IF NOT EXISTS books_slug_unique ON books(slug)`);
     await client.query(`CREATE INDEX IF NOT EXISTS books_theme_language_idx ON books(theme, language, content_type)`);
     await client.query(`CREATE INDEX IF NOT EXISTS books_tags_idx ON books USING GIN(tags)`);
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS content_localizations (
+        id SERIAL PRIMARY KEY,
+        content_type TEXT NOT NULL,
+        content_id INTEGER NOT NULL,
+        locale TEXT NOT NULL,
+        title TEXT,
+        description TEXT,
+        body TEXT,
+        metadata JSONB DEFAULT '{}'::jsonb,
+        created_at TIMESTAMPTZ DEFAULT NOW(),
+        updated_at TIMESTAMPTZ DEFAULT NOW(),
+        UNIQUE (content_type, content_id, locale)
+      )
+    `);
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS book_audio_tracks (
+        id SERIAL PRIMARY KEY,
+        book_id INTEGER NOT NULL REFERENCES books(id) ON DELETE CASCADE,
+        locale TEXT NOT NULL,
+        audio_url TEXT NOT NULL,
+        duration_seconds INTEGER DEFAULT 0,
+        is_default BOOLEAN DEFAULT FALSE,
+        created_at TIMESTAMPTZ DEFAULT NOW(),
+        UNIQUE (book_id, locale)
+      )
+    `);
+    await client.query(`CREATE INDEX IF NOT EXISTS content_localizations_lookup_idx ON content_localizations (content_type, content_id, locale)`);
+    await client.query(`CREATE INDEX IF NOT EXISTS content_localizations_locale_idx ON content_localizations (locale, content_type)`);
+    await client.query(`CREATE INDEX IF NOT EXISTS book_audio_tracks_book_locale_idx ON book_audio_tracks (book_id, locale)`);
+
     await client.query(`CREATE INDEX IF NOT EXISTS books_cms_filters_idx ON books(is_published, is_premium, is_recommended, is_popular, is_new, publish_at)`);
     await client.query(`CREATE INDEX IF NOT EXISTS categories_parent_idx ON categories(parent_id)`);
     await client.query(`CREATE UNIQUE INDEX IF NOT EXISTS book_pages_book_page_unique ON book_pages(book_id, page_number)`);
@@ -906,6 +937,54 @@ export async function initDatabase() {
         SELECT 1 FROM book_pages existing
         WHERE existing.book_id = b.id AND existing.page_number = page.page_number
       )
+    `);
+
+    await client.query(`
+      INSERT INTO content_localizations (content_type, content_id, locale, title, description)
+      SELECT 'book', b.id, b.language, b.title, b.description
+      FROM books b
+      ON CONFLICT (content_type, content_id, locale) DO NOTHING
+    `);
+
+    await client.query(`
+      INSERT INTO content_localizations (content_type, content_id, locale, title, description)
+      SELECT 'book', b.id, seed.locale, seed.title, seed.description
+      FROM books b
+      JOIN (VALUES
+        ('demo-dino-courage', 'en', 'The brave little dinosaur', 'A short story about confidence.'),
+        ('demo-dino-courage', 'ar', 'الديناصور الصغير الشجاع', 'قصة قصيرة عن الثقة.'),
+        ('demo-voyage-lune', 'en', 'Trip to the moon', 'A gentle journey through space.'),
+        ('demo-voyage-lune', 'ar', 'رحلة إلى القمر', 'رحلة هادئة في الفضاء.'),
+        ('demo-comptine-etoiles', 'en', 'Star lullaby', 'A bedtime rhyme.'),
+        ('demo-comptine-etoiles', 'ar', 'أنشودة النجوم', 'أنشودة للنوم.'),
+        ('demo-bonne-nuit-ours', 'en', 'Good night little bear', 'A soft lullaby.'),
+        ('demo-bonne-nuit-ours', 'ar', 'تصبح على خير أيها الدب', 'تهويدة ناعمة.'),
+        ('demo-trois-cochons', 'en', 'The three little pigs', 'A classic for toddlers.'),
+        ('demo-trois-cochons', 'ar', 'الخنازير الثلاثة الصغيرة', 'كلاسيكية للصغار.')
+      ) AS seed(slug, locale, title, description) ON seed.slug = b.slug
+      ON CONFLICT (content_type, content_id, locale) DO NOTHING
+    `);
+
+    await client.query(`
+      INSERT INTO book_audio_tracks (book_id, locale, audio_url, duration_seconds, is_default)
+      SELECT b.id, 'fr', b.audio_url, b.duration_seconds, TRUE
+      FROM books b
+      WHERE b.audio_url IS NOT NULL
+      ON CONFLICT (book_id, locale) DO NOTHING
+    `);
+
+    await client.query(`
+      INSERT INTO book_audio_tracks (book_id, locale, audio_url, duration_seconds, is_default)
+      SELECT b.id, seed.locale, b.audio_url, b.duration_seconds, FALSE
+      FROM books b
+      JOIN (VALUES
+        ('demo-comptine-etoiles', 'en'),
+        ('demo-comptine-etoiles', 'ar'),
+        ('demo-bonne-nuit-ours', 'en'),
+        ('demo-bonne-nuit-ours', 'ar')
+      ) AS seed(slug, locale) ON seed.slug = b.slug
+      WHERE b.audio_url IS NOT NULL
+      ON CONFLICT (book_id, locale) DO NOTHING
     `);
 
     // Seed credentials are development-only unless an explicit production password exists.

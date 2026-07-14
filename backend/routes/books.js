@@ -18,6 +18,12 @@ import {
   loadChildAccessPolicy,
   sendParentalAccessError
 } from '../services/parental/parentalAccessService.js';
+import {
+  applyBooksLocalizations,
+  applySingleBookLocalization,
+  buildLanguageAvailabilityClause,
+  normalizeLocale,
+} from '../services/content/contentLocalizationService.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -206,6 +212,7 @@ const handleMulterUpload = (uploadMiddleware) => {
 
 router.get('/published', async (req, res) => {
   const { age_group, category_id, theme, language, content_type } = req.query;
+  const locale = normalizeLocale(language || req.query.locale);
 
   const token = req.headers.authorization?.split(' ')[1];
   let authenticatedUser = null;
@@ -270,9 +277,9 @@ router.get('/published', async (req, res) => {
     index += 1;
   }
 
-  if (language) {
-    query += ` AND b.language = $${index}`;
-    params.push(language);
+  if (language || req.query.locale) {
+    query += ` AND ${buildLanguageAvailabilityClause(index)}`;
+    params.push(locale);
     index += 1;
   }
 
@@ -296,7 +303,9 @@ router.get('/published', async (req, res) => {
       books = filterAllowedContent(policy, books);
     }
 
-    console.log('API response:', { route: 'GET /books/published', count: books.length });
+    books = await applyBooksLocalizations(pool, books, locale);
+
+    console.log('API response:', { route: 'GET /books/published', count: books.length, locale });
     res.json(books);
   } catch (err) {
     console.error('Error fetching published books:', err);
@@ -361,7 +370,9 @@ router.get('/:id', async (req, res) => {
       [book.id]
     );
 
-    const story = { ...book, pages: pagesResult.rows };
+    const locale = normalizeLocale(req.query.locale || req.query.language);
+    let story = { ...book, pages: pagesResult.rows };
+    story = await applySingleBookLocalization(pool, story, locale);
     console.log('Story loaded:', story);
     console.log('API response:', {
       route: 'GET /books/:id',
@@ -433,8 +444,9 @@ router.post('/', verifyToken, adminOnly, requireAdminPermission('content.moderat
     const coverFile = req.files?.cover?.[0] || null;
     const pageFiles = req.files?.pages || [];
     const audioFile = req.files?.audio?.[0] || null;
+    const isAudioOnly = ['song', 'audio_story'].includes(String(content_type || '').toLowerCase());
 
-    if (pageFiles.length === 0) {
+    if (pageFiles.length === 0 && !isAudioOnly) {
       return res.status(400).json({ error: 'At least one page file is required.' });
     }
 
@@ -478,7 +490,7 @@ router.post('/', verifyToken, adminOnly, requireAdminPermission('content.moderat
           category_id || null,
           age_group_min || 0,
           age_group_max || 12,
-          pagePaths[0] || 'uploaded',
+          pagePaths[0] || audioPath || 'audio-only',
           pagePaths.length,
           content_type || 'story',
           language || 'fr',
@@ -497,14 +509,36 @@ router.post('/', verifyToken, adminOnly, requireAdminPermission('content.moderat
 
       const book = insertBook.rows[0];
       const pageValues = pagePaths.map((pagePath, index) => [book.id, index + 1, pagePath, null]);
-      const valuesPlaceholders = pageValues.map((_, i) => {
-        const base = i * 4;
-        return `($${base + 1}, $${base + 2}, $${base + 3}, $${base + 4})`;
-      }).join(', ');
+
+      if (pageValues.length > 0) {
+        const valuesPlaceholders = pageValues.map((_, i) => {
+          const base = i * 4;
+          return `($${base + 1}, $${base + 2}, $${base + 3}, $${base + 4})`;
+        }).join(', ');
+
+        await client.query(
+          `INSERT INTO book_pages (book_id, page_number, image_path, content) VALUES ${valuesPlaceholders}`,
+          pageValues.flat()
+        );
+      }
+
+      const resolvedAudioUrl = audioPath || audio_url || null;
+      if (resolvedAudioUrl) {
+        await client.query(
+          `INSERT INTO book_audio_tracks (book_id, locale, audio_url, duration_seconds, is_default)
+           VALUES ($1, $2, $3, $4, TRUE)
+           ON CONFLICT (book_id, locale) DO UPDATE
+           SET audio_url = EXCLUDED.audio_url, duration_seconds = EXCLUDED.duration_seconds`,
+          [book.id, language || 'fr', resolvedAudioUrl, Math.max(0, Number.parseInt(duration_seconds, 10) || 0)]
+        );
+      }
 
       await client.query(
-        `INSERT INTO book_pages (book_id, page_number, image_path, content) VALUES ${valuesPlaceholders}`,
-        pageValues.flat()
+        `INSERT INTO content_localizations (content_type, content_id, locale, title, description)
+         VALUES ('book', $1, $2, $3, $4)
+         ON CONFLICT (content_type, content_id, locale) DO UPDATE
+         SET title = EXCLUDED.title, description = EXCLUDED.description, updated_at = NOW()`,
+        [book.id, language || 'fr', title, description || null]
       );
 
       await client.query('COMMIT');

@@ -9,9 +9,11 @@ import {useToast} from '../components/ToastProvider';
 import {getImageUrl} from '../utils/imageUrl';
 import {
  HeartIcon, BookIcon, ChevronLeftIcon, RefreshIcon, 
- StarIcon, ChildIcon, CategoryIcon, HistoryIcon 
+ StarIcon, ChildIcon, CategoryIcon, HistoryIcon, WarningIcon
 } from '../components/Icons';
 import {Logo} from '../components/Logo';
+import {ContentReportModal} from '../components/parent/ContentReportModal';
+import {useLanguage} from '../context/LanguageContext';
 
 function BookDetails() {
  const {id} = useParams();
@@ -21,9 +23,12 @@ function BookDetails() {
  const [isFavorite, setIsFavorite] = useState(false);
  const [relatedBooks, setRelatedBooks] = useState([]);
  const [imageError, setImageError] = useState(false);
+ const [showReportModal, setShowReportModal] = useState(false);
  const {showToast} = useToast();
  const {user} = useAuth();
+ const {t} = useLanguage();
  const isKidAccount = user?.role === 'kid';
+ const canReport = user && (user.role === 'parent' || user.role === 'admin');
 
  useEffect(() => {
  loadBook();
@@ -457,7 +462,26 @@ function BookDetails() {
  Commencer la lecture
  </motion.button>
  )}
+ {canReport && (
+ <motion.button
+ whileHover={{scale: 1.02}}
+ whileTap={{scale: 0.98}}
+ type="button"
+ onClick={() => setShowReportModal(true)}
+ className="px-6 py-4 bg-card text-foreground rounded-full font-bold text-base shadow-lg border-2 border-border hover:border-accent-300 hover:bg-accent-50 transition-all flex items-center justify-center gap-2"
+ >
+ <WarningIcon className="w-5 h-5 text-accent-600" />
+ {t('reportContentAction')}
+ </motion.button>
+ )}
  </motion.div>
+ <ContentReportModal
+ isOpen={showReportModal}
+ onClose={() => setShowReportModal(false)}
+ targetType="book"
+ targetId={book?.id}
+ targetTitle={book?.title}
+ />
  </motion.div>
  </div>
  </motion.div>
