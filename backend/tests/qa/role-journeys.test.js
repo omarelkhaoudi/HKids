@@ -91,15 +91,16 @@ test('[PARENT][Haute] Règles parentales (temps écran)', async () => {
 test('[PARENT][Haute] Approbations catégories', async () => {
   const cats = await request(app).get('/api/categories');
   assert.equal(cats.status, 200);
-  const categoryId = cats.body?.[0]?.id;
-  if (!categoryId) return;
+  assert.ok(cats.body?.length > 0, 'Aucune categorie disponible');
 
-  const res = await request(app)
-    .post(`/api/parental/kids/${state.kidId}/approvals`)
-    .set(auth(state.parentToken))
-    .send({ category_id: categoryId, approved: true });
+  for (const category of cats.body) {
+    const res = await request(app)
+      .post(`/api/parental/kids/${state.kidId}/approvals`)
+      .set(auth(state.parentToken))
+      .send({ category_id: category.id, approved: true });
 
-  assert.ok([200, 201].includes(res.status), res.body?.error || '');
+    assert.ok([200, 201].includes(res.status), res.body?.error || '');
+  }
 });
 
 test('[PARENT][Critique] Création compte enfant', async () => {

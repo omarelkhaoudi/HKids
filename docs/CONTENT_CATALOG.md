@@ -4,21 +4,37 @@ Guide pour alimenter la bibliothèque avec du **contenu original** prêt pour la
 
 ## Contenu fourni
 
-Le dossier `backend/content/` contient :
-
 | Fichier | Rôle |
 |---------|------|
-| `catalog.js` | 13 contenus originaux (histoires illustrées + comptines audio) |
-| `svgAssets.js` | Génération couvertures et pages SVG |
-| `audioAssets.js` | Synthèse vocale via Microsoft Edge TTS (`npx edge-tts`) |
-| `audio/` | MP3 générés (créés au premier seed) |
+| `backend/content/catalog.js` | Catalogue livres (illustrés, audio, comptines, religieux) |
+| `backend/content/catalogExtended.js` | Génération des contenus étendus |
+| `backend/content/learningCatalog.js` | 20 quiz + 20 jeux éducatifs |
+| `backend/content/storyTemplatesCatalog.js` | 10 histoires personnalisables (templates) |
+| `backend/content/svgAssets.js` | Couvertures et pages SVG |
+| `backend/content/audioAssets.js` | Synthèse vocale Edge TTS |
+| `backend/scripts/seed-catalog.js` | Seed unifié (livres + learning + templates) |
 
-### Thèmes couverts
+### Volume cible (après seed)
 
-- Dinosaures, espace, animaux, princesses, couleurs, métiers
-- Alphabet, chiffres, comptines, chansons
-- Métadonnées **FR** + localisations **EN/AR**
-- Pistes audio multilingues pour les comptines
+| Type | Quantité |
+|------|----------|
+| Histoires audio (`audio_story`) | ≥ 30 |
+| Comptines (`song`) | 20 |
+| Histoires illustrées (`story`) | 9 |
+| Histoires religieuses (`theme: spiritual`) | 10 |
+| Quiz (`learning_contents`) | 20 |
+| Jeux éducatifs (mémoire) | 20 |
+| Histoires personnalisables (`generated_stories`) | 10 / profil enfant |
+
+### Métadonnées
+
+- **Catégories** : Histoires, Comptines, Dinosaures, Espace, Animaux, Spiritualité, Contes
+- **Âge** : `age_group_min` / `age_group_max` + tag `level:2-4`, `level:5-7`, `level:8-10`
+- **Tags** : thème, type, difficulté, editorial (`recommended`, `popular`, `new`)
+- **Langues** : FR + localisations EN/AR via `content_localizations`
+- **Illustrations** : SVG générés (emoji + texte)
+- **Durée** : `duration_seconds` + pistes `book_audio_tracks`
+- **Recommandations** : flags `is_recommended`, `is_popular`, `is_new` + tags pour le moteur IA
 
 ## Commande
 
@@ -31,41 +47,46 @@ Options :
 
 ```bash
 npm run seed:catalog -- --force      # régénère les MP3 existants
-npm run seed:catalog -- --skip-audio # SVG seulement (sans TTS)
+npm run seed:catalog -- --skip-audio  # SVG seulement (sans TTS)
 ```
 
 ## Prérequis
 
-- Base PostgreSQL accessible (`DATABASE_URL` ou config locale)
+- `backend/.env` avec `DATABASE_URL` (même base que le serveur)
 - Node 18+
-- Dépendance `edge-tts-universal` (installée via `npm install` dans `backend/`)
-- Connexion internet pour la synthèse vocale (premier seed)
-
-Les fichiers sont écrits dans `backend/uploads/books/` et servis par l’API sur `/uploads/books/:filename`.
+- `edge-tts-universal` installé
+- Internet pour la synthèse vocale (sans `--skip-audio`)
 
 ## Vérification
 
-1. Démarrer le backend : `npm run dev`
-2. Admin → Contenus : 13 entrées publiées
-3. Enfant → Bibliothèque / Audio : couvertures visibles, lecture audio OK
-4. Changer la langue UI (FR/EN/AR) : titres localisés via `content_localizations`
+1. `npm run dev` (backend)
+2. Enfant → **Bibliothèque** : histoires illustrées + audio
+3. Enfant → **Audio** : comptines et histoires audio
+4. Enfant → **Jouer** (`/kids/learning`) : quiz et jeux
+5. Enfant → **Mes histoires** : templates personnalisables
+6. Admin → Contenus : entrées publiées avec tags
 
-## Ajouter un contenu
+Tests :
 
-1. Ajouter une entrée dans `backend/content/catalog.js`
-2. Relancer `npm run seed:catalog`
-3. Le script fait un **upsert par slug** (sans doublon)
+```bash
+cd backend
+node --test tests/catalog.test.js
+```
+
+## Routes concernées
+
+| Route | Contenu |
+|-------|---------|
+| `GET /api/books/published` | Bibliothèque enfant |
+| `GET /api/learning/contents` | Quiz et jeux |
+| `GET /api/generated-stories` | Histoires personnalisables |
+| `POST /api/recommendations` | Suggestions (tags, âge, favoris) |
 
 ## Production (Supabase)
 
-En production avec `SUPABASE_URL` + `SUPABASE_SERVICE_KEY`, les uploads passent par l’API admin (`BookManagement`). Pour un import massif prod :
+```bash
+cd backend
+npm run seed:catalog
+```
 
-1. Exécuter `seed:catalog` en local
-2. Synchroniser `backend/uploads/books/` vers le bucket Supabase
-3. Ou créer via l’admin avec les mêmes métadonnées
-
-## Limites
-
-- Les histoires sont des **textes originaux** (pas de livres sous copyright)
-- L’audio TTS est une voix synthétique — remplaçable par des enregistrements studio via l’admin
-- Les pages sont des **illustrations SVG** (emoji + texte court), pas des PDF scannés
+Synchroniser `backend/uploads/books/` vers le bucket Supabase si nécessaire.
