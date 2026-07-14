@@ -14,6 +14,7 @@ import { fileURLToPath } from 'url';
 import jwt from 'jsonwebtoken';
 import { getDatabase, initDatabase } from './database/init.js';
 import supabase from './config/supabase.js';
+import { readBookAssetBuffer } from './services/storage/bookAssetStorage.js';
 import booksRouter from './routes/books.js';
 import authRouter from './routes/auth.js';
 import categoriesRouter from './routes/categories.js';
@@ -146,6 +147,17 @@ app.get('/uploads/books/:filename', async (req, res) => {
 
     if (fs.existsSync(fullPath)) {
       return res.sendFile(fullPath);
+    }
+
+    const remoteBuffer = await readBookAssetBuffer({
+      filename,
+      localDir: path.join(__dirname, 'uploads', 'books'),
+    });
+    if (remoteBuffer) {
+      const ext = path.extname(filename).toLowerCase();
+      if (ext === '.svg') res.type('image/svg+xml');
+      else if (ext === '.mp3') res.type('audio/mpeg');
+      return res.send(remoteBuffer);
     }
 
     console.warn('[uploads] File not found:', filename);

@@ -9,6 +9,7 @@ import { LEARNING_CATALOG } from '../content/learningCatalog.js';
 import { STORY_TEMPLATES } from '../content/storyTemplatesCatalog.js';
 import { renderCoverSvg, renderPageSvg } from '../content/svgAssets.js';
 import { ensureSpeechMp3, estimateDurationSeconds } from '../content/audioAssets.js';
+import { persistBookAsset, readBookAssetBuffer } from '../services/storage/bookAssetStorage.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const uploadsDir = path.join(__dirname, '../uploads/books');
@@ -18,17 +19,20 @@ const forceAssets = process.argv.includes('--force');
 const skipAudio = process.argv.includes('--skip-audio');
 
 async function writeTextAsset(filename, content) {
-  const fullPath = path.join(uploadsDir, filename);
-  await fs.ensureDir(uploadsDir);
-  await fs.writeFile(fullPath, content, 'utf8');
-  return `/uploads/books/${filename}`;
+  return persistBookAsset({
+    buffer: Buffer.from(content, 'utf8'),
+    filename,
+    localDir: uploadsDir,
+  });
 }
 
 async function copyAudioAsset(sourcePath, filename) {
-  const dest = path.join(uploadsDir, filename);
-  await fs.ensureDir(uploadsDir);
-  await fs.copy(sourcePath, dest);
-  return `/uploads/books/${filename}`;
+  const buffer = await fs.readFile(sourcePath);
+  return persistBookAsset({
+    buffer,
+    filename,
+    localDir: uploadsDir,
+  });
 }
 
 async function ensureBookCategories(client) {
@@ -145,7 +149,13 @@ async function seedItem(client, item) {
   const coverFilename = `${item.slug}-cover.svg`;
   const coverPath = await writeTextAsset(
     coverFilename,
-    renderCoverSvg({ title: item.title, emoji: item.emoji, gradient: item.gradient })
+    renderCoverSvg({
+      title: item.title,
+      emoji: item.emoji,
+      gradient: item.gradient,
+      theme: item.theme,
+      slug: item.slug,
+    })
   );
 
   const pagePaths = [];
