@@ -111,19 +111,18 @@ function KidsLibrary() {
   };
 
   const favoritesIds = storage.getFavorites();
-  const localizedBooks = books.filter((book) => !book.resolved_locale || book.resolved_locale === language || book.language === language);
-  const favoriteBooks = localizedBooks.filter((b) => favoritesIds.includes(b.id));
-  const newBooks = [...localizedBooks].sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0)).slice(0, 15);
-  const downloadedBooks = localizedBooks.filter((b) => offlineContent.getBookStatus(b.id)?.status === 'downloaded');
+  const favoriteBooks = books.filter((b) => favoritesIds.includes(b.id));
+  const newBooks = [...books].sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0)).slice(0, 15);
+  const downloadedBooks = books.filter((b) => offlineContent.getBookStatus(b.id)?.status === 'downloaded');
   const recommendedSection = recommendationSections.find((section) => section.id === 'recommended_for_you');
   const recommendedIds = new Set(
     (recommendedSection?.items || []).map((item) => Number(item.id ?? item.book_id)).filter(Number.isFinite)
   );
   const recommendedBooks = recommendedIds.size > 0
-    ? localizedBooks.filter((book) => recommendedIds.has(Number(book.id)))
-    : localizedBooks.slice(0, 10);
+    ? books.filter((book) => recommendedIds.has(Number(book.id)))
+    : books.slice(0, 10);
 
-  const themeBooks = localizedBooks.filter((b) => inferTheme(b, childThemes) === selectedTheme);
+  const themeBooks = books.filter((b) => inferTheme(b, childThemes) === selectedTheme);
   const featuredBook = selectedTheme === 'all' ? recommendedBooks[0] : (themeBooks.length > 0 ? themeBooks[0] : null);
   const activeThemeData = childThemes.find((theme) => theme.id === selectedTheme);
 
@@ -264,7 +263,7 @@ function KidsLibrary() {
           <div className="px-4">
             <BookGridSkeleton count={8} />
           </div>
-        ) : localizedBooks.length === 0 ? (
+        ) : books.length === 0 ? (
           <KidsEmptyState
             emoji="📚"
             title={t('emptyBooksTitle')}

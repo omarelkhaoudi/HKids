@@ -21,7 +21,6 @@ import {
 import {
   applyBooksLocalizations,
   applySingleBookLocalization,
-  buildLanguageAvailabilityClause,
   normalizeLocale,
 } from '../services/content/contentLocalizationService.js';
 
@@ -277,17 +276,13 @@ router.get('/published', async (req, res) => {
     index += 1;
   }
 
-  if (language || req.query.locale) {
-    query += ` AND ${buildLanguageAvailabilityClause(index)}`;
-    params.push(locale);
-    index += 1;
-  }
-
   if (content_type) {
     query += ` AND b.content_type = $${index}`;
     params.push(content_type);
     index += 1;
   }
+
+  // Locale is applied after fetch via applyBooksLocalizations (FR fallback when EN/AR missing).
 
   query += ' ORDER BY b.created_at DESC';
 

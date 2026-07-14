@@ -134,8 +134,7 @@ function KidsHome() {
   const continueReading = progressRows.find((item) => (
     !item.completed && Number(item.progress_percent || 0) > 0
   )) || null;
-  const recommendedBooks = getRecommendedBooks(recommendationSections)
-    .filter((book) => !book.resolved_locale || book.resolved_locale === language || book.language === language);
+  const recommendedBooks = getRecommendedBooks(recommendationSections);
   const featuredBook = continueReading
     ? {
         id: continueReading.book_id,
