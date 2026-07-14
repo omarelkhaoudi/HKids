@@ -3,7 +3,10 @@ import { fileURLToPath } from 'node:url';
 import fs from 'fs-extra';
 import '../config/env.js';
 import { initDatabase, getDatabase } from '../database/init.js';
-import { CATALOG } from '../content/catalog.js';
+import { CATALOG, CATALOG_STATS } from '../content/catalog.js';
+import { BOOK_CATEGORIES } from '../content/catalogMeta.js';
+import { LEARNING_CATALOG } from '../content/learningCatalog.js';
+import { STORY_TEMPLATES } from '../content/storyTemplatesCatalog.js';
 import { renderCoverSvg, renderPageSvg } from '../content/svgAssets.js';
 import { ensureSpeechMp3, estimateDurationSeconds } from '../content/audioAssets.js';
 
@@ -28,12 +31,27 @@ async function copyAudioAsset(sourcePath, filename) {
   return `/uploads/books/${filename}`;
 }
 
+async function ensureBookCategories(client) {
+  for (const [name, description] of BOOK_CATEGORIES) {
+    await client.query(
+      `INSERT INTO categories (name, description)
+       VALUES ($1, $2)
+       ON CONFLICT (name) DO UPDATE SET description = EXCLUDED.description`,
+      [name, description]
+    );
+  }
+}
+
 async function upsertBook(client, item, coverPath, audioPath, pageCount, durationSeconds) {
   const categoryResult = await client.query(
     'SELECT id FROM categories WHERE name = $1 LIMIT 1',
     [item.category_name]
   );
   const categoryId = categoryResult.rows[0]?.id || null;
+  const level = item.age_group_max <= 4 ? '2-4' : item.age_group_max <= 7 ? '5-7' : '8-10';
+  const tags = Array.isArray(item.tags) && item.tags.length
+    ? item.tags
+    : [`level:${level}`, item.theme, item.content_type].filter(Boolean);
 
   const existing = await client.query('SELECT id FROM books WHERE slug = $1 LIMIT 1', [item.slug]);
   const flags = {
@@ -54,7 +72,7 @@ async function upsertBook(client, item, coverPath, audioPath, pageCount, duratio
         age_group_min = $11, age_group_max = $12, audio_url = $13, duration_seconds = $14,
         page_count = $15, is_published = $16, moderation_status = $17,
         is_premium = $18, is_recommended = $19, is_popular = $20, is_new = $21,
-        updated_at = NOW()
+        tags = $22, updated_at = NOW()
        WHERE id = $1`,
       [
         bookId, item.title, item.author, item.description, coverPath,
@@ -63,6 +81,7 @@ async function upsertBook(client, item, coverPath, audioPath, pageCount, duratio
         item.age_group_min, item.age_group_max, audioPath, durationSeconds,
         pageCount, flags.is_published, flags.moderation_status,
         flags.is_premium, flags.is_recommended, flags.is_popular, flags.is_new,
+        tags,
       ]
     );
     return bookId;
@@ -72,9 +91,9 @@ async function upsertBook(client, item, coverPath, audioPath, pageCount, duratio
     `INSERT INTO books (
       title, slug, author, description, cover_image, file_path, content_type, language, theme,
       category_id, age_group_min, age_group_max, audio_url, duration_seconds, page_count,
-      is_published, moderation_status, is_premium, is_recommended, is_popular, is_new
+      is_published, moderation_status, is_premium, is_recommended, is_popular, is_new, tags
     ) VALUES (
-      $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21
+      $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22
     ) RETURNING id`,
     [
       item.title, item.slug, item.author, item.description, coverPath,
@@ -83,6 +102,7 @@ async function upsertBook(client, item, coverPath, audioPath, pageCount, duratio
       item.age_group_min, item.age_group_max, audioPath, durationSeconds,
       pageCount, flags.is_published, flags.moderation_status,
       flags.is_premium, flags.is_recommended, flags.is_popular, flags.is_new,
+      tags,
     ]
   );
   return inserted.rows[0].id;
@@ -194,9 +214,126 @@ async function seedItem(client, item) {
   return { slug: item.slug, bookId, pages: pagePaths.length, audio: Boolean(audioPath) };
 }
 
+async function upsertLearningContent(client, item) {
+  const category = await client.query(
+    'SELECT id FROM learning_categories WHERE code = $1 LIMIT 1',
+    [item.category_code]
+  );
+  const reward = await client.query(
+    'SELECT id FROM learning_rewards WHERE code = $1 LIMIT 1',
+    [item.reward_code]
+  );
+
+  const existing = await client.query(
+    `SELECT id FROM learning_contents
+     WHERE metadata->>'slug' = $1
+     LIMIT 1`,
+    [item.slug]
+  );
+
+  const metadata = { ...item.metadata, slug: item.slug };
+  let contentId;
+
+  if (existing.rows[0]) {
+    contentId = existing.rows[0].id;
+    await client.query(
+      `UPDATE learning_contents SET
+        title = $2, description = $3, content_type = $4, quiz_type = $5,
+        category_id = $6, age_group_min = $7, age_group_max = $8,
+        language = $9, difficulty = $10, reward_id = $11, status = 'published',
+        metadata = $12::jsonb, updated_at = NOW()
+       WHERE id = $1`,
+      [
+        contentId, item.title, item.description, item.content_type, item.quiz_type,
+        category.rows[0]?.id || null, item.age_group_min, item.age_group_max,
+        item.language, item.difficulty, reward.rows[0]?.id || null, JSON.stringify(metadata),
+      ]
+    );
+  } else {
+    const inserted = await client.query(
+      `INSERT INTO learning_contents (
+        title, description, content_type, quiz_type, category_id,
+        age_group_min, age_group_max, language, difficulty, reward_id, status, metadata
+      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,'published',$11::jsonb)
+      RETURNING id`,
+      [
+        item.title, item.description, item.content_type, item.quiz_type,
+        category.rows[0]?.id || null, item.age_group_min, item.age_group_max,
+        item.language, item.difficulty, reward.rows[0]?.id || null, JSON.stringify(metadata),
+      ]
+    );
+    contentId = inserted.rows[0].id;
+  }
+
+  if (item.question) {
+    await client.query('DELETE FROM learning_questions WHERE content_id = $1', [contentId]);
+    await client.query(
+      `INSERT INTO learning_questions (
+        content_id, question_type, prompt, options, correct_answer, explanation, position
+      ) VALUES ($1,$2,$3,$4::jsonb,$5::jsonb,$6,1)`,
+      [
+        contentId,
+        item.question.question_type,
+        item.question.prompt,
+        JSON.stringify(item.question.options),
+        JSON.stringify(item.question.correct_answer),
+        item.question.explanation,
+      ]
+    );
+  }
+
+  return { slug: item.slug, contentId, type: item.content_type };
+}
+
+async function seedStoryTemplates(client) {
+  const kids = await client.query('SELECT id FROM kids_profiles');
+  let inserted = 0;
+
+  for (const kid of kids.rows) {
+    for (const template of STORY_TEMPLATES) {
+      const exists = await client.query(
+        `SELECT id FROM generated_stories
+         WHERE kid_profile_id = $1
+           AND prompt_metadata->>'slug' = $2
+         LIMIT 1`,
+        [kid.id, template.slug]
+      );
+      if (exists.rows[0]) continue;
+
+      await client.query(
+        `INSERT INTO generated_stories (
+          kid_profile_id, title, story_text, summary, language, theme, age_level,
+          characters, estimated_duration_minutes, prompt_metadata, generation_metadata,
+          provider, saved, moderation_status, is_hidden
+        ) VALUES (
+          $1,$2,$3,$4,$5,$6,$7,$8,$9,$10::jsonb,$11::jsonb,'demo',TRUE,'approved',FALSE
+        )`,
+        [
+          kid.id,
+          template.title,
+          template.story_text,
+          template.summary,
+          template.language,
+          template.theme,
+          template.age_level,
+          template.characters,
+          5,
+          JSON.stringify({ ...template.prompt_metadata, slug: template.slug }),
+          JSON.stringify({ seeded: true, source: 'seed-catalog' }),
+        ]
+      );
+      inserted += 1;
+    }
+  }
+
+  return inserted;
+}
+
 async function main() {
-  console.log('📚 HKids — seed catalogue contenu réel');
-  console.log(`   Items: ${CATALOG.length} | force: ${forceAssets} | skip-audio: ${skipAudio}`);
+  console.log('📚 HKids — seed catalogue demo complet');
+  console.log(`   Livres: ${CATALOG.length} | Learning: ${LEARNING_CATALOG.length} | Templates: ${STORY_TEMPLATES.length}`);
+  console.log(`   Stats livres → audio: ${CATALOG_STATS.audio_stories}, comptines: ${CATALOG_STATS.songs}, religieux: ${CATALOG_STATS.religious}`);
+  console.log(`   Options: force=${forceAssets} skip-audio=${skipAudio}`);
 
   await initDatabase();
   const pool = getDatabase();
@@ -204,17 +341,34 @@ async function main() {
 
   try {
     await client.query('BEGIN');
-    const results = [];
+    await ensureBookCategories(client);
+
+    const bookResults = [];
     for (const item of CATALOG) {
       const result = await seedItem(client, item);
-      results.push(result);
-      console.log(`   ✅ ${result.slug} — ${result.pages} page(s)${result.audio ? ' + audio' : ''}`);
+      bookResults.push(result);
+      console.log(`   ✅ book ${result.slug} — ${result.pages} page(s)${result.audio ? ' + audio' : ''}`);
     }
+
+    const learningResults = [];
+    for (const item of LEARNING_CATALOG) {
+      const result = await upsertLearningContent(client, item);
+      learningResults.push(result);
+      console.log(`   ✅ learning ${result.slug} (${result.type})`);
+    }
+
+    const templateCount = await seedStoryTemplates(client);
+    if (templateCount > 0) {
+      console.log(`   ✅ ${templateCount} histoires personnalisables injectees`);
+    } else {
+      console.log('   ℹ️  Aucun profil enfant — templates seront ajoutes apres creation d un enfant');
+    }
+
     await client.query('COMMIT');
-    console.log(`\n✅ Catalogue prêt : ${results.length} contenus publiés dans uploads/books/`);
+    console.log(`\n✅ Catalogue demo pret : ${bookResults.length} livres, ${learningResults.length} activites learning`);
   } catch (error) {
     await client.query('ROLLBACK');
-    console.error('❌ Échec seed catalogue:', error);
+    console.error('❌ Echec seed catalogue:', error);
     process.exitCode = 1;
   } finally {
     client.release();

@@ -3,7 +3,9 @@
  * Textes originaux, libres de droits. Exécuter: npm run seed:catalog
  */
 
-export const CATALOG = [
+import { buildExtendedCatalog } from './catalogExtended.js';
+
+export const BASE_CATALOG = [
   {
     slug: 'demo-dino-courage',
     title: 'Le petit dinosaure courageux',
@@ -297,3 +299,13 @@ export const CATALOG = [
     },
   },
 ];
+
+export const CATALOG = [...BASE_CATALOG, ...buildExtendedCatalog()];
+
+export const CATALOG_STATS = {
+  total: CATALOG.length,
+  illustrated_stories: CATALOG.filter((item) => item.content_type === 'story').length,
+  audio_stories: CATALOG.filter((item) => item.content_type === 'audio_story').length,
+  songs: CATALOG.filter((item) => item.content_type === 'song').length,
+  religious: CATALOG.filter((item) => item.theme === 'spiritual').length,
+};

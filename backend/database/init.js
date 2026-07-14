@@ -895,7 +895,10 @@ export async function initDatabase() {
         ('Histoires', 'Histoires illustrees et audio pour enfants'),
         ('Comptines', 'Comptines et chansons douces'),
         ('Dinosaures', 'Univers dinosaures'),
-        ('Espace', 'Decouverte de l espace')
+        ('Espace', 'Decouverte de l espace'),
+        ('Animaux', 'Histoires et chansons avec les animaux'),
+        ('Spiritualite', 'Histoires bienveillantes sur les valeurs et la gratitude'),
+        ('Contes', 'Contes doux et classiques adaptes')
       ON CONFLICT (name) DO NOTHING
     `);
 
