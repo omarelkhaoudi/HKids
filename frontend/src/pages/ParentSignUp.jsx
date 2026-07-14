@@ -15,9 +15,9 @@ const getPasswordStrength = (pass) => {
  if (/[0-9]/.test(pass)) score += 1;
  
  if (score <= 1) return {score, label: 'Faible', color: 'bg-red-400'};
- if (score === 2) return {score, label: 'Moyen', color: 'bg-yellow-400'};
- if (score === 3) return {score, label: 'Bon', color: 'bg-blue-400'};
- return {score, label: 'Fort', color: 'bg-green-500'};
+ if (score === 2) return {score, label: 'Moyen', color: 'bg-accent-400'};
+ if (score === 3) return {score, label: 'Bon', color: 'bg-primary-400'};
+ return {score, label: 'Fort', color: 'bg-secondary-500'};
 };
 
 export default function ParentSignUp() {
@@ -108,7 +108,7 @@ export default function ParentSignUp() {
  {mounted && Array.from({length: 8}).map((_, i) => (
  <motion.div
  key={i}
- className="absolute text-yellow-400 opacity-60"
+ className="absolute text-accent-400 opacity-60"
  style={{
  left: `${15 + Math.random() * 70}%`,
  top: `${15 + Math.random() * 70}%`,
@@ -152,7 +152,7 @@ export default function ParentSignUp() {
  transition={{duration: 4, repeat: Infinity, ease:"easeInOut"}}
  className="absolute bottom-4 left-4 bg-card/90 backdrop-blur-md px-4 py-3 rounded-2xl shadow-xl border border-white/50 flex items-center gap-3"
  >
- <div className="w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center text-xl">🎓</div>
+ <div className="w-10 h-10 rounded-full bg-accent-100 flex items-center justify-center text-xl">🎓</div>
  <div className="text-left">
  <div className="text-sm font-extrabold text-foreground">Éducatif</div>
  <div className="text-xs font-bold text-foreground-muted">100% Bienveillant</div>
@@ -204,7 +204,7 @@ export default function ParentSignUp() {
  initial={{scale: 0}}
  animate={{scale: 1}}
  transition={{type:"spring", bounce: 0.5}}
- className="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center text-green-500 mb-6"
+ className="w-24 h-24 bg-secondary-100 rounded-full flex items-center justify-center text-secondary-500 mb-6"
  >
  <CheckCircleIcon className="w-12 h-12" />
  </motion.div>

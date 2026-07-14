@@ -120,7 +120,7 @@ function KidsLearning() {
           id: key,
           name: content.category_name || content.content_type,
           pictogram: content.category_pictogram || content.metadata?.pictogram || '⭐',
-          color: content.category_color || 'from-sky-500 to-cyan-400',
+          color: content.category_color || 'from-primary-500 to-primary-400',
         });
       }
     });

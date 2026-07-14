@@ -235,14 +235,14 @@ function KidsHome() {
                   <span className="text-white font-black drop-shadow-md">{featuredBook?.progress || 0}%</span>
                 </div>
                 <div className="h-4 w-full bg-black/40 rounded-full overflow-hidden border border-white/20 backdrop-blur-sm">
-                  <motion.div initial={{ width: 0 }} animate={{ width: `${featuredBook?.progress || 0}%` }} className="h-full bg-gradient-to-r from-green-400 to-emerald-500 rounded-full" />
+                  <motion.div initial={{ width: 0 }} animate={{ width: `${featuredBook?.progress || 0}%` }} className="h-full bg-gradient-to-r from-secondary-400 to-secondary-500 rounded-full" />
                 </div>
               </div>
             </div>
           </motion.div>
 
           <motion.div whileHover={{ y: -5 }} className="cursor-pointer">
-            <div className="h-64 md:h-80 rounded-[2.5rem] bg-gradient-to-br from-amber-300 via-orange-400 to-rose-500 p-6 flex flex-col items-center justify-center text-center relative overflow-hidden shadow-2xl border-4 border-white/50">
+            <div className="h-64 md:h-80 rounded-[2.5rem] bg-gradient-to-br from-accent-300 via-accent-400 to-rose-500 p-6 flex flex-col items-center justify-center text-center relative overflow-hidden shadow-2xl border-4 border-white/50">
               <div className="absolute top-0 right-0 w-32 h-32 bg-white/20 rounded-full blur-2xl" />
               <motion.div
                 animate={{ y: [0, -10, 0], rotate: [0, 5, -5, 0] }}
@@ -254,7 +254,7 @@ function KidsHome() {
               </motion.div>
               <h3 className="text-white text-2xl font-black drop-shadow-md mb-2">{t('magicChest')}</h3>
               <div className="flex items-center gap-2 bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full border border-white/30 text-white font-bold">
-                <StarIcon className="w-5 h-5 text-yellow-300" />
+                <StarIcon className="w-5 h-5 text-accent-300" />
                 <span>{missionText}</span>
               </div>
             </div>
@@ -288,10 +288,10 @@ function KidsHome() {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={handleSurprise}
-            className="group relative flex items-center gap-4 bg-gradient-to-r from-primary-500 via-fuchsia-500 to-accent-500 p-4 pr-8 rounded-[3rem] shadow-2xl border-4 border-white overflow-hidden"
+            className="group relative flex items-center gap-4 bg-gradient-to-r from-primary-500 via-primary-500 to-accent-500 p-4 pr-8 rounded-[3rem] shadow-2xl border-4 border-white overflow-hidden"
           >
             <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-inner relative z-10 group-hover:rotate-12 transition-transform">
-              <SparklesIcon className="w-8 h-8 text-fuchsia-500" />
+              <SparklesIcon className="w-8 h-8 text-primary-500" />
             </div>
             <span className="text-white font-black text-2xl relative z-10 drop-shadow-md">{t('surpriseMe')}</span>
           </motion.button>
@@ -342,7 +342,7 @@ function KidsHome() {
                   key={badge.id}
                   whileHover={{ scale: 1.1, rotate: [0, -10, 10, -10, 10, 0] }}
                   title={`${badge.label} — ${badge.description}`}
-                  className={`relative w-28 h-28 md:w-32 md:h-32 rounded-full flex items-center justify-center text-5xl md:text-6xl shadow-2xl border-8 ${badge.earned ? 'bg-gradient-to-br from-yellow-300 via-amber-400 to-orange-500 border-yellow-200' : 'bg-surface-200 border-surface-300 grayscale opacity-60'}`}
+                  className={`relative w-28 h-28 md:w-32 md:h-32 rounded-full flex items-center justify-center text-5xl md:text-6xl shadow-2xl border-8 ${badge.earned ? 'bg-gradient-to-br from-accent-300 via-accent-400 to-accent-500 border-accent-200' : 'bg-surface-200 border-surface-300 grayscale opacity-60'}`}
                 >
                   {badge.earned ? (
                     <>

@@ -61,7 +61,7 @@ export default function NewsletterSection({
                 </div>
                 
                 {newsletterStatus === 'success' && (
-                  <p className="mt-3 text-sm text-green-600 font-medium px-4">
+                  <p className="mt-3 text-sm text-secondary-600 font-medium px-4">
                     ✓ Merci de votre inscription.
                   </p>
                 )}

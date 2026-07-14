@@ -106,7 +106,7 @@ function FeatureDetails() {
  {Array.from({length: 20}).map((_, i) => (
  <motion.div
  key={i}
- className="absolute text-yellow-400"
+ className="absolute text-accent-400"
  style={{
  left: `${Math.random() * 100}%`,
  top: `${Math.random() * 100}%`,
@@ -168,7 +168,7 @@ function FeatureDetails() {
  className="bg-gradient-to-br from-primary-50 to-secondary-50 rounded-3xl p-8 md:p-12 shadow-xl border-2 border-primary-100 mb-12"
  >
  <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-4 flex items-center gap-3">
- <StarIcon className="w-8 h-8 text-yellow-500" />
+ <StarIcon className="w-8 h-8 text-accent-500" />
  À propos
  </h2>
  <p className="text-lg text-foreground-secondary leading-relaxed">

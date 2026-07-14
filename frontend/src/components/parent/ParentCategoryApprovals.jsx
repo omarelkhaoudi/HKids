@@ -114,7 +114,7 @@ export function ParentCategoryApprovals({ kidId }) {
           <p className="text-sm text-foreground-muted font-medium mt-1">
             {t('parentCategoryApprovalsDesc')}
           </p>
-          <p className="text-xs text-amber-700 dark:text-amber-300 font-bold mt-2">
+          <p className="text-xs text-accent-700 dark:text-accent-300 font-bold mt-2">
             {t('parentCategoryDefaultHint')}
           </p>
         </div>

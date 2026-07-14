@@ -12,7 +12,7 @@ function StarParticles({count = 20}) {
  {Array.from({length: count}).map((_, i) => (
  <motion.div
  key={i}
- className="absolute text-yellow-400"
+ className="absolute text-accent-400"
  style={{
  left: `${Math.random() * 100}%`,
  top: `${Math.random() * 100}%`,
@@ -204,7 +204,7 @@ function SignUp() {
  initial={{opacity: 0, y: -10}}
  animate={{opacity: 1, y: 0}}
  exit={{opacity: 0, y: -10}}
- className="bg-green-50 border-2 border-green-300 text-green-700 px-4 py-3 rounded-3xl flex items-start gap-2 shadow-md"
+ className="bg-secondary-50 border-2 border-secondary-300 text-secondary-700 px-4 py-3 rounded-3xl flex items-start gap-2 shadow-md"
  >
  <CheckCircleIcon className="w-5 h-5 flex-shrink-0 mt-0.5" />
  <span className="text-sm font-medium">Compte créé avec succès ! Redirection en cours...</span>

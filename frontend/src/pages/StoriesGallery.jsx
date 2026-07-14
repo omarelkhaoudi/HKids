@@ -208,7 +208,7 @@ function StoriesGallery() {
  {decorativeStars.map(({size, opacity, ...position}, index) => (
  <StarIcon
  key={index}
- className={`pointer-events-none absolute z-0 text-yellow-300 ${size} ${opacity}`}
+ className={`pointer-events-none absolute z-0 text-accent-300 ${size} ${opacity}`}
  style={position}
  />
  ))}

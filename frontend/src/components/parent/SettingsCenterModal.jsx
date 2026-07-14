@@ -453,7 +453,7 @@ export function SettingsCenterModal({isOpen, onClose}) {
  </div>
  <div className="p-4 rounded-2xl border-2 border-border hover:border-primary-300 bg-card flex items-center justify-center cursor-pointer relative overflow-hidden">
  <span className="font-bold" style={{fontFamily: 'OpenDyslexic, sans-serif'}}>Dyslexie</span>
- <div className="absolute top-0 right-0 w-8 h-8 bg-blue-100 rounded-bl-2xl"></div>
+ <div className="absolute top-0 right-0 w-8 h-8 bg-primary-100 rounded-bl-2xl"></div>
  </div>
  </div>
  </div>
@@ -492,7 +492,7 @@ export function SettingsCenterModal({isOpen, onClose}) {
  </div>
  
  <div className="bg-gradient-to-br from-gray-900 to-black rounded-3xl p-8 text-white relative overflow-hidden shadow-2xl">
- <div className="absolute top-0 right-0 w-64 h-64 bg-yellow-500/20 rounded-full blur-3xl pointer-events-none"></div>
+ <div className="absolute top-0 right-0 w-64 h-64 bg-accent-500/20 rounded-full blur-3xl pointer-events-none"></div>
  <div className="relative z-10">
  <div className="flex items-center justify-between mb-8">
  <div>
@@ -514,14 +514,14 @@ export function SettingsCenterModal({isOpen, onClose}) {
  </p>
  </div>
  <div className="p-4 bg-card/10 backdrop-blur-md rounded-2xl">
- <StarIcon className="w-8 h-8 text-yellow-400" />
+ <StarIcon className="w-8 h-8 text-accent-400" />
  </div>
  </div>
  
  <div className="space-y-3 mb-8">
- <div className="flex items-center gap-3"><CheckCircleIcon className="w-5 h-5 text-green-400"/> <span>{subscription?.plan?.book_limit || 0} livre(s) premium / mois</span></div>
- <div className="flex items-center gap-3"><CheckCircleIcon className="w-5 h-5 text-green-400"/> <span>Statut : {subscription?.status || 'inactif'}</span></div>
- <div className="flex items-center gap-3"><CheckCircleIcon className="w-5 h-5 text-green-400"/> <span>{invoices.length} facture(s) récente(s)</span></div>
+ <div className="flex items-center gap-3"><CheckCircleIcon className="w-5 h-5 text-secondary-400"/> <span>{subscription?.plan?.book_limit || 0} livre(s) premium / mois</span></div>
+ <div className="flex items-center gap-3"><CheckCircleIcon className="w-5 h-5 text-secondary-400"/> <span>Statut : {subscription?.status || 'inactif'}</span></div>
+ <div className="flex items-center gap-3"><CheckCircleIcon className="w-5 h-5 text-secondary-400"/> <span>{invoices.length} facture(s) récente(s)</span></div>
  </div>
  
  <div className="flex flex-col sm:flex-row gap-4 pt-6 border-t border-white/10">

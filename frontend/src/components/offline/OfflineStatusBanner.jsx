@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNetworkStatus } from '../../hooks/useNetworkStatus';
 import { useLanguage } from '../../context/LanguageContext';
 import { subscribeSyncStatus, SYNC_PHASE } from '../../services/offline/syncStatusService';
+import { BRAND_SEMANTIC } from '../../constants/brandTheme';
 
 export function OfflineStatusBanner() {
   const { online, changedAt } = useNetworkStatus();
@@ -38,16 +39,16 @@ export function OfflineStatusBanner() {
 
   if (online && isSyncing) {
     message = t('offlineBannerSyncing');
-    tone = 'bg-emerald-600 text-white';
+    tone = `${BRAND_SEMANTIC.success.solid} text-white`;
   } else if (online && hasError) {
     message = t('offlineBannerSyncError');
-    tone = 'bg-amber-600 text-white';
+    tone = `${BRAND_SEMANTIC.warning.solid} text-white`;
   } else if (online && isPartial) {
     message = t('offlineBannerSyncPartial', { count: queueFailed });
-    tone = 'bg-amber-600 text-white';
+    tone = `${BRAND_SEMANTIC.warning.solid} text-white`;
   } else if (online) {
     message = t('offlineBannerOnline');
-    tone = 'bg-emerald-600 text-white';
+    tone = `${BRAND_SEMANTIC.success.solid} text-white`;
   }
 
   return (

@@ -112,10 +112,10 @@ function KidsAudioLibrary() {
         <motion.section
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          className="rounded-[2.5rem] bg-gradient-to-br from-violet-500 via-fuchsia-500 to-rose-500 p-8 md:p-12 text-white shadow-2xl"
+          className="rounded-[2.5rem] bg-gradient-to-br from-primary-500 via-primary-500 to-rose-500 p-8 md:p-12 text-white shadow-2xl"
         >
           <div className="flex items-center gap-3 mb-3">
-            <SparklesIcon className="h-8 w-8 text-yellow-300" />
+            <SparklesIcon className="h-8 w-8 text-accent-300" />
             <span className="font-black text-sm uppercase tracking-wider">{t('audioLibrary')}</span>
           </div>
           <h1 className="text-4xl md:text-5xl font-black mb-2">{t('audioLibraryTitle')}</h1>

@@ -406,11 +406,11 @@ function FamilyVoices() {
  <p className="text-sm text-secondary-700 mt-1">Vos données vocales sont protégées par authentification et traitées par ElevenLabs avec votre consentement.</p>
  </div>
  </div>
- <div className="bg-sky-50 rounded-2xl p-5 border border-sky-100 flex gap-4">
- <div className="bg-sky-500 text-white p-3 rounded-full h-fit"><CheckIcon className="w-6 h-6"/></div>
+ <div className="bg-primary-50 rounded-2xl p-5 border border-primary-100 flex gap-4">
+ <div className="bg-primary-500 text-white p-3 rounded-full h-fit"><CheckIcon className="w-6 h-6"/></div>
  <div>
- <h3 className="font-bold text-sky-900">Consentement Requis</h3>
- <p className="text-sm text-sky-700 mt-1">Une voix ne peut être clonée qu'avec l'accord explicite du parent.</p>
+ <h3 className="font-bold text-primary-900">Consentement Requis</h3>
+ <p className="text-sm text-primary-700 mt-1">Une voix ne peut être clonée qu'avec l'accord explicite du parent.</p>
  </div>
  </div>
  <div className="bg-rose-50 rounded-2xl p-5 border border-rose-100 flex gap-4">
@@ -578,7 +578,7 @@ function FamilyVoices() {
  {message.message_text && <p className="text-sm font-medium text-foreground-muted line-clamp-1">{message.message_text}</p>}
  <div className="flex gap-2 mt-2">
  <Badge variant="soft" className="bg-surface-secondary text-xs font-bold uppercase">{message.language}</Badge>
- {message.has_audio && <Badge variant="soft" className="bg-sky-100 text-sky-800 text-xs font-bold">Audio inclus</Badge>}
+ {message.has_audio && <Badge variant="soft" className="bg-primary-100 text-primary-800 text-xs font-bold">Audio inclus</Badge>}
  </div>
  </div>
  

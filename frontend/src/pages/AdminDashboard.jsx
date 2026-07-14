@@ -211,7 +211,7 @@ function RequireAdminPermission({permission, permissions, children}) {
  if (permissions == null) return children;
  if (permissions.includes(permission)) return children;
  return (
- <div className="rounded-2xl bg-amber-50 border border-amber-200 p-6 font-bold text-amber-800">
+ <div className="rounded-2xl bg-accent-50 border border-accent-200 p-6 font-bold text-accent-800">
  Accès refusé : permission « {permission} » requise.
  </div>
  );

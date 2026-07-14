@@ -53,7 +53,7 @@ export function Logo({ className = "", showText = true, size = "default", isLink
               delay: i * 0.2,
             }}
           >
-            <div className="w-1.5 h-1.5 bg-yellow-300 rounded-full shadow-lg shadow-yellow-400/70"></div>
+            <div className="w-1.5 h-1.5 bg-accent-300 rounded-full shadow-lg shadow-accent-400/70"></div>
           </motion.div>
         );
       })}
@@ -99,7 +99,7 @@ export function Logo({ className = "", showText = true, size = "default", isLink
               { left: '45%', top: '15%' },
               { left: '55%', top: '85%' },
             ];
-            const colors = ['bg-yellow-300', 'bg-accent-300', 'bg-primary-300', 'bg-secondary-300', 'bg-yellow-200', 'bg-accent-200'];
+            const colors = ['bg-accent-300', 'bg-accent-300', 'bg-primary-300', 'bg-secondary-300', 'bg-accent-200', 'bg-accent-200'];
             const pos = positions[i % positions.length];
             
             return (

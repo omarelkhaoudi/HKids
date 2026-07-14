@@ -51,7 +51,7 @@ function KidsLibrary() {
   const { showToast } = useToast();
   const { language, isRtl, t } = useLanguage();
   const childThemes = useMemo(() => [
-    { id: 'all', label: t('allCategories'), shortLabel: t('allCategories'), pictogram: '⭐', cue: 'Go', gradient: 'from-sky-400 to-emerald-400', match: [] },
+    { id: 'all', label: t('allCategories'), shortLabel: t('allCategories'), pictogram: '⭐', cue: 'Go', gradient: 'from-primary-400 to-secondary-400', match: [] },
     ...localizeKidCategories(language),
   ], [language, t]);
 
@@ -202,7 +202,7 @@ function KidsLibrary() {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.4 }}
-            className={`relative overflow-hidden rounded-[3rem] bg-gradient-to-br ${activeThemeData?.gradient || 'from-primary-500 to-purple-600'} p-8 md:p-16 text-white shadow-2xl border-8 border-white/30 mb-12`}
+            className={`relative overflow-hidden rounded-[3rem] bg-gradient-to-br ${activeThemeData?.gradient || 'from-primary-500 to-primary-600'} p-8 md:p-16 text-white shadow-2xl border-8 border-white/30 mb-12`}
           >
             <div className="absolute top-0 right-0 w-96 h-96 bg-white/10 rounded-full blur-3xl -mr-20 -mt-20" />
             <div className="absolute bottom-0 left-0 w-64 h-64 bg-black/10 rounded-full blur-3xl -ml-20 -mb-20" />
@@ -225,7 +225,7 @@ function KidsLibrary() {
 
               <div className={`flex-1 text-center ${isRtl ? 'md:text-right' : 'md:text-left'}`}>
                 <div className="inline-flex items-center gap-2 rounded-full bg-white/20 backdrop-blur-md border-2 border-white/30 px-5 py-2 text-sm font-black mb-6 shadow-xl text-white">
-                  <StarIcon className="h-5 w-5 text-yellow-300" filled />
+                  <StarIcon className="h-5 w-5 text-accent-300" filled />
                   <span>{t('featured')} {activeThemeData?.label}</span>
                 </div>
                 <h1 className="text-3xl md:text-6xl font-black leading-tight mb-4 filter drop-shadow-lg text-white hidden lg:block">

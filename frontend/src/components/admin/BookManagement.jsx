@@ -293,10 +293,10 @@ function BookManagement() {
  const isPremium = book.is_premium === true || book.is_premium === 1;
  const moderationStatus = book.moderation_status || 'approved';
  const moderationTone = moderationStatus === 'pending'
- ? 'bg-amber-100 text-amber-800'
+ ? 'bg-accent-100 text-accent-800'
  : moderationStatus === 'rejected'
  ? 'bg-rose-100 text-rose-800'
- : 'bg-emerald-100 text-emerald-800';
+ : 'bg-secondary-100 text-secondary-800';
  const isSelected = selectedItems.includes(book.id);
  const imageUrl = book.cover_image ? getImageUrl(book.cover_image) : null;
  
@@ -320,16 +320,16 @@ function BookManagement() {
  <Badge variant="soft" className="bg-surface-secondary text-foreground-secondary font-bold">{book.category_name || 'Aucune'}</Badge>
  </td>
  <td className="p-4">
- <Badge variant="soft" className={`font-bold ${isPublished ? 'bg-emerald-100 text-emerald-800' : 'bg-surface-secondary text-foreground-secondary'}`}>
+ <Badge variant="soft" className={`font-bold ${isPublished ? 'bg-secondary-100 text-secondary-800' : 'bg-surface-secondary text-foreground-secondary'}`}>
  {isPublished ? 'Publié' : 'Brouillon'}
  </Badge>
  <Badge variant="soft" className={`font-bold ml-2 ${moderationTone}`}>
  {moderationStatus === 'pending' ? 'Modération' : moderationStatus === 'rejected' ? 'Rejeté' : 'Validé'}
  </Badge>
- {isPremium && <Badge variant="soft" className="bg-violet-100 text-violet-800 font-bold ml-2">Premium</Badge>}
+ {isPremium && <Badge variant="soft" className="bg-primary-100 text-primary-800 font-bold ml-2">Premium</Badge>}
  </td>
  <td className="p-4">
- {book.audio_url ? <AudioIcon className="w-5 h-5 text-emerald-500" /> : <AudioIcon className="w-5 h-5 text-surface-300" />}
+ {book.audio_url ? <AudioIcon className="w-5 h-5 text-secondary-500" /> : <AudioIcon className="w-5 h-5 text-surface-300" />}
  </td>
  <td className="p-4 text-right" onClick={(e) => e.stopPropagation()}>
  <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -481,7 +481,7 @@ function BookManagement() {
  <div>
  <label className="block text-sm font-bold text-foreground-secondary mb-1">Audio</label>
  <input type="file" accept="audio/*" onChange={(e) => setAudioFile(e.target.files?.[0] || null)} className="w-full text-sm" />
- {formData.audio_url && !audioFile && <p className="text-xs text-emerald-600 mt-1 font-bold">Audio existant</p>}
+ {formData.audio_url && !audioFile && <p className="text-xs text-secondary-600 mt-1 font-bold">Audio existant</p>}
  </div>
  <div>
  <label className="block text-sm font-bold text-foreground-secondary mb-1">Pages (images)</label>

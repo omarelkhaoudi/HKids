@@ -6,6 +6,7 @@ import { useLanguage } from '../../context/LanguageContext';
 import { isAudioRecordingSupported, recordAudioClip } from '../../services/ai/browserSpeechRecognition';
 import { ensureMicrophonePermission } from '../../services/mobile/androidPermissions';
 import { speakText, stopSpeaking } from '../../services/ai/browserTextToSpeech';
+import { BRAND_HERO_GRADIENT } from '../../constants/brandTheme';
 
 function isExpectedVoiceRecordingError(error) {
   const message = String(error?.message || error?.response?.data?.error || '').toLowerCase();
@@ -246,7 +247,7 @@ export function VoiceAssistant({ language: requestedSpeechLanguage, onNavigate }
         className={`fixed bottom-40 z-50 grid h-20 w-20 place-items-center rounded-full text-white shadow-2xl ${isRtl ? 'left-6' : 'right-6'} ${
           listening
             ? 'bg-gradient-to-br from-accent-400 to-accent-500'
-            : 'bg-gradient-to-br from-primary-500 via-secondary-500 to-purple-500'
+            : `bg-gradient-to-br ${BRAND_HERO_GRADIENT}`
         }`}
         aria-label={t('assistantVoice')}
         title={t('assistantVoice')}
@@ -263,7 +264,7 @@ export function VoiceAssistant({ language: requestedSpeechLanguage, onNavigate }
             className={`fixed bottom-52 z-50 w-[min(92vw,420px)] overflow-hidden rounded-[2rem] bg-white shadow-2xl ring-1 ring-primary-100 ${isRtl ? 'left-4' : 'right-4'}`}
             dir={isRtl ? 'rtl' : 'ltr'}
           >
-            <div className="bg-gradient-to-r from-primary-500 via-secondary-500 to-purple-500 p-4 text-white">
+            <div className={`bg-gradient-to-r ${BRAND_HERO_GRADIENT} p-4 text-white`}>
               <div className="flex items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
                   <span className="grid h-11 w-11 place-items-center rounded-2xl bg-white/20">
@@ -295,7 +296,7 @@ export function VoiceAssistant({ language: requestedSpeechLanguage, onNavigate }
                   key={`${message.role}-${index}`}
                   className={`rounded-2xl px-4 py-3 text-sm font-bold leading-relaxed ${
                     message.role === 'kid'
-                      ? `${isRtl ? 'mr-8' : 'ml-8'} bg-cyan-100 text-cyan-900`
+                      ? `${isRtl ? 'mr-8' : 'ml-8'} bg-primary-100 text-primary-900`
                       : `${isRtl ? 'ml-8' : 'mr-8'} bg-surface-100 text-surface-800`
                   }`}
                 >
@@ -304,7 +305,7 @@ export function VoiceAssistant({ language: requestedSpeechLanguage, onNavigate }
               ))}
 
               {transcriptPreview && listening && (
-                <div className={`${isRtl ? 'mr-8' : 'ml-8'} rounded-2xl bg-cyan-50 px-4 py-3 text-sm font-bold text-cyan-800`}>
+                <div className={`${isRtl ? 'mr-8' : 'ml-8'} rounded-2xl bg-primary-50 px-4 py-3 text-sm font-bold text-primary-800`}>
                   {transcriptPreview}
                 </div>
               )}

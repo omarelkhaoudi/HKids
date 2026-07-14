@@ -55,7 +55,7 @@ export const KidsMediaCard = memo(function KidsMediaCard({
 
       {book.is_premium && (
         <div className="absolute left-3 top-3">
-          <span className="flex items-center gap-1 rounded-full bg-gradient-to-r from-amber-400 to-orange-500 px-3 py-1 text-xs font-black text-white shadow-md border-2 border-white/50">
+          <span className="flex items-center gap-1 rounded-full bg-gradient-to-r from-accent-400 to-accent-500 px-3 py-1 text-xs font-black text-white shadow-md border-2 border-white/50">
             <SparklesIcon className="h-4 w-4" /> PRO
           </span>
         </div>
@@ -115,7 +115,7 @@ export const KidsMediaCard = memo(function KidsMediaCard({
           <div className="flex items-center gap-3 text-sm font-black text-white/90">
             {book.duration_seconds > 0 && (
               <span className="flex items-center gap-1 bg-black/40 px-2 py-1 rounded-lg backdrop-blur-sm">
-                <ClockIcon className="h-4 w-4 text-amber-400" />
+                <ClockIcon className="h-4 w-4 text-accent-400" />
                 {formatDuration(book.duration_seconds)}
               </span>
             )}
