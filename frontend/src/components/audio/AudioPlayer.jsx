@@ -44,7 +44,7 @@ export function AudioPlayer({
     <div className="fixed inset-x-0 bottom-0 z-50 border-t border-white/60 bg-white/95 px-4 py-4 shadow-2xl backdrop-blur dark:bg-surface-900/95">
       <div className="mx-auto grid max-w-7xl gap-3 lg:grid-cols-[1fr_1.4fr_0.7fr] lg:items-center">
         <div className="flex min-w-0 items-center gap-3">
-          <div className="grid h-16 w-16 shrink-0 place-items-center rounded-2xl bg-emerald-100 text-emerald-700">
+          <div className="grid h-16 w-16 shrink-0 place-items-center rounded-2xl bg-secondary-100 text-secondary-700">
             <AudioIcon className="h-8 w-8" />
           </div>
           <div className="min-w-0">
@@ -68,7 +68,7 @@ export function AudioPlayer({
             </button>
             <button
               onClick={onTogglePlay}
-              className="grid h-20 w-20 place-items-center rounded-full bg-emerald-500 text-white shadow-lg transition hover:bg-emerald-600"
+              className="grid h-20 w-20 place-items-center rounded-full bg-secondary-500 text-white shadow-lg transition hover:bg-secondary-600"
               aria-label={playing ? 'Pause' : 'Lecture'}
             >
               {playing ? <PauseIcon className="h-10 w-10" /> : <PlayIcon className="h-10 w-10" />}
@@ -92,7 +92,7 @@ export function AudioPlayer({
               max={progressMax || 0}
               value={progressValue}
               onChange={(event) => onSeekTo(event.target.value)}
-              className="h-3 w-full cursor-pointer accent-emerald-500"
+              className="h-3 w-full cursor-pointer accent-secondary-500"
               aria-label="Progression audio"
             />
             <span className="text-xs font-black text-surface-500 dark:text-surface-300">
@@ -127,7 +127,7 @@ export function AudioPlayer({
               step="0.01"
               value={volume}
               onChange={(event) => onVolumeChange(event.target.value)}
-              className="w-24 accent-emerald-500"
+              className="w-24 accent-secondary-500"
               aria-label="Volume"
             />
           </div>

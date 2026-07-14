@@ -71,14 +71,14 @@ function AdminSubscriptions() {
 
  <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
  <div className="bg-card rounded-[1.5rem] p-6 border border-border shadow-sm relative overflow-hidden group">
- <div className="absolute inset-0 bg-emerald-50 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+ <div className="absolute inset-0 bg-secondary-50 opacity-0 group-hover:opacity-100 transition-opacity"></div>
  <div className="relative z-10 flex justify-between items-start mb-2">
  <h3 className="text-sm font-bold text-foreground-muted uppercase tracking-wider">MRR Actuel</h3>
- <div className="p-2 rounded-xl bg-emerald-100 text-emerald-600"><TrendingUpIcon className="w-5 h-5"/></div>
+ <div className="p-2 rounded-xl bg-secondary-100 text-secondary-600"><TrendingUpIcon className="w-5 h-5"/></div>
  </div>
  <div className="relative z-10">
  <span className="text-3xl font-black text-foreground tracking-tight">{totalRevenue.toFixed(2)} €</span>
- <p className="text-xs text-emerald-600 font-bold mt-1 flex items-center gap-1"><TrendingUpIcon className="w-3 h-3"/> Abonnements actifs et essais</p>
+ <p className="text-xs text-secondary-600 font-bold mt-1 flex items-center gap-1"><TrendingUpIcon className="w-3 h-3"/> Abonnements actifs et essais</p>
  </div>
  </div>
  

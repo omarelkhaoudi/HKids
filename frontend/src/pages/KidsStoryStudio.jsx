@@ -424,7 +424,7 @@ function KidsStoryStudio() {
  whileHover={{scale: 1.1}}
  whileTap={{scale: 0.9}}
  onClick={() => toggleCharacter(char.id)}
- className={`aspect-square rounded-3xl flex flex-col items-center justify-center gap-1 border-2 transition-all ${isSelected ? 'border-cyan-400 bg-cyan-400/20' : 'border-white/5 bg-card/5 hover:bg-card/10'}`}
+ className={`aspect-square rounded-3xl flex flex-col items-center justify-center gap-1 border-2 transition-all ${isSelected ? 'border-primary-400 bg-primary-400/20' : 'border-white/5 bg-card/5 hover:bg-card/10'}`}
  >
  <span className="text-3xl">{char.pictogram}</span>
  <span className="font-bold text-[10px] leading-tight text-center">{char.label}</span>
@@ -437,7 +437,7 @@ function KidsStoryStudio() {
  value={customCharacter}
  onChange={(e) => setCustomCharacter(e.target.value)}
  placeholder="Ajouter un autre personnage... (ex: Mamie, mon chien)" 
- className="flex-1 rounded-2xl bg-card/10 border-2 border-white/10 px-4 py-3 font-bold text-white placeholder-white/40 focus:border-cyan-400 focus:outline-none"
+ className="flex-1 rounded-2xl bg-card/10 border-2 border-white/10 px-4 py-3 font-bold text-white placeholder-white/40 focus:border-primary-400 focus:outline-none"
  />
  </div>
  </div>

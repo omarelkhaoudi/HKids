@@ -12,7 +12,7 @@ export default function HeroSection({ t, totalBooks }) {
         {Array.from({ length: 15 }).map((_, i) => (
           <motion.div
             key={i}
-            className="absolute text-yellow-300 opacity-60"
+            className="absolute text-accent-300 opacity-60"
             style={{
               left: `${(i * 17 + 7) % 100}%`,
               top: `${(i * 23 + 11) % 100}%`,
@@ -125,9 +125,9 @@ export default function HeroSection({ t, totalBooks }) {
 
                 <div className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-white/90 dark:bg-surface-800/90 backdrop-blur-md rounded-full px-5 py-3 shadow-lg border border-white/50 flex items-center gap-3 w-max z-20">
                   <div className="flex -space-x-2">
-                    <div className="w-8 h-8 rounded-full bg-blue-100 border-2 border-white flex items-center justify-center text-sm shadow-sm z-30">👨‍👩‍👧</div>
-                    <div className="w-8 h-8 rounded-full bg-green-100 border-2 border-white flex items-center justify-center text-sm shadow-sm z-20">👩‍👦</div>
-                    <div className="w-8 h-8 rounded-full bg-purple-100 border-2 border-white flex items-center justify-center text-sm shadow-sm z-10">👨‍👧‍👦</div>
+                    <div className="w-8 h-8 rounded-full bg-primary-100 border-2 border-white flex items-center justify-center text-sm shadow-sm z-30">👨‍👩‍👧</div>
+                    <div className="w-8 h-8 rounded-full bg-secondary-100 border-2 border-white flex items-center justify-center text-sm shadow-sm z-20">👩‍👦</div>
+                    <div className="w-8 h-8 rounded-full bg-accent-100 border-2 border-white flex items-center justify-center text-sm shadow-sm z-10">👨‍👧‍👦</div>
                   </div>
                   <div className="text-xs font-semibold text-foreground-secondary">
                     {t.familiesJoined} ✨

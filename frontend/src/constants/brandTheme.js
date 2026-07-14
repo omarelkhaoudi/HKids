@@ -105,3 +105,7 @@ export const BRAND_STORY_GRADIENTS = [
 export function storyGradientAtIndex(index) {
   return BRAND_STORY_GRADIENTS[index % BRAND_STORY_GRADIENTS.length];
 }
+
+export function ringAtIndex(index) {
+  return toneAtIndex(index).borderColor.replace('border-', 'ring-');
+}

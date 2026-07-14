@@ -1,4 +1,5 @@
 import { normalizeLanguage } from '../utils/translations';
+import { hubGradientAtIndex } from './brandTheme';
 
 const labels = {
   fr: {
@@ -79,58 +80,27 @@ export const CONTENT_LANGUAGES = [
   { id: 'en', label: labels.fr.english, shortLabel: 'EN', labelKey: 'english' },
 ];
 
-export const CONTENT_THEMES = [
-  {
-    id: 'dinosaurs',
-    label: labels.fr.dinosaurs,
-    labelKey: 'dinosaurs',
-    pictogram: '🦖',
-    gradient: 'from-lime-500 to-green-600',
-    match: ['dinosaur', 'dinosaure', 'dino'],
-  },
-  {
-    id: 'space',
-    label: labels.fr.space,
-    labelKey: 'space',
-    pictogram: '🚀',
-    gradient: 'from-indigo-500 to-cyan-500',
-    match: ['space', 'espace', 'rocket', 'planete', 'planet'],
-  },
-  {
-    id: 'animals',
-    label: labels.fr.animals,
-    labelKey: 'animals',
-    pictogram: '🐻',
-    gradient: 'from-accent-400 to-accent-500',
-    match: ['animal', 'animaux', 'nature'],
-  },
-  {
-    id: 'princesses',
-    label: labels.fr.princesses,
-    labelKey: 'princesses',
-    pictogram: '👸',
-    gradient: 'from-secondary-500 to-rose-500',
-    match: ['princess', 'princesse', 'fairy', 'conte'],
-  },
-  {
-    id: 'jobs',
-    label: labels.fr.jobs,
-    labelKey: 'jobs',
-    pictogram: '🚒',
-    gradient: 'from-primary-500 to-teal-500',
-    match: ['job', 'metier', 'doctor', 'pompier', 'teacher'],
-  },
+const THEME_DEFS = [
+  { id: 'dinosaurs', labelKey: 'dinosaurs', pictogram: '🦖', match: ['dinosaur', 'dinosaure', 'dino'] },
+  { id: 'space', labelKey: 'space', pictogram: '🚀', match: ['space', 'espace', 'rocket', 'planete', 'planet'] },
+  { id: 'animals', labelKey: 'animals', pictogram: '🐻', match: ['animal', 'animaux', 'nature'] },
+  { id: 'princesses', labelKey: 'princesses', pictogram: '👸', match: ['princess', 'princesse', 'fairy', 'conte'] },
+  { id: 'jobs', labelKey: 'jobs', pictogram: '🚒', match: ['job', 'metier', 'doctor', 'pompier', 'teacher'] },
   {
     id: 'world',
-    label: labels.fr.world,
-    libraryLabel: labels.fr.worldShort,
     labelKey: 'world',
     libraryLabelKey: 'worldShort',
     pictogram: '🌍',
-    gradient: 'from-violet-500 to-fuchsia-500',
     match: ['world', 'monde', 'culture', 'voyage', 'science'],
   },
 ];
+
+export const CONTENT_THEMES = THEME_DEFS.map((theme, index) => ({
+  ...theme,
+  label: labels.fr[theme.labelKey],
+  libraryLabel: theme.libraryLabelKey ? labels.fr[theme.libraryLabelKey] : undefined,
+  gradient: hubGradientAtIndex(index),
+}));
 
 export const LIBRARY_THEME_FILTERS = [
   {
@@ -138,7 +108,7 @@ export const LIBRARY_THEME_FILTERS = [
     label: labels.fr.all,
     labelKey: 'all',
     pictogram: '⭐',
-    gradient: 'from-sky-500 to-emerald-400',
+    gradient: hubGradientAtIndex(0),
     match: [],
   },
   ...CONTENT_THEMES.map((theme) => ({

@@ -99,9 +99,9 @@ export default function StoryPreviewSection({ books, getImageUrl }) {
                       <span className="text-sm font-medium text-surface-500">
                         {book.category_name || "Aventure"}
                       </span>
-                      <div className="flex items-center gap-1 bg-yellow-50 px-2 py-1 rounded-md">
-                        <StarIcon className="w-3.5 h-3.5 text-yellow-500" />
-                        <span className="text-xs font-bold text-yellow-700">4.8</span>
+                      <div className="flex items-center gap-1 bg-accent-50 px-2 py-1 rounded-md">
+                        <StarIcon className="w-3.5 h-3.5 text-accent-500" />
+                        <span className="text-xs font-bold text-accent-700">4.8</span>
                       </div>
                     </div>
                   </div>

@@ -95,7 +95,7 @@ function KidsCategoryPage() {
   const hasContent = books.length > 0 || learningItems.length > 0;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-rose-50 pb-32">
+    <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-rose-50 pb-32">
       <div className="mx-auto max-w-5xl px-4 py-6 sm:px-6 lg:px-8">
         <header className="mb-8 flex items-center justify-between gap-4">
           <Link to="/kids" className="shrink-0">
@@ -180,7 +180,7 @@ function KidsCategoryPage() {
                       whileHover={{ scale: 1.03 }}
                       whileTap={{ scale: 0.95 }}
                       onClick={() => navigate('/kids/learning')}
-                      className={`rounded-[2rem] bg-gradient-to-br ${item.category_color || 'from-sky-500 to-cyan-400'} p-5 text-left text-white shadow-lg min-h-40`}
+                      className={`rounded-[2rem] bg-gradient-to-br ${item.category_color || 'from-primary-500 to-primary-400'} p-5 text-left text-white shadow-lg min-h-40`}
                     >
                       <span className="text-4xl">{item.category_pictogram || '⭐'}</span>
                       <p className="mt-3 font-black text-lg">{item.title}</p>

@@ -35,7 +35,7 @@ export const CONTENT_LIBRARY_CATEGORIES = [
     label: categoryLabels.fr.education[0],
     description: categoryLabels.fr.education[1],
     pictogram: '🎓',
-    gradient: 'from-sky-500 via-cyan-500 to-emerald-400',
+    gradient: 'from-primary-500 via-primary-500 to-secondary-400',
     contentTypes: ['educational', 'quiz'],
   },
   {
@@ -43,7 +43,7 @@ export const CONTENT_LIBRARY_CATEGORIES = [
     label: categoryLabels.fr.entertainment[0],
     description: categoryLabels.fr.entertainment[1],
     pictogram: '🎵',
-    gradient: 'from-violet-500 via-fuchsia-500 to-rose-400',
+    gradient: 'from-primary-500 via-primary-500 to-rose-400',
     contentTypes: ['song'],
   },
 ];

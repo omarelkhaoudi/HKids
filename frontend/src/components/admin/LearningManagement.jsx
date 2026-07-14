@@ -23,7 +23,7 @@ function LearningManagement() {
   const [editingId, setEditingId] = useState(null);
   const [search, setSearch] = useState('');
   const [formData, setFormData] = useState(EMPTY_LEARNING_FORM);
-  const [categoryForm, setCategoryForm] = useState({ code: '', name: '', description: '', pictogram: '⭐', color: 'from-sky-500 to-cyan-400' });
+  const [categoryForm, setCategoryForm] = useState({ code: '', name: '', description: '', pictogram: '⭐', color: 'from-primary-500 to-primary-400' });
   const [challengeForm, setChallengeForm] = useState({ title: '', description: '', challenge_type: 'quiz_success_count', target_value: 3, category_id: '', status: 'active' });
   const [rewardForm, setRewardForm] = useState({ code: '', name: '', reward_type: 'stars', icon: '⭐', value: 5, description: '' });
 
@@ -116,7 +116,7 @@ function LearningManagement() {
     setSubmitting(true);
     try {
       await learningAPI.createCategory(categoryForm);
-      setCategoryForm({ code: '', name: '', description: '', pictogram: '⭐', color: 'from-sky-500 to-cyan-400' });
+      setCategoryForm({ code: '', name: '', description: '', pictogram: '⭐', color: 'from-primary-500 to-primary-400' });
       loadData();
     } catch (error) {
       alert(error.response?.data?.error || 'Création impossible');

@@ -119,7 +119,7 @@ export default function BookOfTheWeekSection({ book, t, getImageUrl, imageError,
 
                 <div className="flex items-start gap-4 pt-4 border-t border-surface-200/50">
                   <div className="mt-1 flex-shrink-0">
-                    <StarIcon className="w-6 h-6 text-yellow-500" />
+                    <StarIcon className="w-6 h-6 text-accent-500" />
                   </div>
                   <div>
                     <div className="flex items-center gap-2">

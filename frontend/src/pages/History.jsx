@@ -135,7 +135,7 @@ function History() {
  {Array.from({length: 20}).map((_, i) => (
  <motion.div
  key={i}
- className="absolute text-yellow-400"
+ className="absolute text-accent-400"
  style={{
  left: `${Math.random() * 100}%`,
  top: `${Math.random() * 100}%`,

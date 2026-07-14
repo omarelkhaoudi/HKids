@@ -337,7 +337,7 @@ function BookDetails() {
  {book.page_count > 0 && (
  <motion.span
  whileHover={{scale: 1.05}}
- className="px-4 py-2 bg-gradient-to-r from-primary-400 to-cyan-400 text-white rounded-full text-sm font-semibold shadow-lg flex items-center gap-2"
+ className="px-4 py-2 bg-gradient-to-r from-primary-400 to-primary-400 text-white rounded-full text-sm font-semibold shadow-lg flex items-center gap-2"
  >
  <BookIcon className="w-4 h-4" />
  {book.page_count} page{book.page_count > 1 ? 's' : ''}

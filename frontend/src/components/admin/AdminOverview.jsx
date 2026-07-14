@@ -134,7 +134,7 @@ function AdminOverview() {
  <div className="space-y-4">
  {data?.recent_activity?.length > 0 ? data.recent_activity.slice(0,5).map((item, i) => (
  <div key={item.id} className="flex items-start gap-4 p-4 rounded-2xl hover:bg-surface-secondary transition-colors border border-transparent hover:border-border">
- <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-400 to-cyan-400 flex items-center justify-center text-white shrink-0 shadow-sm">
+ <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary-400 to-primary-400 flex items-center justify-center text-white shrink-0 shadow-sm">
  <AudioIcon className="w-5 h-5" />
  </div>
  <div className="flex-1 min-w-0">
@@ -173,7 +173,7 @@ function AdminOverview() {
  <p className="text-xs text-surface-400 font-medium">{formatAdminDate(item.created_at)}</p>
  </div>
  </div>
- <span className="px-2 py-1 bg-emerald-50 text-emerald-700 rounded-lg text-xs font-bold">Parent</span>
+ <span className={`px-2 py-1 ${BRAND_SEMANTIC.success.bg} ${BRAND_SEMANTIC.success.text} rounded-lg text-xs font-bold`}>Parent</span>
  </div>
  )) : (
  <p className="text-sm text-foreground-muted text-center py-4">Aucun utilisateur récent.</p>
@@ -189,7 +189,7 @@ function AdminOverview() {
  <div key={item.id} className="p-3 rounded-2xl hover:bg-surface-secondary transition-colors border border-border">
  <div className="flex items-center justify-between mb-1">
  <p className="font-bold text-foreground text-sm truncate pr-2">{item.title}</p>
- <div className={`w-2 h-2 rounded-full shrink-0 ${item.is_published ? 'bg-emerald-500' : 'bg-amber-400'}`}></div>
+ <div className={`w-2 h-2 rounded-full shrink-0 ${item.is_published ? BRAND_SEMANTIC.success.solid : BRAND_SEMANTIC.warning.solid}`}></div>
  </div>
  <p className="text-xs text-surface-400 font-medium truncate">{item.category_name || 'Généré par IA'}</p>
  </div>

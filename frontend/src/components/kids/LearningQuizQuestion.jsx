@@ -50,7 +50,7 @@ function OptionGrid({ options, questionId, answers, onChoose, disabled, columns 
             disabled={disabled}
             className={`flex flex-col items-center justify-center min-h-32 rounded-[1.75rem] border-4 p-4 text-center transition-all shadow-sm ${
               active
-                ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 scale-105 shadow-md'
+                ? 'border-secondary-500 bg-secondary-50 dark:bg-secondary-900/30 text-secondary-700 dark:text-secondary-300 scale-105 shadow-md'
                 : 'border-transparent bg-card hover:border-primary-300'
             }`}
             aria-label={option.label}
@@ -135,7 +135,7 @@ export function LearningMemoryGame({ pairs = [], answers, onChoose, disabled }) 
               onClick={() => handlePick(pair.id)}
               disabled={disabled}
               className={`min-h-28 rounded-[1.5rem] border-4 p-4 text-5xl font-black transition ${
-                active ? 'border-emerald-500 bg-emerald-50' : 'border-transparent bg-card'
+                active ? 'border-secondary-500 bg-secondary-50' : 'border-transparent bg-card'
               }`}
             >
               {active ? pair.pictogram : '❓'}

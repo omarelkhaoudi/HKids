@@ -15,7 +15,7 @@ export function Badge({
  warning:"bg-warning-100 text-warning-700 /30",
  danger:"bg-danger-100 text-danger-700 /30",
  neutral:"bg-surface-secondary text-foreground-secondary",
- premium:"bg-gradient-to-r from-yellow-400 to-amber-500 text-white shadow-sm",
+ premium:"bg-gradient-to-r from-accent-400 to-accent-500 text-white shadow-sm",
  glass:"bg-card/20 backdrop-blur-md border border-white/30 text-white",
  };
 

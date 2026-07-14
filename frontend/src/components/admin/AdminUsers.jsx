@@ -175,12 +175,12 @@ function AdminUsers() {
  <div className="flex-1 overflow-y-auto p-4 xl:p-0 space-y-6 pb-24 xl:pb-0">
  {/* Parent Summary Card */}
  <div className="bg-card rounded-[2rem] border border-border shadow-sm relative overflow-hidden">
- <div className="absolute top-0 left-0 right-0 h-24 bg-gradient-to-r from-primary-500 to-violet-500"></div>
+ <div className="absolute top-0 left-0 right-0 h-24 bg-gradient-to-r from-primary-500 to-primary-500"></div>
  <button onClick={() => setSelectedParent(null)} className="absolute top-4 right-4 z-10 p-2 bg-black/20 text-white rounded-full hover:bg-black/40 backdrop-blur-md transition-colors"><XIcon className="w-5 h-5"/></button>
  
  <div className="relative pt-12 px-6 pb-6">
  <div className="w-24 h-24 bg-card p-1.5 rounded-[1.5rem] shadow-lg mb-4">
- <div className="w-full h-full bg-gradient-to-br from-primary-400 to-violet-500 rounded-2xl flex items-center justify-center text-white text-4xl font-black uppercase">
+ <div className="w-full h-full bg-gradient-to-br from-primary-400 to-primary-500 rounded-2xl flex items-center justify-center text-white text-4xl font-black uppercase">
  {selectedParent.name.charAt(0)}
  </div>
  </div>
@@ -194,7 +194,7 @@ function AdminUsers() {
  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
  <div className="bg-surface-secondary rounded-2xl p-4 border border-border flex flex-col justify-center items-center">
  <div className="text-xs font-bold text-surface-400 uppercase tracking-wider mb-1">Abonnement</div>
- <div className={`text-base font-black ${selectedParent.subscription_status === 'free' ? 'text-foreground-secondary' : 'text-emerald-600'}`}>
+ <div className={`text-base font-black ${selectedParent.subscription_status === 'free' ? 'text-foreground-secondary' : 'text-secondary-600'}`}>
  {selectedParent.subscription_status === 'free' ? 'Gratuit' : 'Premium'}
  </div>
  </div>
@@ -243,7 +243,7 @@ function AdminUsers() {
  <div className="min-w-0 flex-1 pr-2">
  <h5 className="font-black text-foreground text-lg flex items-center gap-2 truncate">
  {kid.name}
- {kid.is_premium_voice && <StarIcon className="w-5 h-5 text-amber-500 shrink-0" title="Premium Voice" />}
+ {kid.is_premium_voice && <StarIcon className="w-5 h-5 text-accent-500 shrink-0" title="Premium Voice" />}
  </h5>
  <p className="text-sm font-bold text-foreground-muted mt-1 truncate">
  {kid.age ? `${kid.age} ans` : 'Âge N/A'} • <span className="uppercase text-surface-400">{kid.preferred_language || 'fr'}</span>
@@ -260,7 +260,7 @@ function AdminUsers() {
  <span className="text-[10px] font-bold text-surface-400 uppercase tracking-wider">Sessions</span>
  </div>
  <div className="bg-card p-2 rounded-xl border border-border text-center">
- <span className="text-emerald-600 font-black text-lg block leading-none mb-1">{Math.round((kid.total_time_seconds || 0)/60)}</span>
+ <span className="text-secondary-600 font-black text-lg block leading-none mb-1">{Math.round((kid.total_time_seconds || 0)/60)}</span>
  <span className="text-[10px] font-bold text-surface-400 uppercase tracking-wider">Minutes</span>
  </div>
  </div>

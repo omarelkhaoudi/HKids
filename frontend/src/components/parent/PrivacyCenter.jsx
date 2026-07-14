@@ -242,7 +242,7 @@ export default function PrivacyCenter() {
           {logs.map((entry) => (
             <div key={entry.id} className="flex items-center justify-between gap-4 py-3 text-sm">
               <span className="flex items-center gap-2 font-medium">
-                <CheckCircleIcon className="h-4 w-4 text-emerald-500" />
+                <CheckCircleIcon className="h-4 w-4 text-secondary-500" />
                 {ACTION_LABELS[entry.action] || entry.action}
               </span>
               <time className="text-xs text-foreground-muted">{formatDate(entry.created_at)}</time>
