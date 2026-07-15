@@ -187,6 +187,156 @@ function StoryTextWithIllustrations({ story }) {
   );
 }
 
+function NarrationPlayer({ story }) {
+  const { t, language } = useLanguage();
+  const [narrationLocale, setNarrationLocale] = React.useState(story.language || language || 'fr');
+  const [audioUrl, setAudioUrl] = React.useState(null);
+  const [isPlaying, setIsPlaying] = React.useState(false);
+  const [isLoading, setIsLoading] = React.useState(false);
+  const [isGenerating, setIsGenerating] = React.useState(false);
+  const audioRef = React.useRef(null);
+
+  const tracks = story.narration_tracks || [];
+  const currentTrack = tracks.find(t => t.locale === narrationLocale);
+  const hasTrack = currentTrack?.available && currentTrack?.url;
+
+  React.useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      setIsPlaying(false);
+    }
+    setAudioUrl(hasTrack ? currentTrack.url : null);
+  }, [narrationLocale, hasTrack, currentTrack?.url]);
+
+  const handlePlayPause = async () => {
+    if (isPlaying && audioRef.current) {
+      audioRef.current.pause();
+      setIsPlaying(false);
+      return;
+    }
+
+    if (audioUrl) {
+      if (!audioRef.current) audioRef.current = new Audio(audioUrl);
+      else audioRef.current.src = audioUrl;
+      audioRef.current.onended = () => setIsPlaying(false);
+      await audioRef.current.play();
+      setIsPlaying(true);
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const langMap = { fr: 'fr-FR', en: 'en-US', ar: 'ar-MA' };
+      await speakText(`${story.title}. ${story.story_text}`, { 
+        language: langMap[narrationLocale] || 'fr-FR',
+        preferServer: true 
+      });
+    } catch (e) {
+      console.warn('TTS fallback failed:', e);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleGenerate = async () => {
+    setIsGenerating(true);
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${window.location.origin}/api/generated-stories/${story.id}/narrations/${narrationLocale}`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({})
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.url) setAudioUrl(data.url);
+      }
+    } catch (e) {
+      console.warn('Narration generation failed:', e);
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const handleDownload = () => {
+    if (!audioUrl) return;
+    const a = document.createElement('a');
+    a.href = audioUrl;
+    a.download = `${story.title.replace(/[^a-zA-Z0-9]/g, '_')}-${narrationLocale}.mp3`;
+    a.click();
+  };
+
+  const localeLabels = { fr: 'FR', en: 'EN', ar: 'AR' };
+
+  return (
+    <div className="flex items-center gap-2 flex-wrap bg-white/50 dark:bg-gray-800/50 rounded-xl p-3 mt-3">
+      {/* Language selector */}
+      <div className="flex gap-1">
+        {['fr', 'en', 'ar'].map((loc) => {
+          const track = tracks.find(t => t.locale === loc);
+          return (
+            <button
+              key={loc}
+              onClick={() => setNarrationLocale(loc)}
+              className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${
+                narrationLocale === loc
+                  ? 'bg-primary-500 text-white shadow-md'
+                  : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200'
+              }`}
+            >
+              {localeLabels[loc]}
+              {track?.available && <span className="ml-1 text-[10px]">●</span>}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Play/Pause */}
+      <button
+        onClick={handlePlayPause}
+        disabled={isLoading}
+        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary-500 text-white text-sm font-bold hover:bg-primary-600 transition-all disabled:opacity-50"
+      >
+        {isLoading ? (
+          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+        ) : isPlaying ? (
+          <span>⏸</span>
+        ) : (
+          <span>▶</span>
+        )}
+        {isPlaying ? (t('kids_pause') || 'Pause') : (t('kids_listen') || 'Écouter')}
+      </button>
+
+      {/* Generate button (when no track available) */}
+      {!hasTrack && (
+        <button
+          onClick={handleGenerate}
+          disabled={isGenerating}
+          className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-secondary-500 text-white text-sm font-bold hover:bg-secondary-600 transition-all disabled:opacity-50"
+        >
+          {isGenerating ? (
+            <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+          ) : (
+            <span>🎙️</span>
+          )}
+          {t('kids_generate_narration') || 'Générer'}
+        </button>
+      )}
+
+      {/* Download button */}
+      {audioUrl && (
+        <button
+          onClick={handleDownload}
+          className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 text-sm hover:bg-gray-200 transition-all"
+          title={t('kids_download_offline') || 'Télécharger'}
+        >
+          <DownloadIcon className="w-4 h-4" />
+        </button>
+      )}
+    </div>
+  );
+}
+
 function KidsAIStories() {
   const { language, t, isRtl } = useLanguage();
   const { user } = useAuth();
@@ -782,6 +932,8 @@ function KidsAIStories() {
                   <p className="text-sm font-bold text-foreground-muted italic text-center mb-6">
                     Créée le {new Date(selectedStory.created_at || Date.now()).toLocaleDateString('fr-FR')}
                   </p>
+
+                  <NarrationPlayer story={selectedStory} />
 
                   {/* Playback & Text Area */}
                   <div className="rounded-2xl bg-primary-50/50 dark:bg-primary-900/10 border border-primary-100 dark:border-primary-900/30 p-6 max-h-96 overflow-y-auto custom-scrollbar">
