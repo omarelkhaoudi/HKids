@@ -2,10 +2,18 @@ import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { privacyAPI } from '../../api/privacy';
 import { useAuth } from '../../context/AuthContext';
+import { useLanguage } from '../../context/LanguageContext';
 import {
   clearLocalPrivacyData,
   downloadPrivacyBlob
 } from '../../services/privacy/privacyStorageService';
+import {
+  getConsent,
+  updateConsent,
+  revokeAllConsent,
+  exportConsentData,
+  CATEGORIES,
+} from '../../services/privacy/consentService';
 import { AlertIcon, CheckCircleIcon, HistoryIcon, ShieldIcon } from '../Icons';
 import { Button, Input } from '../ui';
 import { useToast } from '../ToastProvider';
@@ -15,7 +23,9 @@ const ACTION_LABELS = {
   privacy_export_downloaded: 'Export RGPD téléchargé',
   privacy_local_data_cleared: 'Données locales effacées',
   kid_profile_deleted_permanently: 'Profil enfant supprimé',
-  parent_account_deleted_permanently: 'Compte supprimé'
+  parent_account_deleted_permanently: 'Compte supprimé',
+  consent_updated: 'Consentement modifié',
+  consent_revoked: 'Consentement révoqué',
 };
 
 function formatDate(value) {
@@ -26,9 +36,26 @@ function formatDate(value) {
   }).format(new Date(value));
 }
 
+function ConsentToggle({ checked, onChange, label, description }) {
+  return (
+    <label className="flex items-center justify-between gap-3 cursor-pointer py-2">
+      <span>
+        <span className="text-sm font-bold text-foreground block">{label}</span>
+        <span className="text-xs text-foreground-muted">{description}</span>
+      </span>
+      <span className="relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors"
+        style={{ background: checked ? '#3b82f6' : '#d1d5db' }}>
+        <span className={`inline-block h-4 w-4 rounded-full bg-white shadow transition-transform ${checked ? 'translate-x-4' : 'translate-x-0.5'}`} />
+        <input type="checkbox" checked={checked} onChange={onChange} className="sr-only" />
+      </span>
+    </label>
+  );
+}
+
 export default function PrivacyCenter() {
   const { user, logout } = useAuth();
   const { showToast } = useToast();
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const [password, setPassword] = useState('');
   const [confirmation, setConfirmation] = useState('');
@@ -36,6 +63,7 @@ export default function PrivacyCenter() {
   const [exportSummary, setExportSummary] = useState(null);
   const [busyAction, setBusyAction] = useState('');
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
+  const [consent, setConsent] = useState(() => getConsent());
 
   const loadLogs = useCallback(async () => {
     if (user?.role !== 'parent') return;
@@ -170,6 +198,86 @@ export default function PrivacyCenter() {
             />
           </div>
         </div>
+      </div>
+
+      <div className="rounded-3xl border border-border bg-card p-6">
+        <h4 className="font-bold flex items-center gap-2">
+          <ShieldIcon className="h-4 w-4" /> {t('consentPreferencesTitle')}
+        </h4>
+        <p className="mt-2 text-sm text-foreground-muted">
+          {t('consentPreferencesDesc')}
+        </p>
+        <div className="mt-4 divide-y divide-border">
+          <div className="py-2 opacity-60">
+            <span className="text-sm font-bold text-foreground block">{t('consentEssentialLabel')}</span>
+            <span className="text-xs text-foreground-muted">{t('consentEssentialDesc')}</span>
+          </div>
+          <ConsentToggle
+            checked={consent?.analytics ?? false}
+            onChange={() => {
+              const updated = updateConsent({ analytics: !consent?.analytics });
+              setConsent(updated);
+              showToast(t('consentUpdated'), 'success');
+            }}
+            label={t('consentAnalyticsLabel')}
+            description={t('consentAnalyticsDesc')}
+          />
+          <ConsentToggle
+            checked={consent?.ai ?? false}
+            onChange={() => {
+              const updated = updateConsent({ ai: !consent?.ai });
+              setConsent(updated);
+              showToast(t('consentUpdated'), 'success');
+            }}
+            label={t('consentAiLabel')}
+            description={t('consentAiDesc')}
+          />
+          <ConsentToggle
+            checked={consent?.local_storage ?? false}
+            onChange={() => {
+              const updated = updateConsent({ local_storage: !consent?.local_storage });
+              setConsent(updated);
+              showToast(t('consentUpdated'), 'success');
+            }}
+            label={t('consentStorageLabel')}
+            description={t('consentStorageDesc')}
+          />
+        </div>
+        <div className="mt-4 flex flex-wrap gap-3">
+          <Button
+            variant="outline"
+            onClick={() => {
+              const data = exportConsentData();
+              const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+              const url = URL.createObjectURL(blob);
+              const link = document.createElement('a');
+              link.href = url;
+              link.download = `hkids-consent-${new Date().toISOString().slice(0, 10)}.json`;
+              document.body.appendChild(link);
+              link.click();
+              link.remove();
+              URL.revokeObjectURL(url);
+              showToast(t('consentExported'), 'success');
+            }}
+          >
+            {t('consentExportBtn')}
+          </Button>
+          <Button
+            className="bg-danger-500 text-white hover:bg-danger-600"
+            onClick={() => {
+              revokeAllConsent();
+              setConsent(getConsent());
+              showToast(t('consentRevoked'), 'success');
+            }}
+          >
+            {t('consentRevokeBtn')}
+          </Button>
+        </div>
+        {consent?.revoked_at && (
+          <p className="mt-3 text-xs text-danger-600">
+            {t('consentRevokedAt')}: {formatDate(consent.revoked_at)}
+          </p>
+        )}
       </div>
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
