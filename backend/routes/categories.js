@@ -4,6 +4,10 @@ import { verifyToken } from './auth.js';
 import { adminOnly } from '../middleware/adminOnly.js';
 import { asyncHandler } from '../middleware/errorHandler.js';
 import { requireAdminPermission } from '../services/admin/adminService.js';
+import {
+  applyCategoriesLocalizations,
+  normalizeLocale,
+} from '../services/content/contentLocalizationService.js';
 
 const router = express.Router();
 
@@ -27,7 +31,9 @@ router.get('/', async (req, res) => {
        LEFT JOIN categories parent ON parent.id = c.parent_id
        ORDER BY COALESCE(parent.name, c.name), c.parent_id NULLS FIRST, c.name`
     );
-    res.json(result.rows);
+    const locale = normalizeLocale(req.query.locale || req.query.language);
+    const categories = await applyCategoriesLocalizations(result.rows, locale, pool);
+    res.json(categories);
   } catch (err) {
     console.error('Error fetching categories:', err);
     res.status(500).json({ error: `Error fetching categories: ${err.message || 'Unknown error'}` });

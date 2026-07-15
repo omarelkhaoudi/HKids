@@ -25,13 +25,41 @@ export const GRADIENTS = [
 ];
 
 export const BOOK_CATEGORIES = [
-  ['Histoires', 'Histoires illustrees et audio pour enfants'],
-  ['Comptines', 'Comptines et chansons douces'],
-  ['Dinosaures', 'Univers dinosaures'],
-  ['Espace', 'Decouverte de l espace'],
-  ['Animaux', 'Histoires et chansons avec les animaux'],
-  ['Spiritualite', 'Histoires bienveillantes sur les valeurs et la gratitude'],
-  ['Contes', 'Contes doux et classiques adaptes'],
+  {
+    name: 'Histoires', description: 'Histoires illustrees et audio pour enfants',
+    en: { name: 'Stories', description: 'Illustrated and audio stories for children' },
+    ar: { name: 'قصص', description: 'قصص مصورة وصوتية للأطفال' },
+  },
+  {
+    name: 'Comptines', description: 'Comptines et chansons douces',
+    en: { name: 'Nursery Rhymes', description: 'Nursery rhymes and lullabies' },
+    ar: { name: 'أناشيد', description: 'أناشيد وأغاني هادئة' },
+  },
+  {
+    name: 'Dinosaures', description: 'Univers dinosaures',
+    en: { name: 'Dinosaurs', description: 'Dinosaur universe' },
+    ar: { name: 'ديناصورات', description: 'عالم الديناصورات' },
+  },
+  {
+    name: 'Espace', description: 'Decouverte de l espace',
+    en: { name: 'Space', description: 'Space discovery' },
+    ar: { name: 'فضاء', description: 'اكتشاف الفضاء' },
+  },
+  {
+    name: 'Animaux', description: 'Histoires et chansons avec les animaux',
+    en: { name: 'Animals', description: 'Stories and songs with animals' },
+    ar: { name: 'حيوانات', description: 'قصص وأغاني مع الحيوانات' },
+  },
+  {
+    name: 'Spiritualite', description: 'Histoires bienveillantes sur les valeurs et la gratitude',
+    en: { name: 'Spirituality', description: 'Kind stories about values and gratitude' },
+    ar: { name: 'روحانيات', description: 'قصص عن القيم والامتنان' },
+  },
+  {
+    name: 'Contes', description: 'Contes doux et classiques adaptes',
+    en: { name: 'Tales', description: 'Gentle and adapted classic tales' },
+    ar: { name: 'حكايات', description: 'حكايات كلاسيكية لطيفة ومعدّلة' },
+  },
 ];
 
 export function pickGradient(index) {
