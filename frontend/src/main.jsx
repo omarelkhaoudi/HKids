@@ -8,6 +8,7 @@ import { initCapacitorRuntime } from './services/mobile/capacitorRuntime';
 import { initSentry } from './lib/sentry';
 
 initSentry();
+window.addEventListener('hkids:consent-changed', () => initSentry());
 registerServiceWorker();
 initCapacitorRuntime();
 

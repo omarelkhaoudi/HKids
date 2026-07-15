@@ -1,4 +1,5 @@
 import * as Sentry from '@sentry/react';
+import { isConsentGiven } from '../services/privacy/consentService';
 
 const SENTRY_DSN = import.meta.env.VITE_SENTRY_DSN || '';
 const SENTRY_ENVIRONMENT = import.meta.env.VITE_SENTRY_ENVIRONMENT || (import.meta.env.PROD ? 'production' : 'development');
@@ -10,6 +11,7 @@ let initialized = false;
 
 export function initSentry() {
   if (initialized || !SENTRY_DSN) return;
+  if (!isConsentGiven('analytics')) return;
 
   Sentry.init({
     dsn: SENTRY_DSN,
