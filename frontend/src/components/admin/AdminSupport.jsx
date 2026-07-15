@@ -3,40 +3,43 @@ import {adminAPI} from '../../api/admin';
 import {Badge, Button} from '../ui';
 import {MailIcon, SearchIcon} from '../Icons';
 import {formatAdminDate} from './AdminMetricCard';
-
-const STATUS_OPTIONS = [
-  ['open', 'Ouverts'],
-  ['in_progress', 'En cours'],
-  ['resolved', 'Résolus'],
-  ['closed', 'Fermés'],
-  ['all', 'Tous statuts'],
-];
-
-const PRIORITY_OPTIONS = [
-  ['all', 'Toutes priorités'],
-  ['urgent', 'Urgent'],
-  ['high', 'Haute'],
-  ['normal', 'Normale'],
-  ['low', 'Faible'],
-];
-
-const CATEGORY_OPTIONS = [
-  ['all', 'Toutes catégories'],
-  ['general', 'Général'],
-  ['billing', 'Facturation'],
-  ['technical', 'Technique'],
-  ['content', 'Contenu'],
-  ['bug', 'Bug'],
-];
-
-const STATUS_LABELS = {
-  open: 'Ouvert',
-  in_progress: 'En cours',
-  resolved: 'Résolu',
-  closed: 'Fermé',
-};
+import { useLanguage } from '../../context/LanguageContext';
 
 function AdminSupport() {
+  const { t } = useLanguage();
+
+  const STATUS_OPTIONS = [
+    ['open', t('adminSupportOpen')],
+    ['in_progress', t('adminSupportInProgress')],
+    ['resolved', t('adminSupportResolved')],
+    ['closed', t('adminSupportClosed')],
+    ['all', t('adminSupportAllStatuses')],
+  ];
+
+  const PRIORITY_OPTIONS = [
+    ['all', t('adminSupportAllPriorities')],
+    ['urgent', t('adminSupportUrgent')],
+    ['high', t('adminSupportHigh')],
+    ['normal', t('adminSupportNormal')],
+    ['low', t('adminSupportLow')],
+  ];
+
+  const CATEGORY_OPTIONS = [
+    ['all', t('adminSupportAllCategories')],
+    ['general', t('adminSupportGeneral')],
+    ['billing', t('adminSupportBilling')],
+    ['technical', t('adminSupportTechnical')],
+    ['content', t('adminSupportContent')],
+    ['bug', t('adminSupportBug')],
+  ];
+
+  const STATUS_LABELS = {
+    open: t('adminSupportStatusOpen'),
+    in_progress: t('adminSupportStatusInProgress'),
+    resolved: t('adminSupportStatusResolved'),
+    closed: t('adminSupportStatusClosed'),
+  };
+
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -54,7 +57,7 @@ function AdminSupport() {
       setTickets(response.data?.items || []);
       setError('');
     } catch (err) {
-      setError(err.response?.data?.error || 'Impossible de charger les tickets support.');
+      setError(err.response?.data?.error || t('adminSupportLoadError'));
     } finally {
       setLoading(false);
     }
@@ -70,7 +73,7 @@ function AdminSupport() {
       await adminAPI.updateSupportTicket(ticket.id, patch);
       await loadTickets();
     } catch (err) {
-      setError(err.response?.data?.error || 'Mise à jour impossible.');
+      setError(err.response?.data?.error || t('adminSupportUpdateError'));
     }
   };
 
@@ -91,7 +94,7 @@ function AdminSupport() {
   };
 
   const handleAdminNote = async (ticket) => {
-    const adminNote = window.prompt('Note interne admin', ticket.admin_note || '');
+    const adminNote = window.prompt(t('adminSupportAdminNote'), ticket.admin_note || '');
     if (adminNote === null) return;
     await updateTicket(ticket, {
       status: ticket.status,
@@ -104,8 +107,8 @@ function AdminSupport() {
   return (
     <div className="space-y-6 pb-12">
       <div>
-        <h1 className="text-3xl font-black tracking-tight">Support Client</h1>
-        <p className="text-foreground-muted font-medium mt-1">Gérez les demandes des parents et suivez leur résolution.</p>
+        <h1 className="text-3xl font-black tracking-tight">{t('adminSupportTitle')}</h1>
+        <p className="text-foreground-muted font-medium mt-1">{t('adminSupportSubtitle')}</p>
       </div>
 
       <div className="bg-card rounded-2xl border border-border p-4 flex flex-col xl:flex-row gap-3">
@@ -114,7 +117,7 @@ function AdminSupport() {
           <input
             value={filters.q}
             onChange={(event) => setFilters((current) => ({...current, q: event.target.value}))}
-            placeholder="Sujet, message, parent..."
+            placeholder={t('adminSupportSearchPlaceholder')}
             className="w-full bg-surface-secondary border border-border rounded-xl pl-10 pr-4 py-2 outline-none"
           />
         </div>
@@ -138,11 +141,11 @@ function AdminSupport() {
 
       <div className="grid gap-4">
         {loading ? (
-          <div className="p-10 text-center text-foreground-muted">Chargement...</div>
+          <div className="p-10 text-center text-foreground-muted">{t('adminLoading')}</div>
         ) : tickets.length === 0 ? (
           <div className="bg-card border border-border rounded-3xl p-12 text-center">
             <MailIcon className="w-10 h-10 mx-auto text-surface-300 mb-3" />
-            <p className="font-black">Aucun ticket support.</p>
+            <p className="font-black">{t('adminSupportNoTickets')}</p>
           </div>
         ) : tickets.map((ticket) => (
           <div key={ticket.id} className="bg-card border border-border rounded-2xl p-5 shadow-sm">
@@ -161,12 +164,12 @@ function AdminSupport() {
                 <p className="text-sm text-foreground-muted mt-2 whitespace-pre-wrap">{ticket.message}</p>
                 {ticket.admin_note && (
                   <p className="text-xs text-foreground-secondary mt-3 p-3 rounded-xl bg-surface-secondary border border-border">
-                    <span className="font-bold">Note admin :</span> {ticket.admin_note}
+                    <span className="font-bold">{t('adminSupportAdminNoteLabel')}</span> {ticket.admin_note}
                   </p>
                 )}
                 <div className="text-xs text-surface-400 mt-3">
-                  Par {ticket.requester_name || 'Parent'} · {formatAdminDate(ticket.created_at)}
-                  {ticket.assigned_admin_name ? ` · Assigné à ${ticket.assigned_admin_name}` : ''}
+                  {t('adminSupportByParent').replace('{name}', ticket.requester_name || 'Parent')} · {formatAdminDate(ticket.created_at)}
+                  {ticket.assigned_admin_name ? ' · ' + t('adminSupportAssignedTo').replace('{name}', ticket.assigned_admin_name) : ''}
                 </div>
               </div>
               <div className="flex flex-col gap-2 min-w-[180px]">
@@ -188,10 +191,10 @@ function AdminSupport() {
                     <option key={value} value={value}>{label}</option>
                   ))}
                 </select>
-                <Button variant="outline" onClick={() => handleAdminNote(ticket)}>Note interne</Button>
+                <Button variant="outline" onClick={() => handleAdminNote(ticket)}>{t('adminSupportAddNote')}</Button>
                 {ticket.status === 'open' && (
                   <Button variant="primary" onClick={() => handleStatusChange(ticket, 'in_progress')}>
-                    Prendre en charge
+                    {t('adminSupportTakeOver')}
                   </Button>
                 )}
               </div>

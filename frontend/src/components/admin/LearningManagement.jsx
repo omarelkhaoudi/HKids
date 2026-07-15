@@ -10,8 +10,10 @@ import {
   EMPTY_LEARNING_FORM,
   EMPTY_QUESTION,
 } from '../../constants/learningOptions';
+import { useLanguage } from '../../context/LanguageContext';
 
 function LearningManagement() {
+  const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState('contents');
   const [contents, setContents] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -46,7 +48,7 @@ function LearningManagement() {
       setRewards(rewardsRes.data || []);
     } catch (error) {
       console.error('Learning admin load error:', error);
-      alert('Erreur de chargement des contenus éducatifs');
+      alert(t('adminLearningLoadError'));
     } finally {
       setLoading(false);
     }
@@ -88,18 +90,18 @@ function LearningManagement() {
       setShowModal(true);
     } catch (error) {
       console.error('Learning edit load error:', error);
-      alert('Impossible de charger le contenu');
+      alert(t('adminLearningDetailError'));
     }
   };
 
   const handleDelete = async (id) => {
-    if (!confirm('Supprimer ce contenu éducatif ?')) return;
+    if (!confirm(t('adminLearningDeleteConfirm'))) return;
     try {
       await learningAPI.deleteContent(id);
       loadData();
     } catch (error) {
       console.error('Learning delete error:', error);
-      alert('Suppression impossible');
+      alert(t('adminLearningDeleteError'));
     }
   };
 
@@ -119,7 +121,7 @@ function LearningManagement() {
       setCategoryForm({ code: '', name: '', description: '', pictogram: '⭐', color: 'from-primary-500 to-primary-400' });
       loadData();
     } catch (error) {
-      alert(error.response?.data?.error || 'Création impossible');
+      alert(error.response?.data?.error || t('adminLearningCreateError'));
     } finally {
       setSubmitting(false);
     }
@@ -137,7 +139,7 @@ function LearningManagement() {
       setChallengeForm({ title: '', description: '', challenge_type: 'quiz_success_count', target_value: 3, category_id: '', status: 'active' });
       loadData();
     } catch (error) {
-      alert(error.response?.data?.error || 'Création impossible');
+      alert(error.response?.data?.error || t('adminLearningCreateError'));
     } finally {
       setSubmitting(false);
     }
@@ -154,7 +156,7 @@ function LearningManagement() {
       setRewardForm({ code: '', name: '', reward_type: 'stars', icon: '⭐', value: 5, description: '' });
       loadData();
     } catch (error) {
-      alert(error.response?.data?.error || 'Création impossible');
+      alert(error.response?.data?.error || t('adminLearningCreateError'));
     } finally {
       setSubmitting(false);
     }
@@ -186,7 +188,7 @@ function LearningManagement() {
       loadData();
     } catch (error) {
       console.error('Learning save error:', error);
-      alert(error.response?.data?.error || 'Erreur de sauvegarde');
+      alert(error.response?.data?.error || t('adminLearningSaveError'));
     } finally {
       setSubmitting(false);
     }
@@ -211,20 +213,20 @@ function LearningManagement() {
   );
 
   const tabs = [
-    { id: 'contents', label: 'Contenus' },
-    { id: 'categories', label: 'Catégories' },
-    { id: 'challenges', label: 'Défis' },
-    { id: 'rewards', label: 'Récompenses' },
+    { id: 'contents', label: t('adminLearningTabContents') },
+    { id: 'categories', label: t('adminLearningTabCategories') },
+    { id: 'challenges', label: t('adminLearningTabChallenges') },
+    { id: 'rewards', label: t('adminLearningTabRewards') },
   ];
 
   return (
     <div className="space-y-6 pb-12">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-black text-foreground tracking-tight">Quiz & Jeux</h1>
-          <p className="text-foreground-muted font-medium mt-1">Gérez le contenu ludo-éducatif.</p>
+          <h1 className="text-3xl font-black text-foreground tracking-tight">{t('adminLearningTitle')}</h1>
+          <p className="text-foreground-muted font-medium mt-1">{t('adminLearningSubtitle')}</p>
         </div>
-        <Button variant="primary" onClick={openCreate} disabled={activeTab !== 'contents'}>Créer un contenu</Button>
+        <Button variant="primary" onClick={openCreate} disabled={activeTab !== 'contents'}>{t('adminLearningCreateContent')}</Button>
       </div>
 
       <div className="flex flex-wrap gap-2">
@@ -250,7 +252,7 @@ function LearningManagement() {
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Rechercher..."
+            placeholder={t('adminLearningSearchPlaceholder')}
             className="w-full bg-surface-secondary border border-border rounded-xl pl-10 pr-4 py-2 font-medium focus:outline-none focus:border-primary-400 focus:bg-card transition-colors"
           />
         </div>
@@ -267,12 +269,12 @@ function LearningManagement() {
             <table className="w-full text-left border-collapse">
               <thead className="bg-surface-secondary/50 border-b border-border">
                 <tr>
-                  <th className="p-4 text-xs font-bold text-surface-400 uppercase">Titre</th>
-                  <th className="p-4 text-xs font-bold text-surface-400 uppercase">Type</th>
-                  <th className="p-4 text-xs font-bold text-surface-400 uppercase">Quiz</th>
-                  <th className="p-4 text-xs font-bold text-surface-400 uppercase">Difficulté</th>
-                  <th className="p-4 text-xs font-bold text-surface-400 uppercase">Statut</th>
-                  <th className="p-4 text-xs font-bold text-surface-400 uppercase text-right">Actions</th>
+                  <th className="p-4 text-xs font-bold text-surface-400 uppercase">{t('adminLearningHeaderTitle')}</th>
+                  <th className="p-4 text-xs font-bold text-surface-400 uppercase">{t('adminLearningHeaderType')}</th>
+                  <th className="p-4 text-xs font-bold text-surface-400 uppercase">{t('adminLearningHeaderQuiz')}</th>
+                  <th className="p-4 text-xs font-bold text-surface-400 uppercase">{t('adminLearningHeaderDifficulty')}</th>
+                  <th className="p-4 text-xs font-bold text-surface-400 uppercase">{t('adminLearningHeaderStatus')}</th>
+                  <th className="p-4 text-xs font-bold text-surface-400 uppercase text-right">{t('adminLearningHeaderActions')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
@@ -294,7 +296,7 @@ function LearningManagement() {
                     <td className="p-4"><span className="text-sm font-bold capitalize">{item.difficulty}</span></td>
                     <td className="p-4">
                       <Badge variant={item.status === 'published' ? 'success' : 'secondary'}>
-                        {item.status === 'published' ? 'Publié' : 'Brouillon'}
+                        {item.status === 'published' ? t('adminPublished') : t('adminDraft')}
                       </Badge>
                     </td>
                     <td className="p-4 text-right">
@@ -318,14 +320,14 @@ function LearningManagement() {
       {activeTab === 'categories' && (
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
           <form onSubmit={createCategory} className="bg-card rounded-2xl border border-border p-6 space-y-4">
-            <h2 className="font-black text-lg">Nouvelle catégorie</h2>
+            <h2 className="font-black text-lg">{t('adminLearningNewCategory')}</h2>
             <input required placeholder="Code" value={categoryForm.code} onChange={(e) => setCategoryForm({ ...categoryForm, code: e.target.value })} className="w-full p-3 rounded-xl bg-surface-secondary border border-border" />
-            <input required placeholder="Nom" value={categoryForm.name} onChange={(e) => setCategoryForm({ ...categoryForm, name: e.target.value })} className="w-full p-3 rounded-xl bg-surface-secondary border border-border" />
-            <textarea placeholder="Description" value={categoryForm.description} onChange={(e) => setCategoryForm({ ...categoryForm, description: e.target.value })} className="w-full p-3 rounded-xl bg-surface-secondary border border-border" />
-            <Button type="submit" variant="primary" disabled={submitting}>Créer</Button>
+            <input required placeholder={t('adminCategoriesFormName')} value={categoryForm.name} onChange={(e) => setCategoryForm({ ...categoryForm, name: e.target.value })} className="w-full p-3 rounded-xl bg-surface-secondary border border-border" />
+            <textarea placeholder={t('adminCategoriesFormDescription')} value={categoryForm.description} onChange={(e) => setCategoryForm({ ...categoryForm, description: e.target.value })} className="w-full p-3 rounded-xl bg-surface-secondary border border-border" />
+            <Button type="submit" variant="primary" disabled={submitting}>{t('adminCreate')}</Button>
           </form>
           <div className="bg-card rounded-2xl border border-border p-6 space-y-3">
-            <h2 className="font-black text-lg">Catégories ({categories.length})</h2>
+            <h2 className="font-black text-lg">{t('adminLearningCategoriesCount').replace('{n}', categories.length)}</h2>
             {categories.map((category) => (
               <div key={category.id} className="p-3 rounded-xl bg-surface-secondary border border-border">
                 <p className="font-bold">{category.name}</p>
@@ -339,22 +341,22 @@ function LearningManagement() {
       {activeTab === 'challenges' && (
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
           <form onSubmit={createChallenge} className="bg-card rounded-2xl border border-border p-6 space-y-4">
-            <h2 className="font-black text-lg">Nouveau défi</h2>
-            <input required placeholder="Titre" value={challengeForm.title} onChange={(e) => setChallengeForm({ ...challengeForm, title: e.target.value })} className="w-full p-3 rounded-xl bg-surface-secondary border border-border" />
-            <textarea placeholder="Description" value={challengeForm.description} onChange={(e) => setChallengeForm({ ...challengeForm, description: e.target.value })} className="w-full p-3 rounded-xl bg-surface-secondary border border-border" />
+            <h2 className="font-black text-lg">{t('adminLearningNewChallenge')}</h2>
+            <input required placeholder={t('adminLearningFormTitle')} value={challengeForm.title} onChange={(e) => setChallengeForm({ ...challengeForm, title: e.target.value })} className="w-full p-3 rounded-xl bg-surface-secondary border border-border" />
+            <textarea placeholder={t('adminLearningFormDescription')} value={challengeForm.description} onChange={(e) => setChallengeForm({ ...challengeForm, description: e.target.value })} className="w-full p-3 rounded-xl bg-surface-secondary border border-border" />
             <input type="number" min={1} placeholder="Objectif" value={challengeForm.target_value} onChange={(e) => setChallengeForm({ ...challengeForm, target_value: e.target.value })} className="w-full p-3 rounded-xl bg-surface-secondary border border-border" />
             <select value={challengeForm.category_id} onChange={(e) => setChallengeForm({ ...challengeForm, category_id: e.target.value })} className="w-full p-3 rounded-xl bg-surface-secondary border border-border font-bold">
-              <option value="">Catégorie optionnelle</option>
+              <option value="">{t('adminLearningFormCategoryOptional')}</option>
               {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
-            <Button type="submit" variant="primary" disabled={submitting}>Créer</Button>
+            <Button type="submit" variant="primary" disabled={submitting}>{t('adminCreate')}</Button>
           </form>
           <div className="bg-card rounded-2xl border border-border p-6 space-y-3">
-            <h2 className="font-black text-lg">Défis ({challenges.length})</h2>
+            <h2 className="font-black text-lg">{t('adminLearningChallengesCount').replace('{n}', challenges.length)}</h2>
             {challenges.map((challenge) => (
               <div key={challenge.id} className="p-3 rounded-xl bg-surface-secondary border border-border">
                 <p className="font-bold">{challenge.title}</p>
-                <p className="text-xs text-foreground-muted">Objectif : {challenge.target_value} · {challenge.status}</p>
+                <p className="text-xs text-foreground-muted">{t('adminLearningObjective')} {challenge.target_value} · {challenge.status}</p>
               </div>
             ))}
           </div>
@@ -364,15 +366,15 @@ function LearningManagement() {
       {activeTab === 'rewards' && (
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
           <form onSubmit={createReward} className="bg-card rounded-2xl border border-border p-6 space-y-4">
-            <h2 className="font-black text-lg">Nouvelle récompense</h2>
+            <h2 className="font-black text-lg">{t('adminLearningNewReward')}</h2>
             <input required placeholder="Code" value={rewardForm.code} onChange={(e) => setRewardForm({ ...rewardForm, code: e.target.value })} className="w-full p-3 rounded-xl bg-surface-secondary border border-border" />
             <input required placeholder="Nom" value={rewardForm.name} onChange={(e) => setRewardForm({ ...rewardForm, name: e.target.value })} className="w-full p-3 rounded-xl bg-surface-secondary border border-border" />
             <input type="number" min={1} placeholder="Valeur" value={rewardForm.value} onChange={(e) => setRewardForm({ ...rewardForm, value: e.target.value })} className="w-full p-3 rounded-xl bg-surface-secondary border border-border" />
             <textarea placeholder="Description" value={rewardForm.description} onChange={(e) => setRewardForm({ ...rewardForm, description: e.target.value })} className="w-full p-3 rounded-xl bg-surface-secondary border border-border" />
-            <Button type="submit" variant="primary" disabled={submitting}>Créer</Button>
+            <Button type="submit" variant="primary" disabled={submitting}>{t('adminCreate')}</Button>
           </form>
           <div className="bg-card rounded-2xl border border-border p-6 space-y-3">
-            <h2 className="font-black text-lg">Récompenses ({rewards.length})</h2>
+            <h2 className="font-black text-lg">{t('adminLearningRewardsCount').replace('{n}', rewards.length)}</h2>
             {rewards.map((reward) => (
               <div key={reward.id} className="p-3 rounded-xl bg-surface-secondary border border-border">
                 <p className="font-bold">{reward.icon} {reward.name}</p>
@@ -393,7 +395,7 @@ function LearningManagement() {
               className="bg-card rounded-3xl w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl"
             >
               <div className="p-6 border-b border-border flex justify-between items-center bg-surface-secondary">
-                <h3 className="text-xl font-black">{editingId ? 'Modifier' : 'Nouveau contenu'}</h3>
+                <h3 className="text-xl font-black">{editingId ? t('adminLearningEditContent') : t('adminLearningNewContent')}</h3>
                 <button type="button" onClick={() => setShowModal(false)} className="p-2 rounded-full hover:bg-surface-200">
                   <XIcon className="w-5 h-5" />
                 </button>
@@ -402,48 +404,48 @@ function LearningManagement() {
               <form onSubmit={handleSubmit} className="p-6 overflow-y-auto flex-1 space-y-5">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="col-span-2">
-                    <label className="block text-sm font-bold mb-1">Titre</label>
+                    <label className="block text-sm font-bold mb-1">{t('adminLearningFormTitle')}</label>
                     <input required value={formData.title} onChange={(e) => setFormData({ ...formData, title: e.target.value })} className="w-full p-3 rounded-xl bg-surface-secondary border border-border" />
                   </div>
                   <div className="col-span-2">
-                    <label className="block text-sm font-bold mb-1">Description</label>
+                    <label className="block text-sm font-bold mb-1">{t('adminLearningFormDescription')}</label>
                     <textarea rows={2} value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} className="w-full p-3 rounded-xl bg-surface-secondary border border-border" />
                   </div>
                   <div>
-                    <label className="block text-sm font-bold mb-1">Type</label>
+                    <label className="block text-sm font-bold mb-1">{t('adminLearningFormContentType')}</label>
                     <select value={formData.content_type} onChange={(e) => setFormData({ ...formData, content_type: e.target.value })} className="w-full p-3 rounded-xl bg-surface-secondary border border-border font-bold">
-                      {LEARNING_CONTENT_TYPES.map((t) => <option key={t.id} value={t.id}>{t.label}</option>)}
+                      {LEARNING_CONTENT_TYPES.map((ct) => <option key={ct.id} value={ct.id}>{ct.label}</option>)}
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-bold mb-1">Type de quiz</label>
+                    <label className="block text-sm font-bold mb-1">{t('adminLearningFormQuizType')}</label>
                     <select value={formData.quiz_type || ''} onChange={(e) => setFormData({ ...formData, quiz_type: e.target.value })} className="w-full p-3 rounded-xl bg-surface-secondary border border-border font-bold" disabled={formData.content_type === 'game'}>
-                      {QUIZ_TYPE_OPTIONS.map((t) => <option key={t.id} value={t.id}>{t.label}</option>)}
+                      {QUIZ_TYPE_OPTIONS.map((qt) => <option key={qt.id} value={qt.id}>{qt.label}</option>)}
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-bold mb-1">Catégorie</label>
+                    <label className="block text-sm font-bold mb-1">{t('adminLearningFormCategory')}</label>
                     <select value={formData.category_id} onChange={(e) => setFormData({ ...formData, category_id: e.target.value })} className="w-full p-3 rounded-xl bg-surface-secondary border border-border font-bold">
-                      <option value="">Aucune</option>
+                      <option value="">{t('adminBooksFormNone')}</option>
                       {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-bold mb-1">Difficulté</label>
+                    <label className="block text-sm font-bold mb-1">{t('adminLearningFormDifficulty')}</label>
                     <select value={formData.difficulty} onChange={(e) => setFormData({ ...formData, difficulty: e.target.value })} className="w-full p-3 rounded-xl bg-surface-secondary border border-border font-bold">
                       {DIFFICULTY_OPTIONS.map((d) => <option key={d.id} value={d.id}>{d.label}</option>)}
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-bold mb-1">Âge min</label>
+                    <label className="block text-sm font-bold mb-1">{t('adminLearningFormAgeMin')}</label>
                     <input type="number" min={2} max={12} value={formData.age_group_min} onChange={(e) => setFormData({ ...formData, age_group_min: Number(e.target.value) })} className="w-full p-3 rounded-xl bg-surface-secondary border border-border" />
                   </div>
                   <div>
-                    <label className="block text-sm font-bold mb-1">Âge max</label>
+                    <label className="block text-sm font-bold mb-1">{t('adminLearningFormAgeMax')}</label>
                     <input type="number" min={2} max={12} value={formData.age_group_max} onChange={(e) => setFormData({ ...formData, age_group_max: Number(e.target.value) })} className="w-full p-3 rounded-xl bg-surface-secondary border border-border" />
                   </div>
                   <div>
-                    <label className="block text-sm font-bold mb-1">Langue</label>
+                    <label className="block text-sm font-bold mb-1">{t('adminLearningFormLanguage')}</label>
                     <select value={formData.language} onChange={(e) => setFormData({ ...formData, language: e.target.value })} className="w-full p-3 rounded-xl bg-surface-secondary border border-border font-bold">
                       <option value="fr">FR</option>
                       <option value="en">EN</option>
@@ -451,10 +453,10 @@ function LearningManagement() {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-bold mb-1">Statut</label>
+                    <label className="block text-sm font-bold mb-1">{t('adminLearningFormStatus')}</label>
                     <select value={formData.status} onChange={(e) => setFormData({ ...formData, status: e.target.value })} className="w-full p-3 rounded-xl bg-surface-secondary border border-border font-bold">
-                      <option value="draft">Brouillon</option>
-                      <option value="published">Publié</option>
+                      <option value="draft">{t('adminDraft')}</option>
+                      <option value="published">{t('adminPublished')}</option>
                     </select>
                   </div>
                 </div>
@@ -462,20 +464,20 @@ function LearningManagement() {
                 {formData.content_type !== 'game' && (
                   <div className="space-y-4 border-t border-border pt-4">
                     <div className="flex items-center justify-between">
-                      <h4 className="font-black">Questions</h4>
-                      <Button type="button" variant="outline" onClick={addQuestion}><PlusIcon className="w-4 h-4 mr-1" /> Ajouter</Button>
+                      <h4 className="font-black">{t('adminLearningQuestions')}</h4>
+                      <Button type="button" variant="outline" onClick={addQuestion}><PlusIcon className="w-4 h-4 mr-1" /> {t('adminLearningAddQuestion')}</Button>
                     </div>
                     {formData.questions.map((question, index) => (
                       <div key={index} className="rounded-2xl border border-border p-4 space-y-3 bg-surface-secondary/40">
                         <div className="flex justify-between items-center">
-                          <span className="font-bold text-sm">Question {index + 1}</span>
+                          <span className="font-bold text-sm">{t('adminLearningQuestionNumber').replace('{n}', index + 1)}</span>
                           {formData.questions.length > 1 && (
-                            <button type="button" onClick={() => removeQuestion(index)} className="text-rose-500 text-sm font-bold">Retirer</button>
+                            <button type="button" onClick={() => removeQuestion(index)} className="text-rose-500 text-sm font-bold">{t('adminLearningRemoveQuestion')}</button>
                           )}
                         </div>
                         <input
                           required
-                          placeholder="Énoncé"
+                          placeholder={t('adminLearningQuestionStatement')}
                           value={question.prompt}
                           onChange={(e) => updateQuestion(index, 'prompt', e.target.value)}
                           className="w-full p-3 rounded-xl bg-card border border-border"
@@ -485,10 +487,10 @@ function LearningManagement() {
                           onChange={(e) => updateQuestion(index, 'question_type', e.target.value)}
                           className="w-full p-3 rounded-xl bg-card border border-border font-bold"
                         >
-                          {QUIZ_TYPE_OPTIONS.map((t) => <option key={t.id} value={t.id}>{t.label}</option>)}
+                          {QUIZ_TYPE_OPTIONS.map((qt) => <option key={qt.id} value={qt.id}>{qt.label}</option>)}
                         </select>
                         <input
-                          placeholder="Réponse correcte (id option)"
+                          placeholder={t('adminLearningQuestionCorrectAnswer')}
                           value={question.correct_answer?.value || ''}
                           onChange={(e) => updateQuestion(index, 'correct_answer', { value: e.target.value })}
                           className="w-full p-3 rounded-xl bg-card border border-border"
@@ -513,9 +515,9 @@ function LearningManagement() {
               </form>
 
               <div className="p-4 border-t border-border bg-surface-secondary flex justify-end gap-3">
-                <Button variant="outline" onClick={() => setShowModal(false)}>Annuler</Button>
+                <Button variant="outline" onClick={() => setShowModal(false)}>{t('adminCancel')}</Button>
                 <Button variant="primary" onClick={handleSubmit} disabled={submitting}>
-                  {submitting ? 'Sauvegarde...' : 'Sauvegarder'}
+                  {submitting ? t('adminSaving') : t('adminSave')}
                 </Button>
               </div>
             </motion.div>

@@ -4,8 +4,10 @@ import {adminAPI} from '../../api/admin';
 import {formatAdminDate, formatAdminDuration} from './AdminMetricCard';
 import {ChildIcon, ClockIcon, UserIcon, SearchIcon, MailIcon, StarIcon, XIcon, TrashIcon} from '../Icons';
 import {Avatar, Badge, Button} from '../ui';
+import { useLanguage } from '../../context/LanguageContext';
 
 function AdminUsers() {
+ const { t } = useLanguage();
  const [parents, setParents] = useState([]);
  const [selectedParent, setSelectedParent] = useState(null);
  const [detail, setDetail] = useState(null);
@@ -32,9 +34,9 @@ function AdminUsers() {
 
  const deleteParent = async () => {
  if (!selectedParent) return;
- const reason = window.prompt('Motif de suppression du compte (journalisé)');
+ const reason = window.prompt(t('adminUsersDeleteReason'));
  if (reason === null) return;
- if (!window.confirm(`Supprimer définitivement le compte "${selectedParent.name}" et toutes ses données ?`)) return;
+ if (!window.confirm(t('adminUsersDeleteConfirm').replace('{name}', selectedParent.name))) return;
  try {
  setDeleting(true);
  await adminAPI.deleteUser(selectedParent.id, reason);
@@ -42,7 +44,7 @@ function AdminUsers() {
  setSelectedParent(null);
  setDetail(null);
 } catch (err) {
- window.alert(err.response?.data?.error || 'Suppression impossible.');
+ window.alert(err.response?.data?.error || t('adminUsersDeleteError'));
 } finally {
  setDeleting(false);
 }
@@ -75,8 +77,8 @@ function AdminUsers() {
  <div className="space-y-6 pb-12">
  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
  <div>
- <h1 className="text-3xl font-black text-foreground tracking-tight">Utilisateurs</h1>
- <p className="text-foreground-muted font-medium mt-1">Gérez les comptes parents et profils enfants.</p>
+ <h1 className="text-3xl font-black text-foreground tracking-tight">{t('adminUsersTitle')}</h1>
+ <p className="text-foreground-muted font-medium mt-1">{t('adminUsersSubtitle')}</p>
  </div>
  </div>
 
@@ -91,7 +93,7 @@ function AdminUsers() {
  type="text"
  value={search}
  onChange={(e) => setSearch(e.target.value)}
- placeholder="Rechercher par nom ou email..."
+ placeholder={t('adminUsersSearchPlaceholder')}
  className="w-full bg-card border border-border rounded-xl pl-10 pr-4 py-2 font-medium focus:outline-none focus:border-primary-400 focus:ring-2 focus:ring-primary-100 transition-all text-sm"
  />
  </div>
@@ -105,16 +107,16 @@ function AdminUsers() {
  ) : filteredParents.length === 0 ? (
  <div className="p-12 text-center">
  <div className="w-16 h-16 bg-surface-secondary rounded-full flex items-center justify-center mx-auto mb-4"><UserIcon className="w-8 h-8 text-surface-300"/></div>
- <h3 className="text-lg font-bold text-foreground">Aucun utilisateur trouvé</h3>
+ <h3 className="text-lg font-bold text-foreground">{t('adminUsersNoResults')}</h3>
  </div>
  ) : (
  <table className="w-full text-left border-collapse">
  <thead className="bg-card sticky top-0 z-10 shadow-sm">
  <tr>
- <th className="p-4 text-xs font-bold text-surface-400 uppercase tracking-wider">Parent</th>
- <th className="p-4 text-xs font-bold text-surface-400 uppercase tracking-wider">Abonnement</th>
- <th className="p-4 text-xs font-bold text-surface-400 uppercase tracking-wider text-center">Enfants</th>
- <th className="p-4 text-xs font-bold text-surface-400 uppercase tracking-wider text-right">Inscription</th>
+ <th className="p-4 text-xs font-bold text-surface-400 uppercase tracking-wider">{t('adminUsersHeaderParent')}</th>
+ <th className="p-4 text-xs font-bold text-surface-400 uppercase tracking-wider">{t('adminUsersHeaderSubscription')}</th>
+ <th className="p-4 text-xs font-bold text-surface-400 uppercase tracking-wider text-center">{t('adminUsersHeaderKids')}</th>
+ <th className="p-4 text-xs font-bold text-surface-400 uppercase tracking-wider text-right">{t('adminUsersHeaderSignup')}</th>
  </tr>
  </thead>
  <tbody className="divide-y divide-border">
@@ -135,7 +137,7 @@ function AdminUsers() {
  </td>
  <td className="p-4">
  <Badge variant={parent.subscription_status === 'free' ? 'secondary' : 'success'} className="font-bold">
- {parent.subscription_status === 'free' ? 'Gratuit' : 'Premium'}
+ {parent.subscription_status === 'free' ? t('adminUsersFree') : t('adminUsersPremium')}
  </Badge>
  </td>
  <td className="p-4 text-center">
@@ -188,29 +190,29 @@ function AdminUsers() {
  <h3 className="text-2xl font-black text-foreground mb-1 leading-tight break-words">{detail?.parent?.name || selectedParent.name}</h3>
  <div className="flex items-center gap-2 text-foreground-muted font-medium text-sm mb-6">
  <MailIcon className="w-4 h-4 shrink-0" />
- <span className="truncate">{detail?.parent?.email || selectedParent.email || 'Email inconnu'}</span>
+ <span className="truncate">{detail?.parent?.email || selectedParent.email || t('adminUsersEmailUnknown')}</span>
  </div>
 
  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
  <div className="bg-surface-secondary rounded-2xl p-4 border border-border flex flex-col justify-center items-center">
- <div className="text-xs font-bold text-surface-400 uppercase tracking-wider mb-1">Abonnement</div>
+ <div className="text-xs font-bold text-surface-400 uppercase tracking-wider mb-1">{t('adminUsersSubscription')}</div>
  <div className={`text-base font-black ${selectedParent.subscription_status === 'free' ? 'text-foreground-secondary' : 'text-secondary-600'}`}>
- {selectedParent.subscription_status === 'free' ? 'Gratuit' : 'Premium'}
+ {selectedParent.subscription_status === 'free' ? t('adminUsersFree') : t('adminUsersPremium')}
  </div>
  </div>
  <div className="bg-surface-secondary rounded-2xl p-4 border border-border flex flex-col justify-center items-center">
- <div className="text-xs font-bold text-surface-400 uppercase tracking-wider mb-1">Inscription</div>
+ <div className="text-xs font-bold text-surface-400 uppercase tracking-wider mb-1">{t('adminUsersSignup')}</div>
  <div className="text-base font-black text-foreground-secondary">{formatAdminDate(selectedParent.created_at).split(' ')[0]}</div>
  </div>
  </div>
 
  <div className="space-y-3 pt-4 border-t border-border">
  <div className="flex justify-between items-center p-3 bg-surface-secondary rounded-xl border border-border">
- <span className="text-foreground-secondary font-bold flex items-center gap-2 text-sm"><ChildIcon className="w-4 h-4 text-surface-400"/> Enfants</span>
- <Badge variant="soft" className="bg-card text-foreground font-black border border-border">{totalChildren} profils</Badge>
+ <span className="text-foreground-secondary font-bold flex items-center gap-2 text-sm"><ChildIcon className="w-4 h-4 text-surface-400"/> {t('adminUsersChildren')}</span>
+ <Badge variant="soft" className="bg-card text-foreground font-black border border-border">{t('adminUsersProfiles').replace('{n}', totalChildren)}</Badge>
  </div>
  <div className="flex justify-between items-center p-3 bg-surface-secondary rounded-xl border border-border">
- <span className="text-foreground-secondary font-bold flex items-center gap-2 text-sm"><ClockIcon className="w-4 h-4 text-surface-400"/> Temps d'écoute</span>
+ <span className="text-foreground-secondary font-bold flex items-center gap-2 text-sm"><ClockIcon className="w-4 h-4 text-surface-400"/> {t('adminUsersListeningTime')}</span>
  <Badge variant="soft" className="bg-card text-foreground font-black border border-border">{formatAdminDuration(totalTime)}</Badge>
  </div>
  <Button
@@ -220,7 +222,7 @@ function AdminUsers() {
  onClick={deleteParent}
  className="mt-5 border-rose-200 text-rose-600 hover:bg-rose-50"
  >
- <TrashIcon className="w-4 h-4 mr-2" /> {deleting ? 'Suppression...' : 'Supprimer ce compte'}
+ <TrashIcon className="w-4 h-4 mr-2" /> {deleting ? t('adminUsersDeleting') : t('adminUsersDeleteBtn')}
  </Button>
  </div>
  </div>
@@ -228,7 +230,7 @@ function AdminUsers() {
 
  {/* Children Profiles List */}
  <div className="bg-card rounded-[2rem] border border-border shadow-sm p-6">
- <h4 className="font-black text-foreground mb-5 flex items-center gap-2 text-lg"><ChildIcon className="w-6 h-6 text-foreground-500"/> Profils Enfants</h4>
+ <h4 className="font-black text-foreground mb-5 flex items-center gap-2 text-lg"><ChildIcon className="w-6 h-6 text-foreground-500"/> {t('adminUsersKidProfiles')}</h4>
  
  {detailLoading ? (
  <div className="space-y-4">
@@ -246,7 +248,7 @@ function AdminUsers() {
  {kid.is_premium_voice && <StarIcon className="w-5 h-5 text-accent-500 shrink-0" title="Premium Voice" />}
  </h5>
  <p className="text-sm font-bold text-foreground-muted mt-1 truncate">
- {kid.age ? `${kid.age} ans` : 'Âge N/A'} • <span className="uppercase text-surface-400">{kid.preferred_language || 'fr'}</span>
+ {kid.age ? t('adminUsersAge').replace('{age}', kid.age) : t('adminUsersAgeNA')} • <span className="uppercase text-surface-400">{kid.preferred_language || 'fr'}</span>
  </p>
  </div>
  <div className="w-12 h-12 bg-card rounded-xl shadow-sm border border-border flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
@@ -257,11 +259,11 @@ function AdminUsers() {
  <div className="grid grid-cols-2 gap-2 mt-4 pt-4 border-t border-border/60">
  <div className="bg-card p-2 rounded-xl border border-border text-center">
  <span className="text-foreground-600 font-black text-lg block leading-none mb-1">{kid.total_sessions || 0}</span>
- <span className="text-[10px] font-bold text-surface-400 uppercase tracking-wider">Sessions</span>
+ <span className="text-[10px] font-bold text-surface-400 uppercase tracking-wider">{t('adminUsersSessions')}</span>
  </div>
  <div className="bg-card p-2 rounded-xl border border-border text-center">
  <span className="text-secondary-600 font-black text-lg block leading-none mb-1">{Math.round((kid.total_time_seconds || 0)/60)}</span>
- <span className="text-[10px] font-bold text-surface-400 uppercase tracking-wider">Minutes</span>
+ <span className="text-[10px] font-bold text-surface-400 uppercase tracking-wider">{t('adminUsersMinutes')}</span>
  </div>
  </div>
  </div>
@@ -270,8 +272,8 @@ function AdminUsers() {
  ) : (
  <div className="text-center py-10 bg-surface-secondary rounded-2xl border border-border border-dashed">
  <div className="w-14 h-14 bg-card rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm border border-border"><ChildIcon className="w-6 h-6 text-surface-400"/></div>
- <p className="text-base font-bold text-foreground mb-1">Aucun profil enfant</p>
- <p className="text-sm font-medium text-foreground-muted">Ce parent n'a pas encore créé de profils.</p>
+ <p className="text-base font-bold text-foreground mb-1">{t('adminUsersNoKids')}</p>
+ <p className="text-sm font-medium text-foreground-muted">{t('adminUsersNoKidsHint')}</p>
  </div>
  )}
  </div>

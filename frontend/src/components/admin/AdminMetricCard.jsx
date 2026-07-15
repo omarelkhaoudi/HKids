@@ -17,16 +17,16 @@ export function AdminMetricCard({label, value, detail, icon: Icon, tone = 'bg-pr
  );
 }
 
-export function formatAdminDuration(seconds = 0) {
+export function formatAdminDuration(seconds = 0, t = (k) => k) {
  const totalMinutes = Math.floor(Number(seconds || 0) / 60);
- if (totalMinutes < 1) return '0 min';
+ if (totalMinutes < 1) return t('adminMetricMinutes').replace('{m}', '0');
  const hours = Math.floor(totalMinutes / 60);
  const minutes = totalMinutes % 60;
- return hours > 0 ? `${hours}h ${minutes}min` : `${minutes} min`;
+ return hours > 0 ? t('adminMetricHoursMinutes').replace('{h}', String(hours)).replace('{m}', String(minutes)) : t('adminMetricMinutes').replace('{m}', String(minutes));
 }
 
-export function formatAdminDate(value) {
- if (!value) return 'Jamais';
+export function formatAdminDate(value, t = (k) => k) {
+ if (!value) return t('adminMetricNever');
  return new Date(value).toLocaleDateString('fr-FR', {
  day: '2-digit',
  month: 'short',

@@ -2,6 +2,7 @@ import {useState} from 'react';
 import {useNavigate, Link} from 'react-router-dom';
 import {motion, AnimatePresence} from 'framer-motion';
 import {useAuth} from '../context/AuthContext';
+import {useLanguage} from '../context/LanguageContext';
 import {LockIcon, UserIcon, EyeIcon, EyeOffIcon, AlertIcon, LoadingSpinnerIcon, ChevronLeftIcon, StarIcon} from '../components/Icons';
 import {Logo} from '../components/Logo';
 import {MagicalBackground} from '../components/layout/PlatformShell';
@@ -45,6 +46,7 @@ function AdminLogin({audience = 'admin'}) {
  const [loading, setLoading] = useState(false);
  const [showPassword, setShowPassword] = useState(false);
  const {login} = useAuth();
+ const {t} = useLanguage();
  const navigate = useNavigate();
 
  const resetRateLimit = async () => {
@@ -83,24 +85,24 @@ function AdminLogin({audience = 'admin'}) {
 }
 } else {
  // Translate error messages to French
- let errorMessage = result.error || 'Échec de la connexion';
+ let errorMessage = result.error || t('adminLoginErrorDefault');
  if (errorMessage.includes('Invalid credentials') || errorMessage.includes('Invalid username or password')) {
- errorMessage = 'Identifiants invalides. Vérifiez votre nom d\'utilisateur et votre mot de passe.';
+ errorMessage = t('adminLoginErrorInvalid');
 } else if (errorMessage.includes('Network Error') || errorMessage.includes('ECONNREFUSED')) {
- errorMessage = 'Impossible de se connecter au serveur. Vérifiez que le serveur backend est démarré.';
+ errorMessage = t('adminLoginErrorNetwork');
 } else if (errorMessage.includes('timeout')) {
- errorMessage = 'La connexion a expiré. Veuillez réessayer.';
+ errorMessage = t('adminLoginErrorTimeout');
 } else if (errorMessage.includes('Too many requests') || errorMessage.includes('429') || errorMessage.includes('Erreur 429')) {
  // Auto-reset rate limit
  const reset = await resetRateLimit();
  errorMessage = reset 
- ? 'Trop de tentatives. Le rate limit a été réinitialisé, vous pouvez réessayer maintenant.'
- : 'Trop de tentatives. Veuillez attendre quelques instants avant de réessayer.';
+ ? t('adminLoginErrorRateReset')
+ : t('adminLoginErrorRateWait');
 }
  setError(errorMessage);
 }
 } catch (err) {
- setError('Une erreur inattendue s\'est produite. Veuillez réessayer.');
+ setError(t('adminLoginErrorUnexpected'));
 } finally {
  setLoading(false);
 }
@@ -126,7 +128,7 @@ function AdminLogin({audience = 'admin'}) {
  className="flex items-center gap-2 px-4 py-2.5 bg-card/90 backdrop-blur-sm border-2 border-primary-200/50 rounded-3xl shadow-md hover:shadow-lg hover:border-primary-300 transition-all text-foreground-secondary font-medium text-sm"
  >
  <ChevronLeftIcon className="w-4 h-4" />
- <span>Retour à l'accueil</span>
+ <span>{t('adminLoginBackToHome')}</span>
  </motion.button>
  </Link>
  </motion.div>
@@ -142,36 +144,35 @@ function AdminLogin({audience = 'admin'}) {
  <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-primary-500 to-secondary-500 text-white mb-5 shadow-lg">
  <span className="h-2 w-2 rounded-full bg-card animate-pulse" />
  <span className="text-xs font-semibold uppercase tracking-wide">
- • ESPACE SÉCURISÉ ADMINISTRATEUR
+ {t('adminLoginSecureSpace')}
  </span>
  </div>
  <h1 className="text-4xl xl:text-5xl font-extrabold tracking-tight mb-4">
- Gérez votre bibliothèque
+ {t('adminLoginTitle')}
  <span className="block bg-gradient-to-r from-primary-600 via-secondary-600 to-accent-600 bg-clip-text text-transparent">
- en toute simplicité.
+ {t('adminLoginTitleHighlight')}
  </span>
  </h1>
  <p className="text-base md:text-lg text-foreground-secondary max-w-xl leading-relaxed mb-8">
- Ajoutez de nouveaux livres, organisez les catégories et gardez le contrôle sur tout le contenu
- proposé aux enfants depuis un espace pensé pour les adultes.
+ {t('adminLoginDescription')}
  </p>
  <div className="grid grid-cols-2 gap-4 max-w-md">
  <motion.div 
  whileHover={{scale: 1.02, y: -2}}
  className="rounded-2xl border-2 border-primary-200/50 bg-gradient-to-br from-white to-primary-50/30 px-4 py-4 shadow-md hover:shadow-lg transition-all"
  >
- <p className="font-bold mb-2 text-foreground">Conçu pour les écoles</p>
+ <p className="font-bold mb-2 text-foreground">{t('adminLoginSchoolsTitle')}</p>
  <p className="text-sm text-foreground-secondary">
- Gestion simple des collections, même pour les équipes non techniques.
+ {t('adminLoginSchoolsDesc')}
  </p>
  </motion.div>
  <motion.div 
  whileHover={{scale: 1.02, y: -2}}
  className="rounded-2xl border-2 border-secondary-200/50 bg-gradient-to-br from-white to-secondary-50/30 px-4 py-4 shadow-md hover:shadow-lg transition-all"
  >
- <p className="font-bold mb-2 text-foreground">Sécurité renforcée</p>
+ <p className="font-bold mb-2 text-foreground">{t('adminLoginSecurityTitle')}</p>
  <p className="text-sm text-foreground-secondary">
- Accès réservé via compte administrateur, loin des petites mains curieuses.
+ {t('adminLoginSecurityDesc')}
  </p>
  </motion.div>
  </div>
@@ -202,7 +203,7 @@ function AdminLogin({audience = 'admin'}) {
  </motion.div>
  <h2 className="text-3xl font-bold text-foreground mb-2 tracking-tight">HKids Admin</h2>
  <p className="text-sm text-foreground-secondary">
- Connectez-vous pour gérer les livres, catégories et contenus.
+ {t('adminLoginSubtitle')}
  </p>
  </div>
 
@@ -223,7 +224,7 @@ function AdminLogin({audience = 'admin'}) {
 
  <div>
  <label htmlFor="username" className="block text-sm font-semibold text-foreground-secondary mb-2">
- Nom d'utilisateur
+ {t('adminLoginUsername')}
  </label>
  <div className="relative">
  <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
@@ -236,14 +237,14 @@ function AdminLogin({audience = 'admin'}) {
  onChange={(e) => setUsername(e.target.value)}
  required
  className="w-full pl-10 pr-4 py-3.5 border-2 border-primary-200/50 rounded-3xl focus:ring-4 focus:ring-primary-500/20 focus:border-primary-500 transition-all text-sm bg-card/80 backdrop-blur-sm text-foreground placeholder:text-surface-400 shadow-sm hover:shadow-md"
- placeholder="Entrez votre nom d'utilisateur"
+ placeholder={t('adminLoginUsernamePlaceholder')}
  />
  </div>
  </div>
 
  <div>
  <label htmlFor="password" className="block text-sm font-semibold text-foreground-secondary mb-2">
- Mot de passe
+ {t('adminLoginPassword')}
  </label>
  <div className="relative">
  <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
@@ -256,7 +257,7 @@ function AdminLogin({audience = 'admin'}) {
  onChange={(e) => setPassword(e.target.value)}
  required
  className="w-full pl-10 pr-12 py-3.5 border-2 border-primary-200/50 rounded-3xl focus:ring-4 focus:ring-primary-500/20 focus:border-primary-500 transition-all text-sm bg-card/80 backdrop-blur-sm text-foreground placeholder:text-surface-400 shadow-sm hover:shadow-md"
- placeholder="Entrez votre mot de passe"
+ placeholder={t('adminLoginPasswordPlaceholder')}
  />
  <button
  type="button"
@@ -278,10 +279,10 @@ function AdminLogin({audience = 'admin'}) {
  {loading ? (
  <>
  <LoadingSpinnerIcon className="w-5 h-5 animate-spin" />
- <span>Connexion...</span>
+ <span>{t('adminLoginLoading')}</span>
  </>
  ) : (
- <span>Se connecter</span>
+ <span>{t('adminLoginSubmit')}</span>
  )}
  </motion.button>
  </form>
@@ -289,12 +290,12 @@ function AdminLogin({audience = 'admin'}) {
  <div className="relative z-10 mt-8">
  <div className="text-center">
  <p className="text-sm text-foreground-secondary">
- Vous n'avez pas de compte ?{' '}
+ {t('adminLoginNoAccount')}{' '}
  <Link 
  to="/admin/signup" 
  className="text-foreground-600 font-bold hover:text-foreground-secondary-600 hover:underline transition-colors"
  >
- Créer un compte
+ {t('adminLoginCreateAccount')}
  </Link>
  </p>
  </div>

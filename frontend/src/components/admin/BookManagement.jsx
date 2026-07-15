@@ -9,6 +9,7 @@ import {
  SearchIcon, FilterIcon, DownloadIcon, MoreVerticalIcon, ChevronRightIcon, ChevronLeftIcon 
 } from '../Icons';
 import {Button, Badge, Avatar} from '../ui';
+import { useLanguage } from '../../context/LanguageContext';
 
 // Helper: base URL for images
 const getImageBaseUrl = () => {
@@ -26,6 +27,7 @@ function BookManagement() {
  const [submitting, setSubmitting] = useState(false);
  const [showModal, setShowModal] = useState(false);
  const [editingBook, setEditingBook] = useState(null);
+ const { t } = useLanguage();
  
  const [formData, setFormData] = useState({
  title: '', author: '', description: '', category_id: '',
@@ -71,11 +73,11 @@ function BookManagement() {
  e.preventDefault();
  const audioOnly = ['song', 'audio_story'].includes(formData.content_type);
  if (!editingBook && pageFiles.length === 0 && !audioOnly && !audioFile) {
- alert('Veuillez sélectionner au moins une page ou un fichier audio!');
+ alert(t('adminBooksValidationPageOrAudio'));
  return;
 }
  if (!editingBook && audioOnly && !audioFile && !formData.audio_url) {
- alert('Veuillez ajouter un fichier audio pour ce type de contenu.');
+ alert(t('adminBooksValidationAudioRequired'));
  return;
 }
  setSubmitting(true);
@@ -94,7 +96,7 @@ function BookManagement() {
  loadData();
 } catch (error) {
  console.error('Error saving book:', error);
- alert('Erreur lors de la sauvegarde: ' + (error.response?.data?.error || error.message));
+ alert(t('adminBooksSaveError') + (error.response?.data?.error || error.message));
 } finally {
  setSubmitting(false);
 }
@@ -121,13 +123,13 @@ function BookManagement() {
 };
 
  const handleDelete = async (id) => {
- if (!confirm('Are you sure you want to delete this book?')) return;
+ if (!confirm(t('adminBooksDeleteConfirm'))) return;
  try {
  await booksAPI.deleteBook(id);
  loadData();
 } catch (error) {
  console.error('Error deleting book:', error);
- alert('Error deleting book');
+ alert(t('adminBooksDeleteError'));
 }
 };
 
@@ -187,13 +189,13 @@ function BookManagement() {
  {/* HEADER */}
  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
  <div>
- <h1 className="text-3xl font-black text-foreground tracking-tight">Stories CMS</h1>
- <p className="text-foreground-muted font-medium mt-1">Gérez le contenu de la bibliothèque.</p>
+ <h1 className="text-3xl font-black text-foreground tracking-tight">{t('adminBooksTitle')}</h1>
+ <p className="text-foreground-muted font-medium mt-1">{t('adminBooksSubtitle')}</p>
  </div>
  <div className="flex items-center gap-3">
- <Button variant="outline" className="bg-card"><DownloadIcon className="w-4 h-4 mr-2"/> Exporter</Button>
+ <Button variant="outline" className="bg-card"><DownloadIcon className="w-4 h-4 mr-2"/> {t('adminExport')}</Button>
  <Button variant="primary" onClick={() => {resetForm(); setShowModal(true);}}>
- Créer une histoire
+ {t('adminBooksCreateStory')}
  </Button>
  </div>
  </div>
@@ -206,7 +208,7 @@ function BookManagement() {
  type="text"
  value={filters.search}
  onChange={(e) => setFilters({...filters, search: e.target.value})}
- placeholder="Rechercher par titre, auteur, tags..."
+ placeholder={t('adminBooksSearchPlaceholder')}
  className="w-full bg-surface-secondary border border-border rounded-xl pl-10 pr-4 py-2 font-medium focus:outline-none focus:border-primary-400 focus:bg-card transition-colors"
  />
  </div>
@@ -216,26 +218,26 @@ function BookManagement() {
  onChange={(e) => setFilters({...filters, status: e.target.value})}
  className="bg-surface-secondary border border-border rounded-xl px-4 py-2 font-bold text-sm focus:outline-none focus:border-primary-400"
  >
- <option value="all">Tous statuts</option>
- <option value="published">Publiés</option>
- <option value="draft">Brouillons</option>
+ <option value="all">{t('adminBooksAllStatuses')}</option>
+ <option value="published">{t('adminBooksPublishedFilter')}</option>
+ <option value="draft">{t('adminBooksDraftsFilter')}</option>
  </select>
  <select
  value={filters.moderation}
  onChange={(e) => setFilters({...filters, moderation: e.target.value})}
  className="bg-surface-secondary border border-border rounded-xl px-4 py-2 font-bold text-sm focus:outline-none focus:border-primary-400"
  >
- <option value="all">Toute modération</option>
- <option value="pending">En attente</option>
- <option value="approved">Approuvé</option>
- <option value="rejected">Rejeté</option>
+ <option value="all">{t('adminBooksAllModeration')}</option>
+ <option value="pending">{t('adminBooksPending')}</option>
+ <option value="approved">{t('adminBooksApproved')}</option>
+ <option value="rejected">{t('adminBooksRejected')}</option>
  </select>
  <select
  value={filters.category_id}
  onChange={(e) => setFilters({...filters, category_id: e.target.value})}
  className="bg-surface-secondary border border-border rounded-xl px-4 py-2 font-bold text-sm focus:outline-none focus:border-primary-400"
  >
- <option value="all">Toutes catégories</option>
+ <option value="all">{t('adminBooksAllCategories')}</option>
  {categories.map((c) => (
  <option key={c.id} value={c.id}>{c.name}</option>
  ))}
@@ -247,10 +249,10 @@ function BookManagement() {
  <AnimatePresence>
  {selectedItems.length > 0 && (
  <motion.div initial={{opacity: 0, y: -10}} animate={{opacity: 1, y: 0}} exit={{opacity: 0, y: -10}} className="bg-primary-50 border border-primary-200 rounded-xl p-3 flex items-center justify-between">
- <span className="text-sm font-bold text-foreground-700">{selectedItems.length} histoires sélectionnées</span>
+ <span className="text-sm font-bold text-foreground-700">{t('adminBooksSelectedCount').replace('{n}', selectedItems.length)}</span>
  <div className="flex gap-2">
- <Button variant="outline" className="text-xs py-1 border-primary-200 bg-card">Publier</Button>
- <Button variant="outline" className="text-xs py-1 border-rose-200 bg-card text-rose-600">Supprimer</Button>
+ <Button variant="outline" className="text-xs py-1 border-primary-200 bg-card">{t('adminBooksPublish')}</Button>
+ <Button variant="outline" className="text-xs py-1 border-rose-200 bg-card text-rose-600">{t('adminDelete')}</Button>
  </div>
  </motion.div>
  )}
@@ -268,8 +270,8 @@ function BookManagement() {
  <div className="w-20 h-20 bg-surface-secondary rounded-full flex items-center justify-center mb-4">
  <BookIcon className="w-10 h-10 text-surface-300" />
  </div>
- <h3 className="text-xl font-black text-foreground mb-2">Aucune histoire trouvée</h3>
- <p className="text-foreground-muted font-medium max-w-md">Modifiez vos filtres ou créez une nouvelle histoire pour remplir la bibliothèque.</p>
+ <h3 className="text-xl font-black text-foreground mb-2">{t('adminBooksNoResults')}</h3>
+ <p className="text-foreground-muted font-medium max-w-md">{t('adminBooksNoResultsHint')}</p>
  </div>
  ) : (
  <div className="bg-card rounded-[2rem] border border-border shadow-sm overflow-hidden">
@@ -280,11 +282,11 @@ function BookManagement() {
  <th className="p-4 w-12 text-center">
  <input type="checkbox" checked={selectedItems.length === filteredBooks.length && filteredBooks.length > 0} onChange={toggleAll} className="w-4 h-4 rounded border-surface-300 text-foreground-600 focus:ring-primary-500"/>
  </th>
- <th className="p-4 text-xs font-bold text-surface-400 uppercase tracking-wider min-w-[300px]">Histoire</th>
- <th className="p-4 text-xs font-bold text-surface-400 uppercase tracking-wider">Catégorie</th>
- <th className="p-4 text-xs font-bold text-surface-400 uppercase tracking-wider">Statut</th>
- <th className="p-4 text-xs font-bold text-surface-400 uppercase tracking-wider">Audio</th>
- <th className="p-4 text-xs font-bold text-surface-400 uppercase tracking-wider text-right">Actions</th>
+ <th className="p-4 text-xs font-bold text-surface-400 uppercase tracking-wider min-w-[300px]">{t('adminBooksHeaderStory')}</th>
+ <th className="p-4 text-xs font-bold text-surface-400 uppercase tracking-wider">{t('adminBooksHeaderCategory')}</th>
+ <th className="p-4 text-xs font-bold text-surface-400 uppercase tracking-wider">{t('adminBooksHeaderStatus')}</th>
+ <th className="p-4 text-xs font-bold text-surface-400 uppercase tracking-wider">{t('adminBooksHeaderAudio')}</th>
+ <th className="p-4 text-xs font-bold text-surface-400 uppercase tracking-wider text-right">{t('adminBooksHeaderActions')}</th>
  </tr>
  </thead>
  <tbody className="divide-y divide-border">
@@ -312,19 +314,19 @@ function BookManagement() {
  </div>
  <div>
  <p className="font-bold text-foreground text-sm mb-1 leading-snug">{book.title}</p>
- <p className="text-xs text-foreground-muted truncate max-w-[250px]">{book.author || 'Inconnu'}</p>
+ <p className="text-xs text-foreground-muted truncate max-w-[250px]">{book.author || t('adminBooksUnknownAuthor')}</p>
  </div>
  </div>
  </td>
  <td className="p-4">
- <Badge variant="soft" className="bg-surface-secondary text-foreground-secondary font-bold">{book.category_name || 'Aucune'}</Badge>
+ <Badge variant="soft" className="bg-surface-secondary text-foreground-secondary font-bold">{book.category_name || t('adminBooksNoCategory')}</Badge>
  </td>
  <td className="p-4">
  <Badge variant="soft" className={`font-bold ${isPublished ? 'bg-secondary-100 text-secondary-800' : 'bg-surface-secondary text-foreground-secondary'}`}>
- {isPublished ? 'Publié' : 'Brouillon'}
+ {isPublished ? t('adminBooksStatusPublished') : t('adminBooksStatusDraft')}
  </Badge>
  <Badge variant="soft" className={`font-bold ml-2 ${moderationTone}`}>
- {moderationStatus === 'pending' ? 'Modération' : moderationStatus === 'rejected' ? 'Rejeté' : 'Validé'}
+ {moderationStatus === 'pending' ? t('adminBooksStatusModeration') : moderationStatus === 'rejected' ? t('adminBooksStatusRejected') : t('adminBooksStatusValidated')}
  </Badge>
  {isPremium && <Badge variant="soft" className="bg-primary-100 text-primary-800 font-bold ml-2">Premium</Badge>}
  </td>
@@ -359,7 +361,7 @@ function BookManagement() {
  className="w-full max-w-md bg-card h-full shadow-2xl relative z-10 flex flex-col border-l border-border"
  >
  <div className="p-4 flex items-center justify-between border-b border-border bg-surface-secondary">
- <h3 className="font-bold text-foreground">Aperçu de l'histoire</h3>
+ <h3 className="font-bold text-foreground">{t('adminBooksPreview')}</h3>
  <button onClick={() => setSelectedBook(null)} className="p-2 text-foreground-muted hover:bg-surface-200 rounded-full"><XIcon className="w-5 h-5"/></button>
  </div>
  
@@ -369,30 +371,30 @@ function BookManagement() {
  </div>
  <div className="text-center mb-8">
  <h2 className="text-2xl font-black text-foreground mb-2">{selectedBook.title}</h2>
- <p className="text-sm font-medium text-foreground-muted">{selectedBook.author || 'Auteur inconnu'}</p>
+ <p className="text-sm font-medium text-foreground-muted">{selectedBook.author || t('adminBooksUnknownAuthor')}</p>
  </div>
  
  <div className="space-y-4">
  <div className="bg-surface-secondary p-4 rounded-2xl border border-border">
- <p className="text-xs font-bold text-surface-400 uppercase tracking-wider mb-2">Détails</p>
+ <p className="text-xs font-bold text-surface-400 uppercase tracking-wider mb-2">{t('adminBooksDetails')}</p>
  <div className="space-y-2 text-sm font-medium text-foreground-secondary">
- <div className="flex justify-between"><span>Catégorie</span><span className="font-bold">{selectedBook.category_name || '-'}</span></div>
- <div className="flex justify-between"><span>Tranche d'âge</span><span className="font-bold">{selectedBook.age_group_min}-{selectedBook.age_group_max} ans</span></div>
- <div className="flex justify-between"><span>Langue</span><span className="font-bold uppercase">{selectedBook.language}</span></div>
+ <div className="flex justify-between"><span>{t('adminBooksCategory')}</span><span className="font-bold">{selectedBook.category_name || '-'}</span></div>
+ <div className="flex justify-between"><span>{t('adminBooksAgeRange')}</span><span className="font-bold">{selectedBook.age_group_min}-{selectedBook.age_group_max} {t('adminYears')}</span></div>
+ <div className="flex justify-between"><span>{t('adminBooksLanguage')}</span><span className="font-bold uppercase">{selectedBook.language}</span></div>
  </div>
  </div>
  
  <div className="bg-surface-secondary p-4 rounded-2xl border border-border">
- <p className="text-xs font-bold text-surface-400 uppercase tracking-wider mb-2">Description</p>
- <p className="text-sm font-medium text-foreground-secondary leading-relaxed">{selectedBook.description || 'Aucune description disponible.'}</p>
+ <p className="text-xs font-bold text-surface-400 uppercase tracking-wider mb-2">{t('adminBooksDescription')}</p>
+ <p className="text-sm font-medium text-foreground-secondary leading-relaxed">{selectedBook.description || t('adminBooksNoDescription')}</p>
  </div>
  </div>
  </div>
  
  <div className="p-4 border-t border-border bg-card flex gap-3">
- <Button variant="outline" className="flex-1" onClick={() => {setSelectedBook(null); handleEdit(selectedBook);}}>Modifier</Button>
+ <Button variant="outline" className="flex-1" onClick={() => {setSelectedBook(null); handleEdit(selectedBook);}}>{t('adminEdit')}</Button>
  <Button variant="primary" className="flex-1" onClick={() => {handleTogglePublish(selectedBook); setSelectedBook(null);}}>
- {selectedBook.is_published ? 'Dépublier' : 'Publier'}
+ {selectedBook.is_published ? t('adminBooksUnpublish') : t('adminBooksPublish')}
  </Button>
  </div>
  </motion.div>
@@ -406,94 +408,94 @@ function BookManagement() {
  <div className="fixed inset-0 bg-surface-900/60 backdrop-blur-sm flex items-center justify-center z-[100] p-4">
  <motion.div initial={{opacity: 0, scale: 0.95}} animate={{opacity: 1, scale: 1}} exit={{opacity: 0, scale: 0.95}} className="bg-card rounded-3xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl">
  <div className="p-6 border-b border-border flex justify-between items-center bg-surface-secondary">
- <h3 className="text-xl font-black">{editingBook ? 'Modifier l\'histoire' : 'Nouvelle histoire'}</h3>
+ <h3 className="text-xl font-black">{editingBook ? t('adminBooksEditStory') : t('adminBooksNewStory')}</h3>
  <button onClick={() => {setShowModal(false); resetForm();}} className="p-2 text-surface-400 hover:bg-surface-200 rounded-full"><XIcon className="w-5 h-5"/></button>
  </div>
  <div className="p-6 overflow-y-auto flex-1">
  <form id="bookForm" onSubmit={handleSubmit} className="space-y-6">
  <div className="grid grid-cols-2 gap-4">
  <div>
- <label className="block text-sm font-bold text-foreground-secondary mb-1">Titre</label>
+ <label className="block text-sm font-bold text-foreground-secondary mb-1">{t('adminBooksFormTitle')}</label>
  <input required value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} className="w-full p-3 rounded-xl bg-surface-secondary border border-border font-medium focus:border-primary-400 focus:outline-none" />
  </div>
  <div>
- <label className="block text-sm font-bold text-foreground-secondary mb-1">Auteur</label>
+ <label className="block text-sm font-bold text-foreground-secondary mb-1">{t('adminBooksFormAuthor')}</label>
  <input value={formData.author} onChange={e => setFormData({...formData, author: e.target.value})} className="w-full p-3 rounded-xl bg-surface-secondary border border-border font-medium focus:border-primary-400 focus:outline-none" />
  </div>
  </div>
  <div>
- <label className="block text-sm font-bold text-foreground-secondary mb-1">Description</label>
+ <label className="block text-sm font-bold text-foreground-secondary mb-1">{t('adminBooksFormDescription')}</label>
  <textarea rows="3" value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} className="w-full p-3 rounded-xl bg-surface-secondary border border-border font-medium focus:border-primary-400 focus:outline-none"></textarea>
  </div>
  <div className="grid grid-cols-2 gap-4">
  <div>
- <label className="block text-sm font-bold text-foreground-secondary mb-1">Type de contenu</label>
+ <label className="block text-sm font-bold text-foreground-secondary mb-1">{t('adminBooksFormContentType')}</label>
  <select value={formData.content_type} onChange={e => setFormData({...formData, content_type: e.target.value})} className="w-full p-3 rounded-xl bg-surface-secondary border border-border font-bold">
  {CONTENT_TYPE_OPTIONS.map((opt) => <option key={opt.id} value={opt.id}>{opt.label}</option>)}
  </select>
  </div>
  <div>
- <label className="block text-sm font-bold text-foreground-secondary mb-1">Langue</label>
+ <label className="block text-sm font-bold text-foreground-secondary mb-1">{t('adminBooksFormLanguage')}</label>
  <select value={formData.language} onChange={e => setFormData({...formData, language: e.target.value})} className="w-full p-3 rounded-xl bg-surface-secondary border border-border font-bold">
  {CONTENT_LANGUAGES.map((lang) => <option key={lang.id} value={lang.id}>{lang.label}</option>)}
  </select>
  </div>
  <div>
- <label className="block text-sm font-bold text-foreground-secondary mb-1">Catégorie</label>
+ <label className="block text-sm font-bold text-foreground-secondary mb-1">{t('adminBooksFormCategory')}</label>
  <select value={formData.category_id} onChange={e => setFormData({...formData, category_id: e.target.value})} className="w-full p-3 rounded-xl bg-surface-secondary border border-border font-bold">
- <option value="">Aucune</option>
+ <option value="">{t('adminBooksFormNone')}</option>
  {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
  </select>
  </div>
  <div>
- <label className="block text-sm font-bold text-foreground-secondary mb-1">Thème</label>
+ <label className="block text-sm font-bold text-foreground-secondary mb-1">{t('adminBooksFormTheme')}</label>
  <select value={formData.theme} onChange={e => setFormData({...formData, theme: e.target.value})} className="w-full p-3 rounded-xl bg-surface-secondary border border-border font-bold">
- <option value="">Aucun</option>
+ <option value="">{t('adminBooksFormNoTheme')}</option>
  {CONTENT_THEMES.map((theme) => <option key={theme.id} value={theme.id}>{theme.label}</option>)}
  </select>
  </div>
  <div>
- <label className="block text-sm font-bold text-foreground-secondary mb-1">Âge min</label>
+ <label className="block text-sm font-bold text-foreground-secondary mb-1">{t('adminBooksFormAgeMin')}</label>
  <input type="number" min={0} max={12} value={formData.age_group_min} onChange={e => setFormData({...formData, age_group_min: Number(e.target.value)})} className="w-full p-3 rounded-xl bg-surface-secondary border border-border" />
  </div>
  <div>
- <label className="block text-sm font-bold text-foreground-secondary mb-1">Âge max</label>
+ <label className="block text-sm font-bold text-foreground-secondary mb-1">{t('adminBooksFormAgeMax')}</label>
  <input type="number" min={0} max={12} value={formData.age_group_max} onChange={e => setFormData({...formData, age_group_max: Number(e.target.value)})} className="w-full p-3 rounded-xl bg-surface-secondary border border-border" />
  </div>
  <div>
- <label className="block text-sm font-bold text-foreground-secondary mb-1">Durée (sec)</label>
+ <label className="block text-sm font-bold text-foreground-secondary mb-1">{t('adminBooksFormDuration')}</label>
  <input type="number" min={0} value={formData.duration_seconds} onChange={e => setFormData({...formData, duration_seconds: Number(e.target.value)})} className="w-full p-3 rounded-xl bg-surface-secondary border border-border" />
  </div>
  <div>
- <label className="block text-sm font-bold text-foreground-secondary mb-1">Publié</label>
+ <label className="block text-sm font-bold text-foreground-secondary mb-1">{t('adminBooksFormPublished')}</label>
  <select value={formData.is_published ? 'true' : 'false'} onChange={e => setFormData({...formData, is_published: e.target.value === 'true'})} className="w-full p-3 rounded-xl bg-surface-secondary border border-border font-bold">
- <option value="false">Brouillon</option>
- <option value="true">Publié</option>
+ <option value="false">{t('adminDraft')}</option>
+ <option value="true">{t('adminPublished')}</option>
  </select>
  </div>
  </div>
  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
  <div>
- <label className="block text-sm font-bold text-foreground-secondary mb-1">Couverture</label>
+ <label className="block text-sm font-bold text-foreground-secondary mb-1">{t('adminBooksFormCover')}</label>
  <input type="file" accept="image/*" onChange={(e) => { const file = e.target.files?.[0]; setCoverFile(file || null); if (file) setCoverPreview(URL.createObjectURL(file)); }} className="w-full text-sm" />
  {coverPreview && <img src={coverPreview} alt="" className="mt-2 h-24 rounded-lg object-cover" />}
  </div>
  <div>
- <label className="block text-sm font-bold text-foreground-secondary mb-1">Audio</label>
+ <label className="block text-sm font-bold text-foreground-secondary mb-1">{t('adminBooksFormAudio')}</label>
  <input type="file" accept="audio/*" onChange={(e) => setAudioFile(e.target.files?.[0] || null)} className="w-full text-sm" />
- {formData.audio_url && !audioFile && <p className="text-xs text-secondary-600 mt-1 font-bold">Audio existant</p>}
+ {formData.audio_url && !audioFile && <p className="text-xs text-secondary-600 mt-1 font-bold">{t('adminBooksExistingAudio')}</p>}
  </div>
  <div>
- <label className="block text-sm font-bold text-foreground-secondary mb-1">Pages (images)</label>
+ <label className="block text-sm font-bold text-foreground-secondary mb-1">{t('adminBooksFormPages')}</label>
  <input type="file" accept="image/*" multiple onChange={(e) => setPageFiles(Array.from(e.target.files || []))} className="w-full text-sm" />
- <p className="text-xs text-foreground-muted mt-1">{pageFiles.length} fichier(s)</p>
+ <p className="text-xs text-foreground-muted mt-1">{t('adminBooksFilesCount').replace('{n}', pageFiles.length)}</p>
  </div>
  </div>
  </form>
  </div>
  <div className="p-4 border-t border-border bg-surface-secondary flex justify-end gap-3">
- <Button variant="outline" onClick={() => {setShowModal(false); resetForm();}}>Annuler</Button>
- <Button variant="primary" form="bookForm" type="submit" disabled={submitting}>{submitting ? 'Sauvegarde...' : 'Sauvegarder'}</Button>
+ <Button variant="outline" onClick={() => {setShowModal(false); resetForm();}}>{t('adminCancel')}</Button>
+ <Button variant="primary" form="bookForm" type="submit" disabled={submitting}>{submitting ? t('adminSaving') : t('adminSave')}</Button>
  </div>
  </motion.div>
  </div>
