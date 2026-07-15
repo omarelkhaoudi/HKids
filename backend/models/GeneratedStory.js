@@ -1,3 +1,12 @@
+function getNarrationTracksFromMetadata(metadata) {
+  const tracks = (metadata || {}).tracks || {};
+  return ['fr', 'en', 'ar'].map((locale) => ({
+    locale,
+    available: Boolean(tracks[locale]?.url),
+    url: tracks[locale]?.url || null,
+  }));
+}
+
 export function mapGeneratedStory(row) {
   const storyText = row.story_text || '';
 
@@ -23,6 +32,7 @@ export function mapGeneratedStory(row) {
     illustration_plan: row.illustration_plan || {},
     cover_image_url: row.cover_image_url || null,
     narration_metadata: row.narration_metadata || {},
+    narration_tracks: getNarrationTracksFromMetadata(row.narration_metadata),
     provider: row.provider,
     saved: row.saved === true,
     saved_at: row.saved_at,

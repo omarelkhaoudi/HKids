@@ -4,6 +4,7 @@ import { verifyToken } from './auth.js';
 import { generatePersonalizedStory, normalizeStoryRequest, validateStoryRequest } from '../services/ai/storyGenerationService.js';
 import { aiErrorResponse } from '../services/ai/errors.js';
 import { enqueueIllustrationJob, getIllustrationJobStatus, clearIllustrationCache } from '../services/ai/illustrationQueue.js';
+import { generateStoryNarration, getNarrationTracks, isNarrationConfigured } from '../services/ai/storyNarrationService.js';
 import { buildGeneratedStoryWhereClause, mapGeneratedStory, normalizeStoryListFilters } from '../models/GeneratedStory.js';
 import {
   filterAllowedContent,
@@ -498,6 +499,83 @@ router.post('/:id/illustrations/regenerate', verifyToken, async (req, res) => {
   } catch (err) {
     console.error('Error regenerating illustrations:', err);
     res.status(500).json({ error: 'Could not regenerate illustrations' });
+  }
+});
+
+// Get narration tracks for a story
+router.get('/:id/narrations', verifyToken, async (req, res) => {
+  try {
+    const pool = getPool();
+    const storyResult = await pool.query(
+      'SELECT id, kid_profile_id, narration_metadata FROM generated_stories WHERE id = $1',
+      [req.params.id]
+    );
+    const story = storyResult.rows[0];
+    if (!story) return res.status(404).json({ error: 'Story not found' });
+
+    const kid = await getAuthorizedKidProfile(pool, req.user, story.kid_profile_id);
+    if (!kid) return res.status(403).json({ error: 'Not authorized' });
+
+    const tracks = getNarrationTracks(story.narration_metadata);
+    res.json({ story_id: story.id, configured: isNarrationConfigured(), tracks });
+  } catch (err) {
+    console.error('Error fetching narration tracks:', err);
+    res.status(500).json({ error: 'Could not fetch narration tracks' });
+  }
+});
+
+// Generate narration for a specific locale
+router.post('/:id/narrations/:locale', verifyToken, async (req, res) => {
+  try {
+    const pool = getPool();
+    const storyResult = await pool.query(
+      'SELECT id, kid_profile_id FROM generated_stories WHERE id = $1',
+      [req.params.id]
+    );
+    const story = storyResult.rows[0];
+    if (!story) return res.status(404).json({ error: 'Story not found' });
+
+    const kid = await getAuthorizedKidProfile(pool, req.user, story.kid_profile_id);
+    if (!kid) return res.status(403).json({ error: 'Not authorized' });
+
+    if (!isNarrationConfigured()) {
+      return res.status(503).json({ error: 'Narration service is not configured', code: 'NARRATION_UNAVAILABLE' });
+    }
+
+    const force = req.body?.force === true;
+    const result = await generateStoryNarration(story.id, req.params.locale, { force });
+    res.json(result);
+  } catch (err) {
+    console.error('Error generating narration:', err);
+    res.status(500).json({ error: err.message || 'Narration generation failed' });
+  }
+});
+
+// Generate narrations for all configured locales
+router.post('/:id/narrations', verifyToken, async (req, res) => {
+  try {
+    const pool = getPool();
+    const storyResult = await pool.query(
+      'SELECT id, kid_profile_id FROM generated_stories WHERE id = $1',
+      [req.params.id]
+    );
+    const story = storyResult.rows[0];
+    if (!story) return res.status(404).json({ error: 'Story not found' });
+
+    const kid = await getAuthorizedKidProfile(pool, req.user, story.kid_profile_id);
+    if (!kid) return res.status(403).json({ error: 'Not authorized' });
+
+    if (!isNarrationConfigured()) {
+      return res.status(503).json({ error: 'Narration service is not configured', code: 'NARRATION_UNAVAILABLE' });
+    }
+
+    const { generateAllNarrations } = await import('../services/ai/storyNarrationService.js');
+    const force = req.body?.force === true;
+    const results = await generateAllNarrations(story.id, { force });
+    res.json({ story_id: story.id, results });
+  } catch (err) {
+    console.error('Error generating all narrations:', err);
+    res.status(500).json({ error: err.message || 'Narration generation failed' });
   }
 });
 

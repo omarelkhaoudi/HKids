@@ -76,6 +76,13 @@ function serializeBook(book) {
 }
 
 function serializeGeneratedStory(story) {
+  const narrationTracks = (story.narration_tracks || [])
+    .filter(t => t.available && t.url)
+    .map(t => ({ key: `narration-${t.locale}`, url: ensureAbsoluteUrl(t.url) }))
+    .filter(a => a.url);
+
+  const coverUrl = story.cover_image_url ? ensureAbsoluteUrl(story.cover_image_url) : null;
+
   return {
     id: downloadId('generated-story', story.id),
     type: 'generated-story',
@@ -84,7 +91,10 @@ function serializeGeneratedStory(story) {
     summary: story.summary || '',
     language: story.language || 'fr',
     payload: story,
-    assets: []
+    assets: [
+      coverUrl && { key: 'cover', url: coverUrl },
+      ...narrationTracks,
+    ].filter(Boolean)
   };
 }
 
