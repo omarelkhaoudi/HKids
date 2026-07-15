@@ -21,6 +21,7 @@ export function mapGeneratedStory(row) {
     chapters: row.chapters || [],
     interactive_choices: row.interactive_choices || [],
     illustration_plan: row.illustration_plan || {},
+    cover_image_url: row.cover_image_url || null,
     narration_metadata: row.narration_metadata || {},
     provider: row.provider,
     saved: row.saved === true,

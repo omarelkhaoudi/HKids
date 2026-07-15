@@ -3,6 +3,7 @@ import { getDatabase } from '../database/init.js';
 import { verifyToken } from './auth.js';
 import { generatePersonalizedStory, normalizeStoryRequest, validateStoryRequest } from '../services/ai/storyGenerationService.js';
 import { aiErrorResponse } from '../services/ai/errors.js';
+import { enqueueIllustrationJob, getIllustrationJobStatus, clearIllustrationCache } from '../services/ai/illustrationQueue.js';
 import { buildGeneratedStoryWhereClause, mapGeneratedStory, normalizeStoryListFilters } from '../models/GeneratedStory.js';
 import {
   filterAllowedContent,
@@ -179,7 +180,11 @@ router.post('/generate', verifyToken, async (req, res) => {
       ]
     );
 
-    res.status(201).json(mapGeneratedStory(result.rows[0]));
+    const story = mapGeneratedStory(result.rows[0]);
+    res.status(201).json(story);
+
+    // Fire-and-forget: enqueue illustration generation
+    enqueueIllustrationJob(story.id);
   } catch (err) {
     if (err?.isAIError) {
       const { status, body } = aiErrorResponse(err);
@@ -437,7 +442,11 @@ router.post('/:id/version', verifyToken, async (req, res) => {
       ]
     );
 
-    res.status(201).json(mapGeneratedStory(result.rows[0]));
+    const newStory = mapGeneratedStory(result.rows[0]);
+    res.status(201).json(newStory);
+
+    // Fire-and-forget: enqueue illustration generation
+    enqueueIllustrationJob(newStory.id);
   } catch (err) {
     if (err?.isAIError) {
       const { status, body } = aiErrorResponse(err);
@@ -446,6 +455,49 @@ router.post('/:id/version', verifyToken, async (req, res) => {
 
     console.error('Error regenerating generated story:', err);
     res.status(500).json({ error: 'Could not create a new version' });
+  }
+});
+
+// Get illustration status for a story
+router.get('/:id/illustrations', verifyToken, async (req, res) => {
+  try {
+    const pool = getPool();
+    const storyResult = await pool.query('SELECT id, kid_profile_id, illustration_plan, cover_image_url FROM generated_stories WHERE id = $1', [req.params.id]);
+    const story = storyResult.rows[0];
+    if (!story) return res.status(404).json({ error: 'Story not found' });
+
+    const kid = await getAuthorizedKidProfile(pool, req.user, story.kid_profile_id);
+    if (!kid) return res.status(403).json({ error: 'Not authorized' });
+
+    const queueStatus = getIllustrationJobStatus(story.id);
+    res.json({
+      illustration_plan: story.illustration_plan || {},
+      cover_image_url: story.cover_image_url || null,
+      queue: queueStatus,
+    });
+  } catch (err) {
+    console.error('Error fetching illustration status:', err);
+    res.status(500).json({ error: 'Could not fetch illustration status' });
+  }
+});
+
+// Regenerate illustrations for a story
+router.post('/:id/illustrations/regenerate', verifyToken, async (req, res) => {
+  try {
+    const pool = getPool();
+    const storyResult = await pool.query('SELECT id, kid_profile_id FROM generated_stories WHERE id = $1', [req.params.id]);
+    const story = storyResult.rows[0];
+    if (!story) return res.status(404).json({ error: 'Story not found' });
+
+    const kid = await getAuthorizedKidProfile(pool, req.user, story.kid_profile_id);
+    if (!kid) return res.status(403).json({ error: 'Not authorized' });
+
+    clearIllustrationCache(story.id);
+    const result = enqueueIllustrationJob(story.id, { force: true });
+    res.json({ message: 'Illustration regeneration queued', ...result });
+  } catch (err) {
+    console.error('Error regenerating illustrations:', err);
+    res.status(500).json({ error: 'Could not regenerate illustrations' });
   }
 });
 
