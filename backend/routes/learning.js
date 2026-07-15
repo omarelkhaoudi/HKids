@@ -12,6 +12,11 @@ import {
 } from '../services/parental/parentalAccessService.js';
 import { invalidateParentDashboardCache } from '../services/parentDashboardService.js';
 import { requireAdminPermission } from '../services/admin/adminService.js';
+import {
+  applyCategoriesLocalizations,
+  applyLearningLocalizations,
+  normalizeLocale,
+} from '../services/content/contentLocalizationService.js';
 
 const router = express.Router();
 
@@ -324,7 +329,9 @@ router.get('/categories', verifyToken, async (req, res) => {
     const violation = getGlobalAccessViolation(policy);
     if (violation) return sendParentalAccessError(res, violation);
     const result = await pool.query('SELECT * FROM learning_categories ORDER BY id ASC');
-    res.json(result.rows);
+    const locale = normalizeLocale(req.query.locale || req.query.language);
+    const categories = await applyCategoriesLocalizations(result.rows, locale, pool);
+    res.json(categories);
   } catch (error) {
     console.error('Error loading learning categories:', error);
     res.status(500).json({ error: 'Could not load learning categories' });
@@ -385,7 +392,9 @@ router.get('/contents', verifyToken, async (req, res) => {
       policy,
       contents.map(learningContentDescriptor)
     ).map(({ category_aliases, ...content }) => content);
-    res.json(allowedContents);
+    const locale = normalizeLocale(req.query.locale || req.query.language);
+    const localizedContents = await applyLearningLocalizations(allowedContents, locale, pool);
+    res.json(localizedContents);
   } catch (error) {
     console.error('Error loading learning contents:', error);
     res.status(500).json({ error: 'Could not load learning contents' });

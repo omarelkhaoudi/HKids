@@ -85,6 +85,59 @@ export async function applySingleBookLocalization(pool, book, locale) {
   return localized;
 }
 
+export async function applyCategoriesLocalizations(categories, locale, pool) {
+  if (!categories?.length) return categories;
+
+  const loc = normalizeLocale(locale);
+  const ids = categories.map((c) => c.id);
+
+  const result = await pool.query(
+    `SELECT content_id, title, description
+     FROM content_localizations
+     WHERE content_type = 'category' AND content_id = ANY($1) AND locale = $2`,
+    [ids, loc]
+  );
+
+  const locMap = new Map(result.rows.map((row) => [row.content_id, row]));
+
+  return categories.map((cat) => {
+    const localized = locMap.get(cat.id);
+    if (!localized) return cat;
+    return {
+      ...cat,
+      name: localized.title || cat.name,
+      description: localized.description ?? cat.description,
+    };
+  });
+}
+
+export async function applyLearningLocalizations(contents, locale, pool) {
+  if (!contents?.length) return contents;
+
+  const loc = normalizeLocale(locale);
+  const ids = contents.map((c) => c.id);
+
+  const result = await pool.query(
+    `SELECT content_id, title, description, metadata
+     FROM content_localizations
+     WHERE content_type = 'learning_content' AND content_id = ANY($1) AND locale = $2`,
+    [ids, loc]
+  );
+
+  const locMap = new Map(result.rows.map((row) => [row.content_id, row]));
+
+  return contents.map((content) => {
+    const localized = locMap.get(content.id);
+    if (!localized) return content;
+    return {
+      ...content,
+      title: localized.title || content.title,
+      description: localized.description ?? content.description,
+      ...(localized.metadata?.question ? { localizedQuestion: localized.metadata.question } : {}),
+    };
+  });
+}
+
 export function buildLanguageAvailabilityClause(paramIndex) {
   return `(
     b.language = $${paramIndex}

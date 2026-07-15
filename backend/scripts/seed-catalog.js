@@ -36,13 +36,18 @@ async function copyAudioAsset(sourcePath, filename) {
 }
 
 async function ensureBookCategories(client) {
-  for (const [name, description] of BOOK_CATEGORIES) {
-    await client.query(
+  for (const { name, description, en, ar } of BOOK_CATEGORIES) {
+    const result = await client.query(
       `INSERT INTO categories (name, description)
        VALUES ($1, $2)
-       ON CONFLICT (name) DO UPDATE SET description = EXCLUDED.description`,
+       ON CONFLICT (name) DO UPDATE SET description = EXCLUDED.description
+       RETURNING id`,
       [name, description]
     );
+    const categoryId = result.rows[0].id;
+    await upsertCategoryLocalization(client, categoryId, 'fr', name, description);
+    await upsertCategoryLocalization(client, categoryId, 'en', en.name, en.description);
+    await upsertCategoryLocalization(client, categoryId, 'ar', ar.name, ar.description);
   }
 }
 
@@ -131,6 +136,26 @@ async function upsertLocalization(client, bookId, locale, title, description) {
      ON CONFLICT (content_type, content_id, locale)
      DO UPDATE SET title = EXCLUDED.title, description = EXCLUDED.description, updated_at = NOW()`,
     [bookId, locale, title, description]
+  );
+}
+
+async function upsertCategoryLocalization(client, categoryId, locale, name, description) {
+  await client.query(
+    `INSERT INTO content_localizations (content_type, content_id, locale, title, description)
+     VALUES ('category', $1, $2, $3, $4)
+     ON CONFLICT (content_type, content_id, locale)
+     DO UPDATE SET title = EXCLUDED.title, description = EXCLUDED.description, updated_at = NOW()`,
+    [categoryId, locale, name, description]
+  );
+}
+
+async function upsertLearningLocalization(client, contentId, locale, title, description) {
+  await client.query(
+    `INSERT INTO content_localizations (content_type, content_id, locale, title, description)
+     VALUES ('learning_content', $1, $2, $3, $4)
+     ON CONFLICT (content_type, content_id, locale)
+     DO UPDATE SET title = EXCLUDED.title, description = EXCLUDED.description, updated_at = NOW()`,
+    [contentId, locale, title, description]
   );
 }
 
@@ -290,6 +315,13 @@ async function upsertLearningContent(client, item) {
         item.question.explanation,
       ]
     );
+  }
+
+  await upsertLearningLocalization(client, contentId, item.language || 'fr', item.title, item.description);
+  if (item.localizations) {
+    for (const [locale, loc] of Object.entries(item.localizations)) {
+      await upsertLearningLocalization(client, contentId, locale, loc.title, loc.description);
+    }
   }
 
   return { slug: item.slug, contentId, type: item.content_type };
