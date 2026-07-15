@@ -87,15 +87,32 @@ function getThemeAssets(theme) {
 
 function DynamicCover({ story, className = "" }) {
   const assets = getThemeAssets(story.theme);
+  const coverUrl = story.cover_image_url;
+  
+  if (coverUrl) {
+    return (
+      <div className={`relative overflow-hidden ${className}`}>
+        <img 
+          src={coverUrl} 
+          alt={story.title}
+          className="w-full h-full object-cover"
+          loading="lazy"
+          onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }}
+        />
+        <div className={`w-full h-full bg-gradient-to-br ${assets.gradient} flex-col items-center justify-center p-6 text-center shadow-inner hidden`}>
+          <div className="text-6xl md:text-7xl mb-4 filter drop-shadow-lg">{assets.emoji}</div>
+          <h3 className="text-white font-black text-xl md:text-2xl leading-tight filter drop-shadow-md line-clamp-3">{story.title}</h3>
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/10 pointer-events-none" />
+        </div>
+      </div>
+    );
+  }
   
   return (
     <div className={`relative overflow-hidden bg-gradient-to-br ${assets.gradient} ${className} flex flex-col items-center justify-center p-6 text-center shadow-inner`}>
-      {/* Decorative background elements */}
       <div className="absolute top-2 left-2 text-white/20 text-2xl">{assets.icon}</div>
       <div className="absolute bottom-2 right-2 text-white/20 text-3xl">{assets.icon}</div>
       <div className="absolute top-1/2 left-1/4 text-white/10 text-4xl -translate-y-1/2">{assets.icon}</div>
-      
-      {/* Main Emoji Illustration */}
       <motion.div 
         initial={{ scale: 0.8, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
@@ -104,13 +121,9 @@ function DynamicCover({ story, className = "" }) {
       >
         {assets.emoji}
       </motion.div>
-      
-      {/* Title */}
       <h3 className="text-white font-black text-xl md:text-2xl leading-tight filter drop-shadow-md line-clamp-3">
         {story.title}
       </h3>
-      
-      {/* Soft gradient overlay for premium feel */}
       <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/10 pointer-events-none" />
     </div>
   );
@@ -134,6 +147,44 @@ function speechLanguage(language) {
   if (language === 'en') return 'en-US';
   if (language === 'ar') return 'ar-MA';
   return 'fr-FR';
+}
+
+function StoryTextWithIllustrations({ story }) {
+  const scenes = story.illustration_plan?.scenes || [];
+  const sceneMap = new Map(scenes.filter(s => s.url).map(s => [s.index, s.url]));
+  
+  if (sceneMap.size === 0) {
+    return (
+      <p className="text-lg font-bold leading-relaxed text-foreground whitespace-pre-line">
+        {story.story_text}
+      </p>
+    );
+  }
+
+  const paragraphs = story.story_text.split(/\n{2,}/).filter(p => p.trim());
+  const step = paragraphs.length > 0 ? Math.max(1, Math.floor(paragraphs.length / (sceneMap.size + 1))) : 1;
+  let sceneIdx = 0;
+
+  return (
+    <div className="space-y-4">
+      {paragraphs.map((para, i) => (
+        <React.Fragment key={i}>
+          <p className="text-lg font-bold leading-relaxed text-foreground">
+            {para.trim()}
+          </p>
+          {(i + 1) % step === 0 && sceneMap.has(sceneIdx) && (() => {
+            const url = sceneMap.get(sceneIdx);
+            sceneIdx++;
+            return (
+              <div className="my-4 rounded-xl overflow-hidden shadow-lg">
+                <img src={url} alt={`Scene ${sceneIdx}`} className="w-full h-auto rounded-xl" loading="lazy" />
+              </div>
+            );
+          })()}
+        </React.Fragment>
+      ))}
+    </div>
+  );
 }
 
 function KidsAIStories() {
@@ -686,6 +737,13 @@ function KidsAIStories() {
                   </button>
                 </div>
 
+                {selectedStory.illustration_plan?.status === 'processing' && (
+                  <div className="flex items-center gap-2 text-sm text-primary-500 mt-2 px-8">
+                    <div className="w-4 h-4 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
+                    <span>{t('kids_ai_illustrations_generating') || 'Illustrations en cours...'}</span>
+                  </div>
+                )}
+
                 <div className="p-8 pt-0">
                   <h2 className="text-3xl font-black mb-4 leading-tight">{selectedStory.title}</h2>
                   
@@ -727,9 +785,7 @@ function KidsAIStories() {
 
                   {/* Playback & Text Area */}
                   <div className="rounded-2xl bg-primary-50/50 dark:bg-primary-900/10 border border-primary-100 dark:border-primary-900/30 p-6 max-h-96 overflow-y-auto custom-scrollbar">
-                    <p className="text-lg font-bold leading-relaxed text-foreground whitespace-pre-line">
-                      {selectedStory.story_text}
-                    </p>
+                    <StoryTextWithIllustrations story={selectedStory} />
                   </div>
                   
                   {/* Actions Bar */}
