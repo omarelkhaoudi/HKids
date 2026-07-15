@@ -1,7 +1,14 @@
 package com.lelitquilit.app;
 
+import android.app.ActivityManager;
+import android.app.admin.DevicePolicyManager;
+import android.content.ComponentName;
+import android.content.Context;
+import android.content.IntentFilter;
 import android.os.Build;
 import android.os.Bundle;
+import android.util.Log;
+import android.view.KeyEvent;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowInsets;
@@ -11,10 +18,14 @@ import android.view.WindowManager;
 import com.getcapacitor.BridgeActivity;
 
 public class MainActivity extends BridgeActivity {
+    private static final String TAG = "HKidsMain";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        registerPlugin(KioskPlugin.class);
         super.onCreate(savedInstanceState);
         enableKioskChrome();
+        autoStartLockTaskIfOwner();
     }
 
     @Override
@@ -23,6 +34,54 @@ public class MainActivity extends BridgeActivity {
         if (hasFocus) {
             enableKioskChrome();
         }
+    }
+
+    /**
+     * If the app is device owner, automatically engage lock task mode on launch.
+     * This ensures kiosk mode survives crashes and reboots.
+     */
+    private void autoStartLockTaskIfOwner() {
+        try {
+            DevicePolicyManager dpm = (DevicePolicyManager) getSystemService(Context.DEVICE_POLICY_SERVICE);
+            if (dpm.isDeviceOwnerApp(getPackageName())) {
+                ComponentName admin = new ComponentName(this, HKidsDeviceAdminReceiver.class);
+                dpm.setLockTaskPackages(admin, new String[]{ getPackageName() });
+
+                ActivityManager am = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+                if (am.getLockTaskModeState() == ActivityManager.LOCK_TASK_MODE_NONE) {
+                    startLockTask();
+                    Log.i(TAG, "Lock task mode auto-started (device owner)");
+                }
+            }
+        } catch (Exception e) {
+            Log.w(TAG, "Auto lock-task failed: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Block hardware back, home, and recent-apps keys when in lock task mode.
+     */
+    @Override
+    public boolean dispatchKeyEvent(KeyEvent event) {
+        ActivityManager am = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+        if (am.getLockTaskModeState() != ActivityManager.LOCK_TASK_MODE_NONE) {
+            int keyCode = event.getKeyCode();
+            if (keyCode == KeyEvent.KEYCODE_HOME
+                    || keyCode == KeyEvent.KEYCODE_APP_SWITCH
+                    || keyCode == KeyEvent.KEYCODE_MENU) {
+                return true;
+            }
+        }
+        return super.dispatchKeyEvent(event);
+    }
+
+    @Override
+    public void onBackPressed() {
+        ActivityManager am = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+        if (am.getLockTaskModeState() != ActivityManager.LOCK_TASK_MODE_NONE) {
+            return;
+        }
+        super.onBackPressed();
     }
 
     private void enableKioskChrome() {
