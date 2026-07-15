@@ -3,25 +3,26 @@ import {adminAPI} from '../../api/admin';
 import {useAuth} from '../../context/AuthContext';
 import {Badge, Button} from '../ui';
 import {ShieldIcon, UserIcon} from '../Icons';
-
-const PERMISSION_LABELS = {
- 'overview.read': 'Voir le tableau de bord',
- 'users.read': 'Voir les utilisateurs',
- 'users.delete': 'Supprimer les utilisateurs',
- 'content.read': 'Voir la modération',
- 'content.moderate': 'Modérer les contenus',
- 'books.validate': 'Valider et publier les livres',
- 'subscriptions.read': 'Voir les abonnements',
- 'subscriptions.manage': 'Gérer les abonnements',
- 'reports.read': 'Voir les signalements',
- 'reports.manage': 'Traiter les signalements',
- 'audit.read': 'Voir le journal',
- 'permissions.manage': 'Gérer les permissions',
- 'search.use': 'Utiliser la recherche avancée',
-};
+import { useLanguage } from '../../context/LanguageContext';
 
 function AdminPermissions() {
  const {user} = useAuth();
+ const { t } = useLanguage();
+ const PERMISSION_LABELS = {
+  'overview.read': t('adminPermViewDashboard'),
+  'users.read': t('adminPermViewUsers'),
+  'users.delete': t('adminPermDeleteUsers'),
+  'content.read': t('adminPermViewModeration'),
+  'content.moderate': t('adminPermModerateContent'),
+  'books.validate': t('adminPermValidateBooks'),
+  'subscriptions.read': t('adminPermViewSubscriptions'),
+  'subscriptions.manage': t('adminPermManageSubscriptions'),
+  'reports.read': t('adminPermViewReports'),
+  'reports.manage': t('adminPermManageReports'),
+  'audit.read': t('adminPermViewAudit'),
+  'permissions.manage': t('adminPermManagePermissions'),
+  'search.use': t('adminPermAdvancedSearch'),
+ };
  const [admins, setAdmins] = useState([]);
  const [available, setAvailable] = useState([]);
  const [drafts, setDrafts] = useState({});
@@ -42,7 +43,7 @@ function AdminPermissions() {
 }])));
  setError('');
 } catch (err) {
- setError(err.response?.data?.error || 'Impossible de charger les permissions.');
+ setError(err.response?.data?.error || t('adminPermissionsLoadError'));
 } finally {
  setLoading(false);
 }
@@ -67,7 +68,7 @@ function AdminPermissions() {
  await adminAPI.setPermissions(adminId, draft.unrestricted ? null : draft.permissions);
  await load();
 } catch (err) {
- setError(err.response?.data?.error || 'Impossible de sauvegarder les permissions.');
+ setError(err.response?.data?.error || t('adminPermissionsSaveError'));
 } finally {
  setSavingId(null);
 }
@@ -76,14 +77,14 @@ function AdminPermissions() {
  return (
  <div className="space-y-6 pb-12">
  <div>
- <h1 className="text-3xl font-black tracking-tight">Permissions administratives</h1>
- <p className="text-foreground-muted font-medium mt-1">Appliquez le principe du moindre privilège aux comptes Admin.</p>
+ <h1 className="text-3xl font-black tracking-tight">{t('adminPermissionsTitle')}</h1>
+ <p className="text-foreground-muted font-medium mt-1">{t('adminPermissionsSubtitle')}</p>
  </div>
 
  {error && <div className="p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 font-bold">{error}</div>}
 
  {loading ? (
- <div className="p-10 text-center text-foreground-muted">Chargement...</div>
+ <div className="p-10 text-center text-foreground-muted">{t('adminLoading')}</div>
  ) : (
  <div className="grid gap-5">
  {admins.map((admin) => {
@@ -97,8 +98,8 @@ function AdminPermissions() {
  <div>
  <h2 className="font-black text-lg">{admin.username}</h2>
  <div className="flex gap-2 mt-1">
- {isSelf && <Badge variant="primary">Vous</Badge>}
- {draft.unrestricted && <Badge variant="success">Accès complet</Badge>}
+ {isSelf && <Badge variant="primary">{t('adminPermissionsYou')}</Badge>}
+ {draft.unrestricted && <Badge variant="success">{t('adminPermissionsFullAccess')}</Badge>}
  </div>
  </div>
  </div>
@@ -116,7 +117,7 @@ function AdminPermissions() {
 }
 }))}
  />
- Accès complet
+ {t('adminPermissionsFullAccessToggle')}
  </label>
  )}
  </div>
@@ -138,7 +139,7 @@ function AdminPermissions() {
  {!isSelf && (
  <div className="flex justify-end mt-5">
  <Button variant="primary" onClick={() => save(admin.id)} disabled={savingId === admin.id}>
- <ShieldIcon className="w-4 h-4 mr-2" /> {savingId === admin.id ? 'Enregistrement...' : 'Enregistrer'}
+ <ShieldIcon className="w-4 h-4 mr-2" /> {savingId === admin.id ? t('adminPermissionsSaving') : t('adminSave')}
  </Button>
  </div>
  )}

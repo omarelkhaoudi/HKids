@@ -50,14 +50,54 @@ export function quickGradientAtIndex(index) {
   return BRAND_QUICK_GRADIENTS[index % BRAND_QUICK_GRADIENTS.length];
 }
 
-export const BRAND_FEATURE_TILES = [
-  { title: 'Histoires personnalisées', desc: "Créées par IA selon l'âge, les intérêts et les valeurs de votre enfant.", icon: '📖', tone: 'primary' },
-  { title: 'Éducatif et bienveillant', desc: "Développe l'empathie, la confiance et l'amour de l'apprentissage.", icon: '🎓', tone: 'secondary' },
-  { title: 'Sans publicité', desc: "Un environnement sûr et sans distraction pour apprendre en s'amusant.", icon: '🛡️', tone: 'accent' },
-  { title: 'Disponible partout', desc: 'Sur mobile, tablette et ordinateur, même hors connexion.', icon: '📱', tone: 'primary' },
-  { title: 'Créé avec amour', desc: 'Conçu par des parents pour accompagner chaque famille.', icon: '💜', tone: 'secondary' },
-  { title: 'Contrôle parental', desc: "Temps d'écran, contenus autorisés et suivi de lecture depuis votre tableau de bord.", icon: '👨‍👩‍👧', tone: 'accent' },
+const FEATURE_TILE_LABELS = {
+  fr: [
+    { title: 'Histoires personnalisées', desc: "Créées par IA selon l'âge, les intérêts et les valeurs de votre enfant." },
+    { title: 'Éducatif et bienveillant', desc: "Développe l'empathie, la confiance et l'amour de l'apprentissage." },
+    { title: 'Sans publicité', desc: "Un environnement sûr et sans distraction pour apprendre en s'amusant." },
+    { title: 'Disponible partout', desc: 'Sur mobile, tablette et ordinateur, même hors connexion.' },
+    { title: 'Créé avec amour', desc: 'Conçu par des parents pour accompagner chaque famille.' },
+    { title: 'Contrôle parental', desc: "Temps d'écran, contenus autorisés et suivi de lecture depuis votre tableau de bord." },
+  ],
+  en: [
+    { title: 'Personalized stories', desc: 'AI-created based on your child\'s age, interests and values.' },
+    { title: 'Educational & caring', desc: 'Develops empathy, confidence and a love of learning.' },
+    { title: 'Ad-free', desc: 'A safe, distraction-free environment for learning through fun.' },
+    { title: 'Available everywhere', desc: 'On mobile, tablet and computer, even offline.' },
+    { title: 'Made with love', desc: 'Designed by parents to support every family.' },
+    { title: 'Parental controls', desc: 'Screen time, approved content and reading tracking from your dashboard.' },
+  ],
+  ar: [
+    { title: 'قصص مخصصة', desc: 'أُنشئت بالذكاء الاصطناعي حسب عمر طفلك واهتماماته وقيمه.' },
+    { title: 'تعليمي ورعاية', desc: 'ينمّي التعاطف والثقة وحب التعلم.' },
+    { title: 'بدون إعلانات', desc: 'بيئة آمنة وخالية من التشتت للتعلم بمرح.' },
+    { title: 'متاح في كل مكان', desc: 'على الهاتف والجهاز اللوحي والكمبيوتر، حتى بدون اتصال.' },
+    { title: 'صُنع بحب', desc: 'صممه آباء لمرافقة كل عائلة.' },
+    { title: 'رقابة أبوية', desc: 'وقت الشاشة والمحتوى المعتمد ومتابعة القراءة من لوحة التحكم.' },
+  ],
+};
+
+const FEATURE_TILE_META = [
+  { icon: '📖', tone: 'primary' },
+  { icon: '🎓', tone: 'secondary' },
+  { icon: '🛡️', tone: 'accent' },
+  { icon: '📱', tone: 'primary' },
+  { icon: '💜', tone: 'secondary' },
+  { icon: '👨‍👩‍👧', tone: 'accent' },
 ];
+
+export const BRAND_FEATURE_TILES = FEATURE_TILE_META.map((meta, i) => ({
+  ...meta,
+  ...FEATURE_TILE_LABELS.fr[i],
+}));
+
+export function localizeFeatureTiles(language = 'fr') {
+  const lang = ['en', 'ar'].includes(language) ? language : 'fr';
+  return FEATURE_TILE_META.map((meta, i) => ({
+    ...meta,
+    ...(FEATURE_TILE_LABELS[lang]?.[i] || FEATURE_TILE_LABELS.fr[i]),
+  }));
+}
 
 export const BRAND_SOFT_SURFACES = [
   'bg-primary-50',

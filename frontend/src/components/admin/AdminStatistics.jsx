@@ -4,6 +4,7 @@ import {adminAPI} from '../../api/admin';
 import {formatAdminDate, formatAdminDuration} from './AdminMetricCard';
 import {metricToneAtIndex} from '../../constants/brandTheme';
 import {AudioIcon, BookIcon, ClockIcon, HistoryIcon, UserIcon, ArrowRightIcon, SparklesIcon} from '../Icons';
+import { useLanguage } from '../../context/LanguageContext';
 
 function BarRow({label, value, max, detail, colorClass ="bg-primary-500", icon: Icon}) {
  const width = max > 0 ? Math.max(8, Math.round((Number(value || 0) / max) * 100)) : 0;
@@ -54,6 +55,7 @@ function StatCard({title, value, detail, icon: Icon, tone, index}) {
 }
 
 function AdminStatistics() {
+ const { t } = useLanguage();
  const [data, setData] = useState(null);
  const [loading, setLoading] = useState(true);
 
@@ -91,23 +93,23 @@ function AdminStatistics() {
  <div className="space-y-8 pb-12">
  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
  <div>
- <h1 className="text-3xl font-black text-foreground tracking-tight">Analytique</h1>
- <p className="text-foreground-muted font-medium mt-1">Performances et usage de la plateforme.</p>
+ <h1 className="text-3xl font-black text-foreground tracking-tight">{t('adminStatsTitle')}</h1>
+ <p className="text-foreground-muted font-medium mt-1">{t('adminStatsSubtitle')}</p>
  </div>
  </div>
 
  <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-4">
- <StatCard index={0} title="Écoutes" value={summary.total_listens || 0} detail="Sessions totales démarrées" icon={AudioIcon} tone={`${metricToneAtIndex(0).bg} ${metricToneAtIndex(0).text}`} />
- <StatCard index={1} title="Temps Total" value={formatAdminDuration(summary.total_listening_seconds)} detail="Volume d'écoute cumulé" icon={ClockIcon} tone={`${metricToneAtIndex(1).bg} ${metricToneAtIndex(1).text}`} />
- <StatCard index={2} title="Temps Moyen" value={formatAdminDuration(summary.average_listening_seconds)} detail="Durée moyenne par session" icon={HistoryIcon} tone={`${metricToneAtIndex(2).bg} ${metricToneAtIndex(2).text}`} />
- <StatCard index={3} title="Enfants Actifs" value={summary.active_children || 0} detail="Profils ayant une activité" icon={UserIcon} tone={`${metricToneAtIndex(3).bg} ${metricToneAtIndex(3).text}`} />
+ <StatCard index={0} title={t('adminStatsListens')} value={summary.total_listens || 0} detail={t('adminStatsListensDesc')} icon={AudioIcon} tone={`${metricToneAtIndex(0).bg} ${metricToneAtIndex(0).text}`} />
+ <StatCard index={1} title={t('adminStatsTotalTime')} value={formatAdminDuration(summary.total_listening_seconds)} detail={t('adminStatsTotalTimeDesc')} icon={ClockIcon} tone={`${metricToneAtIndex(1).bg} ${metricToneAtIndex(1).text}`} />
+ <StatCard index={2} title={t('adminStatsAvgTime')} value={formatAdminDuration(summary.average_listening_seconds)} detail={t('adminStatsAvgTimeDesc')} icon={HistoryIcon} tone={`${metricToneAtIndex(2).bg} ${metricToneAtIndex(2).text}`} />
+ <StatCard index={3} title={t('adminStatsActiveKids')} value={summary.active_children || 0} detail={t('adminStatsActiveKidsDesc')} icon={UserIcon} tone={`${metricToneAtIndex(3).bg} ${metricToneAtIndex(3).text}`} />
  </div>
 
  <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
  {/* TOP STORIES */}
  <motion.div initial={{opacity: 0, y: 20}} animate={{opacity: 1, y: 0}} transition={{delay: 0.4}} className="bg-card rounded-[2rem] p-8 border border-border shadow-sm">
  <div className="flex items-center justify-between mb-8">
- <h2 className="text-xl font-black text-foreground">Histoires les plus populaires</h2>
+ <h2 className="text-xl font-black text-foreground">{t('adminStatsPopularStories')}</h2>
  <button className="text-foreground-600 hover:text-foreground-700 bg-primary-50 p-2 rounded-xl transition-colors"><ArrowRightIcon className="w-5 h-5"/></button>
  </div>
  <div className="space-y-6">
@@ -117,7 +119,7 @@ function AdminStatistics() {
  label={book.title}
  value={book.listens_count}
  max={maxBookListens}
- detail={`Temps total: ${formatAdminDuration(book.listening_seconds)}`}
+ detail={`${t('adminStatsTotalTime2')} ${formatAdminDuration(book.listening_seconds)}`}
  colorClass="bg-gradient-to-r from-primary-400 to-primary-600"
  icon={BookIcon}
  />
@@ -128,7 +130,7 @@ function AdminStatistics() {
  {/* TOP CATEGORIES */}
  <motion.div initial={{opacity: 0, y: 20}} animate={{opacity: 1, y: 0}} transition={{delay: 0.5}} className="bg-card rounded-[2rem] p-8 border border-border shadow-sm">
  <div className="flex items-center justify-between mb-8">
- <h2 className="text-xl font-black text-foreground">Catégories phares</h2>
+ <h2 className="text-xl font-black text-foreground">{t('adminStatsTopCategories')}</h2>
  <button className="text-secondary-600 hover:text-secondary-700 bg-secondary-50 p-2 rounded-xl transition-colors"><ArrowRightIcon className="w-5 h-5"/></button>
  </div>
  <div className="space-y-6">
@@ -138,7 +140,7 @@ function AdminStatistics() {
  label={category.name}
  value={category.listens_count}
  max={maxCategoryListens}
- detail={`Temps total: ${formatAdminDuration(category.listening_seconds)}`}
+ detail={`${t('adminStatsTotalTime2')} ${formatAdminDuration(category.listening_seconds)}`}
  colorClass="bg-gradient-to-r from-secondary-400 to-secondary-600"
  icon={SparklesIcon}
  />
@@ -150,30 +152,30 @@ function AdminStatistics() {
  <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
  <motion.div initial={{opacity: 0, y: 20}} animate={{opacity: 1, y: 0}} transition={{delay: 0.6}} className="bg-card rounded-[2rem] p-8 border border-border shadow-sm">
  <div className="flex items-center justify-between mb-8">
- <h2 className="text-xl font-black text-foreground">Utilisateurs actifs</h2>
+ <h2 className="text-xl font-black text-foreground">{t('adminStatsActiveUsers')}</h2>
  </div>
  <div className="space-y-4">
  {(data?.active_users || []).slice(0, 6).map((user) => (
  <div key={user.id} className="flex items-center justify-between p-4 rounded-2xl bg-surface-secondary/50 border border-border">
  <div>
  <p className="font-bold text-foreground text-sm">{user.name}</p>
- <p className="text-xs text-foreground-muted">Parent : {user.parent_name}</p>
+ <p className="text-xs text-foreground-muted">{t('adminStatsParent')} {user.parent_name}</p>
  </div>
  <div className="text-right">
- <p className="text-sm font-black text-foreground">{user.sessions_count || 0} sessions</p>
+ <p className="text-sm font-black text-foreground">{user.sessions_count || 0} {t('adminStatsSessions')}</p>
  <p className="text-xs text-surface-400">{formatAdminDate(user.last_activity_at)}</p>
  </div>
  </div>
  ))}
  {(data?.active_users || []).length === 0 && (
- <p className="text-sm text-foreground-muted text-center py-6">Aucune activité enregistrée.</p>
+ <p className="text-sm text-foreground-muted text-center py-6">{t('adminStatsNoActivity')}</p>
  )}
  </div>
  </motion.div>
 
  <motion.div initial={{opacity: 0, y: 20}} animate={{opacity: 1, y: 0}} transition={{delay: 0.7}} className="bg-card rounded-[2rem] p-8 border border-border shadow-sm">
  <div className="flex items-center justify-between mb-8">
- <h2 className="text-xl font-black text-foreground">Activité récente</h2>
+ <h2 className="text-xl font-black text-foreground">{t('adminStatsRecentActivity')}</h2>
  </div>
  <div className="space-y-4">
  {(data?.recent_activity || []).slice(0, 6).map((item) => (
@@ -192,7 +194,7 @@ function AdminStatistics() {
  </div>
  ))}
  {(data?.recent_activity || []).length === 0 && (
- <p className="text-sm text-foreground-muted text-center py-6">Aucune session récente.</p>
+ <p className="text-sm text-foreground-muted text-center py-6">{t('adminStatsNoSessions')}</p>
  )}
  </div>
  </motion.div>

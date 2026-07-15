@@ -2,6 +2,7 @@ import {useState, useEffect} from 'react';
 import {Link, useNavigate} from 'react-router-dom';
 import {motion, AnimatePresence} from 'framer-motion';
 import {useAuth} from '../context/AuthContext';
+import {useLanguage} from '../context/LanguageContext';
 import {EyeIcon, EyeOffIcon, LockIcon, UserIcon, ChevronLeftIcon, AlertIcon, LoadingSpinnerIcon, StarIcon} from '../components/Icons';
 import {Logo} from '../components/Logo';
 import {MagicalBackground} from '../components/layout/PlatformShell';
@@ -16,6 +17,7 @@ export default function ParentLogin() {
  
  const {login} = useAuth();
  const navigate = useNavigate();
+ const { t } = useLanguage();
 
  useEffect(() => {
  setMounted(true);
@@ -30,7 +32,7 @@ export default function ParentLogin() {
  setLoading(false);
 
  if (!result.success) {
- setError(result.error || 'Connexion impossible');
+    setError(result.error || t('parentLoginErrorDefault'));
  return;
 }
 
@@ -43,7 +45,7 @@ export default function ParentLogin() {
 }
 
  if (user?.role !== 'parent' && user?.role !== 'admin') {
- setError("Ce compte n'a pas accès à HKids.");
+    setError(t('parentLoginErrorNoAccess'));
  return;
 }
 
@@ -63,8 +65,8 @@ export default function ParentLogin() {
  className="flex items-center gap-2 px-5 py-2.5 bg-card/80 backdrop-blur-md border border-border rounded-[1.5rem] shadow-sm text-foreground-secondary font-bold text-sm hover:text-foreground hover:shadow-md transition-all"
  >
  <ChevronLeftIcon className="w-4 h-4" />
- Retour
- </motion.button>
+    {t('parentLoginBack')}
+    </motion.button>
  </Link>
  </div>
 
@@ -126,17 +128,17 @@ export default function ParentLogin() {
  <span className="text-xl">✨</span>
  <div className="text-left">
  <div className="text-xs font-bold text-foreground-muted">HKids</div>
- <div className="text-sm font-extrabold text-foreground-600">Espace Parent</div>
+                <div className="text-sm font-extrabold text-foreground-600">{t('parentLoginParentSpace')}</div>
  </div>
  </motion.div>
  </div>
  </div>
 
  <h2 className="text-4xl lg:text-5xl font-extrabold text-foreground tracking-tight leading-[1.1] mb-4">
- Bienvenue dans<br/>votre espace.
+            {t('parentLoginWelcomeTitle').split('\n').map((line, i) => i === 0 ? <span key={i}>{line}<br/></span> : line)}
  </h2>
  <p className="text-lg text-foreground-secondary font-medium max-w-sm">
- Gérez la bibliothèque de vos enfants et suivez leurs aventures magiques.
+            {t('parentLoginWelcomeDesc')}
  </p>
  </motion.div>
  </div>
@@ -150,8 +152,8 @@ export default function ParentLogin() {
  <div className="w-16 h-16 rounded-3xl bg-primary-50 flex items-center justify-center mb-6">
  <Logo size="small" showText={false} />
  </div>
- <h1 className="text-3xl font-extrabold text-foreground tracking-tight mb-2">Bienvenue</h1>
- <p className="text-foreground-secondary font-medium">Connectez-vous à votre espace parent</p>
+            <h1 className="text-3xl font-extrabold text-foreground tracking-tight mb-2">{t('parentLoginMobileTitle')}</h1>
+            <p className="text-foreground-secondary font-medium">{t('parentLoginMobileSubtitle')}</p>
  </div>
 
  {/* Desktop Header */}
@@ -159,8 +161,8 @@ export default function ParentLogin() {
  <div className="w-14 h-14 rounded-[1.2rem] bg-gradient-to-br from-primary-500 to-primary-600 shadow-lg flex items-center justify-center mb-8">
  <Logo size="small" showText={false} className="text-white" />
  </div>
- <h1 className="text-3xl font-extrabold text-foreground tracking-tight mb-2">Connexion</h1>
- <p className="text-foreground-secondary font-medium">Renseignez vos identifiants pour continuer.</p>
+            <h1 className="text-3xl font-extrabold text-foreground tracking-tight mb-2">{t('parentLoginTitle')}</h1>
+            <p className="text-foreground-secondary font-medium">{t('parentLoginSubtitle')}</p>
  </div>
 
  {/* Error Message */}
@@ -182,7 +184,7 @@ export default function ParentLogin() {
  {/* Username Input */}
  <div className="space-y-2">
  <label className="block text-sm font-bold text-foreground-secondary ml-1">
- Nom d'utilisateur
+            {t('parentLoginUsername')}
  </label>
  <div className="relative group">
  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-surface-400 group-focus-within:text-foreground-500 transition-colors">
@@ -199,11 +201,11 @@ export default function ParentLogin() {
  </div>
  </div>
 
- {/* Password Input */}
- <div className="space-y-2">
- <label className="block text-sm font-bold text-foreground-secondary ml-1">
- Mot de passe
- </label>
+        {/* Password Input */}
+        <div className="space-y-2">
+        <label className="block text-sm font-bold text-foreground-secondary ml-1">
+        {t('parentLoginPassword')}
+        </label>
  <div className="relative group">
  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-surface-400 group-focus-within:text-foreground-500 transition-colors">
  <LockIcon className="w-5 h-5" />
@@ -220,7 +222,7 @@ export default function ParentLogin() {
  type="button"
  onClick={() => setShowPassword(!showPassword)}
  className="absolute right-4 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center rounded-full hover:bg-surface-200 text-surface-400 hover:text-foreground-secondary transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500"
- aria-label={showPassword ?"Masquer le mot de passe" :"Afficher le mot de passe"}
+            aria-label={showPassword ? t('parentLoginHidePassword') : t('parentLoginShowPassword')}
  >
  {showPassword ? <EyeOffIcon className="w-5 h-5" /> : <EyeIcon className="w-5 h-5" />}
  </button>
@@ -236,11 +238,11 @@ export default function ParentLogin() {
  <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
  </div>
  </div>
- <span className="text-sm font-semibold text-foreground-secondary group-hover:text-foreground transition-colors">Se souvenir de moi</span>
+            <span className="text-sm font-semibold text-foreground-secondary group-hover:text-foreground transition-colors">{t('parentLoginRememberMe')}</span>
  </label>
  
  <button type="button" className="text-sm font-bold text-foreground-600 hover:text-foreground-700 hover:underline transition-all">
- Mot de passe oublié ?
+            {t('parentLoginForgotPassword')}
  </button>
  </div>
 
@@ -255,11 +257,11 @@ export default function ParentLogin() {
  {loading ? (
  <>
  <LoadingSpinnerIcon className="w-6 h-6 animate-spin" />
- <span>Connexion en cours...</span>
+            <span>{t('parentLoginLoading')}</span>
  </>
  ) : (
  <>
- <span className="relative z-10">Se connecter</span>
+            <span className="relative z-10">{t('parentLoginSubmit')}</span>
  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite] pointer-events-none" />
  </>
  )}
@@ -269,9 +271,9 @@ export default function ParentLogin() {
  {/* Sign up link */}
  <div className="mt-10 text-center">
  <p className="text-foreground-secondary font-medium">
- Nouveau sur HKids ?{' '}
- <Link to="/parent/signup" className="text-foreground-600 font-bold hover:text-foreground-700 hover:underline inline-flex items-center gap-1 transition-colors">
- Créer un compte <ChevronLeftIcon className="w-3 h-3 rotate-180" />
+            {t('parentLoginNewToHkids')}{' '}
+            <Link to="/parent/signup" className="text-foreground-600 font-bold hover:text-foreground-700 hover:underline inline-flex items-center gap-1 transition-colors">
+            {t('parentLoginCreateAccount')} <ChevronLeftIcon className="w-3 h-3 rotate-180" />
  </Link>
  </p>
  </div>

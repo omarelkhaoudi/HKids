@@ -3,6 +3,7 @@ import {createPortal} from 'react-dom';
 import {Routes, Route, Navigate, Link, useNavigate, useLocation} from 'react-router-dom';
 import {motion, AnimatePresence} from 'framer-motion';
 import {useAuth} from '../context/AuthContext';
+import {useLanguage} from '../context/LanguageContext';
 import BookManagement from '../components/admin/BookManagement';
 import CategoryManagement from '../components/admin/CategoryManagement';
 import AdminOverview from '../components/admin/AdminOverview';
@@ -26,6 +27,7 @@ import {Avatar} from '../components/ui';
 
 // QUICK ACTIONS FAB COMPONENT
 const QuickActions = () => {
+ const { t } = useLanguage();
  const [isOpen, setIsOpen] = useState(false);
  const buttonRef = React.useRef(null);
  const [menuStyle, setMenuStyle] = useState({});
@@ -80,15 +82,15 @@ const QuickActions = () => {
  style={menuStyle}
  className="bg-card rounded-2xl shadow-2xl border border-border p-2 origin-bottom-right"
  >
- <div className="p-2 text-xs font-bold text-surface-400 uppercase tracking-wider">Actions Rapides</div>
+ <div className="p-2 text-xs font-bold text-surface-400 uppercase tracking-wider">{t('adminDashboardQuickActions')}</div>
  <Link to="/admin/contents" onClick={() => setIsOpen(false)} className="flex items-center gap-3 w-full p-3 rounded-xl hover:bg-surface-secondary text-foreground-secondary font-medium transition-colors whitespace-nowrap">
- <div className="bg-primary-50 p-2 rounded-lg text-foreground-600 shrink-0"><BookIcon className="w-4 h-4"/></div> Créer une histoire
+ <div className="bg-primary-50 p-2 rounded-lg text-foreground-600 shrink-0"><BookIcon className="w-4 h-4"/></div> {t('adminDashboardCreateStory')}
  </Link>
  <Link to="/admin/categories" onClick={() => setIsOpen(false)} className="flex items-center gap-3 w-full p-3 rounded-xl hover:bg-surface-secondary text-foreground-secondary font-medium transition-colors whitespace-nowrap">
- <div className="bg-secondary-50 p-2 rounded-lg text-secondary-600 shrink-0"><TagIcon className="w-4 h-4"/></div> Ajouter une catégorie
+ <div className="bg-secondary-50 p-2 rounded-lg text-secondary-600 shrink-0"><TagIcon className="w-4 h-4"/></div> {t('adminDashboardAddCategory')}
  </Link>
  <Link to="/admin/subscriptions" onClick={() => setIsOpen(false)} className="flex items-center gap-3 w-full p-3 rounded-xl hover:bg-surface-secondary text-foreground-secondary font-medium transition-colors whitespace-nowrap">
- <div className="bg-accent-50 p-2 rounded-lg text-accent-600 shrink-0"><CheckIcon className="w-4 h-4"/></div> Gérer les abonnements
+ <div className="bg-accent-50 p-2 rounded-lg text-accent-600 shrink-0"><CheckIcon className="w-4 h-4"/></div> {t('adminDashboardManageSubscriptions')}
  </Link>
  </motion.div>
  )}
@@ -111,6 +113,7 @@ const QuickActions = () => {
 
 // COMMAND PALETTE COMPONENT
 const CommandPalette = ({isOpen, onClose}) => {
+ const { t } = useLanguage();
  const [query, setQuery] = useState('');
  const [results, setResults] = useState([]);
  const [loading, setLoading] = useState(false);
@@ -170,7 +173,7 @@ const CommandPalette = ({isOpen, onClose}) => {
  autoFocus
  value={query}
  onChange={(e) => setQuery(e.target.value)}
- placeholder="Livres, utilisateurs, abonnements, signalements..."
+ placeholder={t('adminDashboardSearchPlaceholder')}
  className="flex-1 bg-transparent border-none outline-none text-lg text-foreground placeholder-surface-400"
  />
  <div className="flex items-center gap-1 text-xs font-bold text-surface-400 bg-surface-secondary px-2 py-1 rounded">ESC</div>
@@ -178,9 +181,9 @@ const CommandPalette = ({isOpen, onClose}) => {
  <div className="p-2 max-h-96 overflow-y-auto">
  {query.trim().length >= 2 ? (
  loading ? (
- <div className="p-8 text-center text-foreground-muted">Recherche...</div>
+ <div className="p-8 text-center text-foreground-muted">{t('adminLoading')}</div>
  ) : results.length === 0 ? (
- <div className="p-8 text-center text-foreground-muted">Aucun résultat.</div>
+ <div className="p-8 text-center text-foreground-muted">{t('adminDashboardNoSearchResults')}</div>
  ) : results.map((result) => (
  <button key={`${result.type}:${result.id}`} onClick={() => openResult(result)} className="w-full text-left flex items-center gap-3 p-3 rounded-xl hover:bg-surface-secondary transition-colors">
  <div className="w-9 h-9 rounded-lg bg-primary-50 flex items-center justify-center text-foreground-600"><SearchIcon className="w-4 h-4" /></div>
@@ -192,12 +195,12 @@ const CommandPalette = ({isOpen, onClose}) => {
  ))
  ) : (
  <>
- <div className="p-2 text-xs font-bold text-surface-400 uppercase tracking-wider">Raccourcis</div>
+ <div className="p-2 text-xs font-bold text-surface-400 uppercase tracking-wider">{t('adminDashboardShortcuts')}</div>
  <Link to="/admin/moderation" onClick={onClose} className="flex items-center gap-3 p-3 rounded-xl hover:bg-surface-secondary text-foreground-secondary transition-colors">
- <BookIcon className="w-5 h-5 text-surface-400" /> File de modération
+ <BookIcon className="w-5 h-5 text-surface-400" /> {t('adminDashboardModerationQueue')}
  </Link>
  <Link to="/admin/reports" onClick={onClose} className="flex items-center gap-3 p-3 rounded-xl hover:bg-surface-secondary text-foreground-secondary transition-colors">
- <WarningIcon className="w-5 h-5 text-surface-400" /> Signalements ouverts
+ <WarningIcon className="w-5 h-5 text-surface-400" /> {t('adminDashboardOpenReports')}
  </Link>
  </>
  )}
@@ -208,16 +211,18 @@ const CommandPalette = ({isOpen, onClose}) => {
 };
 
 function RequireAdminPermission({permission, permissions, children}) {
+ const { t } = useLanguage();
  if (permissions == null) return children;
  if (permissions.includes(permission)) return children;
  return (
  <div className="rounded-2xl bg-accent-50 border border-accent-200 p-6 font-bold text-accent-800">
- Accès refusé : permission « {permission} » requise.
+ {t('adminDashboardAccessDenied').replace('{permission}', permission)}
  </div>
  );
 }
 
 function AdminDashboard() {
+ const { t } = useLanguage();
  const {user, logout} = useAuth();
  const navigate = useNavigate();
  const location = useLocation();
@@ -262,18 +267,18 @@ function AdminDashboard() {
 };
 
  const navItems = [
- {to: '/admin', label:"Vue d'ensemble", icon: HomeIcon, end: true, permission: 'overview.read'},
- {to: '/admin/contents', label: 'Histoires CMS', icon: BookIcon, permission: 'content.read'},
- {to: '/admin/moderation', label: 'Modération', icon: ShieldIcon, permission: 'content.read'},
- {to: '/admin/reports', label: 'Signalements', icon: WarningIcon, permission: 'reports.read'},
- {to: '/admin/support', label: 'Support', icon: MailIcon, permission: 'support.read'},
- {to: '/admin/categories', label: 'Catégories', icon: TagIcon, permission: 'content.read'},
- {to: '/admin/users', label: 'Utilisateurs', icon: UserIcon, permission: 'users.read'},
- {to: '/admin/subscriptions', label: 'Abonnements', icon: CheckIcon, permission: 'subscriptions.read'},
- {to: '/admin/learning', label: 'Quiz & Jeux', icon: BrainIcon, permission: 'content.read'},
- {to: '/admin/statistics', label: 'Analytique', icon: HistoryIcon, permission: 'overview.read'},
- {to: '/admin/audit', label: 'Journal actions', icon: HistoryIcon, permission: 'audit.read'},
- {to: '/admin/permissions', label: 'Permissions', icon: ShieldIcon, permission: 'permissions.manage'},
+ {to: '/admin', label: t('adminDashboardOverview'), icon: HomeIcon, end: true, permission: 'overview.read'},
+ {to: '/admin/contents', label: t('adminDashboardStoriesCms'), icon: BookIcon, permission: 'content.read'},
+ {to: '/admin/moderation', label: t('adminDashboardModeration'), icon: ShieldIcon, permission: 'content.read'},
+ {to: '/admin/reports', label: t('adminDashboardReports'), icon: WarningIcon, permission: 'reports.read'},
+ {to: '/admin/support', label: t('adminDashboardSupport'), icon: MailIcon, permission: 'support.read'},
+ {to: '/admin/categories', label: t('adminDashboardCategories'), icon: TagIcon, permission: 'content.read'},
+ {to: '/admin/users', label: t('adminDashboardUsers'), icon: UserIcon, permission: 'users.read'},
+ {to: '/admin/subscriptions', label: t('adminDashboardSubscriptions'), icon: CheckIcon, permission: 'subscriptions.read'},
+ {to: '/admin/learning', label: t('adminDashboardQuizGames'), icon: BrainIcon, permission: 'content.read'},
+ {to: '/admin/statistics', label: t('adminDashboardAnalytics'), icon: HistoryIcon, permission: 'overview.read'},
+ {to: '/admin/audit', label: t('adminDashboardAuditLog'), icon: HistoryIcon, permission: 'audit.read'},
+ {to: '/admin/permissions', label: t('adminDashboardPermissions'), icon: ShieldIcon, permission: 'permissions.manage'},
  ].filter((item) => permissions == null || permissions.includes(item.permission));
 
  const isActive = (path) => location.pathname === path;
@@ -295,7 +300,7 @@ function AdminDashboard() {
 
  <nav className="flex-1 overflow-y-auto p-3 space-y-1 mt-2">
  <div className={`text-xs font-bold text-surface-400 uppercase tracking-wider mb-2 px-2 ${!isSidebarOpen && 'text-center'}`}>
- {isSidebarOpen ? 'Général' : 'Gén'}
+ {isSidebarOpen ? t('adminDashboardGeneral') : t('adminDashboardGeneralShort')}
  </div>
  {navItems.map((item) => {
  const Icon = item.icon;
@@ -348,7 +353,7 @@ function AdminDashboard() {
  <span>Admin</span>
  <span>/</span>
  <span className="text-foreground font-bold capitalize">
- {location.pathname.split('/')[2] ||"Vue d'ensemble"}
+ {location.pathname.split('/')[2] || t('adminDashboardOverview')}
  </span>
  </div>
  {/* Mobile branding */}
@@ -361,7 +366,7 @@ function AdminDashboard() {
  className="hidden md:flex items-center gap-2 bg-surface-secondary hover:bg-surface-200 text-foreground-muted px-3 py-1.5 rounded-lg transition-colors text-sm font-medium border border-border w-64"
  >
  <SearchIcon className="w-4 h-4" />
- <span>Rechercher...</span>
+ <span>{t('adminDashboardSearch')}</span>
  <div className="ml-auto flex gap-1">
  <kbd className="bg-card px-1.5 rounded text-xs font-sans shadow-sm">⌘</kbd>
  <kbd className="bg-card px-1.5 rounded text-xs font-sans shadow-sm">K</kbd>
@@ -395,8 +400,8 @@ function AdminDashboard() {
  className="absolute right-0 mt-2 w-80 bg-card rounded-2xl shadow-xl border border-border overflow-hidden z-50 origin-top-right"
  >
  <div className="p-4 border-b border-border flex justify-between items-center bg-surface-secondary">
- <h3 className="font-bold text-foreground">Notifications</h3>
- <span className="text-xs text-surface-400 font-bold">{notifications.unread_count} alerte(s)</span>
+ <h3 className="font-bold text-foreground">{t('adminDashboardNotifications')}</h3>
+ <span className="text-xs text-surface-400 font-bold">{t('adminDashboardAlerts').replace('{n}', notifications.unread_count)}</span>
  </div>
  <div className="max-h-64 overflow-y-auto">
  {notifications.items?.length > 0 ? notifications.items.map((item) => (
@@ -411,7 +416,7 @@ function AdminDashboard() {
  <p className="text-xs text-surface-400 mt-2">{formatNotificationDate(item.created_at)}</p>
  </Link>
  )) : (
- <div className="p-6 text-center text-sm text-foreground-muted">Aucune alerte en attente.</div>
+ <div className="p-6 text-center text-sm text-foreground-muted">{t('adminDashboardNoAlerts')}</div>
  )}
  </div>
  </motion.div>
@@ -422,7 +427,7 @@ function AdminDashboard() {
  <button
  onClick={handleLogout}
  className="p-2 text-foreground-muted hover:bg-rose-50 hover:text-rose-600 rounded-full transition-colors"
- title="Déconnexion"
+ title={t('adminDashboardLogout')}
  >
  <LogOutIcon className="w-5 h-5" />
  </button>
