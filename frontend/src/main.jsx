@@ -5,7 +5,9 @@ import App from './App';
 import './index.css';
 import { registerServiceWorker } from './services/offline/registerServiceWorker';
 import { initCapacitorRuntime } from './services/mobile/capacitorRuntime';
+import { initSentry } from './lib/sentry';
 
+initSentry();
 registerServiceWorker();
 initCapacitorRuntime();
 

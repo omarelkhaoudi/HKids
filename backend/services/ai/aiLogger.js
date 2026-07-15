@@ -1,3 +1,5 @@
+import { captureException, addBreadcrumb } from '../../config/sentry.js';
+
 const ALLOWED_FIELDS = new Set([
   'provider',
   'operation',
@@ -29,4 +31,10 @@ export function logAIEvent(level, event, details = {}) {
       : console.info;
 
   writer(JSON.stringify(payload));
+
+  if (level === 'error') {
+    captureException(new Error(`AI ${event}`), payload);
+  } else {
+    addBreadcrumb({ category: 'ai', message: event, level, data: sanitize(details) });
+  }
 }

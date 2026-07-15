@@ -1,5 +1,6 @@
 import { Pool } from 'pg';
 import bcrypt from 'bcryptjs';
+import { captureException as sentryCaptureException } from '../config/sentry.js';
 
 // Vérifie et parse DATABASE_URL
 function parseDatabaseUrl(url) {
@@ -42,6 +43,7 @@ const pool = new Pool(poolConfig);
 
 pool.on('error', (err) => {
   console.error('❌ PostgreSQL error:', err);
+  sentryCaptureException(err, { context: 'pg_pool_idle_error' });
 });
 
 export function getDatabase() {

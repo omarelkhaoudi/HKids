@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { HomeIcon, RefreshIcon, AlertIcon } from './Icons';
+import { captureException } from '../lib/sentry';
 
 class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -14,6 +15,7 @@ class ErrorBoundary extends React.Component {
 
   componentDidCatch(error, errorInfo) {
     console.error('ErrorBoundary caught an error:', error, errorInfo);
+    captureException(error, { componentStack: errorInfo?.componentStack });
     this.setState({
       error,
       errorInfo

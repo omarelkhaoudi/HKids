@@ -4,6 +4,8 @@ import config from './config/env.js';
 import dotenv from 'dotenv';
 dotenv.config();
 
+import { initSentry, Sentry } from './config/sentry.js';
+initSentry();
 
 import express from 'express';
 import cors from 'cors';
@@ -333,6 +335,9 @@ console.log('   POST /api/reset-rate-limit');
 // 404 handler (must be before error handler)
 app.use(notFound);
 
+// Sentry error handler (must be before custom error handler)
+Sentry.setupExpressErrorHandler(app);
+
 // Error handler (must be last)
 app.use(errorHandler);
 
@@ -513,12 +518,14 @@ process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 // Handle uncaught exceptions
 process.on('uncaughtException', (err) => {
   console.error('❌ Uncaught Exception:', err);
+  Sentry.captureException(err);
   gracefulShutdown('uncaughtException');
 });
 
 // Handle unhandled promise rejections
 process.on('unhandledRejection', (reason, promise) => {
   console.error('❌ Unhandled Rejection at:', promise, 'reason:', reason);
+  Sentry.captureException(reason instanceof Error ? reason : new Error(String(reason)));
   gracefulShutdown('unhandledRejection');
 });
 

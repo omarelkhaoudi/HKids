@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useEffect } from 'react';
 import axios from 'axios';
 import { buildApiUrl } from '../config/api.js';
 import { clearLocalPrivacyData } from '../services/privacy/privacyStorageService';
+import { setUser as setSentryUser } from '../lib/sentry';
 
 const AuthContext = createContext();
 
@@ -84,6 +85,7 @@ export function AuthProvider({ children }) {
       localStorage.setItem('user', JSON.stringify(user));
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       setUser(user);
+      setSentryUser(user);
       
       return { success: true };
     } catch (error) {
@@ -150,6 +152,7 @@ export function AuthProvider({ children }) {
     localStorage.removeItem('user');
     delete axios.defaults.headers.common['Authorization'];
     setUser(null);
+    setSentryUser(null);
   };
 
   const value = {
