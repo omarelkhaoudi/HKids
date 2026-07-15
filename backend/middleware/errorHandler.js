@@ -3,6 +3,8 @@
  * Handles all errors in a consistent way across the application
  */
 
+import { captureException as sentryCaptureException, addBreadcrumb } from '../config/sentry.js';
+
 /**
  * Custom error class for application-specific errors
  */
@@ -34,6 +36,20 @@ export const errorHandler = (err, req, res, next) => {
     path: req.path,
     method: req.method
   });
+
+  if (error.statusCode >= 500) {
+    sentryCaptureException(err, {
+      path: req.path,
+      method: req.method,
+      statusCode: error.statusCode,
+    });
+  } else {
+    addBreadcrumb({
+      category: 'http',
+      message: `${req.method} ${req.path} → ${error.statusCode}`,
+      level: 'warning',
+    });
+  }
 
   // Mongoose bad ObjectId
   if (err.name === 'CastError') {
