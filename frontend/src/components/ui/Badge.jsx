@@ -13,9 +13,9 @@ const VARIANTS = {
 };
 
 const SIZES = {
-  sm: 'px-8 py-4 text-caption',
-  md: 'px-12 py-4 text-sm font-bold',
-  lg: 'px-16 py-8 text-body font-bold',
+  sm: 'px-space-8 py-space-4 text-caption',
+  md: 'px-space-12 py-space-4 text-sm font-bold',
+  lg: 'px-space-16 py-space-8 text-body font-bold',
 };
 
 export function Badge({

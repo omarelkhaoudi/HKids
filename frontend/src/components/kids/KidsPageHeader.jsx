@@ -15,7 +15,7 @@ export function KidsPageHeader({
   className = '',
 }) {
   return (
-    <div className={`kids-premium-panel mx-16 sm:mx-24 mt-8 ${className}`}>
+    <div className={`kids-premium-panel mx-space-16 sm:mx-space-24 mt-space-8 ${className}`}>
       <Navbar
         backTo={onBack ? undefined : backTo}
         onBack={onBack}

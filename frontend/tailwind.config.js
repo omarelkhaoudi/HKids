@@ -21,19 +21,24 @@ export default {
         body: ['var(--text-body-size)', { lineHeight: 'var(--text-body-lh)', fontWeight: '500' }],
         caption: ['var(--text-caption-size)', { lineHeight: 'var(--text-caption-lh)', fontWeight: '600' }],
       },
+      /*
+       * Design System spacing tokens (named, non-destructive).
+       * These are ADDED alongside Tailwind's native scale so that
+       * numeric utilities (p-4, w-8, gap-8, m-8, ...) keep their
+       * default Tailwind rem values. DS components opt in explicitly
+       * via `*-space-N` utilities (e.g. p-space-16 = 16px).
+       */
       spacing: {
-        '4': 'var(--space-4)',
-        '8': 'var(--space-8)',
-        '12': 'var(--space-12)',
-        '16': 'var(--space-16)',
-        '20': 'var(--space-20)',
-        '24': 'var(--space-24)',
-        '32': 'var(--space-32)',
-        '40': 'var(--space-40)',
-        '48': 'var(--space-48)',
-        '64': 'var(--space-64)',
-        '80': '80px',
-        '96': '96px',
+        'space-4': 'var(--space-4)',
+        'space-8': 'var(--space-8)',
+        'space-12': 'var(--space-12)',
+        'space-16': 'var(--space-16)',
+        'space-20': 'var(--space-20)',
+        'space-24': 'var(--space-24)',
+        'space-32': 'var(--space-32)',
+        'space-40': 'var(--space-40)',
+        'space-48': 'var(--space-48)',
+        'space-64': 'var(--space-64)',
       },
       borderRadius: {
         'sm': '0.25rem',

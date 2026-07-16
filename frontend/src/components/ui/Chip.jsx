@@ -43,7 +43,7 @@ export function Chip({
       disabled={disabled}
       aria-pressed={selected}
       className={[
-        'inline-flex items-center justify-center gap-8 min-h-touch px-16 py-8',
+        'inline-flex items-center justify-center gap-space-8 min-h-touch px-space-16 py-space-8',
         'rounded-full border-2 font-bold text-body transition-all',
         'focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2',
         'disabled:opacity-50 disabled:cursor-not-allowed',

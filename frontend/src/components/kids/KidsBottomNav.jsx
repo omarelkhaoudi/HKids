@@ -38,13 +38,13 @@ export function KidsBottomNav() {
   const { t } = useLanguage();
 
   return (
-    <div className="fixed bottom-0 left-0 w-full p-4 md:p-6 z-30 pointer-events-none flex justify-center">
+    <div className="fixed bottom-0 left-0 w-full p-space-4 md:p-6 z-30 pointer-events-none flex justify-center">
       <motion.nav
         initial={{ y: 80 }}
         animate={{ y: 0 }}
         transition={{ type: 'spring', damping: 22 }}
         aria-label={t('kidsNavLabel')}
-        className="pointer-events-auto bg-surface/95 dark:bg-surface-900/92 backdrop-blur-xl px-12 py-12 md:px-20 md:py-16 rounded-32 shadow-floating border-4 border-border flex gap-8 md:gap-12 justify-center max-w-full"
+        className="pointer-events-auto bg-surface/95 dark:bg-surface-900/92 backdrop-blur-xl px-space-12 py-space-12 md:px-space-20 md:py-space-16 rounded-32 shadow-floating border-4 border-border flex gap-space-8 md:gap-space-12 justify-center max-w-full"
       >
         {NAV_ITEMS.map((item) => {
           const active = isActiveItem(location, item);
@@ -57,7 +57,7 @@ export function KidsBottomNav() {
               tone={active ? item.tone : undefined}
               size="sm"
               icon={Icon || undefined}
-              className="!rounded-full !px-4 md:!px-5 !min-h-[56px] !text-base md:!text-lg"
+              className="!rounded-full !px-space-4 md:!px-5 !min-h-[56px] !text-base md:!text-lg"
               onClick={() => navigate(item.path)}
               aria-label={t(item.labelKey)}
             >

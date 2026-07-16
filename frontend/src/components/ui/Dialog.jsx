@@ -29,9 +29,9 @@ export function Dialog({
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={title} maxWidth={maxWidth}>
-      <div className="space-y-24">
+      <div className="space-y-space-24">
         {children ? <div className="text-body">{children}</div> : null}
-        <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-12">
+        <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-space-12">
           {secondaryLabel ? (
             <Button variant="ghost" onClick={handleSecondary}>
               {secondaryLabel}

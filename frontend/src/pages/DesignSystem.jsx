@@ -55,11 +55,11 @@ export default function DesignSystem() {
 
   return (
     <div className="min-h-screen bg-background text-foreground transition-colors duration-300">
-      <div className="max-w-7xl mx-auto px-24 py-40 space-y-64">
-        <div className="flex flex-wrap justify-between items-center gap-16">
+      <div className="max-w-7xl mx-auto px-space-24 py-space-40 space-y-space-64">
+        <div className="flex flex-wrap justify-between items-center gap-space-16">
           <div>
-            <p className="text-caption uppercase tracking-widest text-primary-600 mb-8">HKids Design System</p>
-            <h1 className="text-hero mb-8">Bibliothèque magique</h1>
+            <p className="text-caption uppercase tracking-widest text-primary-600 mb-space-8">HKids Design System</p>
+            <h1 className="text-hero mb-space-8">Bibliothèque magique</h1>
             <p className="text-body-lg max-w-xl">
               Tokens CSS + Tailwind. Identité premium pour enfants — chaleureuse, lisible, accessible.
             </p>
@@ -71,13 +71,13 @@ export default function DesignSystem() {
 
         <section>
           <SectionHeader title="Palette" subtitle="Rôles sémantiques — aucune couleur hardcodée dans les composants" />
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-16">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-space-16">
             {DS_PALETTE.map((swatch) => (
               <div key={swatch.id} className="rounded-20 overflow-hidden shadow-card border border-border">
-                <div className={`h-80 ${swatch.swatch}`} />
-                <div className="p-12 bg-surface">
+                <div className={`h-[80px] ${swatch.swatch}`} />
+                <div className="p-space-12 bg-surface">
                   <p className="font-bold text-foreground text-sm">{swatch.label}</p>
-                  <p className="text-caption mt-4">{swatch.role}</p>
+                  <p className="text-caption mt-space-4">{swatch.role}</p>
                 </div>
               </div>
             ))}
@@ -86,10 +86,10 @@ export default function DesignSystem() {
 
         <section>
           <SectionHeader title="Typography" subtitle="Hiérarchie moderne Nunito" />
-          <Card hover={false} className="p-32 space-y-20">
+          <Card hover={false} className="p-space-32 space-y-space-20">
             {DS_TYPOGRAPHY.map((row) => (
-              <div key={row.id} className="border-b border-border pb-16 last:border-0">
-                <p className="text-caption mb-8">{row.label}</p>
+              <div key={row.id} className="border-b border-border pb-space-16 last:border-0">
+                <p className="text-caption mb-space-8">{row.label}</p>
                 <p className={row.className}>{row.sample}</p>
               </div>
             ))}
@@ -98,14 +98,14 @@ export default function DesignSystem() {
 
         <section>
           <SectionHeader title="Radius" subtitle="8 · 12 · 16 · 20 · 24 · 32" />
-          <div className="flex flex-wrap gap-16 items-end">
+          <div className="flex flex-wrap gap-space-16 items-end">
             {DS_RADIUS.map((r) => (
               <div key={r} className="text-center">
                 <div
-                  className={`w-64 h-64 bg-primary-500 shadow-soft rounded-${r}`}
+                  className={`w-space-64 h-space-64 bg-primary-500 shadow-soft rounded-${r}`}
                   style={{ borderRadius: `var(--radius-${r})` }}
                 />
-                <p className="text-caption mt-8">{r}px</p>
+                <p className="text-caption mt-space-8">{r}px</p>
               </div>
             ))}
           </div>
@@ -113,9 +113,9 @@ export default function DesignSystem() {
 
         <section>
           <SectionHeader title="Spacing" subtitle="Échelle 4 → 64" />
-          <div className="flex flex-wrap items-end gap-8">
+          <div className="flex flex-wrap items-end gap-space-8">
             {DS_SPACING.map((s) => (
-              <div key={s} className="flex flex-col items-center gap-8">
+              <div key={s} className="flex flex-col items-center gap-space-8">
                 <div className="bg-magic-400 rounded-8" style={{ width: s, height: 48 }} />
                 <span className="text-caption">{s}</span>
               </div>
@@ -125,9 +125,9 @@ export default function DesignSystem() {
 
         <section>
           <SectionHeader title="Shadows" subtitle="Soft · Card · Floating" />
-          <div className="grid md:grid-cols-3 gap-24">
+          <div className="grid md:grid-cols-3 gap-space-24">
             {DS_SHADOWS.map((s) => (
-              <div key={s.id} className={`bg-surface rounded-24 p-32 ${s.className}`}>
+              <div key={s.id} className={`bg-surface rounded-24 p-space-32 ${s.className}`}>
                 <p className="text-heading-m">{s.label}</p>
               </div>
             ))}
@@ -136,7 +136,7 @@ export default function DesignSystem() {
 
         <section>
           <SectionHeader title="Buttons" subtitle="Primary · Secondary · Ghost" />
-          <Card hover={false} className="p-32 flex flex-wrap gap-16">
+          <Card hover={false} className="p-space-32 flex flex-wrap gap-space-16">
             <Button variant="primary">Primary</Button>
             <Button variant="secondary">Secondary</Button>
             <Button variant="ghost">Ghost</Button>
@@ -149,7 +149,7 @@ export default function DesignSystem() {
 
         <section>
           <SectionHeader title="Chips & Badges" />
-          <Card hover={false} className="p-32 flex flex-wrap gap-16 items-center">
+          <Card hover={false} className="p-space-32 flex flex-wrap gap-space-16 items-center">
             <Chip selected={chipOn} onClick={() => setChipOn((v) => !v)} emoji="📚">Livres</Chip>
             <Chip tone="orange" emoji="🎧">Audio</Chip>
             <Chip tone="success" emoji="🎮">Apprendre</Chip>
@@ -166,15 +166,15 @@ export default function DesignSystem() {
 
         <section>
           <SectionHeader title="Search · Progress · Forms" />
-          <div className="grid md:grid-cols-2 gap-24">
-            <Card hover={false} className="p-24 space-y-20">
+          <div className="grid md:grid-cols-2 gap-space-24">
+            <Card hover={false} className="p-space-24 space-y-space-20">
               <SearchBar value={search} onChange={setSearch} placeholder="Chercher une histoire…" />
               <Input label="Email" placeholder="hello@hkids.com" />
               <Switch checked={toggle} onChange={setToggle} label="Mode hors-ligne" />
               <ProgressBar progress={68} label="Progression" tone="primary" />
               <ProgressBar progress={42} label="Apprendre" tone="success" />
             </Card>
-            <Card hover={false} className="p-24 space-y-16">
+            <Card hover={false} className="p-space-24 space-y-space-16">
               <Tabs
                 tabs={[
                   { id: 'a', label: 'Livres', content: <p className="text-body">Contenu livres</p> },
@@ -182,7 +182,7 @@ export default function DesignSystem() {
                 ]}
                 defaultTab="a"
               />
-              <Skeleton className="h-40 w-full rounded-16" />
+              <Skeleton className="h-space-40 w-full rounded-16" />
               <EmptyState title="Rien ici" description="Ajoute un livre pour commencer." />
             </Card>
           </div>
@@ -190,9 +190,9 @@ export default function DesignSystem() {
 
         <section>
           <SectionHeader title="Cards" subtitle="Card · Book · Category · Story" />
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-24">
-            <Card className="p-24">
-              <p className="text-heading-m mb-8">Card</p>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-space-24">
+            <Card className="p-space-24">
+              <p className="text-heading-m mb-space-8">Card</p>
               <p className="text-body">Surface + shadow-card</p>
             </Card>
             <BookCard book={dummyBook} progress={55} isNew />
@@ -203,7 +203,7 @@ export default function DesignSystem() {
 
         <section>
           <SectionHeader title="Navbar · Modal · Dialog · FAB" />
-          <Card hover={false} className="overflow-hidden mb-24">
+          <Card hover={false} className="overflow-hidden mb-space-24">
             <Navbar
               title="Bibliothèque"
               emoji="📚"
@@ -211,7 +211,7 @@ export default function DesignSystem() {
               trailing={<Badge variant="primary">DS</Badge>}
             />
           </Card>
-          <div className="flex flex-wrap gap-16">
+          <div className="flex flex-wrap gap-space-16">
             <Button onClick={() => setModalOpen(true)}>Ouvrir Modal</Button>
             <Button variant="secondary" onClick={() => setDialogOpen(true)}>Ouvrir Dialog</Button>
           </div>
@@ -231,7 +231,7 @@ export default function DesignSystem() {
           <FloatingButton
             label="Ajouter"
             tone="magic"
-            className="!relative !inset-auto mt-24"
+            className="!relative !inset-auto mt-space-24"
             icon={<span aria-hidden="true">＋</span>}
             onClick={() => {}}
           />

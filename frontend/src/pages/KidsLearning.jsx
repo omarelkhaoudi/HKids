@@ -18,6 +18,7 @@ import {
   LogOutIcon, SparklesIcon, StarIcon, TrophyIcon, SearchIcon, PlayIcon
 } from '../components/Icons';
 import { KidsPageHeader } from '../components/kids/KidsPageHeader';
+import { useReducedMotion } from '../hooks/useReducedMotion';
 import { KidsHero } from '../components/kids/KidsHero';
 import { KidsEmptyState } from '../components/kids/KidsEmptyState';
 import { BookGridSkeleton } from '../components/SkeletonLoader';
@@ -57,6 +58,7 @@ function KidsLearning() {
   const navigate = useNavigate();
   const { showToast } = useToast();
   const { language, t, isRtl } = useLanguage();
+  const reducedMotion = useReducedMotion();
   
   const [contents, setContents] = useState([]);
   const [challenges, setChallenges] = useState([]);
@@ -200,7 +202,7 @@ function KidsLearning() {
   const selectedProfile = kidProfiles.find(k => k.id === selectedKidProfileId);
 
   return (
-    <KidsPageShell isRtl={isRtl} variant="library" world="learn" className="pb-32 kids-glow-learn" footer={<KidsBottomNav />}>
+    <KidsPageShell isRtl={isRtl} variant="library" world="learn" className="pb-space-32 kids-glow-learn" footer={<KidsBottomNav />}>
       <KidsPageHeader backTo="/kids" emoji="🎮" title={t('kidsNavLearning')} />
       <div className="relative z-10 kids-main kids-main-tablet-wide">
         <AnimatePresence mode="wait">
@@ -213,30 +215,30 @@ function KidsLearning() {
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="rounded-[2.5rem] bg-card p-6 md:p-8 shadow-2xl border border-border relative overflow-hidden"
+              className="rounded-32 bg-card p-space-24 md:p-space-32 shadow-floating border border-border relative overflow-hidden"
             >
-              {result && result.attempt?.success && <Confetti />}
+              {result && result.attempt?.success && !reducedMotion && <Confetti />}
               
-              <div className="flex items-center justify-between mb-8 relative z-10">
+              <div className="flex items-center justify-between mb-space-32 relative z-10">
                 <button
                   onClick={() => setSelectedContent(null)}
-                  className="inline-flex h-14 items-center gap-2 rounded-2xl bg-surface-secondary px-6 font-black hover:bg-surface-100 transition shadow-sm border border-border"
+                  className="inline-flex min-h-touch-kids items-center gap-space-8 rounded-16 bg-surface-secondary px-space-24 font-black hover:bg-surface-100 transition shadow-soft border border-border focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-success-300"
                 >
                   <ChevronLeftIcon className="h-6 w-6" />
                   Quitter
                 </button>
               </div>
 
-              <div className={`mb-8 rounded-[2.5rem] bg-gradient-to-br ${selectedContent.category_color} p-8 text-white shadow-lg relative overflow-hidden`}>
+              <div className={`mb-space-32 rounded-32 bg-gradient-to-br ${selectedContent.category_color} p-space-32 text-white shadow-card relative overflow-hidden`}>
                 <div className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-white/10 blur-2xl" />
                 <div className="relative z-10 flex flex-col items-center text-center">
-                  <div className="text-8xl drop-shadow-lg mb-4">{selectedContent.category_pictogram}</div>
-                  <h2 className="text-4xl font-black drop-shadow-md">{selectedContent.title}</h2>
-                  {selectedContent.audio_url && <AudioIcon className="mt-4 h-8 w-8 opacity-80" />}
+                  <div className="text-8xl drop-shadow-lg mb-space-16">{selectedContent.category_pictogram}</div>
+                  <h2 className="text-heading-xl drop-shadow-md">{selectedContent.title}</h2>
+                  {selectedContent.audio_url && <AudioIcon className="mt-space-4 h-8 w-8 opacity-80" />}
                 </div>
               </div>
 
-              <div className="space-y-6 relative z-10">
+              <div className="space-y-space-24 relative z-10">
                 {selectedContent.content_type === 'game' ? (
                   <LearningMemoryGame
                     pairs={selectedContent.metadata?.pairs || [
@@ -263,10 +265,10 @@ function KidsLearning() {
 
               {!result ? (
                 <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.95 }}
+                  whileHover={reducedMotion ? undefined : { scale: 1.02 }}
+                  whileTap={reducedMotion ? undefined : { scale: 0.95 }}
                   onClick={submit}
-                  className="mt-8 inline-flex h-20 w-full items-center justify-center gap-3 rounded-[2rem] bg-gradient-to-r from-secondary-400 to-secondary-600 text-2xl font-black text-white shadow-xl hover:shadow-2xl transition"
+                  className="mt-space-32 inline-flex h-20 min-h-touch-kids w-full items-center justify-center gap-space-12 rounded-24 bg-gradient-to-r from-success-500 to-success-600 text-heading-m text-white shadow-card hover:shadow-floating transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-success-300"
                 >
                   <CheckIcon className="h-8 w-8" />
                   Valider mes réponses !
@@ -275,22 +277,22 @@ function KidsLearning() {
                 <motion.div 
                   initial={{ opacity: 0, scale: 0.8 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  className={`mt-8 rounded-[2rem] p-8 text-center shadow-xl border ${result.attempt?.success ? `${BRAND_SEMANTIC.success.bg} ${BRAND_SEMANTIC.success.border}` : `${BRAND_SEMANTIC.warning.bg} ${BRAND_SEMANTIC.warning.border}`}`}
+                  className={`mt-space-32 rounded-24 p-space-32 text-center shadow-card border ${result.attempt?.success ? `${BRAND_SEMANTIC.success.bg} ${BRAND_SEMANTIC.success.border}` : `${BRAND_SEMANTIC.warning.bg} ${BRAND_SEMANTIC.warning.border}`}`}
                 >
-                  <div className="text-8xl mb-4 drop-shadow-md">{result.attempt?.success ? '🎉' : '⭐'}</div>
-                  <p className="text-4xl font-black text-foreground mb-4">
+                  <div className="text-8xl mb-space-16 drop-shadow-md">{result.attempt?.success ? '🎉' : '⭐'}</div>
+                  <p className="text-heading-xl text-foreground mb-space-16">
                     Score : <span className={result.attempt?.success ? BRAND_SEMANTIC.success.text : BRAND_SEMANTIC.warning.text}>{result.attempt?.score} / {result.attempt?.max_score}</span>
                   </p>
                   {result.reward?.icon && (
-                    <div className="inline-flex items-center gap-3 rounded-full bg-white/80 px-6 py-3 shadow-sm border border-border font-black text-2xl">
+                    <div className="inline-flex items-center gap-space-12 rounded-full bg-white/80 px-space-24 py-space-12 shadow-soft border border-border font-black text-heading-m">
                       <span>{result.reward.icon}</span>
                       <span className="text-foreground">{result.reward.name}</span>
                     </div>
                   )}
-                  <div className="mt-8">
+                  <div className="mt-space-32">
                     <button
                       onClick={() => setSelectedContent(null)}
-                      className="inline-flex h-16 items-center gap-3 rounded-2xl bg-surface-900 px-8 text-xl font-black text-white shadow-md hover:bg-surface-800 transition"
+                      className="inline-flex h-16 min-h-touch-kids items-center gap-space-12 rounded-16 bg-success-600 px-space-32 text-body-lg font-black text-white shadow-soft hover:bg-success-700 transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-success-300"
                     >
                       Continuer à jouer
                     </button>
@@ -316,15 +318,15 @@ function KidsLearning() {
                 badge={t('kidsNavLearning')}
                 title="Apprends en t'amusant !"
                 subtitle="Choisis une activité illustrée et gagne des récompenses."
-                className="mb-10"
+                className="mb-space-40"
               />
 
               {/* PROFILE CARD SELECTOR */}
               {user?.role !== 'kid' && (
-                <section className="mb-10">
-                  <div className="rounded-[2rem] bg-card p-6 shadow-sm border border-border">
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-lg font-black flex items-center gap-2 text-foreground">
+                <section className="mb-space-40">
+                  <div className="rounded-24 bg-card p-space-24 shadow-soft border border-border">
+                    <div className="flex items-center justify-between mb-space-16">
+                      <h3 className="text-heading-m flex items-center gap-space-8 text-foreground">
                         <span className="text-2xl">👦</span> Profil enfant
                       </h3>
                     </div>
@@ -332,15 +334,15 @@ function KidsLearning() {
                       <div className="relative">
                         <button 
                           onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
-                          className="w-full md:w-96 flex items-center justify-between p-4 rounded-2xl bg-surface-secondary border-2 border-primary-100 hover:border-primary-300 dark:border-primary-900/30 transition-all text-left"
+                          className="w-full md:w-96 min-h-touch-kids flex items-center justify-between p-space-16 rounded-16 bg-surface-secondary border-2 border-success-100 hover:border-success-300 dark:border-success-900/30 transition-all text-left focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-success-300"
                         >
-                          <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 rounded-full bg-primary-100 dark:bg-primary-900/50 flex items-center justify-center text-2xl shadow-inner">
+                          <div className="flex items-center gap-space-4">
+                            <div className="w-12 h-12 rounded-full bg-success-100 dark:bg-success-900/50 flex items-center justify-center text-2xl shadow-inner">
                               {selectedProfile?.pictogram || '👧'}
                             </div>
                             <div>
-                              <p className="font-black text-lg text-foreground">{selectedProfile?.name}</p>
-                              <p className="text-sm font-bold text-foreground-muted">{selectedProfile?.age ? `${selectedProfile.age} ans` : 'Niveau standard'}</p>
+                              <p className="text-heading-m text-foreground">{selectedProfile?.name}</p>
+                              <p className="text-caption text-foreground-muted">{selectedProfile?.age ? `${selectedProfile.age} ans` : 'Niveau standard'}</p>
                             </div>
                           </div>
                           <div className={`transition-transform duration-300 ${isProfileMenuOpen ? 'rotate-90' : 'rotate-0'}`}>
@@ -352,13 +354,13 @@ function KidsLearning() {
                           {isProfileMenuOpen && (
                             <motion.div 
                               initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
-                              className="absolute top-full mt-2 w-full md:w-96 bg-card rounded-2xl shadow-xl border border-border z-40 overflow-hidden"
+                              className="absolute top-full mt-space-8 w-full md:w-96 bg-card rounded-16 shadow-floating border border-border z-40 overflow-hidden"
                             >
                               {kidProfiles.map((kid) => (
                                 <button
                                   key={kid.id}
                                   onClick={() => { setSelectedKidProfileId(String(kid.id)); setIsProfileMenuOpen(false); }}
-                                  className="w-full flex items-center gap-4 p-4 hover:bg-surface-secondary transition text-left border-b border-border last:border-0"
+                                  className="w-full min-h-touch-kids flex items-center gap-space-16 p-space-16 hover:bg-surface-secondary transition text-left border-b border-border last:border-0 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-inset focus-visible:ring-success-300"
                                 >
                                   <div className="w-10 h-10 rounded-full bg-surface-100 flex items-center justify-center text-xl">
                                     {kid.pictogram || '👧'}
@@ -373,7 +375,7 @@ function KidsLearning() {
                         </AnimatePresence>
                       </div>
                     ) : (
-                      <p className="rounded-2xl bg-accent-50 px-4 py-3 text-sm font-black text-accent-800 border border-accent-100">
+                      <p className="rounded-16 bg-info-50 px-space-16 py-space-12 text-caption font-black text-info-700 border border-info-100">
                         Aucun profil enfant disponible. Créez-en un dans l'espace parent.
                       </p>
                     )}
@@ -382,56 +384,56 @@ function KidsLearning() {
               )}
 
               {/* QUICK STATS (KPIs) */}
-              <section className="mb-10 grid grid-cols-2 md:grid-cols-4 gap-4">
-                <motion.div whileHover={{ y: -5 }} className="bg-card/60 backdrop-blur-md rounded-[2rem] p-5 shadow-glass border border-border relative overflow-hidden group">
-                  <div className="absolute right-0 top-0 w-16 h-16 bg-primary-500/10 rounded-bl-full transition-transform group-hover:scale-150" />
-                  <BookIcon className="w-8 h-8 text-primary-500 mb-3 relative z-10" />
-                  <p className="text-xs font-bold text-foreground-muted uppercase tracking-wider mb-1">Activités</p>
-                  <p className="text-3xl font-black text-foreground">{contents.length}</p>
+              <section className="mb-space-40 grid grid-cols-2 md:grid-cols-4 gap-space-16">
+                <motion.div whileHover={reducedMotion ? undefined : { y: -5 }} className="bg-card/60 backdrop-blur-md rounded-24 p-space-20 shadow-soft border border-border relative overflow-hidden group">
+                  <div className="absolute right-0 top-0 w-16 h-16 bg-success-500/10 rounded-bl-full transition-transform group-hover:scale-150" />
+                  <BookIcon className="w-8 h-8 text-success-500 mb-space-12 relative z-10" />
+                  <p className="text-caption text-foreground-muted uppercase tracking-wider mb-space-4">Activités</p>
+                  <p className="text-heading-l text-foreground">{contents.length}</p>
                 </motion.div>
-                <motion.div whileHover={{ y: -5 }} className="bg-card/60 backdrop-blur-md rounded-[2rem] p-5 shadow-glass border border-border relative overflow-hidden group">
-                  <div className="absolute right-0 top-0 w-16 h-16 bg-secondary-500/10 rounded-bl-full transition-transform group-hover:scale-150" />
-                  <TrophyIcon className="w-8 h-8 text-secondary-500 mb-3 relative z-10" />
-                  <p className="text-xs font-bold text-foreground-muted uppercase tracking-wider mb-1">Missions</p>
-                  <p className="text-3xl font-black text-foreground">{challenges.length}</p>
+                <motion.div whileHover={reducedMotion ? undefined : { y: -5 }} className="bg-card/60 backdrop-blur-md rounded-24 p-space-20 shadow-soft border border-border relative overflow-hidden group">
+                  <div className="absolute right-0 top-0 w-16 h-16 bg-success-500/10 rounded-bl-full transition-transform group-hover:scale-150" />
+                  <TrophyIcon className="w-8 h-8 text-success-600 mb-space-12 relative z-10" />
+                  <p className="text-caption text-foreground-muted uppercase tracking-wider mb-space-4">Missions</p>
+                  <p className="text-heading-l text-foreground">{challenges.length}</p>
                 </motion.div>
-                <motion.div whileHover={{ y: -5 }} className="bg-card/60 backdrop-blur-md rounded-[2rem] p-5 shadow-glass border border-border relative overflow-hidden group">
-                  <div className="absolute right-0 top-0 w-16 h-16 bg-accent-500/10 rounded-bl-full transition-transform group-hover:scale-150" />
-                  <StarIcon className="w-8 h-8 text-accent-500 mb-3 relative z-10" />
-                  <p className="text-xs font-bold text-foreground-muted uppercase tracking-wider mb-1">XP Total</p>
-                  <p className="text-lg font-black text-accent-600 dark:text-accent-400 mt-1">À venir</p>
+                <motion.div whileHover={reducedMotion ? undefined : { y: -5 }} className="bg-card/60 backdrop-blur-md rounded-24 p-space-20 shadow-soft border border-border relative overflow-hidden group">
+                  <div className="absolute right-0 top-0 w-16 h-16 bg-success-500/10 rounded-bl-full transition-transform group-hover:scale-150" />
+                  <StarIcon className="w-8 h-8 text-success-500 mb-space-12 relative z-10" />
+                  <p className="text-caption text-foreground-muted uppercase tracking-wider mb-space-4">XP Total</p>
+                  <p className="text-heading-m text-success-600 dark:text-success-400 mt-space-4">À venir</p>
                 </motion.div>
-                <motion.div whileHover={{ y: -5 }} className="bg-card/60 backdrop-blur-md rounded-[2rem] p-5 shadow-glass border border-border relative overflow-hidden group">
-                  <div className="absolute right-0 top-0 w-16 h-16 bg-primary-500/10 rounded-bl-full transition-transform group-hover:scale-150" />
-                  <SparklesIcon className="w-8 h-8 text-primary-500 mb-3 relative z-10" />
-                  <p className="text-xs font-bold text-foreground-muted uppercase tracking-wider mb-1">Série</p>
-                  <p className="text-lg font-black text-primary-600 dark:text-primary-400 mt-1">Bientôt dispo.</p>
+                <motion.div whileHover={reducedMotion ? undefined : { y: -5 }} className="bg-card/60 backdrop-blur-md rounded-24 p-space-20 shadow-soft border border-border relative overflow-hidden group">
+                  <div className="absolute right-0 top-0 w-16 h-16 bg-success-500/10 rounded-bl-full transition-transform group-hover:scale-150" />
+                  <SparklesIcon className="w-8 h-8 text-success-600 mb-space-12 relative z-10" />
+                  <p className="text-caption text-foreground-muted uppercase tracking-wider mb-space-4">Série</p>
+                  <p className="text-heading-m text-success-700 dark:text-success-400 mt-space-4">Bientôt dispo.</p>
                 </motion.div>
               </section>
 
               {/* MISSIONS / CHALLENGES */}
               {challenges.length > 0 && (
-                <section className="mb-10">
-                  <h2 className="mb-6 text-2xl font-black flex items-center gap-3">
-                    <TrophyIcon className="w-7 h-7 text-secondary-500" />
+                <section className="mb-space-40">
+                  <h2 className="mb-space-24 text-heading-l flex items-center gap-space-12">
+                    <TrophyIcon className="w-7 h-7 text-success-600" />
                     Missions Quotidiennes
                   </h2>
-                  <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                  <div className="grid gap-space-16 md:grid-cols-2 lg:grid-cols-3">
                     {challenges.map((challenge) => {
                       const progress = Math.min(100, (Number(challenge.progress_value || 0) / Math.max(1, Number(challenge.target_value || 1))) * 100);
                       const isComplete = progress >= 100;
                       return (
                         <motion.div 
                           key={challenge.id} 
-                          whileHover={{ y: -4, scale: 1.01 }}
-                          className={`rounded-[2rem] p-5 shadow-md relative overflow-hidden ${isComplete ? `${BRAND_SEMANTIC.success.bg} ${BRAND_SEMANTIC.success.border}` : 'bg-card border border-border'}`}
+                          whileHover={reducedMotion ? undefined : { y: -4, scale: 1.01 }}
+                          className={`rounded-24 p-space-20 shadow-card relative overflow-hidden ${isComplete ? `${BRAND_SEMANTIC.success.bg} ${BRAND_SEMANTIC.success.border}` : 'bg-card border border-border'}`}
                         >
-                          {isComplete && <div className="absolute -right-6 -top-6 w-24 h-24 bg-secondary-400/20 rounded-full blur-xl" />}
-                          <div className="flex items-start gap-4 relative z-10">
+                          {isComplete && <div className="absolute -right-6 -top-6 w-24 h-24 bg-success-400/20 rounded-full blur-xl" />}
+                          <div className="flex items-start gap-space-16 relative z-10">
                             <div className="text-4xl drop-shadow-sm">{challenge.metadata?.pictogram || challenge.reward_icon || '🏅'}</div>
                             <div className="flex-1">
-                              <p className="text-lg font-black text-foreground mb-1">{challenge.title}</p>
-                              <div className="flex justify-between text-xs font-bold mb-2">
+                              <p className="text-heading-m text-foreground mb-space-4">{challenge.title}</p>
+                              <div className="flex justify-between text-caption mb-space-8">
                                 <span className={isComplete ? BRAND_SEMANTIC.success.text : 'text-foreground-muted'}>
                                   {isComplete ? 'Terminé !' : 'En cours'}
                                 </span>
@@ -441,8 +443,8 @@ function KidsLearning() {
                                 <motion.div
                                   initial={{ width: 0 }}
                                   animate={{ width: `${progress}%` }}
-                                  transition={{ duration: 1, ease: "easeOut" }}
-                                  className={`h-full rounded-full shadow-md ${isComplete ? 'bg-gradient-to-r from-secondary-400 to-secondary-600' : 'bg-gradient-to-r from-accent-400 to-accent-600'}`}
+                                  transition={{ duration: reducedMotion ? 0 : 1, ease: "easeOut" }}
+                                  className={`h-full rounded-full ${isComplete ? 'bg-gradient-to-r from-success-400 to-success-600' : 'bg-gradient-to-r from-success-300 to-success-500'}`}
                                 />
                               </div>
                             </div>
@@ -455,22 +457,22 @@ function KidsLearning() {
               )}
 
               {/* SEARCH & FILTERS (GLASSMORPHISM) */}
-              <section className="mb-10">
-                <div className="rounded-[2.5rem] bg-card/60 backdrop-blur-xl border border-border p-4 shadow-glass">
-                  <div className="flex flex-col md:flex-row gap-4">
+              <section className="mb-space-40">
+                <div className="rounded-32 bg-card/60 backdrop-blur-xl border border-border p-space-16 shadow-soft">
+                  <div className="flex flex-col md:flex-row gap-space-16">
                     <label className="relative flex-1 block">
                       <SearchIcon className="absolute left-5 top-1/2 -translate-y-1/2 h-6 w-6 text-foreground-muted" />
                       <input
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="h-16 w-full rounded-[2rem] bg-surface-secondary/80 border border-border pl-14 pr-4 text-lg font-bold outline-none transition focus:border-primary-400 focus:bg-card focus:ring-4 focus:ring-primary-500/10 placeholder:text-foreground-muted"
+                        className="h-16 min-h-touch-kids w-full rounded-24 bg-surface-secondary/80 border border-border pl-14 pr-space-16 text-body-lg outline-none transition focus:border-success-400 focus:bg-card focus:ring-4 focus:ring-success-500/10 placeholder:text-foreground-muted"
                         placeholder="Chercher une activité..."
                       />
                     </label>
-                    <div className="flex gap-2 overflow-x-auto pb-2 custom-scrollbar items-center px-2">
+                    <div className="flex gap-space-8 overflow-x-auto pb-space-8 custom-scrollbar items-center px-space-8">
                       <button 
                         onClick={() => setSelectedCategoryFilter('all')}
-                        className={`shrink-0 px-6 h-12 rounded-full font-black text-sm transition-all shadow-sm ${selectedCategoryFilter === 'all' ? 'bg-primary-500 text-white shadow-md' : 'bg-card text-foreground-muted hover:bg-surface-secondary'}`}
+                        className={`shrink-0 px-space-24 min-h-touch-kids rounded-full font-black text-caption transition-all shadow-soft focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-success-300 ${selectedCategoryFilter === 'all' ? 'bg-success-600 text-white shadow-card' : 'bg-card text-foreground-muted hover:bg-surface-secondary border border-border'}`}
                       >
                         Tous
                       </button>
@@ -478,7 +480,7 @@ function KidsLearning() {
                         <button 
                           key={cat.id}
                           onClick={() => setSelectedCategoryFilter(cat.id)}
-                          className={`shrink-0 px-6 h-12 rounded-full font-black text-sm flex items-center gap-2 transition-all shadow-sm ${selectedCategoryFilter === cat.id ? 'bg-primary-500 text-white shadow-md' : 'bg-card text-foreground hover:bg-surface-secondary border border-border'}`}
+                          className={`shrink-0 px-space-24 min-h-touch-kids rounded-full font-black text-caption flex items-center gap-space-8 transition-all shadow-soft focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-success-300 ${selectedCategoryFilter === cat.id ? 'bg-success-600 text-white shadow-card' : 'bg-card text-foreground hover:bg-surface-secondary border border-border'}`}
                         >
                           <span>{cat.pictogram}</span> {cat.name}
                         </button>
@@ -490,8 +492,8 @@ function KidsLearning() {
 
               {/* ACTIVITIES GRID (NINTENDO STYLE) */}
               <section>
-                <h2 className="mb-6 text-2xl font-black flex items-center gap-3 text-foreground">
-                  <PlayIcon className="w-7 h-7 text-primary-500" filled />
+                <h2 className="mb-space-24 text-heading-l flex items-center gap-space-12 text-foreground">
+                  <PlayIcon className="w-7 h-7 text-success-600" filled />
                   Mini-Jeux
                 </h2>
                 
@@ -508,38 +510,38 @@ function KidsLearning() {
                     mascotMood="encourage"
                   />
                 ) : (
-                  <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 md:gap-6">
+                  <div className="grid grid-cols-2 gap-space-16 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 md:gap-space-24">
                     <AnimatePresence>
                       {visibleContents.map((content) => (
                         <motion.button
                           key={content.id}
-                          initial={{ opacity: 0, scale: 0.9 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          exit={{ opacity: 0, scale: 0.9 }}
-                          whileHover={{ y: -8, scale: 1.03 }}
-                          whileTap={{ scale: 0.95 }}
+                          initial={reducedMotion ? { opacity: 0 } : { opacity: 0, scale: 0.9 }}
+                          animate={reducedMotion ? { opacity: 1 } : { opacity: 1, scale: 1 }}
+                          exit={reducedMotion ? { opacity: 0 } : { opacity: 0, scale: 0.9 }}
+                          whileHover={reducedMotion ? undefined : { y: -8, scale: 1.03 }}
+                          whileTap={reducedMotion ? undefined : { scale: 0.95 }}
                           onClick={() => openContent(content)}
-                          className={`group relative overflow-hidden min-h-[14rem] rounded-[2rem] bg-gradient-to-br ${content.category_color} p-5 text-left text-white shadow-xl transition-all hover:shadow-2xl flex flex-col`}
+                          className={`group relative overflow-hidden min-h-[14rem] rounded-24 bg-gradient-to-br ${content.category_color} p-space-20 text-left text-white shadow-card transition-all hover:shadow-floating flex flex-col focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-success-300`}
                         >
                           <div className="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-white/20 blur-xl group-hover:bg-white/30 transition-colors" />
                           
                           <div className="flex justify-between items-start relative z-10">
-                            <span className="grid h-16 w-16 place-items-center rounded-[1.25rem] bg-black/20 text-4xl shadow-inner backdrop-blur-sm border border-white/10 group-hover:scale-110 transition-transform">
+                            <span className="grid h-16 w-16 place-items-center rounded-16 bg-black/20 text-4xl shadow-inner backdrop-blur-sm border border-white/10 group-hover:scale-110 transition-transform">
                               {content.category_pictogram}
                             </span>
-                            <span className="inline-flex rounded-full bg-black/30 backdrop-blur-md px-3 py-1 text-xs font-black shadow-sm border border-white/20">
+                            <span className="inline-flex rounded-full bg-black/30 backdrop-blur-md px-space-12 py-space-4 text-caption font-black shadow-soft border border-white/20">
                               {content.reward?.icon || '⭐'} XP
                             </span>
                           </div>
                           
-                          <div className="mt-auto relative z-10 pt-4">
-                            <span className="block text-xl font-black leading-tight drop-shadow-md mb-1">{content.title}</span>
-                            <span className="text-xs font-bold text-white/80 uppercase tracking-wider">{content.category_name || content.content_type}</span>
+                          <div className="mt-auto relative z-10 pt-space-16">
+                            <span className="block text-heading-m leading-tight drop-shadow-md mb-space-4">{content.title}</span>
+                            <span className="text-caption text-white/80 uppercase tracking-wider">{content.category_name || content.content_type}</span>
                           </div>
                           
                           {/* Play Button Overlay */}
                           <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-[2px]">
-                            <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center text-primary-500 shadow-glow transform scale-50 group-hover:scale-100 transition-transform duration-300">
+                            <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center text-success-600 shadow-glow transform scale-50 group-hover:scale-100 transition-transform duration-300">
                               <PlayIcon className="w-8 h-8 ml-1" filled />
                             </div>
                           </div>

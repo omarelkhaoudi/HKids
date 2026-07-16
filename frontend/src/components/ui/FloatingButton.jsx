@@ -20,8 +20,8 @@ export function FloatingButton({
 }) {
   const pos =
     position === 'bottom-left'
-      ? 'left-24 bottom-24'
-      : 'right-24 bottom-24';
+      ? 'left-space-24 bottom-space-24'
+      : 'right-space-24 bottom-space-24';
 
   return (
     <motion.button
@@ -32,8 +32,8 @@ export function FloatingButton({
       aria-label={label}
       className={[
         'fixed z-40 kids-touch-target',
-        'flex items-center justify-center gap-8',
-        'min-h-touch-kids min-w-touch-kids rounded-full px-20',
+        'flex items-center justify-center gap-space-8',
+        'min-h-touch-kids min-w-touch-kids rounded-full px-space-20',
         'focus:outline-none focus-visible:ring-4 focus-visible:ring-primary-300',
         TONES[tone] || TONES.primary,
         pos,

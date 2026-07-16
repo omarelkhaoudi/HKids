@@ -17,12 +17,12 @@ export function ProgressBar({
   size = 'md',
 }) {
   const clamped = Math.min(100, Math.max(0, Number(progress) || 0));
-  const height = size === 'lg' ? 'h-12' : size === 'sm' ? 'h-8' : 'h-10';
+  const height = size === 'lg' ? 'h-space-12' : size === 'sm' ? 'h-space-8' : 'h-[10px]';
 
   return (
     <div className={`w-full ${className}`}>
       {label ? (
-        <div className="flex justify-between mb-8">
+        <div className="flex justify-between mb-space-8">
           <span className="text-caption text-foreground-secondary">{label}</span>
           <span className="text-caption text-foreground-secondary">{Math.round(clamped)}%</span>
         </div>

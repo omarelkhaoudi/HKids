@@ -21,10 +21,10 @@ const VARIANTS = {
 };
 
 const SIZES = {
-  sm: 'min-h-touch px-16 py-8 text-sm rounded-12',
-  md: 'min-h-touch px-24 py-12 text-body rounded-16',
-  lg: 'min-h-touch-kids px-32 py-16 text-body-lg rounded-20',
-  icon: 'min-h-touch min-w-touch p-12 rounded-16',
+  sm: 'min-h-touch px-space-16 py-space-8 text-sm rounded-12',
+  md: 'min-h-touch px-space-24 py-space-12 text-body rounded-16',
+  lg: 'min-h-touch-kids px-space-32 py-space-16 text-body-lg rounded-20',
+  icon: 'min-h-touch min-w-touch p-space-12 rounded-16',
 };
 
 export function Button({
@@ -53,7 +53,7 @@ export function Button({
       {...props}
     >
       {loading ? (
-        <svg className="animate-spin -ml-4 mr-8 h-20 w-20 text-current" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+        <svg className="animate-spin -ml-space-4 mr-space-8 h-space-20 w-space-20 text-current" fill="none" viewBox="0 0 24 24" aria-hidden="true">
           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
         </svg>

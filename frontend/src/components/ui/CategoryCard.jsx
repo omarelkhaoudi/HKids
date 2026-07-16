@@ -29,7 +29,7 @@ export function CategoryCard({
       aria-pressed={selected}
       className={[
         'kids-touch-target relative overflow-hidden text-left',
-        'min-h-[10rem] w-full rounded-24 p-20',
+        'min-h-[10rem] w-full rounded-24 p-space-20',
         `bg-gradient-to-br ${gradient} text-white shadow-card`,
         'border-4 border-white/40',
         'focus:outline-none focus-visible:ring-4 focus-visible:ring-primary-300',
@@ -37,12 +37,12 @@ export function CategoryCard({
         className,
       ].join(' ')}
     >
-      <span className="absolute -right-8 -top-8 text-[7rem] opacity-20 pointer-events-none" aria-hidden="true">
+      <span className="absolute -right-space-8 -top-space-8 text-[7rem] opacity-20 pointer-events-none" aria-hidden="true">
         {emoji}
       </span>
-      <span className="relative text-5xl md:text-6xl block mb-12" aria-hidden="true">{emoji}</span>
+      <span className="relative text-5xl md:text-6xl block mb-space-12" aria-hidden="true">{emoji}</span>
       {title ? <span className="relative text-heading-m text-white line-clamp-2">{title}</span> : null}
-      {subtitle ? <span className="relative mt-4 block text-caption text-white/90 line-clamp-2">{subtitle}</span> : null}
+      {subtitle ? <span className="relative mt-space-4 block text-caption text-white/90 line-clamp-2">{subtitle}</span> : null}
     </motion.button>
   );
 }

@@ -38,13 +38,13 @@ export const BookCard = memo(function BookCard({
           loading="lazy"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-surface-900/70 via-transparent to-transparent opacity-70" />
-        <div className="absolute top-12 left-12 flex flex-col gap-8">
+        <div className="absolute top-space-12 left-space-12 flex flex-col gap-space-8">
           {isNew ? <Badge variant="primary" size="sm">Nouveau</Badge> : null}
           {isRecommended ? <Badge variant="secondary" size="sm">Pour toi</Badge> : null}
         </div>
         <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-          <span className="w-48 h-48 bg-primary-500 text-white rounded-full flex items-center justify-center shadow-floating pl-4" aria-hidden="true">
-            <svg className="w-24 h-24" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
+          <span className="w-space-48 h-space-48 bg-primary-500 text-white rounded-full flex items-center justify-center shadow-floating pl-space-4" aria-hidden="true">
+            <svg className="w-space-24 h-space-24" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
           </span>
         </div>
       </div>
@@ -53,11 +53,11 @@ export const BookCard = memo(function BookCard({
         <ProgressBar progress={progress} className="rounded-none" />
       ) : null}
 
-      <div className="p-16 flex flex-col grow bg-surface">
+      <div className="p-space-16 flex flex-col grow bg-surface">
         <h3 className="text-heading-m text-base line-clamp-1 group-hover:text-primary-600 transition-colors">
           {title}
         </h3>
-        <p className="text-caption mt-4 line-clamp-1">
+        <p className="text-caption mt-space-4 line-clamp-1">
           {book?.age_group ? `${book.age_group} ans` : ''}
           {book?.duration_minutes ? ` · ${book.duration_minutes} min` : ''}
         </p>
