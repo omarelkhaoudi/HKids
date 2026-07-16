@@ -1,5 +1,5 @@
-import { useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useLanguage } from '../../context/LanguageContext';
 import { useAuth } from '../../context/AuthContext';
 import KidsButton from './KidsButton';
@@ -32,7 +32,7 @@ export function KidsBottomNav() {
         animate={{ y: 0 }}
         transition={{ type: 'spring', damping: 22 }}
         aria-label={t('kidsNavLabel')}
-        className="pointer-events-auto bg-white/90 dark:bg-surface-900/90 backdrop-blur-xl px-3 py-3 md:px-4 md:py-4 rounded-full shadow-glass border border-white/50 dark:border-white/10 flex flex-wrap gap-2 md:gap-3 justify-center max-w-full"
+        className="pointer-events-auto bg-white/92 dark:bg-surface-900/92 backdrop-blur-xl px-3 py-3 md:px-5 md:py-4 rounded-[2rem] shadow-glass border-4 border-white/60 dark:border-white/10 flex flex-wrap gap-2 md:gap-3 justify-center max-w-full"
       >
         {navItems.map((item) => {
           const active = isActivePath(location.pathname, item.path);
@@ -44,13 +44,13 @@ export function KidsBottomNav() {
               variant={active ? 'primary' : 'ghost'}
               size="sm"
               icon={Icon || undefined}
-              className="!rounded-full !px-4 md:!px-5 !min-h-[48px] !text-base md:!text-lg"
+              className="!rounded-full !px-4 md:!px-5 !min-h-[56px] !text-base md:!text-lg"
               onClick={() => navigate(item.path)}
               aria-label={t(item.labelKey)}
             >
               {!Icon && item.emoji ? (
                 <span className="flex items-center gap-2">
-                  <span aria-hidden="true">{item.emoji}</span>
+                  <span className="text-2xl" aria-hidden="true">{item.emoji}</span>
                   <span className="hidden sm:inline">{t(item.labelKey)}</span>
                 </span>
               ) : (
@@ -63,7 +63,7 @@ export function KidsBottomNav() {
           variant={location.pathname === '/kids' && location.hash === '#medals' ? 'secondary' : 'ghost'}
           size="sm"
           icon={StarIcon}
-          className="!rounded-full !px-4 md:!px-5 !min-h-[48px]"
+          className="!rounded-full !px-4 md:!px-5 !min-h-[56px]"
           onClick={() => navigate('/kids#medals')}
           aria-label={t('yourMedals')}
         >

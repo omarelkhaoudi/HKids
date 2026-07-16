@@ -8,18 +8,19 @@ import { useLanguage } from '../context/LanguageContext';
 import { getKidCategory } from '../constants/kidCategories';
 import { getCategoryContentStrategy, bookMatchesKidCategory } from '../utils/kidCategoryContent';
 import { getKidsContentPath } from '../utils/contentRouting';
-import { BookIcon, ChevronLeftIcon, LogOutIcon, PlayIcon } from '../components/Icons';
+import { BookIcon, ChevronLeftIcon, PlayIcon } from '../components/Icons';
 import { Logo } from '../components/Logo';
 import { VoiceAssistant } from '../components/kids/VoiceAssistant';
 import { KidsBottomNav } from '../components/kids/KidsBottomNav';
+import { KidsPageShell } from '../components/kids/KidsPageShell';
 import { KidsMediaCard } from '../components/kids/KidsMediaCard';
 import { KidsEmptyState } from '../components/kids/KidsEmptyState';
+import { BookGridSkeleton } from '../components/SkeletonLoader';
 
 function KidsCategoryPage() {
   const { categoryId } = useParams();
-  const { logout } = useAuth();
   const navigate = useNavigate();
-  const { language, t } = useLanguage();
+  const { language, isRtl, t } = useLanguage();
   const category = getKidCategory(categoryId, language);
   const strategy = getCategoryContentStrategy(categoryId);
 
@@ -87,68 +88,73 @@ function KidsCategoryPage() {
     return <Navigate to="/kids" replace />;
   }
 
-  const handleLogout = () => {
-    logout();
-    navigate('/parent/login');
-  };
-
   const hasContent = books.length > 0 || learningItems.length > 0;
+  const featuredBook = books[0] || null;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-rose-50 pb-32">
-      <div className="mx-auto max-w-5xl px-4 py-6 sm:px-6 lg:px-8">
-        <header className="mb-8 flex items-center justify-between gap-4">
-          <Link to="/kids" className="shrink-0">
-            <Logo size="default" showText={true} />
-          </Link>
-          <button
-            onClick={handleLogout}
-            className="grid h-12 w-12 place-items-center rounded-2xl bg-card text-foreground-500 shadow-md transition hover:bg-primary-50"
-            aria-label="Deconnexion"
-          >
-            <LogOutIcon className="h-6 w-6" />
-          </button>
-        </header>
+    <KidsPageShell isRtl={isRtl} variant="library" className="pb-32 kids-hero-glow" footer={<KidsBottomNav />}>
+      <header className="relative z-10 px-6 py-4 flex items-center justify-between">
+        <Link to="/kids" className="shrink-0 transition-transform hover:scale-105">
+          <Logo size="default" showText={false} />
+        </Link>
+      </header>
 
+      <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
         <Link
           to="/kids"
-          className="mb-5 inline-flex min-h-16 items-center gap-3 rounded-2xl bg-card px-5 py-4 font-black text-foreground shadow-md transition hover:bg-surface-secondary"
+          className="mb-5 inline-flex kids-touch-target items-center gap-3 rounded-[1.75rem] kids-premium-panel px-5 py-3 font-black text-foreground shadow-md transition hover:scale-[1.02]"
           aria-label={t('back')}
         >
-          <ChevronLeftIcon className="h-8 w-8" />
+          <ChevronLeftIcon className={`h-8 w-8 ${isRtl ? 'rotate-180' : ''}`} />
           <span className="text-lg">{t('back')}</span>
         </Link>
 
         <motion.main
           initial={{ opacity: 0, y: 18 }}
           animate={{ opacity: 1, y: 0 }}
-          className={`rounded-[2rem] bg-gradient-to-br ${category.gradient} p-8 text-center text-white shadow-xl ring-4 ${category.ring} mb-8`}
+          className={`relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br ${category.gradient} p-8 md:p-12 text-center text-white shadow-kids-soft ring-4 ${category.ring} mb-10`}
         >
+          <div className="absolute -right-10 -top-10 text-[12rem] opacity-20 pointer-events-none" aria-hidden="true">
+            {category.pictogram}
+          </div>
           <motion.div
-            animate={{ y: [0, -8, 0] }}
+            animate={{ y: [0, -10, 0] }}
             transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-            className="mx-auto mb-6 grid h-36 w-36 place-items-center rounded-[2rem] bg-card/25 text-8xl shadow-inner backdrop-blur"
+            className="mx-auto mb-6 grid h-40 w-40 md:h-44 md:w-44 place-items-center rounded-[2rem] bg-white/30 text-8xl md:text-9xl shadow-inner backdrop-blur"
           >
             {category.pictogram}
           </motion.div>
-          <h1 className="text-5xl font-black leading-tight sm:text-6xl">
+          <h1 className="text-4xl md:text-6xl font-black leading-tight drop-shadow-md">
             {category.shortLabel || category.label}
           </h1>
+          <p className="mt-3 text-lg md:text-xl font-bold text-white/90 max-w-lg mx-auto">
+            {category.label}
+          </p>
+
+          {featuredBook && (
+            <motion.button
+              type="button"
+              whileHover={{ scale: 1.04 }}
+              whileTap={{ scale: 0.96 }}
+              onClick={() => navigate(getKidsContentPath(featuredBook))}
+              className="kids-touch-target mx-auto mt-8 inline-flex min-w-52 items-center justify-center gap-4 rounded-[1.75rem] bg-white px-8 py-4 text-xl md:text-2xl font-black text-foreground shadow-xl"
+            >
+              <PlayIcon className={`h-9 w-9 text-primary-500 ${isRtl ? 'rotate-180' : ''}`} filled />
+              <span>{t('listenAction')}</span>
+            </motion.button>
+          )}
+
           <Link
             to={listPath}
-            className="mx-auto mt-8 inline-flex min-h-20 min-w-52 items-center justify-center gap-4 rounded-[1.75rem] bg-card px-8 text-2xl font-black text-foreground shadow-xl transition hover:scale-105"
+            className="kids-touch-target mx-auto mt-4 inline-flex min-w-52 items-center justify-center gap-3 rounded-[1.75rem] bg-white/20 backdrop-blur px-6 py-3 text-lg font-black text-white border-2 border-white/40"
           >
-            <BookIcon className="h-9 w-9" />
+            <BookIcon className="h-7 w-7" />
             <span>{t('discover')}</span>
           </Link>
         </motion.main>
 
         {loading ? (
-          <div className="grid grid-cols-2 gap-4">
-            {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="h-48 rounded-[2rem] bg-card animate-pulse border border-border" />
-            ))}
-          </div>
+          <BookGridSkeleton count={6} />
         ) : !hasContent ? (
           <KidsEmptyState
             emoji={category.pictogram}
@@ -158,20 +164,33 @@ function KidsCategoryPage() {
             onAction={() => navigate('/kids/library')}
           />
         ) : (
-          <div className="space-y-8">
+          <div className="space-y-10">
             {books.length > 0 && (
               <section>
-                <h2 className="text-2xl font-black mb-4 text-foreground">{t('library')}</h2>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                  {books.slice(0, 6).map((book) => (
-                    <KidsMediaCard key={book.id} book={book} variant="poster" hideTitle onPlay={(b) => navigate(getKidsContentPath(b))} />
+                <h2 className="kids-shelf-title mb-5">
+                  <span aria-hidden="true">{category.pictogram}</span>
+                  <span>{t('library')}</span>
+                </h2>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-5 justify-items-center">
+                  {books.slice(0, 9).map((book) => (
+                    <KidsMediaCard
+                      key={book.id}
+                      book={book}
+                      variant="poster"
+                      hideTitle
+                      isRtl={isRtl}
+                      onPlay={(b) => navigate(getKidsContentPath(b))}
+                    />
                   ))}
                 </div>
               </section>
             )}
             {learningItems.length > 0 && (
               <section>
-                <h2 className="text-2xl font-black mb-4 text-foreground">{t('kidsNavLearning')}</h2>
+                <h2 className="kids-shelf-title mb-5">
+                  <span aria-hidden="true">🎮</span>
+                  <span>{t('kidsNavLearning')}</span>
+                </h2>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                   {learningItems.slice(0, 6).map((item) => (
                     <motion.button
@@ -180,11 +199,11 @@ function KidsCategoryPage() {
                       whileHover={{ scale: 1.03 }}
                       whileTap={{ scale: 0.95 }}
                       onClick={() => navigate('/kids/learning')}
-                      className={`rounded-[2rem] bg-gradient-to-br ${item.category_color || 'from-primary-500 to-primary-400'} p-5 text-left text-white shadow-lg min-h-40`}
+                      className={`kids-touch-target rounded-[2rem] bg-gradient-to-br ${item.category_color || 'from-primary-500 to-secondary-500'} p-5 text-left text-white shadow-kids-soft min-h-44 border-4 border-white/30`}
                     >
-                      <span className="text-4xl">{item.category_pictogram || '⭐'}</span>
-                      <p className="mt-3 font-black text-lg">{item.title}</p>
-                      <PlayIcon className="h-6 w-6 mt-2" filled />
+                      <span className="text-5xl">{item.category_pictogram || '⭐'}</span>
+                      <p className="mt-3 font-black text-lg line-clamp-2">{item.title}</p>
+                      <PlayIcon className="h-7 w-7 mt-3" filled />
                     </motion.button>
                   ))}
                 </div>
@@ -193,9 +212,9 @@ function KidsCategoryPage() {
           </div>
         )}
       </div>
+
       <VoiceAssistant onNavigate={navigate} />
-      <KidsBottomNav />
-    </div>
+    </KidsPageShell>
   );
 }
 

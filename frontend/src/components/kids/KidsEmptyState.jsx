@@ -14,15 +14,17 @@ export function KidsEmptyState({
     <motion.div
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
-      className={`w-full rounded-[2rem] bg-white/80 dark:bg-surface-800/80 border border-surface-200 dark:border-surface-700 p-10 md:p-12 text-center shadow-sm ${className}`}
+      className={`kids-premium-panel w-full p-10 md:p-12 text-center ${className}`}
     >
-      <div className="text-6xl mb-4" aria-hidden="true">{emoji}</div>
-      {title && <h3 className={`font-black text-foreground mb-2 ${compact ? 'text-xl' : 'text-2xl'}`}>{title}</h3>}
+      <div className="text-7xl mb-5" aria-hidden="true">{emoji}</div>
+      {title && <h3 className={`font-black text-foreground mb-2 ${compact ? 'text-xl' : 'text-2xl md:text-3xl'}`}>{title}</h3>}
       {!compact && description && (
-        <p className="text-surface-500 font-bold mb-6 max-w-md mx-auto">{description}</p>
+        <p className="text-foreground-secondary font-bold mb-6 max-w-md mx-auto">{description}</p>
       )}
       {actionLabel && onAction && (
-        <KidsButton onClick={onAction}>{compact ? '📚' : actionLabel}</KidsButton>
+        <KidsButton onClick={onAction} className="!min-h-[56px] !text-lg">
+          {compact ? '📚' : actionLabel}
+        </KidsButton>
       )}
     </motion.div>
   );

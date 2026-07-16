@@ -1226,15 +1226,15 @@ function BookReader() {
 
  // Handle theme colors
  const themeColors = {
- day: 'bg-[#fefcfb] text-[#1e293b]',
- sepia: 'bg-[#fbf0d9] text-[#5c4b37]',
- night: 'bg-[#0f172a] text-[#e2e8f0]'
+ day: isKidReader ? 'bg-gradient-to-br from-sky-50 via-teal-50/40 to-amber-50/50 text-[#1e293b]' : 'bg-[#fefcfb] text-[#1e293b]',
+ sepia: isKidReader ? 'bg-gradient-to-br from-amber-50 via-orange-50/50 to-sky-50/30 text-[#5c4b37]' : 'bg-[#fbf0d9] text-[#5c4b37]',
+ night: isKidReader ? 'bg-gradient-to-br from-[#0f172a] via-[#1e3a5f] to-[#134e4a] text-[#e2e8f0]' : 'bg-[#0f172a] text-[#e2e8f0]'
 };
 
  const navThemeColors = {
- day: 'bg-card/70',
- sepia: 'bg-[#f4e4c3]/80',
- night: 'bg-[#1e293b]/70'
+ day: isKidReader ? 'bg-white/75' : 'bg-card/70',
+ sepia: isKidReader ? 'bg-amber-100/80' : 'bg-[#f4e4c3]/80',
+ night: isKidReader ? 'bg-[#1e293b]/85' : 'bg-[#1e293b]/70'
 };
 
 
@@ -1264,7 +1264,7 @@ function BookReader() {
     variant="ghost" 
     size="icon" 
     onClick={() => navigate(readerExitPath)}
-    className={`rounded-full w-14 h-14 bg-white/20 hover:bg-white/40 shadow-sm`}
+    className={`rounded-full w-14 h-14 min-h-[56px] min-w-[56px] bg-white/25 hover:bg-white/45 shadow-sm border-2 border-white/40`}
     aria-label={t('kidReaderHome')}
   >
     <HomeIcon className="w-8 h-8 text-primary-700" />
@@ -1470,13 +1470,13 @@ function BookReader() {
    className="absolute bottom-8 inset-x-0 z-50 flex justify-center pointer-events-none"
    onClick={(e) => e.stopPropagation()}
  >
-   <div className="pointer-events-auto flex items-center gap-4 md:gap-6 px-4 py-3 rounded-[3rem] bg-white/85 backdrop-blur-xl border-4 border-white/60 shadow-floating">
+   <div className="pointer-events-auto flex items-center gap-4 md:gap-6 px-5 py-4 rounded-[3rem] bg-white/90 backdrop-blur-xl border-4 border-white/70 shadow-kids-soft">
      <button
        type="button"
        onClick={prevPage}
        disabled={isFirstPage}
        aria-label={t('kidReaderPrev')}
-       className="w-20 h-20 rounded-full flex items-center justify-center bg-primary-100 text-primary-700 disabled:opacity-40 border-4 border-white shadow-md active:scale-95 transition-transform"
+       className="kids-touch-target w-[4.5rem] h-[4.5rem] md:w-20 md:h-20 rounded-full flex items-center justify-center bg-primary-100 text-primary-700 disabled:opacity-40 border-4 border-white shadow-md active:scale-95 transition-transform"
      >
        <ChevronLeftIcon className={`w-10 h-10 ${isRtl ? 'rotate-180' : ''}`} />
      </button>
@@ -1485,7 +1485,7 @@ function BookReader() {
        onClick={toggleAudio}
        disabled={!book.audio_url && (isExtracting || (!currentPageData?.content && !currentPageData?.image_path))}
        aria-label={t('kidReaderPlay')}
-       className={`w-24 h-24 rounded-full flex items-center justify-center text-white shadow-glow border-4 border-white active:scale-95 transition-transform ${audioPlaybackActive ? 'bg-primary-500' : 'bg-gradient-to-r from-primary-500 to-secondary-500'}`}
+       className={`kids-touch-target w-28 h-28 rounded-full flex items-center justify-center text-white shadow-glow border-4 border-white active:scale-95 transition-transform ${audioPlaybackActive ? 'bg-primary-500' : 'bg-gradient-to-r from-primary-500 via-secondary-400 to-accent-400'}`}
      >
        {!book.audio_url && isExtracting ? (
          <motion.div animate={{rotate: 360}} transition={{repeat: Infinity, ease: 'linear'}} className="w-10 h-10 border-4 border-white border-t-transparent rounded-full" />
@@ -1500,7 +1500,7 @@ function BookReader() {
        onClick={nextPage}
        disabled={isLastPage}
        aria-label={t('kidReaderNext')}
-       className="w-20 h-20 rounded-full flex items-center justify-center bg-primary-100 text-primary-700 disabled:opacity-40 border-4 border-white shadow-md active:scale-95 transition-transform"
+       className="kids-touch-target w-[4.5rem] h-[4.5rem] md:w-20 md:h-20 rounded-full flex items-center justify-center bg-primary-100 text-primary-700 disabled:opacity-40 border-4 border-white shadow-md active:scale-95 transition-transform"
      >
        <ChevronRightIcon className={`w-10 h-10 ${isRtl ? 'rotate-180' : ''}`} />
      </button>
@@ -1511,25 +1511,25 @@ function BookReader() {
  {/* Persistent Bottom Progress Bar */}
  <div className={`absolute bottom-0 inset-x-0 z-30 px-4 md:px-12 ${isKidReader ? 'pb-4' : 'pb-6'} pt-10 bg-gradient-to-t from-black/20 to-transparent flex flex-col justify-end pointer-events-none gap-3`}>
         {isKidReader && totalPages > 1 && (
-          <div className="w-full max-w-4xl mx-auto flex items-center justify-center gap-2 flex-wrap">
-            {Array.from({ length: totalPages }).map((_, index) => (
+          <div className="w-full max-w-4xl mx-auto flex items-center justify-center gap-2 flex-wrap px-2">
+            {Array.from({ length: Math.min(totalPages, 20) }).map((_, index) => (
               <span
                 key={index}
                 className={`rounded-full transition-all duration-300 ${
                   index === currentPage
-                    ? 'h-3 w-8 bg-white shadow-glow'
+                    ? 'h-4 w-10 bg-gradient-to-r from-primary-400 to-secondary-400 shadow-glow'
                     : index < currentPage
-                      ? 'h-3 w-3 bg-secondary-400'
-                      : 'h-3 w-3 bg-white/40'
+                      ? 'h-4 w-4 bg-secondary-400'
+                      : 'h-4 w-4 bg-white/45'
                 }`}
                 aria-hidden="true"
               />
             ))}
           </div>
         )}
-        <div className={`w-full max-w-4xl mx-auto ${isKidReader ? 'h-6' : 'h-4'} bg-black/10 rounded-full overflow-hidden border border-white/20 shadow-inner`}>
+        <div className={`w-full max-w-4xl mx-auto ${isKidReader ? 'h-7' : 'h-4'} bg-black/10 rounded-full overflow-hidden border-2 border-white/25 shadow-inner`}>
           <motion.div 
-            className="h-full bg-gradient-to-r from-primary-400 to-secondary-400 rounded-full"
+            className={`h-full rounded-full ${isKidReader ? 'bg-gradient-to-r from-primary-400 via-secondary-400 to-accent-400' : 'bg-gradient-to-r from-primary-400 to-secondary-400'}`}
             initial={{width: 0}}
             animate={{width: `${progress}%`}}
             transition={{duration: 0.5}}
