@@ -1,6 +1,6 @@
 /**
- * Kids autonomy color-coding — stable modality tones (Vooks-style).
- * Blue = books · Yellow = audio · Teal = learn · Violet = create
+ * Kids autonomy color-coding — HKids modality worlds.
+ * Blue = books · Orange = audio · Green = learn · Purple = create
  */
 
 export const KIDS_MODALITY = {
@@ -15,35 +15,35 @@ export const KIDS_MODALITY = {
   },
   audio: {
     id: 'audio',
-    tone: 'accent',
-    gradient: 'from-accent-400 to-accent-600',
-    activeBg: 'bg-accent-500',
+    tone: 'orange',
+    gradient: 'from-orange-400 to-orange-600',
+    activeBg: 'bg-orange-500',
     glow: 'kids-glow-audio',
-    shelfTint: 'text-accent-600',
-    borderHover: 'hover:bg-accent-50',
+    shelfTint: 'text-orange-600',
+    borderHover: 'hover:bg-orange-50',
   },
   learn: {
     id: 'learn',
-    tone: 'secondary',
-    gradient: 'from-secondary-400 to-secondary-600',
-    activeBg: 'bg-secondary-500',
+    tone: 'success',
+    gradient: 'from-success-400 to-success-600',
+    activeBg: 'bg-success-500',
     glow: 'kids-glow-learn',
-    shelfTint: 'text-secondary-600',
-    borderHover: 'hover:bg-secondary-50',
+    shelfTint: 'text-success-600',
+    borderHover: 'hover:bg-success-50',
   },
   create: {
     id: 'create',
-    tone: 'violet',
-    gradient: 'from-violet-400 to-primary-500',
-    activeBg: 'bg-violet-500',
+    tone: 'magic',
+    gradient: 'from-magic-400 to-magic-600',
+    activeBg: 'bg-magic-500',
     glow: 'kids-glow-create',
-    shelfTint: 'text-violet-600',
-    borderHover: 'hover:bg-violet-50',
+    shelfTint: 'text-magic-600',
+    borderHover: 'hover:bg-magic-50',
   },
   home: {
     id: 'home',
     tone: 'primary',
-    gradient: 'from-primary-400 via-secondary-400 to-accent-300',
+    gradient: 'from-primary-400 via-secondary-400 to-orange-300',
     activeBg: 'bg-primary-500',
     glow: 'kids-hero-glow',
     shelfTint: 'text-primary-600',
@@ -51,12 +51,12 @@ export const KIDS_MODALITY = {
   },
   favorites: {
     id: 'favorites',
-    tone: 'accent',
-    gradient: 'from-accent-400 via-primary-400 to-primary-600',
-    activeBg: 'bg-accent-500',
+    tone: 'orange',
+    gradient: 'from-orange-400 via-primary-400 to-primary-600',
+    activeBg: 'bg-orange-500',
     glow: 'kids-glow-audio',
-    shelfTint: 'text-accent-600',
-    borderHover: 'hover:bg-accent-50',
+    shelfTint: 'text-orange-600',
+    borderHover: 'hover:bg-orange-50',
   },
 };
 

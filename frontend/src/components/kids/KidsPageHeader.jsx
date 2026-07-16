@@ -1,9 +1,9 @@
-import { Link } from 'react-router-dom';
-import { HomeIcon } from '../Icons';
+import { Navbar } from '../ui/Navbar';
 import { Logo } from '../Logo';
+import { Link } from 'react-router-dom';
 
 /**
- * Consistent kids page chrome — icon-first back, optional emoji title.
+ * Consistent kids page chrome — wraps shared Navbar with HKids branding.
  */
 export function KidsPageHeader({
   backTo = '/kids',
@@ -15,35 +15,22 @@ export function KidsPageHeader({
   className = '',
 }) {
   return (
-    <header className={`relative z-10 kids-premium-panel mx-4 sm:mx-6 mt-2 px-4 sm:px-6 py-3 md:py-4 flex items-center justify-between gap-4 ${className}`}>
-      <div className="flex items-center gap-3 min-w-0">
-        {onBack ? (
-          <button type="button" onClick={onBack} className="kids-icon-action" aria-label="Back">
-            <HomeIcon />
-          </button>
-        ) : (
-          <Link to={backTo} className="kids-icon-action" aria-label="Back">
-            <HomeIcon />
-          </Link>
-        )}
-        {showLogo && (
-          <Link to="/kids" className="shrink-0 transition-transform hover:scale-105 active:scale-95">
-            <Logo size="default" showText={false} />
-          </Link>
-        )}
-        {(emoji || title) && (
-          <div className="min-w-0 flex items-center gap-2">
-            {emoji && <span className="text-3xl md:text-4xl leading-none" aria-hidden="true">{emoji}</span>}
-            {title && (
-              <span className="font-black text-base md:text-lg text-foreground truncate hidden sm:inline line-clamp-1">
-                {title}
-              </span>
-            )}
-          </div>
-        )}
-      </div>
-      {trailing}
-    </header>
+    <div className={`kids-premium-panel mx-16 sm:mx-24 mt-8 ${className}`}>
+      <Navbar
+        backTo={onBack ? undefined : backTo}
+        onBack={onBack}
+        emoji={emoji}
+        title={title}
+        trailing={trailing}
+        brand={
+          showLogo ? (
+            <Link to="/kids" className="shrink-0 transition-transform hover:scale-105 active:scale-95">
+              <Logo size="default" showText={false} />
+            </Link>
+          ) : null
+        }
+      />
+    </div>
   );
 }
 

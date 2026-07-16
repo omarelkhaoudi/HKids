@@ -1,33 +1,39 @@
 import React from 'react';
 
-export function Badge({ 
- variant = 'neutral', 
- size = 'md',
- className = '', 
- children 
+const VARIANTS = {
+  primary: 'bg-primary-100 text-primary-700',
+  secondary: 'bg-secondary-100 text-secondary-800',
+  orange: 'bg-orange-100 text-orange-700',
+  success: 'bg-success-100 text-success-700',
+  magic: 'bg-magic-100 text-magic-700',
+  warning: 'bg-warning-100 text-warning-700',
+  danger: 'bg-danger-100 text-danger-700',
+  neutral: 'bg-surface-secondary text-foreground-secondary',
+  premium: 'bg-gradient-to-r from-secondary-400 to-orange-500 text-white shadow-soft',
+};
+
+const SIZES = {
+  sm: 'px-8 py-4 text-caption',
+  md: 'px-12 py-4 text-sm font-bold',
+  lg: 'px-16 py-8 text-body font-bold',
+};
+
+export function Badge({
+  variant = 'neutral',
+  size = 'md',
+  className = '',
+  children,
 }) {
- const baseStyles ="inline-flex items-center font-bold rounded-full";
- 
- const variants = {
- primary:"bg-primary-100 text-foreground-700 /30",
- secondary:"bg-secondary-100 text-foreground-secondary-700 /30",
- success:"bg-success-100 text-success-700 /30",
- warning:"bg-warning-100 text-warning-700 /30",
- danger:"bg-danger-100 text-danger-700 /30",
- neutral:"bg-surface-secondary text-foreground-secondary",
- premium:"bg-gradient-to-r from-accent-400 to-accent-500 text-white shadow-sm",
- glass:"bg-card/20 backdrop-blur-md border border-white/30 text-white",
- };
-
- const sizes = {
- sm:"px-2.5 py-0.5 text-xs",
- md:"px-3 py-1 text-sm",
- lg:"px-4 py-1.5 text-base",
- };
-
- return (
- <span className={`${baseStyles} ${variants[variant]} ${sizes[size]} ${className}`}>
- {children}
- </span>
- );
+  return (
+    <span
+      className={[
+        'inline-flex items-center font-bold rounded-full',
+        VARIANTS[variant] || VARIANTS.neutral,
+        SIZES[size] || SIZES.md,
+        className,
+      ].join(' ')}
+    >
+      {children}
+    </span>
+  );
 }

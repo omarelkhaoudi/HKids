@@ -81,7 +81,7 @@ export const KidsMediaCard = memo(function KidsMediaCard({
         {/* Discovery badges — icon-first, max visual scan */}
         <div className="absolute left-2.5 top-2.5 z-10 flex flex-col gap-1.5 max-w-[70%]">
           {book.is_premium && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-accent-400 to-accent-500 px-2.5 py-1 text-[11px] font-black text-white shadow-md border-2 border-white/50">
+            <span className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-orange-400 to-orange-500 px-2.5 py-1 text-[11px] font-black text-white shadow-md border-2 border-white/50">
               <SparklesIcon className="h-3.5 w-3.5" /> PRO
             </span>
           )}
@@ -92,18 +92,18 @@ export const KidsMediaCard = memo(function KidsMediaCard({
           )}
           {book.age_level && (
             <span className="inline-flex items-center gap-1 rounded-full bg-black/50 backdrop-blur-md px-2.5 py-1 text-[11px] font-black text-white border border-white/30">
-              <ShieldIcon className="h-3.5 w-3.5 text-secondary-300" />
+              <ShieldIcon className="h-3.5 w-3.5 text-success-300" />
               {book.age_level}
             </span>
           )}
           {durationLabel && (
             <span className="inline-flex items-center gap-1 rounded-full bg-black/50 backdrop-blur-md px-2.5 py-1 text-[11px] font-black text-white border border-white/30">
-              <ClockIcon className="h-3.5 w-3.5 text-accent-300" />
+              <ClockIcon className="h-3.5 w-3.5 text-orange-300" />
               {durationLabel}
             </span>
           )}
           {audioReady && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-accent-500/90 px-2.5 py-1 text-[11px] font-black text-white border border-white/40 shadow-md" aria-label="Audio">
+            <span className="inline-flex items-center gap-1 rounded-full bg-orange-500/90 px-2.5 py-1 text-[11px] font-black text-white border border-white/40 shadow-md" aria-label="Audio">
               <AudioIcon className="h-3.5 w-3.5" />
             </span>
           )}

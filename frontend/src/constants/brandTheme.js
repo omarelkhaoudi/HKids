@@ -1,26 +1,26 @@
 /**
  * HKids / Le Lit Qui Lit — identité visuelle unifiée
- * Primary (bleu doux) · Secondary (turquoise) · Accent (soleil chaleureux)
+ * Primary Blue · Secondary Yellow · Orange · Success · Magic Purple
  */
 
-export const BRAND_HERO_GRADIENT = 'from-primary-400 via-secondary-400 to-accent-300';
+export const BRAND_HERO_GRADIENT = 'from-primary-400 via-secondary-400 to-orange-300';
 
 export const BRAND_HUB_GRADIENTS = [
   'from-primary-500 to-primary-700',
   'from-secondary-400 to-secondary-600',
-  'from-accent-400 to-accent-600',
-  'from-primary-400 to-secondary-600',
-  'from-secondary-500 to-primary-600',
-  'from-accent-500 to-primary-600',
+  'from-orange-400 to-orange-600',
+  'from-success-400 to-success-600',
+  'from-magic-400 to-magic-600',
+  'from-primary-400 to-magic-500',
 ];
 
 export const BRAND_QUICK_GRADIENTS = [
   'from-primary-400 to-secondary-400',
-  'from-secondary-400 to-primary-500',
-  'from-accent-400 to-secondary-500',
-  'from-primary-500 to-accent-400',
-  'from-secondary-500 to-accent-500',
-  'from-primary-400 to-accent-500',
+  'from-secondary-400 to-orange-500',
+  'from-orange-400 to-success-500',
+  'from-primary-500 to-magic-400',
+  'from-success-500 to-primary-500',
+  'from-magic-400 to-orange-500',
 ];
 
 export const BRAND_TONES = {
@@ -30,18 +30,33 @@ export const BRAND_TONES = {
     borderColor: 'border-primary-200 dark:border-primary-800',
   },
   secondary: {
-    color: 'text-secondary-700 dark:text-secondary-300',
+    color: 'text-secondary-800 dark:text-secondary-300',
     bgColor: 'bg-secondary-100 dark:bg-secondary-900/40',
     borderColor: 'border-secondary-200 dark:border-secondary-800',
   },
   accent: {
-    color: 'text-accent-700 dark:text-accent-300',
-    bgColor: 'bg-accent-100 dark:bg-accent-900/40',
-    borderColor: 'border-accent-200 dark:border-accent-800',
+    color: 'text-orange-700 dark:text-orange-300',
+    bgColor: 'bg-orange-100 dark:bg-orange-900/40',
+    borderColor: 'border-orange-200 dark:border-orange-800',
+  },
+  orange: {
+    color: 'text-orange-700 dark:text-orange-300',
+    bgColor: 'bg-orange-100 dark:bg-orange-900/40',
+    borderColor: 'border-orange-200 dark:border-orange-800',
+  },
+  success: {
+    color: 'text-success-700 dark:text-success-300',
+    bgColor: 'bg-success-100 dark:bg-success-900/40',
+    borderColor: 'border-success-200 dark:border-success-800',
+  },
+  magic: {
+    color: 'text-magic-700 dark:text-magic-300',
+    bgColor: 'bg-magic-100 dark:bg-magic-900/40',
+    borderColor: 'border-magic-200 dark:border-magic-800',
   },
 };
 
-const TONE_CYCLE = ['primary', 'secondary', 'accent'];
+const TONE_CYCLE = ['primary', 'secondary', 'orange', 'success', 'magic'];
 
 export function toneAtIndex(index) {
   return BRAND_TONES[TONE_CYCLE[index % TONE_CYCLE.length]];
@@ -58,37 +73,37 @@ export function quickGradientAtIndex(index) {
 const FEATURE_TILE_LABELS = {
   fr: [
     { title: 'Histoires personnalisées', desc: "Créées par IA selon l'âge, les intérêts et les valeurs de votre enfant." },
-    { title: 'Éducatif et bienveillant', desc: "Développe l'empathie, la confiance et l'amour de l'apprentissage." },
-    { title: 'Sans publicité', desc: "Un environnement sûr et sans distraction pour apprendre en s'amusant." },
-    { title: 'Disponible partout', desc: 'Sur mobile, tablette et ordinateur, même hors connexion.' },
-    { title: 'Créé avec amour', desc: 'Conçu par des parents pour accompagner chaque famille.' },
-    { title: 'Contrôle parental', desc: "Temps d'écran, contenus autorisés et suivi de lecture depuis votre tableau de bord." },
+    { title: 'Apprentissage ludique', desc: 'Jeux et activités pour progresser en s\'amusant.' },
+    { title: 'Contrôle parental', desc: 'Temps d\'écran, contenu validé et suivi depuis le tableau de bord.' },
+    { title: 'Lecture partout', desc: 'Mobile, tablette et hors-ligne pour les trajets.' },
+    { title: 'Magie créative', desc: 'Studio d\'histoires pour inventer ensemble.' },
+    { title: 'Fait avec amour', desc: 'Conçu par des parents pour accompagner chaque famille.' },
   ],
   en: [
-    { title: 'Personalized stories', desc: 'AI-created based on your child\'s age, interests and values.' },
-    { title: 'Educational & caring', desc: 'Develops empathy, confidence and a love of learning.' },
-    { title: 'Ad-free', desc: 'A safe, distraction-free environment for learning through fun.' },
-    { title: 'Available everywhere', desc: 'On mobile, tablet and computer, even offline.' },
-    { title: 'Made with love', desc: 'Designed by parents to support every family.' },
-    { title: 'Parental controls', desc: 'Screen time, approved content and reading tracking from your dashboard.' },
+    { title: 'Personalized stories', desc: 'AI-made for your child’s age, interests, and values.' },
+    { title: 'Playful learning', desc: 'Games and activities that make progress fun.' },
+    { title: 'Parental controls', desc: 'Screen time, approved content, and reading progress.' },
+    { title: 'Read anywhere', desc: 'Mobile, tablet, and offline for every trip.' },
+    { title: 'Creative magic', desc: 'A story studio to invent together.' },
+    { title: 'Made with love', desc: 'Designed by parents for every family.' },
   ],
   ar: [
-    { title: 'قصص مخصصة', desc: 'أُنشئت بالذكاء الاصطناعي حسب عمر طفلك واهتماماته وقيمه.' },
-    { title: 'تعليمي ورعاية', desc: 'ينمّي التعاطف والثقة وحب التعلم.' },
-    { title: 'بدون إعلانات', desc: 'بيئة آمنة وخالية من التشتت للتعلم بمرح.' },
-    { title: 'متاح في كل مكان', desc: 'على الهاتف والجهاز اللوحي والكمبيوتر، حتى بدون اتصال.' },
+    { title: 'قصص مخصصة', desc: 'مُنشأة بالذكاء الاصطناعي حسب العمر والاهتمامات.' },
+    { title: 'تعلّم مرح', desc: 'ألعاب وأنشطة للتقدّم بمتعة.' },
+    { title: 'رقابة أبوية', desc: 'وقت الشاشة والمحتوى المعتمد ومتابعة القراءة.' },
+    { title: 'اقرأ في أي مكان', desc: 'هاتف وتابلت ودون اتصال.' },
+    { title: 'سحر إبداعي', desc: 'استوديو قصص للاختراع معاً.' },
     { title: 'صُنع بحب', desc: 'صممه آباء لمرافقة كل عائلة.' },
-    { title: 'رقابة أبوية', desc: 'وقت الشاشة والمحتوى المعتمد ومتابعة القراءة من لوحة التحكم.' },
   ],
 };
 
 const FEATURE_TILE_META = [
   { icon: '📖', tone: 'primary' },
-  { icon: '🎓', tone: 'secondary' },
-  { icon: '🛡️', tone: 'accent' },
+  { icon: '🎓', tone: 'success' },
+  { icon: '🛡️', tone: 'orange' },
   { icon: '📱', tone: 'primary' },
-  { icon: '💜', tone: 'secondary' },
-  { icon: '👨‍👩‍👧', tone: 'accent' },
+  { icon: '✨', tone: 'magic' },
+  { icon: '👨‍👩‍👧', tone: 'secondary' },
 ];
 
 export const BRAND_FEATURE_TILES = FEATURE_TILE_META.map((meta, i) => ({
@@ -107,25 +122,33 @@ export function localizeFeatureTiles(language = 'fr') {
 export const BRAND_SOFT_SURFACES = [
   'bg-primary-50',
   'bg-secondary-50',
-  'bg-accent-50',
-  'bg-primary-50/70',
+  'bg-orange-50',
+  'bg-success-50',
+  'bg-magic-50',
 ];
 
 export const BRAND_METRIC_TONES = [
   { bg: 'bg-primary-50', text: 'text-primary-600' },
-  { bg: 'bg-secondary-50', text: 'text-secondary-600' },
-  { bg: 'bg-accent-50', text: 'text-accent-600' },
-  { bg: 'bg-primary-100', text: 'text-primary-700' },
+  { bg: 'bg-secondary-50', text: 'text-secondary-700' },
+  { bg: 'bg-orange-50', text: 'text-orange-600' },
+  { bg: 'bg-success-50', text: 'text-success-600' },
+  { bg: 'bg-magic-50', text: 'text-magic-600' },
 ];
 
 export const BRAND_SEMANTIC = {
-  success: { bg: 'bg-secondary-50', text: 'text-secondary-700', solid: 'bg-secondary-500', border: 'border-secondary-200' },
-  warning: { bg: 'bg-accent-50', text: 'text-accent-700', solid: 'bg-accent-500', border: 'border-accent-200' },
+  success: { bg: 'bg-success-50', text: 'text-success-700', solid: 'bg-success-500', border: 'border-success-200' },
+  warning: { bg: 'bg-secondary-50', text: 'text-secondary-800', solid: 'bg-secondary-500', border: 'border-secondary-200' },
   danger: { bg: 'bg-danger-50', text: 'text-danger-700', solid: 'bg-danger-500', border: 'border-danger-200' },
   info: { bg: 'bg-primary-50', text: 'text-primary-700', solid: 'bg-primary-500', border: 'border-primary-200' },
 };
 
-export const BRAND_CONFETTI = ['bg-primary-500', 'bg-secondary-500', 'bg-accent-500', 'bg-primary-400', 'bg-secondary-400'];
+export const BRAND_CONFETTI = [
+  'bg-primary-500',
+  'bg-secondary-500',
+  'bg-orange-500',
+  'bg-success-500',
+  'bg-magic-500',
+];
 
 export function softSurfaceAtIndex(index) {
   return BRAND_SOFT_SURFACES[index % BRAND_SOFT_SURFACES.length];
@@ -135,16 +158,15 @@ export function metricToneAtIndex(index) {
   return BRAND_METRIC_TONES[index % BRAND_METRIC_TONES.length];
 }
 
-/** Gradients thématiques pour couvertures d'histoires (cycle brand) */
 export const BRAND_STORY_GRADIENTS = [
   'from-primary-500 to-primary-700',
   'from-secondary-400 to-secondary-700',
-  'from-accent-400 to-accent-600',
-  'from-primary-400 to-secondary-600',
-  'from-secondary-500 to-primary-600',
-  'from-accent-500 to-primary-600',
-  'from-primary-500 to-accent-600',
-  'from-secondary-400 to-accent-600',
+  'from-orange-400 to-orange-600',
+  'from-success-400 to-success-600',
+  'from-magic-400 to-magic-600',
+  'from-primary-400 to-magic-500',
+  'from-secondary-400 to-orange-500',
+  'from-success-400 to-primary-600',
 ];
 
 export function storyGradientAtIndex(index) {
