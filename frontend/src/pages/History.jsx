@@ -118,7 +118,7 @@ function History() {
 
  if (isKidMode) {
   return (
-   <KidsPageShell isRtl={isRtl} variant="library" className="pb-32 kids-glow-books" footer={<KidsBottomNav />}>
+   <KidsPageShell isRtl={isRtl} variant="library" world="books" className="pb-32 kids-glow-books" footer={<KidsBottomNav />}>
     <KidsPageHeader
      backTo="/kids"
      emoji="📖"

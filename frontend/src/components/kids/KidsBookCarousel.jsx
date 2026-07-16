@@ -1,7 +1,10 @@
 import { useRef } from 'react';
+import { motion } from 'framer-motion';
 import { ChevronLeftIcon, ChevronRightIcon } from '../Icons';
 import { KidsMediaCard } from './KidsMediaCard';
 import { getKidsModality } from '../../constants/kidsModality';
+import { useReducedMotion } from '../../hooks/useReducedMotion';
+import { getMotionProps, kidsCarouselReveal } from '../../constants/kidsMotion';
 
 export function KidsSectionHeader({
   title,
@@ -65,6 +68,7 @@ export function KidsBookCarousel({
   modality = 'books',
 }) {
   const carouselRef = useRef(null);
+  const reducedMotion = useReducedMotion();
 
   const scroll = (direction) => {
     if (!carouselRef.current) return;
@@ -76,7 +80,7 @@ export function KidsBookCarousel({
   if (!books.length) return null;
 
   return (
-    <section className="mb-10 relative">
+    <motion.section className="mb-10 relative" {...getMotionProps(reducedMotion, kidsCarouselReveal)}>
       <KidsSectionHeader
         title={title}
         icon={icon}
@@ -100,6 +104,7 @@ export function KidsBookCarousel({
               showActions={showActions}
               isFavorite={favorites.includes(book.id)}
               offlineReady={offlineContent?.getBookStatus?.(book.id)?.status === 'downloaded'}
+              themeEmoji={book._themeEmoji}
               onPlay={onPlay}
               onFavorite={onFavorite}
               onDownload={onDownload}
@@ -108,6 +113,6 @@ export function KidsBookCarousel({
           </div>
         ))}
       </div>
-    </section>
+    </motion.section>
   );
 }
