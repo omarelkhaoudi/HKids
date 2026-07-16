@@ -140,14 +140,16 @@ function KidsAudioLibrary() {
     onPlay: handlePlay,
     showActions: false,
     hideTitle: true,
+    modality: 'audio',
   };
 
   return (
-    <KidsPageShell isRtl={isRtl} variant="library" className="pb-32 kids-hero-glow" footer={<KidsBottomNav />}>
+    <KidsPageShell isRtl={isRtl} variant="library" className="pb-32 kids-glow-audio" footer={<KidsBottomNav />}>
       <KidsPageHeader backTo="/kids" emoji="🎧" title={t('audioLibrary')} />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-10">
         <KidsHero
+          modality="audio"
           emoji="🎵"
           badge={t('audioLibrary')}
           title={t('audioLibraryTitle')}

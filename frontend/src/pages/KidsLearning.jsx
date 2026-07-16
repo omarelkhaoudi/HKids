@@ -200,7 +200,7 @@ function KidsLearning() {
   const selectedProfile = kidProfiles.find(k => k.id === selectedKidProfileId);
 
   return (
-    <KidsPageShell isRtl={isRtl} variant="library" className="pb-32 kids-hero-glow" footer={<KidsBottomNav />}>
+    <KidsPageShell isRtl={isRtl} variant="library" className="pb-32 kids-glow-learn" footer={<KidsBottomNav />}>
       <KidsPageHeader backTo="/kids" emoji="🎮" title={t('kidsNavLearning')} />
       <div className="relative z-10 mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8 pb-8">
         <AnimatePresence mode="wait">
@@ -311,6 +311,7 @@ function KidsLearning() {
               
               {/* PREMIUM HERO */}
               <KidsHero
+                modality="learn"
                 emoji="🎮"
                 badge={t('kidsNavLearning')}
                 title="Apprends en t'amusant !"

@@ -161,10 +161,11 @@ function KidsLibrary() {
     onFavorite: toggleFavorite,
     onDownload: handleDownloadBook,
     showActions: true,
+    modality: 'books',
   };
 
   return (
-    <KidsPageShell isRtl={isRtl} variant="library" className="pb-32" footer={<KidsBottomNav />}>
+    <KidsPageShell isRtl={isRtl} variant="library" className="pb-32 kids-glow-books" footer={<KidsBottomNav />}>
       <header className="relative z-10 px-6 py-4 flex items-center justify-between kids-premium-panel mx-4 sm:mx-6 mt-2 sticky top-2">
         <div className="flex items-center gap-4">
           <button

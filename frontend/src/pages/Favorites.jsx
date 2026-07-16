@@ -86,10 +86,10 @@ function Favorites() {
 
  if (isKidMode) {
   return (
-   <KidsPageShell isRtl={isRtl} variant="library" className="pb-32 kids-hero-glow" footer={<KidsBottomNav />}>
+   <KidsPageShell isRtl={isRtl} variant="library" className="pb-32 kids-glow-audio" footer={<KidsBottomNav />}>
     <KidsPageHeader backTo="/kids" emoji="❤️" title={t('yourFavorites')} />
     <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-8">
-     <KidsHero emoji="❤️" title={t('yourFavorites')} subtitle={t('emptyFavoritesTitle')} />
+     <KidsHero modality="favorites" emoji="❤️" title={t('yourFavorites')} subtitle={t('emptyFavoritesTitle')} />
      {loading ? (
       <BookGridSkeleton count={6} variant="carousel" />
      ) : favoriteBooks.length === 0 ? (
@@ -109,6 +109,7 @@ function Favorites() {
         isRtl={isRtl}
         showActions={false}
         hideTitle
+        modality="favorites"
         onPlay={(book) => navigate(getKidsContentPath(book))}
        />
        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 justify-items-center">
