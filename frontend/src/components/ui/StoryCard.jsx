@@ -33,12 +33,12 @@ export const StoryCard = memo(function StoryCard({
           <div className="absolute inset-0 grid place-items-center text-5xl bg-gradient-to-br from-magic-100 to-primary-100" aria-hidden="true">✨</div>
         )}
         {badge ? (
-          <div className="absolute top-12 left-12">
+          <div className="absolute top-space-12 left-space-12">
             <Badge variant="magic" size="sm">{badge}</Badge>
           </div>
         ) : null}
       </div>
-      <div className="p-16 space-y-4">
+      <div className="p-space-16 space-y-space-4">
         <h3 className="text-heading-m line-clamp-2">{title}</h3>
         {meta ? <p className="text-caption line-clamp-1">{meta}</p> : null}
       </div>

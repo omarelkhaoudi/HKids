@@ -29,9 +29,9 @@ export default function KidsButton({
     'relative flex items-center justify-center font-extrabold select-none transition-all duration-150 touch-manipulation kids-btn-ripple kids-touch-target focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-400 focus-visible:ring-offset-2';
 
   const sizeClasses = {
-    sm: 'px-16 py-12 min-h-touch-kids text-lg rounded-16',
-    md: 'px-24 py-16 min-h-[64px] text-xl rounded-24',
-    lg: 'px-32 py-24 min-h-[80px] text-2xl rounded-32',
+    sm: 'px-space-16 py-space-12 min-h-touch-kids text-lg rounded-16',
+    md: 'px-space-24 py-space-16 min-h-[64px] text-xl rounded-24',
+    lg: 'px-space-32 py-space-24 min-h-[80px] text-2xl rounded-32',
   };
 
   const variants = {
@@ -74,7 +74,7 @@ export default function KidsButton({
       aria-label={ariaLabel}
       className={`${baseClasses} ${sizeClasses[size]} ${resolvedVariant} ${className}`}
     >
-      {Icon && <Icon className="w-24 h-24 md:w-32 md:h-32 mr-8 md:mr-12 shrink-0" strokeWidth={2.5} />}
+      {Icon && <Icon className="w-space-24 h-space-24 md:w-space-32 md:h-space-32 mr-space-8 md:mr-space-12 shrink-0" strokeWidth={2.5} />}
       {children}
     </motion.button>
   );

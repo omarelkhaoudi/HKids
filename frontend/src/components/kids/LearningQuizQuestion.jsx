@@ -25,7 +25,7 @@ function QuestionAudioButton({ audioUrl, label = 'Écouter' }) {
       whileHover={{ scale: 1.05 }}
       whileTap={{ scale: 0.95 }}
       onClick={play}
-      className="mx-auto mb-6 flex items-center gap-3 rounded-full bg-primary-500 px-8 py-4 text-xl font-black text-white shadow-lg"
+      className="mx-auto mb-space-24 flex min-h-touch-kids items-center gap-space-12 rounded-full bg-success-600 px-space-32 py-space-16 text-body-lg font-black text-white shadow-card focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-success-300"
       aria-label={label}
     >
       <AudioIcon className="h-8 w-8" />
@@ -37,7 +37,7 @@ function QuestionAudioButton({ audioUrl, label = 'Écouter' }) {
 
 function OptionGrid({ options, questionId, answers, onChoose, disabled, columns = 'grid-cols-2 md:grid-cols-3' }) {
   return (
-    <div className={`grid ${columns} gap-4`}>
+    <div className={`grid ${columns} gap-space-16`}>
       {(options || []).map((option) => {
         const active = answers[questionId] === option.id;
         return (
@@ -48,15 +48,15 @@ function OptionGrid({ options, questionId, answers, onChoose, disabled, columns 
             whileTap={{ scale: disabled ? 1 : 0.92 }}
             onClick={() => !disabled && onChoose(questionId, option.id)}
             disabled={disabled}
-            className={`flex flex-col items-center justify-center min-h-32 rounded-[1.75rem] border-4 p-4 text-center transition-all shadow-sm ${
+            className={`flex flex-col items-center justify-center min-h-[8rem] rounded-24 border-4 p-space-16 text-center transition-all shadow-soft focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-success-300 ${
               active
-                ? 'border-secondary-500 bg-secondary-50 dark:bg-secondary-900/30 text-secondary-700 dark:text-secondary-300 scale-105 shadow-md'
-                : 'border-transparent bg-card hover:border-primary-300'
+                ? 'border-success-500 bg-success-50 dark:bg-success-900/30 text-success-700 dark:text-success-300 scale-105 shadow-card'
+                : 'border-transparent bg-card hover:border-success-300'
             }`}
             aria-label={option.label}
           >
-            <span className="text-6xl mb-2">{option.pictogram || option.label}</span>
-            {option.pictogram && <span className="text-xl font-black">{option.label}</span>}
+            <span className="text-6xl mb-space-8">{option.pictogram || option.label}</span>
+            {option.pictogram && <span className="text-heading-m">{option.label}</span>}
           </motion.button>
         );
       })}
@@ -75,9 +75,9 @@ export function LearningQuizQuestion({
   const showPrompt = questionType !== 'listen_answer' || !question.audio_url;
 
   return (
-    <div className="rounded-[2rem] bg-surface-secondary/50 p-6 md:p-8 border border-border">
+    <div className="rounded-24 bg-surface-secondary/50 p-space-24 md:p-space-32 border border-border">
       {showPrompt && (
-        <p className="mb-6 text-3xl font-black text-center text-foreground">{question.prompt}</p>
+        <p className="mb-space-24 text-heading-l text-center text-foreground">{question.prompt}</p>
       )}
 
       {(questionType === 'listen_answer' || question.audio_url) && (
@@ -122,9 +122,9 @@ export function LearningMemoryGame({ pairs = [], answers, onChoose, disabled }) 
   };
 
   return (
-    <div className="rounded-[2rem] bg-surface-secondary/50 p-6 md:p-8 border border-border">
-      <p className="mb-6 text-2xl font-black text-center text-foreground">Trouve les paires !</p>
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+    <div className="rounded-24 bg-surface-secondary/50 p-space-24 md:p-space-32 border border-border">
+      <p className="mb-space-24 text-heading-l text-center text-foreground">Trouve les paires !</p>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-space-16">
         {pairs.map((pair) => {
           const active = selected.includes(pair.id);
           return (
@@ -134,8 +134,8 @@ export function LearningMemoryGame({ pairs = [], answers, onChoose, disabled }) 
               whileTap={{ scale: 0.95 }}
               onClick={() => handlePick(pair.id)}
               disabled={disabled}
-              className={`min-h-28 rounded-[1.5rem] border-4 p-4 text-5xl font-black transition ${
-                active ? 'border-secondary-500 bg-secondary-50' : 'border-transparent bg-card'
+              className={`min-h-[7rem] rounded-20 border-4 p-space-16 text-5xl font-black transition shadow-soft focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-success-300 ${
+                active ? 'border-success-500 bg-success-50 dark:bg-success-900/30' : 'border-transparent bg-card'
               }`}
             >
               {active ? pair.pictogram : '❓'}

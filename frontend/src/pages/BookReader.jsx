@@ -255,17 +255,17 @@ function PDFPageViewer({pdfUrl, pageNumber, onLoad, onPdfLoaded, imageClassName 
 
  if (loading) {
  return (
- <div className="text-center p-8 w-full">
+ <div className="text-center p-space-8 w-full">
  <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-primary-500 border-t-transparent"></div>
- {!isKidMinimal && <p className="mt-4 text-primary-600">Chargement du PDF...</p>}
+ {!isKidMinimal && <p className="mt-space-4 text-primary-600">Chargement du PDF...</p>}
  </div>
  );
 }
 
  if (error || !imageUrl) {
  return (
- <div className="text-center p-8 w-full">
- <BookIcon className="w-16 h-16 text-primary-400 mx-auto mb-4" />
+ <div className="text-center p-space-8 w-full">
+ <BookIcon className="w-16 h-16 text-primary-400 mx-auto mb-space-4" />
  {!isKidMinimal && (
   <>
    <p className="text-primary-600 mb-2">Erreur de chargement</p>
@@ -276,7 +276,7 @@ function PDFPageViewer({pdfUrl, pageNumber, onLoad, onPdfLoaded, imageClassName 
  onClick={() => {
  setReloadKey(prev => prev + 1);
 }}
- className="mt-4 px-4 py-2 bg-primary-500 text-white rounded-2xl hover:bg-primary-600 transition-colors"
+ className="mt-space-4 px-space-4 py-2 bg-primary-500 text-white rounded-2xl hover:bg-primary-600 transition-colors"
  aria-label={isKidMinimal ? 'Retry' : undefined}
  >
  {isKidMinimal ? '↻' : 'Réessayer'}
@@ -305,7 +305,15 @@ function PDFPageViewer({pdfUrl, pageNumber, onLoad, onPdfLoaded, imageClassName 
 function Confetti({show}) {
  if (!show) return null;
  
- const colors = ['#FFD700', '#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8', '#F7DC6F'];
+ const colors = [
+ 'var(--color-secondary-400)',
+ 'var(--color-danger-500)',
+ 'var(--color-success-400)',
+ 'var(--color-primary-400)',
+ 'var(--color-orange-400)',
+ 'var(--color-magic-400)',
+ 'var(--color-secondary-300)'
+ ];
  
  return (
  <div className="fixed inset-0 pointer-events-none z-50 overflow-hidden">
@@ -343,7 +351,7 @@ function StarParticles({count = 20}) {
  {Array.from({length: count}).map((_, i) => (
  <motion.div
  key={i}
- className="absolute text-yellow-400"
+ className="absolute text-secondary-400"
  style={{
  left: `${Math.random() * 100}%`,
  top: `${Math.random() * 100}%`,
@@ -1175,19 +1183,19 @@ function BookReader() {
 
  if (loading) {
  return (
- <div className={`min-h-screen flex items-center justify-center ${isKidReader ? 'bg-gradient-to-br from-[#0c1222] via-[#1a2744] to-[#1e3a5f]' : 'bg-gradient-to-br from-primary-100 via-secondary-50 to-accent-100'}`}>
+ <div className={`min-h-screen flex items-center justify-center ${isKidReader ? 'bg-gradient-to-br from-surface-900 via-primary-900 to-primary-800' : 'bg-gradient-to-br from-primary-100 via-secondary-50 to-orange-100'}`}>
  <motion.div
  initial={{scale: 0.9, opacity: 0.6}}
  animate={{scale: 1, opacity: 1}}
  transition={{duration: 0.45}}
  className="text-center"
  >
- <div className="text-6xl mb-4" aria-hidden="true">{isKidReader ? '🌙' : '📚'}</div>
+ <div className="text-6xl mb-space-16" aria-hidden="true">{isKidReader ? '🌙' : '📚'}</div>
  {!isKidReader && (
  <motion.p
  animate={{opacity: [0.5, 1, 0.5]}}
  transition={{duration: 1.5, repeat: Infinity}}
- className="text-xl font-bold text-primary-600 mt-4"
+ className="text-body-lg text-primary-600 mt-space-16"
  >
  Chargement de l'histoire...
  </motion.p>
@@ -1199,25 +1207,25 @@ function BookReader() {
 
  if (!book || !book.pages || book.pages.length === 0) {
  return (
- <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-100 via-secondary-50 to-accent-100">
+ <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-100 via-secondary-50 to-orange-100">
  <div className="text-center">
  <motion.div
  initial={{scale: 0}}
  animate={{scale: 1}}
- className="mb-6 flex justify-center"
+ className="mb-space-24 flex justify-center"
  >
- <div className="p-6 bg-card rounded-full shadow-lg">
+ <div className="p-space-24 bg-card rounded-full shadow-card">
  <BookIcon className="w-16 h-16 text-primary-400" />
  </div>
  </motion.div>
  {!isKidReader && (
-  <p className="text-2xl font-bold text-primary-700 mb-6">{t('kidBookNotFound')}</p>
+  <p className="text-heading-l text-primary-700 mb-space-24">{t('kidBookNotFound')}</p>
  )}
  <motion.button
  whileHover={{scale: 1.05}}
  whileTap={{scale: 0.95}}
  onClick={() => navigate(readerExitPath)}
- className={`${isKidReader ? 'p-6' : 'px-8 py-4'} bg-gradient-to-r from-primary-500 to-secondary-500 text-white rounded-full font-bold text-lg shadow-lg hover:shadow-xl transition-shadow flex items-center justify-center mx-auto`}
+ className={`${isKidReader ? 'p-space-24' : 'px-space-32 py-space-16'} min-h-touch-kids bg-gradient-to-r from-primary-500 to-secondary-500 text-white rounded-full font-bold text-body-lg shadow-card hover:shadow-floating transition-shadow flex items-center justify-center mx-auto focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary-300`}
  aria-label={t('kidReaderHome')}
  >
  {isKidReader ? <HomeIcon className="w-10 h-10" /> : 'Retour à la bibliothèque'}
@@ -1247,15 +1255,15 @@ function BookReader() {
 
  // Handle theme colors — kid night is warm bedtime calm
  const themeColors = {
- day: isKidReader ? 'bg-gradient-to-br from-sky-50 via-teal-50/40 to-amber-50/50 text-[#1e293b]' : 'bg-[#fefcfb] text-[#1e293b]',
- sepia: isKidReader ? 'bg-gradient-to-br from-amber-50 via-orange-50/50 to-sky-50/30 text-[#5c4b37]' : 'bg-[#fbf0d9] text-[#5c4b37]',
- night: isKidReader ? 'bg-gradient-to-br from-[#0c1222] via-[#1a2744] to-[#1e3a5f] text-[#f8fafc]' : 'bg-[#0f172a] text-[#e2e8f0]'
+ day: isKidReader ? 'bg-gradient-to-br from-primary-50 via-success-50/40 to-secondary-50/50 text-foreground' : 'bg-background text-foreground',
+ sepia: isKidReader ? 'bg-gradient-to-br from-secondary-50 via-orange-50/50 to-primary-50/30 text-warning-900' : 'bg-secondary-50 text-warning-900',
+ night: isKidReader ? 'bg-gradient-to-br from-surface-900 via-primary-900 to-primary-800 text-surface-50' : 'bg-surface-900 text-surface-200'
 };
 
  const navThemeColors = {
  day: isKidReader ? 'bg-white/75' : 'bg-card/70',
- sepia: isKidReader ? 'bg-amber-100/80' : 'bg-[#f4e4c3]/80',
- night: isKidReader ? 'bg-[#1e293b]/75' : 'bg-[#1e293b]/70'
+ sepia: isKidReader ? 'bg-secondary-100/80' : 'bg-secondary-100/80',
+ night: isKidReader ? 'bg-surface-800/75' : 'bg-surface-800/70'
 };
 
 
@@ -1289,32 +1297,32 @@ function BookReader() {
  exit={{y: -100, opacity: 0}}
  transition={{duration: 0.3, ease:"easeOut"}}
  onClick={(e) => e.stopPropagation()}
- className={`absolute top-0 inset-x-0 z-40 px-6 py-4 flex items-center ${isKidReader ? 'justify-start' : 'justify-between'} backdrop-blur-xl border-b border-white/10 ${navThemeColors[themeMode]} shadow-soft`}
+ className={`absolute top-0 inset-x-0 z-40 px-space-24 py-space-16 flex items-center ${isKidReader ? 'justify-start' : 'justify-between'} backdrop-blur-xl border-b border-white/10 ${navThemeColors[themeMode]} shadow-soft`}
  >
- <div className="flex items-center gap-4">
+ <div className="flex items-center gap-space-16">
   <Button 
     variant="ghost" 
     size="icon" 
     onClick={() => navigate(readerExitPath)}
-    className={`rounded-full w-14 h-14 min-h-[56px] min-w-[56px] bg-white/25 hover:bg-white/45 shadow-sm border-2 border-white/40`}
+    className={`rounded-full w-14 h-14 min-h-touch-kids min-w-touch-kids bg-white/25 hover:bg-white/45 shadow-soft border-2 border-white/40 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary-300`}
     aria-label={t('kidReaderHome')}
   >
     <HomeIcon className="w-8 h-8 text-primary-700" />
   </Button>
   {!isKidReader && (
   <div>
-    <h1 className="text-2xl font-black text-primary-800 line-clamp-1">{book.title}</h1>
+    <h1 className="text-heading-l text-primary-800 line-clamp-1">{book.title}</h1>
   </div>
   )}
 </div>
 
 {!isKidReader && (
-<div className="flex items-center gap-4">
+<div className="flex items-center gap-space-16">
   <Button 
     variant="ghost" 
     size="icon" 
     onClick={toggleBookFavorite}
-    className={`rounded-full w-14 h-14 bg-white/20 hover:bg-white/40 shadow-sm transition-transform hover:scale-110 ${isFavorite ? 'text-danger-500' : 'text-primary-700'}`}
+    className={`rounded-full w-14 h-14 min-h-touch-kids min-w-touch-kids bg-white/20 hover:bg-white/40 shadow-soft transition-transform hover:scale-110 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary-300 ${isFavorite ? 'text-danger-500' : 'text-primary-700'}`}
   >
     <svg className="w-8 h-8" fill={isFavorite ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
@@ -1325,7 +1333,7 @@ function BookReader() {
     variant="ghost" 
     size="icon" 
     onClick={() => setShowReadingAid(true)}
-    className={`rounded-full w-14 h-14 bg-white/20 hover:bg-white/40 shadow-sm text-primary-700`}
+    className={`rounded-full w-14 h-14 min-h-touch-kids min-w-touch-kids bg-white/20 hover:bg-white/40 shadow-soft text-primary-700 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary-300`}
   >
     <SettingsIcon className="w-8 h-8" />
   </Button>
@@ -1335,7 +1343,7 @@ function BookReader() {
       variant="ghost"
       size="icon"
       onClick={() => setShowReportModal(true)}
-      className="rounded-full w-14 h-14 bg-white/20 hover:bg-white/40 shadow-sm text-accent-600"
+      className="rounded-full w-14 h-14 min-h-touch-kids min-w-touch-kids bg-white/20 hover:bg-white/40 shadow-soft text-orange-600 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-300"
       aria-label={t('reportContentAction')}
     >
       <WarningIcon className="w-8 h-8" />
@@ -1361,21 +1369,21 @@ function BookReader() {
  )}
 
  {/* Main Content Area */}
- <div className="relative flex-1 w-full h-full flex items-center justify-center p-4 md:p-12 overflow-hidden">
+ <div className="relative flex-1 w-full h-full flex items-center justify-center p-space-16 md:p-space-48 overflow-hidden">
  
  {/* Big Visible Arrows for Navigation */}
   {!isKidReader && (
   <>
   <div className="absolute left-4 inset-y-0 z-20 flex items-center justify-start pointer-events-none">
     {!isFirstPage && (
-      <button onClick={(e) => {e.stopPropagation(); prevPage();}} className="pointer-events-auto w-20 h-20 bg-white/60 backdrop-blur-md rounded-full flex items-center justify-center shadow-lg hover:bg-white hover:scale-110 active:scale-95 transition-all border-4 border-white/40">
+      <button onClick={(e) => {e.stopPropagation(); prevPage();}} aria-label={t('kidReaderPrev')} className="pointer-events-auto w-20 h-20 min-h-touch-kids min-w-touch-kids bg-white/60 backdrop-blur-md rounded-full flex items-center justify-center shadow-card hover:bg-white hover:scale-110 active:scale-95 transition-all border-4 border-white/40 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary-300">
         <ChevronLeftIcon className="w-10 h-10 text-primary-600" />
       </button>
     )}
   </div>
   <div className="absolute right-4 inset-y-0 z-20 flex items-center justify-end pointer-events-none">
     {!isLastPage && (
-      <button onClick={(e) => {e.stopPropagation(); nextPage();}} className="pointer-events-auto w-20 h-20 bg-white/60 backdrop-blur-md rounded-full flex items-center justify-center shadow-lg hover:bg-white hover:scale-110 active:scale-95 transition-all border-4 border-white/40">
+      <button onClick={(e) => {e.stopPropagation(); nextPage();}} aria-label={t('kidReaderNext')} className="pointer-events-auto w-20 h-20 min-h-touch-kids min-w-touch-kids bg-white/60 backdrop-blur-md rounded-full flex items-center justify-center shadow-card hover:bg-white hover:scale-110 active:scale-95 transition-all border-4 border-white/40 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary-300">
         <ChevronRightIcon className="w-10 h-10 text-primary-600" />
       </button>
     )}
@@ -1403,7 +1411,7 @@ function BookReader() {
  
  if (isPDF) {
  return (
- <div className={`w-full max-h-[85vh] overflow-hidden rounded-2xl shadow-floating bg-card`}>
+ <div className={`w-full max-h-[85vh] overflow-hidden rounded-24 shadow-floating bg-card`}>
  <PDFPageViewer 
  pdfUrl={fileUrl} 
  pageNumber={currentPage + 1}
@@ -1425,7 +1433,7 @@ function BookReader() {
  <motion.img
  src={fileUrl}
  alt={`Page ${currentPage + 1}`}
- className="max-w-full max-h-full object-contain rounded-2xl shadow-floating"
+ className="max-w-full max-h-full object-contain rounded-24 shadow-floating"
  initial={{opacity: 0, y: 10}}
  animate={{opacity: 1, y: 0}}
  transition={{delay: 0.2}}
@@ -1433,7 +1441,7 @@ function BookReader() {
  </div>
  );
 })() : (
- <div className={`w-full max-w-3xl p-10 md:p-16 rounded-3xl shadow-floating text-center flex flex-col items-center justify-center ${themeMode === 'night' ? 'bg-[#1e293b]/90 border border-white/10' : 'bg-card'}`}>
+ <div className={`w-full max-w-3xl p-space-40 md:p-space-64 rounded-32 shadow-floating text-center flex flex-col items-center justify-center ${themeMode === 'night' ? 'bg-surface-800/90 border border-white/10' : 'bg-card'}`}>
  {currentPageData.content && (
  <p 
  className={`text-left md:text-center w-full ${isKidReader ? 'font-bold tracking-wide' : ''}`}
@@ -1463,12 +1471,13 @@ function BookReader() {
  animate={{y: 0, opacity: 1, scale: 1}}
  exit={{y: 50, opacity: 0, scale: 0.9}}
  onClick={(e) => e.stopPropagation()}
- className={`pointer-events-auto flex items-center gap-6 px-4 py-4 rounded-[40px] backdrop-blur-xl border-4 border-white/40 shadow-floating bg-white/30`}
+ className={`pointer-events-auto flex items-center gap-6 px-space-16 py-space-16 rounded-32 backdrop-blur-xl border-4 border-white/40 shadow-floating bg-white/30`}
  >
               <button 
                 onClick={toggleAudio}
                 disabled={!book.audio_url && (isExtracting || (!currentPageData?.content && !currentPageData?.image_path))}
-                className={`w-24 h-24 rounded-full flex items-center justify-center shadow-glow transition-transform hover:scale-110 active:scale-95 ${audioPlaybackActive ? 'bg-primary-500 text-white' : 'bg-gradient-to-r from-primary-500 to-secondary-500 text-white'} ${!book.audio_url && isExtracting ? 'opacity-50 cursor-not-allowed' : ''}`}
+                aria-label={t('kidReaderPlay')}
+                className={`w-24 h-24 min-h-touch-kids min-w-touch-kids rounded-full flex items-center justify-center shadow-glow transition-transform hover:scale-110 active:scale-95 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary-300 ${audioPlaybackActive ? 'bg-primary-500 text-white' : 'bg-gradient-to-r from-primary-500 to-secondary-500 text-white'} ${!book.audio_url && isExtracting ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
                 {!book.audio_url && isExtracting ? (
                   <motion.div animate={{rotate: 360}} transition={{repeat: Infinity, ease: 'linear'}} className="w-10 h-10 border-4 border-white border-t-transparent rounded-full" />
@@ -1508,28 +1517,22 @@ function BookReader() {
    className="absolute bottom-8 inset-x-0 z-50 flex justify-center pointer-events-none"
    onClick={(e) => e.stopPropagation()}
  >
-   <div className="pointer-events-auto flex items-center gap-4 md:gap-6 px-5 py-4 rounded-[3rem] bg-white/85 backdrop-blur-xl border-4 border-white/60 shadow-kids-soft">
+   <div className="pointer-events-auto flex items-center gap-space-16 md:gap-space-24 px-space-20 py-space-16 rounded-32 bg-white/85 backdrop-blur-xl border-4 border-white/60 shadow-card">
      <button
        type="button"
        onClick={prevPage}
        disabled={isFirstPage}
        aria-label={t('kidReaderPrev')}
-       className="kids-touch-target w-[4.5rem] h-[4.5rem] md:w-20 md:h-20 rounded-full flex items-center justify-center bg-indigo-100 text-indigo-700 disabled:opacity-40 border-4 border-white shadow-md active:scale-95 transition-transform"
+       className="kids-touch-target min-h-touch-kids min-w-touch-kids w-[4.5rem] h-[4.5rem] md:w-20 md:h-20 rounded-full flex items-center justify-center bg-magic-100 text-magic-700 disabled:opacity-40 border-4 border-white shadow-soft active:scale-95 transition-transform focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-magic-300"
      >
        <ChevronLeftIcon className={`w-10 h-10 ${isRtl ? 'rotate-180' : ''}`} />
      </button>
-     <motion.button
+     <button
        type="button"
        onClick={toggleAudio}
        disabled={!book.audio_url && (isExtracting || (!currentPageData?.content && !currentPageData?.image_path))}
        aria-label={t('kidReaderPlay')}
-       animate={
-         !reducedMotion && audioPlaybackActive
-           ? { scale: [1, 1.05, 1], boxShadow: ['0 0 0 0 rgba(251,191,36,0.45)', '0 0 0 16px rgba(251,191,36,0)', '0 0 0 0 rgba(251,191,36,0.45)'] }
-           : { scale: 1 }
-       }
-       transition={!reducedMotion && audioPlaybackActive ? { duration: 1.6, repeat: Infinity, ease: 'easeInOut' } : undefined}
-       className={`relative kids-touch-target kids-narration-glow w-28 h-28 rounded-full flex items-center justify-center text-white border-4 border-white active:scale-95 transition-transform ${audioPlaybackActive ? 'bg-accent-500' : 'bg-gradient-to-br from-indigo-500 via-primary-500 to-accent-400'}`}
+       className={`relative kids-touch-target min-h-touch-kids min-w-touch-kids kids-narration-glow w-28 h-28 rounded-full flex items-center justify-center text-white border-4 border-white active:scale-95 transition-transform focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-secondary-300 ${!reducedMotion && audioPlaybackActive ? 'kids-audio-pulse' : ''} ${audioPlaybackActive ? 'bg-orange-500' : 'bg-gradient-to-br from-magic-500 via-primary-500 to-orange-400'}`}
      >
        {!book.audio_url && isExtracting ? (
          <motion.div animate={{rotate: 360}} transition={{repeat: Infinity, ease: 'linear'}} className="w-10 h-10 border-4 border-white border-t-transparent rounded-full" />
@@ -1547,13 +1550,13 @@ function BookReader() {
        ) : (
          <PlayIcon className={`w-12 h-12 ${isRtl ? '' : 'ml-1'}`} />
        )}
-     </motion.button>
+     </button>
      <button
        type="button"
        onClick={nextPage}
        disabled={isLastPage}
        aria-label={t('kidReaderNext')}
-       className="kids-touch-target w-[4.5rem] h-[4.5rem] md:w-20 md:h-20 rounded-full flex items-center justify-center bg-indigo-100 text-indigo-700 disabled:opacity-40 border-4 border-white shadow-md active:scale-95 transition-transform"
+       className="kids-touch-target min-h-touch-kids min-w-touch-kids w-[4.5rem] h-[4.5rem] md:w-20 md:h-20 rounded-full flex items-center justify-center bg-magic-100 text-magic-700 disabled:opacity-40 border-4 border-white shadow-soft active:scale-95 transition-transform focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-magic-300"
      >
        <ChevronRightIcon className={`w-10 h-10 ${isRtl ? 'rotate-180' : ''}`} />
      </button>
@@ -1564,7 +1567,7 @@ function BookReader() {
  )}
 
  {/* Persistent Bottom Progress Bar — illustrated moon-soft for kids */}
- <div className={`absolute bottom-0 inset-x-0 z-30 px-4 md:px-12 ${isKidReader ? 'pb-3' : 'pb-6'} pt-10 bg-gradient-to-t from-black/25 to-transparent flex flex-col justify-end pointer-events-none gap-3`}>
+ <div className={`absolute bottom-0 inset-x-0 z-30 px-space-4 md:px-space-12 ${isKidReader ? 'pb-3' : 'pb-6'} pt-10 bg-gradient-to-t from-black/25 to-transparent flex flex-col justify-end pointer-events-none gap-3`}>
         {isKidReader && totalPages > 1 && (
           <div className="w-full max-w-4xl mx-auto flex items-center justify-center gap-2 flex-wrap px-2">
             {Array.from({ length: Math.min(totalPages, 20) }).map((_, index) => (
@@ -1572,9 +1575,9 @@ function BookReader() {
                 key={index}
                 className={`rounded-full transition-all duration-300 ${
                   index === currentPage
-                    ? 'h-3.5 w-9 bg-gradient-to-r from-amber-200 to-accent-400 shadow-[0_0_12px_rgba(251,191,36,0.55)]'
+                    ? 'h-3.5 w-9 bg-gradient-to-r from-secondary-200 to-orange-400 kids-progress-dot-active'
                     : index < currentPage
-                      ? 'h-3.5 w-3.5 bg-amber-300/80'
+                      ? 'h-3.5 w-3.5 bg-secondary-300/80'
                       : 'h-3.5 w-3.5 bg-white/30'
                 }`}
                 aria-hidden="true"
@@ -1584,7 +1587,7 @@ function BookReader() {
         )}
         <div className={`w-full max-w-4xl mx-auto ${isKidReader ? 'h-5' : 'h-4'} bg-black/15 rounded-full overflow-hidden border border-white/20 shadow-inner`}>
           <motion.div 
-            className={`h-full rounded-full ${isKidReader ? 'bg-gradient-to-r from-indigo-300 via-amber-200 to-accent-300' : 'bg-gradient-to-r from-primary-400 to-secondary-400'}`}
+            className={`h-full rounded-full ${isKidReader ? 'bg-gradient-to-r from-magic-300 via-secondary-200 to-orange-300' : 'bg-gradient-to-r from-primary-400 to-secondary-400'}`}
             initial={{width: 0}}
             animate={{width: `${progress}%`}}
             transition={{duration: isKidReader ? 0.4 : 0.5, ease: [0.22, 1, 0.36, 1]}}
@@ -1627,17 +1630,17 @@ function BookReader() {
 
  {/* End of Book Celebration Modal */}
  <Modal isOpen={showEndModal} onClose={() => setShowEndModal(false)} maxWidth="max-w-md">
- <div className="text-center p-4">
+ <div className="text-center p-space-4">
  <motion.div 
  initial={{scale: 0}}
  animate={{scale: 1, rotate: 360}}
  transition={{type:"spring", bounce: 0.5, delay: 0.2}}
- className="w-24 h-24 bg-gradient-to-br from-accent-400 to-accent-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-glow"
+ className="w-24 h-24 bg-gradient-to-br from-orange-400 to-orange-600 rounded-full flex items-center justify-center mx-auto mb-space-24 shadow-glow"
  >
  <StarIcon className="w-12 h-12 text-white" />
  </motion.div>
-          <h2 className="text-4xl font-black mb-2 text-primary-600">Bravo !</h2>
-          <p className="text-xl font-bold text-foreground-secondary mb-8">Tu as terminé "{book.title}"</p>
+          <h2 className="text-heading-xl mb-space-8 text-primary-600">Bravo !</h2>
+          <p className="text-body-lg text-foreground-secondary mb-space-32">Tu as terminé "{book.title}"</p>
  
  <div className="flex flex-col gap-3">
  <Button variant="primary" fullWidth onClick={() => navigate(readerExitPath)}>

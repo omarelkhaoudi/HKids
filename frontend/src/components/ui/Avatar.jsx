@@ -1,10 +1,10 @@
 import React from 'react';
 
 const SIZES = {
-  sm: 'w-32 h-32 text-caption',
-  md: 'w-48 h-48 text-body',
-  lg: 'w-64 h-64 text-heading-m',
-  xl: 'w-96 h-96 text-heading-l',
+  sm: 'w-space-32 h-space-32 text-caption',
+  md: 'w-space-48 h-space-48 text-body',
+  lg: 'w-space-64 h-space-64 text-heading-m',
+  xl: 'w-[96px] h-[96px] text-heading-l',
 };
 
 export function Avatar({ src, alt, initials, size = 'md', className = '' }) {

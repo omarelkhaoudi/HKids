@@ -216,11 +216,11 @@ function KidsLibrary() {
   };
 
   return (
-    <KidsPageShell isRtl={isRtl} variant="library" world="books" className={`pb-32 kids-glow-books ${selectedTheme === 'bedtime' ? 'kids-night-calm' : ''}`} footer={<KidsBottomNav />}>
+    <KidsPageShell isRtl={isRtl} variant="library" world="books" className={`pb-space-32 kids-glow-books ${selectedTheme === 'bedtime' ? 'kids-night-calm' : ''}`} footer={<KidsBottomNav />}>
       {selectedTheme !== 'all' && <KidsCategoryAtmosphere categoryId={selectedTheme} />}
 
-      <header className="relative z-10 kids-premium-panel mx-16 sm:mx-24 mt-8 sticky top-8 px-16 sm:px-24 py-12 flex items-center justify-between gap-16">
-        <div className="flex items-center gap-16">
+      <header className="relative z-10 kids-premium-panel mx-space-16 sm:mx-space-24 mt-space-8 sticky top-space-8 px-space-16 sm:px-space-24 py-space-12 flex items-center justify-between gap-space-16">
+        <div className="flex items-center gap-space-16">
           <button
             type="button"
             onClick={() => navigate('/kids')}
@@ -265,7 +265,7 @@ function KidsLibrary() {
         )}
 
         <section aria-label={t('allCategories')}>
-          <div className="flex gap-16 overflow-x-auto pb-16 pt-8 px-8 snap-x snap-mandatory custom-scrollbar kids-scroll-smooth">
+          <div className="flex gap-space-16 overflow-x-auto pb-space-16 pt-space-8 px-space-8 snap-x snap-mandatory custom-scrollbar kids-scroll-smooth">
             {childThemes.map((theme) => (
               <KidsThemePill
                 key={theme.id}
@@ -281,13 +281,13 @@ function KidsLibrary() {
           <motion.section
             key={`hero-${selectedTheme}-${featuredBook.id}`}
             {...getMotionProps(reducedMotion, kidsPageEnter)}
-            className="relative overflow-hidden rounded-32 kids-premium-panel p-20 md:p-32 text-white shadow-card border-4 border-border"
+            className="relative overflow-hidden rounded-32 kids-premium-panel p-space-20 md:p-space-32 text-white shadow-card border-4 border-border"
           >
             <div className={`absolute inset-0 bg-gradient-to-br ${activeThemeData?.gradient || 'from-primary-500 to-secondary-500'} opacity-95`} />
-            <div className="absolute right-8 top-1/2 -translate-y-1/2 text-[12rem] opacity-20 pointer-events-none" aria-hidden="true">
+            <div className="absolute right-space-8 top-1/2 -translate-y-1/2 text-[12rem] opacity-20 pointer-events-none" aria-hidden="true">
               {activeThemeData?.pictogram || '⭐'}
             </div>
-            <div className="relative z-10 flex flex-col md:flex-row items-center gap-8 md:gap-12">
+            <div className="relative z-10 flex flex-col md:flex-row items-center gap-space-8 md:gap-space-12">
               <motion.button
                 type="button"
                 whileHover={reducedMotion ? undefined : { scale: 1.05, y: -6 }}
@@ -308,9 +308,9 @@ function KidsLibrary() {
                 </div>
               </motion.button>
 
-              <div className="flex flex-col items-center md:items-start gap-4">
+              <div className="flex flex-col items-center md:items-start gap-space-4">
                 <span className="inline-flex items-center gap-2 rounded-full bg-white/20 backdrop-blur-md border-2 border-white/30 px-5 py-2 text-sm font-black shadow-xl">
-                  <StarIcon className="h-20 w-20 text-secondary-300" filled />
+                  <StarIcon className="h-space-20 w-space-20 text-secondary-300" filled />
                   <span className="line-clamp-1">{selectedTheme === 'all' ? t('forYou') : (activeThemeData?.shortLabel || activeThemeData?.label)}</span>
                 </span>
                 <div className="flex flex-wrap items-center justify-center md:justify-start gap-3">
@@ -319,7 +319,7 @@ function KidsLibrary() {
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={() => handlePlayBook(featuredBook)}
-                    className="kids-touch-target flex items-center gap-3 rounded-full bg-white px-8 py-4 text-xl font-black text-primary-600 shadow-xl"
+                    className="kids-touch-target flex items-center gap-3 rounded-full bg-white px-space-8 py-space-4 text-xl font-black text-primary-600 shadow-xl"
                     aria-label={t('listenAction')}
                   >
                     <PlayIcon className={`h-8 w-8 ${isRtl ? 'rotate-180' : ''}`} filled />
@@ -330,7 +330,7 @@ function KidsLibrary() {
                     whileHover={{ scale: 1.08 }}
                     whileTap={{ scale: 0.92 }}
                     onClick={() => toggleFavorite(featuredBook.id)}
-                    className="kids-touch-target rounded-full bg-white/25 backdrop-blur-md p-4 text-white shadow-xl border-2 border-white/35"
+                    className="kids-touch-target rounded-full bg-white/25 backdrop-blur-md p-space-4 text-white shadow-xl border-2 border-white/35"
                     aria-label={t('yourFavorites')}
                   >
                     <HeartIcon className="h-8 w-8" filled={favoritesIds.includes(featuredBook.id)} />
@@ -344,7 +344,7 @@ function KidsLibrary() {
         <KidsFamilyMessages />
 
         {loading ? (
-          <div className="px-4">
+          <div className="px-space-4">
             <BookGridSkeleton count={8} variant="carousel" />
           </div>
         ) : books.length === 0 ? (
@@ -378,7 +378,7 @@ function KidsLibrary() {
             </div>
           )
         ) : (
-          <div className="space-y-12">
+          <div className="space-y-space-12">
             {continueBooks.length > 0 && (
               <div className="kids-shelf-rail">
                 <KidsBookCarousel title={t('continueReading')} emoji="⭐" books={continueBooks} {...carouselProps} />
