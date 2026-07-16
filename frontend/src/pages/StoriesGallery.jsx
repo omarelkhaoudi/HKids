@@ -1,281 +1,384 @@
-import {useEffect, useState} from 'react';
-import {Link, useNavigate} from 'react-router-dom';
-import {motion} from 'framer-motion';
-import {booksAPI} from '../api/books';
-import {storage} from '../utils/storage';
-import {getImageUrl} from '../utils/imageUrl';
-import {useToast} from '../components/ToastProvider';
-import {useAuth} from '../context/AuthContext';
-import {useLanguage} from '../context/LanguageContext';
-import {BookIcon, ChevronLeftIcon, HeartIcon, LockIcon, StarIcon} from '../components/Icons';
-import {Logo} from '../components/Logo';
+import { useEffect, useMemo, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import { booksAPI } from '../api/books';
+import { storage } from '../utils/storage';
+import { getImageUrl } from '../utils/imageUrl';
+import { useToast } from '../components/ToastProvider';
+import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
+import { useReducedMotion } from '../hooks/useReducedMotion';
+import { getHoverMotion, getMotionProps, kidsCardAppear, kidsCarouselReveal } from '../constants/kidsMotion';
+import { BookIcon, ChevronLeftIcon, HeartIcon, LockIcon, StarIcon } from '../components/Icons';
+import { Logo } from '../components/Logo';
 
-function StoryBookCard({book, index, isAuthenticated, showToast, onFavoriteChange, onOpenBook, onRequireAuth}) {
- const isFavorite = storage.isFavorite(book.id);
-
- return (
- <motion.div
- initial={{opacity: 0, y: 18}}
- animate={{opacity: 1, y: 0}}
- transition={{delay: index * 0.04, duration: 0.3}}
- whileHover={{y: -3, scale: 1.005}}
- className="min-w-0"
- >
- <div
- role="button"
- tabIndex={0}
- onClick={() => onOpenBook(book.id)}
- onKeyDown={(e) => {
- if (e.key === 'Enter' || e.key === ' ') {
- e.preventDefault();
- onOpenBook(book.id);
+function getBookProgress(book, readingHistory = []) {
+  const entry = readingHistory.find((item) => String(item.bookId) === String(book.id));
+  if (!entry) return 0;
+  const page = Number(entry.page || entry.currentPage || 0);
+  const total = Number(book.page_count || entry.totalPages || 0);
+  if (!total || page <= 0) return page > 0 ? 5 : 0;
+  return Math.min(100, Math.round((page / total) * 100));
 }
-}}
- className="group block text-center cursor-pointer"
- >
- <div className="relative aspect-[4/5] rounded-2xl border-2 border-dashed border-accent-400 bg-gradient-to-br from-accent-50 via-white to-secondary-50 p-3 sm:p-4 flex items-center justify-center overflow-hidden transition-all duration-300 group-hover:border-secondary-500 group-hover:shadow-md [perspective:900px]">
- <motion.button
- onClick={(e) => {
- e.preventDefault();
- e.stopPropagation();
- if (!isAuthenticated) {
- onRequireAuth();
- return;
-}
- if (isFavorite) {
- storage.removeFavorite(book.id);
- showToast('Livre retire des favoris', 'info', 2000);
-} else {
- storage.addFavorite(book.id);
- showToast('Livre ajoute aux favoris', 'success', 2000);
-}
- onFavoriteChange();
-}}
- className="absolute top-3 right-3 z-30 p-2.5 bg-card/85 hover:bg-card rounded-full shadow-md backdrop-blur-sm transition-all"
- whileHover={{scale: 1.08}}
- whileTap={{scale: 0.95}}
- >
- <HeartIcon
- className={`w-5 h-5 ${isFavorite ? 'text-foreground-500' : 'text-accent-400'}`}
- filled={isFavorite}
- />
- </motion.button>
- {!isAuthenticated && (
- <div className="absolute top-3 left-3 z-30 inline-flex items-center gap-1.5 rounded-full bg-card/90 px-3 py-1.5 text-xs font-bold text-foreground shadow-md backdrop-blur-sm">
- <LockIcon className="w-3.5 h-3.5 text-accent-500" />
- Prive
- </div>
- )}
 
- <div className="relative w-[72%] max-w-[190px] aspect-[3/4] [transform-style:preserve-3d] transition-transform duration-300 [transform:rotateY(-18deg)_rotateZ(-1deg)] group-hover:[transform:rotateY(-15deg)_rotateZ(-0.5deg)_translateY(-1px)]">
- <div className="absolute -right-[13%] top-[3%] h-[94%] w-[16%] rounded-r-md bg-gradient-to-r from-surface-200 via-white to-surface-300 shadow-md [transform:rotateY(72deg)_translateZ(1px)] origin-left">
- <div className="absolute inset-y-2 left-1/3 w-px bg-surface-300/80"></div>
- <div className="absolute inset-y-3 right-1/3 w-px bg-surface-200/80"></div>
- </div>
- <div className="absolute -right-[8%] top-[5%] h-[90%] w-[10%] rounded-r-sm bg-gradient-to-r from-white via-surface-100 to-surface-300 [transform:translateZ(-9px)]"></div>
- <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-surface-900/10 to-surface-900/25 [transform:translateZ(-14px)]"></div>
- <div className="relative z-10 h-full w-full overflow-hidden rounded-2xl bg-card shadow-2xl ring-1 ring-black/10 [transform:translateZ(12px)]">
- {book.cover_image ? (
- <img
- src={getImageUrl(book.cover_image)}
- alt={book.title}
- className="h-full w-full object-cover"
- loading="lazy"
- onError={(e) => {
- e.currentTarget.style.display = 'none';
- const fallback = e.currentTarget.nextElementSibling;
- if (fallback) fallback.classList.remove('hidden');
-}}
- />
- ) : null}
- <div className={`${book.cover_image ? 'hidden' : 'flex'} absolute inset-0 items-center justify-center bg-gradient-to-br from-accent-100 to-secondary-100`}>
- <BookIcon className="w-12 h-12 sm:w-16 sm:h-16 text-accent-300" />
- </div>
- <div className="pointer-events-none absolute inset-y-0 left-0 w-[14%] bg-gradient-to-r from-black/20 via-black/5 to-transparent"></div>
- <div className="pointer-events-none absolute inset-0 bg-gradient-to-tr from-white/0 via-white/10 to-white/35"></div>
- </div>
- <div className="absolute -bottom-5 left-[9%] h-5 w-[92%] rounded-full bg-black/18 blur-md [transform:rotateX(75deg)]"></div>
- </div>
- </div>
+function StoryBookCard({
+  book,
+  index,
+  isAuthenticated,
+  showToast,
+  onFavoriteChange,
+  onOpenBook,
+  onRequireAuth,
+  progress = 0,
+  variant = 'rail',
+}) {
+  const reducedMotion = useReducedMotion();
+  const isFavorite = storage.isFavorite(book.id);
+  const isRail = variant === 'rail';
 
- <div className="mt-4 px-1">
- <h3 className="text-base sm:text-lg font-bold text-foreground leading-snug line-clamp-2 group-hover:text-accent-600 transition-colors">
- {book.title}
- </h3>
- {book.category_name && (
- <p className="mt-1 text-xs sm:text-sm font-semibold text-foreground-muted truncate">
- {book.category_name}
- </p>
- )}
- <div className="mt-3 flex items-center justify-center gap-2 flex-wrap">
- {book.age_group_min !== undefined && book.age_group_max !== undefined && (
- <span className="inline-flex items-center px-3 py-1.5 text-xs font-semibold bg-accent-50 text-accent-700 rounded-full border border-accent-100">
- {book.age_group_min}-{book.age_group_max} ans
- </span>
- )}
- {book.page_count > 0 && (
- <span className="inline-flex items-center px-3 py-1.5 text-xs font-semibold bg-surface-secondary text-foreground-secondary rounded-full">
- {book.page_count} {book.page_count === 1 ? 'page' : 'pages'}
- </span>
- )}
- </div>
- <div className="mt-3 inline-flex items-center justify-center gap-1.5 text-accent-500 font-bold text-sm">
- {isAuthenticated ? (
- <BookIcon className="w-4 h-4" />
- ) : (
- <LockIcon className="w-4 h-4" />
- )}
- <span>{isAuthenticated ? 'Lire' : 'Connexion pour lire'}</span>
- </div>
- </div>
- </div>
- </motion.div>
- );
+  return (
+    <motion.article
+      {...getMotionProps(reducedMotion, {
+        ...kidsCardAppear,
+        transition: { ...kidsCardAppear.transition, delay: index * 0.04 },
+      })}
+      className={isRail ? 'kids-gallery-card group' : 'min-w-0'}
+    >
+      <div
+        role="button"
+        tabIndex={0}
+        onClick={() => onOpenBook(book.id)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            onOpenBook(book.id);
+          }
+        }}
+        className="block cursor-pointer focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary-300 rounded-24"
+      >
+        <motion.div
+          {...getHoverMotion(reducedMotion, { whileHover: { y: -6, scale: 1.02 } })}
+          className="relative"
+        >
+          <div className="relative aspect-[3/4] overflow-hidden bg-surface-secondary">
+            {book.cover_image ? (
+              <img
+                src={getImageUrl(book.cover_image)}
+                alt={book.title}
+                className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                loading="lazy"
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                  const fallback = e.currentTarget.nextElementSibling;
+                  if (fallback) fallback.classList.remove('hidden');
+                }}
+              />
+            ) : null}
+            <div className={`${book.cover_image ? 'hidden' : 'flex'} absolute inset-0 items-center justify-center bg-gradient-to-br from-primary-100 to-magic-100`}>
+              <BookIcon className="h-16 w-16 text-magic-300" />
+            </div>
+            <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-surface-900/50 via-transparent to-transparent" />
+
+            <motion.button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (!isAuthenticated) {
+                  onRequireAuth();
+                  return;
+                }
+                if (isFavorite) {
+                  storage.removeFavorite(book.id);
+                  showToast('Livre retire des favoris', 'info', 2000);
+                } else {
+                  storage.addFavorite(book.id);
+                  showToast('Livre ajoute aux favoris', 'success', 2000);
+                }
+                onFavoriteChange();
+              }}
+              className="absolute top-space-12 right-space-12 z-20 grid h-12 w-12 min-h-touch min-w-touch place-items-center rounded-full bg-card/90 shadow-card backdrop-blur-sm transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary-300"
+              aria-label={isFavorite ? 'Retirer des favoris' : 'Ajouter aux favoris'}
+            >
+              <HeartIcon className={`h-6 w-6 ${isFavorite ? 'text-orange-500' : 'text-foreground-muted'}`} filled={isFavorite} />
+            </motion.button>
+
+            {!isAuthenticated && (
+              <div className="absolute top-space-12 left-space-12 z-20 inline-flex items-center gap-space-8 rounded-full bg-card/90 px-space-12 py-space-8 text-caption font-bold text-foreground shadow-card backdrop-blur-sm">
+                <LockIcon className="h-4 w-4 text-magic-500" />
+                Prive
+              </div>
+            )}
+
+            {progress > 0 && (
+              <div className="absolute bottom-0 inset-x-0 p-space-12">
+                <div className="h-space-8 overflow-hidden rounded-full bg-white/30 backdrop-blur-sm">
+                  <div
+                    className="h-full rounded-full bg-gradient-to-r from-primary-400 to-secondary-400"
+                    style={{ width: `${progress}%` }}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="p-space-16">
+            <h3 className="text-body font-black text-foreground leading-snug line-clamp-2 group-hover:text-primary-600 transition-colors">
+              {book.title}
+            </h3>
+            {book.category_name && (
+              <p className="mt-space-4 text-caption font-semibold text-foreground-muted truncate">
+                {book.category_name}
+              </p>
+            )}
+            <div className="mt-space-12 flex flex-wrap gap-space-8">
+              {book.age_group_min !== undefined && book.age_group_max !== undefined && (
+                <span className="inline-flex items-center rounded-full border border-primary-100 bg-primary-50 px-space-12 py-space-8 text-caption font-semibold text-primary-700">
+                  {book.age_group_min}-{book.age_group_max} ans
+                </span>
+              )}
+              {book.page_count > 0 && (
+                <span className="inline-flex items-center rounded-full bg-surface-secondary px-space-12 py-space-8 text-caption font-semibold text-foreground-secondary">
+                  {book.page_count} {book.page_count === 1 ? 'page' : 'pages'}
+                </span>
+              )}
+            </div>
+            <div className="mt-space-12 inline-flex items-center gap-space-8 text-primary-600 font-bold text-caption">
+              {isAuthenticated ? <BookIcon className="h-4 w-4" /> : <LockIcon className="h-4 w-4" />}
+              <span>{isAuthenticated ? 'Lire' : 'Connexion pour lire'}</span>
+            </div>
+          </div>
+        </motion.div>
+      </div>
+    </motion.article>
+  );
+}
+
+function ShelfSection({ title, emoji, books, readingHistory, ...cardProps }) {
+  const reducedMotion = useReducedMotion();
+  if (!books.length) return null;
+
+  return (
+    <motion.section
+      className="mb-space-32"
+      aria-label={title}
+      {...getMotionProps(reducedMotion, kidsCarouselReveal)}
+    >
+      <h2 className="kids-shelf-title mb-space-16 px-space-8">
+        <span aria-hidden="true">{emoji}</span>
+        <span>{title}</span>
+      </h2>
+      <div className="kids-gallery-rail">
+        {books.map((book, index) => (
+          <StoryBookCard
+            key={book.id}
+            book={book}
+            index={index}
+            progress={getBookProgress(book, readingHistory)}
+            variant="rail"
+            {...cardProps}
+          />
+        ))}
+      </div>
+    </motion.section>
+  );
 }
 
 function StoriesGallery() {
- const [books, setBooks] = useState([]);
- const [loading, setLoading] = useState(true);
- const [favoritesVersion, setFavoritesVersion] = useState(0);
- const {showToast} = useToast();
- const {user} = useAuth();
- const {language, isRtl} = useLanguage();
- const navigate = useNavigate();
- const isAuthenticated = Boolean(user || localStorage.getItem('token'));
+  const [books, setBooks] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [favoritesVersion, setFavoritesVersion] = useState(0);
+  const { showToast } = useToast();
+  const { user } = useAuth();
+  const { language, isRtl } = useLanguage();
+  const navigate = useNavigate();
+  const isAuthenticated = Boolean(user || localStorage.getItem('token'));
+  const readingHistory = storage.getReadingHistory();
+  const favoriteIds = storage.getFavorites();
 
- const requireAuth = () => {
- showToast('Connectez-vous pour acceder aux histoires.', 'info', 2500);
- navigate('/parent/login');
-};
+  const requireAuth = () => {
+    showToast('Connectez-vous pour acceder aux histoires.', 'info', 2500);
+    navigate('/parent/login');
+  };
 
- const openBook = (bookId) => {
- if (!isAuthenticated) {
- requireAuth();
- return;
-}
- navigate(`/book-details/${bookId}`);
-};
+  const openBook = (bookId) => {
+    if (!isAuthenticated) {
+      requireAuth();
+      return;
+    }
+    navigate(`/book-details/${bookId}`);
+  };
 
- useEffect(() => {
- const loadBooks = async () => {
- try {
- setLoading(true);
- const response = await booksAPI.getPublishedBooks({language});
- setBooks(response.data || []);
-} catch (error) {
- console.error('Error loading stories gallery:', error);
-} finally {
- setLoading(false);
-}
-};
+  useEffect(() => {
+    const loadBooks = async () => {
+      try {
+        setLoading(true);
+        const response = await booksAPI.getPublishedBooks({ language });
+        setBooks(response.data || []);
+      } catch (error) {
+        console.error('Error loading stories gallery:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
- loadBooks();
-}, [language]);
+    loadBooks();
+  }, [language]);
 
- const decorativeStars = [
- {top: '8%', left: '7%', size: 'w-5 h-5', opacity: 'opacity-40'},
- {top: '16%', right: '13%', size: 'w-7 h-7', opacity: 'opacity-50'},
- {top: '34%', left: '4%', size: 'w-6 h-6', opacity: 'opacity-35'},
- {top: '58%', right: '5%', size: 'w-5 h-5', opacity: 'opacity-40'},
- {bottom: '10%', left: '12%', size: 'w-7 h-7', opacity: 'opacity-45'},
- ];
+  const cardProps = {
+    isAuthenticated,
+    showToast,
+    onFavoriteChange: () => setFavoritesVersion((value) => value + 1),
+    onOpenBook: openBook,
+    onRequireAuth: requireAuth,
+  };
 
- return (
- <div className="min-h-screen bg-gradient-to-br from-white via-primary-50/30 to-secondary-50/30" dir={isRtl ? 'rtl' : 'ltr'}>
- <header className="sticky top-0 z-40 shadow-md bg-surface-900/95 backdrop-blur-md">
- <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between gap-4">
- <Link to="/" className="flex items-center">
- <Logo size="default" />
- </Link>
- <Link
- to="/"
- className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-card text-foreground font-bold hover:bg-primary-50 transition-colors shadow-sm"
- >
- <ChevronLeftIcon className="w-4 h-4" />
- Accueil
- </Link>
- <Link
- to="/abonnements"
- className="hidden sm:inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-gradient-to-r from-accent-500 to-secondary-500 text-white font-bold hover:shadow-lg transition-all"
- >
- <BookIcon className="w-4 h-4" />
- Abonnements
- </Link>
- </div>
- </header>
+  const continueBooks = useMemo(() => {
+    const withProgress = readingHistory.filter((h) => Number(h.page || h.currentPage || 0) > 0);
+    return withProgress
+      .map((h) => books.find((b) => String(b.id) === String(h.bookId)))
+      .filter(Boolean)
+      .slice(0, 10);
+  }, [books, readingHistory]);
 
- <main className="relative overflow-hidden">
- {decorativeStars.map(({size, opacity, ...position}, index) => (
- <StarIcon
- key={index}
- className={`pointer-events-none absolute z-0 text-accent-300 ${size} ${opacity}`}
- style={position}
- />
- ))}
+  const recommendedBooks = useMemo(() => {
+    const favSet = new Set(favoriteIds.map(String));
+    const favBooks = books.filter((b) => favSet.has(String(b.id)));
+    if (favBooks.length >= 4) return favBooks.slice(0, 10);
+    const rest = books.filter((b) => !favSet.has(String(b.id)));
+    return [...favBooks, ...rest].slice(0, 10);
+  }, [books, favoriteIds, favoritesVersion]);
 
- <section className="relative z-10 py-10 md:py-14">
- <div className="max-w-7xl mx-auto px-4 sm:px-6">
- <div className="rounded-[2rem] bg-gradient-to-br from-primary-50 via-secondary-50 to-accent-50 border-4 border-white shadow-xl px-5 py-10 md:px-10 md:py-12 text-center">
- <div className="inline-flex items-center gap-2 px-4 py-2 bg-card/80 text-accent-600 rounded-full text-sm font-bold mb-4 border border-accent-100 shadow-sm">
- <StarIcon className="w-4 h-4" />
- Collection HKids
- </div>
- <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-foreground mb-4">
- Toutes les histoires HKids
- </h1>
- <p className="text-base sm:text-lg text-foreground-secondary max-w-2xl mx-auto leading-relaxed">
- Parcourez les livres disponibles, ajoutez vos favoris et choisissez une histoire adaptee a l'age de votre enfant.
- </p>
- <Link
- to="/abonnements"
- className="mt-6 inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-accent-500 to-secondary-500 px-6 py-3 text-white font-bold shadow-lg hover:shadow-xl transition-all"
- >
- Voir les abonnements mensuels
- </Link>
- {!isAuthenticated && (
- <div className="mt-6 inline-flex items-center gap-2 rounded-full bg-card/90 px-4 py-2 text-sm font-bold text-foreground shadow-sm border border-accent-100">
- <LockIcon className="w-4 h-4 text-accent-500" />
- Connectez-vous pour lire les histoires.
- </div>
- )}
- </div>
- </div>
- </section>
+  const categoryShelves = useMemo(() => {
+    const map = new Map();
+    books.forEach((book) => {
+      const key = book.category_name || 'Autres histoires';
+      if (!map.has(key)) map.set(key, []);
+      map.get(key).push(book);
+    });
+    return Array.from(map.entries()).slice(0, 6);
+  }, [books]);
 
- <section className="relative z-10 pb-14 md:pb-20">
- <div className="max-w-7xl mx-auto px-4 sm:px-6">
- {loading ? (
- <div className="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-10 sm:gap-x-6 lg:gap-x-8">
- {Array.from({length: 8}).map((_, index) => (
- <div key={index} className="aspect-[4/5] rounded-2xl bg-card/80 border-2 border-dashed border-accent-200 animate-pulse" />
- ))}
- </div>
- ) : books.length === 0 ? (
- <div className="text-center py-20 rounded-[2rem] bg-card/80 border border-accent-100 shadow-sm">
- <BookIcon className="w-16 h-16 text-accent-300 mx-auto mb-4" />
- <p className="text-lg font-bold text-foreground-secondary">Aucune histoire disponible.</p>
- </div>
- ) : (
- <div className="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-12 sm:gap-x-6 lg:gap-x-8">
- {books.map((book, index) => (
- <StoryBookCard
- key={`${book.id}-${favoritesVersion}`}
- book={book}
- index={index}
- isAuthenticated={isAuthenticated}
- showToast={showToast}
- onFavoriteChange={() => setFavoritesVersion((value) => value + 1)}
- onOpenBook={openBook}
- onRequireAuth={requireAuth}
- />
- ))}
- </div>
- )}
- </div>
- </section>
- </main>
- </div>
- );
+  const decorativeStars = [
+    { top: '8%', left: '7%', size: 'w-5 h-5', opacity: 'opacity-40' },
+    { top: '16%', right: '13%', size: 'w-7 h-7', opacity: 'opacity-50' },
+    { top: '34%', left: '4%', size: 'w-6 h-6', opacity: 'opacity-35' },
+    { top: '58%', right: '5%', size: 'w-5 h-5', opacity: 'opacity-40' },
+    { bottom: '10%', left: '12%', size: 'w-7 h-7', opacity: 'opacity-45' },
+  ];
+
+  return (
+    <div className="min-h-screen kids-gallery-atmosphere" dir={isRtl ? 'rtl' : 'ltr'}>
+      <header className="sticky top-0 z-40 shadow-md bg-surface-900/95 backdrop-blur-md">
+        <div className="max-w-7xl mx-auto px-space-16 sm:px-space-24 py-space-16 flex items-center justify-between gap-space-16">
+          <Link to="/" className="flex items-center">
+            <Logo size="default" />
+          </Link>
+          <Link
+            to="/"
+            className="inline-flex items-center gap-space-8 px-space-20 py-space-10 rounded-full bg-card text-foreground font-bold hover:bg-primary-50 transition-colors shadow-sm focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary-300"
+          >
+            <ChevronLeftIcon className="w-4 h-4" />
+            Accueil
+          </Link>
+          <Link
+            to="/abonnements"
+            className="hidden sm:inline-flex items-center gap-space-8 px-space-20 py-space-10 rounded-full bg-gradient-to-r from-magic-500 to-primary-500 text-white font-bold hover:shadow-floating transition-all focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-magic-300"
+          >
+            <BookIcon className="w-4 h-4" />
+            Abonnements
+          </Link>
+        </div>
+      </header>
+
+      <main className="relative overflow-hidden">
+        {decorativeStars.map(({ size, opacity, ...position }, index) => (
+          <StarIcon
+            key={index}
+            className={`pointer-events-none absolute z-0 text-magic-300 ${size} ${opacity}`}
+            style={position}
+          />
+        ))}
+
+        <section className="relative z-10 py-space-40 md:py-space-56">
+          <div className="max-w-7xl mx-auto px-space-16 sm:px-space-24">
+            <div className="rounded-32 bg-gradient-to-br from-primary-50 via-magic-50 to-secondary-50 border-4 border-white shadow-floating px-space-20 py-space-40 md:px-space-40 md:py-space-48 text-center">
+              <div className="inline-flex items-center gap-space-8 px-space-16 py-space-8 bg-card/80 text-magic-600 rounded-full text-body font-bold mb-space-16 border border-magic-100 shadow-soft">
+                <StarIcon className="w-4 h-4" />
+                Collection HKids
+              </div>
+              <h1 className="text-heading-xl md:text-display-s font-extrabold text-foreground mb-space-16">
+                Toutes les histoires HKids
+              </h1>
+              <p className="text-body md:text-heading-s text-foreground-secondary max-w-2xl mx-auto leading-relaxed">
+                Parcourez les livres disponibles, ajoutez vos favoris et choisissez une histoire adaptee a l&apos;age de votre enfant.
+              </p>
+              <Link
+                to="/abonnements"
+                className="mt-space-24 inline-flex items-center justify-center gap-space-8 rounded-full bg-gradient-to-r from-magic-500 to-primary-500 px-space-24 py-space-12 text-white font-bold shadow-floating hover:shadow-glow transition-all focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-magic-300"
+              >
+                Voir les abonnements mensuels
+              </Link>
+              {!isAuthenticated && (
+                <div className="mt-space-24 inline-flex items-center gap-space-8 rounded-full bg-card/90 px-space-16 py-space-8 text-body font-bold text-foreground shadow-soft border border-magic-100">
+                  <LockIcon className="w-4 h-4 text-magic-500" />
+                  Connectez-vous pour lire les histoires.
+                </div>
+              )}
+            </div>
+          </div>
+        </section>
+
+        <section className="relative z-10 pb-space-56 md:pb-space-64">
+          <div className="max-w-7xl mx-auto px-space-16 sm:px-space-24">
+            {loading ? (
+              <div className="kids-gallery-rail">
+                {Array.from({ length: 6 }).map((_, index) => (
+                  <div key={index} className="kids-gallery-card aspect-[3/5] animate-pulse bg-card/80 border-2 border-dashed border-primary-200" />
+                ))}
+              </div>
+            ) : books.length === 0 ? (
+              <div className="text-center py-space-40 rounded-32 bg-card/80 border border-magic-100 shadow-soft">
+                <BookIcon className="w-16 h-16 text-magic-300 mx-auto mb-space-16" />
+                <p className="text-heading-s font-bold text-foreground-secondary">Aucune histoire disponible.</p>
+              </div>
+            ) : (
+              <>
+                {continueBooks.length > 0 && (
+                  <ShelfSection
+                    title="Continuer la lecture"
+                    emoji="📖"
+                    books={continueBooks}
+                    readingHistory={readingHistory}
+                    {...cardProps}
+                  />
+                )}
+
+                <ShelfSection
+                  title="Recommandes pour vous"
+                  emoji="⭐"
+                  books={recommendedBooks}
+                  readingHistory={readingHistory}
+                  {...cardProps}
+                />
+
+                {categoryShelves.map(([category, shelfBooks]) => (
+                  <ShelfSection
+                    key={category}
+                    title={category}
+                    emoji="📚"
+                    books={shelfBooks.slice(0, 12)}
+                    readingHistory={readingHistory}
+                    {...cardProps}
+                  />
+                ))}
+              </>
+            )}
+          </div>
+        </section>
+      </main>
+    </div>
+  );
 }
 
 export default StoriesGallery;

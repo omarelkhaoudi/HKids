@@ -1035,6 +1035,123 @@
       filter: blur(12px);
       transform: none;
     }
+    .kids-listen-wave span {
+      animation: none;
+    }
+  }
+
+  .kids-studio-atmosphere {
+    background:
+      radial-gradient(ellipse 70% 50% at 15% 0%, var(--color-kids-glow-violet) 0%, transparent 55%),
+      radial-gradient(ellipse 50% 40% at 85% 100%, rgba(var(--color-primary-500-rgb), 0.12) 0%, transparent 50%),
+      linear-gradient(165deg, var(--color-magic-900) 0%, #1a1033 45%, var(--color-magic-800) 100%);
+  }
+
+  .kids-listen-atmosphere {
+    background:
+      radial-gradient(ellipse 60% 45% at 20% 10%, var(--color-kids-glow-amber) 0%, transparent 55%),
+      radial-gradient(ellipse 50% 40% at 80% 90%, var(--color-kids-glow-sky) 0%, transparent 50%),
+      linear-gradient(160deg, var(--color-orange-50) 0%, var(--color-primary-50) 40%, var(--color-surface) 100%);
+  }
+
+  .dark .kids-listen-atmosphere {
+    background:
+      radial-gradient(ellipse 60% 45% at 20% 10%, var(--color-kids-glow-amber) 0%, transparent 55%),
+      linear-gradient(160deg, var(--color-surface-900) 0%, var(--color-magic-900) 100%);
+  }
+
+  .kids-listen-panel {
+    border-radius: var(--radius-32);
+    @apply border-4 border-white/60 dark:border-white/10 overflow-hidden shadow-floating;
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.97) 0%, rgba(255, 247, 237, 0.92) 100%);
+  }
+
+  .dark .kids-listen-panel {
+    background: linear-gradient(145deg, rgba(30, 41, 59, 0.96) 0%, rgba(15, 23, 42, 0.94) 100%);
+  }
+
+  .kids-listen-wave {
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 4px;
+    height: 28px;
+  }
+
+  .kids-listen-wave span {
+    width: 4px;
+    border-radius: 999px;
+    background: var(--color-orange-400);
+    animation: kids-sound-pulse 0.9s ease-in-out infinite;
+  }
+
+  .kids-studio-timeline {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--space-12);
+  }
+
+  @media (max-width: 640px) {
+    .kids-studio-timeline {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  .kids-studio-step {
+    border-radius: var(--radius-24);
+    border: 2px solid color-mix(in srgb, var(--color-magic-400) 30%, transparent);
+    background: color-mix(in srgb, var(--color-magic-500) 10%, transparent);
+    padding: var(--space-12) var(--space-12);
+    padding-top: var(--space-16);
+    padding-bottom: var(--space-16);
+    text-align: center;
+  }
+
+  .kids-studio-step-active {
+    border-color: var(--color-magic-300);
+    background: color-mix(in srgb, var(--color-magic-500) 25%, transparent);
+    box-shadow: var(--shadow-card, 0 8px 24px rgba(0, 0, 0, 0.08));
+  }
+
+  .kids-gallery-atmosphere {
+    background:
+      radial-gradient(ellipse 55% 40% at 10% 0%, var(--color-kids-glow-sky) 0%, transparent 55%),
+      radial-gradient(ellipse 45% 35% at 90% 100%, var(--color-kids-glow-amber) 0%, transparent 50%),
+      linear-gradient(180deg, var(--color-primary-50) 0%, var(--color-surface) 35%, var(--color-secondary-50) 100%);
+  }
+
+  .kids-gallery-rail {
+    display: flex;
+    gap: var(--space-20);
+    overflow-x: auto;
+    padding-bottom: var(--space-16);
+    padding-top: var(--space-8);
+    padding-left: var(--space-8);
+    padding-right: var(--space-8);
+    scroll-snap-type: x mandatory;
+  }
+
+  .kids-gallery-card {
+    scroll-snap-align: start;
+    flex-shrink: 0;
+    width: 11rem;
+    border-radius: var(--radius-24);
+    background: var(--color-card, #fff);
+    border: 4px solid var(--color-border, #e2e8f0);
+    box-shadow: var(--shadow-card, 0 8px 24px rgba(0, 0, 0, 0.08));
+    overflow: hidden;
+    transition: box-shadow 0.2s ease;
+  }
+
+  @media (min-width: 640px) {
+    .kids-gallery-card {
+      width: 13rem;
+    }
+  }
+
+  .kids-gallery-card:hover,
+  .kids-gallery-card:focus-within {
+    box-shadow: var(--shadow-floating, 0 16px 40px rgba(0, 0, 0, 0.12));
   }
 
   .kids-glow-books {

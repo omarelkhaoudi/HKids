@@ -11,6 +11,8 @@ import {
 } from '../components/Icons';
 import {KidsPageShell} from '../components/kids/KidsPageShell';
 import {Button, Badge, Avatar} from '../components/ui';
+import { useReducedMotion } from '../hooks/useReducedMotion';
+import { getHoverMotion } from '../constants/kidsMotion';
 import { BRAND_HERO_GRADIENT, BRAND_SEMANTIC, storyGradientAtIndex } from '../constants/brandTheme';
 
 const themeOptionDefs = [
@@ -81,7 +83,7 @@ const FloatingStars = () => {
  {[...Array(20)].map((_, i) => (
  <motion.div
  key={i}
- className="absolute text-accent-300 opacity-50"
+ className="absolute text-magic-300 opacity-50"
  initial={{
  x: Math.random() * window.innerWidth, 
  y: Math.random() * window.innerHeight,
@@ -114,7 +116,7 @@ const Confetti = () => {
  x: window.innerWidth / 2,
  y: window.innerHeight / 2,
  size: Math.random() * 8 + 4,
- color: ['#7b3eb8', '#389d85', '#f76219', '#9b5fc9', '#5bb89e', '#f98a4a'][Math.floor(Math.random() * 6)],
+ color: ['var(--color-magic-500)', 'var(--color-success-500)', 'var(--color-orange-500)', 'var(--color-magic-400)', 'var(--color-success-400)', 'var(--color-orange-400)'][Math.floor(Math.random() * 6)],
  duration: Math.random() * 2 + 1,
  angle: Math.random() * Math.PI * 2,
  velocity: Math.random() * 300 + 100
@@ -145,6 +147,7 @@ function KidsStoryStudio() {
  const {user} = useAuth();
  const {t} = useLanguage();
  const navigate = useNavigate();
+ const reducedMotion = useReducedMotion();
  const isStoryAuthor = user?.role === 'parent' || user?.role === 'admin';
  const storiesPath = isStoryAuthor ? '/parent/ai-stories' : '/kids/ai-stories';
  const backPath = isStoryAuthor ? '/parent' : '/kids/ai-stories';
@@ -312,8 +315,8 @@ function KidsStoryStudio() {
 
  if (!canUseStoryStudio) {
  return (
- <div className="flex min-h-screen items-center justify-center bg-primary-900 px-4">
- <div className="max-w-md rounded-[2.5rem] bg-card p-8 text-center shadow-2xl">
+ <div className="flex min-h-screen items-center justify-center kids-studio-atmosphere px-4">
+ <div className="max-w-md rounded-32 bg-card p-8 text-center shadow-floating">
  <p className="mb-4 text-xl font-black text-foreground">{t('storyStudioParentOnlyTitle')}</p>
  <p className="mb-6 text-sm font-bold text-foreground-secondary">
   {t('storyStudioParentOnlyDescription')}
@@ -327,12 +330,12 @@ function KidsStoryStudio() {
 }
 
  return (
- <KidsPageShell variant="library" className="bg-primary-900 text-white">
+ <KidsPageShell variant="library" world="create" className="kids-studio-atmosphere kids-glow-create text-white">
  <FloatingStars />
  {showSuccess && <Confetti />}
 
  {/* HEADER */}
- <header className="sticky top-0 z-40 bg-primary-900/80 backdrop-blur-xl border-b border-white/10 shadow-lg px-4 py-4 flex items-center justify-between">
+ <header className="sticky top-0 z-40 bg-magic-900/80 backdrop-blur-xl border-b border-white/10 shadow-lg px-4 py-4 flex items-center justify-between">
  <Link to={backPath} className="flex items-center gap-2 group">
  <div className="p-2 rounded-full bg-card/10 group-hover:bg-card/20 transition-colors">
  <ChevronLeftIcon className="w-6 h-6 text-white" />
@@ -355,11 +358,11 @@ function KidsStoryStudio() {
  {/* MAGIC LOADING OVERLAY */}
  <AnimatePresence>
  {loading && (
- <motion.div initial={{opacity: 0}} animate={{opacity: 1}} exit={{opacity: 0}} className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-primary-900/90 backdrop-blur-md">
+ <motion.div initial={{opacity: 0}} animate={{opacity: 1}} exit={{opacity: 0}} className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-magic-900/90 backdrop-blur-md">
  <div className="text-center">
  <motion.div animate={{rotate: 360}} transition={{duration: 8, repeat: Infinity, ease: 'linear'}} className="w-32 h-32 mx-auto relative mb-8">
- <div className="absolute inset-0 rounded-full border-4 border-white/10 border-t-primary-500 border-r-secondary-500"></div>
- <div className="absolute inset-2 rounded-full border-4 border-white/5 border-b-accent-500 border-l-primary-400" style={{animation: 'spin 4s linear infinite reverse'}}></div>
+ <div className="absolute inset-0 rounded-full border-4 border-white/10 border-t-magic-400 border-r-orange-400"></div>
+ <div className="absolute inset-2 rounded-full border-4 border-white/5 border-b-magic-300 border-l-primary-400" style={{animation: 'spin 4s linear infinite reverse'}}></div>
  <SparklesIcon className="w-12 h-12 text-foreground-400 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" />
  </motion.div>
  
@@ -384,20 +387,34 @@ function KidsStoryStudio() {
  
  {/* HERO TITLE */}
  <div className="text-center mb-12">
- <motion.div initial={{scale: 0}} animate={{scale: 1}} transition={{type: 'spring'}} className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-primary-500/20 to-secondary-500/20 border border-primary-500/30 rounded-full text-foreground-300 font-bold mb-6">
+ <motion.div initial={{scale: 0}} animate={{scale: 1}} transition={{type: 'spring'}} className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-magic-500/20 to-orange-500/20 border border-magic-400/30 rounded-full text-magic-200 font-bold mb-6">
  <SparklesIcon className="w-4 h-4" /> Le Chaudron Magique
  </motion.div>
- <h1 className="text-4xl md:text-6xl font-black text-white leading-tight mb-4 drop-shadow-[0_0_15px_rgba(139,92,246,0.3)]">
+ <h1 className="text-4xl md:text-6xl font-black text-white leading-tight mb-4">
  Invente ton aventure !
  </h1>
  <p className="text-lg text-white/60 font-medium max-w-2xl mx-auto">
  {t('storyStudioParentSubtitle')}
  </p>
  {error && (
- <div className="mt-6 inline-block bg-rose-500/20 border border-rose-500/50 text-rose-200 px-6 py-3 rounded-full font-bold">
+ <div className="mt-6 inline-block bg-danger-500/20 border border-danger-500/50 text-danger-200 px-6 py-3 rounded-full font-bold">
  {error}
  </div>
  )}
+ </div>
+
+ <div className="kids-studio-timeline mb-12 max-w-3xl mx-auto" aria-hidden="true">
+ {[
+  { label: 'Thème', emoji: '🗺️', active: Boolean(form.theme) },
+  { label: 'Héros', emoji: '🦊', active: selectedCharacters.length > 0 || customCharacter.trim() },
+  { label: 'Réglages', emoji: '⏱️', active: Boolean(form.estimated_duration_minutes) },
+  { label: 'Magie', emoji: '✨', active: Boolean(story) },
+ ].map((step) => (
+  <div key={step.label} className={`kids-studio-step ${step.active ? 'kids-studio-step-active' : ''}`}>
+   <span className="text-3xl">{step.emoji}</span>
+   <p className="font-black text-sm mt-2 text-white/90">{step.label}</p>
+  </div>
+ ))}
  </div>
 
  <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
@@ -406,19 +423,18 @@ function KidsStoryStudio() {
  <div className="lg:col-span-8 space-y-8">
  
  {/* THEME SELECTION */}
- <div className="bg-card/5 backdrop-blur-xl border border-white/10 rounded-[2.5rem] p-6 md:p-8">
+ <div className="bg-card/5 backdrop-blur-xl border border-white/10 rounded-32 p-6 md:p-8">
  <h2 className="text-2xl font-black mb-6 flex items-center gap-3">
- <span className="w-8 h-8 rounded-full bg-gradient-to-br from-primary-400 to-secondary-500 flex items-center justify-center text-sm">1</span> 
+ <span className="w-8 h-8 rounded-full bg-gradient-to-br from-magic-400 to-orange-500 flex items-center justify-center text-sm">1</span> 
  Choisis un Thème
  </h2>
  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
  {themeOptions.map(theme => (
  <motion.button
  key={theme.id}
- whileHover={{scale: 1.05, y: -5}}
- whileTap={{scale: 0.95}}
+ {...getHoverMotion(reducedMotion, { whileHover: { scale: 1.05, y: -5 }, whileTap: { scale: 0.95 } })}
  onClick={() => patchForm('theme', theme.id)}
- className={`relative overflow-hidden rounded-[2rem] p-4 flex flex-col items-center justify-center gap-2 border-2 transition-all min-h-[120px] ${form.theme === theme.id ? 'border-white bg-card/20 shadow-[0_0_20px_rgba(255,255,255,0.2)]' : 'border-white/5 bg-card/5 hover:bg-card/10'}`}
+ className={`relative overflow-hidden rounded-24 p-4 flex flex-col items-center justify-center gap-2 border-2 transition-all min-h-[120px] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-magic-300 ${form.theme === theme.id ? 'border-white bg-card/20 shadow-card' : 'border-white/5 bg-card/5 hover:bg-card/10'}`}
  >
  {form.theme === theme.id && <div className={`absolute inset-0 opacity-30 bg-gradient-to-br ${theme.gradient}`}></div>}
  <span className="text-4xl relative z-10">{theme.pictogram}</span>
@@ -430,9 +446,9 @@ function KidsStoryStudio() {
  </div>
 
  {/* CHARACTER SELECTION */}
- <div className="bg-card/5 backdrop-blur-xl border border-white/10 rounded-[2.5rem] p-6 md:p-8">
+ <div className="bg-card/5 backdrop-blur-xl border border-white/10 rounded-32 p-6 md:p-8">
  <h2 className="text-2xl font-black mb-6 flex items-center gap-3">
- <span className="w-8 h-8 rounded-full bg-gradient-to-br from-secondary-400 to-accent-500 flex items-center justify-center text-sm">2</span> 
+ <span className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-400 to-magic-500 flex items-center justify-center text-sm">2</span> 
  Qui sera dans l'histoire ?
  </h2>
  <div className="grid grid-cols-3 sm:grid-cols-6 gap-3 mb-6">
@@ -441,10 +457,9 @@ function KidsStoryStudio() {
  return (
  <motion.button
  key={char.id}
- whileHover={{scale: 1.1}}
- whileTap={{scale: 0.9}}
+ {...getHoverMotion(reducedMotion, { whileHover: { scale: 1.08 }, whileTap: { scale: 0.92 } })}
  onClick={() => toggleCharacter(char.id)}
- className={`aspect-square rounded-3xl flex flex-col items-center justify-center gap-1 border-2 transition-all ${isSelected ? 'border-primary-400 bg-primary-400/20' : 'border-white/5 bg-card/5 hover:bg-card/10'}`}
+ className={`aspect-square rounded-24 flex flex-col items-center justify-center gap-1 border-2 transition-all focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-magic-300 ${isSelected ? 'border-magic-400 bg-magic-400/20' : 'border-white/5 bg-card/5 hover:bg-card/10'}`}
  >
  <span className="text-3xl">{char.pictogram}</span>
  <span className="font-bold text-[10px] leading-tight text-center">{char.label}</span>
@@ -457,13 +472,13 @@ function KidsStoryStudio() {
  value={customCharacter}
  onChange={(e) => setCustomCharacter(e.target.value)}
  placeholder="Ajouter un autre personnage... (ex: Mamie, mon chien)" 
- className="flex-1 rounded-2xl bg-card/10 border-2 border-white/10 px-4 py-3 font-bold text-white placeholder-white/40 focus:border-primary-400 focus:outline-none"
+ className="flex-1 rounded-20 bg-card/10 border-2 border-white/10 px-4 py-3 font-bold text-white placeholder-white/40 focus:border-magic-400 focus:outline-none focus-visible:ring-4 focus-visible:ring-magic-300"
  />
  </div>
  </div>
 
  {/* SETTINGS */}
- <div className="bg-card/5 backdrop-blur-xl border border-white/10 rounded-[2.5rem] p-6 md:p-8 grid sm:grid-cols-2 gap-8">
+ <div className="bg-card/5 backdrop-blur-xl border border-white/10 rounded-32 p-6 md:p-8 grid sm:grid-cols-2 gap-8">
  <div>
  <h2 className="text-xl font-black mb-4 flex items-center gap-3">
  <ClockIcon className="w-6 h-6 text-rose-400" /> Durée
@@ -482,14 +497,14 @@ function KidsStoryStudio() {
  </div>
  <div>
  <h2 className="text-xl font-black mb-4 flex items-center gap-3">
- <BrainIcon className="w-6 h-6 text-accent-400" /> Morale
+ <BrainIcon className="w-6 h-6 text-magic-400" /> Morale
  </h2>
  <div className="flex flex-wrap gap-2">
  {valueOptions.map(val => (
  <button
  key={val.id}
  onClick={() => patchForm('educational_value', val.id)}
- className={`px-4 py-2 rounded-full font-bold text-sm border-2 transition-all ${form.educational_value === val.id ? 'border-accent-400 bg-accent-400/20 text-accent-200' : 'border-white/10 text-white/60 hover:bg-card/10 hover:text-white'}`}
+ className={`px-4 py-2 rounded-full font-bold text-sm border-2 transition-all ${form.educational_value === val.id ? 'border-magic-400 bg-magic-400/20 text-magic-200' : 'border-white/10 text-white/60 hover:bg-card/10 hover:text-white'}`}
  >
  {val.label}
  </button>
@@ -500,15 +515,14 @@ function KidsStoryStudio() {
 
  {/* GENERATE BUTTON */}
  <motion.button
- whileHover={{scale: 1.02}}
- whileTap={{scale: 0.98}}
+ {...getHoverMotion(reducedMotion, { whileHover: { scale: 1.02 }, whileTap: { scale: 0.98 } })}
  onClick={handleGenerate}
  disabled={loading || profilesLoading || !selectedKidProfileId}
- className="w-full relative group overflow-hidden rounded-[2.5rem] p-1"
+ className="w-full relative group overflow-hidden rounded-32 p-1 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-magic-300"
  >
- <div className={`absolute inset-0 bg-gradient-to-r ${BRAND_HERO_GRADIENT} rounded-[2.5rem] opacity-70 group-hover:opacity-100 transition-opacity blur-md`}></div>
- <div className={`absolute inset-0 bg-gradient-to-r ${BRAND_HERO_GRADIENT} rounded-[2.5rem] opacity-90 group-hover:opacity-100 transition-opacity`}></div>
- <div className="relative bg-primary-900/20 backdrop-blur-sm rounded-[2.3rem] py-6 flex items-center justify-center gap-4 border border-white/20">
+ <div className={`absolute inset-0 bg-gradient-to-r ${BRAND_HERO_GRADIENT} rounded-32 opacity-70 group-hover:opacity-100 transition-opacity blur-md`}></div>
+ <div className={`absolute inset-0 bg-gradient-to-r ${BRAND_HERO_GRADIENT} rounded-32 opacity-90 group-hover:opacity-100 transition-opacity`}></div>
+ <div className="relative bg-magic-900/20 backdrop-blur-sm rounded-[1.85rem] py-6 flex items-center justify-center gap-4 border border-white/20">
  <SparklesIcon className="w-8 h-8 text-white" />
  <span className="text-3xl font-black text-white tracking-wide">{t('storyStudioGenerateAction')}</span>
  </div>
@@ -524,19 +538,17 @@ function KidsStoryStudio() {
  <motion.div 
  key="empty"
  initial={{opacity: 0, scale: 0.9}} animate={{opacity: 1, scale: 1}} exit={{opacity: 0}}
- className="bg-card/5 backdrop-blur-xl border border-white/10 rounded-[2.5rem] p-8 text-center min-h-[400px] flex flex-col items-center justify-center"
+ className="bg-card/5 backdrop-blur-xl border border-white/10 rounded-32 p-8 text-center min-h-[400px] flex flex-col items-center justify-center"
  >
- <div className="w-24 h-24 bg-card/10 rounded-full flex items-center justify-center mb-6">
- <BookIcon className="w-12 h-12 text-white/50" />
- </div>
+ <div className="w-28 h-28 bg-magic-500/15 rounded-full flex items-center justify-center mb-6 text-6xl" aria-hidden="true">📖</div>
  <h3 className="text-2xl font-black mb-2">Le livre est vide</h3>
- <p className="text-white/60 font-medium">Mélange tes ingrédients à gauche et clique sur"Créer la Magie" pour voir ton histoire apparaître ici !</p>
+ <p className="text-white/60 font-medium max-w-xs">Mélange tes ingrédients à gauche et clique sur &quot;Créer la Magie&quot; pour voir ton histoire apparaître ici !</p>
  </motion.div>
  ) : (
  <motion.div 
  key="story"
  initial={{opacity: 0, y: 20}} animate={{opacity: 1, y: 0}}
- className="bg-[#fff9f0] text-foreground rounded-[2.5rem] shadow-2xl overflow-hidden relative"
+ className="bg-orange-50 text-foreground rounded-32 shadow-floating overflow-hidden relative"
  >
  {/* Story Header */}
  <div className="bg-gradient-to-br from-primary-100 to-secondary-100 p-8 border-b border-border">
@@ -591,12 +603,12 @@ function KidsStoryStudio() {
  {history.slice(0, 6).map((item) => (
  <motion.button
  key={item.id}
- whileHover={{y: -5}}
+ {...getHoverMotion(reducedMotion, { whileHover: { y: -5 } })}
  onClick={() => {
  setStory(item);
  window.scrollTo({top: document.getElementById('story-result')?.offsetTop - 50, behavior: 'smooth'});
 }}
- className="bg-card/5 backdrop-blur-md border border-white/10 rounded-[2rem] p-6 text-left hover:bg-card/10 transition-colors group"
+ className="bg-card/5 backdrop-blur-md border border-white/10 rounded-24 p-6 text-left hover:bg-card/10 transition-colors group focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-magic-300"
  >
  <div className="flex justify-between items-start mb-4">
  <h3 className="font-black text-xl text-white group-hover:text-foreground-300 transition-colors line-clamp-2">{item.title}</h3>

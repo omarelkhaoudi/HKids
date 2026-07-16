@@ -22,6 +22,8 @@ import { BookGridSkeleton } from '../components/SkeletonLoader';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
 import { ContentReportModal } from '../components/parent/ContentReportModal';
+import { useReducedMotion } from '../hooks/useReducedMotion';
+import { getHoverMotion } from '../constants/kidsMotion';
 import {
   BRAND_HERO_GRADIENT, BRAND_SEMANTIC, hubGradientAtIndex, storyGradientAtIndex,
 } from '../constants/brandTheme';
@@ -47,7 +49,7 @@ function MagicCelebration({ active, onComplete }) {
         const distance = 100 + Math.random() * 200;
         const x = Math.cos((angle * Math.PI) / 180) * distance;
         const y = Math.sin((angle * Math.PI) / 180) * distance;
-        const colorClasses = ['text-primary-500', 'text-secondary-500', 'text-accent-500', 'text-primary-400', 'text-secondary-400'];
+        const colorClasses = ['text-magic-500', 'text-primary-500', 'text-orange-500', 'text-magic-400', 'text-primary-400'];
         const color = colorClasses[Math.floor(Math.random() * colorClasses.length)];
         const size = 10 + Math.random() * 20;
 
@@ -346,6 +348,7 @@ function KidsAIStories() {
   const { language, t, isRtl } = useLanguage();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const reducedMotion = useReducedMotion();
   const canCreateStories = user?.role === 'parent' || user?.role === 'admin';
   const homePath = canCreateStories ? '/parent' : '/kids';
   const storyStudioPath = canCreateStories ? '/parent/story-studio' : null;
@@ -590,7 +593,7 @@ function KidsAIStories() {
     return (
       <motion.article
         layoutId={`story-${story.id}`}
-        whileHover={{ y: -8, scale: 1.02 }}
+        {...getHoverMotion(reducedMotion, { whileHover: { y: -8, scale: 1.02 } })}
         className={`group relative kids-story-card flex flex-col ${featured ? 'min-w-[320px] md:min-w-[400px]' : 'w-full'}`}
       >
         <div className="relative h-48 w-full cursor-pointer" onClick={() => setSelectedStory(story)}>
@@ -612,7 +615,7 @@ function KidsAIStories() {
           {/* Animated Play Overlay */}
           <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-[2px]">
             <motion.div 
-              whileHover={{ scale: 1.1 }}
+              {...getHoverMotion(reducedMotion, { whileHover: { scale: 1.08 } })}
               className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white border border-white/40 shadow-glow"
             >
               <AudioIcon className="w-8 h-8 ml-1" />
@@ -718,10 +721,10 @@ function KidsAIStories() {
           className="mb-10"
         >
           {canCreateStories && storyStudioPath && (
-            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="mt-6">
+            <motion.div {...getHoverMotion(reducedMotion, { whileHover: { scale: 1.03 }, whileTap: { scale: 0.97 } })} className="mt-6">
               <Link
                 to={storyStudioPath}
-                className="kids-touch-target inline-flex items-center justify-center gap-3 rounded-[2rem] bg-white px-8 py-4 text-xl font-black text-primary-700 shadow-xl"
+                className="kids-touch-target inline-flex min-h-touch-kids items-center justify-center gap-3 rounded-32 bg-white px-8 py-4 text-xl font-black text-magic-700 shadow-floating focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-magic-300"
               >
                 <SparklesIcon className="h-6 w-6" />
                 <span>{t('storyStudioCreateStory')}</span>
@@ -730,24 +733,45 @@ function KidsAIStories() {
           )}
         </KidsHero>
 
+        {canCreateStories && storyStudioPath && (
+          <section className="mb-10 grid grid-cols-1 sm:grid-cols-3 gap-4" aria-label="Parcours de création">
+            {[
+              { step: '1', title: 'Imagine', desc: 'Choisis thème et héros', emoji: '🪄', path: storyStudioPath },
+              { step: '2', title: 'Crée', desc: 'Laisse la magie écrire', emoji: '✨', path: storyStudioPath },
+              { step: '3', title: 'Lis & écoute', desc: 'Retrouve tes histoires ici', emoji: '📖', path: null },
+            ].map((item) => (
+              <motion.div
+                key={item.step}
+                {...getHoverMotion(reducedMotion, { whileHover: { y: -4 } })}
+                className="rounded-24 border-2 border-magic-100 bg-card/80 p-5 shadow-soft text-center"
+              >
+                <span className="text-4xl" aria-hidden="true">{item.emoji}</span>
+                <p className="mt-2 text-caption font-bold text-magic-500">Étape {item.step}</p>
+                <h3 className="text-heading-s font-black text-foreground">{item.title}</h3>
+                <p className="text-caption text-foreground-muted mt-1">{item.desc}</p>
+              </motion.div>
+            ))}
+          </section>
+        )}
+
         {/* Quick KPI Statistics */}
         <section className="mb-12 grid grid-cols-2 md:grid-cols-4 gap-4">
-          <motion.div whileHover={{ y: -5 }} className={`bg-gradient-to-br ${hubGradientAtIndex(0)} rounded-3xl p-6 text-white shadow-floating relative overflow-hidden`}>
+          <motion.div {...getHoverMotion(reducedMotion, { whileHover: { y: -5 } })} className={`bg-gradient-to-br ${hubGradientAtIndex(0)} rounded-24 p-6 text-white shadow-floating relative overflow-hidden`}>
             <BookIcon className="w-12 h-12 text-white/30 absolute right-4 bottom-4" />
             <p className="text-sm font-bold text-white/80 uppercase tracking-wider mb-1">Bibliothèque</p>
             <p className="text-4xl font-black">{stories.length}</p>
           </motion.div>
-          <motion.div whileHover={{ y: -5 }} className={`bg-gradient-to-br ${hubGradientAtIndex(1)} rounded-3xl p-6 text-white shadow-floating relative overflow-hidden`}>
+          <motion.div {...getHoverMotion(reducedMotion, { whileHover: { y: -5 } })} className={`bg-gradient-to-br ${hubGradientAtIndex(1)} rounded-24 p-6 text-white shadow-floating relative overflow-hidden`}>
             <HeartIcon className="w-12 h-12 text-white/30 absolute right-4 bottom-4" filled />
             <p className="text-sm font-bold text-white/80 uppercase tracking-wider mb-1">Favoris</p>
             <p className="text-4xl font-black">{favoriteStories.length}</p>
           </motion.div>
-          <motion.div whileHover={{ y: -5 }} className={`bg-gradient-to-br ${hubGradientAtIndex(2)} rounded-3xl p-6 text-white shadow-floating relative overflow-hidden`}>
+          <motion.div {...getHoverMotion(reducedMotion, { whileHover: { y: -5 } })} className={`bg-gradient-to-br ${hubGradientAtIndex(2)} rounded-24 p-6 text-white shadow-floating relative overflow-hidden`}>
             <DownloadIcon className="w-12 h-12 text-white/30 absolute right-4 bottom-4" />
             <p className="text-sm font-bold text-white/80 uppercase tracking-wider mb-1">Sauvegardées</p>
             <p className="text-4xl font-black">{savedStories.length}</p>
           </motion.div>
-          <motion.div whileHover={{ y: -5 }} className={`bg-gradient-to-br ${storyGradientAtIndex(3)} rounded-3xl p-6 text-white shadow-floating relative overflow-hidden`}>
+          <motion.div {...getHoverMotion(reducedMotion, { whileHover: { y: -5 } })} className={`bg-gradient-to-br ${storyGradientAtIndex(3)} rounded-24 p-6 text-white shadow-floating relative overflow-hidden`}>
             <SparklesIcon className="w-12 h-12 text-white/30 absolute right-4 bottom-4" />
             <p className="text-sm font-bold text-white/80 uppercase tracking-wider mb-1">Récents</p>
             <p className="text-4xl font-black">{recentStories.length}</p>
@@ -758,10 +782,10 @@ function KidsAIStories() {
         {recentStories.length > 0 && (
           <section className="mb-12">
             <h2 className="text-2xl font-black mb-6 flex items-center gap-3">
-              <SparklesIcon className="w-7 h-7 text-accent-500" />
+              <SparklesIcon className="w-7 h-7 text-magic-500" />
               Créations récentes
             </h2>
-            <div className="flex gap-6 overflow-x-auto pb-8 pt-2 px-2 -mx-2 snap-x custom-scrollbar">
+            <div className="flex gap-6 overflow-x-auto pb-8 pt-2 px-2 -mx-2 snap-x custom-scrollbar kids-scroll-smooth">
               {recentStories.map(story => (
                 <div key={story.id} className="snap-start shrink-0 w-[280px] md:w-[320px]">
                   <StoryCard story={story} />
@@ -892,7 +916,7 @@ function KidsAIStories() {
                   {/* Detailed Information Grid */}
                   <div className="grid grid-cols-2 gap-4 mb-6">
                     <div className="bg-surface-secondary rounded-2xl p-4 flex items-center gap-3">
-                      <ClockIcon className="w-6 h-6 text-accent-500" />
+                      <ClockIcon className="w-6 h-6 text-magic-500" />
                       <div>
                         <p className="text-xs font-bold text-foreground-muted uppercase tracking-wider">Durée</p>
                         <p className="font-black text-foreground">{selectedStory.estimated_duration_minutes || 3} min</p>
@@ -952,7 +976,7 @@ function KidsAIStories() {
                       <button
                         type="button"
                         onClick={() => setShowReportModal(true)}
-                        className="flex-1 min-w-[140px] rounded-2xl bg-accent-50 text-accent-700 dark:bg-accent-900/30 dark:text-accent-400 px-4 py-3 text-sm font-black hover:opacity-80 transition flex items-center justify-center gap-2"
+                        className="flex-1 min-w-[140px] rounded-2xl bg-magic-50 text-magic-700 dark:bg-magic-900/30 dark:text-magic-300 px-4 py-3 text-sm font-black hover:opacity-80 transition flex items-center justify-center gap-2"
                       >
                         <WarningIcon className="w-5 h-5" />
                         {t('reportContentAction')}
