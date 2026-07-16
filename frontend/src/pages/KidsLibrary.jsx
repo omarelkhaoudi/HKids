@@ -23,6 +23,8 @@ import { BookGridSkeleton } from '../components/SkeletonLoader';
 import { KidsBottomNav } from '../components/kids/KidsBottomNav';
 import { KidsEmptyState } from '../components/kids/KidsEmptyState';
 import { KidsFamilyMessages } from '../components/kids/KidsFamilyMessages';
+import { KidsTrustBadges } from '../components/kids/KidsTrustBadges';
+import { KidsAmbientSound } from '../components/kids/KidsAmbientSound';
 import { getKidsContentPath } from '../utils/contentRouting';
 import { getMotionProps, kidsPageEnter } from '../constants/kidsMotion';
 import { useReducedMotion } from '../hooks/useReducedMotion';
@@ -203,7 +205,7 @@ function KidsLibrary() {
   };
 
   return (
-    <KidsPageShell isRtl={isRtl} variant="library" world="books" className="pb-32 kids-glow-books" footer={<KidsBottomNav />}>
+    <KidsPageShell isRtl={isRtl} variant="library" world="books" className={`pb-32 kids-glow-books ${selectedTheme === 'bedtime' ? 'kids-night-calm' : ''}`} footer={<KidsBottomNav />}>
       {selectedTheme !== 'all' && <KidsCategoryAtmosphere categoryId={selectedTheme} />}
 
       <header className="relative z-10 px-6 py-4 flex items-center justify-between kids-premium-panel mx-4 sm:mx-6 mt-2 sticky top-2">
@@ -211,10 +213,10 @@ function KidsLibrary() {
           <button
             type="button"
             onClick={() => navigate('/kids')}
-            className="kids-touch-target grid h-14 w-14 place-items-center rounded-full bg-white dark:bg-surface-800 text-primary-500 shadow-md transition hover:scale-105 border-2 border-primary-100"
+            className="kids-icon-action"
             aria-label={t('home')}
           >
-            <HomeIcon className="h-7 w-7" />
+            <HomeIcon />
           </button>
           <Link to="/kids" className="shrink-0 transition-transform hover:scale-105 active:scale-95">
             <Logo size="default" showText={false} />
@@ -223,7 +225,23 @@ function KidsLibrary() {
         <span className="text-4xl" aria-hidden="true">{selectedTheme === 'all' ? '📚' : (activeThemeData?.pictogram || '📚')}</span>
       </header>
 
-      <main className="relative z-20 max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-10">
+      <main className="kids-main kids-main-tablet-wide relative z-20">
+        <KidsTrustBadges t={t} compact className="opacity-90" />
+
+        {selectedTheme === 'bedtime' && (
+          <KidsAmbientSound
+            enabled
+            preset="night"
+            compact
+            labels={{
+              bedtimeSoundRain: t('bedtimeSoundRain'),
+              bedtimeSoundForest: t('bedtimeSoundForest'),
+              bedtimeSoundOcean: t('bedtimeSoundOcean'),
+              bedtimeSoundNight: t('bedtimeSoundNight'),
+              bedtimeSoundWind: t('bedtimeSoundWind'),
+            }}
+          />
+        )}
         {/* Visual theme explorer — no search bar */}
         <section className="mb-2" aria-label={t('allCategories')}>
           <div className="flex gap-4 overflow-x-auto pb-4 pt-2 px-2 snap-x snap-mandatory custom-scrollbar">
@@ -315,6 +333,7 @@ function KidsLibrary() {
             description={t('emptyBooksDescription')}
             actionLabel={t('goToLibrary')}
             onAction={() => handleThemeChange('all')}
+            showMascot
           />
         ) : selectedTheme !== 'all' ? (
           themeBooks.length === 0 ? (
@@ -324,6 +343,8 @@ function KidsLibrary() {
               description={t('tryAnotherWord')}
               actionLabel={t('allCategories')}
               onAction={() => handleThemeChange('all')}
+              showMascot
+              mascotMood="encourage"
             />
           ) : (
             <div className="kids-shelf-rail">

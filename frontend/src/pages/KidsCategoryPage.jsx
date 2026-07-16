@@ -18,7 +18,7 @@ import { KidsEmptyState } from '../components/kids/KidsEmptyState';
 import { KidsCategoryAtmosphere } from '../components/kids/KidsCategoryAtmosphere';
 import { BookGridSkeleton } from '../components/SkeletonLoader';
 import { useReducedMotion } from '../hooks/useReducedMotion';
-import { getMotionProps, kidsPageEnter } from '../constants/kidsMotion';
+import { getMotionProps, kidsCategoryEnter } from '../constants/kidsMotion';
 
 function KidsCategoryPage() {
   const { categoryId } = useParams();
@@ -105,19 +105,18 @@ function KidsCategoryPage() {
         <span className="text-4xl" aria-hidden="true">{category.pictogram}</span>
       </header>
 
-      <div className="relative z-10 mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+      <div className="kids-main relative z-10">
         <Link
           to="/kids"
-          className="mb-5 inline-flex kids-touch-target items-center gap-3 rounded-[1.75rem] kids-premium-panel px-5 py-3 font-black text-foreground shadow-md transition hover:scale-[1.02]"
+          className="kids-icon-action self-start"
           aria-label={t('back')}
         >
-          <ChevronLeftIcon className={`h-8 w-8 ${isRtl ? 'rotate-180' : ''}`} />
-          <span className="text-3xl" aria-hidden="true">{category.pictogram}</span>
+          <ChevronLeftIcon className={isRtl ? 'rotate-180' : ''} />
         </Link>
 
         <motion.main
-          {...getMotionProps(reducedMotion, kidsPageEnter)}
-          className={`relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br ${category.gradient} p-8 md:p-12 text-center text-white shadow-kids-soft ring-4 ${category.ring} mb-10`}
+          {...getMotionProps(reducedMotion, kidsCategoryEnter)}
+          className={`relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br ${category.gradient} p-8 md:p-12 text-center text-white shadow-kids-soft ring-4 ${category.ring}`}
         >
           <div className="absolute -right-10 -top-10 text-[12rem] opacity-20 pointer-events-none" aria-hidden="true">
             {category.pictogram}
@@ -158,6 +157,7 @@ function KidsCategoryPage() {
             description={t('emptyBooksDescription')}
             actionLabel={t('goToLibrary')}
             onAction={() => navigate(listPath)}
+            showMascot
           />
         ) : (
           <div className="space-y-10">

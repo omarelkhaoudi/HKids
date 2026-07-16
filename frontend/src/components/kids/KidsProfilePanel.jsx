@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Avatar } from '../ui';
 import { getImageUrl } from '../../utils/imageUrl';
 import { KidsMediaCard } from './KidsMediaCard';
@@ -14,7 +14,10 @@ export function KidsProfilePanel({
   t,
   isRtl,
   onPlayBook,
+  onGoToLibrary,
 }) {
+  const navigate = useNavigate();
+  const goToLibrary = onGoToLibrary || (() => navigate('/kids/library'));
   const avatarSrc = kid?.photo_url ? getImageUrl(kid.photo_url) : null;
   const avatarInitials = kid?.avatar || kidName?.trim().charAt(0).toUpperCase() || '?';
   const completedCount = progressRows.filter((p) => p.completed).length;
@@ -75,7 +78,7 @@ export function KidsProfilePanel({
             <span aria-hidden="true">❤️</span>
             <span>{t('kidProfileFavoriteBooks')}</span>
           </h3>
-          <div className="flex gap-5 overflow-x-auto pb-4 px-2 snap-x custom-scrollbar">
+          <div className="flex gap-5 overflow-x-auto pb-4 px-2 snap-x custom-scrollbar kids-scroll-smooth">
             {favoriteBooks.slice(0, 8).map((book) => (
               <div key={book.id} className="snap-start shrink-0">
                 <KidsMediaCard book={book} variant="carousel" hideTitle isRtl={isRtl} onPlay={onPlayBook} />
@@ -84,7 +87,15 @@ export function KidsProfilePanel({
           </div>
         </div>
       ) : (
-        <KidsEmptyState emoji="❤️" title={t('emptyFavoritesTitle')} compact actionLabel={t('goToLibrary')} onAction={() => window.location.assign('/kids/library')} />
+        <KidsEmptyState
+          emoji="❤️"
+          title={t('emptyFavoritesTitle')}
+          description={t('emptyBooksDescription')}
+          compact
+          showMascot
+          actionLabel={t('goToLibrary')}
+          onAction={goToLibrary}
+        />
       )}
 
       <div className="kids-premium-panel p-6">
@@ -93,12 +104,13 @@ export function KidsProfilePanel({
           <span>{t('kidProfileSettings')}</span>
         </h3>
         <p className="text-foreground-secondary font-bold mb-4">{t('kidProfileSettingsHint')}</p>
-        <Link
-          to="/kids/library"
+        <button
+          type="button"
+          onClick={goToLibrary}
           className="kids-touch-target inline-flex items-center justify-center rounded-[1.5rem] bg-primary-500 px-6 py-3 font-black text-white shadow-md"
         >
           {t('goToLibrary')}
-        </Link>
+        </button>
       </div>
     </section>
   );

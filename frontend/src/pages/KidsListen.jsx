@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { booksAPI } from '../api/books';
@@ -13,6 +13,7 @@ import { KidsPageShell } from '../components/kids/KidsPageShell';
 import { KidsPageHeader } from '../components/kids/KidsPageHeader';
 import { KidsBottomNav } from '../components/kids/KidsBottomNav';
 import { KidsErrorBanner } from '../components/kids/KidsErrorBanner';
+import { KidsFeedbackBurst } from '../components/kids/KidsFeedbackBurst';
 import { VoiceAssistant } from '../components/kids/VoiceAssistant';
 import { BookGridSkeleton } from '../components/SkeletonLoader';
 import {
@@ -36,8 +37,15 @@ function KidsListen() {
   const [book, setBook] = useState(null);
   const [loading, setLoading] = useState(true);
   const [favorite, setFavorite] = useState(false);
+  const [feedback, setFeedback] = useState(null);
+  const playFeedbackShown = useRef(false);
 
   const player = useAudioPlayer();
+
+  const flashFeedback = (type) => {
+    setFeedback(type);
+    window.setTimeout(() => setFeedback(null), 700);
+  };
 
   useEffect(() => {
     if (!user) {
@@ -70,6 +78,13 @@ function KidsListen() {
     };
   }, [id, user]);
 
+  useEffect(() => {
+    if (player.playing && !playFeedbackShown.current) {
+      playFeedbackShown.current = true;
+      flashFeedback('play');
+    }
+  }, [player.playing]);
+
   const toggleFavorite = () => {
     if (!book) return;
     if (storage.isFavorite(book.id)) {
@@ -79,6 +94,7 @@ function KidsListen() {
     } else {
       storage.addFavorite(book.id);
       setFavorite(true);
+      flashFeedback('favorite');
       showToast(t('addedToFavorites'), 'success');
     }
   };
@@ -104,12 +120,13 @@ function KidsListen() {
     <KidsPageShell isRtl={isRtl} variant="library" world="audio" className="pb-32 kids-glow-audio" footer={<KidsBottomNav />}>
       <KidsPageHeader backTo="/kids/audio" onBack={() => navigate('/kids/audio')} emoji="🎧" />
 
-      <div className="relative z-10 mx-auto max-w-3xl px-4 py-4">
+      <div className="relative z-10 mx-auto max-w-3xl px-4 py-4 md:px-8 lg:max-w-4xl">
         <motion.main
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
-          className="kids-premium-panel p-6 md:p-10 flex flex-col items-center text-center"
+          className="kids-premium-panel p-6 md:p-10 flex flex-col items-center text-center relative"
         >
+          <KidsFeedbackBurst type={feedback} active={Boolean(feedback)} />
           <span className="mb-4 inline-flex items-center gap-2 rounded-full bg-accent-100 text-accent-700 px-4 py-2 text-sm font-black">
             <AudioIcon className="h-5 w-5" />
             {typeLabel}

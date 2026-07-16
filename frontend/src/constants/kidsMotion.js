@@ -62,6 +62,19 @@ export const kidsProgressFill = {
   transition: { duration: KIDS_MOTION_DURATION.slow, ease: easeOut },
 };
 
+export const kidsRouteExit = {
+  initial: { opacity: 1 },
+  animate: { opacity: 1 },
+  exit: { opacity: 0, y: 8, scale: 0.98 },
+  transition: { duration: KIDS_MOTION_DURATION.fast, ease: easeOut },
+};
+
+export const kidsCategoryEnter = {
+  initial: { opacity: 0, scale: 0.97, y: 12 },
+  animate: { opacity: 1, scale: 1, y: 0 },
+  transition: { duration: KIDS_MOTION_DURATION.slow, ease: easeOut },
+};
+
 export const kidsStaggerContainer = {
   animate: {
     transition: { staggerChildren: 0.06, delayChildren: 0.04 },

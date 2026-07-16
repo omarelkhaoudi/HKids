@@ -133,7 +133,7 @@ function History() {
       </button>
      ) : null}
     />
-    <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-8">
+    <main className="kids-main kids-main-tablet-wide relative z-20">
      <KidsHero modality="books" emoji="📖" title={t('history')} subtitle={t('continueReading')} />
      {loading ? (
       <BookGridSkeleton count={6} variant="carousel" />
@@ -144,6 +144,8 @@ function History() {
        description={t('emptyBooksDescription')}
        actionLabel={t('goToLibrary')}
        onAction={() => navigate('/kids/library')}
+       showMascot
+       mascotMood="encourage"
       />
      ) : (
       <KidsBookCarousel

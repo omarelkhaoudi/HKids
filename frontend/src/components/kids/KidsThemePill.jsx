@@ -1,11 +1,18 @@
 import { motion } from 'framer-motion';
+import { useReducedMotion } from '../../hooks/useReducedMotion';
+import { getHoverMotion } from '../../constants/kidsMotion';
 
 export function KidsThemePill({ theme, isActive, onClick }) {
+  const reducedMotion = useReducedMotion();
+  const hover = getHoverMotion(reducedMotion, {
+    whileHover: { scale: 1.05, y: -3 },
+    whileTap: { scale: 0.95 },
+  });
+
   return (
     <motion.button
       type="button"
-      whileHover={{ scale: 1.05, y: -3 }}
-      whileTap={{ scale: 0.95 }}
+      {...hover}
       onClick={onClick}
       className={`kids-chip snap-start shrink-0 min-h-[56px] ${
         isActive
@@ -15,8 +22,10 @@ export function KidsThemePill({ theme, isActive, onClick }) {
       aria-label={theme.shortLabel || theme.label}
       aria-pressed={isActive}
     >
-      <span className="text-4xl md:text-5xl filter drop-shadow-sm leading-none">{theme.pictogram}</span>
-      <span className="hidden md:inline text-lg">{theme.shortLabel || theme.label}</span>
+      <span className="text-4xl md:text-5xl filter drop-shadow-sm leading-none" aria-hidden="true">{theme.pictogram}</span>
+      <span className="hidden md:inline text-lg font-black">{theme.shortLabel || theme.label}</span>
     </motion.button>
   );
 }
+
+export default KidsThemePill;

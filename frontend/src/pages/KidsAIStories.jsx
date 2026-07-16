@@ -695,7 +695,7 @@ function KidsAIStories() {
     <KidsPageShell footer={canCreateStories ? null : <KidsBottomNav />} isRtl={isRtl} world="create" className="pb-32 kids-glow-create">
       <MagicCelebration active={showCelebration} onComplete={() => setShowCelebration(false)} />
 
-      <div className="relative z-10 mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+      <div className="relative z-10 kids-main kids-main-tablet-wide">
         <header className="mb-8 flex items-center justify-between gap-4">
           <Link to={homePath} className="shrink-0">
             <Logo size="default" showText={true} />
@@ -840,6 +840,8 @@ function KidsAIStories() {
                 description={canCreateStories ? t('storyStudioEmptyParentDescription') : t('storyStudioEmptyKidDescription')}
                 actionLabel={canCreateStories ? t('storyStudioCreateFirstStory') : t('goToLibrary')}
                 onAction={() => (canCreateStories && storyStudioPath ? navigate(storyStudioPath) : navigate('/kids/library'))}
+                showMascot
+                mascotMood="encourage"
               />
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">

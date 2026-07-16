@@ -88,7 +88,7 @@ function Favorites() {
   return (
    <KidsPageShell isRtl={isRtl} variant="library" world="favorites" className="pb-32 kids-glow-audio" footer={<KidsBottomNav />}>
     <KidsPageHeader backTo="/kids" emoji="❤️" title={t('yourFavorites')} />
-    <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-8">
+    <main className="kids-main kids-main-tablet-wide relative z-20">
      <KidsHero modality="favorites" emoji="❤️" title={t('yourFavorites')} subtitle={t('emptyFavoritesTitle')} />
      {loading ? (
       <BookGridSkeleton count={6} variant="carousel" />
@@ -99,6 +99,8 @@ function Favorites() {
        description={t('emptyBooksDescription')}
        actionLabel={t('goToLibrary')}
        onAction={() => navigate('/kids/library')}
+       showMascot
+       mascotMood="encourage"
       />
      ) : (
       <>
