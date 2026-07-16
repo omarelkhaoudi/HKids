@@ -1,5 +1,7 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { motion } from 'framer-motion';
+import { useReducedMotion } from '../../hooks/useReducedMotion';
+import { getHoverMotion, kidsTouchFeedback } from '../../constants/kidsMotion';
 
 const TONE_VARIANTS = {
   primary: 'bg-primary-500 text-white border-b-4 border-primary-700 active:border-b-0 active:translate-y-[4px]',
@@ -19,10 +21,11 @@ export default function KidsButton({
   'aria-label': ariaLabel,
   type = 'button',
 }) {
-  const baseClasses = 'relative flex items-center justify-center font-extrabold select-none transition-all duration-150 touch-manipulation';
+  const reducedMotion = useReducedMotion();
+  const baseClasses = 'relative flex items-center justify-center font-extrabold select-none transition-all duration-150 touch-manipulation kids-btn-ripple kids-touch-target';
 
   const sizeClasses = {
-    sm: 'px-4 py-3 min-h-[48px] text-lg rounded-2xl',
+    sm: 'px-4 py-3 min-h-[56px] text-lg rounded-2xl',
     md: 'px-6 py-4 min-h-[64px] text-xl rounded-3xl',
     lg: 'px-8 py-6 min-h-[80px] text-2xl rounded-[2rem]',
   };
@@ -40,12 +43,26 @@ export default function KidsButton({
     ? (TONE_VARIANTS[tone] || variants.primary)
     : (variants[variant] || variants.primary);
 
+  const hoverMotion = getHoverMotion(reducedMotion, {
+    whileHover: { scale: 1.02 },
+    ...kidsTouchFeedback,
+  });
+
+  const handlePointerDown = useCallback((event) => {
+    const target = event.currentTarget;
+    const rect = target.getBoundingClientRect();
+    const x = ((event.clientX - rect.left) / rect.width) * 100;
+    const y = ((event.clientY - rect.top) / rect.height) * 100;
+    target.style.setProperty('--ripple-x', `${x}%`);
+    target.style.setProperty('--ripple-y', `${y}%`);
+  }, []);
+
   return (
     <motion.button
       type={type}
-      whileHover={{ scale: 1.02 }}
-      whileTap={{ scale: 0.95 }}
+      {...hoverMotion}
       onClick={onClick}
+      onPointerDown={handlePointerDown}
       aria-label={ariaLabel}
       className={`${baseClasses} ${sizeClasses[size]} ${resolvedVariant} ${className}`}
     >

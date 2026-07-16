@@ -1,6 +1,6 @@
 ﻿import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { booksAPI } from '../api/books';
 import { recommendationsAPI } from '../api/recommendations';
 import { useAuth } from '../context/AuthContext';
@@ -14,25 +14,34 @@ import { getDownloads } from '../services/offline/offlineContentService';
 import { getRestrictionMessage } from '../services/parental/parentalAccessService';
 import { VoiceAssistant } from '../components/kids/VoiceAssistant';
 import { KidsPageShell } from '../components/kids/KidsPageShell';
-import { KidsMediaCard } from '../components/kids/KidsMediaCard';
 import { KidsBookCarousel } from '../components/kids/KidsBookCarousel';
 import { KidsThemePill } from '../components/kids/KidsThemePill';
-import {
-  BookIcon, DownloadIcon, HeartIcon, PlayIcon,
-  SparklesIcon, HomeIcon, StarIcon
-} from '../components/Icons';
+import { KidsCategoryAtmosphere } from '../components/kids/KidsCategoryAtmosphere';
+import { HomeIcon, PlayIcon, HeartIcon, StarIcon } from '../components/Icons';
 import { Logo } from '../components/Logo';
 import { BookGridSkeleton } from '../components/SkeletonLoader';
 import { KidsBottomNav } from '../components/kids/KidsBottomNav';
 import { KidsEmptyState } from '../components/kids/KidsEmptyState';
 import { KidsFamilyMessages } from '../components/kids/KidsFamilyMessages';
 import { getKidsContentPath } from '../utils/contentRouting';
+import { getMotionProps, kidsPageEnter } from '../constants/kidsMotion';
+import { useReducedMotion } from '../hooks/useReducedMotion';
+
+const SHELF_THEME_IDS = ['dinosaurs', 'space', 'animals', 'princesses', 'bedtime', 'ocean', 'vehicles', 'world'];
 
 function inferTheme(book, childThemes) {
   if (book.theme) return book.theme;
   const searchable = [book.title, book.description, book.category_name, book.author].filter(Boolean).join(' ').toLowerCase();
   const matchedTheme = childThemes.find((theme) => theme.id !== 'all' && theme.match.some((keyword) => searchable.includes(keyword)));
-  return matchedTheme?.id || 'all';
+  return matchedTheme?.id || null;
+}
+
+function withThemeEmoji(books, childThemes) {
+  return books.map((book) => {
+    const themeId = inferTheme(book, childThemes);
+    const theme = childThemes.find((item) => item.id === themeId);
+    return { ...book, _themeEmoji: theme?.pictogram, _themeId: themeId };
+  });
 }
 
 function getRecommendationContext() {
@@ -50,6 +59,7 @@ function KidsLibrary() {
   const [searchParams, setSearchParams] = useSearchParams();
   const { showToast } = useToast();
   const { language, isRtl, t } = useLanguage();
+  const reducedMotion = useReducedMotion();
   const childThemes = useMemo(() => [
     { id: 'all', label: t('allCategories'), shortLabel: t('allCategories'), pictogram: '⭐', cue: 'Go', gradient: 'from-primary-400 to-secondary-400', match: [] },
     ...localizeKidCategories(language),
@@ -107,23 +117,50 @@ function KidsLibrary() {
 
   const handleThemeChange = (themeId) => {
     setSelectedTheme(themeId);
-    setSearchParams({ theme: themeId });
+    if (themeId === 'all') {
+      setSearchParams({});
+    } else {
+      setSearchParams({ theme: themeId });
+    }
   };
 
   const favoritesIds = storage.getFavorites();
-  const favoriteBooks = books.filter((b) => favoritesIds.includes(b.id));
-  const newBooks = [...books].sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0)).slice(0, 15);
-  const downloadedBooks = books.filter((b) => offlineContent.getBookStatus(b.id)?.status === 'downloaded');
+  const readingHistory = storage.getReadingHistory();
+  const taggedBooks = useMemo(() => withThemeEmoji(books, childThemes), [books, childThemes]);
+
+  const continueBooks = useMemo(() => {
+    const byId = new Map(taggedBooks.map((book) => [book.id, book]));
+    return readingHistory
+      .map((entry) => byId.get(entry.bookId))
+      .filter(Boolean)
+      .slice(0, 12);
+  }, [taggedBooks, readingHistory]);
+
+  const favoriteBooks = taggedBooks.filter((b) => favoritesIds.includes(b.id));
+  const newBooks = [...taggedBooks].sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0)).slice(0, 15);
+
   const recommendedSection = recommendationSections.find((section) => section.id === 'recommended_for_you');
   const recommendedIds = new Set(
     (recommendedSection?.items || []).map((item) => Number(item.id ?? item.book_id)).filter(Number.isFinite)
   );
-  const recommendedBooks = recommendedIds.size > 0
-    ? books.filter((book) => recommendedIds.has(Number(book.id)))
-    : books.slice(0, 10);
+  const todayBooks = recommendedIds.size > 0
+    ? taggedBooks.filter((book) => recommendedIds.has(Number(book.id)))
+    : taggedBooks.slice(0, 10);
 
-  const themeBooks = books.filter((b) => inferTheme(b, childThemes) === selectedTheme);
-  const featuredBook = selectedTheme === 'all' ? recommendedBooks[0] : (themeBooks.length > 0 ? themeBooks[0] : null);
+  const themeShelves = useMemo(() => (
+    SHELF_THEME_IDS
+      .map((themeId) => {
+        const theme = childThemes.find((item) => item.id === themeId);
+        if (!theme) return null;
+        const shelfBooks = taggedBooks.filter((book) => book._themeId === themeId).slice(0, 15);
+        if (!shelfBooks.length) return null;
+        return { theme, books: shelfBooks };
+      })
+      .filter(Boolean)
+  ), [childThemes, taggedBooks]);
+
+  const themeBooks = taggedBooks.filter((b) => b._themeId === selectedTheme);
+  const featuredBook = selectedTheme === 'all' ? (continueBooks[0] || todayBooks[0]) : (themeBooks[0] || null);
   const activeThemeData = childThemes.find((theme) => theme.id === selectedTheme);
 
   const toggleFavorite = (bookId) => {
@@ -161,11 +198,14 @@ function KidsLibrary() {
     onFavorite: toggleFavorite,
     onDownload: handleDownloadBook,
     showActions: true,
+    hideTitle: true,
     modality: 'books',
   };
 
   return (
-    <KidsPageShell isRtl={isRtl} variant="library" className="pb-32 kids-glow-books" footer={<KidsBottomNav />}>
+    <KidsPageShell isRtl={isRtl} variant="library" world="books" className="pb-32 kids-glow-books" footer={<KidsBottomNav />}>
+      {selectedTheme !== 'all' && <KidsCategoryAtmosphere categoryId={selectedTheme} />}
+
       <header className="relative z-10 px-6 py-4 flex items-center justify-between kids-premium-panel mx-4 sm:mx-6 mt-2 sticky top-2">
         <div className="flex items-center gap-4">
           <button
@@ -180,15 +220,12 @@ function KidsLibrary() {
             <Logo size="default" showText={false} />
           </Link>
         </div>
-        <span className="text-4xl" aria-hidden="true">📚</span>
+        <span className="text-4xl" aria-hidden="true">{selectedTheme === 'all' ? '📚' : (activeThemeData?.pictogram || '📚')}</span>
       </header>
 
       <main className="relative z-20 max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-10">
-        <section className="mb-4">
-          <h2 className="kids-shelf-title mb-4 px-2">
-            <span aria-hidden="true">🎨</span>
-            <span className="sr-only sm:not-sr-only">{t('allCategories')}</span>
-          </h2>
+        {/* Visual theme explorer — no search bar */}
+        <section className="mb-2" aria-label={t('allCategories')}>
           <div className="flex gap-4 overflow-x-auto pb-4 pt-2 px-2 snap-x snap-mandatory custom-scrollbar">
             {childThemes.map((theme) => (
               <KidsThemePill
@@ -203,58 +240,59 @@ function KidsLibrary() {
 
         {featuredBook && (
           <motion.section
-            key={selectedTheme}
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.4 }}
-            className={`relative overflow-hidden rounded-[2.75rem] kids-premium-panel p-6 md:p-12 text-white shadow-kids-soft border-4 border-white/50 mb-10`}
+            key={`hero-${selectedTheme}-${featuredBook.id}`}
+            {...getMotionProps(reducedMotion, kidsPageEnter)}
+            className="relative overflow-hidden rounded-[2.75rem] kids-premium-panel p-5 md:p-8 text-white shadow-kids-soft border-4 border-white/50"
           >
             <div className={`absolute inset-0 bg-gradient-to-br ${activeThemeData?.gradient || 'from-primary-500 to-secondary-500'} opacity-95`} />
-            <div className="absolute top-0 right-0 w-96 h-96 bg-white/10 rounded-full blur-3xl -mr-20 -mt-20" />
-            <div className="absolute bottom-0 left-0 w-64 h-64 bg-black/10 rounded-full blur-3xl -ml-20 -mb-20" />
-            <div className="absolute right-10 top-1/2 -translate-y-1/2 text-[15rem] opacity-20 pointer-events-none filter blur-sm transform rotate-12">
-              {activeThemeData?.pictogram}
+            <div className="absolute right-8 top-1/2 -translate-y-1/2 text-[12rem] opacity-20 pointer-events-none" aria-hidden="true">
+              {activeThemeData?.pictogram || '⭐'}
             </div>
-
-            <div className="relative z-10 flex flex-col md:flex-row items-center gap-12">
-              <motion.div
-                whileHover={{ scale: 1.05, rotate: -2 }}
-                className="w-48 md:w-64 shrink-0 relative rounded-3xl overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.5)] border-4 border-white cursor-pointer"
+            <div className="relative z-10 flex flex-col md:flex-row items-center gap-8 md:gap-12">
+              <motion.button
+                type="button"
+                whileHover={reducedMotion ? undefined : { scale: 1.05, y: -6 }}
+                whileTap={reducedMotion ? undefined : { scale: 0.97 }}
+                className="w-44 md:w-56 shrink-0 relative rounded-[2rem] overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.45)] border-4 border-white kids-book-object"
                 onClick={() => handlePlayBook(featuredBook)}
+                aria-label={featuredBook.title}
               >
                 <img
                   src={getImageUrl(featuredBook.cover_image, 'book')}
-                  alt={featuredBook.title}
-                  className="w-full h-auto object-cover"
+                  alt=""
+                  className="w-full aspect-[3/4] object-cover"
                 />
-              </motion.div>
-
-              <div className={`flex-1 text-center ${isRtl ? 'md:text-right' : 'md:text-left'}`}>
-                <div className="inline-flex items-center gap-2 rounded-full bg-white/20 backdrop-blur-md border-2 border-white/30 px-5 py-2 text-sm font-black mb-6 shadow-xl text-white">
-                  <StarIcon className="h-5 w-5 text-accent-300" filled />
-                  <span>{t('featured')} {activeThemeData?.label}</span>
+                <div className="absolute inset-0 flex items-center justify-center bg-black/10">
+                  <span className="kids-touch-target grid h-16 w-16 place-items-center rounded-full bg-white/40 border-4 border-white/60">
+                    <PlayIcon className={`h-8 w-8 text-white ${isRtl ? 'rotate-180' : ''}`} filled />
+                  </span>
                 </div>
-                <h1 className="text-3xl md:text-6xl font-black leading-tight mb-4 filter drop-shadow-lg text-white hidden lg:block">
-                  {featuredBook.title}
-                </h1>
+              </motion.button>
 
-                <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 mt-8">
+              <div className="flex flex-col items-center md:items-start gap-4">
+                <span className="inline-flex items-center gap-2 rounded-full bg-white/20 backdrop-blur-md border-2 border-white/30 px-5 py-2 text-sm font-black shadow-xl">
+                  <StarIcon className="h-5 w-5 text-accent-300" filled />
+                  <span className="line-clamp-1">{selectedTheme === 'all' ? t('forYou') : (activeThemeData?.shortLabel || activeThemeData?.label)}</span>
+                </span>
+                <div className="flex flex-wrap items-center justify-center md:justify-start gap-3">
                   <motion.button
                     type="button"
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={() => handlePlayBook(featuredBook)}
-                    className="kids-touch-target flex items-center gap-4 rounded-full bg-white px-8 md:px-10 py-4 text-xl md:text-2xl font-black text-primary-600 shadow-xl hover:shadow-2xl transition"
+                    className="kids-touch-target flex items-center gap-3 rounded-full bg-white px-8 py-4 text-xl font-black text-primary-600 shadow-xl"
+                    aria-label={t('listenAction')}
                   >
                     <PlayIcon className={`h-8 w-8 ${isRtl ? 'rotate-180' : ''}`} filled />
-                    {t('listenAction')}
+                    <span className="hidden sm:inline">{t('listenAction')}</span>
                   </motion.button>
                   <motion.button
                     type="button"
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.9 }}
+                    whileHover={{ scale: 1.08 }}
+                    whileTap={{ scale: 0.92 }}
                     onClick={() => toggleFavorite(featuredBook.id)}
-                    className="kids-touch-target rounded-full bg-white/25 backdrop-blur-md p-4 text-white shadow-xl border-2 border-white/35 hover:bg-rose-500 transition-colors"
+                    className="kids-touch-target rounded-full bg-white/25 backdrop-blur-md p-4 text-white shadow-xl border-2 border-white/35"
+                    aria-label={t('yourFavorites')}
                   >
                     <HeartIcon className="h-8 w-8" filled={favoritesIds.includes(featuredBook.id)} />
                   </motion.button>
@@ -268,7 +306,7 @@ function KidsLibrary() {
 
         {loading ? (
           <div className="px-4">
-            <BookGridSkeleton count={8} />
+            <BookGridSkeleton count={8} variant="carousel" />
           </div>
         ) : books.length === 0 ? (
           <KidsEmptyState
@@ -279,47 +317,56 @@ function KidsLibrary() {
             onAction={() => handleThemeChange('all')}
           />
         ) : selectedTheme !== 'all' ? (
-          <section className="mb-12">
-            {themeBooks.length === 0 ? (
-              <KidsEmptyState
-                emoji="🔍"
-                title={t('nothingFound')}
-                description={t('tryAnotherWord')}
-                actionLabel={t('allCategories')}
-                onAction={() => handleThemeChange('all')}
+          themeBooks.length === 0 ? (
+            <KidsEmptyState
+              emoji={activeThemeData?.pictogram || '🔍'}
+              title={t('nothingFound')}
+              description={t('tryAnotherWord')}
+              actionLabel={t('allCategories')}
+              onAction={() => handleThemeChange('all')}
+            />
+          ) : (
+            <div className="kids-shelf-rail">
+              <KidsBookCarousel
+                title={activeThemeData?.shortLabel || activeThemeData?.label}
+                emoji={activeThemeData?.pictogram}
+                books={themeBooks}
+                {...carouselProps}
               />
-            ) : (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 justify-items-center">
-              <AnimatePresence>
-                {themeBooks.map((book) => (
-                  <KidsMediaCard
-                    key={book.id}
-                    book={book}
-                    variant="poster"
-                    hideTitle
-                    isFavorite={favoritesIds.includes(book.id)}
-                    offlineReady={offlineContent.getBookStatus(book.id)?.status === 'downloaded'}
-                    showActions
-                    onPlay={handlePlayBook}
-                    onFavorite={toggleFavorite}
-                    onDownload={handleDownloadBook}
-                    isRtl={isRtl}
-                  />
-                ))}
-              </AnimatePresence>
             </div>
-            )}
-          </section>
+          )
         ) : (
-          <div className="space-y-16">
-            <KidsBookCarousel title={t('forYou')} icon={SparklesIcon} books={recommendedBooks} hideTitle {...carouselProps} />
-            <KidsBookCarousel title={t('newBooks')} icon={BookIcon} books={newBooks} hideTitle {...carouselProps} />
+          <div className="space-y-12">
+            {continueBooks.length > 0 && (
+              <div className="kids-shelf-rail">
+                <KidsBookCarousel title={t('continueReading')} emoji="⭐" books={continueBooks} {...carouselProps} />
+              </div>
+            )}
             {favoriteBooks.length > 0 && (
-              <KidsBookCarousel title={t('yourFavorites')} icon={HeartIcon} books={favoriteBooks} hideTitle {...carouselProps} />
+              <div className="kids-shelf-rail">
+                <KidsBookCarousel title={t('yourFavorites')} emoji="❤️" books={favoriteBooks} {...carouselProps} modality="favorites" />
+              </div>
             )}
-            {downloadedBooks.length > 0 && (
-              <KidsBookCarousel title={t('offline')} icon={DownloadIcon} books={downloadedBooks} hideTitle {...carouselProps} />
+            {newBooks.length > 0 && (
+              <div className="kids-shelf-rail">
+                <KidsBookCarousel title={t('newBooks')} emoji="🆕" books={newBooks} {...carouselProps} />
+              </div>
             )}
+            {todayBooks.length > 0 && (
+              <div className="kids-shelf-rail">
+                <KidsBookCarousel title={t('kidsStoriesToday')} emoji="📖" books={todayBooks} {...carouselProps} />
+              </div>
+            )}
+            {themeShelves.map(({ theme, books: shelfBooks }) => (
+              <div key={theme.id} className="kids-shelf-rail">
+                <KidsBookCarousel
+                  title={theme.shortLabel || theme.label}
+                  emoji={theme.pictogram}
+                  books={shelfBooks}
+                  {...carouselProps}
+                />
+              </div>
+            ))}
           </div>
         )}
       </main>

@@ -6,7 +6,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { localizeKidCategories } from '../constants/kidCategories';
 import { getKidsModality } from '../constants/kidsModality';
 import { VoiceAssistant } from '../components/kids/VoiceAssistant';
-import { LitMascot } from '../components/kids/LitMascot';
+import { KidsMascot } from '../components/kids/KidsMascot';
 import { KidsPageShell } from '../components/kids/KidsPageShell';
 import { KidsBookCarousel } from '../components/kids/KidsBookCarousel';
 import { KidCategoryCard } from '../components/kids/KidCategoryCard';
@@ -31,14 +31,6 @@ import { BookGridSkeleton } from '../components/SkeletonLoader';
 function getRecommendedBooks(sections = []) {
   const recommendedSection = sections.find((section) => section.id === 'recommended_for_you');
   return Array.isArray(recommendedSection?.items) ? recommendedSection.items : [];
-}
-
-function getPopularBooks(books, history = []) {
-  const order = new Map(history.map((item, index) => [item.bookId, index]));
-  return [...books]
-    .filter((book) => order.has(book.id))
-    .sort((a, b) => order.get(a.id) - order.get(b.id))
-    .slice(0, 15);
 }
 
 const AUTONOMY_WORLDS = [
@@ -141,7 +133,6 @@ function KidsHome() {
   )) || null;
   const recommendedBooks = getRecommendedBooks(recommendationSections);
   const favoriteIds = storage.getFavorites();
-  const readingHistory = storage.getReadingHistory();
 
   const favoriteBooks = useMemo(
     () => publishedBooks.filter((book) => favoriteIds.includes(book.id)),
@@ -151,11 +142,6 @@ function KidsHome() {
   const newBooks = useMemo(
     () => [...publishedBooks].sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0)).slice(0, 15),
     [publishedBooks],
-  );
-
-  const popularBooks = useMemo(
-    () => getPopularBooks(publishedBooks, readingHistory),
-    [publishedBooks, readingHistory],
   );
 
   const continueBooks = useMemo(
@@ -220,7 +206,7 @@ function KidsHome() {
 
   if (loading) {
     return (
-      <KidsPageShell isRtl={isRtl} variant="home" className="pb-32" footer={<KidsBottomNav />}>
+      <KidsPageShell isRtl={isRtl} variant="home" world="home" className="pb-32" footer={<KidsBottomNav />}>
         <div className="px-6 py-8 space-y-8">
           <div className="kids-premium-panel h-72 animate-pulse" />
           <BookGridSkeleton count={5} variant="carousel" />
@@ -230,7 +216,7 @@ function KidsHome() {
   }
 
   return (
-    <KidsPageShell isRtl={isRtl} variant="home" className="pb-32 kids-hero-glow" footer={<KidsBottomNav />}>
+    <KidsPageShell isRtl={isRtl} variant="home" world="home" className="pb-32 kids-hero-glow" footer={<KidsBottomNav />}>
       <header className="relative z-10 px-6 py-4 flex items-center justify-between gap-4">
         <div className="flex items-center gap-4 min-w-0">
           <Avatar
@@ -244,11 +230,11 @@ function KidsHome() {
             <h1 className="text-xl md:text-2xl font-black text-foreground truncate">
               {greeting} <span className="text-primary-600">{kidName}</span>
             </h1>
-            <p className="hidden sm:block text-sm font-bold text-foreground-muted">{t('readyToPlay')}</p>
+            <p className="hidden sm:block text-sm font-bold text-foreground-muted line-clamp-1">{t('kidsDiscoverToday')}</p>
           </div>
         </div>
         <div className="flex items-center gap-3 shrink-0">
-          <LitMascot showBubble={false} size="small" className="hidden sm:flex" />
+          <KidsMascot mood="wave" size="small" showBubble className="hidden sm:block" />
           <Link to="/kids" className="shrink-0 transition-transform hover:scale-105 active:scale-95">
             <Logo size="default" showText={false} />
           </Link>
@@ -321,11 +307,11 @@ function KidsHome() {
                   whileHover={{ scale: 1.04, y: -2 }}
                   whileTap={{ scale: 0.96 }}
                   onClick={() => navigate(world.path)}
-                  className={`kids-touch-target rounded-[2rem] bg-gradient-to-br ${theme.gradient} p-5 md:p-6 text-white shadow-kids-soft border-4 border-white/50 min-h-[8rem] flex flex-col items-center justify-center gap-2`}
+                  className={`kids-touch-target rounded-[2rem] bg-gradient-to-br ${theme.gradient} p-5 md:p-6 text-white shadow-kids-soft border-4 border-white/50 min-h-[8.5rem] flex flex-col items-center justify-center gap-2`}
                   aria-label={t(world.labelKey)}
                 >
                   <span className="text-5xl md:text-6xl" aria-hidden="true">{world.emoji}</span>
-                  <span className="font-black text-base md:text-lg">{t(world.labelKey)}</span>
+                  <span className="font-black text-base md:text-lg line-clamp-1">{t(world.labelKey)}</span>
                 </motion.button>
               );
             })}
@@ -335,31 +321,25 @@ function KidsHome() {
         <KidsFamilyMessages />
 
         {continueBooks.length > 0 && (
-          <KidsBookCarousel
-            title={t('continueReading')}
-            emoji="📖"
-            books={continueBooks}
-            {...carouselProps}
-          />
-        )}
-
-        {favoriteBooks.length > 0 && (
-          <KidsBookCarousel
-            title={t('yourFavorites')}
-            emoji="❤️"
-            books={favoriteBooks}
-            {...carouselProps}
-            modality="favorites"
-          />
+          <div className="kids-shelf-rail">
+            <KidsBookCarousel
+              title={t('continueReading')}
+              emoji="⭐"
+              books={continueBooks}
+              {...carouselProps}
+            />
+          </div>
         )}
 
         {recommendedBooks.length > 0 ? (
-          <KidsBookCarousel
-            title={t('forYou')}
-            emoji="⭐"
-            books={recommendedBooks}
-            {...carouselProps}
-          />
+          <div className="kids-shelf-rail">
+            <KidsBookCarousel
+              title={t('kidsStoriesToday')}
+              emoji="📖"
+              books={recommendedBooks}
+              {...carouselProps}
+            />
+          </div>
         ) : (
           <KidsEmptyState
             emoji="📚"
@@ -370,28 +350,33 @@ function KidsHome() {
           />
         )}
 
+        {favoriteBooks.length > 0 && (
+          <div className="kids-shelf-rail">
+            <KidsBookCarousel
+              title={t('kidsRecentlyLoved')}
+              emoji="❤️"
+              books={favoriteBooks}
+              {...carouselProps}
+              modality="favorites"
+            />
+          </div>
+        )}
+
         {newBooks.length > 0 && (
-          <KidsBookCarousel
-            title={t('newBooks')}
-            emoji="🆕"
-            books={newBooks}
-            {...carouselProps}
-          />
+          <div className="kids-shelf-rail">
+            <KidsBookCarousel
+              title={t('newBooks')}
+              emoji="🆕"
+              books={newBooks}
+              {...carouselProps}
+            />
+          </div>
         )}
 
-        {popularBooks.length > 0 && (
-          <KidsBookCarousel
-            title={t('popularStories')}
-            emoji="🔥"
-            books={popularBooks}
-            {...carouselProps}
-          />
-        )}
-
-        <section>
+        <section aria-label={t('allCategories')}>
           <h2 className="kids-shelf-title mb-5 px-2">
             <span aria-hidden="true">🗂️</span>
-            <span className="sr-only sm:not-sr-only">{t('allCategories')}</span>
+            <span className="sr-only">{t('allCategories')}</span>
           </h2>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-5">
             {kidCategories.map((category) => (

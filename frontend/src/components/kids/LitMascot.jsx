@@ -1,5 +1,7 @@
 import { motion } from 'framer-motion';
 import { useLanguage } from '../../context/LanguageContext';
+import { useReducedMotion } from '../../hooks/useReducedMotion';
+import { getFloatMotion } from '../../constants/kidsMotion';
 
 const SIZE_MAP = {
   small: 'w-24 h-24 md:w-28 md:h-28',
@@ -14,22 +16,23 @@ export function LitMascot({
   message,
 }) {
   const { t } = useLanguage();
+  const reducedMotion = useReducedMotion();
   const bubbleText = message || t('litMascotGreeting');
   const sizeClass = SIZE_MAP[size] || SIZE_MAP.default;
+  const floatProps = getFloatMotion(reducedMotion);
 
   return (
     <motion.div
       className={`relative ${sizeClass} ${className}`}
-      animate={{ y: [0, -10, 0] }}
-      transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+      {...floatProps}
     >
-      <div className="absolute inset-0 bg-primary-500/20 blur-3xl rounded-full animate-pulse-glow" />
+      <div className="absolute inset-0 bg-primary-500/20 blur-3xl rounded-full" />
 
       {showBubble && (
         <motion.div
-          initial={{ opacity: 0, scale: 0.8 }}
+          initial={reducedMotion ? false : { opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.3, type: 'spring', stiffness: 260 }}
+          transition={reducedMotion ? { duration: 0 } : { delay: 0.2, type: 'spring', stiffness: 260 }}
           className="absolute -top-2 left-1/2 -translate-x-1/2 md:-top-4 z-20 w-[90%] max-w-xs"
         >
           <div className="relative bg-white dark:bg-surface-800 rounded-3xl px-4 py-3 shadow-lg border-4 border-primary-100 dark:border-primary-900 text-center">
@@ -45,19 +48,7 @@ export function LitMascot({
         src="/assets/lit_mascot.png"
         alt={t('litMascotName')}
         className="relative z-10 w-full h-full object-contain drop-shadow-2xl"
-      />
-
-      <motion.div
-        className="absolute top-4 right-8 w-4 h-4 bg-accent-300 rounded-full blur-[2px]"
-        animate={{ scale: [1, 1.5, 1], opacity: [0.5, 1, 0.5] }}
-        transition={{ duration: 2, repeat: Infinity, delay: 0.5 }}
-        aria-hidden="true"
-      />
-      <motion.div
-        className="absolute bottom-12 left-4 w-3 h-3 bg-secondary-300 rounded-full blur-[1px]"
-        animate={{ scale: [1, 1.8, 1], opacity: [0.3, 0.8, 0.3] }}
-        transition={{ duration: 2.5, repeat: Infinity, delay: 1 }}
-        aria-hidden="true"
+        loading="lazy"
       />
     </motion.div>
   );

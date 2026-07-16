@@ -285,6 +285,309 @@
 
   .kids-story-card {
     @apply overflow-hidden rounded-[2rem] bg-surface-secondary shadow-lg border-4 border-white/50 dark:border-white/10 transition-all duration-300 hover:shadow-2xl;
+    box-shadow:
+      0 12px 28px -8px rgba(59, 154, 232, 0.22),
+      0 4px 12px -4px rgba(15, 23, 42, 0.12),
+      inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  }
+
+  .kids-story-card:hover {
+    box-shadow:
+      0 22px 44px -10px rgba(59, 154, 232, 0.28),
+      0 8px 18px -6px rgba(15, 23, 42, 0.16),
+      inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  }
+
+  .kids-shimmer {
+    background: linear-gradient(
+      110deg,
+      rgba(255, 255, 255, 0) 0%,
+      rgba(255, 255, 255, 0.45) 45%,
+      rgba(255, 255, 255, 0) 90%
+    );
+    background-size: 200% 100%;
+    animation: kids-shimmer-move 1.6s ease-in-out infinite;
+  }
+
+  @keyframes kids-shimmer-move {
+    0% { background-position: 120% 0; }
+    100% { background-position: -40% 0; }
+  }
+
+  .kids-ambient {
+    z-index: 0;
+  }
+
+  .kids-ambient-emoji {
+    position: absolute;
+    font-size: 2.5rem;
+    opacity: 0.18;
+    filter: blur(0.2px);
+  }
+
+  .kids-ambient-shelf {
+    position: absolute;
+    height: 10px;
+    border-radius: 999px;
+    background: linear-gradient(90deg, rgba(59, 154, 232, 0.12), rgba(45, 212, 191, 0.08));
+    left: 5%;
+    right: 5%;
+  }
+  .kids-ambient-shelf-1 { top: 22%; }
+  .kids-ambient-shelf-2 { top: 48%; opacity: 0.7; }
+  .kids-ambient-shelf-3 { top: 74%; opacity: 0.55; }
+
+  .kids-ambient-moon {
+    position: absolute;
+    top: 8%;
+    right: 10%;
+    width: 5.5rem;
+    height: 5.5rem;
+    border-radius: 999px;
+    background: radial-gradient(circle at 35% 35%, #fef9c3, #fbbf24 55%, transparent 70%);
+    opacity: 0.45;
+  }
+
+  .kids-ambient-star {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    border-radius: 999px;
+    background: #fde68a;
+    box-shadow: 0 0 12px 4px rgba(251, 191, 36, 0.45);
+    animation: kids-twinkle 2.8s ease-in-out infinite;
+  }
+  .kids-ambient-star-sm {
+    width: 5px;
+    height: 5px;
+    opacity: 0.7;
+  }
+
+  @keyframes kids-twinkle {
+    0%, 100% { opacity: 0.35; transform: scale(0.9); }
+    50% { opacity: 0.9; transform: scale(1.15); }
+  }
+
+  .kids-ambient-blob {
+    position: absolute;
+    border-radius: 40% 60% 55% 45%;
+    filter: blur(2px);
+    opacity: 0.22;
+  }
+  .kids-ambient-blob-a {
+    width: 12rem;
+    height: 12rem;
+    top: 10%;
+    left: -2%;
+    background: rgba(45, 212, 191, 0.45);
+    animation: kids-drift 9s ease-in-out infinite;
+  }
+  .kids-ambient-blob-b {
+    width: 9rem;
+    height: 9rem;
+    top: 40%;
+    right: -1%;
+    background: rgba(59, 154, 232, 0.35);
+    animation: kids-drift 11s ease-in-out infinite reverse;
+  }
+  .kids-ambient-blob-c {
+    width: 7rem;
+    height: 7rem;
+    bottom: 15%;
+    left: 30%;
+    background: rgba(251, 191, 36, 0.3);
+    animation: kids-drift 8s ease-in-out infinite;
+  }
+
+  @keyframes kids-drift {
+    0%, 100% { transform: translate(0, 0) rotate(0deg); }
+    50% { transform: translate(12px, -10px) rotate(8deg); }
+  }
+
+  .kids-ambient-cloud {
+    position: absolute;
+    height: 3rem;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.45);
+    filter: blur(1px);
+    opacity: 0.5;
+  }
+  .kids-ambient-cloud-1 { width: 10rem; top: 16%; left: 8%; }
+  .kids-ambient-cloud-2 { width: 7rem; top: 28%; right: 12%; opacity: 0.35; }
+
+  .kids-ambient-spark {
+    position: absolute;
+    width: 6px;
+    height: 6px;
+    border-radius: 999px;
+    background: #c4b5fd;
+    box-shadow: 0 0 10px 3px rgba(167, 139, 250, 0.5);
+  }
+
+  .kids-ambient-heart {
+    position: absolute;
+    width: 1.25rem;
+    height: 1.25rem;
+    background: rgba(244, 114, 182, 0.35);
+    transform: rotate(45deg);
+    border-radius: 2px;
+    opacity: 0.5;
+  }
+  .kids-ambient-heart::before,
+  .kids-ambient-heart::after {
+    content: '';
+    position: absolute;
+    width: 1.25rem;
+    height: 1.25rem;
+    background: inherit;
+    border-radius: 999px;
+  }
+  .kids-ambient-heart::before { top: -0.625rem; left: 0; }
+  .kids-ambient-heart::after { top: 0; left: -0.625rem; }
+  .kids-ambient-heart-sm { transform: rotate(45deg) scale(0.7); opacity: 0.35; }
+
+  .kids-ambient-static .kids-ambient-star,
+  .kids-ambient-static .kids-ambient-blob,
+  .kids-ambient-static .kids-shimmer {
+    animation: none !important;
+  }
+
+  .kids-ambient-books {
+    background: radial-gradient(ellipse at 15% 20%, rgba(59, 154, 232, 0.12), transparent 50%);
+  }
+  .kids-ambient-audio {
+    background: radial-gradient(ellipse at 80% 10%, rgba(251, 191, 36, 0.16), transparent 45%),
+      radial-gradient(ellipse at 20% 80%, rgba(30, 64, 175, 0.08), transparent 50%);
+  }
+  .kids-ambient-learn {
+    background: radial-gradient(ellipse at 50% 0%, rgba(45, 212, 191, 0.14), transparent 50%);
+  }
+  .kids-ambient-create {
+    background: radial-gradient(ellipse at 50% 0%, rgba(167, 139, 250, 0.16), transparent 50%),
+      radial-gradient(ellipse at 80% 80%, rgba(59, 154, 232, 0.1), transparent 45%);
+  }
+  .kids-ambient-favorites {
+    background: radial-gradient(ellipse at 30% 20%, rgba(244, 114, 182, 0.14), transparent 50%);
+  }
+  .kids-ambient-home {
+    background: transparent;
+  }
+
+  .kids-book-object {
+    margin-inline: 0.25rem;
+  }
+
+  .kids-book-glow {
+    box-shadow: inset 0 0 0 3px rgba(255, 255, 255, 0.45);
+    background: radial-gradient(circle at 50% 40%, rgba(255, 255, 255, 0.18), transparent 55%);
+  }
+
+  .kids-shelf-rail {
+    position: relative;
+    padding-bottom: 0.75rem;
+  }
+
+  .kids-shelf-rail::after {
+    content: '';
+    position: absolute;
+    left: 0.5rem;
+    right: 0.5rem;
+    bottom: 0;
+    height: 10px;
+    border-radius: 999px;
+    background: linear-gradient(90deg, rgba(180, 140, 100, 0.35), rgba(120, 90, 60, 0.45), rgba(180, 140, 100, 0.35));
+    box-shadow: 0 6px 14px -6px rgba(59, 154, 232, 0.2);
+    opacity: 0.55;
+  }
+
+  .kids-category-atmosphere {
+    z-index: 0;
+  }
+
+  .kids-cat-motif {
+    position: absolute;
+    opacity: 0.28;
+    filter: blur(0.2px);
+  }
+
+  .kids-cat-print {
+    position: absolute;
+    width: 2.2rem;
+    height: 2.8rem;
+    border-radius: 50% 50% 40% 40%;
+    background: rgba(22, 101, 52, 0.18);
+    transform: rotate(-18deg);
+  }
+  .kids-cat-print-sm {
+    transform: rotate(12deg) scale(0.7);
+    opacity: 0.7;
+  }
+
+  .kids-cat-bubble {
+    position: absolute;
+    width: 1.4rem;
+    height: 1.4rem;
+    border-radius: 999px;
+    border: 2px solid rgba(56, 189, 248, 0.35);
+    background: rgba(165, 243, 252, 0.2);
+    animation: kids-bubble-rise 5s ease-in-out infinite;
+  }
+  .kids-cat-bubble-sm {
+    width: 0.85rem;
+    height: 0.85rem;
+    animation-duration: 4s;
+  }
+
+  @keyframes kids-bubble-rise {
+    0%, 100% { transform: translateY(0); opacity: 0.35; }
+    50% { transform: translateY(-18px); opacity: 0.7; }
+  }
+
+  .kids-cat-dino {
+    background: radial-gradient(ellipse at 20% 80%, rgba(34, 197, 94, 0.12), transparent 50%);
+  }
+  .kids-cat-space {
+    background: radial-gradient(ellipse at 50% 0%, rgba(30, 27, 75, 0.2), transparent 55%);
+  }
+  .kids-cat-ocean {
+    background: radial-gradient(ellipse at 50% 100%, rgba(14, 165, 233, 0.16), transparent 50%);
+  }
+  .kids-cat-fairy {
+    background: radial-gradient(ellipse at 70% 20%, rgba(232, 121, 249, 0.14), transparent 50%);
+  }
+  .kids-cat-bedtime {
+    background: radial-gradient(ellipse at 80% 10%, rgba(99, 102, 241, 0.16), transparent 45%);
+  }
+  .kids-cat-animals {
+    background: radial-gradient(ellipse at 30% 20%, rgba(251, 191, 36, 0.12), transparent 50%);
+  }
+  .kids-cat-vehicles,
+  .kids-cat-world,
+  .kids-cat-colors,
+  .kids-cat-spirit,
+  .kids-cat-rhymes,
+  .kids-cat-abc,
+  .kids-cat-numbers,
+  .kids-cat-jobs,
+  .kids-cat-default {
+    background: radial-gradient(ellipse at 40% 0%, rgba(59, 154, 232, 0.1), transparent 50%);
+  }
+
+  .kids-btn-ripple {
+    position: relative;
+    overflow: hidden;
+  }
+  .kids-btn-ripple::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at var(--ripple-x, 50%) var(--ripple-y, 50%), rgba(255,255,255,0.35), transparent 55%);
+    opacity: 0;
+    transition: opacity 0.35s ease;
+    pointer-events: none;
+  }
+  .kids-btn-ripple:active::after {
+    opacity: 1;
   }
 
   .kids-shelf-title {

@@ -89,7 +89,7 @@ function KidsListen() {
 
   if (loading) {
     return (
-      <KidsPageShell isRtl={isRtl} variant="library" className="pb-32" footer={<KidsBottomNav />}>
+      <KidsPageShell isRtl={isRtl} variant="library" world="audio" className="pb-32" footer={<KidsBottomNav />}>
         <KidsPageHeader backTo="/kids/audio" emoji="🎧" />
         <div className="px-6 py-12">
           <BookGridSkeleton count={1} variant="carousel" />
@@ -101,7 +101,7 @@ function KidsListen() {
   if (!book) return null;
 
   return (
-    <KidsPageShell isRtl={isRtl} variant="library" className="pb-32 kids-glow-audio" footer={<KidsBottomNav />}>
+    <KidsPageShell isRtl={isRtl} variant="library" world="audio" className="pb-32 kids-glow-audio" footer={<KidsBottomNav />}>
       <KidsPageHeader backTo="/kids/audio" onBack={() => navigate('/kids/audio')} emoji="🎧" />
 
       <div className="relative z-10 mx-auto max-w-3xl px-4 py-4">
@@ -163,9 +163,11 @@ function KidsListen() {
             <motion.button
               type="button"
               whileTap={{ scale: 0.92 }}
+              animate={player.playing ? { scale: [1, 1.05, 1], boxShadow: ['0 0 0 0 rgba(251,191,36,0.4)', '0 0 0 14px rgba(251,191,36,0)', '0 0 0 0 rgba(251,191,36,0.4)'] } : { scale: 1 }}
+              transition={player.playing ? { duration: 1.6, repeat: Infinity, ease: 'easeInOut' } : undefined}
               onClick={() => (player.playing ? player.pause() : player.play(book))}
               disabled={!book.audio_url}
-              className="kids-touch-target grid h-28 w-28 place-items-center rounded-full bg-gradient-to-br from-primary-500 to-secondary-400 text-white shadow-glow disabled:opacity-40 border-4 border-white"
+              className="kids-touch-target grid h-28 w-28 place-items-center rounded-full bg-gradient-to-br from-accent-400 to-accent-600 text-white shadow-glow disabled:opacity-40 border-4 border-white"
               aria-label={player.playing ? t('pause') : t('listenAction')}
             >
               {player.playing ? <PauseIcon className="h-14 w-14" /> : <PlayIcon className={`h-14 w-14 ${isRtl ? 'rotate-180' : ''}`} filled />}

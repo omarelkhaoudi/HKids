@@ -20,6 +20,7 @@ import ReadingAidPanel from '../components/ReadingAidPanel';
 import {ContentReportModal} from '../components/parent/ContentReportModal';
 import {AudioPlayer} from '../components/audio/AudioPlayer';
 import {useAudioPlayer} from '../hooks/useAudioPlayer';
+import {KidsCelebration} from '../components/kids/KidsCelebration';
 
 // Configuration de pdfjs-dist
 if (typeof window !== 'undefined') {
@@ -1103,6 +1104,7 @@ function BookReader() {
  const [showMenu, setShowMenu] = useState(!isKidReader);
  const [isFavorite, setIsFavorite] = useState(false);
  const [showEndModal, setShowEndModal] = useState(false);
+ const [showKidCelebration, setShowKidCelebration] = useState(false);
  const [showReportModal, setShowReportModal] = useState(false);
  const canReport = user && (user.role === 'parent' || user.role === 'admin') && !isKidReader;
 
@@ -1147,6 +1149,10 @@ function BookReader() {
 
  if (hasReachedEnd && isLastPage && !isKidReader) {
  const timeoutId = setTimeout(() => setShowEndModal(true), 1500);
+ return () => clearTimeout(timeoutId);
+}
+ if (hasReachedEnd && isLastPage && isKidReader) {
+ const timeoutId = setTimeout(() => setShowKidCelebration(true), 600);
  return () => clearTimeout(timeoutId);
 }
  return undefined;
@@ -1247,7 +1253,8 @@ function BookReader() {
  onTouchEnd={onTouchEnd}
  >
  <Confetti show={showConfetti} />
- 
+ {isKidReader && <StarParticles count={14} />}
+
  {/* Top Navbar (Glassmorphism) */}
  <AnimatePresence>
  {(showMenu || isKidReader) && (
@@ -1356,10 +1363,10 @@ function BookReader() {
  <AnimatePresence mode="wait">
  <motion.div
  key={currentPage}
- initial={{opacity: 0, rotateY: pageDirection === 'next' ? 45 : -45, scale: 0.95}}
+ initial={{opacity: 0, rotateY: pageDirection === 'next' ? (isKidReader ? 18 : 45) : (isKidReader ? -18 : -45), scale: isKidReader ? 0.97 : 0.95}}
  animate={{opacity: 1, rotateY: 0, scale: 1}}
- exit={{opacity: 0, rotateY: pageDirection === 'next' ? -45 : 45, scale: 0.95}}
- transition={{duration: 0.5, ease: [0.4, 0, 0.2, 1]}}
+ exit={{opacity: 0, rotateY: pageDirection === 'next' ? (isKidReader ? -18 : -45) : (isKidReader ? 18 : 45), scale: isKidReader ? 0.97 : 0.95}}
+ transition={{duration: isKidReader ? 0.38 : 0.5, ease: [0.22, 1, 0.36, 1]}}
  className="w-full h-full flex flex-col items-center justify-center"
  style={{
  fontFamily: readingSettings.font === 'dyslexic' ? 'OpenDyslexic, sans-serif' : readingSettings.font === 'comic' ? 'Comic Sans MS, cursive' : 'Nunito, sans-serif'
@@ -1532,7 +1539,7 @@ function BookReader() {
             className={`h-full rounded-full ${isKidReader ? 'bg-gradient-to-r from-primary-400 via-secondary-400 to-accent-400' : 'bg-gradient-to-r from-primary-400 to-secondary-400'}`}
             initial={{width: 0}}
             animate={{width: `${progress}%`}}
-            transition={{duration: 0.5}}
+            transition={{duration: isKidReader ? 0.4 : 0.5, ease: [0.22, 1, 0.36, 1]}}
           />
         </div>
  </div>
@@ -1594,6 +1601,25 @@ function BookReader() {
  </div>
  </div>
  </Modal>
+
+ {isKidReader && (
+   <KidsCelebration
+     active={showKidCelebration}
+     title={t('kidBookDone')}
+     subtitle={book?.title ? `"${book.title}"` : undefined}
+     primaryLabel={t('continueReading')}
+     onPrimary={() => {
+       setShowKidCelebration(false);
+       navigate(readerExitPath);
+     }}
+     secondaryLabel={t('kidReaderAnother')}
+     onSecondary={() => {
+       setShowKidCelebration(false);
+       navigate('/kids/library');
+     }}
+     onComplete={() => setShowKidCelebration(false)}
+   />
+ )}
 
  <ContentReportModal
   isOpen={showReportModal}
