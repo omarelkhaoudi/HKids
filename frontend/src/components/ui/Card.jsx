@@ -1,38 +1,40 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 
-export function Card({ 
- variant = 'default',
- hover = true,
- className = '', 
- children,
- ...props 
+const VARIANTS = {
+  default: 'bg-surface shadow-card border border-border',
+  elevated: 'bg-surface shadow-floating border border-border',
+  soft: 'bg-surface-secondary shadow-soft border border-border',
+  premium: 'bg-gradient-to-br from-primary-500 to-magic-500 text-white shadow-floating border-0',
+  glass: 'bg-surface/70 backdrop-blur-md border border-border shadow-soft',
+};
+
+export function Card({
+  variant = 'default',
+  hover = true,
+  className = '',
+  children,
+  as: As = 'div',
+  ...props
 }) {
- const baseStyles ="rounded-3xl overflow-hidden relative";
- 
- const variants = {
- default:"bg-card shadow-soft border border-border",
- glass:"glass-panel text-white border border-white/20",
- elevated:"bg-card shadow-medium border-none",
- premium:"bg-gradient-to-br from-primary-500 to-secondary-500 text-white shadow-large",
- };
+  const base = `rounded-24 overflow-hidden relative ${VARIANTS[variant] || VARIANTS.default}`;
 
- if (hover) {
- return (
- <motion.div
- whileHover={{ y: -4, scale: 1.01 }}
- transition={{ duration: 0.2 }}
- className={`${baseStyles} ${variants[variant]} transition-all hover:shadow-floating ${className}`}
- {...props}
- >
- {children}
- </motion.div>
- );
- }
+  if (hover) {
+    return (
+      <motion.div
+        whileHover={{ y: -4, scale: 1.01 }}
+        transition={{ duration: 0.2 }}
+        className={`${base} transition-shadow hover:shadow-floating ${className}`}
+        {...props}
+      >
+        {children}
+      </motion.div>
+    );
+  }
 
- return (
- <div className={`${baseStyles} ${variants[variant]} ${className}`} {...props}>
- {children}
- </div>
- );
+  return (
+    <As className={`${base} ${className}`} {...props}>
+      {children}
+    </As>
+  );
 }

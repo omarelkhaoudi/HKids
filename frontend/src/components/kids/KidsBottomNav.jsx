@@ -7,8 +7,8 @@ import { HomeIcon, BookIcon, AudioIcon, HeartIcon } from '../Icons';
 const NAV_ITEMS = [
   { id: 'home', path: '/kids', match: 'exact', labelKey: 'kidsNavHome', icon: HomeIcon, tone: 'primary' },
   { id: 'library', path: '/kids/library', match: 'prefix', labelKey: 'library', icon: BookIcon, tone: 'primary' },
-  { id: 'audio', path: '/kids/audio', match: 'audio', labelKey: 'kidsNavAudio', icon: AudioIcon, tone: 'accent' },
-  { id: 'favorites', path: '/favorites', match: 'exact', labelKey: 'yourFavorites', icon: HeartIcon, tone: 'accent' },
+  { id: 'audio', path: '/kids/audio', match: 'audio', labelKey: 'kidsNavAudio', icon: AudioIcon, tone: 'orange' },
+  { id: 'favorites', path: '/favorites', match: 'exact', labelKey: 'yourFavorites', icon: HeartIcon, tone: 'orange' },
   { id: 'profile', path: '/kids#profile', match: 'hash', labelKey: 'profile', icon: null, emoji: '👤', tone: 'primary' },
 ];
 
@@ -44,7 +44,7 @@ export function KidsBottomNav() {
         animate={{ y: 0 }}
         transition={{ type: 'spring', damping: 22 }}
         aria-label={t('kidsNavLabel')}
-        className="pointer-events-auto bg-white/92 dark:bg-surface-900/92 backdrop-blur-xl px-3 py-3 md:px-5 md:py-4 rounded-[2rem] shadow-glass border-4 border-white/60 dark:border-white/10 flex gap-2 md:gap-3 justify-center max-w-full"
+        className="pointer-events-auto bg-surface/95 dark:bg-surface-900/92 backdrop-blur-xl px-12 py-12 md:px-20 md:py-16 rounded-32 shadow-floating border-4 border-border flex gap-8 md:gap-12 justify-center max-w-full"
       >
         {NAV_ITEMS.map((item) => {
           const active = isActiveItem(location, item);

@@ -1,7 +1,13 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { useEffect } from 'react';
 import { CheckIcon, XCircleIcon, InfoIcon, AlertIcon, XIcon } from './Icons';
-import { BRAND_SEMANTIC } from '../constants/brandTheme';
+
+const TYPE_STYLES = {
+  success: 'bg-success-600 text-white',
+  error: 'bg-danger-600 text-white',
+  info: 'bg-primary-600 text-white',
+  warning: 'bg-secondary-600 text-white',
+};
 
 function Toast({ message, type = 'success', isVisible, onClose, duration = 3000 }) {
   useEffect(() => {
@@ -14,36 +20,33 @@ function Toast({ message, type = 'success', isVisible, onClose, duration = 3000 
   }, [isVisible, duration, onClose]);
 
   const icons = {
-    success: <CheckIcon className="w-5 h-5" />,
-    error: <XCircleIcon className="w-5 h-5" />,
-    info: <InfoIcon className="w-5 h-5" />,
-    warning: <AlertIcon className="w-5 h-5" />
-  };
-
-  const colors = {
-    success: BRAND_SEMANTIC.success.solid,
-    error: BRAND_SEMANTIC.danger.solid,
-    info: BRAND_SEMANTIC.info.solid,
-    warning: BRAND_SEMANTIC.warning.solid,
+    success: <CheckIcon className="w-20 h-20" />,
+    error: <XCircleIcon className="w-20 h-20" />,
+    info: <InfoIcon className="w-20 h-20" />,
+    warning: <AlertIcon className="w-20 h-20" />,
   };
 
   return (
     <AnimatePresence>
       {isVisible && (
         <motion.div
+          role="status"
+          aria-live="polite"
           initial={{ opacity: 0, y: -50, x: '-50%' }}
           animate={{ opacity: 1, y: 0, x: '-50%' }}
           exit={{ opacity: 0, y: -20, x: '-50%' }}
           transition={{ duration: 0.3, type: 'spring', stiffness: 300 }}
-          className={`fixed top-4 left-1/2 z-50 ${colors[type]} text-white px-6 py-4 rounded-2xl shadow-lg flex items-center gap-3 min-w-[300px] max-w-[90vw]`}
+          className={`fixed top-16 left-1/2 z-50 ${TYPE_STYLES[type] || TYPE_STYLES.info} px-24 py-16 rounded-20 shadow-floating flex items-center gap-12 min-w-[280px] max-w-[90vw]`}
         >
-          <div className="flex-shrink-0">{icons[type]}</div>
-          <p className="flex-1 font-medium text-sm">{message}</p>
+          <div className="shrink-0">{icons[type] || icons.info}</div>
+          <p className="flex-1 font-bold text-body">{message}</p>
           <button
+            type="button"
             onClick={onClose}
-            className="flex-shrink-0 text-white/80 hover:text-white transition-colors"
+            className="shrink-0 text-white/80 hover:text-white transition-colors min-h-touch min-w-touch grid place-items-center"
+            aria-label="Close"
           >
-            <XIcon className="w-4 h-4" />
+            <XIcon className="w-16 h-16" />
           </button>
         </motion.div>
       )}

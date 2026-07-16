@@ -25,6 +25,7 @@ import { KidsEmptyState } from '../components/kids/KidsEmptyState';
 import { KidsFamilyMessages } from '../components/kids/KidsFamilyMessages';
 import { KidsTrustBadges } from '../components/kids/KidsTrustBadges';
 import { KidsAmbientSound } from '../components/kids/KidsAmbientSound';
+import { SearchBar } from '../components/ui';
 import { getKidsContentPath } from '../utils/contentRouting';
 import { getMotionProps, kidsPageEnter } from '../constants/kidsMotion';
 import { useReducedMotion } from '../hooks/useReducedMotion';
@@ -72,6 +73,7 @@ function KidsLibrary() {
   const [selectedTheme, setSelectedTheme] = useState(urlTheme);
   const [loading, setLoading] = useState(true);
   const [recommendationSections, setRecommendationSections] = useState([]);
+  const [searchQuery, setSearchQuery] = useState('');
   const offlineContent = useOfflineContent();
 
   useEffect(() => {
@@ -130,38 +132,47 @@ function KidsLibrary() {
   const readingHistory = storage.getReadingHistory();
   const taggedBooks = useMemo(() => withThemeEmoji(books, childThemes), [books, childThemes]);
 
+  const visibleBooks = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return taggedBooks;
+    return taggedBooks.filter((book) => {
+      const hay = [book.title, book.description, book.author, book.category_name].filter(Boolean).join(' ').toLowerCase();
+      return hay.includes(q);
+    });
+  }, [taggedBooks, searchQuery]);
+
   const continueBooks = useMemo(() => {
-    const byId = new Map(taggedBooks.map((book) => [book.id, book]));
+    const byId = new Map(visibleBooks.map((book) => [book.id, book]));
     return readingHistory
       .map((entry) => byId.get(entry.bookId))
       .filter(Boolean)
       .slice(0, 12);
-  }, [taggedBooks, readingHistory]);
+  }, [visibleBooks, readingHistory]);
 
-  const favoriteBooks = taggedBooks.filter((b) => favoritesIds.includes(b.id));
-  const newBooks = [...taggedBooks].sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0)).slice(0, 15);
+  const favoriteBooks = visibleBooks.filter((b) => favoritesIds.includes(b.id));
+  const newBooks = [...visibleBooks].sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0)).slice(0, 15);
 
   const recommendedSection = recommendationSections.find((section) => section.id === 'recommended_for_you');
   const recommendedIds = new Set(
     (recommendedSection?.items || []).map((item) => Number(item.id ?? item.book_id)).filter(Number.isFinite)
   );
   const todayBooks = recommendedIds.size > 0
-    ? taggedBooks.filter((book) => recommendedIds.has(Number(book.id)))
-    : taggedBooks.slice(0, 10);
+    ? visibleBooks.filter((book) => recommendedIds.has(Number(book.id)))
+    : visibleBooks.slice(0, 10);
 
   const themeShelves = useMemo(() => (
     SHELF_THEME_IDS
       .map((themeId) => {
         const theme = childThemes.find((item) => item.id === themeId);
         if (!theme) return null;
-        const shelfBooks = taggedBooks.filter((book) => book._themeId === themeId).slice(0, 15);
+        const shelfBooks = visibleBooks.filter((book) => book._themeId === themeId).slice(0, 15);
         if (!shelfBooks.length) return null;
         return { theme, books: shelfBooks };
       })
       .filter(Boolean)
-  ), [childThemes, taggedBooks]);
+  ), [childThemes, visibleBooks]);
 
-  const themeBooks = taggedBooks.filter((b) => b._themeId === selectedTheme);
+  const themeBooks = visibleBooks.filter((b) => b._themeId === selectedTheme);
   const featuredBook = selectedTheme === 'all' ? (continueBooks[0] || todayBooks[0]) : (themeBooks[0] || null);
   const activeThemeData = childThemes.find((theme) => theme.id === selectedTheme);
 
@@ -208,8 +219,8 @@ function KidsLibrary() {
     <KidsPageShell isRtl={isRtl} variant="library" world="books" className={`pb-32 kids-glow-books ${selectedTheme === 'bedtime' ? 'kids-night-calm' : ''}`} footer={<KidsBottomNav />}>
       {selectedTheme !== 'all' && <KidsCategoryAtmosphere categoryId={selectedTheme} />}
 
-      <header className="relative z-10 px-6 py-4 flex items-center justify-between kids-premium-panel mx-4 sm:mx-6 mt-2 sticky top-2">
-        <div className="flex items-center gap-4">
+      <header className="relative z-10 kids-premium-panel mx-16 sm:mx-24 mt-8 sticky top-8 px-16 sm:px-24 py-12 flex items-center justify-between gap-16">
+        <div className="flex items-center gap-16">
           <button
             type="button"
             onClick={() => navigate('/kids')}
@@ -221,12 +232,22 @@ function KidsLibrary() {
           <Link to="/kids" className="shrink-0 transition-transform hover:scale-105 active:scale-95">
             <Logo size="default" showText={false} />
           </Link>
+          <h1 className="text-heading-m hidden sm:block truncate">
+            {selectedTheme === 'all' ? t('library') : (activeThemeData?.shortLabel || activeThemeData?.label)}
+          </h1>
         </div>
         <span className="text-4xl" aria-hidden="true">{selectedTheme === 'all' ? '📚' : (activeThemeData?.pictogram || '📚')}</span>
       </header>
 
       <main className="kids-main kids-main-tablet-wide relative z-20">
         <KidsTrustBadges t={t} compact className="opacity-90" />
+
+        <SearchBar
+          value={searchQuery}
+          onChange={setSearchQuery}
+          placeholder={t('tryAnotherWord') || 'Search…'}
+          aria-label={t('library')}
+        />
 
         {selectedTheme === 'bedtime' && (
           <KidsAmbientSound
@@ -242,9 +263,9 @@ function KidsLibrary() {
             }}
           />
         )}
-        {/* Visual theme explorer — no search bar */}
-        <section className="mb-2" aria-label={t('allCategories')}>
-          <div className="flex gap-4 overflow-x-auto pb-4 pt-2 px-2 snap-x snap-mandatory custom-scrollbar">
+
+        <section aria-label={t('allCategories')}>
+          <div className="flex gap-16 overflow-x-auto pb-16 pt-8 px-8 snap-x snap-mandatory custom-scrollbar kids-scroll-smooth">
             {childThemes.map((theme) => (
               <KidsThemePill
                 key={theme.id}
@@ -260,7 +281,7 @@ function KidsLibrary() {
           <motion.section
             key={`hero-${selectedTheme}-${featuredBook.id}`}
             {...getMotionProps(reducedMotion, kidsPageEnter)}
-            className="relative overflow-hidden rounded-[2.75rem] kids-premium-panel p-5 md:p-8 text-white shadow-kids-soft border-4 border-white/50"
+            className="relative overflow-hidden rounded-32 kids-premium-panel p-20 md:p-32 text-white shadow-card border-4 border-border"
           >
             <div className={`absolute inset-0 bg-gradient-to-br ${activeThemeData?.gradient || 'from-primary-500 to-secondary-500'} opacity-95`} />
             <div className="absolute right-8 top-1/2 -translate-y-1/2 text-[12rem] opacity-20 pointer-events-none" aria-hidden="true">
@@ -289,7 +310,7 @@ function KidsLibrary() {
 
               <div className="flex flex-col items-center md:items-start gap-4">
                 <span className="inline-flex items-center gap-2 rounded-full bg-white/20 backdrop-blur-md border-2 border-white/30 px-5 py-2 text-sm font-black shadow-xl">
-                  <StarIcon className="h-5 w-5 text-accent-300" filled />
+                  <StarIcon className="h-20 w-20 text-secondary-300" filled />
                   <span className="line-clamp-1">{selectedTheme === 'all' ? t('forYou') : (activeThemeData?.shortLabel || activeThemeData?.label)}</span>
                 </span>
                 <div className="flex flex-wrap items-center justify-center md:justify-start gap-3">

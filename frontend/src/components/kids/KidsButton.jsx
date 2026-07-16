@@ -5,9 +5,12 @@ import { getHoverMotion, kidsTouchFeedback } from '../../constants/kidsMotion';
 
 const TONE_VARIANTS = {
   primary: 'bg-primary-500 text-white border-b-4 border-primary-700 active:border-b-0 active:translate-y-[4px]',
-  secondary: 'bg-secondary-500 text-white border-b-4 border-secondary-700 active:border-b-0 active:translate-y-[4px]',
-  accent: 'bg-accent-500 text-white border-b-4 border-accent-700 active:border-b-0 active:translate-y-[4px]',
-  violet: 'bg-violet-500 text-white border-b-4 border-violet-700 active:border-b-0 active:translate-y-[4px]',
+  secondary: 'bg-secondary-500 text-foreground border-b-4 border-secondary-700 active:border-b-0 active:translate-y-[4px]',
+  accent: 'bg-orange-500 text-white border-b-4 border-orange-700 active:border-b-0 active:translate-y-[4px]',
+  orange: 'bg-orange-500 text-white border-b-4 border-orange-700 active:border-b-0 active:translate-y-[4px]',
+  success: 'bg-success-500 text-white border-b-4 border-success-700 active:border-b-0 active:translate-y-[4px]',
+  magic: 'bg-magic-500 text-white border-b-4 border-magic-700 active:border-b-0 active:translate-y-[4px]',
+  violet: 'bg-magic-500 text-white border-b-4 border-magic-700 active:border-b-0 active:translate-y-[4px]',
 };
 
 export default function KidsButton({
@@ -22,26 +25,31 @@ export default function KidsButton({
   type = 'button',
 }) {
   const reducedMotion = useReducedMotion();
-  const baseClasses = 'relative flex items-center justify-center font-extrabold select-none transition-all duration-150 touch-manipulation kids-btn-ripple kids-touch-target';
+  const baseClasses =
+    'relative flex items-center justify-center font-extrabold select-none transition-all duration-150 touch-manipulation kids-btn-ripple kids-touch-target focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-400 focus-visible:ring-offset-2';
 
   const sizeClasses = {
-    sm: 'px-4 py-3 min-h-[56px] text-lg rounded-2xl',
-    md: 'px-6 py-4 min-h-[64px] text-xl rounded-3xl',
-    lg: 'px-8 py-6 min-h-[80px] text-2xl rounded-[2rem]',
+    sm: 'px-16 py-12 min-h-touch-kids text-lg rounded-16',
+    md: 'px-24 py-16 min-h-[64px] text-xl rounded-24',
+    lg: 'px-32 py-24 min-h-[80px] text-2xl rounded-32',
   };
 
   const variants = {
     primary: TONE_VARIANTS.primary,
     secondary: TONE_VARIANTS.secondary,
     accent: TONE_VARIANTS.accent,
+    orange: TONE_VARIANTS.orange,
+    success: TONE_VARIANTS.success,
+    magic: TONE_VARIANTS.magic,
     violet: TONE_VARIANTS.violet,
-    ghost: 'bg-surface-50 text-surface-900 border-2 border-surface-200 active:bg-surface-100',
-    glass: 'bg-white/60 backdrop-blur-md border border-white/80 text-primary-900 shadow-glass',
+    ghost: 'bg-surface text-foreground border-2 border-border active:bg-surface-secondary',
+    glass: 'bg-surface/70 backdrop-blur-md border border-border text-primary-800 shadow-soft',
   };
 
-  const resolvedVariant = tone && variants[variant] !== variants.ghost && variants[variant] !== variants.glass
-    ? (TONE_VARIANTS[tone] || variants.primary)
-    : (variants[variant] || variants.primary);
+  const resolvedVariant =
+    tone && variants[variant] !== variants.ghost && variants[variant] !== variants.glass
+      ? TONE_VARIANTS[tone] || variants.primary
+      : variants[variant] || variants.primary;
 
   const hoverMotion = getHoverMotion(reducedMotion, {
     whileHover: { scale: 1.02 },
@@ -66,7 +74,7 @@ export default function KidsButton({
       aria-label={ariaLabel}
       className={`${baseClasses} ${sizeClasses[size]} ${resolvedVariant} ${className}`}
     >
-      {Icon && <Icon className="w-6 h-6 md:w-8 md:h-8 mr-2 md:mr-3 shrink-0" strokeWidth={2.5} />}
+      {Icon && <Icon className="w-24 h-24 md:w-32 md:h-32 mr-8 md:mr-12 shrink-0" strokeWidth={2.5} />}
       {children}
     </motion.button>
   );

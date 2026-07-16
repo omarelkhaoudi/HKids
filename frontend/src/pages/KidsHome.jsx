@@ -24,7 +24,7 @@ import { useToast } from '../components/ToastProvider';
 import { getRestrictionMessage } from '../services/parental/parentalAccessService';
 import { PlayIcon, LockIcon } from '../components/Icons';
 import { getCachedKidProfile } from '../services/cloud/cloudSyncService';
-import { Avatar } from '../components/ui';
+import { Avatar, CategoryCard } from '../components/ui';
 import { KidsTrustBadges } from '../components/kids/KidsTrustBadges';
 import { KidsProfilePanel } from '../components/kids/KidsProfilePanel';
 import { BookGridSkeleton } from '../components/SkeletonLoader';
@@ -218,23 +218,23 @@ function KidsHome() {
 
   return (
     <KidsPageShell isRtl={isRtl} variant="home" world="home" className="pb-32 kids-hero-glow" footer={<KidsBottomNav />}>
-      <header className="relative z-10 px-6 py-4 flex items-center justify-between gap-4">
-        <div className="flex items-center gap-4 min-w-0">
+      <header className="relative z-10 px-24 py-16 flex items-center justify-between gap-16">
+        <div className="flex items-center gap-16 min-w-0">
           <Avatar
             src={avatarSrc}
             initials={avatarInitials}
             alt={kidName}
             size="lg"
-            className="w-16 h-16 border-4 border-white shadow-lg bg-gradient-to-br from-primary-400 to-secondary-400 text-white shrink-0"
+            className="w-64 h-64 border-4 border-surface shadow-card bg-gradient-to-br from-primary-400 to-secondary-400 text-white shrink-0"
           />
           <div className="min-w-0">
-            <h1 className="text-xl md:text-2xl font-black text-foreground truncate">
+            <h1 className="text-heading-l truncate">
               {greeting} <span className="text-primary-600">{kidName}</span>
             </h1>
-            <p className="hidden sm:block text-sm font-bold text-foreground-muted line-clamp-1">{t('kidsDiscoverToday')}</p>
+            <p className="hidden sm:block text-body line-clamp-1">{t('kidsDiscoverToday')}</p>
           </div>
         </div>
-        <div className="flex items-center gap-3 shrink-0">
+        <div className="flex items-center gap-12 shrink-0">
           <KidsMascot mood="wave" size="small" showBubble className="hidden sm:block" />
           <Link to="/kids" className="shrink-0 transition-transform hover:scale-105 active:scale-95">
             <Logo size="default" showText={false} />
@@ -258,7 +258,7 @@ function KidsHome() {
             navigate(`/kids/read/${featuredBook.id}${pageQuery}`);
           }}
         >
-          <div className="relative h-72 md:h-[22rem] w-full rounded-[2.5rem] overflow-hidden shadow-kids-soft group border-4 border-white/70">
+          <div className="relative h-72 md:h-[22rem] w-full rounded-32 overflow-hidden shadow-card group border-4 border-border">
             {featuredBook?.cover_image ? (
               <img
                 src={getImageUrl(featuredBook.cover_image)}
@@ -268,29 +268,29 @@ function KidsHome() {
             ) : (
               <div className={`absolute inset-0 bg-gradient-to-br ${getKidsModality('books').gradient}`} />
             )}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-t from-surface-900/80 via-surface-900/20 to-transparent" />
             <div className="absolute inset-0 flex items-center justify-center">
-              <div className="kids-touch-target w-24 h-24 md:w-28 md:h-28 bg-white/35 backdrop-blur-md rounded-full flex items-center justify-center border-4 border-white/60 group-hover:scale-110 transition-transform shadow-kids-warm">
-                <PlayIcon className={`w-12 h-12 md:w-14 md:h-14 text-white drop-shadow-md ${isRtl ? 'mr-2 rotate-180' : 'ml-2'}`} filled />
+              <div className="kids-touch-target w-96 h-96 md:w-[7rem] md:h-[7rem] bg-surface/35 backdrop-blur-md rounded-full flex items-center justify-center border-4 border-surface/60 group-hover:scale-110 transition-transform shadow-floating">
+                <PlayIcon className={`w-48 h-48 md:w-56 md:h-56 text-white drop-shadow-md ${isRtl ? 'mr-8 rotate-180' : 'ml-8'}`} filled />
               </div>
             </div>
-            <div className="absolute bottom-0 inset-x-0 p-5 md:p-7 flex flex-col gap-3">
-              <div className="flex items-end justify-between gap-3">
+            <div className="absolute bottom-0 inset-x-0 p-20 md:p-28 flex flex-col gap-12">
+              <div className="flex items-end justify-between gap-12">
                 <div className="min-w-0">
-                  <span className="inline-flex min-h-9 items-center bg-primary-500/90 backdrop-blur-md px-4 py-1.5 rounded-full text-white text-sm font-black border border-white/40 uppercase tracking-wide mb-2">
+                  <span className="inline-flex min-h-touch items-center bg-primary-500/90 backdrop-blur-md px-16 py-8 rounded-full text-white text-caption font-black border border-surface/40 uppercase tracking-wide mb-8">
                     {featuredBook?.isInProgress ? t('resume') : t('discover')}
                   </span>
                   {featuredBook?.title && (
-                    <h2 className="text-white font-black text-2xl md:text-3xl drop-shadow-md truncate">{featuredBook.title}</h2>
+                    <h2 className="text-hero text-white drop-shadow-md truncate !text-[clamp(1.5rem,4vw,2.25rem)]">{featuredBook.title}</h2>
                   )}
                 </div>
-                <span className="text-white font-black drop-shadow-md text-xl shrink-0">{featuredBook?.progress || 0}%</span>
+                <span className="text-white font-black drop-shadow-md text-heading-m shrink-0">{featuredBook?.progress || 0}%</span>
               </div>
-              <div className="h-4 w-full bg-black/35 rounded-full overflow-hidden border border-white/25 backdrop-blur-sm">
+              <div className="h-16 w-full bg-surface-900/35 rounded-full overflow-hidden border border-surface/25 backdrop-blur-sm">
                 <motion.div
                   initial={{ width: 0 }}
                   animate={{ width: `${featuredBook?.progress || 0}%` }}
-                  className="h-full bg-gradient-to-r from-primary-300 to-accent-300 rounded-full"
+                  className="h-full bg-gradient-to-r from-primary-300 to-secondary-300 rounded-full"
                 />
               </div>
             </div>
@@ -298,23 +298,19 @@ function KidsHome() {
         </motion.section>
 
         <section aria-label={t('kidsAutonomyWorlds')}>
-          <KidsTrustBadges t={t} compact className="mb-4 opacity-90" />
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <KidsTrustBadges t={t} compact className="mb-16 opacity-90" />
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-16">
             {autonomyWorlds.map((world) => {
               const theme = getKidsModality(world.modality);
               return (
-                <motion.button
+                <CategoryCard
                   key={world.id}
-                  type="button"
-                  whileHover={{ scale: 1.04, y: -2 }}
-                  whileTap={{ scale: 0.96 }}
+                  emoji={world.emoji}
+                  title={t(world.labelKey)}
+                  tone={theme.tone}
                   onClick={() => navigate(world.path)}
-                  className={`kids-touch-target rounded-[2rem] bg-gradient-to-br ${theme.gradient} p-5 md:p-6 text-white shadow-kids-soft border-4 border-white/50 min-h-[8.5rem] flex flex-col items-center justify-center gap-2`}
-                  aria-label={t(world.labelKey)}
-                >
-                  <span className="text-5xl md:text-6xl" aria-hidden="true">{world.emoji}</span>
-                  <span className="font-black text-base md:text-lg line-clamp-1">{t(world.labelKey)}</span>
-                </motion.button>
+                  className="min-h-[8.5rem]"
+                />
               );
             })}
           </div>
@@ -377,11 +373,11 @@ function KidsHome() {
         )}
 
         <section aria-label={t('allCategories')}>
-          <h2 className="kids-shelf-title mb-5 px-2">
+          <h2 className="kids-shelf-title mb-20 px-8">
             <span aria-hidden="true">🗂️</span>
             <span className="sr-only">{t('allCategories')}</span>
           </h2>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-5">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-16 md:gap-20">
             {kidCategories.map((category) => (
               <KidCategoryCard key={category.id} category={category} />
             ))}
