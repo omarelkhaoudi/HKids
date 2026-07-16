@@ -25,6 +25,7 @@ import { getRestrictionMessage } from '../services/parental/parentalAccessServic
 import { PlayIcon, StarIcon, LockIcon, SparklesIcon } from '../components/Icons';
 import { getCachedKidProfile } from '../services/cloud/cloudSyncService';
 import { Avatar } from '../components/ui';
+import { KidsProfilePanel } from '../components/kids/KidsProfilePanel';
 import { BookGridSkeleton } from '../components/SkeletonLoader';
 
 function getRecommendedBooks(sections = []) {
@@ -88,9 +89,13 @@ function KidsHome() {
   }, [t]);
 
   useEffect(() => {
-    if (loading || location.hash !== '#medals') return;
-    const medalsSection = document.getElementById('kids-medals');
-    medalsSection?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    if (loading) return;
+    if (location.hash === '#medals') {
+      document.getElementById('kids-medals')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+    if (location.hash === '#profile') {
+      document.getElementById('kids-profile')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
   }, [loading, location.hash, location.pathname]);
 
   useEffect(() => {
@@ -223,6 +228,9 @@ function KidsHome() {
     hideSectionTitle: false,
     onPlay: handlePlayBook,
   };
+
+  const lastActivityBook = progressRows[0];
+  const lastActivityText = lastActivityBook?.book_title || null;
 
   const handleSurprise = () => {
     if (recommendedBooks.length === 0) {
@@ -433,6 +441,19 @@ function KidsHome() {
             {...carouselProps}
           />
         )}
+
+        <section id="kids-profile" className="scroll-mt-24">
+          <KidsProfilePanel
+            kid={kid}
+            kidName={kidName}
+            progressRows={progressRows}
+            favoriteBooks={favoriteBooks}
+            lastActivity={lastActivityText}
+            t={t}
+            isRtl={isRtl}
+            onPlayBook={handlePlayBook}
+          />
+        </section>
 
         <section id="kids-medals" className="mb-12 scroll-mt-24">
           <h2 className="kids-shelf-title mb-6 pl-2">

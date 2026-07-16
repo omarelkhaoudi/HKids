@@ -1,19 +1,35 @@
 import {useState, useEffect} from 'react';
-import {Link} from 'react-router-dom';
+import {Link, useNavigate} from 'react-router-dom';
 import {motion, AnimatePresence} from 'framer-motion';
 import {booksAPI} from '../api/books';
 import {storage} from '../utils/storage';
 import {useToast} from '../components/ToastProvider';
+import {BookGridSkeleton} from '../components/SkeletonLoader';
 import {HistoryIcon, BookIcon, ChevronLeftIcon, TrashIcon, StarIcon} from '../components/Icons';
 import {Logo} from '../components/Logo';
 import {getImageUrl} from '../utils/imageUrl';
 import {useLanguage} from '../context/LanguageContext';
+import {useAuth} from '../context/AuthContext';
+import {KidsPageShell} from '../components/kids/KidsPageShell';
+import {KidsPageHeader} from '../components/kids/KidsPageHeader';
+import {KidsHero} from '../components/kids/KidsHero';
+import {KidsBottomNav} from '../components/kids/KidsBottomNav';
+import {KidsMediaCard} from '../components/kids/KidsMediaCard';
+import {KidsEmptyState} from '../components/kids/KidsEmptyState';
+import {KidsBookCarousel} from '../components/kids/KidsBookCarousel';
+import {KidsModal} from '../components/kids/KidsModal';
+import {getKidsContentPath} from '../utils/contentRouting';
+import {VoiceAssistant} from '../components/kids/VoiceAssistant';
 
 function History() {
  const [history, setHistory] = useState([]);
  const [books, setBooks] = useState([]);
  const [loading, setLoading] = useState(true);
- const {language, isRtl} = useLanguage();
+ const [showClearModal, setShowClearModal] = useState(false);
+ const {language, isRtl, t} = useLanguage();
+ const {user} = useAuth();
+ const navigate = useNavigate();
+ const isKidMode = user?.role === 'kid';
 
  useEffect(() => {
  loadHistory();
@@ -66,13 +82,22 @@ function History() {
  const {showToast} = useToast();
 
  const clearHistory = () => {
- if (confirm('Voulez-vous vraiment effacer tout l\'historique ?')) {
  storage.clearReadingHistory();
  setHistory([]);
  setBooks([]);
  showToast('Historique effacé', 'info', 2000);
-}
+ setShowClearModal(false);
 };
+
+ const handlePlayBook = (book) => {
+  const historyItem = history.find((h) => h.bookId === book.id);
+  const pageQuery = historyItem?.page ? `?page=${historyItem.page}` : '';
+  if (book.id) {
+   navigate(`/kids/read/${book.id}${pageQuery}`);
+  } else {
+   navigate(getKidsContentPath(book));
+  }
+ };
 
  const formatDate = (dateString) => {
  const date = new Date(dateString);
@@ -90,6 +115,64 @@ function History() {
  const totalPagesRead = history.reduce((sum, h) => sum + (h.page || 0), 0);
  const uniqueBooks = books.length;
  const avgPagesPerBook = uniqueBooks > 0 ? Math.round(totalPagesRead / uniqueBooks) : 0;
+
+ if (isKidMode) {
+  return (
+   <KidsPageShell isRtl={isRtl} variant="library" className="pb-32 kids-hero-glow" footer={<KidsBottomNav />}>
+    <KidsPageHeader
+     backTo="/kids"
+     emoji="📖"
+     title={t('history')}
+     trailing={books.length > 0 ? (
+      <button
+       type="button"
+       onClick={() => setShowClearModal(true)}
+       className="kids-touch-target rounded-full bg-rose-100 text-rose-700 px-4 py-2 font-black text-sm"
+      >
+        🗑️
+      </button>
+     ) : null}
+    />
+    <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-8">
+     <KidsHero emoji="📖" title={t('history')} subtitle={t('continueReading')} />
+     {loading ? (
+      <BookGridSkeleton count={6} variant="carousel" />
+     ) : books.length === 0 ? (
+      <KidsEmptyState
+       emoji="📖"
+       title={t('emptyBooksTitle')}
+       description={t('emptyBooksDescription')}
+       actionLabel={t('goToLibrary')}
+       onAction={() => navigate('/kids/library')}
+      />
+     ) : (
+      <KidsBookCarousel
+       title={t('continueReading')}
+       emoji="📖"
+       books={books}
+       isRtl={isRtl}
+       showActions={false}
+       hideTitle
+       onPlay={handlePlayBook}
+      />
+     )}
+    </main>
+    <KidsModal
+     isOpen={showClearModal}
+     onClose={() => setShowClearModal(false)}
+     emoji="🗑️"
+     title={t('history')}
+     primaryLabel="OK"
+     onPrimary={clearHistory}
+     secondaryLabel={t('back')}
+     onSecondary={() => setShowClearModal(false)}
+    >
+      Effacer tout l&apos;historique ?
+    </KidsModal>
+    <VoiceAssistant onNavigate={navigate} />
+   </KidsPageShell>
+  );
+ }
 
  return (
  <div className="min-h-screen bg-card" dir={isRtl ? 'rtl' : 'ltr'}>

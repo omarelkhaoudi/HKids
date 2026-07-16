@@ -44,6 +44,18 @@ const fallbackPlans = [
 },
 ];
 
+const SUBSCRIPTION_ERROR_CODES = {
+ TRIAL_ALREADY_USED: 'subscriptionsTrialAlreadyUsed',
+ SUBSCRIPTION_ALREADY_ACTIVE: 'subscriptionsAlreadyActive',
+};
+
+function getSubscriptionErrorMessage(data, t, fallbackKey) {
+ const code = data?.code;
+ const translationKey = SUBSCRIPTION_ERROR_CODES[code];
+ if (translationKey) return t(translationKey);
+ return data?.error || t(fallbackKey);
+}
+
 function formatPrice(plan) {
  return new Intl.NumberFormat('fr-FR', {
  style: 'currency',
@@ -265,11 +277,8 @@ function Subscriptions() {
 } else if (error.response?.data?.setup_required) {
  setErrorMessage(t('subscriptionsStripeRequired'));
  setViewState('error');
-} else if (error.response?.data?.error) {
- setErrorMessage(error.response.data.error);
- setViewState('error');
 } else {
- setErrorMessage(t('subscriptionsPaymentFailed'));
+ setErrorMessage(getSubscriptionErrorMessage(error.response?.data, t, 'subscriptionsPaymentFailed'));
  setViewState('error');
 }
 } finally {
@@ -295,8 +304,7 @@ function Subscriptions() {
  if (error.response?.status === 401) {
  handleExpiredSession();
 } else {
- const msg = error.response?.data?.error || t('subscriptionsTrialError');
- setErrorMessage(msg);
+ setErrorMessage(getSubscriptionErrorMessage(error.response?.data, t, 'subscriptionsTrialError'));
  setViewState('error');
 }
  } finally {

@@ -15,8 +15,12 @@ import { useLanguage } from '../context/LanguageContext';
 import { getRestrictionMessage } from '../services/parental/parentalAccessService';
 import {
   AudioIcon, BookIcon, ChevronLeftIcon, CheckIcon, HomeIcon, 
-  LogOutIcon, SparklesIcon, StarIcon, TrophyIcon, ShieldIcon, SearchIcon, PlayIcon
+  LogOutIcon, SparklesIcon, StarIcon, TrophyIcon, SearchIcon, PlayIcon
 } from '../components/Icons';
+import { KidsPageHeader } from '../components/kids/KidsPageHeader';
+import { KidsHero } from '../components/kids/KidsHero';
+import { KidsEmptyState } from '../components/kids/KidsEmptyState';
+import { BookGridSkeleton } from '../components/SkeletonLoader';
 
 // --- HELPER COMPONENTS ---
 
@@ -52,7 +56,7 @@ function KidsLearning() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const { showToast } = useToast();
-  const { language } = useLanguage();
+  const { language, t, isRtl } = useLanguage();
   
   const [contents, setContents] = useState([]);
   const [challenges, setChallenges] = useState([]);
@@ -196,33 +200,9 @@ function KidsLearning() {
   const selectedProfile = kidProfiles.find(k => k.id === selectedKidProfileId);
 
   return (
-    <KidsPageShell footer={<KidsBottomNav />}>
-      <div className="relative z-10 mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8 pb-8">
-        
-        {/* HEADER */}
-        <header className="mb-6 flex items-center justify-between gap-4">
-          <Link to="/kids" className="shrink-0">
-            <Logo size="default" showText={true} />
-          </Link>
-          <div className="flex items-center gap-3">
-            <Link
-              to="/kids"
-              className="grid h-14 w-14 place-items-center rounded-[1.25rem] bg-card text-secondary-600 shadow-sm border border-border hover:bg-secondary-50 hover:border-secondary-200 transition"
-              aria-label="Accueil"
-            >
-              <HomeIcon className="h-6 w-6" />
-            </Link>
-            <button
-              onClick={handleLogout}
-              className="grid h-14 w-14 place-items-center rounded-[1.25rem] bg-card text-foreground-muted shadow-sm border border-border hover:bg-rose-50 hover:text-rose-500 hover:border-rose-200 transition"
-              aria-label="Déconnexion"
-            >
-              <LogOutIcon className="h-6 w-6" />
-            </button>
-          </div>
-        </header>
-
-        {/* QUIZ INTERFACE OR MAIN DASHBOARD */}
+    <KidsPageShell isRtl={isRtl} variant="library" className="pb-32 kids-hero-glow" footer={<KidsBottomNav />}>
+      <KidsPageHeader backTo="/kids" emoji="🎮" title={t('kidsNavLearning')} />
+      <div className="relative z-10 mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8 pb-8">
         <AnimatePresence mode="wait">
           {selectedContent ? (
             /* ========================================================
@@ -330,36 +310,13 @@ function KidsLearning() {
             >
               
               {/* PREMIUM HERO */}
-              <section className={`mb-10 relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br ${BRAND_HERO_GRADIENT} p-8 md:p-12 text-white shadow-2xl`}>
-                <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4IiBoZWlnaHQ9IjgiPgo8cmVjdCB3aWR0aD0iOCIgaGVpZ2h0PSI4IiBmaWxsPSIjZmZmIiBmaWxsLW9wYWNpdHk9IjAuMDUiLz4KPC9zdmc+')] opacity-20 mix-blend-overlay"></div>
-                
-                <div className="relative z-10 flex flex-col md:flex-row justify-between items-center gap-8">
-                  <div className="max-w-xl">
-                    <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/20 px-4 py-2 text-sm font-black backdrop-blur-md border border-white/30 shadow-glass">
-                      <SparklesIcon className="h-5 w-5 text-accent-200" />
-                      <span>Centre d'apprentissage</span>
-                    </div>
-                    <h1 className="text-4xl md:text-5xl lg:text-6xl font-black leading-tight mb-4 filter drop-shadow-lg">
-                      Apprends en t'amusant !
-                    </h1>
-                    <div className="flex flex-wrap gap-3 mt-6">
-                      <span className="flex items-center gap-1.5 rounded-full bg-black/20 px-3 py-1.5 text-xs font-black backdrop-blur-sm">
-                        <TrophyIcon className="w-4 h-4 text-accent-300" /> Missions
-                      </span>
-                      <span className="flex items-center gap-1.5 rounded-full bg-black/20 px-3 py-1.5 text-xs font-black backdrop-blur-sm">
-                        <StarIcon className="w-4 h-4 text-secondary-300" /> Récompenses
-                      </span>
-                    </div>
-                  </div>
-                  
-                  {/* Floating Illustrations */}
-                  <div className="hidden md:flex relative w-48 h-48 items-center justify-center">
-                    <motion.div animate={{ y: [-10, 10, -10], rotate: [0, 5, -5, 0] }} transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }} className="absolute text-7xl z-20">🌍</motion.div>
-                    <motion.div animate={{ y: [10, -10, 10], x: [-10, 10, -10] }} transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }} className="absolute -left-4 top-4 text-5xl z-10">🔤</motion.div>
-                    <motion.div animate={{ y: [-5, 15, -5], x: [10, -10, 10] }} transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }} className="absolute -right-4 bottom-4 text-5xl z-30">🚀</motion.div>
-                  </div>
-                </div>
-              </section>
+              <KidsHero
+                emoji="🎮"
+                badge={t('kidsNavLearning')}
+                title="Apprends en t'amusant !"
+                subtitle="Choisis une activité illustrée et gagne des récompenses."
+                className="mb-10"
+              />
 
               {/* PROFILE CARD SELECTOR */}
               {user?.role !== 'kid' && (
@@ -538,24 +495,15 @@ function KidsLearning() {
                 </h2>
                 
                 {loading ? (
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
-                    {Array.from({length: 8}).map((_, index) => (
-                      <div key={index} className="h-56 animate-pulse rounded-[2rem] bg-card shadow-sm" />
-                    ))}
-                  </div>
+                  <BookGridSkeleton count={8} />
                 ) : visibleContents.length === 0 ? (
-                  <div className="rounded-[2.5rem] bg-card border border-border p-12 text-center shadow-sm">
-                    <div className="text-8xl mb-6">🦕</div>
-                    <h3 className="text-2xl font-black mb-2">Aucune activité trouvée.</h3>
-                    <p className="text-foreground-muted font-bold mb-8">Essaie de changer ta recherche ou tes filtres.</p>
-                    <button
-                      onClick={() => { setSearchQuery(''); setSelectedCategoryFilter('all'); }}
-                      className="inline-flex items-center gap-2 rounded-2xl bg-primary-500 px-8 py-4 text-lg font-black text-white shadow-lg hover:bg-primary-600 transition"
-                    >
-                      <SparklesIcon className="h-6 w-6" />
-                      Voir toutes les activités
-                    </button>
-                  </div>
+                  <KidsEmptyState
+                    emoji="🦕"
+                    title={t('nothingFound')}
+                    description={t('tryAnotherWord')}
+                    actionLabel={t('allCategories')}
+                    onAction={() => { setSearchQuery(''); setSelectedCategoryFilter('all'); }}
+                  />
                 ) : (
                   <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 md:gap-6">
                     <AnimatePresence>

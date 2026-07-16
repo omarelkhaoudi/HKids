@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { generatedStoriesAPI } from '../api/generatedStories';
 import { speakText, stopSpeaking } from '../services/ai/browserTextToSpeech';
@@ -14,6 +14,11 @@ import { Logo } from '../components/Logo';
 import { VoiceAssistant } from '../components/kids/VoiceAssistant';
 import { KidsBottomNav } from '../components/kids/KidsBottomNav';
 import { KidsPageShell } from '../components/kids/KidsPageShell';
+import { KidsEmptyState } from '../components/kids/KidsEmptyState';
+import { KidsErrorBanner } from '../components/kids/KidsErrorBanner';
+import { KidsHero } from '../components/kids/KidsHero';
+import { KidsModal } from '../components/kids/KidsModal';
+import { BookGridSkeleton } from '../components/SkeletonLoader';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
 import { ContentReportModal } from '../components/parent/ContentReportModal';
@@ -340,6 +345,7 @@ function NarrationPlayer({ story, canGenerate = false }) {
 function KidsAIStories() {
   const { language, t, isRtl } = useLanguage();
   const { user } = useAuth();
+  const navigate = useNavigate();
   const canCreateStories = user?.role === 'parent' || user?.role === 'admin';
   const homePath = canCreateStories ? '/parent' : '/kids';
   const storyStudioPath = canCreateStories ? '/parent/story-studio' : null;
@@ -358,6 +364,7 @@ function KidsAIStories() {
   // Celebration state
   const [showCelebration, setShowCelebration] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState(null);
   const canReport = user && (user.role === 'parent' || user.role === 'admin');
 
   const selectedKid = kidProfiles.find((kid) => String(kid.id) === String(selectedKidProfileId));
@@ -529,7 +536,12 @@ function KidsAIStories() {
   };
 
   const handleDelete = async (story) => {
-    if (!window.confirm('Supprimer cette histoire magique ?')) return;
+    setDeleteTarget(story);
+  };
+
+  const confirmDelete = async () => {
+    const story = deleteTarget;
+    if (!story) return;
     setBusyStoryId(story.id);
     setError('');
     try {
@@ -541,6 +553,7 @@ function KidsAIStories() {
       setError(getErrorMessage(err));
     } finally {
       setBusyStoryId(null);
+      setDeleteTarget(null);
     }
   };
 
@@ -578,7 +591,7 @@ function KidsAIStories() {
       <motion.article
         layoutId={`story-${story.id}`}
         whileHover={{ y: -8, scale: 1.02 }}
-        className={`group relative rounded-3xl bg-card shadow-floating border border-border overflow-hidden flex flex-col ${featured ? 'min-w-[320px] md:min-w-[400px]' : 'w-full'}`}
+        className={`group relative kids-story-card flex flex-col ${featured ? 'min-w-[320px] md:min-w-[400px]' : 'w-full'}`}
       >
         <div className="relative h-48 w-full cursor-pointer" onClick={() => setSelectedStory(story)}>
           <DynamicCover story={story} className="absolute inset-0" />
@@ -679,7 +692,7 @@ function KidsAIStories() {
   };
 
   return (
-    <KidsPageShell footer={canCreateStories ? null : <KidsBottomNav />} isRtl={isRtl}>
+    <KidsPageShell footer={canCreateStories ? null : <KidsBottomNav />} isRtl={isRtl} className="pb-32 kids-hero-glow">
       <MagicCelebration active={showCelebration} onComplete={() => setShowCelebration(false)} />
 
       <div className="relative z-10 mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
@@ -696,43 +709,25 @@ function KidsAIStories() {
           </Link>
         </header>
 
-        {/* Premium Immersive Hero */}
-        <motion.section 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className={`relative mb-12 overflow-hidden rounded-[2.5rem] bg-gradient-to-br ${BRAND_HERO_GRADIENT} p-8 md:p-12 text-white shadow-2xl`}
+        <KidsHero
+          emoji="✨"
+          badge="Le Lit Qui Lit Magique"
+          title={`✨ ${t('kidsNavStories')}`}
+          subtitle={canCreateStories ? t('storyStudioEmptyParentDescription') : t('storyStudioEmptyKidDescription')}
+          className="mb-10"
         >
-          <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4IiBoZWlnaHQ9IjgiPgo8cmVjdCB3aWR0aD0iOCIgaGVpZ2h0PSI4IiBmaWxsPSIjZmZmIiBmaWxsLW9wYWNpdHk9IjAuMDUiLz4KPC9zdmc+')] opacity-30 mix-blend-overlay"></div>
-          <div className="absolute -top-24 -right-24 w-96 h-96 bg-white/20 blur-3xl rounded-full pointer-events-none"></div>
-          <div className="absolute -bottom-24 -left-24 w-72 h-72 bg-secondary-400/20 blur-3xl rounded-full pointer-events-none"></div>
-          
-          <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-8">
-            <div className="max-w-xl">
-              <div className="inline-flex items-center gap-2 rounded-full bg-white/20 backdrop-blur-md border border-white/30 px-4 py-2 text-sm font-black mb-6 shadow-glass">
-                <SparklesIcon className="h-5 w-5 text-accent-200" />
-                <span>Le Lit Qui Lit Magique</span>
-              </div>
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-black leading-tight mb-4 filter drop-shadow-lg">
-                ✨ Mes Histoires IA
-              </h1>
-              <p className="text-lg md:text-xl font-bold text-white/90 filter drop-shadow-md">
-                Retrouve toutes tes aventures créées avec la magie de l'IA. Relis-les, écoute-les ou crée de nouvelles versions fantastiques !
-              </p>
-            </div>
-            
-            {canCreateStories && (
-              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                <Link
-                  to={storyStudioPath}
-                  className="inline-flex items-center justify-center gap-3 rounded-3xl bg-white px-8 py-5 text-xl font-black text-primary-700 shadow-xl hover:shadow-2xl transition"
-                >
-                  <SparklesIcon className="h-6 w-6" />
-                  <span>{t('storyStudioCreateStory')}</span>
-                </Link>
-              </motion.div>
-            )}
-          </div>
-        </motion.section>
+          {canCreateStories && storyStudioPath && (
+            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="mt-6">
+              <Link
+                to={storyStudioPath}
+                className="kids-touch-target inline-flex items-center justify-center gap-3 rounded-[2rem] bg-white px-8 py-4 text-xl font-black text-primary-700 shadow-xl"
+              >
+                <SparklesIcon className="h-6 w-6" />
+                <span>{t('storyStudioCreateStory')}</span>
+              </Link>
+            </motion.div>
+          )}
+        </KidsHero>
 
         {/* Quick KPI Statistics */}
         <section className="mb-12 grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -824,11 +819,7 @@ function KidsAIStories() {
           </form>
         </section>
 
-        {error && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mb-8 rounded-2xl bg-danger-50 border border-danger-200 px-6 py-4 text-danger-800 font-bold flex items-center gap-3 shadow-sm">
-            <span className="text-2xl">⚠️</span> {error}
-          </motion.div>
-        )}
+        {error && <KidsErrorBanner message={error} onDismiss={() => setError('')} className="mb-8" />}
 
         {/* Main Grid & Selected Story */}
         <main className="grid gap-8 lg:grid-cols-[1fr_400px]">
@@ -840,30 +831,15 @@ function KidsAIStories() {
             </h2>
             
             {loading ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                {[1, 2, 3, 4].map(i => (
-                  <div key={i} className="h-80 rounded-3xl bg-surface-secondary animate-pulse border border-border" />
-                ))}
-              </div>
+              <BookGridSkeleton count={4} />
             ) : stories.length === 0 ? (
-              <div className="rounded-[2.5rem] bg-card border border-border p-12 text-center shadow-sm">
-                <div className="text-8xl mb-6">🐉</div>
-                <h3 className="text-2xl font-black mb-2">
-                  {canCreateStories ? t('storyStudioEmptyParentTitle') : t('storyStudioEmptyKidTitle')}
-                </h3>
-                <p className="text-foreground-muted font-bold mb-8">
-                  {canCreateStories ? t('storyStudioEmptyParentDescription') : t('storyStudioEmptyKidDescription')}
-                </p>
-                {canCreateStories && (
-                  <Link
-                    to={storyStudioPath}
-                    className="inline-flex items-center gap-2 rounded-2xl bg-primary-500 px-8 py-4 text-lg font-black text-white shadow-lg hover:bg-primary-600 transition"
-                  >
-                    <SparklesIcon className="h-6 w-6" />
-                    {t('storyStudioCreateFirstStory')}
-                  </Link>
-                )}
-              </div>
+              <KidsEmptyState
+                emoji="🐉"
+                title={canCreateStories ? t('storyStudioEmptyParentTitle') : t('storyStudioEmptyKidTitle')}
+                description={canCreateStories ? t('storyStudioEmptyParentDescription') : t('storyStudioEmptyKidDescription')}
+                actionLabel={canCreateStories ? t('storyStudioCreateFirstStory') : t('goToLibrary')}
+                onAction={() => (canCreateStories && storyStudioPath ? navigate(storyStudioPath) : navigate('/kids/library'))}
+              />
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <AnimatePresence>
@@ -987,6 +963,18 @@ function KidsAIStories() {
         </main>
       </div>
       <VoiceAssistant />
+      <KidsModal
+        isOpen={Boolean(deleteTarget)}
+        onClose={() => setDeleteTarget(null)}
+        emoji="🗑️"
+        title={t('kidsNavStories')}
+        primaryLabel="OK"
+        onPrimary={confirmDelete}
+        secondaryLabel={t('back')}
+        onSecondary={() => setDeleteTarget(null)}
+      >
+        Supprimer cette histoire magique ?
+      </KidsModal>
       <ContentReportModal
         isOpen={showReportModal}
         onClose={() => setShowReportModal(false)}

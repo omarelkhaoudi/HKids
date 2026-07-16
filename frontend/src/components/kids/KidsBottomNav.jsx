@@ -69,6 +69,16 @@ export function KidsBottomNav() {
         >
           <span className="hidden sm:inline">{t('yourMedals')}</span>
         </KidsButton>
+        <KidsButton
+          variant={location.pathname === '/kids' && location.hash === '#profile' ? 'secondary' : 'ghost'}
+          size="sm"
+          className="!rounded-full !px-4 md:!px-5 !min-h-[56px]"
+          onClick={() => navigate('/kids#profile')}
+          aria-label={t('profile')}
+        >
+          <span className="text-2xl" aria-hidden="true">👤</span>
+          <span className="hidden sm:inline">{t('profile')}</span>
+        </KidsButton>
       </motion.nav>
     </div>
   );
