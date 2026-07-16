@@ -202,7 +202,7 @@ function KidsLearning() {
   return (
     <KidsPageShell isRtl={isRtl} variant="library" world="learn" className="pb-32 kids-glow-learn" footer={<KidsBottomNav />}>
       <KidsPageHeader backTo="/kids" emoji="🎮" title={t('kidsNavLearning')} />
-      <div className="relative z-10 mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8 pb-8">
+      <div className="relative z-10 kids-main kids-main-tablet-wide">
         <AnimatePresence mode="wait">
           {selectedContent ? (
             /* ========================================================
@@ -504,6 +504,8 @@ function KidsLearning() {
                     description={t('tryAnotherWord')}
                     actionLabel={t('allCategories')}
                     onAction={() => { setSearchQuery(''); setSelectedCategoryFilter('all'); }}
+                    showMascot
+                    mascotMood="encourage"
                   />
                 ) : (
                   <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 md:gap-6">

@@ -1,5 +1,8 @@
+import { motion } from 'framer-motion';
 import { PlatformShell, MagicalBackground, KidsMagicalBackground } from '../layout/PlatformShell';
 import { KidsAmbientBackground } from './KidsAmbientBackground';
+import { useReducedMotion } from '../../hooks/useReducedMotion';
+import { getMotionProps, kidsPageEnter } from '../../constants/kidsMotion';
 
 export { MagicalBackground, KidsMagicalBackground };
 
@@ -10,7 +13,9 @@ export function KidsPageShell({
   world,
   className = '',
   footer = null,
+  wide = false,
 }) {
+  const reducedMotion = useReducedMotion();
   const shellVariant = variant === 'library' ? 'library' : 'kids';
   const ambientWorld = world || (variant === 'library' ? 'books' : 'home');
 
@@ -22,7 +27,12 @@ export function KidsPageShell({
       footer={footer}
     >
       <KidsAmbientBackground world={ambientWorld} />
-      <div className="relative z-10 flex min-h-0 flex-1 flex-col">{children}</div>
+      <motion.div
+        className={`kids-page relative z-10 flex min-h-0 flex-1 flex-col ${wide ? 'kids-main-tablet-wide' : ''}`}
+        {...getMotionProps(reducedMotion, kidsPageEnter)}
+      >
+        {children}
+      </motion.div>
     </PlatformShell>
   );
 }

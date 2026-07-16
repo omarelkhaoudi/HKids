@@ -93,7 +93,7 @@ export function KidsBookCarousel({
       />
       <div
         ref={carouselRef}
-        className="flex gap-5 md:gap-7 overflow-x-auto px-2 md:px-4 pb-6 pt-2 snap-x snap-mandatory custom-scrollbar"
+        className="flex gap-5 md:gap-7 lg:gap-8 overflow-x-auto px-2 md:px-4 pb-6 pt-2 snap-x snap-mandatory custom-scrollbar kids-scroll-smooth"
       >
         {books.map((book) => (
           <div key={book.id} className="snap-start shrink-0">

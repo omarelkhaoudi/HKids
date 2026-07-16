@@ -25,6 +25,7 @@ import { getRestrictionMessage } from '../services/parental/parentalAccessServic
 import { PlayIcon, LockIcon } from '../components/Icons';
 import { getCachedKidProfile } from '../services/cloud/cloudSyncService';
 import { Avatar } from '../components/ui';
+import { KidsTrustBadges } from '../components/kids/KidsTrustBadges';
 import { KidsProfilePanel } from '../components/kids/KidsProfilePanel';
 import { BookGridSkeleton } from '../components/SkeletonLoader';
 
@@ -241,7 +242,7 @@ function KidsHome() {
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-20 space-y-8 mt-2">
+      <main className="kids-main kids-main-tablet-wide relative z-20 mt-2">
         <motion.section
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
@@ -297,6 +298,7 @@ function KidsHome() {
         </motion.section>
 
         <section aria-label={t('kidsAutonomyWorlds')}>
+          <KidsTrustBadges t={t} compact className="mb-4 opacity-90" />
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {autonomyWorlds.map((world) => {
               const theme = getKidsModality(world.modality);
@@ -347,6 +349,7 @@ function KidsHome() {
             compact
             actionLabel={t('goToLibrary')}
             onAction={() => navigate('/kids/library')}
+            showMascot
           />
         )}
 
@@ -395,6 +398,7 @@ function KidsHome() {
             t={t}
             isRtl={isRtl}
             onPlayBook={handlePlayBook}
+            onGoToLibrary={() => navigate('/kids/library')}
           />
         </section>
 
@@ -410,6 +414,8 @@ function KidsHome() {
               compact
               actionLabel={t('goToLibrary')}
               onAction={() => navigate('/kids/library')}
+              showMascot
+              mascotMood="encourage"
             />
           ) : (
             <div className="flex flex-wrap gap-6 justify-center md:justify-start px-2">

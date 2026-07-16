@@ -1,8 +1,9 @@
-import { memo } from 'react';
+import { memo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getImageUrl } from '../../utils/imageUrl';
 import { useReducedMotion } from '../../hooks/useReducedMotion';
 import { getHoverMotion, kidsBadgePop, getFloatMotion } from '../../constants/kidsMotion';
+import { KidsFeedbackBurst } from './KidsFeedbackBurst';
 import { PlayIcon, HeartIcon, DownloadIcon, SparklesIcon, ClockIcon, ShieldIcon, AudioIcon } from '../Icons';
 
 function formatDuration(seconds = 0) {
@@ -18,8 +19,8 @@ function hasAudio(book) {
 }
 
 const SIZE_MAP = {
-  carousel: 'relative w-56 h-[18.5rem] md:w-64 md:h-[21rem]',
-  poster: 'relative h-[23rem] w-64 md:h-[27rem] md:w-72 shrink-0',
+  carousel: 'relative w-56 h-[18.5rem] md:w-64 md:h-[21rem] lg:w-72 lg:h-[23rem]',
+  poster: 'relative h-[23rem] w-64 md:h-[27rem] md:w-72 lg:h-[28rem] lg:w-80 shrink-0',
 };
 
 export const KidsMediaCard = memo(function KidsMediaCard({
@@ -37,6 +38,7 @@ export const KidsMediaCard = memo(function KidsMediaCard({
   className = '',
 }) {
   const reducedMotion = useReducedMotion();
+  const [feedback, setFeedback] = useState(null);
   const sizeClass = SIZE_MAP[variant] || SIZE_MAP.carousel;
   const durationLabel = formatDuration(book.duration_seconds);
   const audioReady = hasAudio(book);
@@ -49,6 +51,11 @@ export const KidsMediaCard = memo(function KidsMediaCard({
     transition: { duration: 4.2, repeat: Infinity, ease: 'easeInOut' },
   });
 
+  const flashFeedback = (type) => {
+    setFeedback(type);
+    window.setTimeout(() => setFeedback(null), 700);
+  };
+
   return (
     <motion.div
       {...floatProps}
@@ -60,6 +67,7 @@ export const KidsMediaCard = memo(function KidsMediaCard({
         onClick={() => onPlay?.(book)}
         aria-label={book.title}
       >
+        <KidsFeedbackBurst type={feedback} active={Boolean(feedback)} />
         <img
           src={getImageUrl(book.cover_image, 'book')}
           alt=""
@@ -110,7 +118,10 @@ export const KidsMediaCard = memo(function KidsMediaCard({
                 whileTap={reducedMotion ? undefined : { scale: 0.88 }}
                 onClick={(e) => {
                   e.stopPropagation();
-                  if (showActions) onFavorite?.(book.id);
+                  if (showActions) {
+                    onFavorite?.(book.id);
+                    flashFeedback('favorite');
+                  }
                 }}
                 className={`kids-touch-target !min-h-[48px] !min-w-[48px] rounded-full backdrop-blur-md p-2.5 text-white shadow-xl border-2 transition-colors ${
                   isFavorite
@@ -134,7 +145,11 @@ export const KidsMediaCard = memo(function KidsMediaCard({
                   type="button"
                   whileHover={reducedMotion ? undefined : { scale: 1.08 }}
                   whileTap={reducedMotion ? undefined : { scale: 0.92 }}
-                  onClick={(e) => { e.stopPropagation(); onDownload?.(book); }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDownload?.(book);
+                    flashFeedback('download');
+                  }}
                   className="kids-touch-target !min-h-[48px] !min-w-[48px] rounded-full bg-white/25 backdrop-blur-md p-2.5 text-white shadow-xl border-2 border-white/40 opacity-0 group-hover:opacity-100 hover:bg-secondary-500 hover:border-secondary-400 transition-all"
                   aria-label="Download"
                 >
