@@ -1,5 +1,5 @@
 import {useState, useEffect} from 'react';
-import {Link} from 'react-router-dom';
+import {Link, useNavigate} from 'react-router-dom';
 import {motion, AnimatePresence} from 'framer-motion';
 import {booksAPI} from '../api/books';
 import {storage} from '../utils/storage';
@@ -9,11 +9,24 @@ import {HeartIcon, BookIcon, ChevronLeftIcon, StarIcon} from '../components/Icon
 import {Logo} from '../components/Logo';
 import {getImageUrl} from '../utils/imageUrl';
 import {useLanguage} from '../context/LanguageContext';
+import {useAuth} from '../context/AuthContext';
+import {KidsPageShell} from '../components/kids/KidsPageShell';
+import {KidsPageHeader} from '../components/kids/KidsPageHeader';
+import {KidsHero} from '../components/kids/KidsHero';
+import {KidsBottomNav} from '../components/kids/KidsBottomNav';
+import {KidsMediaCard} from '../components/kids/KidsMediaCard';
+import {KidsEmptyState} from '../components/kids/KidsEmptyState';
+import {KidsBookCarousel} from '../components/kids/KidsBookCarousel';
+import {getKidsContentPath} from '../utils/contentRouting';
+import {VoiceAssistant} from '../components/kids/VoiceAssistant';
 
 function Favorites() {
  const [favoriteBooks, setFavoriteBooks] = useState([]);
  const [loading, setLoading] = useState(true);
- const {language, isRtl} = useLanguage();
+ const {language, isRtl, t} = useLanguage();
+ const {user} = useAuth();
+ const navigate = useNavigate();
+ const isKidMode = user?.role === 'kid';
 
  useEffect(() => {
  loadFavorites();
@@ -70,6 +83,56 @@ function Favorites() {
  showToast('Livre retiré des favoris', 'info', 2000);
  loadFavorites();
 };
+
+ if (isKidMode) {
+  return (
+   <KidsPageShell isRtl={isRtl} variant="library" className="pb-32 kids-hero-glow" footer={<KidsBottomNav />}>
+    <KidsPageHeader backTo="/kids" emoji="❤️" title={t('yourFavorites')} />
+    <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-8">
+     <KidsHero emoji="❤️" title={t('yourFavorites')} subtitle={t('emptyFavoritesTitle')} />
+     {loading ? (
+      <BookGridSkeleton count={6} variant="carousel" />
+     ) : favoriteBooks.length === 0 ? (
+      <KidsEmptyState
+       emoji="❤️"
+       title={t('emptyFavoritesTitle')}
+       description={t('emptyBooksDescription')}
+       actionLabel={t('goToLibrary')}
+       onAction={() => navigate('/kids/library')}
+      />
+     ) : (
+      <>
+       <KidsBookCarousel
+        title={t('yourFavorites')}
+        emoji="❤️"
+        books={favoriteBooks}
+        isRtl={isRtl}
+        showActions={false}
+        hideTitle
+        onPlay={(book) => navigate(getKidsContentPath(book))}
+       />
+       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 justify-items-center">
+        {favoriteBooks.map((book) => (
+         <KidsMediaCard
+          key={book.id}
+          book={book}
+          variant="poster"
+          hideTitle
+          isRtl={isRtl}
+          showActions
+          isFavorite
+          onPlay={(b) => navigate(getKidsContentPath(b))}
+          onFavorite={() => removeFavorite(book.id)}
+         />
+        ))}
+       </div>
+      </>
+     )}
+    </main>
+    <VoiceAssistant onNavigate={navigate} />
+   </KidsPageShell>
+  );
+ }
 
  return (
  <div className="min-h-screen bg-card" dir={isRtl ? 'rtl' : 'ltr'}>
