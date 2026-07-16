@@ -197,6 +197,8 @@ function App() {
                 <Route path="/admin/*" element={<RequireRole roles={['admin']}><LazyRoute><AdminDashboard /></LazyRoute></RequireRole>} />
                 <Route path="/parent/profiles" element={<RequireRole roles={['parent', 'admin']}><ParentKidsProfiles /></RequireRole>} />
                 <Route path="/parent/voices" element={<RequireRole roles={['parent', 'admin']}><LazyRoute><FamilyVoices /></LazyRoute></RequireRole>} />
+                <Route path="/parent/story-studio" element={<RequireRole roles={['parent', 'admin']}><LazyRoute><KidsStoryStudio /></LazyRoute></RequireRole>} />
+                <Route path="/parent/ai-stories" element={<RequireRole roles={['parent', 'admin']}><LazyRoute><KidsAIStories /></LazyRoute></RequireRole>} />
                 <Route path="/parent/*" element={<RequireRole roles={['parent', 'admin']}><LazyRoute><ParentDashboard /></LazyRoute></RequireRole>} />
                 <Route path="/kids" element={<RequireAuth><LazyRoute><KidsHome /></LazyRoute></RequireAuth>} />
                 <Route path="/kids/library" element={<RequireAuth><LazyRoute><KidsLibrary /></LazyRoute></RequireAuth>} />

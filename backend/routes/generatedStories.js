@@ -59,6 +59,18 @@ function mapKidProfile(row) {
   };
 }
 
+function requireStoryAuthorRole(req, res) {
+  if (req.user?.role === 'parent' || req.user?.role === 'admin') {
+    return true;
+  }
+
+  res.status(403).json({
+    error: 'Only a parent or admin can create story content',
+    code: 'PARENT_REQUIRED'
+  });
+  return false;
+}
+
 router.get('/kid-profiles', verifyToken, async (req, res) => {
   try {
     const pool = getPool();
@@ -92,6 +104,7 @@ router.get('/kid-profiles', verifyToken, async (req, res) => {
 
 router.post('/generate', verifyToken, async (req, res) => {
   try {
+    if (!requireStoryAuthorRole(req, res)) return;
     const pool = getPool();
     const kid = await getAuthorizedKidProfile(pool, req.user, req.body.kid_profile_id);
 
@@ -335,6 +348,7 @@ router.post('/:id/favorite', verifyToken, async (req, res) => {
 
 router.post('/:id/version', verifyToken, async (req, res) => {
   try {
+    if (!requireStoryAuthorRole(req, res)) return;
     const pool = getPool();
     const storyResult = await pool.query('SELECT * FROM generated_stories WHERE id = $1', [req.params.id]);
     const story = storyResult.rows[0];
@@ -485,6 +499,7 @@ router.get('/:id/illustrations', verifyToken, async (req, res) => {
 // Regenerate illustrations for a story
 router.post('/:id/illustrations/regenerate', verifyToken, async (req, res) => {
   try {
+    if (!requireStoryAuthorRole(req, res)) return;
     const pool = getPool();
     const storyResult = await pool.query('SELECT id, kid_profile_id FROM generated_stories WHERE id = $1', [req.params.id]);
     const story = storyResult.rows[0];
@@ -527,6 +542,7 @@ router.get('/:id/narrations', verifyToken, async (req, res) => {
 // Generate narration for a specific locale
 router.post('/:id/narrations/:locale', verifyToken, async (req, res) => {
   try {
+    if (!requireStoryAuthorRole(req, res)) return;
     const pool = getPool();
     const storyResult = await pool.query(
       'SELECT id, kid_profile_id FROM generated_stories WHERE id = $1',
@@ -554,6 +570,7 @@ router.post('/:id/narrations/:locale', verifyToken, async (req, res) => {
 // Generate narrations for all configured locales
 router.post('/:id/narrations', verifyToken, async (req, res) => {
   try {
+    if (!requireStoryAuthorRole(req, res)) return;
     const pool = getPool();
     const storyResult = await pool.query(
       'SELECT id, kid_profile_id FROM generated_stories WHERE id = $1',

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState, useRef } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { generatedStoriesAPI } from '../api/generatedStories';
@@ -7,7 +7,7 @@ import { useOfflineContent } from '../hooks/useOfflineContent';
 import { getDownloads, offlineContentIds } from '../services/offline/offlineContentService';
 import { queueOfflineMutation } from '../services/offline/offlineSyncService';
 import { 
-  AudioIcon, BookIcon, ChevronLeftIcon, ClockIcon, DownloadIcon, 
+  AudioIcon, BookIcon, ChevronLeftIcon, ChildIcon, ClockIcon, DownloadIcon, LanguageIcon,
   HeartIcon, HistoryIcon, RefreshIcon, SearchIcon, SparklesIcon, TrashIcon, WarningIcon
 } from '../components/Icons';
 import { Logo } from '../components/Logo';
@@ -187,7 +187,7 @@ function StoryTextWithIllustrations({ story }) {
   );
 }
 
-function NarrationPlayer({ story }) {
+function NarrationPlayer({ story, canGenerate = false }) {
   const { t, language } = useLanguage();
   const [narrationLocale, setNarrationLocale] = React.useState(story.language || language || 'fr');
   const [audioUrl, setAudioUrl] = React.useState(null);
@@ -308,7 +308,7 @@ function NarrationPlayer({ story }) {
       </button>
 
       {/* Generate button (when no track available) */}
-      {!hasTrack && (
+      {!hasTrack && canGenerate && (
         <button
           onClick={handleGenerate}
           disabled={isGenerating}
@@ -340,6 +340,9 @@ function NarrationPlayer({ story }) {
 function KidsAIStories() {
   const { language, t, isRtl } = useLanguage();
   const { user } = useAuth();
+  const canCreateStories = user?.role === 'parent' || user?.role === 'admin';
+  const homePath = canCreateStories ? '/parent' : '/kids';
+  const storyStudioPath = canCreateStories ? '/parent/story-studio' : null;
   const [kidProfiles, setKidProfiles] = useState([]);
   const [selectedKidProfileId, setSelectedKidProfileId] = useState('');
   const [stories, setStories] = useState([]);
@@ -633,14 +636,16 @@ function KidsAIStories() {
               <HeartIcon className="w-5 h-5" filled={story.favorite} />
             </button>
             
-            <button 
-              onClick={() => handleNewVersion(story)} 
-              disabled={busyStoryId === story.id}
-              className="p-2 rounded-xl bg-surface-secondary text-foreground-muted hover:bg-primary-50 hover:text-primary-500 transition"
-              title="Nouvelle version"
-            >
-              <RefreshIcon className="w-5 h-5" />
-            </button>
+            {canCreateStories && (
+              <button 
+                onClick={() => handleNewVersion(story)} 
+                disabled={busyStoryId === story.id}
+                className="p-2 rounded-xl bg-surface-secondary text-foreground-muted hover:bg-primary-50 hover:text-primary-500 transition"
+                title={t('storyStudioVariantAction')}
+              >
+                <RefreshIcon className="w-5 h-5" />
+              </button>
+            )}
             
             {offlineReady ? (
               <button 
@@ -674,16 +679,16 @@ function KidsAIStories() {
   };
 
   return (
-    <KidsPageShell footer={<KidsBottomNav />} isRtl={isRtl}>
+    <KidsPageShell footer={canCreateStories ? null : <KidsBottomNav />} isRtl={isRtl}>
       <MagicCelebration active={showCelebration} onComplete={() => setShowCelebration(false)} />
 
       <div className="relative z-10 mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
         <header className="mb-8 flex items-center justify-between gap-4">
-          <Link to="/kids" className="shrink-0">
+          <Link to={homePath} className="shrink-0">
             <Logo size="default" showText={true} />
           </Link>
           <Link
-            to="/kids"
+            to={homePath}
             className="inline-flex items-center gap-2 rounded-2xl bg-card/80 backdrop-blur-md px-5 py-3 text-sm font-black text-foreground shadow-sm hover:shadow-md transition border border-border"
           >
             <ChevronLeftIcon className="h-5 w-5" />
@@ -715,15 +720,17 @@ function KidsAIStories() {
               </p>
             </div>
             
-            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-              <Link
-                to="/kids/story-studio"
-                className="inline-flex items-center justify-center gap-3 rounded-3xl bg-white px-8 py-5 text-xl font-black text-primary-700 shadow-xl hover:shadow-2xl transition"
-              >
-                <SparklesIcon className="h-6 w-6" />
-                <span>Créer une histoire</span>
-              </Link>
-            </motion.div>
+            {canCreateStories && (
+              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                <Link
+                  to={storyStudioPath}
+                  className="inline-flex items-center justify-center gap-3 rounded-3xl bg-white px-8 py-5 text-xl font-black text-primary-700 shadow-xl hover:shadow-2xl transition"
+                >
+                  <SparklesIcon className="h-6 w-6" />
+                  <span>{t('storyStudioCreateStory')}</span>
+                </Link>
+              </motion.div>
+            )}
           </div>
         </motion.section>
 
@@ -841,15 +848,21 @@ function KidsAIStories() {
             ) : stories.length === 0 ? (
               <div className="rounded-[2.5rem] bg-card border border-border p-12 text-center shadow-sm">
                 <div className="text-8xl mb-6">🐉</div>
-                <h3 className="text-2xl font-black mb-2">Tu n'as pas encore créé d'histoire magique.</h3>
-                <p className="text-foreground-muted font-bold mb-8">Utilise la magie de l'IA pour imaginer ta première aventure !</p>
-                <Link
-                  to="/kids/story-studio"
-                  className="inline-flex items-center gap-2 rounded-2xl bg-primary-500 px-8 py-4 text-lg font-black text-white shadow-lg hover:bg-primary-600 transition"
-                >
-                  <SparklesIcon className="h-6 w-6" />
-                  Créer ma première histoire
-                </Link>
+                <h3 className="text-2xl font-black mb-2">
+                  {canCreateStories ? t('storyStudioEmptyParentTitle') : t('storyStudioEmptyKidTitle')}
+                </h3>
+                <p className="text-foreground-muted font-bold mb-8">
+                  {canCreateStories ? t('storyStudioEmptyParentDescription') : t('storyStudioEmptyKidDescription')}
+                </p>
+                {canCreateStories && (
+                  <Link
+                    to={storyStudioPath}
+                    className="inline-flex items-center gap-2 rounded-2xl bg-primary-500 px-8 py-4 text-lg font-black text-white shadow-lg hover:bg-primary-600 transition"
+                  >
+                    <SparklesIcon className="h-6 w-6" />
+                    {t('storyStudioCreateFirstStory')}
+                  </Link>
+                )}
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
@@ -933,7 +946,7 @@ function KidsAIStories() {
                     Créée le {new Date(selectedStory.created_at || Date.now()).toLocaleDateString('fr-FR')}
                   </p>
 
-                  <NarrationPlayer story={selectedStory} />
+                  <NarrationPlayer story={selectedStory} canGenerate={canCreateStories} />
 
                   {/* Playback & Text Area */}
                   <div className="rounded-2xl bg-primary-50/50 dark:bg-primary-900/10 border border-primary-100 dark:border-primary-900/30 p-6 max-h-96 overflow-y-auto custom-scrollbar">
@@ -950,10 +963,12 @@ function KidsAIStories() {
                       <HeartIcon className="w-5 h-5" filled={selectedStory.favorite} />
                       {selectedStory.favorite ? 'Retirer' : 'Favori'}
                     </button>
-                    <button onClick={() => handleNewVersion(selectedStory)} disabled={busyStoryId === selectedStory.id} className="flex-1 min-w-[140px] rounded-2xl bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400 px-4 py-3 text-sm font-black disabled:opacity-60 hover:opacity-80 transition flex items-center justify-center gap-2">
-                      <RefreshIcon className="w-5 h-5" />
-                      Variante
-                    </button>
+                    {canCreateStories && (
+                      <button onClick={() => handleNewVersion(selectedStory)} disabled={busyStoryId === selectedStory.id} className="flex-1 min-w-[140px] rounded-2xl bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400 px-4 py-3 text-sm font-black disabled:opacity-60 hover:opacity-80 transition flex items-center justify-center gap-2">
+                        <RefreshIcon className="w-5 h-5" />
+                        {t('storyStudioVariantAction')}
+                      </button>
+                    )}
                     {canReport && (
                       <button
                         type="button"
