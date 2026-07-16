@@ -1,6 +1,7 @@
 import { useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useLanguage } from '../../context/LanguageContext';
+import { useAuth } from '../../context/AuthContext';
 import KidsButton from './KidsButton';
 import { HomeIcon, BookIcon, SparklesIcon, StarIcon } from '../Icons';
 
@@ -21,6 +22,8 @@ export function KidsBottomNav() {
   const navigate = useNavigate();
   const location = useLocation();
   const { t } = useLanguage();
+  const { user } = useAuth();
+  const navItems = NAV_ITEMS.filter((item) => item.id !== 'studio' || user?.role !== 'kid');
 
   return (
     <div className="fixed bottom-0 left-0 w-full p-4 md:p-6 z-30 pointer-events-none flex justify-center">
@@ -31,7 +34,7 @@ export function KidsBottomNav() {
         aria-label={t('kidsNavLabel')}
         className="pointer-events-auto bg-white/90 dark:bg-surface-900/90 backdrop-blur-xl px-3 py-3 md:px-4 md:py-4 rounded-full shadow-glass border border-white/50 dark:border-white/10 flex flex-wrap gap-2 md:gap-3 justify-center max-w-full"
       >
-        {NAV_ITEMS.map((item) => {
+        {navItems.map((item) => {
           const active = isActivePath(location.pathname, item.path);
           const Icon = item.icon;
 

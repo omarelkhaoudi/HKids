@@ -6,13 +6,11 @@ import {generatedStoriesAPI} from '../api/generatedStories';
 import {useAuth} from '../context/AuthContext';
 import {speakText, stopSpeaking} from '../services/ai/browserTextToSpeech';
 import {
- AudioIcon, BookIcon, CheckIcon, ClockIcon, SparklesIcon, StarIcon, 
+ AudioIcon, BookIcon, ClockIcon, SparklesIcon,
  ChevronLeftIcon, PlayIcon, PauseIcon, BrainIcon, HeartIcon, HistoryIcon
 } from '../components/Icons';
-import {Logo} from '../components/Logo';
-import {KidsBottomNav} from '../components/kids/KidsBottomNav';
 import {KidsPageShell} from '../components/kids/KidsPageShell';
-import {Button, Card, Badge, Avatar} from '../components/ui';
+import {Button, Badge, Avatar} from '../components/ui';
 import { BRAND_HERO_GRADIENT, BRAND_SEMANTIC, storyGradientAtIndex } from '../constants/brandTheme';
 
 const themeOptionDefs = [
@@ -147,6 +145,9 @@ function KidsStoryStudio() {
  const {user} = useAuth();
  const {t} = useLanguage();
  const navigate = useNavigate();
+ const isStoryAuthor = user?.role === 'parent' || user?.role === 'admin';
+ const storiesPath = isStoryAuthor ? '/parent/ai-stories' : '/kids/ai-stories';
+ const backPath = isStoryAuthor ? '/parent' : '/kids/ai-stories';
  const themeOptions = useMemo(
   () => themeOptionDefs.map((theme, index) => ({
    ...theme,
@@ -177,7 +178,7 @@ function KidsStoryStudio() {
  const [speaking, setSpeaking] = useState(false);
  const [error, setError] = useState('');
 
- const canUseStoryStudio = ['kid', 'parent', 'admin'].includes(user?.role);
+ const canUseStoryStudio = isStoryAuthor;
  const selectedKidProfile = kidProfiles.find((kid) => String(kid.id) === String(selectedKidProfileId));
 
  useEffect(() => {
@@ -313,9 +314,12 @@ function KidsStoryStudio() {
  return (
  <div className="flex min-h-screen items-center justify-center bg-primary-900 px-4">
  <div className="max-w-md rounded-[2.5rem] bg-card p-8 text-center shadow-2xl">
- <p className="mb-6 text-xl font-black text-foreground">Espace enfant ou parent requis pour la magie ! ✨</p>
- <Button onClick={() => navigate('/kids')} variant="primary" className="rounded-full w-full font-black">
- Retour
+ <p className="mb-4 text-xl font-black text-foreground">{t('storyStudioParentOnlyTitle')}</p>
+ <p className="mb-6 text-sm font-bold text-foreground-secondary">
+  {t('storyStudioParentOnlyDescription')}
+ </p>
+ <Button onClick={() => navigate('/kids/ai-stories')} variant="primary" className="rounded-full w-full font-black">
+  {t('back')}
  </Button>
  </div>
  </div>
@@ -323,13 +327,13 @@ function KidsStoryStudio() {
 }
 
  return (
- <KidsPageShell variant="library" className="bg-primary-900 text-white" footer={<KidsBottomNav />}>
+ <KidsPageShell variant="library" className="bg-primary-900 text-white">
  <FloatingStars />
  {showSuccess && <Confetti />}
 
  {/* HEADER */}
  <header className="sticky top-0 z-40 bg-primary-900/80 backdrop-blur-xl border-b border-white/10 shadow-lg px-4 py-4 flex items-center justify-between">
- <Link to="/kids" className="flex items-center gap-2 group">
+ <Link to={backPath} className="flex items-center gap-2 group">
  <div className="p-2 rounded-full bg-card/10 group-hover:bg-card/20 transition-colors">
  <ChevronLeftIcon className="w-6 h-6 text-white" />
  </div>
@@ -340,7 +344,7 @@ function KidsStoryStudio() {
  <Avatar src={null} fallback={selectedKidProfile?.name?.charAt(0) ||"K"} className="w-8 h-8 bg-gradient-to-br from-primary-400 to-secondary-500 text-white font-bold" />
  <span className="font-bold text-sm">{selectedKidProfile?.name ||"Enfant"}</span>
  </div>
- <Link to="/kids/ai-stories">
+ <Link to={storiesPath}>
  <Button variant="outline" className="rounded-full bg-card/10 border-none text-white hover:bg-card/20 font-bold shadow-lg">
  <BookIcon className="w-5 h-5 mr-2" /> Mes histoires
  </Button>
@@ -387,7 +391,7 @@ function KidsStoryStudio() {
  Invente ton aventure !
  </h1>
  <p className="text-lg text-white/60 font-medium max-w-2xl mx-auto">
- Mélange tes ingrédients préférés pour créer une histoire unique.
+ {t('storyStudioParentSubtitle')}
  </p>
  {error && (
  <div className="mt-6 inline-block bg-rose-500/20 border border-rose-500/50 text-rose-200 px-6 py-3 rounded-full font-bold">
@@ -506,7 +510,7 @@ function KidsStoryStudio() {
  <div className={`absolute inset-0 bg-gradient-to-r ${BRAND_HERO_GRADIENT} rounded-[2.5rem] opacity-90 group-hover:opacity-100 transition-opacity`}></div>
  <div className="relative bg-primary-900/20 backdrop-blur-sm rounded-[2.3rem] py-6 flex items-center justify-center gap-4 border border-white/20">
  <SparklesIcon className="w-8 h-8 text-white" />
- <span className="text-3xl font-black text-white tracking-wide">Créer la Magie</span>
+ <span className="text-3xl font-black text-white tracking-wide">{t('storyStudioGenerateAction')}</span>
  </div>
  </motion.button>
 

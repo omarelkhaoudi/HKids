@@ -154,6 +154,7 @@ function KidsHome() {
   const badges = Array.isArray(homeData?.badges) ? homeData.badges : [];
   const missionText = getMissionText(homeData?.goal, homeData?.summary, t);
   const kidCategories = localizeKidCategories(language);
+  const quickLinks = QUICK_LINKS.filter((link) => link.id !== 'studio' || user?.role !== 'kid');
 
   const handleSurprise = () => {
     if (recommendedBooks.length === 0) {
@@ -262,7 +263,7 @@ function KidsHome() {
 
         <section>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {QUICK_LINKS.map((link, index) => (
+            {quickLinks.map((link, index) => (
               <motion.button
                 key={link.id}
                 type="button"

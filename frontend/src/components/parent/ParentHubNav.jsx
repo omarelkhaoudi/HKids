@@ -2,12 +2,13 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Card } from '../ui';
 import { useLanguage } from '../../context/LanguageContext';
-import { BookIcon, AudioIcon, SettingsIcon } from '../Icons';
+import { BookIcon, AudioIcon, SettingsIcon, SparklesIcon } from '../Icons';
 import { hubGradientAtIndex } from '../../constants/brandTheme';
 
 const LINKS = [
   { id: 'profiles', path: '/parent/profiles', labelKey: 'parentNavProfiles', descKey: 'parentNavProfilesDesc', icon: BookIcon },
   { id: 'voices', path: '/parent/voices', labelKey: 'parentNavVoices', descKey: 'parentNavVoicesDesc', icon: AudioIcon },
+  { id: 'stories', path: '/parent/story-studio', labelKey: 'parentNavStories', descKey: 'parentNavStoriesDesc', icon: SparklesIcon },
   { id: 'subscription', path: '/abonnements', labelKey: 'parentNavSubscription', descKey: 'parentNavSubscriptionDesc', icon: SettingsIcon },
 ];
 
@@ -17,7 +18,7 @@ export function ParentHubNav({ className = '' }) {
   const { t } = useLanguage();
 
   return (
-    <div className={`grid grid-cols-1 md:grid-cols-3 gap-4 ${className}`.trim()}>
+    <div className={`grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 ${className}`.trim()}>
       {LINKS.map((link, index) => {
         const Icon = link.icon;
         const isActive = location.pathname === link.path;
