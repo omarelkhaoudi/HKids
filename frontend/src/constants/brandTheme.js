@@ -1,21 +1,26 @@
 /**
  * HKids / Le Lit Qui Lit — identité visuelle unifiée
- * Primary (violet) · Secondary (menthe) · Accent (corail)
+ * Primary (bleu doux) · Secondary (turquoise) · Accent (soleil chaleureux)
  */
 
-export const BRAND_HERO_GRADIENT = 'from-primary-600 via-secondary-500 to-accent-500';
+export const BRAND_HERO_GRADIENT = 'from-primary-400 via-secondary-400 to-accent-300';
 
 export const BRAND_HUB_GRADIENTS = [
   'from-primary-500 to-primary-700',
-  'from-secondary-500 to-secondary-700',
-  'from-accent-500 to-accent-700',
+  'from-secondary-400 to-secondary-600',
+  'from-accent-400 to-accent-600',
+  'from-primary-400 to-secondary-600',
+  'from-secondary-500 to-primary-600',
+  'from-accent-500 to-primary-600',
 ];
 
 export const BRAND_QUICK_GRADIENTS = [
-  'from-primary-400 to-secondary-500',
+  'from-primary-400 to-secondary-400',
   'from-secondary-400 to-primary-500',
-  'from-accent-400 to-primary-500',
-  'from-primary-500 to-accent-500',
+  'from-accent-400 to-secondary-500',
+  'from-primary-500 to-accent-400',
+  'from-secondary-500 to-accent-500',
+  'from-primary-400 to-accent-500',
 ];
 
 export const BRAND_TONES = {
@@ -132,14 +137,14 @@ export function metricToneAtIndex(index) {
 
 /** Gradients thématiques pour couvertures d'histoires (cycle brand) */
 export const BRAND_STORY_GRADIENTS = [
-  'from-primary-600 to-primary-800',
-  'from-secondary-600 to-secondary-800',
-  'from-accent-600 to-accent-800',
-  'from-primary-500 to-secondary-700',
-  'from-secondary-500 to-accent-700',
-  'from-accent-500 to-primary-700',
-  'from-primary-600 to-accent-800',
-  'from-secondary-600 to-primary-800',
+  'from-primary-500 to-primary-700',
+  'from-secondary-400 to-secondary-700',
+  'from-accent-400 to-accent-600',
+  'from-primary-400 to-secondary-600',
+  'from-secondary-500 to-primary-600',
+  'from-accent-500 to-primary-600',
+  'from-primary-500 to-accent-600',
+  'from-secondary-400 to-accent-600',
 ];
 
 export function storyGradientAtIndex(index) {

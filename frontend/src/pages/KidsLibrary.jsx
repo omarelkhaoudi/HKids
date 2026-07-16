@@ -165,24 +165,29 @@ function KidsLibrary() {
 
   return (
     <KidsPageShell isRtl={isRtl} variant="library" className="pb-32" footer={<KidsBottomNav />}>
-      <header className="relative z-10 px-6 py-4 flex items-center justify-between bg-white/60 dark:bg-surface-900/60 backdrop-blur-md border-b border-white/60 dark:border-white/10 shadow-sm sticky top-0">
+      <header className="relative z-10 px-6 py-4 flex items-center justify-between kids-premium-panel mx-4 sm:mx-6 mt-2 sticky top-2">
         <div className="flex items-center gap-4">
           <button
             type="button"
             onClick={() => navigate('/kids')}
-            className="grid h-12 w-12 place-items-center rounded-full bg-white dark:bg-surface-800 text-primary-500 shadow-md transition hover:scale-105 border-2 border-primary-100"
+            className="kids-touch-target grid h-14 w-14 place-items-center rounded-full bg-white dark:bg-surface-800 text-primary-500 shadow-md transition hover:scale-105 border-2 border-primary-100"
             aria-label={t('home')}
           >
-            <HomeIcon className="h-6 w-6" />
+            <HomeIcon className="h-7 w-7" />
           </button>
           <Link to="/kids" className="shrink-0 transition-transform hover:scale-105 active:scale-95">
             <Logo size="default" showText={false} />
           </Link>
         </div>
+        <span className="text-4xl" aria-hidden="true">📚</span>
       </header>
 
-      <main className="relative z-20 max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12">
-        <section className="mb-8">
+      <main className="relative z-20 max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-10">
+        <section className="mb-4">
+          <h2 className="kids-shelf-title mb-4 px-2">
+            <span aria-hidden="true">🎨</span>
+            <span className="sr-only sm:not-sr-only">{t('allCategories')}</span>
+          </h2>
           <div className="flex gap-4 overflow-x-auto pb-4 pt-2 px-2 snap-x snap-mandatory custom-scrollbar">
             {childThemes.map((theme) => (
               <KidsThemePill
@@ -201,8 +206,9 @@ function KidsLibrary() {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.4 }}
-            className={`relative overflow-hidden rounded-[3rem] bg-gradient-to-br ${activeThemeData?.gradient || 'from-primary-500 to-primary-600'} p-8 md:p-16 text-white shadow-2xl border-8 border-white/30 mb-12`}
+            className={`relative overflow-hidden rounded-[2.75rem] kids-premium-panel p-6 md:p-12 text-white shadow-kids-soft border-4 border-white/50 mb-10`}
           >
+            <div className={`absolute inset-0 bg-gradient-to-br ${activeThemeData?.gradient || 'from-primary-500 to-secondary-500'} opacity-95`} />
             <div className="absolute top-0 right-0 w-96 h-96 bg-white/10 rounded-full blur-3xl -mr-20 -mt-20" />
             <div className="absolute bottom-0 left-0 w-64 h-64 bg-black/10 rounded-full blur-3xl -ml-20 -mb-20" />
             <div className="absolute right-10 top-1/2 -translate-y-1/2 text-[15rem] opacity-20 pointer-events-none filter blur-sm transform rotate-12">
@@ -237,7 +243,7 @@ function KidsLibrary() {
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={() => handlePlayBook(featuredBook)}
-                    className="flex items-center gap-4 rounded-full bg-white px-10 py-5 text-2xl font-black text-primary-600 shadow-xl hover:shadow-2xl transition"
+                    className="kids-touch-target flex items-center gap-4 rounded-full bg-white px-8 md:px-10 py-4 text-xl md:text-2xl font-black text-primary-600 shadow-xl hover:shadow-2xl transition"
                   >
                     <PlayIcon className={`h-8 w-8 ${isRtl ? 'rotate-180' : ''}`} filled />
                     {t('listenAction')}
@@ -247,7 +253,7 @@ function KidsLibrary() {
                     whileHover={{ scale: 1.1 }}
                     whileTap={{ scale: 0.9 }}
                     onClick={() => toggleFavorite(featuredBook.id)}
-                    className="rounded-full bg-white/20 backdrop-blur-md p-5 text-white shadow-xl border-2 border-white/30 hover:bg-rose-500 transition-colors"
+                    className="kids-touch-target rounded-full bg-white/25 backdrop-blur-md p-4 text-white shadow-xl border-2 border-white/35 hover:bg-rose-500 transition-colors"
                   >
                     <HeartIcon className="h-8 w-8" filled={favoritesIds.includes(featuredBook.id)} />
                   </motion.button>

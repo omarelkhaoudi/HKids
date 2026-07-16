@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
@@ -16,7 +16,10 @@ import { KidsFamilyMessages } from '../components/kids/KidsFamilyMessages';
 import { Logo } from '../components/Logo';
 import { parentalAPI } from '../api/parental';
 import { recommendationsAPI } from '../api/recommendations';
+import { booksAPI } from '../api/books';
 import { getImageUrl } from '../utils/imageUrl';
+import { storage } from '../utils/storage';
+import { getKidsContentPath } from '../utils/contentRouting';
 import { useToast } from '../components/ToastProvider';
 import { getRestrictionMessage } from '../services/parental/parentalAccessService';
 import { PlayIcon, StarIcon, LockIcon, SparklesIcon } from '../components/Icons';
@@ -48,12 +51,22 @@ function getMissionText(goal, summary, t) {
   return t('noReadingRecorded');
 }
 
+function getPopularBooks(books, history = []) {
+  const order = new Map(history.map((item, index) => [item.bookId, index]));
+  return [...books]
+    .filter((book) => order.has(book.id))
+    .sort((a, b) => order.get(a.id) - order.get(b.id))
+    .slice(0, 15);
+}
+
 const QUICK_LINKS = [
   { id: 'audio', path: '/kids/audio', emoji: '🎧', labelKey: 'kidsQuickAudio' },
   { id: 'learning', path: '/kids/learning', emoji: '🎮', labelKey: 'kidsQuickLearning' },
   { id: 'studio', path: '/kids/story-studio', emoji: '✨', labelKey: 'kidsQuickStudio' },
   { id: 'stories', path: '/kids/ai-stories', emoji: '📖', labelKey: 'kidsQuickStories' },
 ];
+
+const HOME_CATEGORY_IDS = ['dinosaurs', 'space', 'animals', 'princesses', 'bedtime', 'ocean', 'vehicles', 'world', 'colors', 'spirituality'];
 
 function KidsHome() {
   const { user } = useAuth();
@@ -64,6 +77,7 @@ function KidsHome() {
   const [greeting, setGreeting] = useState(t('goodMorning'));
   const [homeData, setHomeData] = useState(null);
   const [recommendationSections, setRecommendationSections] = useState([]);
+  const [publishedBooks, setPublishedBooks] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -85,9 +99,10 @@ function KidsHome() {
     const loadKidsHome = async () => {
       try {
         setLoading(true);
-        const [overviewResult, recommendationsResult] = await Promise.allSettled([
+        const [overviewResult, recommendationsResult, booksResult] = await Promise.allSettled([
           parentalAPI.getConnectedKidOverview(),
           recommendationsAPI.getForKid({ language }),
+          booksAPI.getPublishedBooks({ language }),
         ]);
 
         if (!active) return;
@@ -115,6 +130,10 @@ function KidsHome() {
           const message = getRestrictionMessage(recommendationsResult.reason);
           if (message) showToast(message, 'info');
         }
+
+        if (booksResult.status === 'fulfilled') {
+          setPublishedBooks(booksResult.value.data || []);
+        }
       } finally {
         if (active) setLoading(false);
       }
@@ -135,6 +154,37 @@ function KidsHome() {
     !item.completed && Number(item.progress_percent || 0) > 0
   )) || null;
   const recommendedBooks = getRecommendedBooks(recommendationSections);
+  const favoriteIds = storage.getFavorites();
+  const readingHistory = storage.getReadingHistory();
+
+  const favoriteBooks = useMemo(
+    () => publishedBooks.filter((book) => favoriteIds.includes(book.id)),
+    [publishedBooks, favoriteIds],
+  );
+
+  const newBooks = useMemo(
+    () => [...publishedBooks].sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0)).slice(0, 15),
+    [publishedBooks],
+  );
+
+  const popularBooks = useMemo(
+    () => getPopularBooks(publishedBooks, readingHistory),
+    [publishedBooks, readingHistory],
+  );
+
+  const continueBooks = useMemo(
+    () => progressRows
+      .filter((item) => !item.completed && Number(item.progress_percent || 0) > 0)
+      .map((item) => ({
+        id: item.book_id,
+        title: item.book_title,
+        cover_image: item.cover_image,
+        kid_progress_percent: item.progress_percent,
+        current_page: item.current_page,
+      })),
+    [progressRows],
+  );
+
   const featuredBook = continueReading
     ? {
         id: continueReading.book_id,
@@ -153,8 +203,26 @@ function KidsHome() {
       : null;
   const badges = Array.isArray(homeData?.badges) ? homeData.badges : [];
   const missionText = getMissionText(homeData?.goal, homeData?.summary, t);
-  const kidCategories = localizeKidCategories(language);
+  const kidCategories = localizeKidCategories(language).filter((category) => HOME_CATEGORY_IDS.includes(category.id));
   const quickLinks = QUICK_LINKS.filter((link) => link.id !== 'studio' || user?.role !== 'kid');
+
+  const handlePlayBook = (book) => {
+    const progress = progressRows.find((row) => row.book_id === book.id);
+    const pageQuery = progress?.current_page ? `?page=${progress.current_page}` : '';
+    if (book.id) {
+      navigate(`/kids/read/${book.id}${pageQuery}`);
+      return;
+    }
+    navigate(getKidsContentPath(book));
+  };
+
+  const carouselProps = {
+    isRtl,
+    showActions: false,
+    hideTitle: true,
+    hideSectionTitle: false,
+    onPlay: handlePlayBook,
+  };
 
   const handleSurprise = () => {
     if (recommendedBooks.length === 0) {
@@ -163,24 +231,25 @@ function KidsHome() {
     }
 
     const randomBook = recommendedBooks[Math.floor(Math.random() * recommendedBooks.length)];
-    navigate(`/kids/read/${randomBook.id}`);
+    navigate(getKidsContentPath(randomBook));
   };
 
   if (loading) {
     return (
       <KidsPageShell isRtl={isRtl} variant="home" className="pb-32" footer={<KidsBottomNav />}>
-        <div className="px-6 py-8">
-          <BookGridSkeleton count={4} />
+        <div className="px-6 py-8 space-y-8">
+          <div className="kids-premium-panel h-72 animate-pulse" />
+          <BookGridSkeleton count={5} variant="carousel" />
         </div>
       </KidsPageShell>
     );
   }
 
   return (
-    <KidsPageShell isRtl={isRtl} variant="home" className="pb-32" footer={<KidsBottomNav />}>
+    <KidsPageShell isRtl={isRtl} variant="home" className="pb-32 kids-hero-glow" footer={<KidsBottomNav />}>
       <header className="relative z-10 px-6 py-4 flex items-center justify-between gap-4">
         <div className="flex items-center gap-4 min-w-0">
-          <Avatar src={avatarSrc} initials={avatarInitials} alt={kidName} size="lg" className="w-16 h-16 border-4 border-white shadow-lg bg-gradient-to-br from-primary-400 to-secondary-500 text-white shrink-0" />
+          <Avatar src={avatarSrc} initials={avatarInitials} alt={kidName} size="lg" className="w-16 h-16 border-4 border-white shadow-lg bg-gradient-to-br from-primary-400 to-secondary-400 text-white shrink-0" />
           <div className="min-w-0">
             <h1 className="text-xl md:text-2xl font-black text-foreground truncate">
               {greeting} <span className="text-primary-600">{kidName}</span>
@@ -200,66 +269,68 @@ function KidsHome() {
         <LitMascot size="large" showBubble message={t('litMascotGreetingShort')} />
       </div>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-20 space-y-12 mt-4">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <motion.div
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            className="lg:col-span-2 cursor-pointer"
-            onClick={() => {
-              if (!featuredBook) {
-                navigate('/kids/library');
-                return;
-              }
-              const pageQuery = featuredBook.isInProgress ? `?page=${featuredBook.currentPage}` : '';
-              navigate(`/kids/read/${featuredBook.id}${pageQuery}`);
-            }}
-          >
-            <div className="relative h-64 md:h-80 w-full rounded-[2.5rem] overflow-hidden shadow-2xl group border-4 border-white/40">
-              {featuredBook?.cover_image ? (
-                <img src={getImageUrl(featuredBook.cover_image)} alt="" className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
-              ) : (
-                <div className="absolute inset-0 bg-gradient-to-br from-primary-400 to-secondary-500" />
-              )}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-24 h-24 bg-white/30 backdrop-blur-md rounded-full flex items-center justify-center border-4 border-white/50 group-hover:scale-110 transition-transform shadow-[0_0_40px_rgba(255,255,255,0.4)]">
-                  <PlayIcon className={`w-12 h-12 text-white drop-shadow-md ${isRtl ? 'mr-2 rotate-180' : 'ml-2'}`} filled />
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-20 space-y-10 mt-2">
+        <section className="kids-premium-panel p-4 md:p-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 md:gap-6">
+            <motion.div
+              whileHover={{ scale: 1.01 }}
+              whileTap={{ scale: 0.99 }}
+              className="lg:col-span-2 cursor-pointer"
+              onClick={() => {
+                if (!featuredBook) {
+                  navigate('/kids/library');
+                  return;
+                }
+                const pageQuery = featuredBook.isInProgress ? `?page=${featuredBook.currentPage}` : '';
+                navigate(`/kids/read/${featuredBook.id}${pageQuery}`);
+              }}
+            >
+              <div className="relative h-64 md:h-80 w-full rounded-[2.25rem] overflow-hidden shadow-kids-soft group border-4 border-white/70">
+                {featuredBook?.cover_image ? (
+                  <img src={getImageUrl(featuredBook.cover_image)} alt="" className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                ) : (
+                  <div className="absolute inset-0 bg-gradient-to-br from-primary-300 via-secondary-300 to-accent-200" />
+                )}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/15 to-transparent" />
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="kids-touch-target w-24 h-24 md:w-28 md:h-28 bg-white/35 backdrop-blur-md rounded-full flex items-center justify-center border-4 border-white/60 group-hover:scale-110 transition-transform shadow-kids-warm">
+                    <PlayIcon className={`w-12 h-12 md:w-14 md:h-14 text-white drop-shadow-md ${isRtl ? 'mr-2 rotate-180' : 'ml-2'}`} filled />
+                  </div>
+                </div>
+                <div className="absolute bottom-0 inset-x-0 p-5 md:p-6 flex flex-col gap-3">
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="inline-flex min-h-9 items-center bg-white/25 backdrop-blur-md px-4 py-1.5 rounded-full text-white text-sm font-black border border-white/40 uppercase tracking-wide">
+                      {featuredBook?.isInProgress ? `▶️ ${t('resume')}` : `✨ ${t('discover')}`}
+                    </span>
+                    <span className="text-white font-black drop-shadow-md text-lg">{featuredBook?.progress || 0}%</span>
+                  </div>
+                  <div className="h-5 w-full bg-black/35 rounded-full overflow-hidden border border-white/25 backdrop-blur-sm">
+                    <motion.div initial={{ width: 0 }} animate={{ width: `${featuredBook?.progress || 0}%` }} className="h-full bg-gradient-to-r from-secondary-300 to-accent-300 rounded-full" />
+                  </div>
                 </div>
               </div>
-              <div className="absolute bottom-0 inset-x-0 p-6 flex flex-col gap-3">
-                <div className="flex items-center justify-between">
-                  <span className="bg-white/20 backdrop-blur-md px-3 py-1 rounded-full text-white text-xs font-black border border-white/30 uppercase tracking-wider">
-                    {featuredBook?.isInProgress ? t('resume') : t('discover')}
-                  </span>
-                  <span className="hidden sm:inline text-white font-black drop-shadow-md">{featuredBook?.progress || 0}%</span>
-                </div>
-                <div className="h-4 w-full bg-black/40 rounded-full overflow-hidden border border-white/20 backdrop-blur-sm">
-                  <motion.div initial={{ width: 0 }} animate={{ width: `${featuredBook?.progress || 0}%` }} className="h-full bg-gradient-to-r from-secondary-400 to-secondary-500 rounded-full" />
-                </div>
-              </div>
-            </div>
-          </motion.div>
+            </motion.div>
 
-          <motion.div whileHover={{ y: -5 }} className="cursor-pointer">
-            <div className="h-64 md:h-80 rounded-[2.5rem] bg-gradient-to-br from-accent-300 via-accent-400 to-rose-500 p-6 flex flex-col items-center justify-center text-center relative overflow-hidden shadow-2xl border-4 border-white/50">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-white/20 rounded-full blur-2xl" />
-              <motion.div
-                animate={{ y: [0, -10, 0], rotate: [0, 5, -5, 0] }}
-                transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
-                className="text-8xl filter drop-shadow-2xl mb-4"
-                aria-hidden="true"
-              >
-                🎁
-              </motion.div>
-              <h3 className="hidden sm:block text-white text-2xl font-black drop-shadow-md mb-2">{t('magicChest')}</h3>
-              <div className="flex items-center gap-2 bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full border border-white/30 text-white font-bold" aria-label={missionText}>
-                <StarIcon className="w-5 h-5 text-accent-300" />
-                <span className="hidden sm:inline">{missionText}</span>
+            <motion.div whileHover={{ y: -4 }} className="cursor-pointer">
+              <div className="h-64 md:h-80 rounded-[2.25rem] bg-gradient-to-br from-accent-300 via-accent-400 to-primary-400 p-6 flex flex-col items-center justify-center text-center relative overflow-hidden shadow-kids-warm border-4 border-white/60">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-white/25 rounded-full blur-2xl" />
+                <motion.div
+                  animate={{ y: [0, -10, 0], rotate: [0, 5, -5, 0] }}
+                  transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+                  className="text-8xl filter drop-shadow-2xl mb-4"
+                  aria-hidden="true"
+                >
+                  🎁
+                </motion.div>
+                <h3 className="text-white text-2xl font-black drop-shadow-md mb-2">{t('magicChest')}</h3>
+                <div className="flex items-center gap-2 bg-white/25 backdrop-blur-sm px-4 py-2.5 rounded-full border border-white/35 text-white font-bold min-h-[44px]" aria-label={missionText}>
+                  <StarIcon className="w-5 h-5 text-accent-100" />
+                  <span>{missionText}</span>
+                </div>
               </div>
-            </div>
-          </motion.div>
-        </div>
+            </motion.div>
+          </div>
+        </section>
 
         <section>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -270,11 +341,11 @@ function KidsHome() {
                 whileHover={{ scale: 1.04 }}
                 whileTap={{ scale: 0.96 }}
                 onClick={() => navigate(link.path)}
-                className={`rounded-[2rem] bg-gradient-to-br ${quickGradientAtIndex(index)} p-5 md:p-6 text-white shadow-xl border-4 border-white/40 min-h-[120px] flex flex-col items-center justify-center gap-2`}
+                className={`kids-touch-target rounded-[2rem] bg-gradient-to-br ${quickGradientAtIndex(index)} p-5 md:p-6 text-white shadow-kids-soft border-4 border-white/50 min-h-[7.5rem] flex flex-col items-center justify-center gap-2`}
                 aria-label={t(link.labelKey)}
               >
-                <span className="text-4xl" aria-hidden="true">{link.emoji}</span>
-                <span className="font-black text-lg hidden sm:inline">{t(link.labelKey)}</span>
+                <span className="text-5xl" aria-hidden="true">{link.emoji}</span>
+                <span className="font-black text-base md:text-lg">{t(link.labelKey)}</span>
               </motion.button>
             ))}
           </div>
@@ -282,40 +353,58 @@ function KidsHome() {
 
         <KidsFamilyMessages />
 
-        <div className="flex justify-center my-4">
+        <div className="flex justify-center">
           <motion.button
             type="button"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={handleSurprise}
-            className="group relative flex items-center gap-4 bg-gradient-to-r from-primary-500 via-primary-500 to-accent-500 p-4 pr-4 sm:pr-8 rounded-[3rem] shadow-2xl border-4 border-white overflow-hidden"
+            className="kids-touch-target group relative flex items-center gap-4 bg-gradient-to-r from-primary-500 via-secondary-400 to-accent-400 px-5 pr-6 sm:pr-10 py-3 rounded-[3rem] shadow-kids-soft border-4 border-white overflow-hidden"
             aria-label={t('surpriseMe')}
           >
             <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-inner relative z-10 group-hover:rotate-12 transition-transform">
               <SparklesIcon className="w-8 h-8 text-primary-500" />
             </div>
-            <span className="hidden sm:inline text-white font-black text-2xl relative z-10 drop-shadow-md">{t('surpriseMe')}</span>
+            <span className="text-white font-black text-xl sm:text-2xl relative z-10 drop-shadow-md">{t('surpriseMe')}</span>
           </motion.button>
         </div>
 
+        {continueBooks.length > 0 && (
+          <KidsBookCarousel
+            title={t('continueReading')}
+            emoji="📖"
+            books={continueBooks}
+            {...carouselProps}
+          />
+        )}
+
         <section>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-6">
+          <h2 className="kids-shelf-title mb-5 px-2">
+            <span aria-hidden="true">🗂️</span>
+            <span className="sr-only sm:not-sr-only">{t('allCategories')}</span>
+          </h2>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-5">
             {kidCategories.map((category) => (
               <KidCategoryCard key={category.id} category={category} />
             ))}
           </div>
         </section>
 
+        {favoriteBooks.length > 0 && (
+          <KidsBookCarousel
+            title={t('yourFavorites')}
+            emoji="❤️"
+            books={favoriteBooks}
+            {...carouselProps}
+          />
+        )}
+
         {recommendedBooks.length > 0 ? (
           <KidsBookCarousel
             title={t('forYou')}
             emoji="⭐"
             books={recommendedBooks}
-            isRtl={isRtl}
-            showActions={false}
-            hideTitle
-            hideSectionTitle
-            onPlay={(book) => navigate(`/kids/read/${book.id}`)}
+            {...carouselProps}
           />
         ) : (
           <KidsEmptyState
@@ -327,8 +416,29 @@ function KidsHome() {
           />
         )}
 
+        {newBooks.length > 0 && (
+          <KidsBookCarousel
+            title={t('newBooks')}
+            emoji="🆕"
+            books={newBooks}
+            {...carouselProps}
+          />
+        )}
+
+        {popularBooks.length > 0 && (
+          <KidsBookCarousel
+            title={t('popularStories')}
+            emoji="🔥"
+            books={popularBooks}
+            {...carouselProps}
+          />
+        )}
+
         <section id="kids-medals" className="mb-12 scroll-mt-24">
-          <h2 className="text-2xl font-black text-foreground mb-6 pl-2"><span aria-hidden="true">🏆</span><span className="hidden sm:inline"> {t('yourMedals')}</span></h2>
+          <h2 className="kids-shelf-title mb-6 pl-2">
+            <span aria-hidden="true">🏆</span>
+            <span>{t('yourMedals')}</span>
+          </h2>
           {badges.length === 0 ? (
             <KidsEmptyState
               emoji="🏅"
@@ -344,7 +454,7 @@ function KidsHome() {
                   key={badge.id}
                   whileHover={{ scale: 1.1, rotate: [0, -10, 10, -10, 10, 0] }}
                   title={`${badge.label} — ${badge.description}`}
-                  className={`relative w-28 h-28 md:w-32 md:h-32 rounded-full flex items-center justify-center text-5xl md:text-6xl shadow-2xl border-8 ${badge.earned ? 'bg-gradient-to-br from-accent-300 via-accent-400 to-accent-500 border-accent-200' : 'bg-surface-200 border-surface-300 grayscale opacity-60'}`}
+                  className={`relative w-28 h-28 md:w-32 md:h-32 rounded-full flex items-center justify-center text-5xl md:text-6xl shadow-2xl border-8 ${badge.earned ? 'bg-gradient-to-br from-accent-300 via-accent-400 to-primary-400 border-accent-200' : 'bg-surface-200 border-surface-300 grayscale opacity-60'}`}
                 >
                   {badge.earned ? (
                     <>

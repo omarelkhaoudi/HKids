@@ -27,51 +27,53 @@
     --color-text-primary: #111827;
     --color-text-secondary: #4b5563;
     --color-text-muted: #9ca3af;
-    --color-kids-bg: #f8fbff;
-    --color-kids-glow-sky: rgba(125, 211, 252, 0.35);
-    --color-kids-glow-amber: rgba(252, 211, 77, 0.28);
+    --color-kids-bg: #f4f9ff;
+    --color-kids-glow-sky: rgba(59, 154, 232, 0.28);
+    --color-kids-glow-amber: rgba(251, 191, 36, 0.22);
+    --color-kids-panel: rgba(255, 255, 255, 0.92);
+    --color-kids-violet-soft: #c4b5fd;
 
     /* Aliases for Tailwind background.* tokens */
     --color-bg-card: var(--color-card);
     --color-bg-elevated: var(--color-elevated);
 
 
-    /* Primary: Magical Purple/Indigo */
-    --color-primary-50: #f0ebf8;
-    --color-primary-100: #e2d7f2;
-    --color-primary-200: #cbb4e7;
-    --color-primary-300: #af8adb;
-    --color-primary-400: #925ccb;
-    --color-primary-500: #7b3eb8; /* Main */
-    --color-primary-600: #652d9a;
-    --color-primary-700: #52247d;
-    --color-primary-800: #462068;
-    --color-primary-900: #3a1c54;
-    --color-primary-500-rgb: 123, 62, 184;
+    /* Primary: Soft sky blue (bedtime library) */
+    --color-primary-50: #eff8ff;
+    --color-primary-100: #dbeefe;
+    --color-primary-200: #bfe0fd;
+    --color-primary-300: #93c9fb;
+    --color-primary-400: #5eaef6;
+    --color-primary-500: #3b9ae8;
+    --color-primary-600: #257dc9;
+    --color-primary-700: #1d64a3;
+    --color-primary-800: #1d5586;
+    --color-primary-900: #1d476f;
+    --color-primary-500-rgb: 59, 154, 232;
 
-    /* Secondary: Mint/Teal */
-    --color-secondary-50: #eefaf6;
-    --color-secondary-100: #d6f2e8;
-    --color-secondary-200: #b1e5d4;
-    --color-secondary-300: #81d1ba;
-    --color-secondary-400: #55b79e;
-    --color-secondary-500: #389d85; /* Main */
-    --color-secondary-600: #2b7d6b;
-    --color-secondary-700: #256456;
-    --color-secondary-800: #215147;
-    --color-secondary-900: #1d433b;
+    /* Secondary: Turquoise / mint */
+    --color-secondary-50: #ecfeff;
+    --color-secondary-100: #cffafe;
+    --color-secondary-200: #a5f3fc;
+    --color-secondary-300: #67e8f9;
+    --color-secondary-400: #2dd4bf;
+    --color-secondary-500: #14b8a6;
+    --color-secondary-600: #0d9488;
+    --color-secondary-700: #0f766e;
+    --color-secondary-800: #115e59;
+    --color-secondary-900: #134e4a;
 
-    /* Accent: Coral/Orange */
-    --color-accent-50: #fff3ed;
-    --color-accent-100: #ffe4d5;
-    --color-accent-200: #fecaa9;
-    --color-accent-300: #fda975;
-    --color-accent-400: #fb8342;
-    --color-accent-500: #f76219; /* Main */
-    --color-accent-600: #e84b0d;
-    --color-accent-700: #c1370c;
-    --color-accent-800: #9a2d10;
-    --color-accent-900: #7c2610;
+    /* Accent: Warm sun / orange */
+    --color-accent-50: #fff8eb;
+    --color-accent-100: #feefc7;
+    --color-accent-200: #fde08a;
+    --color-accent-300: #fcd34d;
+    --color-accent-400: #fbbf24;
+    --color-accent-500: #f59e0b;
+    --color-accent-600: #d97706;
+    --color-accent-700: #b45309;
+    --color-accent-800: #92400e;
+    --color-accent-900: #78350f;
 
     /* Surface (Neutrals with warm tint) */
     --color-surface-50: #faf8f7;
@@ -104,9 +106,9 @@
     --color-kids-glow-amber: rgba(251, 191, 36, 0.12);
 
     /* Base colors update for dark mode */
-    --color-primary-500: #8B5CF6;
-    --color-secondary-500: #60A5FA;
-    --color-accent-500: #34D399;
+    --color-primary-500: #5eaef6;
+    --color-secondary-500: #2dd4bf;
+    --color-accent-500: #fbbf24;
 
 
     /* Surface (Neutrals adjusted for dark mode) */
@@ -247,8 +249,47 @@
   }
   
   .book-card-enhanced:hover {
-    box-shadow: 0 20px 40px -8px rgba(123, 62, 184, 0.2); /* primary color shadow */
+    box-shadow: 0 20px 40px -8px rgba(59, 154, 232, 0.22);
     transform: translateY(-8px) scale(1.02);
+  }
+
+  /* HKids child design primitives */
+  .kids-touch-target {
+    @apply min-h-[56px] min-w-[56px];
+  }
+
+  .kids-premium-panel {
+    @apply rounded-[2.5rem] border-4 border-white/60 dark:border-white/10 shadow-floating overflow-hidden;
+    background: linear-gradient(
+      145deg,
+      var(--color-kids-panel) 0%,
+      rgba(239, 248, 255, 0.95) 40%,
+      rgba(236, 254, 255, 0.9) 100%
+    );
+    box-shadow:
+      0 24px 48px -12px rgba(59, 154, 232, 0.16),
+      0 8px 24px -8px rgba(45, 212, 191, 0.1);
+  }
+
+  .dark .kids-premium-panel {
+    background: linear-gradient(145deg, rgba(30, 41, 59, 0.96) 0%, rgba(15, 23, 42, 0.94) 100%);
+  }
+
+  .kids-chip {
+    @apply inline-flex items-center justify-center gap-2 rounded-full font-black shadow-md border-4 transition-all kids-touch-target px-5 py-3;
+  }
+
+  .kids-story-card {
+    @apply overflow-hidden rounded-[2rem] bg-surface-secondary shadow-lg border-4 border-white/50 dark:border-white/10 transition-all duration-300 hover:shadow-2xl;
+  }
+
+  .kids-shelf-title {
+    @apply flex items-center gap-3 text-2xl md:text-3xl font-black text-foreground tracking-tight;
+  }
+
+  .kids-hero-glow {
+    background: radial-gradient(ellipse at 20% 0%, var(--color-kids-glow-sky) 0%, transparent 55%),
+      radial-gradient(ellipse at 80% 100%, var(--color-kids-glow-amber) 0%, transparent 50%);
   }
 
   /* Glassmorphism */

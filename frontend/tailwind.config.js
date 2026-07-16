@@ -155,6 +155,14 @@ export default {
         'floating': '0 30px 60px -12px rgba(0, 0, 0, 0.15)',
         'glass': '0 8px 32px 0 rgba(0, 0, 0, 0.05)',
         'glow': '0 0 20px rgba(var(--color-primary-500-rgb), 0.3)',
+        'kids-soft': '0 16px 40px -8px rgba(59, 154, 232, 0.18)',
+        'kids-warm': '0 16px 40px -8px rgba(251, 191, 36, 0.2)',
+      },
+      minHeight: {
+        'touch': '56px',
+      },
+      minWidth: {
+        'touch': '56px',
       },
       animation: {
         'fade-in': 'fadeIn 0.4s ease-out',

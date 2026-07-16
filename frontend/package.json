@@ -8,6 +8,8 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
+    "lint": "echo \"No ESLint config — skipping\" && exit 0",
+    "typecheck": "tsc --noEmit -p jsconfig.json",
     "android:add": "cap add android",
     "android:sync": "npm run build && cap sync android",
     "android:open": "cap open android",
