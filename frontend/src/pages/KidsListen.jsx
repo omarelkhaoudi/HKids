@@ -6,6 +6,8 @@ import { useAuth } from '../context/AuthContext';
 import { useToast } from '../components/ToastProvider';
 import { useLanguage } from '../context/LanguageContext';
 import { useAudioPlayer } from '../hooks/useAudioPlayer';
+import { useReducedMotion } from '../hooks/useReducedMotion';
+import { getMotionProps, kidsCardAppear } from '../constants/kidsMotion';
 import { getImageUrl } from '../utils/imageUrl';
 import { storage } from '../utils/storage';
 import { getRestrictionMessage } from '../services/parental/parentalAccessService';
@@ -34,6 +36,7 @@ function KidsListen() {
   const navigate = useNavigate();
   const { showToast } = useToast();
   const { language, isRtl, t } = useLanguage();
+  const reducedMotion = useReducedMotion();
   const [book, setBook] = useState(null);
   const [loading, setLoading] = useState(true);
   const [favorite, setFavorite] = useState(false);
@@ -41,6 +44,7 @@ function KidsListen() {
   const playFeedbackShown = useRef(false);
 
   const player = useAudioPlayer();
+  const listeningHistory = storage.getListeningHistory().filter((item) => String(item.bookId) !== String(id));
 
   const flashFeedback = (type) => {
     setFeedback(type);
@@ -105,9 +109,9 @@ function KidsListen() {
 
   if (loading) {
     return (
-      <KidsPageShell isRtl={isRtl} variant="library" world="audio" className="pb-32" footer={<KidsBottomNav />}>
+      <KidsPageShell isRtl={isRtl} variant="library" world="audio" className="pb-space-32 kids-listen-atmosphere" footer={<KidsBottomNav />}>
         <KidsPageHeader backTo="/kids/audio" emoji="🎧" />
-        <div className="px-6 py-12">
+        <div className="px-6 py-space-32">
           <BookGridSkeleton count={1} variant="carousel" />
         </div>
       </KidsPageShell>
@@ -117,82 +121,86 @@ function KidsListen() {
   if (!book) return null;
 
   return (
-    <KidsPageShell isRtl={isRtl} variant="library" world="audio" className="pb-32 kids-glow-audio" footer={<KidsBottomNav />}>
+    <KidsPageShell isRtl={isRtl} variant="library" world="audio" className="pb-space-32 kids-listen-atmosphere kids-glow-audio" footer={<KidsBottomNav />}>
       <KidsPageHeader backTo="/kids/audio" onBack={() => navigate('/kids/audio')} emoji="🎧" />
 
-      <div className="relative z-10 mx-auto max-w-3xl px-4 py-4 md:px-8 lg:max-w-4xl">
+      <div className="relative z-10 mx-auto max-w-4xl px-space-16 py-space-16 md:px-space-32">
         <motion.main
-          initial={{ opacity: 0, y: 24 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="kids-premium-panel p-6 md:p-10 flex flex-col items-center text-center relative"
+          {...getMotionProps(reducedMotion, kidsCardAppear)}
+          className="kids-listen-panel p-space-24 md:p-space-40 flex flex-col items-center text-center relative"
         >
           <KidsFeedbackBurst type={feedback} active={Boolean(feedback)} />
-          <span className="mb-4 inline-flex items-center gap-2 rounded-full bg-accent-100 text-accent-700 px-4 py-2 text-sm font-black">
+
+          <span className="mb-space-16 inline-flex min-h-touch items-center gap-space-8 rounded-full bg-orange-100 text-orange-700 px-space-16 py-space-8 text-caption font-black border border-orange-200">
             <AudioIcon className="h-5 w-5" />
             {typeLabel}
           </span>
 
           <motion.div
-            animate={player.playing ? { scale: [1, 1.03, 1] } : { scale: 1 }}
-            transition={{ duration: 2, repeat: player.playing ? Infinity : 0 }}
-            className="mb-8 w-56 h-56 md:w-72 md:h-72 rounded-[2.5rem] overflow-hidden shadow-kids-soft border-4 border-white/70"
+            className={`relative mb-space-24 w-56 h-56 md:w-72 md:h-72 rounded-32 overflow-hidden shadow-floating border-4 border-white/80 ${!reducedMotion && player.playing ? 'kids-audio-pulse' : ''}`}
           >
             {book.cover_image ? (
               <img src={getImageUrl(book.cover_image, 'book')} alt="" className="w-full h-full object-cover" />
             ) : (
-              <div className="w-full h-full grid place-items-center bg-gradient-to-br from-primary-100 to-secondary-100 text-8xl">🎵</div>
+              <div className="w-full h-full grid place-items-center bg-gradient-to-br from-orange-100 to-primary-100 text-8xl">🎵</div>
             )}
+            <div className="absolute inset-0 bg-gradient-to-t from-surface-900/35 via-transparent to-transparent pointer-events-none" />
           </motion.div>
 
-          <h1 className="text-2xl md:text-4xl font-black mb-4 text-foreground">{book.title}</h1>
+          <h1 className="text-heading-l md:text-heading-xl mb-space-16 text-foreground max-w-2xl">{book.title}</h1>
 
-          {player.error && <KidsErrorBanner message={player.error} className="mb-4 w-full" />}
-
-          {!book.audio_url && (
-            <KidsErrorBanner message={t('audioUnavailable')} className="mb-6 w-full" />
+          {player.playing && !reducedMotion && (
+            <div className="kids-listen-wave mb-space-16" aria-hidden="true">
+              {Array.from({ length: 7 }).map((_, i) => (
+                <span key={i} style={{ animationDelay: `${i * 0.12}s`, height: `${10 + (i % 3) * 6}px` }} />
+              ))}
+            </div>
           )}
 
-          <div className="w-full max-w-md mb-8">
+          {player.error && <KidsErrorBanner message={player.error} className="mb-space-16 w-full" />}
+
+          {!book.audio_url && (
+            <KidsErrorBanner message={t('audioUnavailable')} className="mb-space-24 w-full" />
+          )}
+
+          <div className="w-full max-w-md mb-space-24">
             <input
               type="range"
               min={0}
               max={progressMax || 1}
               value={progressValue}
               onChange={(e) => player.seekTo(e.target.value)}
-              className="w-full h-4 rounded-full appearance-none bg-primary-100 accent-primary-500"
+              className="kids-audio-scrubber w-full mb-space-8 accent-orange-500"
               aria-label="Progression"
             />
-            <div className="flex justify-between text-sm font-bold text-foreground-muted mt-2">
+            <div className="flex justify-between text-caption font-bold text-foreground-muted">
               <span>{formatTime(player.currentTime)}</span>
               <span>{formatTime(player.duration)}</span>
             </div>
           </div>
 
-          <div className="flex items-center gap-6 mb-8">
+          <div className="flex items-center gap-space-24 mb-space-24">
             <button
               type="button"
               onClick={() => player.seekBy(-10)}
-              className="kids-touch-target grid h-16 w-16 place-items-center rounded-full bg-primary-50 border-2 border-primary-100 text-primary-600"
+              className="kids-touch-target grid h-16 w-16 min-h-touch-kids min-w-touch-kids place-items-center rounded-full bg-primary-50 border-2 border-primary-100 text-primary-600 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary-300"
               aria-label="-10s"
             >
               <ChevronLeftIcon className="h-8 w-8" />
             </button>
-            <motion.button
+            <button
               type="button"
-              whileTap={{ scale: 0.92 }}
-              animate={player.playing ? { scale: [1, 1.05, 1], boxShadow: ['0 0 0 0 rgba(251,191,36,0.4)', '0 0 0 14px rgba(251,191,36,0)', '0 0 0 0 rgba(251,191,36,0.4)'] } : { scale: 1 }}
-              transition={player.playing ? { duration: 1.6, repeat: Infinity, ease: 'easeInOut' } : undefined}
               onClick={() => (player.playing ? player.pause() : player.play(book))}
               disabled={!book.audio_url}
-              className="kids-touch-target grid h-28 w-28 place-items-center rounded-full bg-gradient-to-br from-accent-400 to-accent-600 text-white shadow-glow disabled:opacity-40 border-4 border-white"
+              className={`kids-touch-target grid h-28 w-28 min-h-touch-kids min-w-touch-kids place-items-center rounded-full bg-gradient-to-br from-orange-400 to-orange-600 text-white shadow-glow disabled:opacity-40 border-4 border-white focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-300 ${!reducedMotion && player.playing ? 'kids-audio-pulse' : ''}`}
               aria-label={player.playing ? t('pause') : t('listenAction')}
             >
               {player.playing ? <PauseIcon className="h-14 w-14" /> : <PlayIcon className={`h-14 w-14 ${isRtl ? 'rotate-180' : ''}`} filled />}
-            </motion.button>
+            </button>
             <button
               type="button"
               onClick={() => player.seekBy(10)}
-              className="kids-touch-target grid h-16 w-16 place-items-center rounded-full bg-primary-50 border-2 border-primary-100 text-primary-600"
+              className="kids-touch-target grid h-16 w-16 min-h-touch-kids min-w-touch-kids place-items-center rounded-full bg-primary-50 border-2 border-primary-100 text-primary-600 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary-300"
               aria-label="+10s"
             >
               <ChevronRightIcon className="h-8 w-8" />
@@ -202,12 +210,41 @@ function KidsListen() {
           <button
             type="button"
             onClick={toggleFavorite}
-            className="kids-touch-target inline-flex items-center gap-3 rounded-full bg-accent-100 text-accent-800 px-8 py-4 font-black border-2 border-accent-200 hover:bg-accent-200 transition"
+            className="kids-touch-target inline-flex min-h-touch-kids items-center gap-space-12 rounded-full bg-orange-100 text-orange-800 px-space-24 py-space-12 font-black border-2 border-orange-200 hover:bg-orange-200 transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-300"
           >
             <HeartIcon className="h-7 w-7" filled={favorite} />
-            {favorite ? t('yourFavorites') : t('addedToFavorites')}
+            {favorite ? t('yourFavorites') : t('addToFavorites')}
           </button>
         </motion.main>
+
+        {listeningHistory.length > 0 && (
+          <section className="mt-space-32" aria-label={t('continueReading')}>
+            <h2 className="kids-shelf-title mb-space-16 px-space-8">
+              <span aria-hidden="true">🎧</span>
+              <span>{t('continueReading')}</span>
+            </h2>
+            <div className="kids-gallery-rail">
+              {listeningHistory.slice(0, 8).map((item) => (
+                <button
+                  key={item.bookId}
+                  type="button"
+                  onClick={() => navigate(`/kids/listen/${item.bookId}`)}
+                  className="snap-start shrink-0 w-44 rounded-24 bg-card border-4 border-border shadow-card p-space-16 text-left hover:shadow-floating transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-300"
+                >
+                  <div className="h-20 rounded-16 bg-gradient-to-br from-orange-100 to-primary-100 mb-space-12 grid place-items-center text-3xl" aria-hidden="true">
+                    🎵
+                  </div>
+                  <p className="text-body font-black text-foreground line-clamp-2">{item.bookTitle}</p>
+                  {item.duration > 0 && (
+                    <p className="text-caption text-foreground-muted mt-space-4">
+                      {Math.round((item.currentTime / item.duration) * 100)}%
+                    </p>
+                  )}
+                </button>
+              ))}
+            </div>
+          </section>
+        )}
       </div>
 
       <VoiceAssistant
