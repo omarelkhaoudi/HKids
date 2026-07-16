@@ -1,21 +1,35 @@
 import { useRef } from 'react';
 import { ChevronLeftIcon, ChevronRightIcon } from '../Icons';
 import { KidsMediaCard } from './KidsMediaCard';
+import { getKidsModality } from '../../constants/kidsModality';
 
-export function KidsSectionHeader({ title, icon: Icon, emoji, isRtl = false, onScrollLeft, onScrollRight, hideTitle = false }) {
+export function KidsSectionHeader({
+  title,
+  icon: Icon,
+  emoji,
+  isRtl = false,
+  modality,
+  onScrollLeft,
+  onScrollRight,
+  hideTitle = false,
+}) {
+  const theme = getKidsModality(modality || 'books');
+
   return (
     <div className="mb-5 flex items-center justify-between px-2 md:px-4">
       <h2 className="kids-shelf-title">
         {emoji && <span className="text-4xl md:text-5xl drop-shadow-sm" aria-hidden="true">{emoji}</span>}
-        {Icon && <Icon className="h-9 w-9 text-primary-500" />}
-        {!hideTitle && title && <span className="sr-only sm:not-sr-only">{title}</span>}
+        {Icon && <Icon className={`h-9 w-9 ${theme.shelfTint}`} />}
+        {!hideTitle && title && (
+          <span className={`sr-only sm:not-sr-only ${theme.shelfTint}`}>{title}</span>
+        )}
       </h2>
       {(onScrollLeft || onScrollRight) && (
         <div className="hidden md:flex items-center gap-3">
           <button
             type="button"
             onClick={onScrollLeft}
-            className="kids-touch-target p-3 rounded-full bg-white dark:bg-surface-800 shadow-md border-2 border-border hover:bg-primary-50 hover:scale-105 transition-transform text-primary-600"
+            className={`kids-touch-target p-3 rounded-full bg-white dark:bg-surface-800 shadow-md border-2 border-border ${theme.borderHover} hover:scale-105 transition-transform ${theme.shelfTint}`}
             aria-label="Scroll left"
           >
             <ChevronLeftIcon className={`w-7 h-7 ${isRtl ? 'rotate-180' : ''}`} />
@@ -23,7 +37,7 @@ export function KidsSectionHeader({ title, icon: Icon, emoji, isRtl = false, onS
           <button
             type="button"
             onClick={onScrollRight}
-            className="kids-touch-target p-3 rounded-full bg-white dark:bg-surface-800 shadow-md border-2 border-border hover:bg-primary-50 hover:scale-105 transition-transform text-primary-600"
+            className={`kids-touch-target p-3 rounded-full bg-white dark:bg-surface-800 shadow-md border-2 border-border ${theme.borderHover} hover:scale-105 transition-transform ${theme.shelfTint}`}
             aria-label="Scroll right"
           >
             <ChevronRightIcon className={`w-7 h-7 ${isRtl ? 'rotate-180' : ''}`} />
@@ -48,6 +62,7 @@ export function KidsBookCarousel({
   showActions = true,
   hideTitle = true,
   hideSectionTitle = false,
+  modality = 'books',
 }) {
   const carouselRef = useRef(null);
 
@@ -67,6 +82,7 @@ export function KidsBookCarousel({
         icon={icon}
         emoji={emoji}
         isRtl={isRtl}
+        modality={modality}
         hideTitle={hideSectionTitle}
         onScrollLeft={() => scroll('left')}
         onScrollRight={() => scroll('right')}

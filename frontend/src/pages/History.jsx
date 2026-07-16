@@ -118,7 +118,7 @@ function History() {
 
  if (isKidMode) {
   return (
-   <KidsPageShell isRtl={isRtl} variant="library" className="pb-32 kids-hero-glow" footer={<KidsBottomNav />}>
+   <KidsPageShell isRtl={isRtl} variant="library" className="pb-32 kids-glow-books" footer={<KidsBottomNav />}>
     <KidsPageHeader
      backTo="/kids"
      emoji="📖"
@@ -134,7 +134,7 @@ function History() {
      ) : null}
     />
     <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-8">
-     <KidsHero emoji="📖" title={t('history')} subtitle={t('continueReading')} />
+     <KidsHero modality="books" emoji="📖" title={t('history')} subtitle={t('continueReading')} />
      {loading ? (
       <BookGridSkeleton count={6} variant="carousel" />
      ) : books.length === 0 ? (
@@ -153,6 +153,7 @@ function History() {
        isRtl={isRtl}
        showActions={false}
        hideTitle
+       modality="books"
        onPlay={handlePlayBook}
       />
      )}

@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { localizeKidCategories } from '../constants/kidCategories';
-import { quickGradientAtIndex } from '../constants/brandTheme';
+import { getKidsModality } from '../constants/kidsModality';
 import { VoiceAssistant } from '../components/kids/VoiceAssistant';
 import { LitMascot } from '../components/kids/LitMascot';
 import { KidsPageShell } from '../components/kids/KidsPageShell';
@@ -22,7 +22,7 @@ import { storage } from '../utils/storage';
 import { getKidsContentPath } from '../utils/contentRouting';
 import { useToast } from '../components/ToastProvider';
 import { getRestrictionMessage } from '../services/parental/parentalAccessService';
-import { PlayIcon, StarIcon, LockIcon, SparklesIcon } from '../components/Icons';
+import { PlayIcon, LockIcon } from '../components/Icons';
 import { getCachedKidProfile } from '../services/cloud/cloudSyncService';
 import { Avatar } from '../components/ui';
 import { KidsProfilePanel } from '../components/kids/KidsProfilePanel';
@@ -33,25 +33,6 @@ function getRecommendedBooks(sections = []) {
   return Array.isArray(recommendedSection?.items) ? recommendedSection.items : [];
 }
 
-function getMissionText(goal, summary, t) {
-  if (goal) {
-    const units = {
-      minutes: 'min',
-      completed_books: 'livres',
-      sessions: 'sessions',
-    };
-    return `${Number(goal.progress_value || 0)} / ${Number(goal.target_value || 0)} ${units[goal.goal_type] || ''}`.trim();
-  }
-
-  const totalMinutes = Math.floor(Number(summary?.total_time_seconds || 0) / 60);
-  if (totalMinutes > 0) return t('readingMinutes', { count: totalMinutes });
-
-  const totalSessions = Number(summary?.total_sessions || 0);
-  if (totalSessions > 0) return t(totalSessions > 1 ? 'readingSessionsPlural' : 'readingSessions', { count: totalSessions });
-
-  return t('noReadingRecorded');
-}
-
 function getPopularBooks(books, history = []) {
   const order = new Map(history.map((item, index) => [item.bookId, index]));
   return [...books]
@@ -60,11 +41,11 @@ function getPopularBooks(books, history = []) {
     .slice(0, 15);
 }
 
-const QUICK_LINKS = [
-  { id: 'audio', path: '/kids/audio', emoji: '🎧', labelKey: 'kidsQuickAudio' },
-  { id: 'learning', path: '/kids/learning', emoji: '🎮', labelKey: 'kidsQuickLearning' },
-  { id: 'studio', path: '/kids/story-studio', emoji: '✨', labelKey: 'kidsQuickStudio' },
-  { id: 'stories', path: '/kids/ai-stories', emoji: '📖', labelKey: 'kidsQuickStories' },
+const AUTONOMY_WORLDS = [
+  { id: 'library', path: '/kids/library', emoji: '📚', labelKey: 'kidsWorldBooks', modality: 'books' },
+  { id: 'audio', path: '/kids/audio', emoji: '🎧', labelKey: 'kidsWorldAudio', modality: 'audio' },
+  { id: 'learning', path: '/kids/learning', emoji: '🎮', labelKey: 'kidsWorldLearn', modality: 'learn' },
+  { id: 'create', path: '/kids/ai-stories', emoji: '✨', labelKey: 'kidsWorldCreate', modality: 'create', studioPath: '/kids/story-studio' },
 ];
 
 const HOME_CATEGORY_IDS = ['dinosaurs', 'space', 'animals', 'princesses', 'bedtime', 'ocean', 'vehicles', 'world', 'colors', 'spirituality'];
@@ -207,9 +188,13 @@ function KidsHome() {
         }
       : null;
   const badges = Array.isArray(homeData?.badges) ? homeData.badges : [];
-  const missionText = getMissionText(homeData?.goal, homeData?.summary, t);
   const kidCategories = localizeKidCategories(language).filter((category) => HOME_CATEGORY_IDS.includes(category.id));
-  const quickLinks = QUICK_LINKS.filter((link) => link.id !== 'studio' || user?.role !== 'kid');
+  const autonomyWorlds = AUTONOMY_WORLDS.map((world) => {
+    if (world.id === 'create' && user?.role !== 'kid') {
+      return { ...world, path: world.studioPath || world.path };
+    }
+    return world;
+  });
 
   const handlePlayBook = (book) => {
     const progress = progressRows.find((row) => row.book_id === book.id);
@@ -227,20 +212,11 @@ function KidsHome() {
     hideTitle: true,
     hideSectionTitle: false,
     onPlay: handlePlayBook,
+    modality: 'books',
   };
 
   const lastActivityBook = progressRows[0];
   const lastActivityText = lastActivityBook?.book_title || null;
-
-  const handleSurprise = () => {
-    if (recommendedBooks.length === 0) {
-      navigate('/kids/library');
-      return;
-    }
-
-    const randomBook = recommendedBooks[Math.floor(Math.random() * recommendedBooks.length)];
-    navigate(getKidsContentPath(randomBook));
-  };
 
   if (loading) {
     return (
@@ -257,7 +233,13 @@ function KidsHome() {
     <KidsPageShell isRtl={isRtl} variant="home" className="pb-32 kids-hero-glow" footer={<KidsBottomNav />}>
       <header className="relative z-10 px-6 py-4 flex items-center justify-between gap-4">
         <div className="flex items-center gap-4 min-w-0">
-          <Avatar src={avatarSrc} initials={avatarInitials} alt={kidName} size="lg" className="w-16 h-16 border-4 border-white shadow-lg bg-gradient-to-br from-primary-400 to-secondary-400 text-white shrink-0" />
+          <Avatar
+            src={avatarSrc}
+            initials={avatarInitials}
+            alt={kidName}
+            size="lg"
+            className="w-16 h-16 border-4 border-white shadow-lg bg-gradient-to-br from-primary-400 to-secondary-400 text-white shrink-0"
+          />
           <div className="min-w-0">
             <h1 className="text-xl md:text-2xl font-black text-foreground truncate">
               {greeting} <span className="text-primary-600">{kidName}</span>
@@ -273,109 +255,84 @@ function KidsHome() {
         </div>
       </header>
 
-      <div className="relative z-10 px-6 -mt-2 mb-2 sm:hidden flex justify-center">
-        <LitMascot size="large" showBubble message={t('litMascotGreetingShort')} />
-      </div>
-
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-20 space-y-10 mt-2">
-        <section className="kids-premium-panel p-4 md:p-6">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 md:gap-6">
-            <motion.div
-              whileHover={{ scale: 1.01 }}
-              whileTap={{ scale: 0.99 }}
-              className="lg:col-span-2 cursor-pointer"
-              onClick={() => {
-                if (!featuredBook) {
-                  navigate('/kids/library');
-                  return;
-                }
-                const pageQuery = featuredBook.isInProgress ? `?page=${featuredBook.currentPage}` : '';
-                navigate(`/kids/read/${featuredBook.id}${pageQuery}`);
-              }}
-            >
-              <div className="relative h-64 md:h-80 w-full rounded-[2.25rem] overflow-hidden shadow-kids-soft group border-4 border-white/70">
-                {featuredBook?.cover_image ? (
-                  <img src={getImageUrl(featuredBook.cover_image)} alt="" className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
-                ) : (
-                  <div className="absolute inset-0 bg-gradient-to-br from-primary-300 via-secondary-300 to-accent-200" />
-                )}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/15 to-transparent" />
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="kids-touch-target w-24 h-24 md:w-28 md:h-28 bg-white/35 backdrop-blur-md rounded-full flex items-center justify-center border-4 border-white/60 group-hover:scale-110 transition-transform shadow-kids-warm">
-                    <PlayIcon className={`w-12 h-12 md:w-14 md:h-14 text-white drop-shadow-md ${isRtl ? 'mr-2 rotate-180' : 'ml-2'}`} filled />
-                  </div>
-                </div>
-                <div className="absolute bottom-0 inset-x-0 p-5 md:p-6 flex flex-col gap-3">
-                  <div className="flex items-center justify-between gap-3">
-                    <span className="inline-flex min-h-9 items-center bg-white/25 backdrop-blur-md px-4 py-1.5 rounded-full text-white text-sm font-black border border-white/40 uppercase tracking-wide">
-                      {featuredBook?.isInProgress ? `▶️ ${t('resume')}` : `✨ ${t('discover')}`}
-                    </span>
-                    <span className="text-white font-black drop-shadow-md text-lg">{featuredBook?.progress || 0}%</span>
-                  </div>
-                  <div className="h-5 w-full bg-black/35 rounded-full overflow-hidden border border-white/25 backdrop-blur-sm">
-                    <motion.div initial={{ width: 0 }} animate={{ width: `${featuredBook?.progress || 0}%` }} className="h-full bg-gradient-to-r from-secondary-300 to-accent-300 rounded-full" />
-                  </div>
-                </div>
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-20 space-y-8 mt-2">
+        <motion.section
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          whileHover={{ scale: 1.01 }}
+          whileTap={{ scale: 0.99 }}
+          className="cursor-pointer"
+          onClick={() => {
+            if (!featuredBook) {
+              navigate('/kids/library');
+              return;
+            }
+            const pageQuery = featuredBook.isInProgress ? `?page=${featuredBook.currentPage}` : '';
+            navigate(`/kids/read/${featuredBook.id}${pageQuery}`);
+          }}
+        >
+          <div className="relative h-72 md:h-[22rem] w-full rounded-[2.5rem] overflow-hidden shadow-kids-soft group border-4 border-white/70">
+            {featuredBook?.cover_image ? (
+              <img
+                src={getImageUrl(featuredBook.cover_image)}
+                alt=""
+                className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+              />
+            ) : (
+              <div className={`absolute inset-0 bg-gradient-to-br ${getKidsModality('books').gradient}`} />
+            )}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="kids-touch-target w-24 h-24 md:w-28 md:h-28 bg-white/35 backdrop-blur-md rounded-full flex items-center justify-center border-4 border-white/60 group-hover:scale-110 transition-transform shadow-kids-warm">
+                <PlayIcon className={`w-12 h-12 md:w-14 md:h-14 text-white drop-shadow-md ${isRtl ? 'mr-2 rotate-180' : 'ml-2'}`} filled />
               </div>
-            </motion.div>
-
-            <motion.div whileHover={{ y: -4 }} className="cursor-pointer">
-              <div className="h-64 md:h-80 rounded-[2.25rem] bg-gradient-to-br from-accent-300 via-accent-400 to-primary-400 p-6 flex flex-col items-center justify-center text-center relative overflow-hidden shadow-kids-warm border-4 border-white/60">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-white/25 rounded-full blur-2xl" />
+            </div>
+            <div className="absolute bottom-0 inset-x-0 p-5 md:p-7 flex flex-col gap-3">
+              <div className="flex items-end justify-between gap-3">
+                <div className="min-w-0">
+                  <span className="inline-flex min-h-9 items-center bg-primary-500/90 backdrop-blur-md px-4 py-1.5 rounded-full text-white text-sm font-black border border-white/40 uppercase tracking-wide mb-2">
+                    {featuredBook?.isInProgress ? t('resume') : t('discover')}
+                  </span>
+                  {featuredBook?.title && (
+                    <h2 className="text-white font-black text-2xl md:text-3xl drop-shadow-md truncate">{featuredBook.title}</h2>
+                  )}
+                </div>
+                <span className="text-white font-black drop-shadow-md text-xl shrink-0">{featuredBook?.progress || 0}%</span>
+              </div>
+              <div className="h-4 w-full bg-black/35 rounded-full overflow-hidden border border-white/25 backdrop-blur-sm">
                 <motion.div
-                  animate={{ y: [0, -10, 0], rotate: [0, 5, -5, 0] }}
-                  transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
-                  className="text-8xl filter drop-shadow-2xl mb-4"
-                  aria-hidden="true"
-                >
-                  🎁
-                </motion.div>
-                <h3 className="text-white text-2xl font-black drop-shadow-md mb-2">{t('magicChest')}</h3>
-                <div className="flex items-center gap-2 bg-white/25 backdrop-blur-sm px-4 py-2.5 rounded-full border border-white/35 text-white font-bold min-h-[44px]" aria-label={missionText}>
-                  <StarIcon className="w-5 h-5 text-accent-100" />
-                  <span>{missionText}</span>
-                </div>
+                  initial={{ width: 0 }}
+                  animate={{ width: `${featuredBook?.progress || 0}%` }}
+                  className="h-full bg-gradient-to-r from-primary-300 to-accent-300 rounded-full"
+                />
               </div>
-            </motion.div>
+            </div>
           </div>
-        </section>
+        </motion.section>
 
-        <section>
+        <section aria-label={t('kidsAutonomyWorlds')}>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {quickLinks.map((link, index) => (
-              <motion.button
-                key={link.id}
-                type="button"
-                whileHover={{ scale: 1.04 }}
-                whileTap={{ scale: 0.96 }}
-                onClick={() => navigate(link.path)}
-                className={`kids-touch-target rounded-[2rem] bg-gradient-to-br ${quickGradientAtIndex(index)} p-5 md:p-6 text-white shadow-kids-soft border-4 border-white/50 min-h-[7.5rem] flex flex-col items-center justify-center gap-2`}
-                aria-label={t(link.labelKey)}
-              >
-                <span className="text-5xl" aria-hidden="true">{link.emoji}</span>
-                <span className="font-black text-base md:text-lg">{t(link.labelKey)}</span>
-              </motion.button>
-            ))}
+            {autonomyWorlds.map((world) => {
+              const theme = getKidsModality(world.modality);
+              return (
+                <motion.button
+                  key={world.id}
+                  type="button"
+                  whileHover={{ scale: 1.04, y: -2 }}
+                  whileTap={{ scale: 0.96 }}
+                  onClick={() => navigate(world.path)}
+                  className={`kids-touch-target rounded-[2rem] bg-gradient-to-br ${theme.gradient} p-5 md:p-6 text-white shadow-kids-soft border-4 border-white/50 min-h-[8rem] flex flex-col items-center justify-center gap-2`}
+                  aria-label={t(world.labelKey)}
+                >
+                  <span className="text-5xl md:text-6xl" aria-hidden="true">{world.emoji}</span>
+                  <span className="font-black text-base md:text-lg">{t(world.labelKey)}</span>
+                </motion.button>
+              );
+            })}
           </div>
         </section>
 
         <KidsFamilyMessages />
-
-        <div className="flex justify-center">
-          <motion.button
-            type="button"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={handleSurprise}
-            className="kids-touch-target group relative flex items-center gap-4 bg-gradient-to-r from-primary-500 via-secondary-400 to-accent-400 px-5 pr-6 sm:pr-10 py-3 rounded-[3rem] shadow-kids-soft border-4 border-white overflow-hidden"
-            aria-label={t('surpriseMe')}
-          >
-            <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-inner relative z-10 group-hover:rotate-12 transition-transform">
-              <SparklesIcon className="w-8 h-8 text-primary-500" />
-            </div>
-            <span className="text-white font-black text-xl sm:text-2xl relative z-10 drop-shadow-md">{t('surpriseMe')}</span>
-          </motion.button>
-        </div>
 
         {continueBooks.length > 0 && (
           <KidsBookCarousel
@@ -386,24 +343,13 @@ function KidsHome() {
           />
         )}
 
-        <section>
-          <h2 className="kids-shelf-title mb-5 px-2">
-            <span aria-hidden="true">🗂️</span>
-            <span className="sr-only sm:not-sr-only">{t('allCategories')}</span>
-          </h2>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-5">
-            {kidCategories.map((category) => (
-              <KidCategoryCard key={category.id} category={category} />
-            ))}
-          </div>
-        </section>
-
         {favoriteBooks.length > 0 && (
           <KidsBookCarousel
             title={t('yourFavorites')}
             emoji="❤️"
             books={favoriteBooks}
             {...carouselProps}
+            modality="favorites"
           />
         )}
 
@@ -441,6 +387,18 @@ function KidsHome() {
             {...carouselProps}
           />
         )}
+
+        <section>
+          <h2 className="kids-shelf-title mb-5 px-2">
+            <span aria-hidden="true">🗂️</span>
+            <span className="sr-only sm:not-sr-only">{t('allCategories')}</span>
+          </h2>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-5">
+            {kidCategories.map((category) => (
+              <KidCategoryCard key={category.id} category={category} />
+            ))}
+          </div>
+        </section>
 
         <section id="kids-profile" className="scroll-mt-24">
           <KidsProfilePanel

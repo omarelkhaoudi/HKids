@@ -92,7 +92,7 @@ function KidsCategoryPage() {
   const featuredBook = books[0] || null;
 
   return (
-    <KidsPageShell isRtl={isRtl} variant="library" className="pb-32 kids-hero-glow" footer={<KidsBottomNav />}>
+    <KidsPageShell isRtl={isRtl} variant="library" className="pb-32 kids-glow-books" footer={<KidsBottomNav />}>
       <header className="relative z-10 px-6 py-4 flex items-center justify-between">
         <Link to="/kids" className="shrink-0 transition-transform hover:scale-105">
           <Logo size="default" showText={false} />

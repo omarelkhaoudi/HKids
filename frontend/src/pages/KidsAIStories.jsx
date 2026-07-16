@@ -692,7 +692,7 @@ function KidsAIStories() {
   };
 
   return (
-    <KidsPageShell footer={canCreateStories ? null : <KidsBottomNav />} isRtl={isRtl} className="pb-32 kids-hero-glow">
+    <KidsPageShell footer={canCreateStories ? null : <KidsBottomNav />} isRtl={isRtl} className="pb-32 kids-glow-create">
       <MagicCelebration active={showCelebration} onComplete={() => setShowCelebration(false)} />
 
       <div className="relative z-10 mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
@@ -710,6 +710,7 @@ function KidsAIStories() {
         </header>
 
         <KidsHero
+          modality="create"
           emoji="✨"
           badge="Le Lit Qui Lit Magique"
           title={`✨ ${t('kidsNavStories')}`}

@@ -101,7 +101,7 @@ function KidsListen() {
   if (!book) return null;
 
   return (
-    <KidsPageShell isRtl={isRtl} variant="library" className="pb-32 kids-hero-glow" footer={<KidsBottomNav />}>
+    <KidsPageShell isRtl={isRtl} variant="library" className="pb-32 kids-glow-audio" footer={<KidsBottomNav />}>
       <KidsPageHeader backTo="/kids/audio" onBack={() => navigate('/kids/audio')} emoji="🎧" />
 
       <div className="relative z-10 mx-auto max-w-3xl px-4 py-4">
@@ -110,7 +110,7 @@ function KidsListen() {
           animate={{ opacity: 1, y: 0 }}
           className="kids-premium-panel p-6 md:p-10 flex flex-col items-center text-center"
         >
-          <span className="mb-4 inline-flex items-center gap-2 rounded-full bg-primary-100 text-primary-700 px-4 py-2 text-sm font-black">
+          <span className="mb-4 inline-flex items-center gap-2 rounded-full bg-accent-100 text-accent-700 px-4 py-2 text-sm font-black">
             <AudioIcon className="h-5 w-5" />
             {typeLabel}
           </span>
