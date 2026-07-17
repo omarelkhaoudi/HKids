@@ -3,8 +3,7 @@ import { buildBookCoverSources } from '../../utils/bookCover';
 
 /**
  * Full-bleed illustrated book cover.
- * Loads real art from API when available, else `/books/covers/{slug}.*`,
- * else theme / default temps in the same folder.
+ * Always prefers `/books/covers/*` art — never seed SVG/uploads placeholders.
  */
 export function KidsBookCover({
   book,
@@ -21,14 +20,16 @@ export function KidsBookCover({
     book?.theme,
     book?._themeId,
     book?.title,
+    book?.category_name,
   ]);
   const [sourceIndex, setSourceIndex] = useState(0);
 
   useEffect(() => {
     setSourceIndex(0);
-  }, [sources]);
+  }, [sources.join('|')]);
 
-  const src = sources[Math.min(sourceIndex, Math.max(sources.length - 1, 0))] || '/books/covers/default.webp';
+  const src = sources[Math.min(sourceIndex, Math.max(sources.length - 1, 0))]
+    || '/books/covers/default.webp';
 
   return (
     <img
@@ -38,10 +39,15 @@ export function KidsBookCover({
       loading={loading}
       decoding="async"
       className={`kids-book-cover-img ${imgClassName} ${className}`.trim()}
-      onError={() => {
-        setSourceIndex((current) => {
-          if (current >= sources.length - 1) return current;
-          return current + 1;
+      onError={(event) => {
+        // SPA rewrite can return index.html (200) for missing files — treat as failure
+        const current = event.currentTarget?.currentSrc || src;
+        if (current && !current.includes('/books/covers/')) {
+          // unexpected remote failure — advance
+        }
+        setSourceIndex((index) => {
+          if (index >= sources.length - 1) return index;
+          return index + 1;
         });
       }}
     />

@@ -3,14 +3,12 @@ import { getImageUrl } from './imageUrl';
 /**
  * Local illustrated covers live in `frontend/public/books/covers/`.
  *
- * One-line replacement later:
- *   drop `{slug}.webp` (or .png / .jpg) into that folder —
- *   it automatically wins over theme/default temps.
+ * Replace forever with one file drop:
+ *   frontend/public/books/covers/{slug}.webp
  */
 export const LOCAL_BOOK_COVERS_BASE = '/books/covers';
 
 const ILLUSTRATED_EXT = /\.(png|jpe?g|webp|gif|avif)$/i;
-const LOCAL_EXTS = ['webp', 'png', 'jpg', 'jpeg'];
 
 const THEME_ALIASES = {
   dinosaurs: 'dinosaurs',
@@ -45,13 +43,37 @@ const THEME_ALIASES = {
   vehicles: 'jobs',
 };
 
+/** Titles on /stories mapped to theme packs (no seed SVG). */
+const TITLE_THEME_HINTS = [
+  [/ange|angel|veille|gratitude|spiritual/i, 'bedtime'],
+  [/poisson|fish|baleine|whale/i, 'ocean'],
+  [/tap tap|mains|clap|comptine|chanson|soleil/i, 'rhymes'],
+  [/vache|cow|chat|animal|chien|oiseau|abeille|poule/i, 'animals'],
+  [/vent|feuille|fleur|jardin|nature/i, 'world'],
+  [/dino|dinosaur/i, 'dinosaurs'],
+  [/lune|étoile|etoile|space|fusée|fusee/i, 'space'],
+  [/princesse|dragon|fée|fee|fairy/i, 'princesses'],
+];
+
 /**
- * Seed catalog SVG covers are gradient + emoji blocks — never treat as art.
+ * Seed catalog covers (SVG emoji blocks, or /uploads/books/* placeholders).
+ * Never show these in the kids/public UI — local illustrated art wins.
  */
-export function isIllustratedCoverPath(imagePath) {
+export function isSeedCatalogCover(imagePath) {
   if (!imagePath || typeof imagePath !== 'string') return false;
   const path = imagePath.split('?')[0].toLowerCase();
-  if (path.endsWith('.svg')) return false;
+  if (path.endsWith('.svg') || path.includes('.svg')) return true;
+  if (path.includes('data:image/svg')) return true;
+  // Catalog seed / synced placeholders live under uploads/books
+  if (path.includes('/uploads/books/')) return true;
+  if (path.includes('/object/public/') && path.includes('-cover')) return true;
+  return false;
+}
+
+export function isIllustratedCoverPath(imagePath) {
+  if (!imagePath || typeof imagePath !== 'string') return false;
+  if (isSeedCatalogCover(imagePath)) return false;
+  const path = imagePath.split('?')[0].toLowerCase();
   if (ILLUSTRATED_EXT.test(path)) return true;
   if (path.startsWith('http://') || path.startsWith('https://')) {
     return !path.includes('.svg');
@@ -79,42 +101,38 @@ export function deriveBookTheme(book = {}) {
 
   const haystack = [book.title, book.description, book.category_name, book.author]
     .filter(Boolean)
-    .join(' ')
-    .toLowerCase();
+    .join(' ');
 
-  if (/dino|dinosaur/.test(haystack)) return 'dinosaurs';
-  if (/lune|moon|étoile|etoile|star|space|fusée|fusee|rocket/.test(haystack)) return 'space';
-  if (/princesse|princess|dragon gentil|fee|fée|fairy/.test(haystack)) return 'princesses';
-  if (/couleur|color|colour|fée des couleurs/.test(haystack)) return 'colors';
-  if (/ange|angel|spiritual|foi|faith|gratitude|veille/.test(haystack)) return 'bedtime';
-  if (/ours|bear|nuit|night|dormir|bonne nuit|bedtime|sleep|soleil se couche/.test(haystack)) return 'bedtime';
-  if (/poisson|fish|baleine|whale|océan|ocean|mer|sea/.test(haystack)) return 'ocean';
-  if (/vache|cow|chat|cat|animal|chien|dog|oiseau|bird|abeille|bee|poule|hen/.test(haystack)) return 'animals';
-  if (/vent|feuille|leaf|fleur|flower|jardin|garden|nature/.test(haystack)) return 'world';
-  if (/pompier|firefighter|camion|truck|métier|job/.test(haystack)) return 'jobs';
-  if (/abc|alphabet|lettre|letter/.test(haystack)) return 'alphabet';
-  if (/compte|count|nombre|number|pomme|apple|forme|shape/.test(haystack)) return 'numbers';
-  if (/comptine|chanson|song|rhyme|tap tap|matin|morning|soleil/.test(haystack)) return 'rhymes';
-  if (/cochon|pig|world|monde|marché|marche/.test(haystack)) return 'world';
+  for (const [pattern, theme] of TITLE_THEME_HINTS) {
+    if (pattern.test(haystack)) return theme;
+  }
+
   return null;
 }
 
-function pushLocalVariants(list, relativeBase) {
-  LOCAL_EXTS.forEach((ext) => {
-    list.push(`${LOCAL_BOOK_COVERS_BASE}/${relativeBase}.${ext}`);
-  });
-}
-
 /**
- * Ordered cover candidates for a book.
- * First successful image load wins.
+ * Ordered cover candidates — LOCAL illustrated art first, seed API covers never.
  */
 export function buildBookCoverSources(book = {}) {
   const sources = [];
   const slug = deriveBookSlug(book);
   const theme = deriveBookTheme(book);
 
-  // 1) Real API / CDN illustrated art
+  // 1) Local slug file (one-line replace later)
+  if (slug) {
+    sources.push(`${LOCAL_BOOK_COVERS_BASE}/${slug}.webp`);
+  }
+
+  // 2) Local theme pack
+  if (theme) {
+    sources.push(`${LOCAL_BOOK_COVERS_BASE}/themes/${theme}.webp`);
+  }
+
+  // 3) Default illustrated cover
+  sources.push(`${LOCAL_BOOK_COVERS_BASE}/default.webp`);
+  sources.push(`${LOCAL_BOOK_COVERS_BASE}/themes/default.webp`);
+
+  // 4) Real external illustrated art only (never seed /uploads SVG-or-placeholder)
   if (isIllustratedCoverPath(book.cover_image)) {
     const apiUrl = getImageUrl(book.cover_image);
     if (apiUrl) sources.push(apiUrl);
@@ -124,29 +142,20 @@ export function buildBookCoverSources(book = {}) {
     if (apiUrl) sources.push(apiUrl);
   }
 
-  // 2) Local slug file — drop `{slug}.webp` here to replace forever
-  if (slug) pushLocalVariants(sources, slug);
-
-  // 3) Local theme temp art
-  if (theme) pushLocalVariants(sources, `themes/${theme}`);
-
-  // 4) Default illustrated cover
-  pushLocalVariants(sources, 'default');
-  pushLocalVariants(sources, 'themes/default');
-
   return [...new Set(sources.filter(Boolean))];
 }
 
-/** @deprecated Prefer buildBookCoverSources(book) — kept for callers that pass a path string */
 export function resolveBookCoverUrl(coverImageOrBook, maybeBook) {
   if (coverImageOrBook && typeof coverImageOrBook === 'object') {
-    return buildBookCoverSources(coverImageOrBook)[0] || null;
+    return buildBookCoverSources(coverImageOrBook)[0] || `${LOCAL_BOOK_COVERS_BASE}/default.webp`;
   }
   if (maybeBook && typeof maybeBook === 'object') {
-    return buildBookCoverSources({ ...maybeBook, cover_image: coverImageOrBook })[0] || null;
+    return buildBookCoverSources({ ...maybeBook, cover_image: coverImageOrBook })[0]
+      || `${LOCAL_BOOK_COVERS_BASE}/default.webp`;
   }
   if (isIllustratedCoverPath(coverImageOrBook)) {
     return getImageUrl(coverImageOrBook);
   }
-  return buildBookCoverSources({ cover_image: coverImageOrBook })[0] || `${LOCAL_BOOK_COVERS_BASE}/default.webp`;
+  return buildBookCoverSources({ cover_image: coverImageOrBook })[0]
+    || `${LOCAL_BOOK_COVERS_BASE}/default.webp`;
 }
