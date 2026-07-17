@@ -70,16 +70,23 @@ export function ParentReadingGoalCard({ kidId, goal, onSaved }) {
   if (!kidId) return null;
 
   return (
-    <Card className="p-6 shadow-floating">
-      <h2 className="text-xl font-bold mb-2">{t('parentReadingGoal')}</h2>
-      <p className="text-sm text-foreground-muted mb-4">{t('parentReadingGoalDesc')}</p>
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+    <Card className="p-space-24 md:p-space-32 rounded-32 shadow-card border border-border/40">
+      <h2 className="text-heading-l font-black text-foreground mb-2">{t('parentReadingGoal')}</h2>
+      <p className="text-body-lg text-foreground-secondary font-medium mb-space-24">{t('parentReadingGoalDesc')}</p>
+      {goal && (
+        <div className="mb-space-24 rounded-32 bg-surface-secondary/60 p-space-16 border border-border/40">
+          <p className="text-body font-bold text-primary-600">
+            {goal.progress_value} / {goal.target_value} · {Math.round(goal.progress_percent || 0)}%
+          </p>
+        </div>
+      )}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-space-16 mb-space-24">
         <div>
           <label className="block text-sm font-bold mb-1">{t('parentGoalType')}</label>
           <select
             value={form.goal_type}
             onChange={(e) => setForm({ ...form, goal_type: e.target.value })}
-            className="w-full rounded-xl border border-border bg-surface-secondary px-3 py-2 font-bold"
+            className="w-full rounded-2xl border border-border bg-surface-secondary px-3 py-2.5 font-bold min-h-touch"
           >
             {GOAL_TYPES.map((type) => (
               <option key={type.id} value={type.id}>{t(type.labelKey)}</option>
@@ -102,7 +109,7 @@ export function ParentReadingGoalCard({ kidId, goal, onSaved }) {
           <select
             value={form.period}
             onChange={(e) => setForm({ ...form, period: e.target.value })}
-            className="w-full rounded-xl border border-border bg-surface-secondary px-3 py-2 font-bold"
+            className="w-full rounded-2xl border border-border bg-surface-secondary px-3 py-2.5 font-bold min-h-touch"
           >
             {PERIODS.map((period) => (
               <option key={period.id} value={period.id}>{t(period.labelKey)}</option>
@@ -110,13 +117,13 @@ export function ParentReadingGoalCard({ kidId, goal, onSaved }) {
           </select>
         </div>
       </div>
-      <div className="flex flex-wrap gap-3 justify-end">
+      <div className="flex flex-wrap gap-space-12 justify-end">
         {goal && (
-          <Button variant="outline" onClick={handleClear} disabled={saving}>
+          <Button variant="outline" onClick={handleClear} disabled={saving} className="min-h-touch font-bold">
             {t('parentClearGoal')}
           </Button>
         )}
-        <Button variant="primary" onClick={handleSave} disabled={saving}>
+        <Button variant="primary" onClick={handleSave} disabled={saving} className="min-h-touch font-bold">
           {saving ? t('parentSaving') : t('parentSaveGoal')}
         </Button>
       </div>

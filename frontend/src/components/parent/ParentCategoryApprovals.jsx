@@ -4,12 +4,16 @@ import { categoriesAPI } from '../../api/books';
 import { parentalAPI } from '../../api/parental';
 import { useToast } from '../ToastProvider';
 import { useLanguage } from '../../context/LanguageContext';
-import { Button, EmptyState, Skeleton } from '../ui';
+import { useReducedMotion } from '../../hooks/useReducedMotion';
+import { getHoverMotion } from '../../constants/kidsMotion';
+import { Button, Skeleton } from '../ui';
 import { CheckIcon, LockIcon } from '../Icons';
+import { ParentEmptyState } from './ParentEmptyState';
 
 export function ParentCategoryApprovals({ kidId }) {
   const { showToast } = useToast();
   const { t } = useLanguage();
+  const reducedMotion = useReducedMotion();
   const [categories, setCategories] = useState([]);
   const [approvals, setApprovals] = useState({});
   const [loading, setLoading] = useState(true);
@@ -83,9 +87,9 @@ export function ParentCategoryApprovals({ kidId }) {
 
   if (loading) {
     return (
-      <div className="rounded-3xl border border-border bg-card p-6 space-y-3">
-        <Skeleton className="h-6 w-48" />
-        <Skeleton className="h-4 w-full" />
+      <div className="rounded-32 border border-border/40 bg-card p-space-24 space-y-space-16" aria-busy="true">
+        <Skeleton className="h-8 w-48 rounded-2xl" />
+        <Skeleton className="h-4 w-full rounded-xl" />
         <div className="flex flex-wrap gap-2">
           {[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-12 w-28 rounded-2xl" />)}
         </div>
@@ -95,58 +99,63 @@ export function ParentCategoryApprovals({ kidId }) {
 
   if (error) {
     return (
-      <div className="rounded-3xl border border-border bg-card p-6">
-        <EmptyState
-          title={t('parentLoadError')}
-          description={t('parentCategoryApprovalsDesc')}
-          actionLabel={t('parentRetry')}
-          onAction={loadData}
-        />
-      </div>
+      <ParentEmptyState
+        emoji="📚"
+        title={t('parentLoadError')}
+        description={t('parentCategoryApprovalsDesc')}
+        actionLabel={t('parentRetry')}
+        onAction={loadData}
+      />
     );
   }
 
   return (
-    <div className="rounded-3xl border border-border bg-card p-6 shadow-sm space-y-4">
-      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+    <div className="rounded-32 border border-border/40 bg-card p-space-24 md:p-space-32 shadow-card space-y-space-16">
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-space-16">
         <div>
-          <h3 className="text-xl font-black text-foreground">{t('parentCategoryApprovalsTitle')}</h3>
-          <p className="text-sm text-foreground-muted font-medium mt-1">
+          <h3 className="text-heading-l font-black text-foreground">{t('parentCategoryApprovalsTitle')}</h3>
+          <p className="text-body-lg text-foreground-secondary font-medium mt-1">
             {t('parentCategoryApprovalsDesc')}
           </p>
-          <p className="text-xs text-accent-700 dark:text-accent-300 font-bold mt-2">
+          <p className="text-caption text-accent-700 dark:text-accent-300 font-bold mt-2">
             {t('parentCategoryDefaultHint')}
           </p>
         </div>
         {categories.length > 0 && (
-          <Button variant="outline" size="sm" onClick={approveAll}>
+          <Button variant="outline" size="sm" onClick={approveAll} className="min-h-touch font-bold shrink-0">
             {t('parentApproveAll')}
           </Button>
         )}
       </div>
 
       {categories.length === 0 ? (
-        <EmptyState title={t('parentNoCategories')} description={t('parentCategoryApprovalsDesc')} />
+        <ParentEmptyState
+          emoji="🌍"
+          title={t('parentNoCategories')}
+          description={t('parentCategoryApprovalsDesc')}
+          compact
+        />
       ) : (
-        <div className="flex flex-wrap gap-3">
+        <div className="flex flex-wrap gap-space-12">
           {categories.map((category) => {
             const approved = approvals[category.id] === true;
             return (
               <motion.button
                 key={category.id}
                 type="button"
-                whileTap={{ scale: 0.97 }}
+                {...getHoverMotion(reducedMotion)}
                 onClick={() => toggleCategory(category.id)}
-                className={`flex items-center gap-2 px-4 py-3 rounded-2xl border-2 font-bold text-sm transition-colors min-h-[48px] ${
+                className={`flex items-center gap-2 px-4 py-3 rounded-2xl border-2 font-bold text-body transition-colors min-h-touch focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-400 ${
                   approved
-                    ? 'bg-secondary-500 border-secondary-600 text-white'
+                    ? 'bg-secondary-500 border-secondary-600 text-white shadow-soft'
                     : 'bg-surface-secondary border-border text-foreground-secondary'
                 }`}
+                aria-pressed={approved}
               >
                 {approved ? (
-                  <CheckIcon className="w-5 h-5" />
+                  <CheckIcon className="w-5 h-5" aria-hidden="true" />
                 ) : (
-                  <LockIcon className="w-5 h-5 opacity-60" />
+                  <LockIcon className="w-5 h-5 opacity-60" aria-hidden="true" />
                 )}
                 <span>{category.name}</span>
               </motion.button>
@@ -155,7 +164,7 @@ export function ParentCategoryApprovals({ kidId }) {
         </div>
       )}
 
-      <Button variant="primary" onClick={handleSave} loading={saving} disabled={saving || categories.length === 0}>
+      <Button variant="primary" onClick={handleSave} loading={saving} disabled={saving || categories.length === 0} className="min-h-touch font-bold">
         {t('parentSaveApprovals')}
       </Button>
     </div>

@@ -1177,6 +1177,102 @@
     border-radius: 999px;
   }
 
+  /* —— Parent companion experience —— */
+  .parent-home-shell {
+    background: linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--color-surface-50) 100%, transparent) 0%,
+      color-mix(in srgb, var(--color-primary-50) 18%, var(--color-surface-50)) 100%
+    );
+  }
+
+  .parent-hero-glow {
+    background:
+      radial-gradient(ellipse 60% 50% at 90% 10%, color-mix(in srgb, var(--color-card) 12%, transparent), transparent),
+      radial-gradient(ellipse 50% 40% at 10% 90%, color-mix(in srgb, var(--color-secondary-400) 10%, transparent), transparent);
+  }
+
+  .parent-warm-card {
+    border-radius: var(--radius-32);
+    box-shadow: var(--shadow-card);
+    background: var(--color-card);
+    border: 1px solid color-mix(in srgb, var(--color-border) 40%, transparent);
+    padding: var(--space-24);
+    transition: box-shadow 0.32s ease;
+  }
+
+  .parent-warm-card:hover {
+    box-shadow: var(--shadow-floating);
+  }
+
+  .parent-discovery-rail {
+    display: flex;
+    gap: var(--space-16);
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+  }
+
+  .parent-discovery-rail::-webkit-scrollbar {
+    height: 5px;
+  }
+
+  .parent-discovery-rail::-webkit-scrollbar-thumb {
+    background: color-mix(in srgb, var(--color-primary-300) 40%, transparent);
+    border-radius: 999px;
+  }
+
+  .parent-journey-list {
+    position: relative;
+  }
+
+  .parent-journey-day::before {
+    content: '';
+    position: absolute;
+    inset-inline-start: 0.65rem;
+    top: 2.5rem;
+    bottom: -1.5rem;
+    width: 2px;
+    background: linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--color-primary-300) 70%, transparent),
+      color-mix(in srgb, var(--color-primary-200) 20%, transparent)
+    );
+  }
+
+  .parent-journey-day:last-child::before {
+    display: none;
+  }
+
+  .parent-journey-dot {
+    position: absolute;
+    inset-inline-start: 0;
+    top: 1.75rem;
+    width: 1.25rem;
+    height: 1.25rem;
+    border-radius: 999px;
+    background: var(--color-primary-500);
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-primary-200) 50%, transparent);
+  }
+
+  .parent-empty-state {
+    transition: box-shadow 0.32s ease;
+  }
+
+  .parent-hub-card,
+  .parent-family-card {
+    transition: box-shadow 0.32s ease;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .parent-warm-card:hover,
+    .parent-hub-card:hover,
+    .parent-family-card:hover {
+      box-shadow: var(--shadow-card);
+    }
+  }
+
   .kids-world-portal {
     display: flex;
     flex-direction: column;
