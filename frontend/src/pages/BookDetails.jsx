@@ -132,13 +132,13 @@ function BookDetails() {
 
  if (loading) {
  return (
- <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 via-secondary-50 to-accent-50">
+ <div className="min-h-screen flex items-center justify-center bg-background">
  <motion.div 
  className="text-center"
  initial={{opacity: 0, scale: 0.9}}
  animate={{opacity: 1, scale: 1}}
  >
- <div className="inline-block animate-spin rounded-full h-16 w-16 border-4 border-primary-300 border-t-primary-600"></div>
+ <div className="inline-block animate-spin rounded-full h-14 w-14 border-2 border-primary-200 border-t-primary-600"></div>
  <p className="mt-4 text-foreground-secondary text-lg font-medium">Chargement du livre...</p>
  </motion.div>
  </div>
@@ -147,7 +147,7 @@ function BookDetails() {
 
  if (!book) {
  return (
- <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 via-secondary-50 to-accent-50">
+ <div className="min-h-screen flex items-center justify-center bg-background">
  <motion.div 
  className="text-center"
  initial={{opacity: 0, y: 20}}
@@ -229,18 +229,18 @@ function BookDetails() {
  >
  <motion.div
  {...getHoverMotion(reducedMotion, { whileHover: { y: -6, scale: 1.02 } })}
- className="relative mb-space-24 w-56 sm:w-64 md:w-72 rounded-32 overflow-hidden border-4 border-white/80 shadow-floating kids-book-glow"
+ className="relative mb-space-24 w-56 sm:w-64 md:w-72 rounded-32 overflow-hidden border border-border/50 shadow-floating"
  >
  {coverUrl ? (
  <img src={coverUrl} alt={book.title} className="w-full aspect-[3/4] object-cover" onError={() => setImageError(true)} onLoad={() => setImageError(false)} />
  ) : (
- <div className="w-full aspect-[3/4] grid place-items-center bg-gradient-to-br from-primary-100 to-magic-100">
- <BookIcon className="w-24 h-24 text-magic-300" />
+ <div className="w-full aspect-[3/4] grid place-items-center bg-gradient-to-br from-primary-100 to-primary-50">
+ <BookIcon className="w-24 h-24 text-primary-300" />
  </div>
  )}
  </motion.div>
 
- <h1 className="text-heading-xl md:text-display-s font-extrabold text-foreground mb-space-12 max-w-2xl leading-tight">
+ <h1 className="text-heading-xl md:text-hero font-bold text-foreground mb-space-12 max-w-2xl leading-tight">
  {book.title}
  </h1>
 
@@ -279,18 +279,18 @@ function BookDetails() {
  <div className="w-full max-w-md mb-space-24 rounded-24 bg-card/80 backdrop-blur-sm border border-border p-space-16 shadow-soft text-left">
  <div className="flex items-center gap-space-8 mb-space-8">
  <HistoryIcon className="w-5 h-5 text-primary-600" />
- <span className="text-body font-black text-foreground">Ta progression</span>
+ <span className="text-body font-bold text-foreground">Ta progression</span>
  </div>
  <div className="flex justify-between text-caption text-foreground-muted mb-space-8">
  <span>Page {lastPage + 1} sur {book.page_count || '?'}</span>
  <span>{progress}%</span>
  </div>
- <div className="h-space-12 w-full overflow-hidden rounded-full bg-surface-secondary">
+ <div className="h-space-8 w-full overflow-hidden rounded-full bg-surface-secondary">
  <motion.div
  initial={{ width: 0 }}
  animate={{ width: `${progress}%` }}
  transition={reducedMotion ? { duration: 0 } : { duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
- className="h-full rounded-full bg-gradient-to-r from-primary-400 to-secondary-400"
+ className="h-full rounded-full bg-primary-500"
  />
  </div>
  </div>
@@ -300,43 +300,43 @@ function BookDetails() {
  {hasHistory ? (
  <>
  <motion.button
- {...getHoverMotion(reducedMotion, { whileHover: { scale: 1.03 }, whileTap: { scale: 0.97 } })}
+ {...getHoverMotion(reducedMotion, { whileHover: { y: -2 }, whileTap: { scale: 0.98 } })}
  type="button"
  onClick={continueReading}
- className="kids-touch-target flex-1 inline-flex min-h-touch-kids items-center justify-center gap-space-12 rounded-32 bg-gradient-to-r from-primary-500 to-secondary-500 text-white text-heading-s font-black shadow-floating focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary-300"
+ className="kids-touch-target flex-1 inline-flex min-h-touch-kids items-center justify-center gap-space-12 rounded-32 bg-primary-500 text-white text-heading-m font-bold shadow-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-300"
  >
- <BookIcon className="w-7 h-7" />
+ <BookIcon className="w-6 h-6" />
  Continuer
  </motion.button>
  <motion.button
- {...getHoverMotion(reducedMotion, { whileHover: { scale: 1.03 }, whileTap: { scale: 0.97 } })}
+ {...getHoverMotion(reducedMotion, { whileHover: { y: -2 }, whileTap: { scale: 0.98 } })}
  type="button"
  onClick={startReading}
- className="kids-touch-target flex-1 inline-flex min-h-touch-kids items-center justify-center gap-space-12 rounded-32 bg-card text-foreground text-body font-black border-4 border-border shadow-soft focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary-300"
+ className="kids-touch-target flex-1 inline-flex min-h-touch-kids items-center justify-center gap-space-12 rounded-32 bg-card text-primary-700 text-body font-bold border-2 border-primary-300 shadow-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-300"
  >
- <RefreshIcon className="w-6 h-6" />
+ <RefreshIcon className="w-5 h-5" />
  Recommencer
  </motion.button>
  </>
  ) : (
  <motion.button
- {...getHoverMotion(reducedMotion, { whileHover: { scale: 1.03 }, whileTap: { scale: 0.97 } })}
+ {...getHoverMotion(reducedMotion, { whileHover: { y: -2 }, whileTap: { scale: 0.98 } })}
  type="button"
  onClick={startReading}
- className="kids-touch-target w-full inline-flex min-h-touch-kids items-center justify-center gap-space-12 rounded-32 bg-gradient-to-r from-primary-500 via-secondary-500 to-magic-500 text-white text-heading-s font-black shadow-floating focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary-300"
+ className="kids-touch-target w-full inline-flex min-h-touch-kids items-center justify-center gap-space-12 rounded-32 bg-primary-500 text-white text-heading-m font-bold shadow-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-300"
  >
- <PlayIcon className="w-8 h-8" filled />
+ <PlayIcon className="w-7 h-7" filled />
  Lire l'histoire
  </motion.button>
  )}
  {book.audio_url && isKidAccount && (
  <motion.button
- {...getHoverMotion(reducedMotion, { whileHover: { scale: 1.03 }, whileTap: { scale: 0.97 } })}
+ {...getHoverMotion(reducedMotion, { whileHover: { y: -2 }, whileTap: { scale: 0.98 } })}
  type="button"
  onClick={() => navigate(`/kids/listen/${id}`)}
- className="kids-touch-target flex-1 inline-flex min-h-touch-kids items-center justify-center gap-space-12 rounded-32 bg-gradient-to-r from-orange-400 to-orange-600 text-white text-body font-black shadow-floating focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-300"
+ className="kids-touch-target flex-1 inline-flex min-h-touch-kids items-center justify-center gap-space-12 rounded-32 bg-orange-400 text-white text-body font-bold shadow-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300"
  >
- <AudioIcon className="w-7 h-7" />
+ <AudioIcon className="w-6 h-6" />
  Écouter
  </motion.button>
  )}
@@ -399,9 +399,9 @@ function BookDetails() {
  >
  <Link
  to={`/book-details/${relatedBook.id}`}
- className="block rounded-24 overflow-hidden bg-card border-4 border-border shadow-card hover:shadow-floating transition-shadow focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary-300"
+ className="block rounded-24 overflow-hidden bg-card border border-border/60 shadow-card hover:shadow-floating transition-shadow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-300"
  >
- <div className="aspect-[3/4] bg-gradient-to-br from-primary-100 to-magic-100 overflow-hidden">
+ <div className="aspect-[3/4] bg-gradient-to-br from-primary-100 to-primary-50 overflow-hidden">
  {relatedBook.cover_image ? (
  <img src={getImageUrl(relatedBook.cover_image)} alt="" className="w-full h-full object-cover" loading="lazy" />
  ) : (
@@ -409,7 +409,7 @@ function BookDetails() {
  )}
  </div>
  <div className="p-space-16">
- <h3 className="text-body font-black text-foreground line-clamp-2">{relatedBook.title}</h3>
+ <h3 className="text-body font-bold text-foreground line-clamp-2">{relatedBook.title}</h3>
  </div>
  </Link>
  </motion.div>

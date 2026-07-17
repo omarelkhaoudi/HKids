@@ -2,7 +2,7 @@ import { memo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getImageUrl } from '../../utils/imageUrl';
 import { useReducedMotion } from '../../hooks/useReducedMotion';
-import { getHoverMotion, kidsBadgePop, getFloatMotion } from '../../constants/kidsMotion';
+import { getHoverMotion, kidsBadgePop } from '../../constants/kidsMotion';
 import { KidsFeedbackBurst } from './KidsFeedbackBurst';
 import { PlayIcon, HeartIcon, DownloadIcon, SparklesIcon, ClockIcon, ShieldIcon, AudioIcon } from '../Icons';
 
@@ -44,13 +44,10 @@ export const KidsMediaCard = memo(function KidsMediaCard({
   const durationLabel = formatDuration(book.duration_seconds);
   const audioReady = hasAudio(book);
   const hoverMotion = getHoverMotion(reducedMotion, {
-    whileHover: { y: -12, scale: variant === 'poster' ? 1.04 : 1.05 },
-    whileTap: { scale: 0.97 },
+    whileHover: { y: -4, scale: variant === 'poster' ? 1.015 : 1.02 },
+    whileTap: { scale: 0.98 },
   });
-  const floatProps = getFloatMotion(reducedMotion, {
-    animate: { y: [0, -4, 0] },
-    transition: { duration: 4.2, repeat: Infinity, ease: 'easeInOut' },
-  });
+  const floatProps = {};
 
   const flashFeedback = (type) => {
     setFeedback(type);
@@ -72,7 +69,7 @@ export const KidsMediaCard = memo(function KidsMediaCard({
         <img
           src={getImageUrl(book.cover_image, 'book')}
           alt=""
-          className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.08]"
+          className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.03]"
           loading="lazy"
         />
 
@@ -82,34 +79,29 @@ export const KidsMediaCard = memo(function KidsMediaCard({
         {/* Discovery badges — icon-first, max visual scan */}
         <div className="absolute left-2.5 top-2.5 z-10 flex flex-col gap-1.5 max-w-[78%]">
           {(discoveryReason || book._discoveryReason) && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-white/95 px-2.5 py-1 text-[11px] font-black text-primary-700 shadow-md border-2 border-white line-clamp-1">
+            <span className="inline-flex items-center gap-1 rounded-full bg-card/95 px-2.5 py-1 text-[11px] font-bold text-primary-700 shadow-soft border border-border/60 line-clamp-1">
               {discoveryReason || book._discoveryReason}
             </span>
           )}
           {book.is_premium && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-orange-400 to-orange-500 px-2.5 py-1 text-[11px] font-black text-white shadow-md border-2 border-white/50">
+            <span className="inline-flex items-center gap-1 rounded-full bg-primary-600 px-2.5 py-1 text-[11px] font-bold text-white shadow-soft">
               <SparklesIcon className="h-3.5 w-3.5" /> PRO
             </span>
           )}
-          {themeEmoji && (
-            <span className="inline-flex kids-touch-target !min-h-0 !min-w-0 h-9 w-9 items-center justify-center rounded-full bg-white/90 text-lg shadow-md border-2 border-white" aria-hidden="true">
-              {themeEmoji}
-            </span>
-          )}
           {(book.age_level || (book.age_group_min != null && book.age_group_max != null)) && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-black/50 backdrop-blur-md px-2.5 py-1 text-[11px] font-black text-white border border-white/30">
-              <ShieldIcon className="h-3.5 w-3.5 text-success-300" />
+            <span className="inline-flex items-center gap-1 rounded-full bg-foreground/45 backdrop-blur-sm px-2.5 py-1 text-[11px] font-bold text-white">
+              <ShieldIcon className="h-3.5 w-3.5 text-white/90" />
               {book.age_level || `${book.age_group_min}–${book.age_group_max}`}
             </span>
           )}
           {durationLabel && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-black/50 backdrop-blur-md px-2.5 py-1 text-[11px] font-black text-white border border-white/30">
-              <ClockIcon className="h-3.5 w-3.5 text-orange-300" />
+            <span className="inline-flex items-center gap-1 rounded-full bg-foreground/45 backdrop-blur-sm px-2.5 py-1 text-[11px] font-bold text-white">
+              <ClockIcon className="h-3.5 w-3.5 text-white/90" />
               {durationLabel}
             </span>
           )}
           {audioReady && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-orange-500/90 px-2.5 py-1 text-[11px] font-black text-white border border-white/40 shadow-md" aria-label="Audio">
+            <span className="inline-flex items-center gap-1 rounded-full bg-orange-400/95 px-2.5 py-1 text-[11px] font-bold text-white shadow-soft" aria-label="Audio">
               <AudioIcon className="h-3.5 w-3.5" />
             </span>
           )}
@@ -129,10 +121,10 @@ export const KidsMediaCard = memo(function KidsMediaCard({
                     flashFeedback('favorite');
                   }
                 }}
-                className={`kids-touch-target !min-h-[48px] !min-w-[48px] rounded-full backdrop-blur-md p-2.5 text-white shadow-xl border-2 transition-colors ${
+                className={`kids-touch-target !min-h-[48px] !min-w-[48px] rounded-full backdrop-blur-md p-2.5 text-white shadow-card border transition-colors ${
                   isFavorite
                     ? 'bg-rose-500 border-rose-300'
-                    : 'bg-white/25 border-white/40 opacity-0 group-hover:opacity-100 hover:bg-rose-500 hover:border-rose-400'
+                    : 'bg-card/30 border-white/40 opacity-0 group-hover:opacity-100 hover:bg-rose-500 hover:border-rose-400'
                 }`}
                 aria-label="Favorite"
                 aria-pressed={isFavorite}
@@ -156,7 +148,7 @@ export const KidsMediaCard = memo(function KidsMediaCard({
                     onDownload?.(book);
                     flashFeedback('download');
                   }}
-                  className="kids-touch-target !min-h-[48px] !min-w-[48px] rounded-full bg-white/25 backdrop-blur-md p-2.5 text-white shadow-xl border-2 border-white/40 opacity-0 group-hover:opacity-100 hover:bg-secondary-500 hover:border-secondary-400 transition-all"
+                  className="kids-touch-target !min-h-[48px] !min-w-[48px] rounded-full bg-card/30 backdrop-blur-md p-2.5 text-white shadow-card border border-white/40 opacity-0 group-hover:opacity-100 hover:bg-primary-500 hover:border-primary-300 transition-all"
                   aria-label="Download"
                 >
                   <DownloadIcon className="h-6 w-6" />
@@ -164,7 +156,7 @@ export const KidsMediaCard = memo(function KidsMediaCard({
               ) : (
                 <motion.div
                   {...(reducedMotion ? {} : kidsBadgePop)}
-                  className="kids-touch-target !min-h-[48px] !min-w-[48px] rounded-full bg-secondary-500 p-2.5 text-white shadow-xl border-2 border-secondary-400"
+                  className="kids-touch-target !min-h-[48px] !min-w-[48px] rounded-full bg-primary-500 p-2.5 text-white shadow-card border border-primary-300"
                   aria-label="Downloaded"
                 >
                   <DownloadIcon className="h-6 w-6" />
@@ -177,10 +169,10 @@ export const KidsMediaCard = memo(function KidsMediaCard({
         {/* Play — appears on hover / focus for emotional selection */}
         <div className="absolute inset-0 flex items-center justify-center">
           <motion.div
-            className={`flex items-center justify-center rounded-full bg-white/40 backdrop-blur-md text-white border-4 border-white/70 shadow-lg transition-all duration-300 opacity-0 scale-90 group-hover:opacity-100 group-hover:scale-110 group-focus-within:opacity-100 group-focus-within:scale-110 ${
+            className={`flex items-center justify-center rounded-full bg-card/50 backdrop-blur-sm text-primary-700 border border-white/60 shadow-card transition-all duration-300 opacity-0 scale-95 group-hover:opacity-100 group-hover:scale-100 group-focus-within:opacity-100 group-focus-within:scale-100 ${
               variant === 'poster'
-                ? 'h-[4.5rem] w-[4.5rem] md:h-24 md:w-24 group-hover:bg-primary-500 group-hover:border-primary-200'
-                : 'h-16 w-16 group-hover:bg-primary-500'
+                ? 'h-[4.5rem] w-[4.5rem] md:h-24 md:w-24 group-hover:bg-primary-500 group-hover:text-white group-hover:border-primary-200'
+                : 'h-14 w-14 group-hover:bg-primary-500 group-hover:text-white'
             }`}
             onClick={(e) => { e.stopPropagation(); onPlay?.(book); }}
           >
@@ -190,7 +182,7 @@ export const KidsMediaCard = memo(function KidsMediaCard({
 
         {!hideTitle && (
           <div className="absolute bottom-0 left-0 right-0 p-4 md:p-5">
-            <h3 className="line-clamp-2 text-lg md:text-xl font-black leading-tight text-white drop-shadow-lg">
+            <h3 className="line-clamp-2 text-base md:text-lg font-bold leading-snug text-white drop-shadow-md">
               {book.title}
             </h3>
           </div>

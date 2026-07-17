@@ -19,13 +19,13 @@
     --font-display: 'Nunito', ui-sans-serif, system-ui, sans-serif;
     --font-body: 'Nunito', ui-sans-serif, system-ui, sans-serif;
     --text-hero-size: clamp(2.5rem, 5vw, 3.5rem);
-    --text-hero-lh: 1.1;
-    --text-heading-xl-size: clamp(2rem, 4vw, 2.75rem);
-    --text-heading-xl-lh: 1.15;
-    --text-heading-l-size: clamp(1.5rem, 3vw, 2rem);
-    --text-heading-l-lh: 1.2;
-    --text-heading-m-size: clamp(1.25rem, 2.5vw, 1.5rem);
-    --text-heading-m-lh: 1.3;
+    --text-hero-lh: 1.15;
+    --text-heading-xl-size: clamp(1.85rem, 3.5vw, 2.5rem);
+    --text-heading-xl-lh: 1.2;
+    --text-heading-l-size: clamp(1.4rem, 2.8vw, 1.85rem);
+    --text-heading-l-lh: 1.25;
+    --text-heading-m-size: clamp(1.15rem, 2.2vw, 1.35rem);
+    --text-heading-m-lh: 1.35;
     --text-body-lg-size: 1.125rem;
     --text-body-lg-lh: 1.5;
     --text-body-size: 1rem;
@@ -53,29 +53,29 @@
     --space-48: 48px;
     --space-64: 64px;
 
-    /* —— Shadows —— */
-    --shadow-soft: 0 4px 16px -2px rgba(15, 23, 42, 0.06), 0 2px 6px -2px rgba(15, 23, 42, 0.04);
-    --shadow-card: 0 12px 28px -8px rgba(37, 125, 201, 0.18), 0 4px 12px -4px rgba(15, 23, 42, 0.1);
-    --shadow-floating: 0 24px 48px -12px rgba(37, 125, 201, 0.22), 0 8px 20px -6px rgba(15, 23, 42, 0.12);
+    /* —— Shadows (calm paper, not glowing toy) —— */
+    --shadow-soft: 0 2px 10px -2px rgba(15, 23, 42, 0.05), 0 1px 4px -1px rgba(15, 23, 42, 0.04);
+    --shadow-card: 0 8px 24px -10px rgba(15, 23, 42, 0.1), 0 2px 8px -4px rgba(15, 23, 42, 0.06);
+    --shadow-floating: 0 16px 40px -14px rgba(15, 23, 42, 0.12), 0 6px 16px -8px rgba(15, 23, 42, 0.08);
 
-    /* —— Semantic surfaces (Light) —— */
-    --color-bg: #f7fbff;
+    /* —— Semantic surfaces (Light) —— soft sky + cream library —— */
+    --color-bg: #f6f4ef;
     --color-surface: #ffffff;
-    --color-surface-secondary: #eef5fc;
+    --color-surface-secondary: #f0f4f8;
     --color-card: #ffffff;
     --color-elevated: #ffffff;
-    --color-border: #d7e4f2;
-    --color-divider: #d7e4f2;
-    --color-text-primary: #0f2744;
-    --color-text-secondary: #3d5a7a;
-    --color-text-muted: #7a93ad;
-    --color-kids-bg: #f0f7ff;
-    --color-kids-glow-sky: rgba(59, 154, 232, 0.28);
-    --color-kids-glow-amber: rgba(245, 158, 11, 0.22);
-    --color-kids-glow-teal: rgba(16, 185, 129, 0.22);
-    --color-kids-glow-violet: rgba(139, 92, 246, 0.26);
-    --color-kids-panel: rgba(255, 255, 255, 0.94);
-    --color-kids-violet-soft: #c4b5fd;
+    --color-border: #e2e8f0;
+    --color-divider: #e8eef4;
+    --color-text-primary: #1a2b3d;
+    --color-text-secondary: #4a6178;
+    --color-text-muted: #8496a8;
+    --color-kids-bg: #f4f7fa;
+    --color-kids-glow-sky: rgba(59, 154, 232, 0.1);
+    --color-kids-glow-amber: rgba(245, 158, 11, 0.08);
+    --color-kids-glow-teal: rgba(16, 185, 129, 0.08);
+    --color-kids-glow-violet: rgba(139, 92, 246, 0.1);
+    --color-kids-panel: rgba(255, 255, 255, 0.97);
+    --color-kids-violet-soft: #ddd6fe;
     --color-bg-card: var(--color-card);
     --color-bg-elevated: var(--color-elevated);
 
@@ -163,10 +163,10 @@
     --color-info-700: #1d4ed8;
     --color-info-900: #1e3a8a;
 
-    /* Neutrals (warm sky tint) */
-    --color-surface-50: #f8fafc;
-    --color-surface-100: #eef5fc;
-    --color-surface-200: #d7e4f2;
+    /* Neutrals (soft cream-sky library) */
+    --color-surface-50: #f8f7f4;
+    --color-surface-100: #f0f4f8;
+    --color-surface-200: #e2e8f0;
     --color-surface-300: #b8cce0;
     --color-surface-400: #8fabc6;
     --color-surface-500: #6b87a5;
@@ -391,8 +391,8 @@
   }
   
   .book-card-enhanced:hover {
-    box-shadow: 0 20px 40px -8px rgba(59, 154, 232, 0.22);
-    transform: translateY(-8px) scale(1.02);
+    box-shadow: var(--shadow-floating);
+    transform: translateY(-4px);
   }
 
   /* HKids child design primitives — Sprint 7 product tokens */
@@ -400,9 +400,9 @@
     --kids-radius-panel: var(--radius-32);
     --kids-radius-card: var(--radius-24);
     --kids-radius-chip: 9999px;
-    --kids-space-page-x: var(--space-16);
-    --kids-space-page-y: var(--space-24);
-    --kids-space-section: var(--space-40);
+    --kids-space-page-x: var(--space-20);
+    --kids-space-page-y: var(--space-32);
+    --kids-space-section: var(--space-48);
     --kids-shadow-card: var(--shadow-card);
     --kids-shadow-panel: var(--shadow-floating);
   }
@@ -426,10 +426,10 @@
   }
 
   .kids-icon-action {
-    @apply kids-touch-target grid place-items-center rounded-full bg-white dark:bg-surface-800 text-primary-500 shadow-md border-2 border-primary-100 shrink-0 transition-transform active:scale-95;
+    @apply kids-touch-target grid place-items-center rounded-full bg-card dark:bg-surface-800 text-primary-600 shadow-soft border border-border shrink-0 transition-transform active:scale-95;
   }
   .kids-icon-action svg {
-    @apply h-7 w-7;
+    @apply h-6 w-6;
   }
 
   .kids-page {
@@ -458,35 +458,36 @@
 
   .kids-premium-panel {
     border-radius: var(--kids-radius-panel);
-    @apply border-4 border-white/60 dark:border-white/10 overflow-hidden;
-    background: linear-gradient(
-      145deg,
-      var(--color-kids-panel) 0%,
-      rgba(239, 248, 255, 0.95) 40%,
-      rgba(236, 254, 255, 0.9) 100%
-    );
-    box-shadow: var(--kids-shadow-panel);
+    border: 1px solid color-mix(in srgb, var(--color-border) 70%, transparent);
+    overflow: hidden;
+    background: var(--color-kids-panel);
+    box-shadow: var(--kids-shadow-card);
   }
 
   .dark .kids-premium-panel {
-    background: linear-gradient(145deg, rgba(30, 41, 59, 0.96) 0%, rgba(15, 23, 42, 0.94) 100%);
+    background: rgba(22, 32, 50, 0.96);
+    border-color: rgba(255, 255, 255, 0.1);
   }
 
   .kids-chip {
-    @apply inline-flex items-center justify-center gap-2 rounded-full font-black shadow-md border-4 transition-all kids-touch-target px-5 py-3;
+    @apply inline-flex items-center justify-center gap-2 rounded-full font-bold shadow-soft border border-border transition-all kids-touch-target px-5 py-3;
   }
 
   .kids-story-card {
     border-radius: var(--kids-radius-card);
-    @apply overflow-hidden bg-surface-secondary border-4 border-white/50 dark:border-white/10 transition-all duration-300;
+    overflow: hidden;
+    background: var(--color-surface-secondary);
+    border: 1px solid color-mix(in srgb, var(--color-border) 60%, transparent);
+    transition: box-shadow 0.3s ease, transform 0.3s ease;
     box-shadow: var(--kids-shadow-card);
   }
 
+  .dark .kids-story-card {
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+
   .kids-story-card:hover {
-    box-shadow:
-      0 22px 44px -10px rgba(59, 154, 232, 0.28),
-      0 8px 18px -6px rgba(15, 23, 42, 0.16),
-      inset 0 1px 0 rgba(255, 255, 255, 0.4);
+    box-shadow: var(--shadow-floating);
   }
 
   .kids-scroll-smooth {
@@ -542,16 +543,16 @@
 
   .kids-ambient-emoji {
     position: absolute;
-    font-size: 2.5rem;
-    opacity: 0.18;
-    filter: blur(0.2px);
+    font-size: 1.75rem;
+    opacity: 0.08;
+    filter: blur(0.5px);
   }
 
   .kids-ambient-shelf {
     position: absolute;
-    height: 10px;
+    height: 6px;
     border-radius: 999px;
-    background: linear-gradient(90deg, rgba(59, 154, 232, 0.12), rgba(45, 212, 191, 0.08));
+    background: linear-gradient(90deg, rgba(148, 163, 184, 0.12), rgba(148, 163, 184, 0.06));
     left: 5%;
     right: 5%;
   }
@@ -712,14 +713,14 @@
   .kids-shelf-rail::after {
     content: '';
     position: absolute;
-    left: 0.5rem;
-    right: 0.5rem;
+    left: 0.75rem;
+    right: 0.75rem;
     bottom: 0;
-    height: 10px;
+    height: 4px;
     border-radius: 999px;
-    background: linear-gradient(90deg, rgba(180, 140, 100, 0.35), rgba(120, 90, 60, 0.45), rgba(180, 140, 100, 0.35));
-    box-shadow: 0 6px 14px -6px rgba(59, 154, 232, 0.2);
-    opacity: 0.55;
+    background: linear-gradient(90deg, transparent, rgba(148, 163, 184, 0.28), transparent);
+    box-shadow: none;
+    opacity: 0.7;
   }
 
   .kids-category-atmosphere {
@@ -728,8 +729,8 @@
 
   .kids-cat-motif {
     position: absolute;
-    opacity: 0.28;
-    filter: blur(0.2px);
+    opacity: 0.12;
+    filter: blur(0.5px);
   }
 
   .kids-cat-print {
@@ -886,16 +887,16 @@
   }
 
   .kids-audio-pulse {
-    animation: kids-audio-pulse 1.6s ease-in-out infinite;
+    animation: kids-audio-pulse 2.4s ease-in-out infinite;
   }
   @keyframes kids-audio-pulse {
     0%, 100% {
-      box-shadow: 0 0 0 0 rgba(var(--color-secondary-400-rgb), 0.45);
+      box-shadow: 0 0 0 0 rgba(var(--color-orange-400-rgb), 0.25);
       transform: scale(1);
     }
     50% {
-      box-shadow: 0 0 0 16px rgba(var(--color-secondary-400-rgb), 0);
-      transform: scale(1.05);
+      box-shadow: 0 0 0 10px rgba(var(--color-orange-400-rgb), 0);
+      transform: scale(1.02);
     }
   }
 
@@ -930,20 +931,19 @@
   }
 
   .kids-shelf-title {
-    @apply flex items-center gap-3 text-2xl md:text-3xl font-black text-foreground tracking-tight;
+    @apply flex items-center gap-3 text-xl md:text-2xl font-bold text-foreground tracking-tight;
   }
 
   .kids-hero-glow {
-    background: radial-gradient(ellipse at 20% 0%, var(--color-kids-glow-sky) 0%, transparent 55%),
-      radial-gradient(ellipse at 80% 100%, var(--color-kids-glow-amber) 0%, transparent 50%);
+    background: radial-gradient(ellipse at 30% 0%, var(--color-kids-glow-sky) 0%, transparent 60%);
   }
 
   .kids-hero-story {
     background: linear-gradient(
-      135deg,
-      rgba(255, 255, 255, 0.96) 0%,
-      rgba(239, 248, 255, 0.94) 45%,
-      rgba(254, 243, 199, 0.35) 100%
+      160deg,
+      rgba(255, 255, 255, 0.98) 0%,
+      rgba(244, 247, 250, 0.96) 55%,
+      rgba(246, 244, 239, 0.92) 100%
     );
   }
 
@@ -972,9 +972,7 @@
     inset: 0;
     pointer-events: none;
     background:
-      radial-gradient(ellipse 55% 60% at 12% 20%, var(--color-kids-glow-sky) 0%, transparent 60%),
-      radial-gradient(ellipse 45% 50% at 88% 75%, var(--color-kids-glow-amber) 0%, transparent 55%),
-      radial-gradient(ellipse 35% 40% at 70% 15%, var(--color-kids-glow-violet) 0%, transparent 50%);
+      radial-gradient(ellipse 55% 50% at 15% 20%, var(--color-kids-glow-sky) 0%, transparent 65%);
   }
 
   .kids-hero-story-atmosphere::before,
@@ -1044,32 +1042,33 @@
 
   .kids-studio-atmosphere {
     background:
-      radial-gradient(ellipse 70% 50% at 15% 0%, var(--color-kids-glow-violet) 0%, transparent 55%),
-      radial-gradient(ellipse 50% 40% at 85% 100%, rgba(var(--color-primary-500-rgb), 0.12) 0%, transparent 50%),
-      linear-gradient(165deg, var(--color-magic-900) 0%, #1a1033 45%, var(--color-magic-800) 100%);
+      radial-gradient(ellipse 60% 45% at 20% 0%, var(--color-kids-glow-violet) 0%, transparent 60%),
+      linear-gradient(165deg, #2a2150 0%, #1a1433 50%, #241a42 100%);
   }
 
   .kids-listen-atmosphere {
     background:
-      radial-gradient(ellipse 60% 45% at 20% 10%, var(--color-kids-glow-amber) 0%, transparent 55%),
-      radial-gradient(ellipse 50% 40% at 80% 90%, var(--color-kids-glow-sky) 0%, transparent 50%),
-      linear-gradient(160deg, var(--color-orange-50) 0%, var(--color-primary-50) 40%, var(--color-surface) 100%);
+      radial-gradient(ellipse 55% 40% at 20% 10%, var(--color-kids-glow-amber) 0%, transparent 60%),
+      linear-gradient(165deg, var(--color-orange-50) 0%, #fffaf5 45%, var(--color-surface) 100%);
   }
 
   .dark .kids-listen-atmosphere {
     background:
-      radial-gradient(ellipse 60% 45% at 20% 10%, var(--color-kids-glow-amber) 0%, transparent 55%),
-      linear-gradient(160deg, var(--color-surface-900) 0%, var(--color-magic-900) 100%);
+      radial-gradient(ellipse 55% 40% at 20% 10%, var(--color-kids-glow-amber) 0%, transparent 60%),
+      linear-gradient(165deg, var(--color-surface-900) 0%, #1a1520 100%);
   }
 
   .kids-listen-panel {
     border-radius: var(--radius-32);
-    @apply border-4 border-white/60 dark:border-white/10 overflow-hidden shadow-floating;
-    background: linear-gradient(145deg, rgba(255, 255, 255, 0.97) 0%, rgba(255, 247, 237, 0.92) 100%);
+    border: 1px solid color-mix(in srgb, var(--color-border) 60%, transparent);
+    overflow: hidden;
+    box-shadow: var(--shadow-card);
+    background: var(--color-kids-panel);
   }
 
   .dark .kids-listen-panel {
-    background: linear-gradient(145deg, rgba(30, 41, 59, 0.96) 0%, rgba(15, 23, 42, 0.94) 100%);
+    background: rgba(22, 32, 50, 0.96);
+    border-color: rgba(255, 255, 255, 0.1);
   }
 
   .kids-listen-wave {
@@ -1117,9 +1116,8 @@
 
   .kids-gallery-atmosphere {
     background:
-      radial-gradient(ellipse 55% 40% at 10% 0%, var(--color-kids-glow-sky) 0%, transparent 55%),
-      radial-gradient(ellipse 45% 35% at 90% 100%, var(--color-kids-glow-amber) 0%, transparent 50%),
-      linear-gradient(180deg, var(--color-primary-50) 0%, var(--color-surface) 35%, var(--color-secondary-50) 100%);
+      radial-gradient(ellipse 50% 35% at 15% 0%, var(--color-kids-glow-sky) 0%, transparent 60%),
+      linear-gradient(180deg, var(--color-primary-50) 0%, var(--color-surface) 50%, var(--color-bg) 100%);
   }
 
   .kids-gallery-rail {
@@ -1279,18 +1277,19 @@
     align-items: center;
     justify-content: center;
     gap: var(--space-12);
-    min-height: 9rem;
-    min-width: 9rem;
+    min-height: 8.5rem;
+    min-width: 8.5rem;
     padding: var(--space-20);
     border-radius: var(--radius-24);
-    border: 4px solid rgba(255, 255, 255, 0.35);
-    box-shadow: var(--shadow-card, 0 8px 24px rgba(0, 0, 0, 0.08));
+    border: 1px solid color-mix(in srgb, var(--color-border) 80%, transparent);
+    background: var(--color-card);
+    box-shadow: var(--shadow-soft);
     scroll-snap-align: start;
-    transition: box-shadow 0.2s ease, transform 0.2s ease;
+    transition: box-shadow 0.28s ease, transform 0.28s ease;
   }
 
   .kids-world-portal:hover {
-    box-shadow: var(--shadow-floating, 0 16px 40px rgba(0, 0, 0, 0.12));
+    box-shadow: var(--shadow-card);
   }
 
   .kids-book-details-page {

@@ -4,7 +4,6 @@ import { motion } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { localizeKidCategories, getKidCategory } from '../constants/kidCategories';
-import { getKidsModality } from '../constants/kidsModality';
 import { VoiceAssistant } from '../components/kids/VoiceAssistant';
 import { KidsMascot } from '../components/kids/KidsMascot';
 import { KidsPageShell } from '../components/kids/KidsPageShell';
@@ -324,7 +323,7 @@ function KidsHome() {
             initials={avatarInitials}
             alt={kidName}
             size="lg"
-            className="w-space-64 h-space-64 border-4 border-surface shadow-card bg-gradient-to-br from-primary-400 to-secondary-400 text-white shrink-0"
+            className="w-space-64 h-space-64 border-2 border-surface shadow-soft bg-gradient-to-br from-primary-400 to-primary-600 text-white shrink-0"
           />
           <div className="min-w-0">
             <h1 className="text-heading-l truncate">
@@ -512,18 +511,17 @@ function KidsHome() {
           </h2>
           <div className="kids-discovery-rail">
             {autonomyWorlds.map((world) => {
-              const theme = getKidsModality(world.modality);
               return (
                 <motion.button
                   key={world.id}
                   type="button"
                   {...getHoverMotion(reducedMotion, kidsHoverLift)}
                   onClick={() => navigate(world.path)}
-                  className={`kids-world-portal shrink-0 bg-gradient-to-br ${theme.gradient} focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary-300`}
+                  className="kids-world-portal shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-300"
                   aria-label={t(world.labelKey)}
                 >
-                  <span className="text-5xl" aria-hidden="true">{world.emoji}</span>
-                  <span className="text-body font-black text-white drop-shadow-sm">{t(world.labelKey)}</span>
+                  <span className="text-4xl" aria-hidden="true">{world.emoji}</span>
+                  <span className="text-body font-bold text-foreground">{t(world.labelKey)}</span>
                 </motion.button>
               );
             })}
@@ -532,8 +530,8 @@ function KidsHome() {
 
         <KidsFamilyMessages />
 
-        <details className="kids-profile-fold rounded-32 border-4 border-border bg-card/60 shadow-soft overflow-hidden">
-          <summary className="kids-touch-target cursor-pointer list-none px-space-24 py-space-16 text-heading-s font-black text-foreground flex items-center justify-between gap-space-12 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary-300">
+        <details className="kids-profile-fold rounded-32 border border-border/70 bg-card shadow-soft overflow-hidden">
+          <summary className="kids-touch-target cursor-pointer list-none px-space-24 py-space-16 text-heading-m font-bold text-foreground flex items-center justify-between gap-space-12 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-300">
             <span className="flex items-center gap-space-12">
               <span aria-hidden="true">👤</span>
               {kidName ? `${kidName}` : t('yourMedals')}
