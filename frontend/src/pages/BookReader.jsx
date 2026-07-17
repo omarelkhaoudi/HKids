@@ -15,7 +15,9 @@ import {getFileUrl} from '../utils/fileUrl';
 import {useToast} from '../components/ToastProvider';
 import {useAuth} from '../context/AuthContext';
 import {useLanguage} from '../context/LanguageContext';
-import {ChevronLeftIcon, ChevronRightIcon, HomeIcon, BookIcon, StarIcon, PlayIcon, PauseIcon, SettingsIcon, WarningIcon} from '../components/Icons';
+import {ChevronLeftIcon, ChevronRightIcon, HomeIcon, BookIcon, StarIcon, PlayIcon, PauseIcon, SettingsIcon, WarningIcon, MoonIcon, SunIcon, MaximizeIcon, MinimizeIcon} from '../components/Icons';
+import {getImageUrl} from '../utils/imageUrl';
+import {getMotionProps, kidsBookOpen, kidsProgressFill} from '../constants/kidsMotion';
 import ReadingAidPanel from '../components/ReadingAidPanel';
 import {ContentReportModal} from '../components/parent/ContentReportModal';
 import {AudioPlayer} from '../components/audio/AudioPlayer';
@@ -301,6 +303,27 @@ function PDFPageViewer({pdfUrl, pageNumber, onLoad, onPdfLoaded, imageClassName 
  );
 }
 
+// Gentle page-turn sparkle (kid reader)
+function PageSparkle({ active, reducedMotion }) {
+ if (!active || reducedMotion) return null;
+ return (
+ <div className="kids-reader-sparkle" aria-hidden="true">
+ <span className="kids-reader-sparkle-burst">✨</span>
+ </div>
+ );
+}
+
+// Soft clouds for reading atmosphere
+function ReaderClouds() {
+ return (
+ <div className="absolute inset-0 pointer-events-none overflow-hidden z-[1]" aria-hidden="true">
+ <span className="kids-reader-cloud kids-reader-cloud-a" />
+ <span className="kids-reader-cloud kids-reader-cloud-b" />
+ <span className="kids-reader-cloud kids-reader-cloud-c" />
+ </div>
+ );
+}
+
 // Composant pour les confettis de célébration
 function Confetti({show}) {
  if (!show) return null;
@@ -419,6 +442,9 @@ function BookReader() {
  const [pdfTotalPages, setPdfTotalPages] = useState(null); // Nombre total de pages dans le PDF actuel
  const [currentPdfUrl, setCurrentPdfUrl] = useState(null); // URL du PDF actuellement chargé
  const [isFullscreen, setIsFullscreen] = useState(false); // Mode plein écran
+ const readerRef = useRef(null);
+ const pageTurnMountRef = useRef(true);
+ const [pageSparkle, setPageSparkle] = useState(false);
  const workerRef = useRef(null);
  const {showToast} = useToast();
  const {user} = useAuth();
@@ -1152,10 +1178,38 @@ function BookReader() {
  return () => clearTimeout(timeout);
 }, [showMenu, currentPage, isPlaying, audioPlayer.playing, isKidReader, showKidCelebration, showStoryOpening]);
 
- // Keep bedtime night mode for kid readers
+ // Kid page-turn sparkle (UI only)
  useEffect(() => {
- if (isKidReader) setThemeMode('night');
-}, [isKidReader]);
+ if (!isKidReader || pageTurnMountRef.current) {
+ pageTurnMountRef.current = false;
+ return undefined;
+ }
+ setPageSparkle(true);
+ const timer = setTimeout(() => setPageSparkle(false), 650);
+ return () => clearTimeout(timer);
+ }, [currentPage, isKidReader]);
+
+ useEffect(() => {
+ const onFullscreenChange = () => setIsFullscreen(Boolean(document.fullscreenElement));
+ document.addEventListener('fullscreenchange', onFullscreenChange);
+ return () => document.removeEventListener('fullscreenchange', onFullscreenChange);
+ }, []);
+
+ const toggleFullscreen = () => {
+ if (!document.fullscreenElement) {
+ readerRef.current?.requestFullscreen?.().catch(() => {});
+ } else {
+ document.exitFullscreen?.().catch(() => {});
+ }
+ };
+
+ const cycleThemeMode = () => {
+ setThemeMode((current) => {
+ if (current === 'day') return 'sepia';
+ if (current === 'sepia') return 'night';
+ return 'day';
+ });
+ };
 
  // Reset opening when book id changes
  useEffect(() => {
@@ -1252,6 +1306,15 @@ function BookReader() {
  const isLastPage = currentPage === totalPages - 1;
  const progress = ((currentPage + 1) / totalPages) * 100;
  const audioPlaybackActive = book.audio_url ? audioPlayer.playing : isPlaying;
+ const coverBleedUrl = book?.cover_image ? getImageUrl(book.cover_image, 'book') : null;
+ const kidPageMotion = reducedMotion
+  ? getMotionProps(reducedMotion, kidsBookOpen)
+  : {
+    initial: kidsBookOpen.initial,
+    animate: kidsBookOpen.animate,
+    exit: { opacity: 0, scale: 0.97, rotateY: pageDirection === 'next' ? -14 : 14 },
+    transition: { duration: 0.38, ease: [0.22, 1, 0.36, 1] },
+  };
 
  // Handle theme colors — kid night is warm bedtime calm
  const themeColors = {
@@ -1269,15 +1332,21 @@ function BookReader() {
 
  return (
  <div 
- className={`h-screen w-full flex flex-col relative overflow-hidden transition-colors duration-700 ease-in-out ${themeColors[themeMode]} ${isKidReader ? 'kids-night-calm' : ''}`}
+ ref={readerRef}
+ className={`kids-reader-shell h-screen w-full flex flex-col relative overflow-hidden transition-colors duration-700 ease-in-out ${isKidReader ? (themeMode === 'night' ? 'kids-night-calm kids-reader-atmosphere text-surface-50' : themeColors[themeMode]) : themeColors[themeMode]}`}
  onClick={() => setShowMenu(!showMenu)}
  onTouchStart={onTouchStart}
  onTouchMove={onTouchMove}
  onTouchEnd={onTouchEnd}
  >
+ {isKidReader && coverBleedUrl && (
+ <div className="kids-reader-cover-bleed" style={{ backgroundImage: `url(${coverBleedUrl})` }} aria-hidden="true" />
+ )}
+ {isKidReader && <ReaderClouds />}
  {isKidReader && <KidsBedtimeAtmosphere intensity="soft" />}
  <Confetti show={showConfetti && !isKidReader} />
  {isKidReader && themeMode === 'night' && !showStoryOpening && <StarParticles count={reducedMotion ? 0 : 8} />}
+ <PageSparkle active={pageSparkle} reducedMotion={reducedMotion} />
 
  {isKidReader && (
    <KidsStoryOpening
@@ -1297,9 +1366,9 @@ function BookReader() {
  exit={{y: -100, opacity: 0}}
  transition={{duration: 0.3, ease:"easeOut"}}
  onClick={(e) => e.stopPropagation()}
- className={`absolute top-0 inset-x-0 z-40 px-space-24 py-space-16 flex items-center ${isKidReader ? 'justify-start' : 'justify-between'} backdrop-blur-xl border-b border-white/10 ${navThemeColors[themeMode]} shadow-soft`}
+ className={`absolute top-0 inset-x-0 z-40 px-space-24 py-space-16 flex items-center ${isKidReader ? 'justify-between' : 'justify-between'} backdrop-blur-xl border-b border-white/10 ${navThemeColors[themeMode]} shadow-soft`}
  >
- <div className="flex items-center gap-space-16">
+ <div className="flex items-center gap-space-12">
   <Button 
     variant="ghost" 
     size="icon" 
@@ -1309,14 +1378,57 @@ function BookReader() {
   >
     <HomeIcon className="w-8 h-8 text-primary-700" />
   </Button>
+  {isKidReader && (
+    <Button
+      variant="ghost"
+      size="icon"
+      onClick={() => navigate('/kids/library')}
+      className="rounded-full w-14 h-14 min-h-touch-kids min-w-touch-kids bg-white/25 hover:bg-white/45 shadow-soft border-2 border-white/40 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary-300"
+      aria-label={t('goToLibrary')}
+    >
+      <BookIcon className="w-8 h-8 text-primary-700" />
+    </Button>
+  )}
   {!isKidReader && (
   <div>
     <h1 className="text-heading-l text-primary-800 line-clamp-1">{book.title}</h1>
   </div>
   )}
+  {isKidReader && (
+    <p className="hidden sm:block text-body font-black text-white/90 line-clamp-1 max-w-[12rem] md:max-w-xs">{book.title}</p>
+  )}
 </div>
 
-{!isKidReader && (
+{isKidReader ? (
+<div className="flex items-center gap-space-8">
+  <button
+    type="button"
+    onClick={cycleThemeMode}
+    className="kids-reader-toolbar-btn"
+    aria-label={themeMode === 'night' ? 'Mode nuit' : themeMode === 'sepia' ? 'Mode sepia' : 'Mode jour'}
+  >
+    {themeMode === 'night' ? <MoonIcon className="w-7 h-7" /> : <SunIcon className="w-7 h-7" />}
+  </button>
+  <button
+    type="button"
+    onClick={toggleFullscreen}
+    className="kids-reader-toolbar-btn"
+    aria-label={isFullscreen ? 'Quitter plein écran' : 'Plein écran'}
+  >
+    {isFullscreen ? <MinimizeIcon className="w-7 h-7" /> : <MaximizeIcon className="w-7 h-7" />}
+  </button>
+  <button
+    type="button"
+    onClick={toggleBookFavorite}
+    className={`kids-reader-toolbar-btn ${isFavorite ? 'text-orange-500 bg-orange-100/80' : ''}`}
+    aria-label={t('yourFavorites')}
+  >
+    <svg className="w-7 h-7" fill={isFavorite ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+    </svg>
+  </button>
+</div>
+) : (
 <div className="flex items-center gap-space-16">
   <Button 
     variant="ghost" 
@@ -1369,37 +1481,37 @@ function BookReader() {
  )}
 
  {/* Main Content Area */}
- <div className="relative flex-1 w-full h-full flex items-center justify-center p-space-16 md:p-space-48 overflow-hidden">
+ <div className="relative flex-1 w-full h-full flex items-center justify-center p-space-16 md:p-space-32 overflow-hidden z-10">
  
- {/* Big Visible Arrows for Navigation */}
-  {!isKidReader && (
+ {/* Side navigation — kid + parent */}
   <>
-  <div className="absolute left-4 inset-y-0 z-20 flex items-center justify-start pointer-events-none">
-    {!isFirstPage && (
-      <button onClick={(e) => {e.stopPropagation(); prevPage();}} aria-label={t('kidReaderPrev')} className="pointer-events-auto w-20 h-20 min-h-touch-kids min-w-touch-kids bg-white/60 backdrop-blur-md rounded-full flex items-center justify-center shadow-card hover:bg-white hover:scale-110 active:scale-95 transition-all border-4 border-white/40 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary-300">
-        <ChevronLeftIcon className="w-10 h-10 text-primary-600" />
+  <div className={`absolute ${isRtl ? 'right-4' : 'left-4'} inset-y-0 z-20 flex items-center justify-start pointer-events-none`}>
+    {!isFirstPage && (showMenu || !isKidReader) && (
+      <button onClick={(e) => {e.stopPropagation(); prevPage();}} aria-label={t('kidReaderPrev')} className="pointer-events-auto w-20 h-20 min-h-touch-kids min-w-touch-kids bg-white/60 backdrop-blur-md rounded-full flex items-center justify-center shadow-card hover:bg-white hover:scale-105 active:scale-95 transition-all border-4 border-white/40 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary-300">
+        <ChevronLeftIcon className={`w-10 h-10 text-primary-600 ${isRtl ? 'rotate-180' : ''}`} />
       </button>
     )}
   </div>
-  <div className="absolute right-4 inset-y-0 z-20 flex items-center justify-end pointer-events-none">
-    {!isLastPage && (
-      <button onClick={(e) => {e.stopPropagation(); nextPage();}} aria-label={t('kidReaderNext')} className="pointer-events-auto w-20 h-20 min-h-touch-kids min-w-touch-kids bg-white/60 backdrop-blur-md rounded-full flex items-center justify-center shadow-card hover:bg-white hover:scale-110 active:scale-95 transition-all border-4 border-white/40 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary-300">
-        <ChevronRightIcon className="w-10 h-10 text-primary-600" />
+  <div className={`absolute ${isRtl ? 'left-4' : 'right-4'} inset-y-0 z-20 flex items-center justify-end pointer-events-none`}>
+    {!isLastPage && (showMenu || !isKidReader) && (
+      <button onClick={(e) => {e.stopPropagation(); nextPage();}} aria-label={t('kidReaderNext')} className="pointer-events-auto w-20 h-20 min-h-touch-kids min-w-touch-kids bg-white/60 backdrop-blur-md rounded-full flex items-center justify-center shadow-card hover:bg-white hover:scale-105 active:scale-95 transition-all border-4 border-white/40 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary-300">
+        <ChevronRightIcon className={`w-10 h-10 text-primary-600 ${isRtl ? 'rotate-180' : ''}`} />
       </button>
     )}
   </div>
   </>
-  )}
 
  {/* The Book Canvas */}
- <div className="relative w-full max-w-5xl h-full flex items-center justify-center" style={{perspective: '1200px'}}>
+ <div className="kids-reader-book-shell relative h-full flex items-center justify-center" style={{perspective: '1200px'}}>
  <AnimatePresence mode="wait">
  <motion.div
  key={currentPage}
- initial={{opacity: 0, rotateY: pageDirection === 'next' ? (isKidReader ? 18 : 45) : (isKidReader ? -18 : -45), scale: isKidReader ? 0.97 : 0.95}}
- animate={{opacity: 1, rotateY: 0, scale: 1}}
- exit={{opacity: 0, rotateY: pageDirection === 'next' ? (isKidReader ? -18 : -45) : (isKidReader ? 18 : 45), scale: isKidReader ? 0.97 : 0.95}}
- transition={{duration: isKidReader ? 0.38 : 0.5, ease: [0.22, 1, 0.36, 1]}}
+ {...(isKidReader ? kidPageMotion : {
+  initial:{opacity: 0, rotateY: pageDirection === 'next' ? 45 : -45, scale: 0.95},
+  animate:{opacity: 1, rotateY: 0, scale: 1},
+  exit:{opacity: 0, rotateY: pageDirection === 'next' ? -45 : 45, scale: 0.95},
+  transition:{duration: 0.5, ease: [0.22, 1, 0.36, 1]},
+ })}
  className="w-full h-full flex flex-col items-center justify-center"
  style={{
  fontFamily: readingSettings.font === 'dyslexic' ? 'OpenDyslexic, sans-serif' : readingSettings.font === 'comic' ? 'Comic Sans MS, cursive' : 'Nunito, sans-serif'
@@ -1411,7 +1523,7 @@ function BookReader() {
  
  if (isPDF) {
  return (
- <div className={`w-full max-h-[85vh] overflow-hidden rounded-24 shadow-floating bg-card`}>
+ <div className={`w-full max-h-[85vh] overflow-hidden rounded-32 shadow-floating kids-reader-page-card`}>
  <PDFPageViewer 
  pdfUrl={fileUrl} 
  pageNumber={currentPage + 1}
@@ -1429,31 +1541,31 @@ function BookReader() {
 }
  
  return (
- <div className="w-full h-[85vh] flex items-center justify-center">
+ <div className="kids-reader-illustration-wrap w-full">
  <motion.img
  src={fileUrl}
  alt={`Page ${currentPage + 1}`}
- className="max-w-full max-h-full object-contain rounded-24 shadow-floating"
- initial={{opacity: 0, y: 10}}
- animate={{opacity: 1, y: 0}}
- transition={{delay: 0.2}}
+ className={`kids-reader-illustration ${!reducedMotion && isKidReader ? 'kids-reader-illustration-float' : ''}`}
+ {...getMotionProps(reducedMotion, { initial: { opacity: 0, y: 8 }, animate: { opacity: 1, y: 0 }, transition: { duration: 0.32 } })}
  />
  </div>
  );
 })() : (
- <div className={`w-full max-w-3xl p-space-40 md:p-space-64 rounded-32 shadow-floating text-center flex flex-col items-center justify-center ${themeMode === 'night' ? 'bg-surface-800/90 border border-white/10' : 'bg-card'}`}>
+ <div className={`w-full kids-reader-page-card ${themeMode === 'night' ? 'border-white/10' : ''}`}>
+ <div className="kids-reader-text-page">
  {currentPageData.content && (
  <p 
- className={`text-left md:text-center w-full ${isKidReader ? 'font-bold tracking-wide' : ''}`}
+ className={`kids-reader-text-body ${isKidReader ? 'font-bold' : ''}`}
  style={{
- fontSize: `${isKidReader ? Math.max(readingSettings.fontSize, 22) : readingSettings.fontSize}px`,
- lineHeight: isKidReader ? '1.85' : (readingSettings.lineSpacing ? '2' : '1.6'),
+ fontSize: isKidReader ? undefined : `${readingSettings.fontSize}px`,
+ lineHeight: isKidReader ? undefined : (readingSettings.lineSpacing ? '2' : '1.6'),
  letterSpacing: readingSettings.syllabification ? '0.1em' : (isKidReader ? '0.02em' : 'normal')
 }}
  >
  {currentPageData.content}
  </p>
  )}
+ </div>
  </div>
  )}
  </motion.div>
@@ -1514,7 +1626,7 @@ function BookReader() {
    animate={{ y: 0, opacity: 1 }}
    exit={{ y: 40, opacity: 0 }}
    transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
-   className="absolute bottom-8 inset-x-0 z-50 flex justify-center pointer-events-none"
+   className="absolute bottom-24 inset-x-0 z-50 flex justify-center pointer-events-none"
    onClick={(e) => e.stopPropagation()}
  >
    <div className="pointer-events-auto flex items-center gap-space-16 md:gap-space-24 px-space-20 py-space-16 rounded-32 bg-white/85 backdrop-blur-xl border-4 border-white/60 shadow-card">
@@ -1532,7 +1644,7 @@ function BookReader() {
        onClick={toggleAudio}
        disabled={!book.audio_url && (isExtracting || (!currentPageData?.content && !currentPageData?.image_path))}
        aria-label={t('kidReaderPlay')}
-       className={`relative kids-touch-target min-h-touch-kids min-w-touch-kids kids-narration-glow w-28 h-28 rounded-full flex items-center justify-center text-white border-4 border-white active:scale-95 transition-transform focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-secondary-300 ${!reducedMotion && audioPlaybackActive ? 'kids-audio-pulse' : ''} ${audioPlaybackActive ? 'bg-orange-500' : 'bg-gradient-to-br from-magic-500 via-primary-500 to-orange-400'}`}
+       className={`relative kids-touch-target min-h-touch-kids min-w-touch-kids kids-narration-glow w-28 h-28 rounded-full flex items-center justify-center text-white border-4 border-white active:scale-95 transition-transform focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-300 ${!reducedMotion && audioPlaybackActive ? 'kids-audio-pulse kids-reader-audio-active' : ''} ${audioPlaybackActive ? 'bg-orange-500' : 'bg-gradient-to-br from-magic-500 via-primary-500 to-orange-400'}`}
      >
        {!book.audio_url && isExtracting ? (
          <motion.div animate={{rotate: 360}} transition={{repeat: Infinity, ease: 'linear'}} className="w-10 h-10 border-4 border-white border-t-transparent rounded-full" />
@@ -1566,33 +1678,40 @@ function BookReader() {
  </AnimatePresence>
  )}
 
- {/* Persistent Bottom Progress Bar — illustrated moon-soft for kids */}
+ {/* Storybook progress — kids */}
  <div className={`absolute bottom-0 inset-x-0 z-30 px-space-4 md:px-space-12 ${isKidReader ? 'pb-3' : 'pb-6'} pt-10 bg-gradient-to-t from-black/25 to-transparent flex flex-col justify-end pointer-events-none gap-3`}>
         {isKidReader && totalPages > 1 && (
-          <div className="w-full max-w-4xl mx-auto flex items-center justify-center gap-2 flex-wrap px-2">
-            {Array.from({ length: Math.min(totalPages, 20) }).map((_, index) => (
-              <span
-                key={index}
-                className={`rounded-full transition-all duration-300 ${
-                  index === currentPage
-                    ? 'h-3.5 w-9 bg-gradient-to-r from-secondary-200 to-orange-400 kids-progress-dot-active'
-                    : index < currentPage
-                      ? 'h-3.5 w-3.5 bg-secondary-300/80'
-                      : 'h-3.5 w-3.5 bg-white/30'
-                }`}
-                aria-hidden="true"
-              />
-            ))}
+          <div className="kids-reader-progress-story w-full max-w-4xl mx-auto">
+            <p className="kids-reader-progress-label" aria-live="polite">
+              Page {currentPage + 1} · {totalPages} {totalPages === 1 ? 'page' : 'pages'}
+            </p>
+            <div className="kids-reader-star-trail" role="progressbar" aria-valuenow={currentPage + 1} aria-valuemin={1} aria-valuemax={totalPages} aria-label={book.title}>
+              {Array.from({ length: Math.min(totalPages, 24) }).map((_, index) => (
+                <span
+                  key={index}
+                  className={`kids-reader-star ${
+                    index === currentPage
+                      ? 'kids-reader-star-current'
+                      : index < currentPage
+                        ? 'kids-reader-star-done'
+                        : 'kids-reader-star-upcoming'
+                  }`}
+                  aria-hidden="true"
+                />
+              ))}
+            </div>
           </div>
         )}
-        <div className={`w-full max-w-4xl mx-auto ${isKidReader ? 'h-5' : 'h-4'} bg-black/15 rounded-full overflow-hidden border border-white/20 shadow-inner`}>
+        {!isKidReader && (
+        <div className="w-full max-w-4xl mx-auto h-4 bg-black/15 rounded-full overflow-hidden border border-white/20 shadow-inner">
           <motion.div 
-            className={`h-full rounded-full ${isKidReader ? 'bg-gradient-to-r from-magic-300 via-secondary-200 to-orange-300' : 'bg-gradient-to-r from-primary-400 to-secondary-400'}`}
+            className="h-full rounded-full bg-gradient-to-r from-primary-400 to-secondary-400"
             initial={{width: 0}}
             animate={{width: `${progress}%`}}
-            transition={{duration: isKidReader ? 0.4 : 0.5, ease: [0.22, 1, 0.36, 1]}}
+            transition={reducedMotion ? { duration: 0 } : kidsProgressFill.transition}
           />
         </div>
+        )}
  </div>
 
  {showAudioPlayer && book.audio_url && !isKidReader && (
@@ -1659,6 +1778,10 @@ function BookReader() {
      variant="bedtime"
      title={t('bedtimeStoryDone')}
      subtitle={t('bedtimeStoryEncourage')}
+     coverUrl={coverBleedUrl}
+     bookTitle={book.title}
+     isFavorite={isFavorite}
+     onFavorite={toggleBookFavorite}
      primaryLabel={t('kidReaderAnother')}
      onPrimary={() => {
        setShowKidCelebration(false);

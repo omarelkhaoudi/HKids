@@ -8,7 +8,14 @@ import { getMotionProps, kidsPageEnter, kidsBadgePop } from '../../constants/kid
 
 const STAR_COUNT = 12;
 const CONFETTI_COUNT = 24;
-const COLORS = ['#FBBF24', '#3B9AE8', '#2DD4BF', '#F472B6', '#A78BFA', '#F59E0B'];
+const COLORS = [
+  'var(--color-secondary-400)',
+  'var(--color-primary-400)',
+  'var(--color-success-400)',
+  'var(--color-orange-400)',
+  'var(--color-magic-400)',
+  'var(--color-secondary-300)',
+];
 
 /**
  * Celebration overlay. Bedtime variant: moon/stars, soft encouragement, up to 3 CTAs.
@@ -27,6 +34,10 @@ export const KidsCelebration = memo(function KidsCelebration({
   durationMs = 1800,
   autoDismiss = false,
   variant = 'default',
+  coverUrl = null,
+  bookTitle = '',
+  isFavorite = false,
+  onFavorite,
 }) {
   const reducedMotion = useReducedMotion();
   const { t } = useLanguage();
@@ -43,7 +54,7 @@ export const KidsCelebration = memo(function KidsCelebration({
       {active && (
         <motion.div
           className={`fixed inset-0 z-[60] flex items-center justify-center p-6 backdrop-blur-sm ${
-            isBedtime ? 'bg-[#0f172a]/55' : 'bg-black/35'
+            isBedtime ? 'bg-surface-900/55' : 'bg-black/35'
           }`}
           {...getMotionProps(reducedMotion, {
             initial: { opacity: 0 },
@@ -59,7 +70,7 @@ export const KidsCelebration = memo(function KidsCelebration({
             <div className="absolute inset-0 pointer-events-none overflow-hidden" aria-hidden="true">
               {isBedtime ? (
                 <>
-                  <div className="absolute top-16 right-16 w-24 h-24 rounded-full bg-amber-100/80 shadow-[0_0_60px_20px_rgba(253,230,138,0.35)]" />
+                  <div className="absolute top-16 right-16 w-24 h-24 rounded-full bg-secondary-100/80 shadow-[0_0_60px_20px_rgba(var(--color-secondary-400-rgb),0.35)]" />
                   {Array.from({ length: STAR_COUNT }).map((_, i) => (
                     <motion.span
                       key={`s-${i}`}
@@ -112,21 +123,39 @@ export const KidsCelebration = memo(function KidsCelebration({
           )}
 
           <motion.div
-            className={`relative z-10 kids-premium-panel max-w-md w-full p-8 md:p-10 text-center shadow-kids-soft ${
-              isBedtime ? 'border-amber-100/40' : ''
+            className={`relative z-10 kids-premium-panel max-w-md w-full p-8 md:p-10 text-center shadow-floating rounded-32 ${
+              isBedtime ? 'border-secondary-100/40' : ''
             }`}
             {...getMotionProps(reducedMotion, kidsPageEnter)}
           >
+            {coverUrl && (
+              <div className="mx-auto mb-6 w-40 h-52 rounded-24 overflow-hidden border-4 border-white/70 shadow-floating">
+                <img src={coverUrl} alt="" className="w-full h-full object-cover" />
+              </div>
+            )}
             <motion.div className="flex justify-center mb-4" {...getMotionProps(reducedMotion, kidsBadgePop)}>
               <KidsMascot mood="celebrate" size="small" showBubble={false} className="!pointer-events-none" />
             </motion.div>
-            <h2 className={`text-3xl md:text-4xl font-black mb-2 ${isBedtime ? 'text-indigo-700' : 'text-primary-600'}`}>
+            <h2 className={`text-3xl md:text-4xl font-black mb-2 ${isBedtime ? 'text-magic-600' : 'text-primary-600'}`}>
               {title || t('kidBookDone')}
             </h2>
+            {bookTitle && (
+              <p className="text-body font-bold text-foreground mb-2 line-clamp-2">{bookTitle}</p>
+            )}
             {subtitle && (
               <p className="text-lg font-bold text-foreground-secondary mb-6 line-clamp-2">{subtitle}</p>
             )}
             <div className="flex flex-col gap-3">
+              {onFavorite && (
+                <KidsButton
+                  onClick={onFavorite}
+                  variant="ghost"
+                  className="!min-h-[56px] !w-full !text-lg"
+                  tone={isFavorite ? 'accent' : 'primary'}
+                >
+                  {isFavorite ? t('yourFavorites') : t('addToFavorites')}
+                </KidsButton>
+              )}
               {primaryLabel && onPrimary && (
                 <KidsButton onClick={onPrimary} className="!min-h-[56px] !w-full !text-lg" tone={isBedtime ? 'accent' : 'primary'}>
                   {primaryLabel}
