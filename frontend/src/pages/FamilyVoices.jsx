@@ -430,15 +430,20 @@ function FamilyVoices() {
  </div>
 
  {activeProfiles.length === 0 ? (
- <Card className="text-center py-16 border-2 border-dashed border-border bg-card shadow-sm flex flex-col items-center">
- <div className="w-24 h-24 bg-primary-50 rounded-full flex items-center justify-center mb-4">
- <MicrophoneIcon className="w-12 h-12 text-foreground-400" />
- </div>
- <h3 className="text-2xl font-black text-foreground mb-2">{t('parentVoiceEmptyTitle')}</h3>
- <p className="text-foreground-muted max-w-md mx-auto mb-6 font-medium">
+ <Card className="text-center py-space-32 rounded-32 border-2 border-dashed border-border/60 bg-card shadow-card flex flex-col items-center parent-empty-state">
+ <motion.div
+ className="text-6xl mb-space-16"
+ animate={{ y: [0, -6, 0] }}
+ transition={{ duration: 3.6, repeat: Infinity, ease: 'easeInOut' }}
+ aria-hidden="true"
+ >
+ 🎙️
+ </motion.div>
+ <h3 className="text-heading-l font-black text-foreground mb-2">{t('parentVoiceEmptyTitle')}</h3>
+ <p className="text-body-lg text-foreground-secondary max-w-md mx-auto mb-space-24 font-medium">
  {t('parentVoiceEmptyDesc')}
  </p>
- <Button onClick={() => setWizardStep(1)} variant="primary" size="lg" className="rounded-full shadow-lg">
+ <Button onClick={() => setWizardStep(1)} variant="primary" size="lg" className="rounded-32 shadow-floating min-h-touch font-bold">
  {t('parentVoiceCreateFirst')}
  </Button>
  </Card>

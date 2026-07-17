@@ -148,48 +148,52 @@ function ParentKidsProfiles() {
 }
 
  return (
- <div className="min-h-screen bg-gradient-to-br from-surface-50 to-surface-100 dark:from-surface-900 dark:to-surface-800" dir={isRtl ? 'rtl' : 'ltr'}>
- <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
- <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
- <div className="flex items-center gap-4">
- <Link to="/">
+ <div className="min-h-screen parent-home-shell bg-gradient-to-br from-surface-50 to-surface-100 dark:from-surface-900 dark:to-surface-800" dir={isRtl ? 'rtl' : 'ltr'}>
+ <div className="mx-auto max-w-7xl px-space-16 py-space-32 sm:px-space-24 lg:px-space-32">
+ <header className="mb-space-32 flex flex-col gap-space-16 sm:flex-row sm:items-center sm:justify-between">
+ <div className="flex items-center gap-space-16">
+ <Link to="/" className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-400 rounded-2xl">
  <Logo size="default" showText={true} />
  </Link>
  <div>
- <h1 className="text-2xl font-bold text-foreground">
+ <h1 className="text-hero font-black text-foreground tracking-tight">
  {t('parentProfilesTitle')}
  </h1>
- <p className="text-sm text-foreground-muted">
+ <p className="text-body-lg text-foreground-secondary font-medium mt-1">
  {t('parentProfilesDesc')}
  </p>
  </div>
  </div>
- <div className="flex gap-3">
+ <div className="flex gap-space-12">
  <Link
  to="/parent"
- className="rounded-2xl bg-card px-4 py-2 font-bold text-foreground-secondary shadow-sm transition hover:bg-surface-secondary"
+ className="rounded-32 bg-card px-space-16 py-space-12 font-bold text-foreground-secondary shadow-card border border-border/50 transition hover:shadow-floating min-h-touch inline-flex items-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-400"
  >
  {t('parentProfilesDashboard')}
  </Link>
  <button
+ type="button"
  onClick={handleLogout}
- className="inline-flex items-center gap-2 rounded-2xl bg-primary-500 px-4 py-2 font-bold text-white transition hover:bg-primary-600"
+ className="inline-flex items-center gap-2 rounded-32 bg-primary-500 px-space-16 py-space-12 font-bold text-white transition hover:bg-primary-600 min-h-touch focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-400"
  >
- <LogOutIcon className="h-5 w-5" />
+ <LogOutIcon className="h-5 w-5" aria-hidden="true" />
  <span>{t('parentProfilesLogout')}</span>
  </button>
  </div>
- </div>
+ </header>
 
- <ParentHubNav className="mb-6" />
+ <ParentHubNav className="mb-space-32" />
 
- <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-3">
+ <div className="mb-space-32 grid grid-cols-1 gap-space-16 md:grid-cols-3">
  {stats.map((item) => (
- <div key={item.label} className="rounded-3xl bg-card p-5 shadow-sm">
- <span className="text-sm font-bold text-foreground-muted">
+ <div key={item.label} className="parent-warm-card text-center md:text-start">
+ <span className="text-3xl mb-space-8 block" aria-hidden="true">
+ {item.label === t('parentProfilesStatProfiles') ? '👧' : item.label === t('parentProfilesStatAvatar') ? '📸' : '✨'}
+ </span>
+ <span className="text-caption font-bold text-foreground-muted uppercase tracking-wide">
  {item.label}
  </span>
- <span className="mt-1 block text-3xl font-black text-foreground">
+ <span className="mt-1 block text-heading-xl font-black text-foreground">
  {item.value}
  </span>
  </div>
