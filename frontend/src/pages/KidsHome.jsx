@@ -419,7 +419,7 @@ function KidsHome() {
               {t('seeAll')}
             </button>
           </div>
-          <div className="kids-discovery-rail pb-space-8 !gap-space-12 md:!gap-space-16">
+          <div className="kids-discovery-rail pb-space-12 !gap-space-16 md:!gap-space-20">
             {kidCategories.map((category) => (
               <KidCategoryCard key={category.id} category={category} compact />
             ))}

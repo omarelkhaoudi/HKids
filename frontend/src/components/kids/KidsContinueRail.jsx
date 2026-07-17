@@ -35,7 +35,7 @@ export function KidsContinueRail({
         )}
       </div>
 
-      <div className="flex gap-space-20 md:gap-space-28 overflow-x-auto px-space-8 md:px-space-16 pb-space-16 snap-x snap-mandatory kids-scroll-smooth custom-scrollbar">
+      <div className="flex gap-space-28 md:gap-space-32 overflow-x-auto px-space-8 md:px-space-16 pb-space-16 snap-x snap-mandatory kids-scroll-smooth custom-scrollbar">
         {books.map((book) => {
           const progress = Math.min(100, Math.max(0, Number(book.kid_progress_percent || book.progress || 0)));
 
@@ -66,7 +66,7 @@ export function KidsContinueRail({
               </button>
 
               <div className="mt-space-12 px-0.5 space-y-space-8 flex flex-col grow">
-                <h3 className="text-body font-semibold text-foreground leading-snug line-clamp-2">
+                <h3 className="kids-book-title">
                   {book.title}
                 </h3>
                 <div className="flex items-center justify-between gap-2">

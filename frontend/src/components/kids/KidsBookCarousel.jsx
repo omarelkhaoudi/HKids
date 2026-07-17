@@ -22,7 +22,7 @@ export function KidsSectionHeader({
   const theme = getKidsModality(modality || 'books');
 
   return (
-    <div className="mb-space-20 flex items-end justify-between gap-space-12 px-space-8 md:px-space-16">
+    <div className="mb-space-24 flex items-end justify-between gap-space-12 px-space-8 md:px-space-16">
       <div className="min-w-0 flex-1">
         <h2 className="kids-shelf-title !mb-0">
           {emoji && <span className="text-lg opacity-55" aria-hidden="true">{emoji}</span>}
@@ -120,7 +120,7 @@ export function KidsBookCarousel({
       />
       <div
         ref={carouselRef}
-        className="kids-discovery-rail !gap-space-20 md:!gap-space-24"
+        className="kids-discovery-rail !gap-space-28 md:!gap-space-32"
       >
         {books.map((book) => (
           <div key={book.id} className="snap-start shrink-0">
