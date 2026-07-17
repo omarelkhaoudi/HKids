@@ -25,14 +25,14 @@ export function KidsSectionHeader({
     <div className="mb-space-16 flex items-end justify-between gap-space-12 px-space-8 md:px-space-16">
       <div className="min-w-0 flex-1">
         <h2 className="kids-shelf-title !mb-0">
-          {emoji && <span className="text-2xl md:text-3xl opacity-80" aria-hidden="true">{emoji}</span>}
-          {Icon && <Icon className={`h-6 w-6 text-primary-500`} />}
+          {emoji && <span className="text-2xl opacity-75" aria-hidden="true">{emoji}</span>}
+          {Icon && <Icon className="h-5 w-5 text-primary-500" />}
           {!hideTitle && title && (
-            <span className="text-foreground">{title}</span>
+            <span className="text-foreground font-semibold">{title}</span>
           )}
         </h2>
         {subtitle && (
-          <p className="mt-space-4 text-caption md:text-body font-medium text-foreground-muted line-clamp-1 px-1">
+          <p className="mt-space-8 text-body font-medium text-foreground-muted line-clamp-2 px-1 max-w-xl">
             {subtitle}
           </p>
         )}
@@ -42,7 +42,7 @@ export function KidsSectionHeader({
           <button
             type="button"
             onClick={onSeeAll}
-            className="kids-touch-target inline-flex min-h-touch items-center rounded-full border border-border bg-card px-space-16 py-space-8 text-caption font-bold text-primary-600 shadow-soft hover:bg-primary-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-300"
+            className="kids-touch-target inline-flex min-h-touch items-center rounded-full border border-border/70 bg-card px-space-16 py-space-8 text-caption font-semibold text-primary-600 shadow-soft hover:bg-primary-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-300"
           >
             {seeAllLabel}
           </button>
@@ -52,18 +52,18 @@ export function KidsSectionHeader({
             <button
               type="button"
               onClick={onScrollLeft}
-              className={`kids-touch-target p-3 rounded-full bg-card shadow-soft border border-border ${theme.borderHover} transition-colors text-foreground-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-300`}
+              className={`kids-touch-target p-3 rounded-full bg-card shadow-soft border border-border/70 ${theme.borderHover} transition-colors text-foreground-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-300`}
               aria-label="Scroll left"
             >
-              <ChevronLeftIcon className={`w-6 h-6 ${isRtl ? 'rotate-180' : ''}`} />
+              <ChevronLeftIcon className={`w-5 h-5 ${isRtl ? 'rotate-180' : ''}`} />
             </button>
             <button
               type="button"
               onClick={onScrollRight}
-              className={`kids-touch-target p-3 rounded-full bg-card shadow-soft border border-border ${theme.borderHover} transition-colors text-foreground-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-300`}
+              className={`kids-touch-target p-3 rounded-full bg-card shadow-soft border border-border/70 ${theme.borderHover} transition-colors text-foreground-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-300`}
               aria-label="Scroll right"
             >
-              <ChevronRightIcon className={`w-6 h-6 ${isRtl ? 'rotate-180' : ''}`} />
+              <ChevronRightIcon className={`w-5 h-5 ${isRtl ? 'rotate-180' : ''}`} />
             </button>
           </div>
         )}

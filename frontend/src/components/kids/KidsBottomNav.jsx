@@ -1,15 +1,15 @@
 import { motion } from 'framer-motion';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useLanguage } from '../../context/LanguageContext';
-import KidsButton from './KidsButton';
+import { useReducedMotion } from '../../hooks/useReducedMotion';
 import { HomeIcon, BookIcon, AudioIcon, HeartIcon } from '../Icons';
 
 const NAV_ITEMS = [
-  { id: 'home', path: '/kids', match: 'exact', labelKey: 'kidsNavHome', icon: HomeIcon, tone: 'primary' },
-  { id: 'library', path: '/kids/library', match: 'prefix', labelKey: 'library', icon: BookIcon, tone: 'primary' },
-  { id: 'audio', path: '/kids/audio', match: 'audio', labelKey: 'kidsNavAudio', icon: AudioIcon, tone: 'orange' },
-  { id: 'favorites', path: '/favorites', match: 'exact', labelKey: 'yourFavorites', icon: HeartIcon, tone: 'orange' },
-  { id: 'profile', path: '/kids#profile', match: 'hash', labelKey: 'profile', icon: null, emoji: '👤', tone: 'primary' },
+  { id: 'home', path: '/kids', match: 'exact', labelKey: 'kidsNavHome', icon: HomeIcon },
+  { id: 'library', path: '/kids/library', match: 'prefix', labelKey: 'library', icon: BookIcon },
+  { id: 'audio', path: '/kids/audio', match: 'audio', labelKey: 'kidsNavAudio', icon: AudioIcon },
+  { id: 'favorites', path: '/favorites', match: 'exact', labelKey: 'yourFavorites', icon: HeartIcon },
+  { id: 'profile', path: '/kids#profile', match: 'hash', labelKey: 'profile', icon: null, emoji: '👤' },
 ];
 
 function isActiveItem(location, item) {
@@ -36,40 +36,37 @@ export function KidsBottomNav() {
   const navigate = useNavigate();
   const location = useLocation();
   const { t } = useLanguage();
+  const reducedMotion = useReducedMotion();
 
   return (
-    <div className="fixed bottom-0 left-0 w-full p-space-4 md:p-6 z-30 pointer-events-none flex justify-center">
+    <div className="fixed bottom-0 inset-inline-0 p-space-12 md:p-space-20 z-30 pointer-events-none flex justify-center">
       <motion.nav
-        initial={{ y: 80 }}
-        animate={{ y: 0 }}
-        transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+        initial={reducedMotion ? false : { y: 40, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
         aria-label={t('kidsNavLabel')}
-        className="pointer-events-auto bg-card/95 dark:bg-surface-900/92 backdrop-blur-md px-space-12 py-space-12 md:px-space-20 md:py-space-16 rounded-32 shadow-floating border border-border/70 flex gap-space-8 md:gap-space-12 justify-center max-w-full"
+        className="kids-bottom-nav-shell pointer-events-auto px-space-12 py-space-8 md:px-space-16 rounded-full flex gap-space-4 md:gap-space-8 justify-center max-w-full"
       >
         {NAV_ITEMS.map((item) => {
           const active = isActiveItem(location, item);
           const Icon = item.icon;
 
           return (
-            <KidsButton
+            <button
               key={item.id}
-              variant={active ? 'primary' : 'ghost'}
-              tone={active ? item.tone : undefined}
-              size="sm"
-              icon={Icon || undefined}
-              className="!rounded-full !px-space-4 md:!px-5 !min-h-[56px] !text-base md:!text-lg"
+              type="button"
               onClick={() => navigate(item.path)}
               aria-label={t(item.labelKey)}
+              aria-current={active ? 'page' : undefined}
+              className={`kids-bottom-nav-item focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-400 ${active ? 'is-active' : ''}`}
             >
-              {!Icon && item.emoji ? (
-                <span className="flex items-center gap-2">
-                  <span className="text-2xl" aria-hidden="true">{item.emoji}</span>
-                  <span className="hidden sm:inline">{t(item.labelKey)}</span>
-                </span>
+              {Icon ? (
+                <Icon className="h-5 w-5 md:h-6 md:w-6" strokeWidth={active ? 2.25 : 1.75} />
               ) : (
-                <span className="hidden sm:inline">{t(item.labelKey)}</span>
+                <span className="text-lg leading-none" aria-hidden="true">{item.emoji}</span>
               )}
-            </KidsButton>
+              <span className="hidden sm:block max-w-[4.5rem] truncate">{t(item.labelKey)}</span>
+            </button>
           );
         })}
       </motion.nav>
