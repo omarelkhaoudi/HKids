@@ -17,6 +17,7 @@ import {useAuth} from '../context/AuthContext';
 import {useLanguage} from '../context/LanguageContext';
 import {ChevronLeftIcon, ChevronRightIcon, HomeIcon, BookIcon, StarIcon, PlayIcon, PauseIcon, SettingsIcon, WarningIcon, MoonIcon, SunIcon, MaximizeIcon, MinimizeIcon} from '../components/Icons';
 import {getImageUrl} from '../utils/imageUrl';
+import {resolveBookCoverUrl} from '../utils/bookCover';
 import {getMotionProps, kidsBookOpen, kidsProgressFill} from '../constants/kidsMotion';
 import ReadingAidPanel from '../components/ReadingAidPanel';
 import {ContentReportModal} from '../components/parent/ContentReportModal';
@@ -1306,7 +1307,7 @@ function BookReader() {
  const isLastPage = currentPage === totalPages - 1;
  const progress = ((currentPage + 1) / totalPages) * 100;
  const audioPlaybackActive = book.audio_url ? audioPlayer.playing : isPlaying;
- const coverBleedUrl = book?.cover_image ? getImageUrl(book.cover_image, 'book') : null;
+ const coverBleedUrl = resolveBookCoverUrl(book);
  const kidPageMotion = reducedMotion
   ? getMotionProps(reducedMotion, kidsBookOpen)
   : {

@@ -1,5 +1,5 @@
 import { getFileUrl } from '../../utils/fileUrl';
-import { getImageUrl } from '../../utils/imageUrl';
+import { resolveBookCoverUrl } from '../../utils/bookCover';
 import { storage } from '../../utils/storage';
 import {
   assertParentalAccess,
@@ -55,7 +55,7 @@ async function fetchAsBlob(url, { signal, onProgress } = {}) {
 }
 
 function serializeBook(book) {
-  const coverUrl = ensureAbsoluteUrl(getImageUrl(book.cover_image));
+  const coverUrl = ensureAbsoluteUrl(resolveBookCoverUrl(book));
   const audioUrl = ensureAbsoluteUrl(getFileUrl(book.audio_url));
   const fileUrl = ensureAbsoluteUrl(getFileUrl(book.file_url || book.pdf_url));
 

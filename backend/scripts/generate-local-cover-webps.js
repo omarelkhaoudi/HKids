@@ -96,7 +96,10 @@ async function main() {
     }
 
     console.log(`   🖌️  ${item.slug} — (${index + 1}/${items.length})`);
-    const { buffer } = await generateCoverPngBuffer(item, { provider });
+    const { buffer, source } = await generateCoverPngBuffer(item, { provider });
+    if (source === 'svg-fallback') {
+      throw new Error('Refusing SVG icon-card fallback — use rebuild-local-covers-from-themes.js');
+    }
     await saveAsWebp(buffer, outPath);
     console.log(`   ✅ ${item.slug}.webp`);
     return 'updated';

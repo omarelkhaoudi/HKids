@@ -7,7 +7,7 @@ import {useToast} from '../components/ToastProvider';
 import {BookGridSkeleton} from '../components/SkeletonLoader';
 import {HistoryIcon, BookIcon, ChevronLeftIcon, TrashIcon, StarIcon} from '../components/Icons';
 import {Logo} from '../components/Logo';
-import {getImageUrl} from '../utils/imageUrl';
+import {KidsBookCover} from '../components/kids/KidsBookCover';
 import {useLanguage} from '../context/LanguageContext';
 import {useAuth} from '../context/AuthContext';
 import {KidsPageShell} from '../components/kids/KidsPageShell';
@@ -351,17 +351,7 @@ function History() {
  {books.map((book, index) => {
  const historyItem = history.find(h => h.bookId === book.id);
  const progress = book.page_count > 0 ? Math.round(((historyItem?.page || 0) + 1) / book.page_count * 100) : 0;
- const coverImageUrl = book.cover_image ? getImageUrl(book.cover_image) : null;
- 
- // Debug: log pour vérifier les données
- console.log(`[History] Book ${index + 1}:`, {
- id: book.id,
- title: book.title,
- cover_image: book.cover_image,
- coverImageUrl: coverImageUrl,
- hasCoverImage: !!book.cover_image
-});
- 
+
  return (
  <motion.div
  key={book.id}
@@ -382,40 +372,16 @@ function History() {
  className="bg-card rounded-2xl border-2 border-border overflow-hidden group block hover:border-primary-300 hover:shadow-xl transition-all shadow-lg"
  >
  <div className="flex flex-col sm:flex-row items-center sm:items-start gap-3 sm:gap-4 p-3 sm:p-4 md:p-6">
- {/* Image de couverture circulaire */}
  <div className="flex-shrink-0">
- <motion.div
- className="w-24 h-24 sm:w-32 sm:h-32 rounded-full overflow-hidden shadow-lg border-4 border-white ring-2 ring-surface-200 group-hover:ring-primary-300 transition-all relative bg-gradient-to-br from-surface-100 to-surface-50"
- whileHover={{scale: 1.05}}
- >
- {coverImageUrl ? (
- <>
- <img
- src={coverImageUrl}
+ <div className="w-24 h-32 sm:w-28 sm:h-36 rounded-2xl overflow-hidden shadow-lg border border-border relative bg-surface-secondary">
+ <KidsBookCover
+ book={book}
  alt={book.title}
- className="w-full h-full object-cover"
- onError={(e) => {
- console.error('[History] Image load error:', coverImageUrl);
- e.target.style.display = 'none';
- const fallback = e.target.parentElement.querySelector('.image-fallback');
- if (fallback) fallback.style.display = 'flex';
-}}
- onLoad={() => {
- console.log('[History] Image loaded successfully:', coverImageUrl);
-}}
+ imgClassName="absolute inset-0 w-full h-full object-cover"
  />
- <div className="image-fallback w-full h-full absolute inset-0 flex items-center justify-center bg-gradient-to-br from-surface-100 to-surface-50" style={{display: 'none'}}>
- <BookIcon className="w-12 h-12 text-surface-400" />
  </div>
- </>
- ) : (
- <div className="w-full h-full flex items-center justify-center">
- <BookIcon className="w-12 h-12 sm:w-16 sm:h-16 text-surface-400" />
  </div>
- )}
- </motion.div>
- </div>
- <div className="flex-1 w-full bg-gradient-to-br from-primary-50/30 to-secondary-50/30 rounded-3xl p-4 sm:p-6">
+ <div className="flex-1 w-full rounded-3xl p-4 sm:p-6">
  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start mb-3 gap-2">
  <div className="flex-1">
  <h3 className="font-bold text-xl text-foreground group-hover:text-foreground-600 transition-colors mb-2">

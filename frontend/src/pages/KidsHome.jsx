@@ -174,14 +174,21 @@ function KidsHome() {
   const continueBooks = useMemo(
     () => progressRows
       .filter((item) => !item.completed && Number(item.progress_percent || 0) > 0)
-      .map((item) => ({
-        id: item.book_id,
-        title: item.book_title,
-        cover_image: item.cover_image,
-        kid_progress_percent: item.progress_percent,
-        current_page: item.current_page,
-      })),
-    [progressRows],
+      .map((item) => {
+        const published = publishedBooks.find((book) => book.id === item.book_id);
+        return {
+          ...(published || {}),
+          id: item.book_id,
+          title: item.book_title || published?.title,
+          cover_image: published?.cover_image || item.cover_image,
+          slug: published?.slug || item.slug,
+          theme: published?.theme || item.theme,
+          author: published?.author || item.author,
+          kid_progress_percent: item.progress_percent,
+          current_page: item.current_page,
+        };
+      }),
+    [progressRows, publishedBooks],
   );
 
   const featuredBook = useMemo(() => {

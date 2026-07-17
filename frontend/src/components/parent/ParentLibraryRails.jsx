@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion';
 import { useReducedMotion } from '../../hooks/useReducedMotion';
 import { getHoverMotion, getMotionProps, kidsCardAppear } from '../../constants/kidsMotion';
-import { getFileUrl } from '../../utils/fileUrl';
+import { KidsBookCover } from '../kids/KidsBookCover';
 import { ParentEmptyState } from './ParentEmptyState';
 
 function LibraryRail({ title, subtitle, items, emptyEmoji, emptyTitle, emptyDesc, t, renderItem }) {
@@ -43,18 +43,11 @@ function BookCoverCard({ book, badge }) {
   return (
     <article className="group">
       <div className="relative aspect-[3/4] rounded-2xl overflow-hidden shadow-card bg-surface-secondary mb-space-8">
-        {book.cover_image ? (
-          <img
-            src={getFileUrl(book.cover_image)}
-            alt=""
-            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-            loading="lazy"
-          />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center text-5xl bg-gradient-to-br from-primary-100 to-magic-100" aria-hidden="true">
-            📚
-          </div>
-        )}
+        <KidsBookCover
+          book={book}
+          alt={book.title || ''}
+          imgClassName="absolute inset-0 w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+        />
         {badge && (
           <span className="absolute top-2 inset-inline-end-2 rounded-full bg-card/90 backdrop-blur-sm px-2 py-0.5 text-caption font-bold text-foreground shadow-soft">
             {badge}
@@ -73,7 +66,7 @@ function BookCoverCard({ book, badge }) {
           </div>
         )}
       </div>
-      <p className="text-body font-bold text-foreground line-clamp-2 leading-snug">{book.title}</p>
+      <p className="kids-book-title text-sm line-clamp-2 leading-snug">{book.title}</p>
     </article>
   );
 }

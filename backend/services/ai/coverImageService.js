@@ -139,8 +139,8 @@ export async function generateCoverPngBuffer(item, { provider } = {}) {
   }
 
   try {
-    const buffer = await generateSvgFallbackPng(item);
-    return { buffer, source: 'svg-fallback' };
+    // Never persist SVG icon-card fallbacks as "covers" — they regress the kids UI.
+    throw lastError || new Error('Pollinations unavailable; refusing SVG icon-card fallback');
   } catch (fallbackError) {
     throw lastError || fallbackError;
   }

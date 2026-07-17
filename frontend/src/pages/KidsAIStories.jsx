@@ -24,8 +24,9 @@ import { useAuth } from '../context/AuthContext';
 import { ContentReportModal } from '../components/parent/ContentReportModal';
 import { useReducedMotion } from '../hooks/useReducedMotion';
 import { getHoverMotion } from '../constants/kidsMotion';
+import { KidsBookCover } from '../components/kids/KidsBookCover';
 import {
-  BRAND_HERO_GRADIENT, BRAND_SEMANTIC, hubGradientAtIndex, storyGradientAtIndex,
+  BRAND_HERO_GRADIENT, BRAND_SEMANTIC,
 } from '../constants/brandTheme';
 
 // --- MAGIC CELEBRATION PARTICLES ---
@@ -76,62 +77,20 @@ function MagicCelebration({ active, onComplete }) {
 }
 
 // --- DYNAMIC COVER GENERATOR ---
-function getThemeAssets(theme) {
-  const t = (theme || '').toLowerCase();
-  let index = 0;
-  if (t.includes('espace') || t.includes('space') || t.includes('etoile')) index = 0;
-  else if (t.includes('foret') || t.includes('nature') || t.includes('animaux')) index = 1;
-  else if (t.includes('magie') || t.includes('sorcier') || t.includes('fee')) index = 2;
-  else if (t.includes('ocean') || t.includes('mer') || t.includes('poisson')) index = 3;
-  else if (t.includes('chevalier') || t.includes('chateau') || t.includes('dragon')) index = 4;
-  else if (t.includes('reve') || t.includes('nuit') || t.includes('sommeil')) index = 5;
-  else index = 6;
-
-  const emojis = ['🚀', '🦊', '🪄', '🐋', '🐉', '🌙', '📚'];
-  const icons = ['⭐', '🍃', '✨', '🌊', '🛡️', '☁️', '✨'];
-  return { gradient: storyGradientAtIndex(index), emoji: emojis[index] || '📚', icon: icons[index] || '✨' };
-}
-
-function DynamicCover({ story, className = "" }) {
-  const assets = getThemeAssets(story.theme);
-  const coverUrl = story.cover_image_url;
-  
-  if (coverUrl) {
-    return (
-      <div className={`relative overflow-hidden ${className}`}>
-        <img 
-          src={coverUrl} 
-          alt={story.title}
-          className="w-full h-full object-cover"
-          loading="lazy"
-          onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }}
-        />
-        <div className={`w-full h-full bg-gradient-to-br ${assets.gradient} flex-col items-center justify-center p-6 text-center shadow-inner hidden`}>
-          <div className="text-6xl md:text-7xl mb-4 filter drop-shadow-lg">{assets.emoji}</div>
-          <h3 className="text-white font-black text-xl md:text-2xl leading-tight filter drop-shadow-md line-clamp-3">{story.title}</h3>
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/10 pointer-events-none" />
-        </div>
-      </div>
-    );
-  }
-  
+function DynamicCover({ story, className = '' }) {
   return (
-    <div className={`relative overflow-hidden bg-gradient-to-br ${assets.gradient} ${className} flex flex-col items-center justify-center p-6 text-center shadow-inner`}>
-      <div className="absolute top-2 left-2 text-white/20 text-2xl">{assets.icon}</div>
-      <div className="absolute bottom-2 right-2 text-white/20 text-3xl">{assets.icon}</div>
-      <div className="absolute top-1/2 left-1/4 text-white/10 text-4xl -translate-y-1/2">{assets.icon}</div>
-      <motion.div 
-        initial={{ scale: 0.8, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        transition={{ duration: 0.5 }}
-        className="text-6xl md:text-7xl mb-4 filter drop-shadow-lg"
-      >
-        {assets.emoji}
-      </motion.div>
-      <h3 className="text-white font-black text-xl md:text-2xl leading-tight filter drop-shadow-md line-clamp-3">
-        {story.title}
-      </h3>
-      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/10 pointer-events-none" />
+    <div className={`relative overflow-hidden ${className}`}>
+      <KidsBookCover
+        book={{
+          title: story.title,
+          slug: story.slug,
+          cover_image: story.cover_image_url || story.cover_image,
+          cover_image_url: story.cover_image_url,
+          theme: story.theme,
+        }}
+        alt={story.title}
+        imgClassName="absolute inset-0 w-full h-full object-cover"
+      />
     </div>
   );
 }

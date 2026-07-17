@@ -2,6 +2,7 @@ import React, { memo } from 'react';
 import { motion } from 'framer-motion';
 import { Badge } from './Badge';
 import { useReducedMotion } from '../../hooks/useReducedMotion';
+import { LOCAL_BOOK_COVERS_BASE } from '../../utils/bookCover';
 
 export const StoryCard = memo(function StoryCard({
   title,
@@ -13,6 +14,7 @@ export const StoryCard = memo(function StoryCard({
 }) {
   const reducedMotion = useReducedMotion();
   const hoverMotion = reducedMotion ? {} : { whileHover: { y: -6, scale: 1.02 } };
+  const src = coverUrl || `${LOCAL_BOOK_COVERS_BASE}/default.webp`;
 
   return (
     <motion.button
@@ -26,12 +28,16 @@ export const StoryCard = memo(function StoryCard({
       ].join(' ')}
       aria-label={title}
     >
-      <div className="relative aspect-[16/10] bg-surface-secondary overflow-hidden">
-        {coverUrl ? (
-          <img src={coverUrl} alt="" className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy" />
-        ) : (
-          <div className="absolute inset-0 grid place-items-center text-5xl bg-gradient-to-br from-magic-100 to-primary-100" aria-hidden="true">✨</div>
-        )}
+      <div className="relative aspect-[3/4] bg-surface-secondary overflow-hidden">
+        <img
+          src={src}
+          alt=""
+          className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+          loading="lazy"
+          onError={(event) => {
+            event.currentTarget.src = `${LOCAL_BOOK_COVERS_BASE}/default.webp`;
+          }}
+        />
         {badge ? (
           <div className="absolute top-space-12 left-space-12">
             <Badge variant="magic" size="sm">{badge}</Badge>

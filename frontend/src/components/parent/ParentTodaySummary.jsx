@@ -7,7 +7,7 @@ import {
   getHoverMotion, getMotionProps, kidsCardAppear, kidsStaggerContainer,
 } from '../../constants/kidsMotion';
 import { formatParentDuration } from './parentFormatters';
-import { getFileUrl } from '../../utils/fileUrl';
+import { KidsBookCover } from '../kids/KidsBookCover';
 
 function SummaryCard({ icon, label, value, detail, accent = 'primary', index = 0 }) {
   const reducedMotion = useReducedMotion();
@@ -63,12 +63,12 @@ function ContinueTogetherCard({ book, t, index }) {
       {...getHoverMotion(reducedMotion)}
       className="parent-warm-card md:col-span-2 flex flex-col sm:flex-row gap-space-16 items-center"
     >
-      <div className="shrink-0 w-24 h-32 rounded-2xl overflow-hidden shadow-card bg-surface-secondary">
-        {book.cover_image ? (
-          <img src={getFileUrl(book.cover_image)} alt="" className="w-full h-full object-cover" />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center text-4xl bg-gradient-to-br from-primary-100 to-secondary-100" aria-hidden="true">📖</div>
-        )}
+      <div className="shrink-0 w-24 h-32 rounded-2xl overflow-hidden shadow-card bg-surface-secondary relative">
+        <KidsBookCover
+          book={book}
+          alt={book.title || ''}
+          imgClassName="absolute inset-0 w-full h-full object-cover"
+        />
       </div>
       <div className="min-w-0 text-center sm:text-start">
         <p className="text-caption font-bold text-foreground-muted uppercase tracking-wide mb-1">{t('parentHomeContinueTogether')}</p>

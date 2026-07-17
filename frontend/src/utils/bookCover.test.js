@@ -35,7 +35,7 @@ describe('bookCover utils', () => {
     expect(deriveBookTheme({ title: 'La vache meuh' })).toBe('animals');
   });
 
-  it('prefers local theme webp over seed uploads', () => {
+  it('never uses seed uploads; prefers slug local art then default', () => {
     const sources = buildBookCoverSources({
       slug: 'spiritual-10',
       title: 'Les anges veillent',
@@ -43,8 +43,18 @@ describe('bookCover utils', () => {
       theme: 'spiritual',
     });
     expect(sources[0]).toBe(`${LOCAL_BOOK_COVERS_BASE}/spiritual-10.webp`);
-    expect(sources).toContain(`${LOCAL_BOOK_COVERS_BASE}/themes/bedtime.webp`);
+    expect(sources).toContain(`${LOCAL_BOOK_COVERS_BASE}/default.webp`);
     expect(sources.every((src) => !src.includes('/uploads/'))).toBe(true);
+    expect(sources.every((src) => !src.includes('.svg'))).toBe(true);
+  });
+
+  it('prefers real illustrated API cover before local slug', () => {
+    const sources = buildBookCoverSources({
+      slug: 'demo-dino-courage',
+      cover_image: 'https://cdn.example.com/covers/dino.webp',
+    });
+    expect(sources[0]).toBe('https://cdn.example.com/covers/dino.webp');
+    expect(sources).toContain(`${LOCAL_BOOK_COVERS_BASE}/demo-dino-courage.webp`);
   });
 
   it('resolveBookCoverUrl never returns uploads seed path', () => {

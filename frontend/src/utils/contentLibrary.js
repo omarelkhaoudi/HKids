@@ -1,6 +1,6 @@
 import { CONTENT_LANGUAGES } from '../constants/contentOptions';
 import { getCategoryForContent } from '../constants/contentLibrary';
-import { getImageUrl } from './imageUrl';
+import { resolveBookCoverUrl } from './bookCover';
 import { storage } from './storage';
 
 export function formatContentDuration(seconds = 0) {
@@ -28,7 +28,7 @@ export function normalizeContentItem(book) {
     ...book,
     library_category_id: category.id,
     library_category_label: category.label,
-    cover_url: getImageUrl(book.cover_image),
+    cover_url: resolveBookCoverUrl(book),
     short_description: book.description || 'Contenu a decouvrir.',
     duration_label: formatContentDuration(book.duration_seconds),
     language_label: getContentLanguageLabel(book.language),

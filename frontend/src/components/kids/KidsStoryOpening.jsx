@@ -2,7 +2,7 @@ import { memo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useReducedMotion } from '../../hooks/useReducedMotion';
 import { getMotionProps, kidsBookOpen } from '../../constants/kidsMotion';
-import { getImageUrl } from '../../utils/imageUrl';
+import { KidsBookCover } from './KidsBookCover';
 
 /**
  * Soft story-opening cover fade — presentation only.
@@ -10,10 +10,12 @@ import { getImageUrl } from '../../utils/imageUrl';
 export const KidsStoryOpening = memo(function KidsStoryOpening({
   active = false,
   coverUrl,
+  book,
   title,
   onDone,
 }) {
   const reducedMotion = useReducedMotion();
+  const coverBook = book || { cover_image: coverUrl, title };
 
   return (
     <AnimatePresence>
@@ -24,9 +26,6 @@ export const KidsStoryOpening = memo(function KidsStoryOpening({
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: reducedMotion ? 0.15 : 0.45 }}
-          onAnimationComplete={() => {
-            // Allow cover to settle then signal done via timeout from parent preferred
-          }}
           aria-hidden="true"
         >
           <motion.div
@@ -44,11 +43,11 @@ export const KidsStoryOpening = memo(function KidsStoryOpening({
               }
             }}
           >
-            {coverUrl ? (
-              <img src={getImageUrl(coverUrl, 'book')} alt="" className="w-full h-full object-cover" />
-            ) : (
-              <div className="w-full h-full bg-gradient-to-br from-primary-400 to-accent-400 grid place-items-center text-6xl">📖</div>
-            )}
+            <KidsBookCover
+              book={coverBook}
+              alt={title || ''}
+              imgClassName="absolute inset-0 w-full h-full object-cover"
+            />
           </motion.div>
           {title && (
             <motion.p
