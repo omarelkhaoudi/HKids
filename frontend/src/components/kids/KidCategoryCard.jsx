@@ -1,34 +1,35 @@
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { useReducedMotion } from '../../hooks/useReducedMotion';
+import { getHoverMotion } from '../../constants/kidsMotion';
 
 export function KidCategoryCard({ category, to, compact = false }) {
   const destination = to || `/kids/library?theme=${category.id}`;
+  const reducedMotion = useReducedMotion();
 
   return (
     <motion.div
-      whileHover={{ y: -8, scale: 1.03 }}
-      whileTap={{ scale: 0.96 }}
-      className={`h-full ${compact ? 'shrink-0 w-44 sm:w-52' : ''}`}
+      {...getHoverMotion(reducedMotion, { whileHover: { y: -3 }, whileTap: { scale: 0.98 } })}
+      className={`h-full ${compact ? 'shrink-0 w-40 sm:w-48' : ''}`}
     >
       <Link
         to={destination}
         aria-label={category.label}
-        className={`group relative flex h-full ${compact ? 'min-h-40' : 'min-h-48 md:min-h-56'} flex-col justify-between overflow-hidden rounded-32 bg-gradient-to-br ${category.gradient} ${compact ? 'p-space-16' : 'p-space-20 md:p-space-24'} text-white shadow-card ring-4 ${category.ring} transition focus:outline-none focus-visible:ring-8 kids-touch-target`}
+        className={`group relative flex h-full ${compact ? 'min-h-36' : 'min-h-44 md:min-h-52'} flex-col justify-between overflow-hidden rounded-32 bg-card border border-border/70 ${compact ? 'p-space-16' : 'p-space-20 md:p-space-24'} text-foreground shadow-soft hover:shadow-card transition focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-400 kids-touch-target`}
       >
-        <motion.span
+        <span
+          className={`absolute inset-0 opacity-90 bg-gradient-to-br ${category.gradient}`}
+          style={{ opacity: 0.12 }}
           aria-hidden="true"
-          animate={{ y: [0, -5, 0], opacity: [0.7, 1, 0.7] }}
-          transition={{ duration: 2.8, repeat: Infinity, ease: 'easeInOut' }}
-          className="absolute right-space-12 top-space-12 h-space-8 w-space-8 rounded-full bg-surface/80 shadow-soft"
         />
-        <span className={`grid place-items-center rounded-24 bg-surface/30 shadow-inner backdrop-blur-sm transition group-hover:scale-110 ${compact ? 'h-16 w-16 text-4xl' : 'h-[96px] w-[96px] md:h-[7rem] md:w-[7rem] text-6xl md:text-7xl'}`}>
+        <span className={`relative grid place-items-center rounded-24 bg-surface-secondary/80 transition group-hover:scale-105 ${compact ? 'h-14 w-14 text-3xl' : 'h-20 w-20 md:h-24 md:w-24 text-5xl md:text-6xl'}`}>
           {category.pictogram}
         </span>
-        <div className={compact ? 'mt-space-12' : 'mt-space-16 md:mt-space-20'}>
-          <span className={`mb-space-8 inline-flex min-h-touch items-center rounded-full bg-surface/25 font-black backdrop-blur text-white ${compact ? 'px-space-12 text-caption' : 'px-space-16 text-caption md:text-body'}`}>
+        <div className={`relative ${compact ? 'mt-space-12' : 'mt-space-16'}`}>
+          <span className={`mb-space-8 inline-flex min-h-[40px] items-center rounded-full bg-primary-50 text-primary-700 font-bold ${compact ? 'px-space-12 text-caption' : 'px-space-16 text-caption'}`}>
             {category.cue}
           </span>
-          <span className={`block text-white leading-tight drop-shadow-sm ${compact ? 'text-body font-black line-clamp-2' : 'text-heading-m md:text-heading-l'}`}>
+          <span className={`block text-foreground leading-snug ${compact ? 'text-body font-bold line-clamp-2' : 'text-heading-m font-bold'}`}>
             {category.shortLabel || category.label}
           </span>
         </div>

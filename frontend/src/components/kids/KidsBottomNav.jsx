@@ -42,9 +42,9 @@ export function KidsBottomNav() {
       <motion.nav
         initial={{ y: 80 }}
         animate={{ y: 0 }}
-        transition={{ type: 'spring', damping: 22 }}
+        transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
         aria-label={t('kidsNavLabel')}
-        className="pointer-events-auto bg-surface/95 dark:bg-surface-900/92 backdrop-blur-xl px-space-12 py-space-12 md:px-space-20 md:py-space-16 rounded-32 shadow-floating border-4 border-border flex gap-space-8 md:gap-space-12 justify-center max-w-full"
+        className="pointer-events-auto bg-card/95 dark:bg-surface-900/92 backdrop-blur-md px-space-12 py-space-12 md:px-space-20 md:py-space-16 rounded-32 shadow-floating border border-border/70 flex gap-space-8 md:gap-space-12 justify-center max-w-full"
       >
         {NAV_ITEMS.map((item) => {
           const active = isActiveItem(location, item);

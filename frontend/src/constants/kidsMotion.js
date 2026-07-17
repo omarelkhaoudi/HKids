@@ -31,13 +31,13 @@ export const kidsCarouselReveal = {
 };
 
 export const kidsHoverLift = {
-  whileHover: { y: -8, scale: 1.02 },
-  whileTap: { scale: 0.97 },
-  transition: { duration: KIDS_MOTION_DURATION.fast, ease: easeOut },
+  whileHover: { y: -4, scale: 1.01 },
+  whileTap: { scale: 0.98 },
+  transition: { duration: KIDS_MOTION_DURATION.base, ease: easeOut },
 };
 
 export const kidsTouchFeedback = {
-  whileTap: { scale: 0.94 },
+  whileTap: { scale: 0.97 },
   transition: { duration: KIDS_MOTION_DURATION.fast },
 };
 
@@ -48,14 +48,14 @@ export const kidsBookOpen = {
 };
 
 export const kidsFloat = {
-  animate: { y: [0, -8, 0] },
-  transition: { duration: 3.6, repeat: Infinity, ease: 'easeInOut' },
+  animate: { y: [0, -4, 0] },
+  transition: { duration: 4.8, repeat: Infinity, ease: 'easeInOut' },
 };
 
 export const kidsBadgePop = {
-  initial: { scale: 0, opacity: 0 },
+  initial: { scale: 0.92, opacity: 0 },
   animate: { scale: 1, opacity: 1 },
-  transition: { type: 'spring', stiffness: 320, damping: 18, duration: KIDS_MOTION_DURATION.base },
+  transition: { duration: KIDS_MOTION_DURATION.base, ease: easeOut },
 };
 
 export const kidsProgressFill = {
