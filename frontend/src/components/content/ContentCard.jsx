@@ -2,7 +2,6 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   AudioIcon,
-  BookIcon,
   CheckIcon,
   ClockIcon,
   GlobeIcon,
@@ -12,6 +11,7 @@ import {
   PlayIcon,
   TagIcon,
 } from '../Icons';
+import { KidsBookCover } from '../kids/KidsBookCover';
 
 export function ContentCard({ content, playing = false, onToggleAudio }) {
   const hasAudio = Boolean(content.audio_url);
@@ -22,19 +22,12 @@ export function ContentCard({ content, playing = false, onToggleAudio }) {
       className="flex h-full flex-col overflow-hidden rounded-3xl bg-white shadow-md ring-1 ring-surface-100 transition hover:shadow-lg dark:bg-surface-800 dark:ring-surface-700"
     >
       <Link to={`/book-details/${content.id}`} className="flex flex-1 flex-col">
-        <div className="relative aspect-[4/3] bg-surface-100 dark:bg-surface-700">
-          {content.cover_url ? (
-            <img
-              src={content.cover_url}
-              alt={content.title}
-              className="h-full w-full object-cover"
-              loading="lazy"
-            />
-          ) : (
-            <div className="grid h-full place-items-center text-surface-400">
-              <BookIcon className="h-14 w-14" />
-            </div>
-          )}
+        <div className="relative aspect-[3/4] bg-surface-100 dark:bg-surface-700 overflow-hidden">
+          <KidsBookCover
+            book={content}
+            alt={content.title}
+            imgClassName="absolute inset-0 h-full w-full object-cover"
+          />
 
           <div className="absolute left-3 top-3 flex flex-wrap gap-2">
             {content.is_premium && (

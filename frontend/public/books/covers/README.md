@@ -2,27 +2,22 @@
 
 Drop illustrated covers here. The UI loads them automatically.
 
-## Replace a cover (one file)
+## Priority (never seed SVG / icon cards)
+
+1. Real illustrated API `cover` / `cover_image` (PNG/JPG/WebP — not `/uploads` SVG)
+2. `/books/covers/{slug}.webp`
+3. `/books/covers/default.webp`
+
+Theme packs under `/books/covers/themes/` are for **category destination cards only**, not book product covers.
+
+## Replace a cover
 
 ```text
 frontend/public/books/covers/{slug}.webp
 ```
 
-Preferred order per book:
-
-1. `/books/covers/{slug}.webp` (unique story art)
-2. `/books/covers/themes/{theme}.webp` (world / category immersion)
-3. `/books/covers/default.webp`
-4. Real external illustrated API URLs only (never seed SVG `/uploads/books/`)
-
-Generate missing slug covers:
+Rebuild small / SVG-fallback covers from illustrated theme art:
 
 ```bash
-node backend/scripts/generate-local-cover-webps.js
+node backend/scripts/rebuild-local-covers-from-themes.js --only-small
 ```
-
-Examples:
-
-- `demo-dino-courage.webp`
-- `spiritual-10.webp`
-- `themes/bedtime.webp` (category destination backdrop)

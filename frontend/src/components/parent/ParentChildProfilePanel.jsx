@@ -7,7 +7,7 @@ import {
 import { KidAvatar } from './KidAvatar';
 import { useReducedMotion } from '../../hooks/useReducedMotion';
 import { getHoverMotion, getMotionProps, kidsCardAppear } from '../../constants/kidsMotion';
-import { getFileUrl } from '../../utils/fileUrl';
+import { KidsBookCover } from '../kids/KidsBookCover';
 import { CONTENT_THEMES } from '../../constants/contentOptions';
 
 function themeLabel(themeId) {
@@ -98,12 +98,12 @@ export function ParentChildProfilePanel({
             <div className="flex gap-space-12 overflow-x-auto parent-discovery-rail pb-space-4">
               {favorites.slice(0, 6).map((book) => (
                 <div key={book.book_id} className="shrink-0 w-20">
-                  <div className="aspect-[3/4] rounded-xl overflow-hidden shadow-card bg-surface-secondary">
-                    {book.cover_image ? (
-                      <img src={getFileUrl(book.cover_image)} alt="" className="w-full h-full object-cover" loading="lazy" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-2xl" aria-hidden="true">📖</div>
-                    )}
+                  <div className="aspect-[3/4] rounded-xl overflow-hidden shadow-card bg-surface-secondary relative">
+                    <KidsBookCover
+                      book={book}
+                      alt={book.title || ''}
+                      imgClassName="absolute inset-0 w-full h-full object-cover"
+                    />
                   </div>
                 </div>
               ))}

@@ -8,7 +8,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { useAudioPlayer } from '../hooks/useAudioPlayer';
 import { useReducedMotion } from '../hooks/useReducedMotion';
 import { getMotionProps, kidsCardAppear } from '../constants/kidsMotion';
-import { getImageUrl } from '../utils/imageUrl';
+import { KidsBookCover } from '../components/kids/KidsBookCover';
 import { storage } from '../utils/storage';
 import { getRestrictionMessage } from '../services/parental/parentalAccessService';
 import { KidsPageShell } from '../components/kids/KidsPageShell';
@@ -139,11 +139,11 @@ function KidsListen() {
           <motion.div
             className={`relative mb-space-24 w-56 h-56 md:w-72 md:h-72 rounded-32 overflow-hidden shadow-floating border-4 border-white/80 ${!reducedMotion && player.playing ? 'kids-audio-pulse' : ''}`}
           >
-            {book.cover_image ? (
-              <img src={getImageUrl(book.cover_image, 'book')} alt="" className="w-full h-full object-cover" />
-            ) : (
-              <div className="w-full h-full grid place-items-center bg-gradient-to-br from-orange-100 to-primary-100 text-8xl">🎵</div>
-            )}
+            <KidsBookCover
+              book={book}
+              alt={book.title}
+              imgClassName="absolute inset-0 w-full h-full object-cover"
+            />
             <div className="absolute inset-0 bg-gradient-to-t from-surface-900/35 via-transparent to-transparent pointer-events-none" />
           </motion.div>
 
@@ -231,10 +231,14 @@ function KidsListen() {
                   onClick={() => navigate(`/kids/listen/${item.bookId}`)}
                   className="snap-start shrink-0 w-44 rounded-24 bg-card border-4 border-border shadow-card p-space-16 text-left hover:shadow-floating transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-300"
                 >
-                  <div className="h-20 rounded-16 bg-gradient-to-br from-orange-100 to-primary-100 mb-space-12 grid place-items-center text-3xl" aria-hidden="true">
-                    🎵
+                  <div className="relative aspect-[3/4] rounded-16 overflow-hidden mb-space-12 bg-surface-secondary">
+                    <KidsBookCover
+                      book={{ id: item.bookId, title: item.bookTitle, slug: item.slug, cover_image: item.cover_image }}
+                      alt={item.bookTitle}
+                      imgClassName="absolute inset-0 w-full h-full object-cover"
+                    />
                   </div>
-                  <p className="text-body font-black text-foreground line-clamp-2">{item.bookTitle}</p>
+                  <p className="kids-book-title text-sm line-clamp-2">{item.bookTitle}</p>
                   {item.duration > 0 && (
                     <p className="text-caption text-foreground-muted mt-space-4">
                       {Math.round((item.currentTime / item.duration) * 100)}%

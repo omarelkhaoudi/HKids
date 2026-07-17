@@ -3,8 +3,10 @@ import { getImageUrl } from './imageUrl';
 /**
  * Local illustrated covers live in `frontend/public/books/covers/`.
  *
- * Replace forever with one file drop:
- *   frontend/public/books/covers/{slug}.webp
+ * Priority (never seed SVG / icon cards):
+ *   1. Real illustrated book.cover / cover_image
+ *   2. /books/covers/{slug}.webp
+ *   3. /books/covers/default.webp
  */
 export const LOCAL_BOOK_COVERS_BASE = '/books/covers';
 
@@ -43,7 +45,7 @@ const THEME_ALIASES = {
   vehicles: 'jobs',
 };
 
-/** Titles on /stories mapped to theme packs (no seed SVG). */
+/** Titles mapped to theme packs (category immersion / soft slug hints only). */
 const TITLE_THEME_HINTS = [
   [/ange|angel|veille|gratitude|spiritual/i, 'bedtime'],
   [/poisson|fish|baleine|whale/i, 'ocean'],
@@ -84,13 +86,13 @@ export function isIllustratedCoverPath(imagePath) {
 export function deriveBookSlug(book = {}) {
   if (book.slug) return String(book.slug).trim();
   if (book.cover_slug) return String(book.cover_slug).trim();
-  const fromCover = String(book.cover_image || '')
+  const fromCover = String(book.cover_image || book.cover || book.cover_image_url || '')
     .split('?')[0]
     .split('/')
     .pop()
     ?.replace(/-cover\.(svg|png|jpe?g|webp)$/i, '')
     ?.replace(/\.(svg|png|jpe?g|webp)$/i, '');
-  if (fromCover && fromCover !== 'cover') return fromCover;
+  if (fromCover && fromCover !== 'cover' && fromCover !== 'default') return fromCover;
   return null;
 }
 
@@ -110,39 +112,47 @@ export function deriveBookTheme(book = {}) {
   return null;
 }
 
+function firstIllustratedApiUrl(book = {}) {
+  const candidates = [
+    book.cover,
+    book.cover_image,
+    book.cover_image_url,
+    book.cover_url,
+  ];
+  for (const candidate of candidates) {
+    if (!isIllustratedCoverPath(candidate)) continue;
+    const apiUrl = getImageUrl(candidate);
+    if (apiUrl) return apiUrl;
+  }
+  return null;
+}
+
 /**
- * Ordered cover candidates — LOCAL illustrated art first, seed API covers never.
+ * Ordered cover candidates — never seed SVG / icon-card placeholders.
  */
 export function buildBookCoverSources(book = {}) {
   const sources = [];
   const slug = deriveBookSlug(book);
-  const theme = deriveBookTheme(book);
 
-  // 1) Local slug file (one-line replace later)
+  // 1) Real illustrated API cover
+  const apiCover = firstIllustratedApiUrl(book);
+  if (apiCover) sources.push(apiCover);
+
+  // 2) Local unique slug art
   if (slug) {
     sources.push(`${LOCAL_BOOK_COVERS_BASE}/${slug}.webp`);
   }
 
-  // 2) Local theme pack
-  if (theme) {
-    sources.push(`${LOCAL_BOOK_COVERS_BASE}/themes/${theme}.webp`);
-  }
-
-  // 3) Default illustrated cover
+  // 3) Default illustrated cover only (no icon / gradient cards)
   sources.push(`${LOCAL_BOOK_COVERS_BASE}/default.webp`);
-  sources.push(`${LOCAL_BOOK_COVERS_BASE}/themes/default.webp`);
-
-  // 4) Real external illustrated art only (never seed /uploads SVG-or-placeholder)
-  if (isIllustratedCoverPath(book.cover_image)) {
-    const apiUrl = getImageUrl(book.cover_image);
-    if (apiUrl) sources.push(apiUrl);
-  }
-  if (isIllustratedCoverPath(book.cover_image_url)) {
-    const apiUrl = getImageUrl(book.cover_image_url);
-    if (apiUrl) sources.push(apiUrl);
-  }
 
   return [...new Set(sources.filter(Boolean))];
+}
+
+/** Theme packs for category destination cards — not book product covers. */
+export function resolveCategoryThemeArt(themeId) {
+  const theme = THEME_ALIASES[String(themeId || '').toLowerCase()] || themeId || 'default';
+  return `${LOCAL_BOOK_COVERS_BASE}/themes/${theme}.webp`;
 }
 
 export function resolveBookCoverUrl(coverImageOrBook, maybeBook) {

@@ -5,9 +5,9 @@ import {booksAPI} from '../api/books';
 import {storage} from '../utils/storage';
 import {useToast} from '../components/ToastProvider';
 import {BookGridSkeleton} from '../components/SkeletonLoader';
-import {HeartIcon, BookIcon, ChevronLeftIcon, StarIcon} from '../components/Icons';
+import {HeartIcon, ChevronLeftIcon, StarIcon} from '../components/Icons';
 import {Logo} from '../components/Logo';
-import {getImageUrl} from '../utils/imageUrl';
+import {KidsBookCover} from '../components/kids/KidsBookCover';
 import {useLanguage} from '../context/LanguageContext';
 import {useAuth} from '../context/AuthContext';
 import {KidsPageShell} from '../components/kids/KidsPageShell';
@@ -278,40 +278,19 @@ function Favorites() {
  >
  <div className="bg-card rounded-2xl border-2 border-border overflow-hidden group h-full flex flex-col hover:border-primary-300 hover:shadow-xl transition-all shadow-lg">
  <Link to={`/book-details/${book.id}`} className="flex-1">
- <div className="h-56 bg-gradient-to-br from-surface-100 to-surface-50 flex items-center justify-center overflow-hidden relative">
- {book.cover_image ? (
- <>
- <motion.img
- src={getImageUrl(book.cover_image)}
+ <div className="aspect-[3/4] bg-surface-secondary overflow-hidden relative">
+ <KidsBookCover
+ book={book}
  alt={book.title}
- className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
- whileHover={{scale: 1.1}}
- onError={(e) => {
- console.error('[Favorites] Image load error for book', book.id, ':', getImageUrl(book.cover_image));
- e.target.style.display = 'none';
- const fallback = e.target.parentElement.querySelector('.image-fallback');
- if (fallback) fallback.style.display = 'flex';
-}}
- onLoad={() => {
- console.log('[Favorites] Image loaded successfully for book', book.id);
-}}
+ imgClassName="absolute inset-0 w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
  />
- <div className="image-fallback w-full h-full absolute inset-0 flex items-center justify-center bg-gradient-to-br from-surface-100 to-surface-50" style={{display: 'none'}}>
- <BookIcon className="w-20 h-20 text-surface-400" />
  </div>
- </>
- ) : (
- <div className="w-full h-full flex items-center justify-center">
- <BookIcon className="w-20 h-20 text-surface-400" />
- </div>
- )}
- </div>
- <div className="p-5 bg-gradient-to-br from-primary-50/50 to-secondary-50/50">
- <h3 className="font-bold text-lg text-foreground mb-2 line-clamp-2">
+ <div className="p-5">
+ <h3 className="kids-book-title mb-1">
  {book.title}
  </h3>
  {book.author && (
- <p className="text-sm text-foreground-secondary font-medium">par {book.author}</p>
+ <p className="kids-book-author">par {book.author}</p>
  )}
  </div>
  </Link>

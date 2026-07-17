@@ -9,7 +9,7 @@ import { filterContentItems, normalizeContentItem } from '../utils/contentLibrar
 import { useAudioPlayer } from '../hooks/useAudioPlayer';
 import { useLanguage } from '../context/LanguageContext';
 import { storage } from '../utils/storage';
-import { getImageUrl } from '../utils/imageUrl';
+import { KidsBookCover } from '../components/kids/KidsBookCover';
 import {
   AudioIcon, BookIcon, DownloadIcon, HeartIcon, PlayIcon, PauseIcon,
   SearchIcon, SparklesIcon, ChevronLeftIcon, ChevronRightIcon,
@@ -41,11 +41,10 @@ const CinematicCard = ({ content, isFavorite, playing, onToggleAudio, onToggleFa
       className="group relative h-72 w-52 md:h-80 md:w-56 shrink-0 cursor-pointer overflow-hidden rounded-3xl bg-surface-secondary shadow-sm transition-shadow hover:shadow-2xl"
       onClick={() => onToggleAudio(content)}
     >
-      <img
-        src={getImageUrl(content.cover_image || content.image_url, 'book')}
+      <KidsBookCover
+        book={content}
         alt={content.title}
-        className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
-        loading="lazy"
+        imgClassName="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
       />
       <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/90 pointer-events-none" />
       <div className="absolute inset-0 bg-primary-900/40 opacity-0 transition-opacity duration-300 group-hover:opacity-100 pointer-events-none" />
@@ -383,11 +382,11 @@ function ContentLibraryHome() {
               className="group relative overflow-hidden rounded-[2.5rem] bg-surface-secondary shadow-lg cursor-pointer flex flex-col md:flex-row min-h-[300px]"
               onClick={() => toggleAudio(featuredBook)}
             >
-              <div className="w-full md:w-1/2 relative h-64 md:h-auto">
-                <img 
-                  src={getImageUrl(featuredBook.cover_image || featuredBook.image_url, 'book')} 
-                  alt={featuredBook.title} 
-                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
+              <div className="w-full md:w-1/2 relative h-64 md:h-auto overflow-hidden">
+                <KidsBookCover
+                  book={featuredBook}
+                  alt={featuredBook.title}
+                  imgClassName="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                 />
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent to-surface-secondary/90 md:bg-gradient-to-l" />
               </div>
