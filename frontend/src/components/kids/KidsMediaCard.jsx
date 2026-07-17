@@ -56,7 +56,7 @@ export const KidsMediaCard = memo(function KidsMediaCard({
         role="button"
         tabIndex={0}
         {...getHoverMotion(reducedMotion, {
-          whileHover: { y: -4 },
+          whileHover: { y: -6, scale: 1.02 },
           whileTap: { scale: 0.985 },
         })}
         className="kids-book-collectible-cover kids-book-collectible-cover--hero w-full cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-400 focus-visible:ring-offset-2"
@@ -155,32 +155,32 @@ export const KidsMediaCard = memo(function KidsMediaCard({
 
       {!hideTitle && (
         <div className="kids-book-collectible-meta">
-          <h3 className="text-[0.95rem] font-semibold text-foreground leading-snug line-clamp-2">
+          <h3 className="kids-book-title">
             {book.title}
           </h3>
           {book.author && (
-            <p className="text-[0.7rem] font-medium text-foreground-muted line-clamp-1">{book.author}</p>
+            <p className="kids-book-author">{book.author}</p>
           )}
-          <div className="flex flex-wrap items-center gap-1 pt-0.5">
+          <div className="kids-book-meta-row">
             {ageLabel && (
-              <span className="inline-flex items-center gap-0.5 rounded-full bg-surface-secondary/80 px-1.5 py-0.5 text-[9px] font-medium text-foreground-secondary">
+              <span className="kids-book-meta-pill">
                 <ShieldIcon className="h-2.5 w-2.5" />
                 {ageLabel}
               </span>
             )}
             {durationLabel && (
-              <span className="inline-flex items-center gap-0.5 rounded-full bg-surface-secondary/80 px-1.5 py-0.5 text-[9px] font-medium text-foreground-secondary">
+              <span className="kids-book-meta-pill">
                 <ClockIcon className="h-2.5 w-2.5" />
                 {durationLabel}
               </span>
             )}
             {audioReady && (
-              <span className="inline-flex items-center rounded-full bg-orange-50 text-orange-700 px-1.5 py-0.5 text-[9px] font-medium" aria-label="Audio">
+              <span className="kids-book-meta-pill kids-book-meta-pill--audio" aria-label="Audio">
                 <AudioIcon className="h-2.5 w-2.5" />
               </span>
             )}
             {progress > 0 && progress < 100 && (
-              <span className="inline-flex items-center rounded-full bg-primary-50 text-primary-700 px-1.5 py-0.5 text-[9px] font-semibold">
+              <span className="kids-book-meta-pill kids-book-meta-pill--progress">
                 {Math.round(progress)}%
               </span>
             )}
