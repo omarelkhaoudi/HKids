@@ -6,7 +6,6 @@ import {newsletterAPI} from '../api/newsletter';
 import {storage} from '../utils/storage';
 import {useToast} from '../components/ToastProvider';
 import {BookGridSkeleton} from '../components/SkeletonLoader';
-import {getImageUrl} from '../utils/imageUrl';
 import {
  BookIcon, SearchIcon, HeartIcon, HistoryIcon, 
  MoonIcon, SunIcon, LockIcon, GridIcon, ListIcon, XIcon,
@@ -78,7 +77,6 @@ function Home({darkMode, setDarkMode}) {
  const [viewMode, setViewMode] = useState('grid'); // grid, list
  const [loading, setLoading] = useState(true);
  const [favoritesUpdate, setFavoritesUpdate] = useState(0); // Pour forcer le re-render
- const [imageError, setImageError] = useState(false);
  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
  const [newsletterEmail, setNewsletterEmail] = useState('');
  const [newsletterStatus, setNewsletterStatus] = useState('');
@@ -156,11 +154,6 @@ function Home({darkMode, setDarkMode}) {
  setNewsletterLoading(false);
 }
 };
-
- // Reset image error when book changes
- useEffect(() => {
- setImageError(false);
-}, [allBooks[0]?.id]);
 
  const filterAndSortBooks = (booksToFilter) => {
  let filtered = [...booksToFilter];
@@ -468,9 +461,9 @@ function Home({darkMode, setDarkMode}) {
  </motion.header>
  <main id="main-content">
  <HeroSection t={t} totalBooks={totalBooks} />
- <BookOfTheWeekSection book={allBooks[0]} t={t} getImageUrl={getImageUrl} imageError={imageError} setImageError={setImageError} />
+ <BookOfTheWeekSection book={allBooks[0]} t={t} />
  <BrowseByAgeSection t={t} selectedAge={selectedAge} setSelectedAge={setSelectedAge} />
- <StoryPreviewSection books={allBooks} getImageUrl={getImageUrl} />
+ <StoryPreviewSection books={allBooks} />
  <FeaturesSection t={t} />
  <TestimonialsSection t={t} />
  <NewsletterSection 
