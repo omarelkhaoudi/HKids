@@ -26,13 +26,13 @@ import { useToast } from '../components/ToastProvider';
 import { getRestrictionMessage } from '../services/parental/parentalAccessService';
 import { LockIcon } from '../components/Icons';
 import { getCachedKidProfile } from '../services/cloud/cloudSyncService';
-import { Avatar, CategoryCard } from '../components/ui';
+import { Avatar } from '../components/ui';
 import { KidsTrustBadges } from '../components/kids/KidsTrustBadges';
 import { KidsProfilePanel } from '../components/kids/KidsProfilePanel';
 import { BookGridSkeleton } from '../components/SkeletonLoader';
 import { bookMatchesKidCategory, getCategoryContentStrategy } from '../utils/kidCategoryContent';
 import { useReducedMotion } from '../hooks/useReducedMotion';
-import { getHoverMotion, kidsHoverLift } from '../constants/kidsMotion';
+import { getHoverMotion, kidsHoverLift, getMotionProps, kidsCarouselReveal } from '../constants/kidsMotion';
 
 function getRecommendedBooks(sections = []) {
   const recommendedSection = sections.find((section) => section.id === 'recommended_for_you');
@@ -286,7 +286,7 @@ function KidsHome() {
         </div>
       </header>
 
-      <main className="kids-main kids-main-tablet-wide relative z-20 mt-2">
+      <main className="kids-main kids-main-tablet-wide relative z-20 mt-2 space-y-space-24">
         <KidsHeroStoryCard
           book={featuredBook}
           isRtl={isRtl}
@@ -295,28 +295,8 @@ function KidsHome() {
           onListen={handleListenBook}
           emptyLabel={t('emptyBooksTitle')}
           onEmptyAction={() => navigate('/kids/library')}
+          badgeLabel={featuredBook?.isInProgress ? t('continueReading') : t('kidsStoriesToday')}
         />
-
-        <section aria-label={t('kidsAutonomyWorlds')}>
-          <KidsTrustBadges t={t} compact className="mb-space-16 opacity-90" />
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-space-16">
-            {autonomyWorlds.map((world) => {
-              const theme = getKidsModality(world.modality);
-              return (
-                <CategoryCard
-                  key={world.id}
-                  emoji={world.emoji}
-                  title={t(world.labelKey)}
-                  tone={theme.tone}
-                  onClick={() => navigate(world.path)}
-                  className="min-h-[8.5rem]"
-                />
-              );
-            })}
-          </div>
-        </section>
-
-        <KidsFamilyMessages />
 
         {continueBooks.length > 0 && (
           <KidsContinueRail
@@ -351,45 +331,25 @@ function KidsHome() {
 
         {bedtimeBooks.length > 0 && (
           <div className="kids-shelf-rail">
-            <KidsBookCarousel
-              title={bedtimeLabel}
-              emoji="🌙"
-              books={bedtimeBooks}
-              {...carouselProps}
-            />
+            <KidsBookCarousel title={bedtimeLabel} emoji="🌙" books={bedtimeBooks} {...carouselProps} />
           </div>
         )}
 
         {animalBooks.length > 0 && (
           <div className="kids-shelf-rail">
-            <KidsBookCarousel
-              title={animalsLabel}
-              emoji="🦁"
-              books={animalBooks}
-              {...carouselProps}
-            />
+            <KidsBookCarousel title={animalsLabel} emoji="🦁" books={animalBooks} {...carouselProps} />
           </div>
         )}
 
         {spaceBooks.length > 0 && (
           <div className="kids-shelf-rail">
-            <KidsBookCarousel
-              title={spaceLabel}
-              emoji="🚀"
-              books={spaceBooks}
-              {...carouselProps}
-            />
+            <KidsBookCarousel title={spaceLabel} emoji="🚀" books={spaceBooks} {...carouselProps} />
           </div>
         )}
 
         {magicBooks.length > 0 && (
           <div className="kids-shelf-rail">
-            <KidsBookCarousel
-              title={magicLabel}
-              emoji="🧙"
-              books={magicBooks}
-              {...carouselProps}
-            />
+            <KidsBookCarousel title={magicLabel} emoji="🧙" books={magicBooks} {...carouselProps} />
           </div>
         )}
 
@@ -407,75 +367,112 @@ function KidsHome() {
 
         {newBooks.length > 0 && (
           <div className="kids-shelf-rail">
-            <KidsBookCarousel
-              title={t('newBooks')}
-              emoji="🆕"
-              books={newBooks}
-              {...carouselProps}
-            />
+            <KidsBookCarousel title={t('newBooks')} emoji="🆕" books={newBooks} {...carouselProps} />
           </div>
         )}
 
-        <section aria-label={t('allCategories')}>
-          <h2 className="kids-shelf-title mb-space-20 px-space-8">
-            <span aria-hidden="true">🗂️</span>
-            <span className="sr-only">{t('allCategories')}</span>
+        <motion.section
+          aria-label={t('kidsAutonomyWorlds')}
+          {...getMotionProps(reducedMotion, kidsCarouselReveal)}
+        >
+          <h2 className="kids-shelf-title mb-space-16 px-space-8">
+            <span aria-hidden="true">🌍</span>
+            <span>{t('kidsAutonomyWorlds')}</span>
           </h2>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-space-16 md:gap-space-20">
+          <div className="kids-discovery-rail">
+            {autonomyWorlds.map((world) => {
+              const theme = getKidsModality(world.modality);
+              return (
+                <motion.button
+                  key={world.id}
+                  type="button"
+                  {...getHoverMotion(reducedMotion, kidsHoverLift)}
+                  onClick={() => navigate(world.path)}
+                  className={`kids-world-portal shrink-0 bg-gradient-to-br ${theme.gradient} focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary-300`}
+                  aria-label={t(world.labelKey)}
+                >
+                  <span className="text-5xl" aria-hidden="true">{world.emoji}</span>
+                  <span className="text-body font-black text-white drop-shadow-sm">{t(world.labelKey)}</span>
+                </motion.button>
+              );
+            })}
+          </div>
+        </motion.section>
+
+        <motion.section aria-label={t('allCategories')} {...getMotionProps(reducedMotion, kidsCarouselReveal)}>
+          <h2 className="kids-shelf-title mb-space-16 px-space-8">
+            <span aria-hidden="true">🗺️</span>
+            <span>{t('allCategories')}</span>
+          </h2>
+          <div className="kids-discovery-rail pb-space-8">
             {kidCategories.map((category) => (
-              <KidCategoryCard key={category.id} category={category} />
+              <KidCategoryCard key={category.id} category={category} compact />
             ))}
           </div>
-        </section>
+        </motion.section>
 
-        <section id="kids-profile" className="scroll-mt-24">
-          <KidsProfilePanel
-            kid={kid}
-            kidName={kidName}
-            progressRows={progressRows}
-            favoriteBooks={favoriteBooks}
-            lastActivity={lastActivityText}
-            t={t}
-            isRtl={isRtl}
-            onPlayBook={handlePlayBook}
-            onGoToLibrary={() => navigate('/kids/library')}
-          />
-        </section>
+        <KidsFamilyMessages />
 
-        <section id="kids-medals" className="mb-space-12 scroll-mt-24">
-          <h2 className="kids-shelf-title mb-6 pl-2">
-            <span aria-hidden="true">🏆</span>
-            <span>{t('yourMedals')}</span>
-          </h2>
-          {badges.length === 0 ? (
-            <KidsEmptyState
-              emoji="🏅"
-              title={t('emptyBadgesTitle')}
-              compact
-              actionLabel={t('goToLibrary')}
-              onAction={() => navigate('/kids/library')}
-              showMascot
-              mascotMood="encourage"
-            />
-          ) : (
-            <div className="flex flex-wrap gap-6 justify-center md:justify-start px-2">
-              {badges.map((badge) => (
-                <motion.div
-                  key={badge.id}
-                  {...getHoverMotion(reducedMotion, kidsHoverLift)}
-                  title={`${badge.label} — ${badge.description}`}
-                  className={`relative w-28 h-28 md:w-32 md:h-32 rounded-full flex items-center justify-center text-5xl md:text-6xl shadow-card border-8 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary-300 ${badge.earned ? 'bg-gradient-to-br from-orange-300 via-orange-400 to-primary-400 border-orange-200' : 'bg-surface-200 border-surface-300 grayscale opacity-60'}`}
-                >
-                  {badge.earned ? (
-                    <span className="filter drop-shadow-lg z-10 relative" aria-hidden="true">{badge.icon}</span>
-                  ) : (
-                    <LockIcon className="w-10 h-10 text-surface-400" />
-                  )}
-                </motion.div>
-              ))}
-            </div>
-          )}
-        </section>
+        <details className="kids-profile-fold rounded-32 border-4 border-border bg-card/60 shadow-soft overflow-hidden">
+          <summary className="kids-touch-target cursor-pointer list-none px-space-24 py-space-16 text-heading-s font-black text-foreground flex items-center justify-between gap-space-12 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary-300">
+            <span className="flex items-center gap-space-12">
+              <span aria-hidden="true">👤</span>
+              {kidName ? `${kidName}` : t('yourMedals')}
+            </span>
+            <span className="text-caption text-foreground-muted font-bold">{t('yourMedals')}</span>
+          </summary>
+          <div className="px-space-16 pb-space-24 space-y-space-24">
+            <section id="kids-profile" className="scroll-mt-24">
+              <KidsProfilePanel
+                kid={kid}
+                kidName={kidName}
+                progressRows={progressRows}
+                favoriteBooks={favoriteBooks}
+                lastActivity={lastActivityText}
+                t={t}
+                isRtl={isRtl}
+                onPlayBook={handlePlayBook}
+                onGoToLibrary={() => navigate('/kids/library')}
+              />
+            </section>
+            <section id="kids-medals" className="scroll-mt-24">
+              <h2 className="kids-shelf-title mb-space-16 pl-space-8">
+                <span aria-hidden="true">🏆</span>
+                <span>{t('yourMedals')}</span>
+              </h2>
+              {badges.length === 0 ? (
+                <KidsEmptyState
+                  emoji="🏅"
+                  title={t('emptyBadgesTitle')}
+                  compact
+                  actionLabel={t('goToLibrary')}
+                  onAction={() => navigate('/kids/library')}
+                  showMascot
+                  mascotMood="encourage"
+                />
+              ) : (
+                <div className="flex flex-wrap gap-space-16 justify-center md:justify-start px-space-8">
+                  {badges.map((badge) => (
+                    <motion.div
+                      key={badge.id}
+                      {...getHoverMotion(reducedMotion, kidsHoverLift)}
+                      title={`${badge.label} — ${badge.description}`}
+                      className={`relative w-24 h-24 md:w-28 md:h-28 rounded-full flex items-center justify-center text-4xl md:text-5xl shadow-card border-8 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary-300 ${badge.earned ? 'bg-gradient-to-br from-orange-300 via-orange-400 to-primary-400 border-orange-200' : 'bg-surface-200 border-surface-300 grayscale opacity-60'}`}
+                    >
+                      {badge.earned ? (
+                        <span className="filter drop-shadow-lg z-10 relative" aria-hidden="true">{badge.icon}</span>
+                      ) : (
+                        <LockIcon className="w-8 h-8 text-surface-400" />
+                      )}
+                    </motion.div>
+                  ))}
+                </div>
+              )}
+            </section>
+          </div>
+        </details>
+
+        <KidsTrustBadges t={t} compact className="opacity-80" />
       </main>
 
       <VoiceAssistant onNavigate={(path) => navigate(path)} />

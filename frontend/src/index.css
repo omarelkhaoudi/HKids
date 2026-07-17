@@ -1154,6 +1154,66 @@
     box-shadow: var(--shadow-floating, 0 16px 40px rgba(0, 0, 0, 0.12));
   }
 
+  /* —— Vooks-inspired discovery (HKids original) —— */
+  .kids-discovery-rail {
+    display: flex;
+    gap: var(--space-16);
+    overflow-x: auto;
+    padding: var(--space-8);
+    padding-bottom: var(--space-16);
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .kids-world-portal {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-12);
+    min-height: 9rem;
+    min-width: 9rem;
+    padding: var(--space-20);
+    border-radius: var(--radius-24);
+    border: 4px solid rgba(255, 255, 255, 0.35);
+    box-shadow: var(--shadow-card, 0 8px 24px rgba(0, 0, 0, 0.08));
+    scroll-snap-align: start;
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
+  }
+
+  .kids-world-portal:hover {
+    box-shadow: var(--shadow-floating, 0 16px 40px rgba(0, 0, 0, 0.12));
+  }
+
+  .kids-book-details-page {
+    background: var(--color-surface, #fff);
+  }
+
+  .kids-book-details-atmosphere {
+    background:
+      radial-gradient(ellipse 70% 50% at 50% 0%, var(--color-kids-glow-sky) 0%, transparent 60%),
+      linear-gradient(180deg, var(--color-primary-50) 0%, var(--color-surface) 70%);
+  }
+
+  .kids-book-details-bleed {
+    position: absolute;
+    inset: 0;
+    background-size: cover;
+    background-position: center;
+    filter: blur(48px) saturate(1.2);
+    opacity: 0.35;
+    transform: scale(1.15);
+    pointer-events: none;
+  }
+
+  .kids-profile-fold summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .kids-profile-fold[open] summary {
+    border-bottom: 2px solid var(--color-border, #e2e8f0);
+  }
+
   .kids-glow-books {
     background: radial-gradient(ellipse at 20% 0%, var(--color-kids-glow-sky) 0%, transparent 55%),
       radial-gradient(ellipse at 85% 90%, rgba(59, 154, 232, 0.12) 0%, transparent 50%);

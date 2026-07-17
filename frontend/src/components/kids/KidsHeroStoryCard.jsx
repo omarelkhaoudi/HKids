@@ -33,6 +33,7 @@ export function KidsHeroStoryCard({
   onListen,
   emptyLabel,
   onEmptyAction,
+  badgeLabel,
 }) {
   const reducedMotion = useReducedMotion();
   const progress = Math.min(100, Math.max(0, Number(book?.progress || book?.kid_progress_percent || 0)));
@@ -104,7 +105,7 @@ export function KidsHeroStoryCard({
         <div className="flex flex-1 flex-col justify-center min-w-0 gap-space-8 md:gap-space-12 py-space-4">
           <div className="min-w-0">
             <p className="text-caption font-black uppercase tracking-wide text-primary-700/90 mb-space-4">
-              {book.isInProgress ? t('continueReading') : t('forYou')}
+              {badgeLabel || (book.isInProgress ? t('continueReading') : t('forYou'))}
             </p>
             <h2 className="text-heading-l md:text-heading-xl text-foreground line-clamp-2 drop-shadow-sm">
               {book.title}
