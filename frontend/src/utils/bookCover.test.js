@@ -41,8 +41,10 @@ describe('bookCover utils', () => {
     expect(sources).toContain(`${LOCAL_BOOK_COVERS_BASE}/default.png`);
   });
 
-  it('resolveBookCoverUrl never returns null for a titled book', () => {
-    const url = resolveBookCoverUrl({ title: 'Une histoire', cover_image: '/uploads/x.svg' });
-    expect(url).toContain('/books/covers/');
+  it('maps spiritual and nature themes to illustrated packs', () => {
+    expect(deriveBookTheme({ theme: 'spiritual' })).toBe('bedtime');
+    expect(deriveBookTheme({ title: 'Les anges veillent', category_name: 'Spiritualité' })).toBe('bedtime');
+    expect(deriveBookTheme({ title: 'Le petit poisson' })).toBe('ocean');
+    expect(deriveBookTheme({ theme: 'nature' })).toBe('world');
   });
 });

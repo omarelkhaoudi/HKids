@@ -3,7 +3,6 @@ import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { booksAPI } from '../api/books';
 import { storage } from '../utils/storage';
-import { getImageUrl } from '../utils/imageUrl';
 import { useToast } from '../components/ToastProvider';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
@@ -11,6 +10,7 @@ import { useReducedMotion } from '../hooks/useReducedMotion';
 import { getHoverMotion, getMotionProps, kidsCardAppear, kidsCarouselReveal } from '../constants/kidsMotion';
 import { BookIcon, ChevronLeftIcon, HeartIcon, LockIcon, StarIcon } from '../components/Icons';
 import { Logo } from '../components/Logo';
+import { KidsBookCover } from '../components/kids/KidsBookCover';
 
 function getBookProgress(book, readingHistory = []) {
   const entry = readingHistory.find((item) => String(item.bookId) === String(book.id));
@@ -60,24 +60,13 @@ function StoryBookCard({
           {...getHoverMotion(reducedMotion, { whileHover: { y: -6, scale: 1.02 } })}
           className="relative"
         >
-          <div className="relative aspect-[3/4] overflow-hidden bg-surface-secondary">
-            {book.cover_image ? (
-              <img
-                src={getImageUrl(book.cover_image)}
-                alt={book.title}
-                className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                loading="lazy"
-                onError={(e) => {
-                  e.currentTarget.style.display = 'none';
-                  const fallback = e.currentTarget.nextElementSibling;
-                  if (fallback) fallback.classList.remove('hidden');
-                }}
-              />
-            ) : null}
-            <div className={`${book.cover_image ? 'hidden' : 'flex'} absolute inset-0 items-center justify-center bg-gradient-to-br from-primary-100 to-magic-100`}>
-              <BookIcon className="h-16 w-16 text-magic-300" />
-            </div>
-            <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-surface-900/50 via-transparent to-transparent" />
+          <div className="relative aspect-[3/4] overflow-hidden bg-surface-secondary kids-book-collectible-cover !rounded-none !shadow-none !transform-none">
+            <KidsBookCover
+              book={book}
+              alt={book.title}
+              imgClassName="absolute inset-0 h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+            />
+            <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-surface-900/45 via-transparent to-transparent" />
 
             <motion.button
               type="button"

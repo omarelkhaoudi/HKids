@@ -21,19 +21,27 @@ const THEME_ALIASES = {
   bedtime: 'bedtime',
   night: 'bedtime',
   sleep: 'bedtime',
+  spiritual: 'bedtime',
+  spirituality: 'bedtime',
+  faith: 'bedtime',
+  religious: 'bedtime',
   princesses: 'princesses',
   princess: 'princesses',
   magic: 'princesses',
   colors: 'colors',
   colour: 'colors',
   world: 'world',
+  nature: 'world',
+  garden: 'alphabet',
   ocean: 'ocean',
   sea: 'ocean',
   jobs: 'jobs',
   alphabet: 'alphabet',
   numbers: 'numbers',
+  shapes: 'numbers',
   rhymes: 'rhymes',
   song: 'rhymes',
+  comptine: 'rhymes',
   vehicles: 'jobs',
 };
 
@@ -78,14 +86,16 @@ export function deriveBookTheme(book = {}) {
   if (/lune|moon|étoile|etoile|star|space|fusée|fusee|rocket/.test(haystack)) return 'space';
   if (/princesse|princess|dragon gentil|fee|fée|fairy/.test(haystack)) return 'princesses';
   if (/couleur|color|colour|fée des couleurs/.test(haystack)) return 'colors';
-  if (/ours|bear|nuit|night|dormir|bonne nuit|bedtime|sleep/.test(haystack)) return 'bedtime';
-  if (/chat|cat|animal|chien|dog|ours|bear|oiseau|bird/.test(haystack)) return 'animals';
-  if (/océan|ocean|mer|sea|poisson|fish/.test(haystack)) return 'ocean';
+  if (/ange|angel|spiritual|foi|faith|gratitude|veille/.test(haystack)) return 'bedtime';
+  if (/ours|bear|nuit|night|dormir|bonne nuit|bedtime|sleep|soleil se couche/.test(haystack)) return 'bedtime';
+  if (/poisson|fish|baleine|whale|océan|ocean|mer|sea/.test(haystack)) return 'ocean';
+  if (/vache|cow|chat|cat|animal|chien|dog|oiseau|bird|abeille|bee|poule|hen/.test(haystack)) return 'animals';
+  if (/vent|feuille|leaf|fleur|flower|jardin|garden|nature/.test(haystack)) return 'world';
   if (/pompier|firefighter|camion|truck|métier|job/.test(haystack)) return 'jobs';
-  if (/abc|alphabet|lettre|letter|jardin/.test(haystack)) return 'alphabet';
-  if (/compte|count|nombre|number|pomme|apple/.test(haystack)) return 'numbers';
-  if (/comptine|chanson|song|rhyme|matin|morning/.test(haystack)) return 'rhymes';
-  if (/cochon|pig|world|monde/.test(haystack)) return 'world';
+  if (/abc|alphabet|lettre|letter/.test(haystack)) return 'alphabet';
+  if (/compte|count|nombre|number|pomme|apple|forme|shape/.test(haystack)) return 'numbers';
+  if (/comptine|chanson|song|rhyme|tap tap|matin|morning|soleil/.test(haystack)) return 'rhymes';
+  if (/cochon|pig|world|monde|marché|marche/.test(haystack)) return 'world';
   return null;
 }
 

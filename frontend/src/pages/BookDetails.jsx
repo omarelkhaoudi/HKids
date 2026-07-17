@@ -6,7 +6,8 @@ import {subscriptionsAPI} from '../api/subscriptions';
 import {useAuth} from '../context/AuthContext';
 import {storage} from '../utils/storage';
 import {useToast} from '../components/ToastProvider';
-import {getImageUrl} from '../utils/imageUrl';
+import {resolveBookCoverUrl} from '../utils/bookCover';
+import {KidsBookCover} from '../components/kids/KidsBookCover';
 import {
  HeartIcon, BookIcon, ChevronLeftIcon, RefreshIcon,
  ChildIcon, CategoryIcon, HistoryIcon, WarningIcon, AudioIcon, PlayIcon
@@ -24,7 +25,6 @@ function BookDetails() {
  const [loading, setLoading] = useState(true);
  const [isFavorite, setIsFavorite] = useState(false);
  const [relatedBooks, setRelatedBooks] = useState([]);
- const [imageError, setImageError] = useState(false);
  const [showReportModal, setShowReportModal] = useState(false);
  const {showToast} = useToast();
  const {user} = useAuth();
@@ -41,7 +41,6 @@ function BookDetails() {
  if (book) {
  setIsFavorite(storage.isFavorite(book.id));
  loadRelatedBooks();
- setImageError(false); // Reset image error when book changes
 }
 }, [book]);
 
@@ -183,7 +182,7 @@ function BookDetails() {
  return colorMap[categoryName] || 'from-primary-500 to-secondary-500';
 };
 
- const coverUrl = book?.cover_image && !imageError ? getImageUrl(book.cover_image) : null;
+ const coverUrl = resolveBookCoverUrl(book);
 
  return (
  <div className="min-h-screen kids-book-details-page">
@@ -229,15 +228,15 @@ function BookDetails() {
  >
  <motion.div
  {...getHoverMotion(reducedMotion, { whileHover: { y: -6, scale: 1.02 } })}
- className="relative mb-space-24 w-56 sm:w-64 md:w-72 rounded-32 overflow-hidden border border-border/50 shadow-floating"
+ className="relative mb-space-24 w-56 sm:w-64 md:w-72 kids-hero-cover"
  >
- {coverUrl ? (
- <img src={coverUrl} alt={book.title} className="w-full aspect-[3/4] object-cover" onError={() => setImageError(true)} onLoad={() => setImageError(false)} />
- ) : (
- <div className="w-full aspect-[3/4] grid place-items-center bg-gradient-to-br from-primary-100 to-primary-50">
- <BookIcon className="w-24 h-24 text-primary-300" />
+ <div className="aspect-[3/4] relative overflow-hidden">
+ <KidsBookCover
+ book={book}
+ alt={book.title}
+ imgClassName="absolute inset-0 w-full h-full object-cover"
+ />
  </div>
- )}
  </motion.div>
 
  <h1 className="text-heading-xl md:text-hero font-bold text-foreground mb-space-12 max-w-2xl leading-tight">
@@ -401,12 +400,11 @@ function BookDetails() {
  to={`/book-details/${relatedBook.id}`}
  className="block rounded-24 overflow-hidden bg-card border border-border/60 shadow-card hover:shadow-floating transition-shadow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-300"
  >
- <div className="aspect-[3/4] bg-gradient-to-br from-primary-100 to-primary-50 overflow-hidden">
- {relatedBook.cover_image ? (
- <img src={getImageUrl(relatedBook.cover_image)} alt="" className="w-full h-full object-cover" loading="lazy" />
- ) : (
- <div className="w-full h-full grid place-items-center"><BookIcon className="w-16 h-16 text-magic-300" /></div>
- )}
+ <div className="aspect-[3/4] bg-surface-secondary overflow-hidden relative">
+ <KidsBookCover
+ book={relatedBook}
+ imgClassName="absolute inset-0 w-full h-full object-cover"
+ />
  </div>
  <div className="p-space-16">
  <h3 className="text-body font-bold text-foreground line-clamp-2">{relatedBook.title}</h3>
