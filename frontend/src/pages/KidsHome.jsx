@@ -196,12 +196,15 @@ function KidsHome() {
     if (!adventureCandidate?.id) return null;
     const enrichment = publishedBooks.find((book) => book.id === adventureCandidate.id);
     const merged = enrichment ? { ...enrichment, ...adventureCandidate } : adventureCandidate;
+    const progressRow = progressRows.find((row) => row.book_id === merged.id);
+    const progress = Number(progressRow?.progress_percent || merged.kid_progress_percent || 0);
     return {
       ...merged,
-      progress: Number(merged.kid_progress_percent || 0),
-      isInProgress: false,
+      progress,
+      kid_progress_percent: progress,
+      isInProgress: progress > 0 && progress < 100,
     };
-  }, [continueReading, recommendedBooks, newBooks, publishedBooks]);
+  }, [continueReading, recommendedBooks, newBooks, publishedBooks, progressRows]);
 
   const bedtimeBooks = useMemo(() => filterBooksByCategory(publishedBooks, 'bedtime'), [publishedBooks]);
   const kidCategories = localizeKidCategories(language).filter((category) => WORLD_CATEGORY_IDS.includes(category.id));
@@ -292,7 +295,7 @@ function KidsHome() {
   const carouselProps = {
     isRtl,
     showActions: false,
-    hideTitle: true,
+    hideTitle: false,
     hideSectionTitle: false,
     onPlay: handlePlayBook,
     modality: 'books',
@@ -305,9 +308,9 @@ function KidsHome() {
 
   if (loading) {
     return (
-      <KidsPageShell isRtl={isRtl} variant="home" world="home" className="pb-space-32" footer={<KidsBottomNav />}>
-        <div className="px-6 py-space-8 space-y-space-8">
-          <div className="kids-premium-panel h-52 animate-pulse" />
+      <KidsPageShell isRtl={isRtl} variant="home" world="home" className="pb-space-32 kids-home-shell kids-hero-glow" footer={<KidsBottomNav />}>
+        <div className="kids-main kids-home-main px-space-24 py-space-24 space-y-space-24">
+          <div className="kids-hero-story h-64 md:h-80 animate-pulse rounded-32" />
           <BookGridSkeleton count={5} variant="carousel" />
         </div>
       </KidsPageShell>
@@ -315,59 +318,70 @@ function KidsHome() {
   }
 
   return (
-    <KidsPageShell isRtl={isRtl} variant="home" world="home" className="pb-space-32 kids-hero-glow" footer={<KidsBottomNav />}>
-      <header className="relative z-10 px-space-24 py-space-16 flex items-center justify-between gap-space-16">
+    <KidsPageShell isRtl={isRtl} variant="home" world="home" className="pb-space-32 kids-home-shell kids-hero-glow" footer={<KidsBottomNav />}>
+      <div className="kids-home-atmosphere" aria-hidden="true">
+        <span className="kids-home-cloud" style={{ width: '9rem', top: '8%', left: '6%' }} />
+        <span className="kids-home-cloud" style={{ width: '6rem', top: '18%', right: '10%' }} />
+        <span className="kids-home-star" style={{ top: '12%', left: '28%' }} />
+        <span className="kids-home-star" style={{ top: '22%', right: '24%' }} />
+        <span className="kids-home-star" style={{ top: '40%', left: '14%' }} />
+      </div>
+
+      <header className="kids-home-header relative z-10 px-space-24 py-space-16 flex items-center justify-between gap-space-16 sticky top-0">
         <div className="flex items-center gap-space-16 min-w-0">
           <Avatar
             src={avatarSrc}
             initials={avatarInitials}
             alt={kidName}
             size="lg"
-            className="w-space-64 h-space-64 border-2 border-surface shadow-soft bg-gradient-to-br from-primary-400 to-primary-600 text-white shrink-0"
+            className="w-14 h-14 border border-border/60 shadow-soft bg-gradient-to-br from-primary-400 to-primary-600 text-white shrink-0"
           />
           <div className="min-w-0">
-            <h1 className="text-heading-l truncate">
-              {greeting} <span className="text-primary-600">{kidName}</span>
+            <p className="text-caption font-medium text-foreground-muted">{greeting}</p>
+            <h1 className="text-heading-m md:text-heading-l font-semibold truncate text-foreground">
+              {kidName}
             </h1>
-            <p className="hidden sm:block text-body line-clamp-1">{t('kidsDiscoverToday')}</p>
           </div>
         </div>
         <div className="flex items-center gap-space-12 shrink-0">
-          <KidsMascot mood="wave" size="small" showBubble className="hidden sm:block" />
-          <Link to="/kids" className="shrink-0 transition-transform hover:scale-105 active:scale-95 focus:outline-none focus-visible:ring-4 focus-visible:ring-primary-300 rounded-full">
+          <KidsMascot mood="wave" size="small" showBubble={false} className="hidden sm:block opacity-90" />
+          <Link to="/kids" className="shrink-0 transition-opacity hover:opacity-80 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-300 rounded-full">
             <Logo size="default" showText={false} />
           </Link>
         </div>
       </header>
 
-      <main className="kids-main kids-main-tablet-wide relative z-20 mt-2 space-y-space-20">
-        {/* 1. Continue Reading — always first */}
+      <main className="kids-main kids-main-tablet-wide kids-home-main relative z-20 mt-space-8">
+        {/* 1. Today's Adventure */}
+        <section aria-label={t('kidsStoriesToday')} className="space-y-space-12">
+          <KidsHeroStoryCard
+            book={featuredBook}
+            isRtl={isRtl}
+            t={t}
+            onRead={handlePlayBook}
+            onListen={handleListenBook}
+            onContinue={handlePlayBook}
+            emptyLabel={t('emptyBooksTitle')}
+            onEmptyAction={() => navigate('/kids/library')}
+            badgeLabel={t('kidsStoriesToday')}
+          />
+          {featuredBook && (
+            <p className="px-space-8 text-body font-medium text-foreground-muted">
+              {t('discoverAdventureSubtitle')}
+            </p>
+          )}
+        </section>
+
+        {/* 2. Continue Reading */}
         {continueBooks.length > 0 && (
           <KidsContinueRail
             books={continueBooks}
             title={t('continueReading')}
-            emoji="⭐"
+            emoji="📖"
             isRtl={isRtl}
             t={t}
             onResume={handlePlayBook}
           />
-        )}
-
-        {/* 2. Today's Adventure — one featured story */}
-        <KidsHeroStoryCard
-          book={featuredBook}
-          isRtl={isRtl}
-          t={t}
-          onRead={handlePlayBook}
-          onListen={handleListenBook}
-          emptyLabel={t('emptyBooksTitle')}
-          onEmptyAction={() => navigate('/kids/library')}
-          badgeLabel={t('kidsStoriesToday')}
-        />
-        {featuredBook && (
-          <p className="px-space-8 -mt-space-12 text-caption font-bold text-foreground-muted">
-            {t('discoverAdventureSubtitle')}
-          </p>
         )}
 
         {/* 3. Recommended For You */}
@@ -390,57 +404,57 @@ function KidsHome() {
           />
         )}
 
-        {/* 4. Recently Added */}
-        {recentlyAdded.length > 0 && (
-          <KidsBookCarousel
-            title={t('newBooks')}
-            subtitle={t('discoverNewSubtitle')}
-            emoji="🆕"
-            books={recentlyAdded}
-            {...carouselProps}
-          />
-        )}
-
-        {/* 5. Because You Liked... */}
-        {becauseYouLikedBooks.length > 0 && (
-          <KidsBookCarousel
-            title={likedTheme
-              ? t('discoverBecauseYouLiked', { theme: likedTheme.shortLabel || likedTheme.label })
-              : t('kidsRecentlyLoved')}
-            subtitle={t('discoverBecauseSubtitle')}
-            emoji="❤️"
-            books={becauseYouLikedBooks}
-            {...carouselProps}
-            modality="favorites"
-          />
-        )}
-
-        {/* 6. Categories as visual worlds */}
+        {/* 4. Explore Worlds */}
         <motion.section aria-label={t('allCategories')} {...getMotionProps(reducedMotion, kidsCarouselReveal)}>
-          <div className="mb-space-16 px-space-8 md:px-space-16 flex items-end justify-between gap-space-12">
+          <div className="mb-space-20 px-space-8 md:px-space-16 flex items-end justify-between gap-space-12">
             <div>
               <h2 className="kids-shelf-title !mb-0">
-                <span aria-hidden="true">🗺️</span>
+                <span className="text-2xl opacity-80" aria-hidden="true">🗺️</span>
                 <span>{t('kidsWorldsExplore')}</span>
               </h2>
-              <p className="mt-space-4 text-caption font-bold text-foreground-muted">{t('discoverCategoriesSubtitle')}</p>
+              <p className="mt-space-8 text-body font-medium text-foreground-muted">{t('discoverCategoriesSubtitle')}</p>
             </div>
             <button
               type="button"
               onClick={() => navigate('/kids/library')}
-              className="kids-touch-target inline-flex min-h-touch items-center rounded-full border-2 border-border bg-card px-space-16 py-space-8 text-caption font-black text-primary-600 shadow-soft focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary-300"
+              className="kids-touch-target inline-flex min-h-touch items-center rounded-full border border-border/70 bg-card px-space-16 py-space-8 text-caption font-semibold text-primary-600 shadow-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-300"
             >
               {t('seeAll')}
             </button>
           </div>
-          <div className="kids-discovery-rail pb-space-8">
+          <div className="kids-discovery-rail pb-space-8 !gap-space-16 md:!gap-space-20">
             {kidCategories.map((category) => (
               <KidCategoryCard key={category.id} category={category} compact />
             ))}
           </div>
         </motion.section>
 
-        {/* Bedtime world shelf — atmospheric accent */}
+        {/* 5. New Stories */}
+        {recentlyAdded.length > 0 && (
+          <KidsBookCarousel
+            title={t('newBooks')}
+            subtitle={t('discoverNewSubtitle')}
+            emoji="🌱"
+            books={recentlyAdded}
+            {...carouselProps}
+          />
+        )}
+
+        {/* Because You Liked... */}
+        {becauseYouLikedBooks.length > 0 && (
+          <KidsBookCarousel
+            title={likedTheme
+              ? t('discoverBecauseYouLiked', { theme: likedTheme.shortLabel || likedTheme.label })
+              : t('kidsRecentlyLoved')}
+            subtitle={t('discoverBecauseSubtitle')}
+            emoji="💛"
+            books={becauseYouLikedBooks}
+            {...carouselProps}
+            modality="favorites"
+          />
+        )}
+
+        {/* Bedtime world shelf */}
         {bedtimeAnnotated.length > 0 && (
           <KidsBookCarousel
             title={getKidCategory('bedtime', language)?.label || 'Bedtime'}
@@ -452,15 +466,15 @@ function KidsHome() {
           />
         )}
 
-        {/* 7. Collections (age bands) */}
+        {/* Collections */}
         {(collectionLittle.length > 0 || collectionGrowing.length > 0 || collectionBig.length > 0) && (
-          <section aria-label={t('discoverCollections')} className="space-y-space-16">
+          <section aria-label={t('discoverCollections')} className="space-y-space-24">
             <div className="px-space-8 md:px-space-16">
               <h2 className="kids-shelf-title !mb-0">
-                <span aria-hidden="true">📚</span>
+                <span className="text-2xl opacity-80" aria-hidden="true">📚</span>
                 <span>{t('discoverCollections')}</span>
               </h2>
-              <p className="mt-space-4 text-caption font-bold text-foreground-muted">{t('discoverCollectionsSubtitle')}</p>
+              <p className="mt-space-8 text-body font-medium text-foreground-muted">{t('discoverCollectionsSubtitle')}</p>
             </div>
             {collectionLittle.length > 0 && (
               <KidsBookCarousel
@@ -473,7 +487,7 @@ function KidsHome() {
             {collectionGrowing.length > 0 && (
               <KidsBookCarousel
                 title={t('discoverCollectionGrowing')}
-                emoji="🌱"
+                emoji="🌿"
                 books={collectionGrowing}
                 {...carouselProps}
               />
@@ -489,54 +503,52 @@ function KidsHome() {
           </section>
         )}
 
-        {/* 8. Seasonal Stories */}
+        {/* Seasonal */}
         {seasonalBooks.length > 0 && (
           <KidsBookCarousel
             title={t('discoverSeasonal')}
             subtitle={t('discoverSeasonalSubtitle')}
-            emoji="🍂"
+            emoji="🍃"
             books={seasonalBooks}
             {...carouselProps}
           />
         )}
 
-        {/* Autonomy worlds — secondary navigation */}
+        {/* Autonomy worlds */}
         <motion.section
           aria-label={t('kidsAutonomyWorlds')}
           {...getMotionProps(reducedMotion, kidsCarouselReveal)}
         >
-          <h2 className="kids-shelf-title mb-space-16 px-space-8">
-            <span aria-hidden="true">🌍</span>
+          <h2 className="kids-shelf-title mb-space-20 px-space-8 md:px-space-16">
+            <span className="text-2xl opacity-80" aria-hidden="true">🌍</span>
             <span>{t('kidsAutonomyWorlds')}</span>
           </h2>
-          <div className="kids-discovery-rail">
-            {autonomyWorlds.map((world) => {
-              return (
-                <motion.button
-                  key={world.id}
-                  type="button"
-                  {...getHoverMotion(reducedMotion, kidsHoverLift)}
-                  onClick={() => navigate(world.path)}
-                  className="kids-world-portal shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-300"
-                  aria-label={t(world.labelKey)}
-                >
-                  <span className="text-4xl" aria-hidden="true">{world.emoji}</span>
-                  <span className="text-body font-bold text-foreground">{t(world.labelKey)}</span>
-                </motion.button>
-              );
-            })}
+          <div className="kids-discovery-rail !gap-space-16">
+            {autonomyWorlds.map((world) => (
+              <motion.button
+                key={world.id}
+                type="button"
+                {...getHoverMotion(reducedMotion, kidsHoverLift)}
+                onClick={() => navigate(world.path)}
+                className="kids-world-portal kids-world-destination--default shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-300"
+                aria-label={t(world.labelKey)}
+              >
+                <span className="text-4xl" aria-hidden="true">{world.emoji}</span>
+                <span className="text-body font-semibold text-foreground">{t(world.labelKey)}</span>
+              </motion.button>
+            ))}
           </div>
         </motion.section>
 
         <KidsFamilyMessages />
 
-        <details className="kids-profile-fold rounded-32 border border-border/70 bg-card shadow-soft overflow-hidden">
-          <summary className="kids-touch-target cursor-pointer list-none px-space-24 py-space-16 text-heading-m font-bold text-foreground flex items-center justify-between gap-space-12 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-300">
+        <details className="kids-profile-fold rounded-32 border border-border/50 bg-card/80 shadow-soft overflow-hidden">
+          <summary className="kids-touch-target cursor-pointer list-none px-space-24 py-space-16 text-heading-m font-semibold text-foreground flex items-center justify-between gap-space-12 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-300">
             <span className="flex items-center gap-space-12">
               <span aria-hidden="true">👤</span>
               {kidName ? `${kidName}` : t('yourMedals')}
             </span>
-            <span className="text-caption text-foreground-muted font-bold">{t('yourMedals')}</span>
+            <span className="text-caption text-foreground-muted font-medium">{t('yourMedals')}</span>
           </summary>
           <div className="px-space-16 pb-space-24 space-y-space-24">
             <section id="kids-profile" className="scroll-mt-24">
@@ -554,7 +566,7 @@ function KidsHome() {
             </section>
             <section id="kids-medals" className="scroll-mt-24">
               <h2 className="kids-shelf-title mb-space-16 pl-space-8">
-                <span aria-hidden="true">🏆</span>
+                <span className="text-2xl opacity-80" aria-hidden="true">🏆</span>
                 <span>{t('yourMedals')}</span>
               </h2>
               {badges.length === 0 ? (
@@ -574,12 +586,12 @@ function KidsHome() {
                       key={badge.id}
                       {...getHoverMotion(reducedMotion, kidsHoverLift)}
                       title={`${badge.label} — ${badge.description}`}
-                      className={`relative w-24 h-24 md:w-28 md:h-28 rounded-full flex items-center justify-center text-4xl md:text-5xl shadow-card border-8 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary-300 ${badge.earned ? 'bg-gradient-to-br from-orange-300 via-orange-400 to-primary-400 border-orange-200' : 'bg-surface-200 border-surface-300 grayscale opacity-60'}`}
+                      className={`relative w-20 h-20 md:w-24 md:h-24 rounded-full flex items-center justify-center text-3xl md:text-4xl shadow-card border-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-300 ${badge.earned ? 'bg-gradient-to-br from-orange-200 to-primary-300 border-orange-100' : 'bg-surface-200 border-surface-300 grayscale opacity-60'}`}
                     >
                       {badge.earned ? (
-                        <span className="filter drop-shadow-lg z-10 relative" aria-hidden="true">{badge.icon}</span>
+                        <span className="z-10 relative" aria-hidden="true">{badge.icon}</span>
                       ) : (
-                        <LockIcon className="w-8 h-8 text-surface-400" />
+                        <LockIcon className="w-7 h-7 text-surface-400" />
                       )}
                     </motion.div>
                   ))}
@@ -589,7 +601,7 @@ function KidsHome() {
           </div>
         </details>
 
-        <KidsTrustBadges t={t} compact className="opacity-80" />
+        <KidsTrustBadges t={t} compact className="opacity-70" />
       </main>
 
       <VoiceAssistant onNavigate={(path) => navigate(path)} />

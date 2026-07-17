@@ -1,8 +1,8 @@
 import { motion } from 'framer-motion';
 import { getImageUrl } from '../../utils/imageUrl';
 import { useReducedMotion } from '../../hooks/useReducedMotion';
-import { getMotionProps, getHoverMotion, kidsCardAppear, kidsHoverLift, kidsProgressFill } from '../../constants/kidsMotion';
-import { PlayIcon, AudioIcon } from '../Icons';
+import { getMotionProps, getHoverMotion, kidsCardAppear, kidsProgressFill } from '../../constants/kidsMotion';
+import { PlayIcon, AudioIcon, BookIcon } from '../Icons';
 import KidsButton from './KidsButton';
 
 function formatAge(book, t) {
@@ -31,6 +31,7 @@ export function KidsHeroStoryCard({
   t,
   onRead,
   onListen,
+  onContinue,
   emptyLabel,
   onEmptyAction,
   badgeLabel,
@@ -40,25 +41,28 @@ export function KidsHeroStoryCard({
   const ageLabel = formatAge(book, t);
   const durationLabel = formatDuration(book, t);
   const subtitle = book?.description || book?.author || t('kidsDiscoverToday');
-  const readLabel = book?.isInProgress ? t('resume') : t('readAction');
+  const hasProgress = progress > 0 && progress < 100;
   const cover = book?.cover_image ? getImageUrl(book.cover_image, 'book') : null;
 
   if (!book) {
     return (
       <motion.section
         {...getMotionProps(reducedMotion, kidsCardAppear)}
-        className="kids-hero-story relative overflow-hidden rounded-32 border-4 border-border shadow-card"
+        className="kids-hero-story relative overflow-hidden rounded-32"
         aria-label={emptyLabel || t('goToLibrary')}
       >
         <div className="kids-hero-story-atmosphere" aria-hidden="true">
           <span className="kids-hero-star kids-hero-star-a" />
           <span className="kids-hero-star kids-hero-star-b" />
-          <span className="kids-hero-star kids-hero-star-c" />
-          <span className="kids-hero-star kids-hero-star-d" />
         </div>
-        <div className="relative z-10 flex flex-col items-start justify-center gap-space-16 p-space-24 md:p-space-32 min-h-[12rem] md:min-h-[14rem]">
-          <h2 className="text-heading-l text-foreground">{emptyLabel || t('emptyBooksTitle')}</h2>
-          <KidsButton variant="primary" size="sm" onClick={onEmptyAction} aria-label={t('goToLibrary')}>
+        <div className="relative z-10 flex flex-col items-start justify-center gap-space-16 p-space-32 md:p-space-40 min-h-[14rem]">
+          <p className="text-caption font-semibold uppercase tracking-widest text-primary-600/80">
+            {badgeLabel || t('kidsStoriesToday')}
+          </p>
+          <h2 className="text-heading-xl font-semibold text-foreground max-w-lg leading-snug">
+            {emptyLabel || t('emptyBooksTitle')}
+          </h2>
+          <KidsButton variant="primary" size="md" onClick={onEmptyAction} aria-label={t('goToLibrary')}>
             {t('goToLibrary')}
           </KidsButton>
         </div>
@@ -69,14 +73,13 @@ export function KidsHeroStoryCard({
   return (
     <motion.section
       {...getMotionProps(reducedMotion, kidsCardAppear)}
-      className="kids-hero-story relative overflow-hidden rounded-32 border-4 border-border shadow-card"
+      className="kids-hero-story relative overflow-hidden rounded-32"
       aria-label={book.title}
     >
       <div className="kids-hero-story-atmosphere" aria-hidden="true">
         <span className="kids-hero-star kids-hero-star-a" />
         <span className="kids-hero-star kids-hero-star-b" />
         <span className="kids-hero-star kids-hero-star-c" />
-        <span className="kids-hero-star kids-hero-star-d" />
       </div>
       {cover ? (
         <div
@@ -86,93 +89,109 @@ export function KidsHeroStoryCard({
         />
       ) : null}
 
-      <div className="relative z-10 flex flex-row items-stretch gap-space-16 md:gap-space-24 p-space-16 md:p-space-24 min-h-[12rem] md:min-h-[14rem]">
+      <div className="relative z-10 flex flex-col md:flex-row items-center md:items-stretch gap-space-24 md:gap-space-32 p-space-24 md:p-space-32 lg:p-space-40">
         <motion.div
-          {...getHoverMotion(reducedMotion, kidsHoverLift)}
-          className="relative shrink-0 w-[6.5rem] sm:w-32 md:w-36 self-center"
+          {...getHoverMotion(reducedMotion)}
+          className="kids-hero-cover shrink-0 w-44 sm:w-52 md:w-56 lg:w-64 self-center"
         >
-          <div className="kids-hero-cover aspect-[3/4] rounded-24 overflow-hidden border-4 border-white/70 shadow-floating bg-surface-secondary">
+          <div className="aspect-[3/4] bg-surface-secondary">
             {cover ? (
               <img src={cover} alt="" className="h-full w-full object-cover" />
             ) : (
-              <div className="h-full w-full grid place-items-center text-4xl bg-gradient-to-br from-primary-300 to-magic-400" aria-hidden="true">
+              <div className="h-full w-full grid place-items-center text-5xl bg-gradient-to-br from-primary-100 to-primary-50" aria-hidden="true">
                 📖
               </div>
             )}
           </div>
         </motion.div>
 
-        <div className="flex flex-1 flex-col justify-center min-w-0 gap-space-8 md:gap-space-12 py-space-4">
-          <div className="min-w-0">
-            <p className="text-caption font-black uppercase tracking-wide text-primary-700/90 mb-space-4">
-              {badgeLabel || (book.isInProgress ? t('continueReading') : t('forYou'))}
+        <div className="flex flex-1 flex-col justify-center min-w-0 gap-space-16 text-center md:text-start py-space-4">
+          <div className="min-w-0 space-y-space-8">
+            <p className="text-caption font-semibold uppercase tracking-widest text-primary-600/80">
+              {badgeLabel || t('kidsStoriesToday')}
             </p>
-            <h2 className="text-heading-l md:text-heading-xl text-foreground line-clamp-2 drop-shadow-sm">
+            <h2 className="text-heading-xl md:text-hero font-semibold text-foreground leading-tight line-clamp-3">
               {book.title}
             </h2>
             {subtitle ? (
-              <p className="mt-space-4 text-body text-foreground-secondary line-clamp-2 max-w-xl">
+              <p className="text-body-lg text-foreground-secondary font-medium leading-relaxed line-clamp-3 max-w-xl mx-auto md:mx-0">
                 {subtitle}
               </p>
             ) : null}
           </div>
 
           {(ageLabel || durationLabel) && (
-            <div className="flex flex-wrap items-center gap-space-8 text-caption font-bold text-foreground-secondary">
+            <div className="flex flex-wrap items-center justify-center md:justify-start gap-space-8">
               {ageLabel ? (
-                <span className="inline-flex min-h-touch items-center rounded-full bg-surface/80 px-space-12 border border-border">
+                <span className="inline-flex min-h-[44px] items-center rounded-full bg-primary-50 text-primary-700 px-space-16 text-caption font-semibold border border-primary-100">
                   {ageLabel}
                 </span>
               ) : null}
               {durationLabel ? (
-                <span className="inline-flex min-h-touch items-center rounded-full bg-surface/80 px-space-12 border border-border">
+                <span className="inline-flex min-h-[44px] items-center rounded-full bg-surface-secondary text-foreground-secondary px-space-16 text-caption font-semibold border border-border/60">
                   {durationLabel}
                 </span>
               ) : null}
             </div>
           )}
 
-          <div className="flex flex-wrap items-center gap-space-12 pt-space-4">
+          {hasProgress && (
+            <div className="w-full max-w-md mx-auto md:mx-0">
+              <div className="flex items-center justify-between mb-space-8">
+                <span className="text-caption font-medium text-foreground-muted">{t('continueReading')}</span>
+                <span className="text-caption font-semibold text-primary-600">{Math.round(progress)}%</span>
+              </div>
+              <div
+                className="h-2 w-full overflow-hidden rounded-full bg-surface-secondary"
+                role="progressbar"
+                aria-valuenow={Math.round(progress)}
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-label={book.title}
+              >
+                <motion.div
+                  className="h-full rounded-full bg-primary-500"
+                  initial={{ width: 0 }}
+                  animate={{ width: `${progress}%` }}
+                  transition={reducedMotion ? { duration: 0 } : kidsProgressFill.transition}
+                />
+              </div>
+            </div>
+          )}
+
+          <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center justify-center md:justify-start gap-space-12 pt-space-4">
             <KidsButton
               variant="primary"
-              size="sm"
+              size="md"
               icon={PlayIcon}
               onClick={() => onRead?.(book)}
-              aria-label={readLabel}
+              aria-label={t('readAction')}
+              className="min-w-[8.5rem]"
             >
-              {readLabel}
+              {t('readAction')}
             </KidsButton>
             <KidsButton
-              variant="glass"
-              size="sm"
+              variant="secondary"
+              size="md"
               icon={AudioIcon}
               onClick={() => onListen?.(book)}
               aria-label={t('listenAction')}
+              className="min-w-[8.5rem]"
             >
               {t('listenAction')}
             </KidsButton>
-          </div>
-
-          <div className="w-full max-w-md pt-space-4">
-            <div className="flex items-center justify-between mb-space-4">
-              <span className="text-caption font-bold text-foreground-secondary">{t('continueReading')}</span>
-              <span className="text-caption font-black text-primary-700">{Math.round(progress)}%</span>
-            </div>
-            <div
-              className="h-space-12 w-full overflow-hidden rounded-full bg-surface-900/15 border border-border/60"
-              role="progressbar"
-              aria-valuenow={Math.round(progress)}
-              aria-valuemin={0}
-              aria-valuemax={100}
-              aria-label={book.title}
-            >
-              <motion.div
-                className="h-full rounded-full bg-gradient-to-r from-primary-400 via-secondary-400 to-orange-400"
-                initial={{ width: 0 }}
-                animate={{ width: `${progress}%` }}
-                transition={reducedMotion ? { duration: 0 } : kidsProgressFill.transition}
-              />
-            </div>
+            {hasProgress && (
+              <KidsButton
+                variant="ghost"
+                size="md"
+                icon={BookIcon}
+                onClick={() => (onContinue || onRead)?.(book)}
+                aria-label={t('resume')}
+                className="min-w-[8.5rem]"
+              >
+                {t('resume')}
+              </KidsButton>
+            )}
           </div>
         </div>
       </div>
