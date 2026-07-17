@@ -230,7 +230,7 @@ function KidsLibrary() {
     onFavorite: toggleFavorite,
     onDownload: handleDownloadBook,
     showActions: true,
-    hideTitle: true,
+    hideTitle: false,
     modality: 'books',
     seeAllLabel: t('seeAll'),
   };
@@ -260,11 +260,11 @@ function KidsLibrary() {
   );
 
   return (
-    <KidsPageShell isRtl={isRtl} variant="library" world="books" className={`pb-space-32 kids-glow-books ${selectedTheme === 'bedtime' ? 'kids-night-calm' : ''}`} footer={<KidsBottomNav />}>
+    <KidsPageShell isRtl={isRtl} variant="library" world="books" className={`pb-space-32 kids-library-shell kids-home-shell kids-hero-glow ${selectedTheme === 'bedtime' ? 'kids-night-calm' : ''}`} footer={<KidsBottomNav />}>
       {selectedTheme !== 'all' && <KidsCategoryAtmosphere categoryId={selectedTheme} />}
 
-      <header className="relative z-10 kids-premium-panel mx-space-16 sm:mx-space-24 mt-space-8 sticky top-space-8 px-space-16 sm:px-space-24 py-space-12 flex items-center justify-between gap-space-16">
-        <div className="flex items-center gap-space-16">
+      <header className="kids-home-header relative z-10 sticky top-0 px-space-20 sm:px-space-24 py-space-12 flex items-center justify-between gap-space-16">
+        <div className="flex items-center gap-space-12 min-w-0">
           <button
             type="button"
             onClick={() => navigate('/kids')}
@@ -273,18 +273,17 @@ function KidsLibrary() {
           >
             <HomeIcon />
           </button>
-          <Link to="/kids" className="shrink-0 transition-transform hover:scale-105 active:scale-95">
+          <Link to="/kids" className="shrink-0 transition-opacity hover:opacity-80 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-300 rounded-full">
             <Logo size="default" showText={false} />
           </Link>
-          <h1 className="text-heading-m hidden sm:block truncate">
+          <h1 className="text-heading-m font-semibold hidden sm:block truncate text-foreground">
             {selectedTheme === 'all' ? t('library') : (activeThemeData?.shortLabel || activeThemeData?.label)}
           </h1>
         </div>
-        <span className="text-4xl" aria-hidden="true">{selectedTheme === 'all' ? '📚' : (activeThemeData?.pictogram || '📚')}</span>
       </header>
 
-      <main className="kids-main kids-main-tablet-wide relative z-20 space-y-space-16">
-        <KidsTrustBadges t={t} compact className="opacity-90" />
+      <main className="kids-main kids-main-tablet-wide kids-home-main relative z-20 space-y-space-24">
+        <KidsTrustBadges t={t} compact className="opacity-60" />
 
         <SearchBar
           value={searchQuery}
@@ -309,7 +308,7 @@ function KidsLibrary() {
         )}
 
         <section aria-label={t('allCategories')}>
-          <div className="kids-discovery-rail !pt-space-4">
+          <div className="kids-discovery-rail !pt-space-4 !gap-space-10">
             {childThemes.map((theme) => (
               <KidsThemePill
                 key={theme.id}
@@ -369,12 +368,11 @@ function KidsLibrary() {
             </>
           )
         ) : (
-          <div className="space-y-space-12">
+          <div className="space-y-space-24">
             {continueAnnotated.length > 0 && (
               <KidsBookCarousel
                 title={t('continueReading')}
                 subtitle={t('discoverContinueSubtitle')}
-                emoji="⭐"
                 books={continueAnnotated}
                 {...carouselProps}
                 seeAllLabel={null}
@@ -397,7 +395,6 @@ function KidsLibrary() {
               <KidsBookCarousel
                 title={t('forYou')}
                 subtitle={t('discoverRecommendedSubtitle')}
-                emoji="✨"
                 books={todayAnnotated}
                 {...carouselProps}
                 seeAllLabel={null}
@@ -408,7 +405,6 @@ function KidsLibrary() {
               <KidsBookCarousel
                 title={t('newBooks')}
                 subtitle={t('discoverNewSubtitle')}
-                emoji="🆕"
                 books={newAnnotated}
                 {...carouselProps}
                 seeAllLabel={null}
@@ -419,7 +415,6 @@ function KidsLibrary() {
               <KidsBookCarousel
                 title={t('yourFavorites')}
                 subtitle={t('discoverBecauseSubtitle')}
-                emoji="❤️"
                 books={favoriteAnnotated}
                 {...carouselProps}
                 modality="favorites"
@@ -431,7 +426,6 @@ function KidsLibrary() {
               <KidsBookCarousel
                 title={t('discoverSeasonal')}
                 subtitle={t('discoverSeasonalSubtitle')}
-                emoji="🍂"
                 books={seasonalAnnotated}
                 {...carouselProps}
                 seeAllLabel={null}

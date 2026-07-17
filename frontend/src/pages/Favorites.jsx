@@ -110,7 +110,7 @@ function Favorites() {
         books={favoriteBooks}
         isRtl={isRtl}
         showActions={false}
-        hideTitle
+        hideTitle={false}
         modality="favorites"
         onPlay={(book) => navigate(getKidsContentPath(book))}
        />
@@ -119,8 +119,8 @@ function Favorites() {
          <KidsMediaCard
           key={book.id}
           book={book}
-          variant="poster"
-          hideTitle
+          variant="carousel"
+          hideTitle={false}
           isRtl={isRtl}
           showActions
           isFavorite

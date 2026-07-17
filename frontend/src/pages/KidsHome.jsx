@@ -377,7 +377,6 @@ function KidsHome() {
           <KidsContinueRail
             books={continueBooks}
             title={t('continueReading')}
-            emoji="📖"
             isRtl={isRtl}
             t={t}
             onResume={handlePlayBook}
@@ -389,7 +388,6 @@ function KidsHome() {
           <KidsBookCarousel
             title={t('forYou')}
             subtitle={t('discoverRecommendedSubtitle')}
-            emoji="✨"
             books={recommendedForYou}
             {...carouselProps}
           />
@@ -409,7 +407,6 @@ function KidsHome() {
           <div className="mb-space-20 px-space-8 md:px-space-16 flex items-end justify-between gap-space-12">
             <div>
               <h2 className="kids-shelf-title !mb-0">
-                <span className="text-2xl opacity-80" aria-hidden="true">🗺️</span>
                 <span>{t('kidsWorldsExplore')}</span>
               </h2>
               <p className="mt-space-8 text-body font-medium text-foreground-muted">{t('discoverCategoriesSubtitle')}</p>
@@ -417,12 +414,12 @@ function KidsHome() {
             <button
               type="button"
               onClick={() => navigate('/kids/library')}
-              className="kids-touch-target inline-flex min-h-touch items-center rounded-full border border-border/70 bg-card px-space-16 py-space-8 text-caption font-semibold text-primary-600 shadow-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-300"
+              className="kids-touch-target inline-flex min-h-touch items-center rounded-full border border-border/50 bg-card px-space-16 py-space-8 text-caption font-semibold text-primary-600 shadow-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-300"
             >
               {t('seeAll')}
             </button>
           </div>
-          <div className="kids-discovery-rail pb-space-8 !gap-space-16 md:!gap-space-20">
+          <div className="kids-discovery-rail pb-space-8 !gap-space-12 md:!gap-space-16">
             {kidCategories.map((category) => (
               <KidCategoryCard key={category.id} category={category} compact />
             ))}
@@ -434,7 +431,6 @@ function KidsHome() {
           <KidsBookCarousel
             title={t('newBooks')}
             subtitle={t('discoverNewSubtitle')}
-            emoji="🌱"
             books={recentlyAdded}
             {...carouselProps}
           />
@@ -447,7 +443,6 @@ function KidsHome() {
               ? t('discoverBecauseYouLiked', { theme: likedTheme.shortLabel || likedTheme.label })
               : t('kidsRecentlyLoved')}
             subtitle={t('discoverBecauseSubtitle')}
-            emoji="💛"
             books={becauseYouLikedBooks}
             {...carouselProps}
             modality="favorites"
@@ -459,7 +454,6 @@ function KidsHome() {
           <KidsBookCarousel
             title={getKidCategory('bedtime', language)?.label || 'Bedtime'}
             subtitle={t('discoverReasonBedtime')}
-            emoji="🌙"
             books={bedtimeAnnotated}
             {...carouselProps}
             onSeeAll={() => navigate('/kids/library?theme=bedtime')}
@@ -471,7 +465,6 @@ function KidsHome() {
           <section aria-label={t('discoverCollections')} className="space-y-space-24">
             <div className="px-space-8 md:px-space-16">
               <h2 className="kids-shelf-title !mb-0">
-                <span className="text-2xl opacity-80" aria-hidden="true">📚</span>
                 <span>{t('discoverCollections')}</span>
               </h2>
               <p className="mt-space-8 text-body font-medium text-foreground-muted">{t('discoverCollectionsSubtitle')}</p>
@@ -479,7 +472,6 @@ function KidsHome() {
             {collectionLittle.length > 0 && (
               <KidsBookCarousel
                 title={t('discoverCollectionLittle')}
-                emoji="🐣"
                 books={collectionLittle}
                 {...carouselProps}
               />
@@ -487,7 +479,6 @@ function KidsHome() {
             {collectionGrowing.length > 0 && (
               <KidsBookCarousel
                 title={t('discoverCollectionGrowing')}
-                emoji="🌿"
                 books={collectionGrowing}
                 {...carouselProps}
               />
@@ -495,7 +486,6 @@ function KidsHome() {
             {collectionBig.length > 0 && (
               <KidsBookCarousel
                 title={t('discoverCollectionBig')}
-                emoji="🚀"
                 books={collectionBig}
                 {...carouselProps}
               />
@@ -508,7 +498,6 @@ function KidsHome() {
           <KidsBookCarousel
             title={t('discoverSeasonal')}
             subtitle={t('discoverSeasonalSubtitle')}
-            emoji="🍃"
             books={seasonalBooks}
             {...carouselProps}
           />
@@ -520,7 +509,6 @@ function KidsHome() {
           {...getMotionProps(reducedMotion, kidsCarouselReveal)}
         >
           <h2 className="kids-shelf-title mb-space-20 px-space-8 md:px-space-16">
-            <span className="text-2xl opacity-80" aria-hidden="true">🌍</span>
             <span>{t('kidsAutonomyWorlds')}</span>
           </h2>
           <div className="kids-discovery-rail !gap-space-16">

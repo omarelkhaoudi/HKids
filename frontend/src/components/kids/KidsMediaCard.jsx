@@ -1,9 +1,9 @@
 import { memo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { getImageUrl } from '../../utils/imageUrl';
 import { useReducedMotion } from '../../hooks/useReducedMotion';
 import { getHoverMotion, kidsBadgePop } from '../../constants/kidsMotion';
 import { KidsFeedbackBurst } from './KidsFeedbackBurst';
+import { KidsBookCover } from './KidsBookCover';
 import { PlayIcon, HeartIcon, DownloadIcon, SparklesIcon, ClockIcon, ShieldIcon, AudioIcon } from '../Icons';
 
 function formatDuration(seconds = 0) {
@@ -50,51 +50,51 @@ export const KidsMediaCard = memo(function KidsMediaCard({
 
   return (
     <motion.article
-      className={`kids-book-collectible group ${isPoster ? '!w-64 md:!w-72' : ''} ${className}`}
+      className={`kids-book-collectible group ${isPoster ? 'kids-book-collectible--poster' : ''} ${className}`}
     >
-      <motion.button
-        type="button"
+      <motion.div
+        role="button"
+        tabIndex={0}
         {...getHoverMotion(reducedMotion, {
-          whileHover: { y: -2 },
-          whileTap: { scale: 0.98 },
+          whileHover: { y: -4 },
+          whileTap: { scale: 0.985 },
         })}
-        className="kids-book-collectible-cover w-full cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-400 focus-visible:ring-offset-2"
+        className="kids-book-collectible-cover kids-book-collectible-cover--hero w-full cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-400 focus-visible:ring-offset-2"
         onClick={() => onPlay?.(book)}
+        onKeyDown={(event) => {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            onPlay?.(book);
+          }
+        }}
         aria-label={book.title}
       >
         <KidsFeedbackBurst type={feedback} active={Boolean(feedback)} />
-        <img
-          src={getImageUrl(book.cover_image, 'book')}
-          alt=""
-          className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.03]"
-          loading="lazy"
+        <KidsBookCover
+          book={book}
+          imgClassName="absolute inset-0 h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.025]"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-foreground/40 via-transparent to-transparent pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-t from-foreground/20 via-transparent to-transparent pointer-events-none" />
 
-        <div className="absolute left-2 top-2 z-10 flex flex-col gap-1.5 max-w-[80%]">
+        <div className="absolute inset-inline-start-2 top-2 z-10 flex flex-col gap-1 max-w-[75%]">
           {(discoveryReason || book._discoveryReason) && (
-            <span className="inline-flex items-center rounded-full bg-card/95 px-2 py-0.5 text-[10px] font-semibold text-primary-700 shadow-soft border border-border/50 line-clamp-1">
+            <span className="kids-book-meta-chip line-clamp-1">
               {discoveryReason || book._discoveryReason}
             </span>
           )}
           {book.is_premium && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-primary-600/95 px-2 py-0.5 text-[10px] font-semibold text-white">
+            <span className="kids-book-meta-chip kids-book-meta-chip--accent">
               <SparklesIcon className="h-3 w-3" /> PRO
-            </span>
-          )}
-          {progress > 0 && progress < 100 && (
-            <span className="inline-flex items-center rounded-full bg-card/95 px-2 py-0.5 text-[10px] font-semibold text-primary-700 shadow-soft">
-              {Math.round(progress)}%
             </span>
           )}
         </div>
 
         {(isFavorite || showActions) && (
-          <div className="absolute right-2 top-2 z-10 flex flex-col gap-2">
+          <div className="absolute inset-inline-end-2 top-2 z-10 flex flex-col gap-2">
             <motion.button
               type="button"
-              whileHover={reducedMotion ? undefined : { scale: 1.05 }}
-              whileTap={reducedMotion ? undefined : { scale: 0.92 }}
+              whileHover={reducedMotion ? undefined : { scale: 1.04 }}
+              whileTap={reducedMotion ? undefined : { scale: 0.94 }}
               onClick={(e) => {
                 e.stopPropagation();
                 if (showActions) {
@@ -102,10 +102,10 @@ export const KidsMediaCard = memo(function KidsMediaCard({
                   flashFeedback('favorite');
                 }
               }}
-              className={`kids-touch-target !min-h-[48px] !min-w-[48px] rounded-full p-2.5 text-white shadow-card border transition-colors ${
+              className={`kids-touch-target !min-h-[48px] !min-w-[48px] rounded-full p-2.5 shadow-soft border transition-colors ${
                 isFavorite
-                  ? 'bg-rose-500 border-rose-300'
-                  : 'bg-card/35 border-white/40 opacity-0 group-hover:opacity-100'
+                  ? 'bg-rose-500 text-white border-rose-300'
+                  : 'bg-card/90 text-foreground-secondary border-border/50 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100'
               }`}
               aria-label="Favorite"
               aria-pressed={isFavorite}
@@ -126,13 +126,13 @@ export const KidsMediaCard = memo(function KidsMediaCard({
                     onDownload?.(book);
                     flashFeedback('download');
                   }}
-                  className="kids-touch-target !min-h-[48px] !min-w-[48px] rounded-full bg-card/35 p-2.5 text-white shadow-card border border-white/40 opacity-0 group-hover:opacity-100"
+                  className="kids-touch-target !min-h-[48px] !min-w-[48px] rounded-full bg-card/90 text-foreground-secondary p-2.5 shadow-soft border border-border/50 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100"
                   aria-label="Download"
                 >
                   <DownloadIcon className="h-5 w-5" />
                 </motion.button>
               ) : (
-                <div className="kids-touch-target !min-h-[48px] !min-w-[48px] rounded-full bg-primary-500 p-2.5 text-white shadow-card" aria-label="Downloaded">
+                <div className="kids-touch-target !min-h-[48px] !min-w-[48px] rounded-full bg-primary-500 p-2.5 text-white shadow-soft" aria-label="Downloaded">
                   <DownloadIcon className="h-5 w-5" />
                 </div>
               )
@@ -141,46 +141,48 @@ export const KidsMediaCard = memo(function KidsMediaCard({
         )}
 
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <span className="flex h-12 w-12 items-center justify-center rounded-full bg-card/80 text-primary-700 shadow-card opacity-0 scale-95 transition-all duration-300 group-hover:opacity-100 group-hover:scale-100 group-focus-within:opacity-100 group-focus-within:scale-100">
-            <PlayIcon className={`h-6 w-6 ${isRtl ? 'mr-0.5 rotate-180' : 'ml-0.5'}`} filled />
+          <span className="flex h-11 w-11 items-center justify-center rounded-full bg-card/92 text-primary-700 shadow-card opacity-0 scale-95 transition-all duration-300 group-hover:opacity-100 group-hover:scale-100 group-focus-within:opacity-100 group-focus-within:scale-100">
+            <PlayIcon className={`h-5 w-5 ${isRtl ? 'me-0.5 rotate-180' : 'ms-0.5'}`} filled />
           </span>
         </div>
 
         {progress > 0 && progress < 100 && (
-          <div className="absolute inset-x-0 bottom-0 h-1 bg-foreground/20">
-            <div className="h-full bg-primary-400" style={{ width: `${progress}%` }} />
+          <div className="absolute inset-x-0 bottom-0 h-1 bg-foreground/15">
+            <div className="h-full bg-primary-500" style={{ width: `${progress}%` }} />
           </div>
         )}
-      </motion.button>
+      </motion.div>
 
       {!hideTitle && (
-        <div className="mt-space-12 px-0.5 space-y-1.5">
-          <h3 className="text-body font-semibold text-foreground leading-snug line-clamp-2">
+        <div className="kids-book-collectible-meta">
+          <h3 className="text-[0.95rem] font-semibold text-foreground leading-snug line-clamp-2">
             {book.title}
           </h3>
           {book.author && (
-            <p className="text-caption font-medium text-foreground-muted line-clamp-1">{book.author}</p>
+            <p className="text-[0.7rem] font-medium text-foreground-muted line-clamp-1">{book.author}</p>
           )}
-          <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
+          <div className="flex flex-wrap items-center gap-1 pt-0.5">
             {ageLabel && (
-              <span className="inline-flex items-center gap-1 rounded-full bg-surface-secondary px-2 py-0.5 text-[10px] font-semibold text-foreground-secondary">
-                <ShieldIcon className="h-3 w-3" />
+              <span className="inline-flex items-center gap-0.5 rounded-full bg-surface-secondary/80 px-1.5 py-0.5 text-[9px] font-medium text-foreground-secondary">
+                <ShieldIcon className="h-2.5 w-2.5" />
                 {ageLabel}
               </span>
             )}
             {durationLabel && (
-              <span className="inline-flex items-center gap-1 rounded-full bg-surface-secondary px-2 py-0.5 text-[10px] font-semibold text-foreground-secondary">
-                <ClockIcon className="h-3 w-3" />
+              <span className="inline-flex items-center gap-0.5 rounded-full bg-surface-secondary/80 px-1.5 py-0.5 text-[9px] font-medium text-foreground-secondary">
+                <ClockIcon className="h-2.5 w-2.5" />
                 {durationLabel}
               </span>
             )}
             {audioReady && (
-              <span className="inline-flex items-center rounded-full bg-orange-50 text-orange-700 px-2 py-0.5 text-[10px] font-semibold" aria-label="Audio">
-                <AudioIcon className="h-3 w-3" />
+              <span className="inline-flex items-center rounded-full bg-orange-50 text-orange-700 px-1.5 py-0.5 text-[9px] font-medium" aria-label="Audio">
+                <AudioIcon className="h-2.5 w-2.5" />
               </span>
             )}
-            {themeEmoji && (
-              <span className="text-sm" aria-hidden="true">{themeEmoji}</span>
+            {progress > 0 && progress < 100 && (
+              <span className="inline-flex items-center rounded-full bg-primary-50 text-primary-700 px-1.5 py-0.5 text-[9px] font-semibold">
+                {Math.round(progress)}%
+              </span>
             )}
           </div>
         </div>
