@@ -31,6 +31,14 @@ import { KidsTrustBadges } from '../components/kids/KidsTrustBadges';
 import { KidsProfilePanel } from '../components/kids/KidsProfilePanel';
 import { BookGridSkeleton } from '../components/SkeletonLoader';
 import { bookMatchesKidCategory, getCategoryContentStrategy } from '../utils/kidCategoryContent';
+import {
+  annotateBooksWithReasons,
+  filterByAgeBand,
+  filterSeasonalBooks,
+  inferLikedThemeId,
+  isShortStory,
+  withDiscoveryReason,
+} from '../utils/discoveryRails';
 import { useReducedMotion } from '../hooks/useReducedMotion';
 import { getHoverMotion, kidsHoverLift, getMotionProps, kidsCarouselReveal } from '../constants/kidsMotion';
 
@@ -46,7 +54,7 @@ const AUTONOMY_WORLDS = [
   { id: 'create', path: '/kids/ai-stories', emoji: '✨', labelKey: 'kidsWorldCreate', modality: 'create', studioPath: '/kids/story-studio' },
 ];
 
-const HOME_CATEGORY_IDS = ['dinosaurs', 'space', 'animals', 'princesses', 'bedtime', 'ocean', 'vehicles', 'world', 'colors', 'spirituality'];
+const WORLD_CATEGORY_IDS = ['animals', 'space', 'princesses', 'bedtime', 'dinosaurs', 'ocean', 'world', 'colors'];
 
 const MAGIC_STRATEGY = {
   type: 'books',
@@ -178,39 +186,84 @@ function KidsHome() {
   );
 
   const featuredBook = useMemo(() => {
-    const base = continueReading
-      ? {
-          id: continueReading.book_id,
-          title: continueReading.book_title,
-          cover_image: continueReading.cover_image,
-          progress: Number(continueReading.progress_percent || 0),
-          currentPage: Number(continueReading.current_page || 0),
-          isInProgress: true,
-        }
-      : recommendedBooks[0]
-        ? {
-            ...recommendedBooks[0],
-            progress: Number(recommendedBooks[0].kid_progress_percent || 0),
-            isInProgress: false,
-          }
-        : null;
+    // Today's Adventure: prefer a recommended pick that is NOT the continue book
+    const continueId = continueReading?.book_id;
+    const adventureCandidate = recommendedBooks.find((book) => book.id !== continueId)
+      || recommendedBooks[0]
+      || newBooks[0]
+      || publishedBooks[0]
+      || null;
 
-    if (!base?.id) return base;
-    const enrichment = publishedBooks.find((book) => book.id === base.id);
-    return enrichment ? { ...enrichment, ...base } : base;
-  }, [continueReading, recommendedBooks, publishedBooks]);
+    if (!adventureCandidate?.id) return null;
+    const enrichment = publishedBooks.find((book) => book.id === adventureCandidate.id);
+    const merged = enrichment ? { ...enrichment, ...adventureCandidate } : adventureCandidate;
+    return {
+      ...merged,
+      progress: Number(merged.kid_progress_percent || 0),
+      isInProgress: false,
+    };
+  }, [continueReading, recommendedBooks, newBooks, publishedBooks]);
 
   const bedtimeBooks = useMemo(() => filterBooksByCategory(publishedBooks, 'bedtime'), [publishedBooks]);
-  const animalBooks = useMemo(() => filterBooksByCategory(publishedBooks, 'animals'), [publishedBooks]);
-  const spaceBooks = useMemo(() => filterBooksByCategory(publishedBooks, 'space'), [publishedBooks]);
-  const magicBooks = useMemo(() => filterBooksByCategory(publishedBooks, 'magic'), [publishedBooks]);
+  const kidCategories = localizeKidCategories(language).filter((category) => WORLD_CATEGORY_IDS.includes(category.id));
+
+  const likedThemeId = useMemo(
+    () => inferLikedThemeId(favoriteBooks, localizeKidCategories(language)),
+    [favoriteBooks, language],
+  );
+  const likedTheme = likedThemeId ? getKidCategory(likedThemeId, language) : null;
+
+  const becauseYouLikedBooks = useMemo(() => {
+    if (!likedThemeId) {
+      return annotateBooksWithReasons(favoriteBooks.slice(0, 12), t('discoverReasonLoved'));
+    }
+    const themed = filterBooksByCategory(publishedBooks, likedThemeId)
+      .filter((book) => !favoriteIds.includes(book.id))
+      .slice(0, 12);
+    const reason = t('discoverBecauseYouLiked', { theme: likedTheme?.shortLabel || likedTheme?.label || likedThemeId });
+    return annotateBooksWithReasons(themed.length ? themed : favoriteBooks.slice(0, 12), reason);
+  }, [likedThemeId, likedTheme, publishedBooks, favoriteBooks, favoriteIds, t]);
+
+  const recommendedForYou = useMemo(
+    () => recommendedBooks.map((book) => {
+      if (isShortStory(book)) return withDiscoveryReason(book, t('discoverReasonShort'));
+      if (book.age_group_min != null && book.age_group_max != null) {
+        return withDiscoveryReason(book, t('discoverReasonAges', { min: book.age_group_min, max: book.age_group_max }));
+      }
+      return withDiscoveryReason(book, t('forYou'));
+    }),
+    [recommendedBooks, t],
+  );
+
+  const recentlyAdded = useMemo(
+    () => annotateBooksWithReasons(newBooks, t('discoverReasonNew')),
+    [newBooks, t],
+  );
+
+  const seasonalBooks = useMemo(
+    () => annotateBooksWithReasons(filterSeasonalBooks(publishedBooks), t('discoverSeasonal')),
+    [publishedBooks, t],
+  );
+
+  const collectionLittle = useMemo(
+    () => annotateBooksWithReasons(filterByAgeBand(publishedBooks, 2, 5), t('discoverCollectionLittle')),
+    [publishedBooks, t],
+  );
+  const collectionGrowing = useMemo(
+    () => annotateBooksWithReasons(filterByAgeBand(publishedBooks, 5, 8), t('discoverCollectionGrowing')),
+    [publishedBooks, t],
+  );
+  const collectionBig = useMemo(
+    () => annotateBooksWithReasons(filterByAgeBand(publishedBooks, 8, 12), t('discoverCollectionBig')),
+    [publishedBooks, t],
+  );
+
+  const bedtimeAnnotated = useMemo(
+    () => annotateBooksWithReasons(bedtimeBooks, t('discoverReasonBedtime')),
+    [bedtimeBooks, t],
+  );
 
   const badges = Array.isArray(homeData?.badges) ? homeData.badges : [];
-  const kidCategories = localizeKidCategories(language).filter((category) => HOME_CATEGORY_IDS.includes(category.id));
-  const bedtimeLabel = getKidCategory('bedtime', language)?.label || 'Bedtime';
-  const animalsLabel = getKidCategory('animals', language)?.label || 'Animals';
-  const spaceLabel = getKidCategory('space', language)?.label || 'Space';
-  const magicLabel = getKidCategory('princesses', language)?.label || 'Magic';
 
   const autonomyWorlds = AUTONOMY_WORLDS.map((world) => {
     if (world.id === 'create' && user?.role !== 'kid') {
@@ -244,6 +297,8 @@ function KidsHome() {
     hideSectionTitle: false,
     onPlay: handlePlayBook,
     modality: 'books',
+    seeAllLabel: t('seeAll'),
+    onSeeAll: () => navigate('/kids/library'),
   };
 
   const lastActivityBook = progressRows[0];
@@ -286,18 +341,8 @@ function KidsHome() {
         </div>
       </header>
 
-      <main className="kids-main kids-main-tablet-wide relative z-20 mt-2 space-y-space-24">
-        <KidsHeroStoryCard
-          book={featuredBook}
-          isRtl={isRtl}
-          t={t}
-          onRead={handlePlayBook}
-          onListen={handleListenBook}
-          emptyLabel={t('emptyBooksTitle')}
-          onEmptyAction={() => navigate('/kids/library')}
-          badgeLabel={featuredBook?.isInProgress ? t('continueReading') : t('kidsStoriesToday')}
-        />
-
+      <main className="kids-main kids-main-tablet-wide relative z-20 mt-2 space-y-space-20">
+        {/* 1. Continue Reading — always first */}
         {continueBooks.length > 0 && (
           <KidsContinueRail
             books={continueBooks}
@@ -309,15 +354,32 @@ function KidsHome() {
           />
         )}
 
-        {recommendedBooks.length > 0 ? (
-          <div className="kids-shelf-rail">
-            <KidsBookCarousel
-              title={t('forYou')}
-              emoji="⭐"
-              books={recommendedBooks}
-              {...carouselProps}
-            />
-          </div>
+        {/* 2. Today's Adventure — one featured story */}
+        <KidsHeroStoryCard
+          book={featuredBook}
+          isRtl={isRtl}
+          t={t}
+          onRead={handlePlayBook}
+          onListen={handleListenBook}
+          emptyLabel={t('emptyBooksTitle')}
+          onEmptyAction={() => navigate('/kids/library')}
+          badgeLabel={t('kidsStoriesToday')}
+        />
+        {featuredBook && (
+          <p className="px-space-8 -mt-space-12 text-caption font-bold text-foreground-muted">
+            {t('discoverAdventureSubtitle')}
+          </p>
+        )}
+
+        {/* 3. Recommended For You */}
+        {recommendedForYou.length > 0 ? (
+          <KidsBookCarousel
+            title={t('forYou')}
+            subtitle={t('discoverRecommendedSubtitle')}
+            emoji="✨"
+            books={recommendedForYou}
+            {...carouselProps}
+          />
         ) : (
           <KidsEmptyState
             emoji="📚"
@@ -329,48 +391,117 @@ function KidsHome() {
           />
         )}
 
-        {bedtimeBooks.length > 0 && (
-          <div className="kids-shelf-rail">
-            <KidsBookCarousel title={bedtimeLabel} emoji="🌙" books={bedtimeBooks} {...carouselProps} />
-          </div>
+        {/* 4. Recently Added */}
+        {recentlyAdded.length > 0 && (
+          <KidsBookCarousel
+            title={t('newBooks')}
+            subtitle={t('discoverNewSubtitle')}
+            emoji="🆕"
+            books={recentlyAdded}
+            {...carouselProps}
+          />
         )}
 
-        {animalBooks.length > 0 && (
-          <div className="kids-shelf-rail">
-            <KidsBookCarousel title={animalsLabel} emoji="🦁" books={animalBooks} {...carouselProps} />
-          </div>
+        {/* 5. Because You Liked... */}
+        {becauseYouLikedBooks.length > 0 && (
+          <KidsBookCarousel
+            title={likedTheme
+              ? t('discoverBecauseYouLiked', { theme: likedTheme.shortLabel || likedTheme.label })
+              : t('kidsRecentlyLoved')}
+            subtitle={t('discoverBecauseSubtitle')}
+            emoji="❤️"
+            books={becauseYouLikedBooks}
+            {...carouselProps}
+            modality="favorites"
+          />
         )}
 
-        {spaceBooks.length > 0 && (
-          <div className="kids-shelf-rail">
-            <KidsBookCarousel title={spaceLabel} emoji="🚀" books={spaceBooks} {...carouselProps} />
+        {/* 6. Categories as visual worlds */}
+        <motion.section aria-label={t('allCategories')} {...getMotionProps(reducedMotion, kidsCarouselReveal)}>
+          <div className="mb-space-16 px-space-8 md:px-space-16 flex items-end justify-between gap-space-12">
+            <div>
+              <h2 className="kids-shelf-title !mb-0">
+                <span aria-hidden="true">🗺️</span>
+                <span>{t('kidsWorldsExplore')}</span>
+              </h2>
+              <p className="mt-space-4 text-caption font-bold text-foreground-muted">{t('discoverCategoriesSubtitle')}</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => navigate('/kids/library')}
+              className="kids-touch-target inline-flex min-h-touch items-center rounded-full border-2 border-border bg-card px-space-16 py-space-8 text-caption font-black text-primary-600 shadow-soft focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary-300"
+            >
+              {t('seeAll')}
+            </button>
           </div>
+          <div className="kids-discovery-rail pb-space-8">
+            {kidCategories.map((category) => (
+              <KidCategoryCard key={category.id} category={category} compact />
+            ))}
+          </div>
+        </motion.section>
+
+        {/* Bedtime world shelf — atmospheric accent */}
+        {bedtimeAnnotated.length > 0 && (
+          <KidsBookCarousel
+            title={getKidCategory('bedtime', language)?.label || 'Bedtime'}
+            subtitle={t('discoverReasonBedtime')}
+            emoji="🌙"
+            books={bedtimeAnnotated}
+            {...carouselProps}
+            onSeeAll={() => navigate('/kids/library?theme=bedtime')}
+          />
         )}
 
-        {magicBooks.length > 0 && (
-          <div className="kids-shelf-rail">
-            <KidsBookCarousel title={magicLabel} emoji="🧙" books={magicBooks} {...carouselProps} />
-          </div>
+        {/* 7. Collections (age bands) */}
+        {(collectionLittle.length > 0 || collectionGrowing.length > 0 || collectionBig.length > 0) && (
+          <section aria-label={t('discoverCollections')} className="space-y-space-16">
+            <div className="px-space-8 md:px-space-16">
+              <h2 className="kids-shelf-title !mb-0">
+                <span aria-hidden="true">📚</span>
+                <span>{t('discoverCollections')}</span>
+              </h2>
+              <p className="mt-space-4 text-caption font-bold text-foreground-muted">{t('discoverCollectionsSubtitle')}</p>
+            </div>
+            {collectionLittle.length > 0 && (
+              <KidsBookCarousel
+                title={t('discoverCollectionLittle')}
+                emoji="🐣"
+                books={collectionLittle}
+                {...carouselProps}
+              />
+            )}
+            {collectionGrowing.length > 0 && (
+              <KidsBookCarousel
+                title={t('discoverCollectionGrowing')}
+                emoji="🌱"
+                books={collectionGrowing}
+                {...carouselProps}
+              />
+            )}
+            {collectionBig.length > 0 && (
+              <KidsBookCarousel
+                title={t('discoverCollectionBig')}
+                emoji="🚀"
+                books={collectionBig}
+                {...carouselProps}
+              />
+            )}
+          </section>
         )}
 
-        {favoriteBooks.length > 0 && (
-          <div className="kids-shelf-rail">
-            <KidsBookCarousel
-              title={t('kidsRecentlyLoved')}
-              emoji="❤️"
-              books={favoriteBooks}
-              {...carouselProps}
-              modality="favorites"
-            />
-          </div>
+        {/* 8. Seasonal Stories */}
+        {seasonalBooks.length > 0 && (
+          <KidsBookCarousel
+            title={t('discoverSeasonal')}
+            subtitle={t('discoverSeasonalSubtitle')}
+            emoji="🍂"
+            books={seasonalBooks}
+            {...carouselProps}
+          />
         )}
 
-        {newBooks.length > 0 && (
-          <div className="kids-shelf-rail">
-            <KidsBookCarousel title={t('newBooks')} emoji="🆕" books={newBooks} {...carouselProps} />
-          </div>
-        )}
-
+        {/* Autonomy worlds — secondary navigation */}
         <motion.section
           aria-label={t('kidsAutonomyWorlds')}
           {...getMotionProps(reducedMotion, kidsCarouselReveal)}
@@ -396,18 +527,6 @@ function KidsHome() {
                 </motion.button>
               );
             })}
-          </div>
-        </motion.section>
-
-        <motion.section aria-label={t('allCategories')} {...getMotionProps(reducedMotion, kidsCarouselReveal)}>
-          <h2 className="kids-shelf-title mb-space-16 px-space-8">
-            <span aria-hidden="true">🗺️</span>
-            <span>{t('allCategories')}</span>
-          </h2>
-          <div className="kids-discovery-rail pb-space-8">
-            {kidCategories.map((category) => (
-              <KidCategoryCard key={category.id} category={category} compact />
-            ))}
           </div>
         </motion.section>
 
