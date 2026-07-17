@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Badge } from './Badge';
 import { ProgressBar } from './ProgressBar';
 import { useReducedMotion } from '../../hooks/useReducedMotion';
+import { KidsBookCover } from '../kids/KidsBookCover';
 
 export const BookCard = memo(function BookCard({
   book,
@@ -14,7 +15,6 @@ export const BookCard = memo(function BookCard({
 }) {
   const reducedMotion = useReducedMotion();
   const hoverMotion = reducedMotion ? {} : { whileHover: { y: -8, scale: 1.02 } };
-  const cover = book?.cover_image_url || book?.cover_image;
   const title = book?.title || '';
 
   return (
@@ -31,11 +31,9 @@ export const BookCard = memo(function BookCard({
       aria-label={title}
     >
       <div className="relative aspect-[3/4] overflow-hidden bg-surface-secondary">
-        <img
-          src={cover || '/placeholder.png'}
-          alt=""
-          className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-          loading="lazy"
+        <KidsBookCover
+          book={book}
+          imgClassName="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-surface-900/70 via-transparent to-transparent opacity-70" />
         <div className="absolute top-space-12 left-space-12 flex flex-col gap-space-8">
