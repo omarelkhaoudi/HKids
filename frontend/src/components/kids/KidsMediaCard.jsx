@@ -32,6 +32,7 @@ export const KidsMediaCard = memo(function KidsMediaCard({
   offlineReady = false,
   showActions = false,
   themeEmoji,
+  discoveryReason,
   onPlay,
   onFavorite,
   onDownload,
@@ -79,7 +80,12 @@ export const KidsMediaCard = memo(function KidsMediaCard({
         <div className={`absolute inset-0 bg-gradient-to-t pointer-events-none ${variant === 'poster' ? 'from-black/80 via-black/15' : 'from-black/50 via-transparent'} to-transparent`} />
 
         {/* Discovery badges — icon-first, max visual scan */}
-        <div className="absolute left-2.5 top-2.5 z-10 flex flex-col gap-1.5 max-w-[70%]">
+        <div className="absolute left-2.5 top-2.5 z-10 flex flex-col gap-1.5 max-w-[78%]">
+          {(discoveryReason || book._discoveryReason) && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-white/95 px-2.5 py-1 text-[11px] font-black text-primary-700 shadow-md border-2 border-white line-clamp-1">
+              {discoveryReason || book._discoveryReason}
+            </span>
+          )}
           {book.is_premium && (
             <span className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-orange-400 to-orange-500 px-2.5 py-1 text-[11px] font-black text-white shadow-md border-2 border-white/50">
               <SparklesIcon className="h-3.5 w-3.5" /> PRO
@@ -90,10 +96,10 @@ export const KidsMediaCard = memo(function KidsMediaCard({
               {themeEmoji}
             </span>
           )}
-          {book.age_level && (
+          {(book.age_level || (book.age_group_min != null && book.age_group_max != null)) && (
             <span className="inline-flex items-center gap-1 rounded-full bg-black/50 backdrop-blur-md px-2.5 py-1 text-[11px] font-black text-white border border-white/30">
               <ShieldIcon className="h-3.5 w-3.5 text-success-300" />
-              {book.age_level}
+              {book.age_level || `${book.age_group_min}–${book.age_group_max}`}
             </span>
           )}
           {durationLabel && (

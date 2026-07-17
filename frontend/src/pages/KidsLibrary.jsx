@@ -1,6 +1,5 @@
 ﻿import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { motion } from 'framer-motion';
 import { booksAPI } from '../api/books';
 import { recommendationsAPI } from '../api/recommendations';
 import { useAuth } from '../context/AuthContext';
@@ -18,7 +17,7 @@ import { KidsBookCarousel } from '../components/kids/KidsBookCarousel';
 import { KidsThemePill } from '../components/kids/KidsThemePill';
 import { KidsCategoryAtmosphere } from '../components/kids/KidsCategoryAtmosphere';
 import { KidsHeroStoryCard } from '../components/kids/KidsHeroStoryCard';
-import { HomeIcon, HeartIcon } from '../components/Icons';
+import { HomeIcon } from '../components/Icons';
 import { Logo } from '../components/Logo';
 import { BookGridSkeleton } from '../components/SkeletonLoader';
 import { KidsBottomNav } from '../components/kids/KidsBottomNav';
@@ -28,7 +27,12 @@ import { KidsTrustBadges } from '../components/kids/KidsTrustBadges';
 import { KidsAmbientSound } from '../components/kids/KidsAmbientSound';
 import { SearchBar } from '../components/ui';
 import { getKidsContentPath } from '../utils/contentRouting';
-import { useReducedMotion } from '../hooks/useReducedMotion';
+import {
+  annotateBooksWithReasons,
+  filterSeasonalBooks,
+  isShortStory,
+  withDiscoveryReason,
+} from '../utils/discoveryRails';
 
 const SHELF_THEME_IDS = ['dinosaurs', 'space', 'animals', 'princesses', 'bedtime', 'ocean', 'vehicles', 'world'];
 
@@ -62,7 +66,6 @@ function KidsLibrary() {
   const [searchParams, setSearchParams] = useSearchParams();
   const { showToast } = useToast();
   const { language, isRtl, t } = useLanguage();
-  const reducedMotion = useReducedMotion();
   const childThemes = useMemo(() => [
     { id: 'all', label: t('allCategories'), shortLabel: t('allCategories'), pictogram: '⭐', cue: 'Go', gradient: 'from-primary-400 to-secondary-400', match: [] },
     ...localizeKidCategories(language),
@@ -229,7 +232,32 @@ function KidsLibrary() {
     showActions: true,
     hideTitle: true,
     modality: 'books',
+    seeAllLabel: t('seeAll'),
   };
+
+  const continueAnnotated = useMemo(
+    () => annotateBooksWithReasons(continueBooks, t('continueReading')),
+    [continueBooks, t],
+  );
+  const todayAnnotated = useMemo(
+    () => todayBooks.map((book) => {
+      if (isShortStory(book)) return withDiscoveryReason(book, t('discoverReasonShort'));
+      return withDiscoveryReason(book, t('forYou'));
+    }),
+    [todayBooks, t],
+  );
+  const newAnnotated = useMemo(
+    () => annotateBooksWithReasons(newBooks, t('discoverReasonNew')),
+    [newBooks, t],
+  );
+  const favoriteAnnotated = useMemo(
+    () => annotateBooksWithReasons(favoriteBooks, t('discoverReasonLoved')),
+    [favoriteBooks, t],
+  );
+  const seasonalAnnotated = useMemo(
+    () => annotateBooksWithReasons(filterSeasonalBooks(visibleBooks), t('discoverSeasonal')),
+    [visibleBooks, t],
+  );
 
   return (
     <KidsPageShell isRtl={isRtl} variant="library" world="books" className={`pb-space-32 kids-glow-books ${selectedTheme === 'bedtime' ? 'kids-night-calm' : ''}`} footer={<KidsBottomNav />}>
@@ -255,7 +283,7 @@ function KidsLibrary() {
         <span className="text-4xl" aria-hidden="true">{selectedTheme === 'all' ? '📚' : (activeThemeData?.pictogram || '📚')}</span>
       </header>
 
-      <main className="kids-main kids-main-tablet-wide relative z-20">
+      <main className="kids-main kids-main-tablet-wide relative z-20 space-y-space-16">
         <KidsTrustBadges t={t} compact className="opacity-90" />
 
         <SearchBar
@@ -281,7 +309,7 @@ function KidsLibrary() {
         )}
 
         <section aria-label={t('allCategories')}>
-          <div className="flex gap-space-16 overflow-x-auto pb-space-16 pt-space-8 px-space-8 snap-x snap-mandatory custom-scrollbar kids-scroll-smooth">
+          <div className="kids-discovery-rail !pt-space-4">
             {childThemes.map((theme) => (
               <KidsThemePill
                 key={theme.id}
@@ -292,20 +320,6 @@ function KidsLibrary() {
             ))}
           </div>
         </section>
-
-        {featuredHeroBook && (
-          <KidsHeroStoryCard
-            book={featuredHeroBook}
-            isRtl={isRtl}
-            t={t}
-            onRead={handlePlayBook}
-            onListen={handleListenBook}
-            badgeLabel={selectedTheme === 'all' ? t('kidsStoriesToday') : (activeThemeData?.shortLabel || activeThemeData?.label)}
-            onEmptyAction={() => handleThemeChange('all')}
-          />
-        )}
-
-        <KidsFamilyMessages />
 
         {loading ? (
           <div className="px-space-4">
@@ -332,49 +346,113 @@ function KidsLibrary() {
               mascotMood="encourage"
             />
           ) : (
-            <div className="kids-shelf-rail">
+            <>
+              {featuredHeroBook && (
+                <KidsHeroStoryCard
+                  book={featuredHeroBook}
+                  isRtl={isRtl}
+                  t={t}
+                  onRead={handlePlayBook}
+                  onListen={handleListenBook}
+                  badgeLabel={activeThemeData?.shortLabel || activeThemeData?.label}
+                  onEmptyAction={() => handleThemeChange('all')}
+                />
+              )}
               <KidsBookCarousel
                 title={activeThemeData?.shortLabel || activeThemeData?.label}
+                subtitle={t('discoverCategoriesSubtitle')}
                 emoji={activeThemeData?.pictogram}
-                books={themeBooks}
+                books={annotateBooksWithReasons(themeBooks, activeThemeData?.shortLabel || activeThemeData?.label)}
                 {...carouselProps}
+                onSeeAll={() => handleThemeChange('all')}
               />
-            </div>
+            </>
           )
         ) : (
           <div className="space-y-space-12">
-            {continueBooks.length > 0 && (
-              <div className="kids-shelf-rail">
-                <KidsBookCarousel title={t('continueReading')} emoji="⭐" books={continueBooks} {...carouselProps} />
-              </div>
+            {continueAnnotated.length > 0 && (
+              <KidsBookCarousel
+                title={t('continueReading')}
+                subtitle={t('discoverContinueSubtitle')}
+                emoji="⭐"
+                books={continueAnnotated}
+                {...carouselProps}
+                seeAllLabel={null}
+              />
             )}
-            {favoriteBooks.length > 0 && (
-              <div className="kids-shelf-rail">
-                <KidsBookCarousel title={t('yourFavorites')} emoji="❤️" books={favoriteBooks} {...carouselProps} modality="favorites" />
-              </div>
+
+            {featuredHeroBook && !featuredHeroBook.isInProgress && (
+              <KidsHeroStoryCard
+                book={featuredHeroBook}
+                isRtl={isRtl}
+                t={t}
+                onRead={handlePlayBook}
+                onListen={handleListenBook}
+                badgeLabel={t('kidsStoriesToday')}
+                onEmptyAction={() => handleThemeChange('all')}
+              />
             )}
-            {newBooks.length > 0 && (
-              <div className="kids-shelf-rail">
-                <KidsBookCarousel title={t('newBooks')} emoji="🆕" books={newBooks} {...carouselProps} />
-              </div>
+
+            {todayAnnotated.length > 0 && (
+              <KidsBookCarousel
+                title={t('forYou')}
+                subtitle={t('discoverRecommendedSubtitle')}
+                emoji="✨"
+                books={todayAnnotated}
+                {...carouselProps}
+                seeAllLabel={null}
+              />
             )}
-            {todayBooks.length > 0 && (
-              <div className="kids-shelf-rail">
-                <KidsBookCarousel title={t('kidsStoriesToday')} emoji="📖" books={todayBooks} {...carouselProps} />
-              </div>
+
+            {newAnnotated.length > 0 && (
+              <KidsBookCarousel
+                title={t('newBooks')}
+                subtitle={t('discoverNewSubtitle')}
+                emoji="🆕"
+                books={newAnnotated}
+                {...carouselProps}
+                seeAllLabel={null}
+              />
             )}
+
+            {favoriteAnnotated.length > 0 && (
+              <KidsBookCarousel
+                title={t('yourFavorites')}
+                subtitle={t('discoverBecauseSubtitle')}
+                emoji="❤️"
+                books={favoriteAnnotated}
+                {...carouselProps}
+                modality="favorites"
+                seeAllLabel={null}
+              />
+            )}
+
+            {seasonalAnnotated.length > 0 && (
+              <KidsBookCarousel
+                title={t('discoverSeasonal')}
+                subtitle={t('discoverSeasonalSubtitle')}
+                emoji="🍂"
+                books={seasonalAnnotated}
+                {...carouselProps}
+                seeAllLabel={null}
+              />
+            )}
+
             {themeShelves.map(({ theme, books: shelfBooks }) => (
-              <div key={theme.id} className="kids-shelf-rail">
-                <KidsBookCarousel
-                  title={theme.shortLabel || theme.label}
-                  emoji={theme.pictogram}
-                  books={shelfBooks}
-                  {...carouselProps}
-                />
-              </div>
+              <KidsBookCarousel
+                key={theme.id}
+                title={theme.shortLabel || theme.label}
+                subtitle={t('discoverCategoriesSubtitle')}
+                emoji={theme.pictogram}
+                books={annotateBooksWithReasons(shelfBooks, theme.shortLabel || theme.label)}
+                {...carouselProps}
+                onSeeAll={() => handleThemeChange(theme.id)}
+              />
             ))}
           </div>
         )}
+
+        <KidsFamilyMessages />
       </main>
 
       <VoiceAssistant language={language === 'en' ? 'en-US' : language === 'ar' ? 'ar-MA' : 'fr-FR'} onNavigate={(path) => navigate(path)} />

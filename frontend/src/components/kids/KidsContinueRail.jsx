@@ -7,6 +7,7 @@ import { PlayIcon } from '../Icons';
 export function KidsContinueRail({
   books = [],
   title,
+  subtitle,
   emoji = '⭐',
   isRtl = false,
   t,
@@ -22,10 +23,17 @@ export function KidsContinueRail({
       aria-label={title || t('continueReading')}
       {...getMotionProps(reducedMotion, kidsCarouselReveal)}
     >
-      <h2 className="kids-shelf-title mb-space-16 px-space-8">
-        <span aria-hidden="true">{emoji}</span>
-        <span>{title || t('continueReading')}</span>
-      </h2>
+      <div className="mb-space-16 px-space-8">
+        <h2 className="kids-shelf-title !mb-0">
+          <span aria-hidden="true">{emoji}</span>
+          <span>{title || t('continueReading')}</span>
+        </h2>
+        {(subtitle || t('discoverContinueSubtitle')) && (
+          <p className="mt-space-4 text-caption font-bold text-foreground-muted">
+            {subtitle || t('discoverContinueSubtitle')}
+          </p>
+        )}
+      </div>
 
       <div className="flex gap-space-16 md:gap-space-20 overflow-x-auto px-space-8 pb-space-16 snap-x snap-mandatory custom-scrollbar kids-scroll-smooth">
         {books.map((book) => {

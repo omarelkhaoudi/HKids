@@ -1165,6 +1165,16 @@
     padding-bottom: var(--space-16);
     scroll-snap-type: x mandatory;
     -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+  }
+
+  .kids-discovery-rail::-webkit-scrollbar {
+    height: 6px;
+  }
+
+  .kids-discovery-rail::-webkit-scrollbar-thumb {
+    background: color-mix(in srgb, var(--color-primary-400) 45%, transparent);
+    border-radius: 999px;
   }
 
   .kids-world-portal {
