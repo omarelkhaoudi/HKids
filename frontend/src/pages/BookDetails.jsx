@@ -8,12 +8,14 @@ import {storage} from '../utils/storage';
 import {useToast} from '../components/ToastProvider';
 import {getImageUrl} from '../utils/imageUrl';
 import {
- HeartIcon, BookIcon, ChevronLeftIcon, RefreshIcon, 
- StarIcon, ChildIcon, CategoryIcon, HistoryIcon, WarningIcon
+ HeartIcon, BookIcon, ChevronLeftIcon, RefreshIcon,
+ ChildIcon, CategoryIcon, HistoryIcon, WarningIcon, AudioIcon, PlayIcon
 } from '../components/Icons';
 import {Logo} from '../components/Logo';
 import {ContentReportModal} from '../components/parent/ContentReportModal';
 import {useLanguage} from '../context/LanguageContext';
+import {useReducedMotion} from '../hooks/useReducedMotion';
+import {getHoverMotion, getMotionProps, kidsCardAppear, kidsCarouselReveal} from '../constants/kidsMotion';
 
 function BookDetails() {
  const {id} = useParams();
@@ -27,6 +29,7 @@ function BookDetails() {
  const {showToast} = useToast();
  const {user} = useAuth();
  const {t} = useLanguage();
+ const reducedMotion = useReducedMotion();
  const isKidAccount = user?.role === 'kid';
  const canReport = user && (user.role === 'parent' || user.role === 'admin');
 
@@ -170,311 +173,202 @@ function BookDetails() {
 
  const getCategoryColor = (categoryName) => {
  const colorMap = {
- 'Nature': 'from-secondary-500 to-secondary-600',
- 'Aventure': 'from-accent-500 to-accent-600',
- 'Animaux': 'from-secondary-500 to-primary-500',
- 'Espace': 'from-primary-500 to-primary-700',
- 'Fiction': 'from-primary-500 to-secondary-500',
- 'Educational': 'from-primary-500 to-secondary-500',
+ 'Nature': 'from-success-500 to-success-600',
+ 'Aventure': 'from-primary-500 to-primary-600',
+ 'Animaux': 'from-orange-500 to-orange-600',
+ 'Espace': 'from-primary-600 to-magic-700',
+ 'Fiction': 'from-magic-500 to-primary-500',
+ 'Educational': 'from-success-500 to-primary-500',
 };
  return colorMap[categoryName] || 'from-primary-500 to-secondary-500';
 };
 
+ const coverUrl = book?.cover_image && !imageError ? getImageUrl(book.cover_image) : null;
+
  return (
- <div className="min-h-screen bg-card">
- {/* Header */}
+ <div className="min-h-screen kids-book-details-page">
  <motion.header 
- initial={{y: -100, opacity: 0}}
- animate={{y: 0, opacity: 1}}
- transition={{duration: 0.5}}
- className="sticky top-0 z-50 shadow-md bg-surface-900/95 backdrop-blur-md"
+ {...getMotionProps(reducedMotion, kidsCardAppear)}
+ className="sticky top-0 z-50 shadow-md bg-surface-900/90 backdrop-blur-md"
  >
- <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4 flex justify-between items-center gap-3">
- <Link to="/" className="flex items-center">
+ <div className="max-w-5xl mx-auto px-space-16 sm:px-space-24 py-space-12 flex justify-between items-center gap-space-12">
+ <Link to="/" className="flex items-center shrink-0">
  <Logo size="default" />
  </Link>
- <div className="flex items-center gap-4">
- <motion.button
- whileHover={{scale: 1.05}}
- whileTap={{scale: 0.95}}
+ <div className="flex items-center gap-space-12">
+ <button
+ type="button"
  onClick={() => navigate(-1)}
- className="text-surface-100 hover:text-white font-medium flex items-center gap-2 transition-colors"
+ className="kids-touch-target inline-flex items-center gap-space-8 text-surface-100 hover:text-white font-bold transition-colors focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary-300 rounded-full px-space-12"
  >
- <ChevronLeftIcon className="w-4 h-4" />
+ <ChevronLeftIcon className="w-5 h-5" />
  <span className="hidden sm:inline">Retour</span>
- </motion.button>
- <motion.button
- whileHover={{scale: 1.1}}
- whileTap={{scale: 0.9}}
+ </button>
+ <button
+ type="button"
  onClick={toggleFavorite}
- className={`p-3 rounded-full transition-all ${
- isFavorite
- ? 'bg-primary-500 text-white shadow-lg'
- : 'bg-surface-800 text-surface-300 hover:bg-surface-700'
+ className={`kids-touch-target grid h-14 w-14 min-h-touch min-w-touch place-items-center rounded-full transition-all focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary-300 ${
+ isFavorite ? 'bg-orange-500 text-white shadow-floating' : 'bg-surface-800 text-surface-300 hover:bg-surface-700'
 }`}
+ aria-label={isFavorite ? 'Retirer des favoris' : 'Ajouter aux favoris'}
  >
- <HeartIcon className="w-5 h-5" filled={isFavorite} />
- </motion.button>
+ <HeartIcon className="w-6 h-6" filled={isFavorite} />
+ </button>
  </div>
  </div>
  </motion.header>
 
- {/* Hero Section avec étoiles animées et couverture */}
- <section className="relative overflow-hidden bg-gradient-to-br from-white via-primary-50/30 to-secondary-50/30 py-12 md:py-16">
- {/* Étoiles animées en arrière-plan */}
- <div className="absolute inset-0 overflow-hidden pointer-events-none">
- {Array.from({length: 20}).map((_, i) => (
+ <section className="relative overflow-hidden kids-book-details-atmosphere py-space-40 md:py-space-56">
+ {coverUrl && (
+ <div className="kids-book-details-bleed" style={{ backgroundImage: `url(${coverUrl})` }} aria-hidden="true" />
+ )}
+ <div className="max-w-5xl mx-auto px-space-16 sm:px-space-24 relative z-10">
  <motion.div
- key={i}
- className="absolute text-accent-400"
- style={{
- left: `${Math.random() * 100}%`,
- top: `${Math.random() * 100}%`,
-}}
- animate={{
- y: [0, -20, 0],
- opacity: [0.3, 1, 0.3],
- scale: [1, 1.2, 1],
-}}
- transition={{
- duration: 3 + Math.random() * 2,
- repeat: Infinity,
- delay: Math.random() * 2,
-}}
+ {...getMotionProps(reducedMotion, kidsCardAppear)}
+ className="flex flex-col items-center text-center"
  >
- <StarIcon className="w-6 h-6" />
- </motion.div>
- ))}
- </div>
- <div className="max-w-7xl mx-auto px-4 sm:px-6 relative z-10 py-12">
  <motion.div
- initial={{opacity: 0, y: 30}}
- animate={{opacity: 1, y: 0}}
- transition={{duration: 0.6}}
- className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12 items-start"
+ {...getHoverMotion(reducedMotion, { whileHover: { y: -6, scale: 1.02 } })}
+ className="relative mb-space-24 w-56 sm:w-64 md:w-72 rounded-32 overflow-hidden border-4 border-white/80 shadow-floating kids-book-glow"
  >
- {/* Couverture du livre */}
- <motion.div
- initial={{opacity: 0, scale: 0.9, rotateY: -15}}
- animate={{opacity: 1, scale: 1, rotateY: 0}}
- transition={{duration: 0.6, delay: 0.2}}
- className="lg:col-span-1 flex justify-center lg:justify-start"
- >
- <div className="relative">
- <div className="absolute inset-0 bg-gradient-to-br from-primary-500/20 via-secondary-500/20 to-accent-500/20 blur-2xl rounded-3xl"></div>
- <motion.div
- whileHover={{scale: 1.04, y: -4}}
- transition={{type: 'spring', stiffness: 300}}
- className="relative w-[300px] sm:w-[360px] md:w-[420px] rounded-3xl border-4 border-white bg-gradient-to-br from-primary-50 via-secondary-50 to-accent-50 p-8 sm:p-10 shadow-2xl [perspective:1200px]"
- >
- <div className="relative mx-auto w-[78%] max-w-[300px] aspect-[3/4] [transform-style:preserve-3d] [transform:rotateY(-18deg)_rotateZ(-1deg)] transition-transform duration-300 hover:[transform:rotateY(-14deg)_rotateZ(-0.5deg)_translateY(-2px)]">
- <div className="absolute -right-[14%] top-[3%] h-[94%] w-[17%] rounded-r-lg bg-gradient-to-r from-surface-200 via-white to-surface-300 shadow-lg [transform:rotateY(72deg)_translateZ(1px)] origin-left">
- <div className="absolute inset-y-4 left-1/3 w-px bg-surface-300/80"></div>
- <div className="absolute inset-y-5 right-1/3 w-px bg-surface-200/80"></div>
- </div>
- <div className="absolute -right-[8%] top-[5%] h-[90%] w-[10%] rounded-r-md bg-gradient-to-r from-white via-surface-100 to-surface-300 [transform:translateZ(-12px)]"></div>
- <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-surface-900/10 to-surface-900/25 [transform:translateZ(-18px)]"></div>
- <div className="relative z-10 h-full w-full overflow-hidden rounded-3xl bg-card shadow-2xl ring-1 ring-black/10 [transform:translateZ(16px)]">
- {book.cover_image && !imageError ? (
- <img
- src={getImageUrl(book.cover_image)}
- alt={book.title}
- className="h-full w-full object-cover"
- onError={() => setImageError(true)}
- onLoad={() => setImageError(false)}
- />
+ {coverUrl ? (
+ <img src={coverUrl} alt={book.title} className="w-full aspect-[3/4] object-cover" onError={() => setImageError(true)} onLoad={() => setImageError(false)} />
  ) : (
- <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary-100 to-secondary-100">
- <BookIcon className="w-28 h-28 text-foreground-400" />
+ <div className="w-full aspect-[3/4] grid place-items-center bg-gradient-to-br from-primary-100 to-magic-100">
+ <BookIcon className="w-24 h-24 text-magic-300" />
  </div>
  )}
- <div className="pointer-events-none absolute inset-y-0 left-0 w-[14%] bg-gradient-to-r from-black/20 via-black/5 to-transparent"></div>
- <div className="pointer-events-none absolute inset-0 bg-gradient-to-tr from-white/0 via-white/10 to-white/35"></div>
- </div>
- <div className="absolute -bottom-7 left-[9%] h-7 w-[95%] rounded-full bg-black/20 blur-xl [transform:rotateX(75deg)]"></div>
- </div>
- </motion.div>
- </div>
  </motion.div>
 
- {/* Informations du livre */}
- <div className="lg:col-span-2 space-y-6">
- <motion.div
- initial={{opacity: 0, x: 20}}
- animate={{opacity: 1, x: 0}}
- transition={{delay: 0.3}}
- >
- <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-foreground mb-4 leading-tight">
+ <h1 className="text-heading-xl md:text-display-s font-extrabold text-foreground mb-space-12 max-w-2xl leading-tight">
  {book.title}
  </h1>
- 
+
  {book.author && (
- <div className="flex items-center gap-3 mb-6">
- <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary-100 to-secondary-100 flex items-center justify-center">
- <BookIcon className="w-5 h-5 text-foreground-600" />
- </div>
- <p className="text-xl md:text-2xl text-foreground-secondary font-medium">
- par {book.author}
- </p>
- </div>
+ <p className="text-heading-s text-foreground-secondary font-medium mb-space-16">par {book.author}</p>
  )}
 
- {/* Tags */}
- <div className="flex flex-wrap gap-3 mb-6">
+ <div className="flex flex-wrap justify-center gap-space-8 mb-space-24">
  {book.category_name && (
- <motion.span
- whileHover={{scale: 1.05}}
- className={`px-4 py-2 bg-gradient-to-r ${getCategoryColor(book.category_name)} text-white rounded-full text-sm font-semibold shadow-lg flex items-center gap-2`}
- >
+ <span className={`inline-flex items-center gap-space-8 px-space-16 py-space-8 bg-gradient-to-r ${getCategoryColor(book.category_name)} text-white rounded-full text-caption font-bold shadow-soft`}>
  <CategoryIcon className="w-4 h-4" />
  {book.category_name}
- </motion.span>
+ </span>
  )}
  {book.age_group_min !== undefined && book.age_group_max !== undefined && (
- <motion.span
- whileHover={{scale: 1.05}}
- className="px-4 py-2 bg-gradient-to-r from-accent-400 to-secondary-400 text-white rounded-full text-sm font-semibold shadow-lg flex items-center gap-2"
- >
+ <span className="inline-flex items-center gap-space-8 px-space-16 py-space-8 bg-orange-100 text-orange-800 rounded-full text-caption font-bold border border-orange-200">
  <ChildIcon className="w-4 h-4" />
  {book.age_group_min}-{book.age_group_max} ans
- </motion.span>
+ </span>
  )}
  {book.page_count > 0 && (
- <motion.span
- whileHover={{scale: 1.05}}
- className="px-4 py-2 bg-gradient-to-r from-primary-400 to-primary-400 text-white rounded-full text-sm font-semibold shadow-lg flex items-center gap-2"
- >
+ <span className="inline-flex items-center gap-space-8 px-space-16 py-space-8 bg-primary-50 text-primary-700 rounded-full text-caption font-bold border border-primary-100">
  <BookIcon className="w-4 h-4" />
  {book.page_count} page{book.page_count > 1 ? 's' : ''}
- </motion.span>
+ </span>
  )}
  </div>
 
- {/* Description */}
  {book.description && (
- <motion.div
- initial={{opacity: 0, y: 10}}
- animate={{opacity: 1, y: 0}}
- transition={{delay: 0.4}}
- className="bg-card/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/50"
- >
- <h3 className="font-bold text-foreground mb-3 text-lg flex items-center gap-2">
- <StarIcon className="w-5 h-5 text-accent-500" />
- À propos de ce livre
- </h3>
- <p className="text-foreground-secondary leading-relaxed text-base">
+ <p className="text-body text-foreground-secondary leading-relaxed max-w-xl mb-space-24 line-clamp-4">
  {book.description}
  </p>
- </motion.div>
  )}
 
- {/* Progression si déjà lu */}
  {hasHistory && (
- <motion.div
- initial={{opacity: 0, y: 10}}
- animate={{opacity: 1, y: 0}}
- transition={{delay: 0.5}}
- className="bg-card/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/50"
- >
- <div className="flex items-center gap-3 mb-3">
- <HistoryIcon className="w-5 h-5 text-foreground-600" />
- <h3 className="font-bold text-foreground">Votre progression</h3>
+ <div className="w-full max-w-md mb-space-24 rounded-24 bg-card/80 backdrop-blur-sm border border-border p-space-16 shadow-soft text-left">
+ <div className="flex items-center gap-space-8 mb-space-8">
+ <HistoryIcon className="w-5 h-5 text-primary-600" />
+ <span className="text-body font-black text-foreground">Ta progression</span>
  </div>
- <div className="space-y-2">
- <div className="flex justify-between text-sm text-foreground-secondary">
+ <div className="flex justify-between text-caption text-foreground-muted mb-space-8">
  <span>Page {lastPage + 1} sur {book.page_count || '?'}</span>
- <span>{progress}% terminé</span>
+ <span>{progress}%</span>
  </div>
- <div className="w-full h-3 bg-surface-200 rounded-full overflow-hidden">
+ <div className="h-space-12 w-full overflow-hidden rounded-full bg-surface-secondary">
  <motion.div
- initial={{width: 0}}
- animate={{width: `${progress}%`}}
- transition={{duration: 1, ease: 'easeOut'}}
- className="h-full bg-gradient-to-r from-primary-500 via-secondary-500 to-accent-500 rounded-full shadow-lg"
+ initial={{ width: 0 }}
+ animate={{ width: `${progress}%` }}
+ transition={reducedMotion ? { duration: 0 } : { duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+ className="h-full rounded-full bg-gradient-to-r from-primary-400 to-secondary-400"
  />
  </div>
  </div>
- </motion.div>
  )}
 
- <motion.div
- initial={{opacity: 0, y: 10}}
- animate={{opacity: 1, y: 0}}
- transition={{delay: 0.55}}
- className="rounded-2xl bg-surface-900 text-white p-5 shadow-xl flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
- >
- <div>
- <p className="text-sm font-bold text-accent-200 uppercase tracking-wide">
- {isKidAccount ? 'Acces gere par tes parents' : 'Abonnement mensuel'}
- </p>
- <p className="mt-1 text-lg font-bold">
- {isKidAccount
- ? 'Si ce livre est bloque, demande a ton parent de choisir une formule.'
- : 'Debloquez 1, 2 ou 3 livres par mois selon votre formule.'}
- </p>
- </div>
- {!isKidAccount && (
- <Link
- to="/abonnements"
- className="shrink-0 inline-flex items-center justify-center gap-2 rounded-full bg-card px-5 py-3 font-bold text-foreground hover:bg-accent-50 transition-colors"
- >
- Voir les formules
- </Link>
- )}
- </motion.div>
-
- {/* Boutons d'action */}
- <motion.div
- initial={{opacity: 0, y: 10}}
- animate={{opacity: 1, y: 0}}
- transition={{delay: 0.6}}
- className="flex flex-col sm:flex-row gap-4 pt-4"
- >
+ <div className="flex flex-col sm:flex-row gap-space-16 w-full max-w-lg mb-space-24">
  {hasHistory ? (
  <>
  <motion.button
- whileHover={{scale: 1.05, y: -2}}
- whileTap={{scale: 0.95}}
+ {...getHoverMotion(reducedMotion, { whileHover: { scale: 1.03 }, whileTap: { scale: 0.97 } })}
+ type="button"
  onClick={continueReading}
- className="flex-1 px-8 py-4 bg-gradient-to-r from-primary-600 to-secondary-600 text-white rounded-full font-bold text-lg shadow-xl hover:shadow-2xl transition-all flex items-center justify-center gap-3"
+ className="kids-touch-target flex-1 inline-flex min-h-touch-kids items-center justify-center gap-space-12 rounded-32 bg-gradient-to-r from-primary-500 to-secondary-500 text-white text-heading-s font-black shadow-floating focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary-300"
  >
- <BookIcon className="w-6 h-6" />
- Continuer la lecture
+ <BookIcon className="w-7 h-7" />
+ Continuer
  </motion.button>
  <motion.button
- whileHover={{scale: 1.05, y: -2}}
- whileTap={{scale: 0.95}}
+ {...getHoverMotion(reducedMotion, { whileHover: { scale: 1.03 }, whileTap: { scale: 0.97 } })}
+ type="button"
  onClick={startReading}
- className="px-8 py-4 bg-card text-foreground rounded-full font-bold text-lg shadow-lg hover:shadow-xl transition-all border-2 border-border flex items-center justify-center gap-3"
+ className="kids-touch-target flex-1 inline-flex min-h-touch-kids items-center justify-center gap-space-12 rounded-32 bg-card text-foreground text-body font-black border-4 border-border shadow-soft focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary-300"
  >
- <RefreshIcon className="w-5 h-5" />
+ <RefreshIcon className="w-6 h-6" />
  Recommencer
  </motion.button>
  </>
  ) : (
  <motion.button
- whileHover={{scale: 1.05, y: -2}}
- whileTap={{scale: 0.95}}
+ {...getHoverMotion(reducedMotion, { whileHover: { scale: 1.03 }, whileTap: { scale: 0.97 } })}
+ type="button"
  onClick={startReading}
- className="w-full px-8 py-4 bg-gradient-to-r from-primary-600 via-secondary-600 to-accent-600 text-white rounded-full font-bold text-lg shadow-xl hover:shadow-2xl transition-all flex items-center justify-center gap-3"
+ className="kids-touch-target w-full inline-flex min-h-touch-kids items-center justify-center gap-space-12 rounded-32 bg-gradient-to-r from-primary-500 via-secondary-500 to-magic-500 text-white text-heading-s font-black shadow-floating focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary-300"
  >
- <BookIcon className="w-6 h-6" />
- Commencer la lecture
+ <PlayIcon className="w-8 h-8" filled />
+ Lire l'histoire
  </motion.button>
  )}
+ {book.audio_url && isKidAccount && (
+ <motion.button
+ {...getHoverMotion(reducedMotion, { whileHover: { scale: 1.03 }, whileTap: { scale: 0.97 } })}
+ type="button"
+ onClick={() => navigate(`/kids/listen/${id}`)}
+ className="kids-touch-target flex-1 inline-flex min-h-touch-kids items-center justify-center gap-space-12 rounded-32 bg-gradient-to-r from-orange-400 to-orange-600 text-white text-body font-black shadow-floating focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-300"
+ >
+ <AudioIcon className="w-7 h-7" />
+ Écouter
+ </motion.button>
+ )}
+ </div>
+
+ <div className="w-full max-w-lg rounded-24 bg-surface-900/90 text-white p-space-20 shadow-card text-left">
+ <p className="text-caption font-bold text-orange-200 uppercase tracking-wide">
+ {isKidAccount ? 'Acces gere par tes parents' : 'Abonnement mensuel'}
+ </p>
+ <p className="mt-space-8 text-body font-bold leading-snug">
+ {isKidAccount
+ ? 'Si ce livre est bloque, demande a ton parent de choisir une formule.'
+ : 'Debloquez 1, 2 ou 3 livres par mois selon votre formule.'}
+ </p>
+ {!isKidAccount && (
+ <Link to="/abonnements" className="mt-space-16 inline-flex min-h-touch items-center rounded-full bg-card px-space-20 py-space-12 font-bold text-foreground hover:bg-primary-50 transition-colors">
+ Voir les formules
+ </Link>
+ )}
+ </div>
+
  {canReport && (
  <motion.button
- whileHover={{scale: 1.02}}
- whileTap={{scale: 0.98}}
+ {...getHoverMotion(reducedMotion, { whileTap: { scale: 0.98 } })}
  type="button"
  onClick={() => setShowReportModal(true)}
- className="px-6 py-4 bg-card text-foreground rounded-full font-bold text-base shadow-lg border-2 border-border hover:border-accent-300 hover:bg-accent-50 transition-all flex items-center justify-center gap-2"
+ className="mt-space-16 kids-touch-target inline-flex items-center gap-space-8 text-caption font-bold text-foreground-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary-300 rounded-full px-space-16 py-space-8"
  >
- <WarningIcon className="w-5 h-5 text-accent-600" />
+ <WarningIcon className="w-5 h-5" />
  {t('reportContentAction')}
  </motion.button>
  )}
- </motion.div>
  <ContentReportModal
  isOpen={showReportModal}
  onClose={() => setShowReportModal(false)}
@@ -484,70 +378,45 @@ function BookDetails() {
  />
  </motion.div>
  </div>
- </motion.div>
- </div>
  </section>
 
- {/* Livres similaires */}
  {relatedBooks.length > 0 && (
- <section className="bg-card py-16">
- <div className="max-w-7xl mx-auto px-4">
- <motion.div
- initial={{opacity: 0, y: 20}}
- whileInView={{opacity: 1, y: 0}}
- viewport={{once: true}}
- transition={{duration: 0.6}}
+ <motion.section
+ className="py-space-40 bg-card"
+ {...getMotionProps(reducedMotion, kidsCarouselReveal)}
  >
- <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-8 flex items-center gap-3">
- <StarIcon className="w-8 h-8 text-accent-500" />
- Livres similaires
+ <div className="max-w-5xl mx-auto px-space-16 sm:px-space-24">
+ <h2 className="kids-shelf-title mb-space-20 px-space-8">
+ <span aria-hidden="true">✨</span>
+ <span>Histoires similaires</span>
  </h2>
- <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+ <div className="kids-discovery-rail">
  {relatedBooks.map((relatedBook, index) => (
  <motion.div
  key={relatedBook.id}
- initial={{opacity: 0, y: 20}}
- whileInView={{opacity: 1, y: 0}}
- viewport={{once: true}}
- transition={{delay: index * 0.1}}
- whileHover={{y: -8, scale: 1.02}}
+ {...getMotionProps(reducedMotion, { ...kidsCardAppear, transition: { ...kidsCardAppear.transition, delay: index * 0.05 } })}
+ className="shrink-0 w-44 sm:w-52"
  >
  <Link
  to={`/book-details/${relatedBook.id}`}
- className="bg-card rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all border-2 border-transparent hover:border-primary-200 block"
+ className="block rounded-24 overflow-hidden bg-card border-4 border-border shadow-card hover:shadow-floating transition-shadow focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary-300"
  >
- <div className="h-56 bg-gradient-to-br from-primary-100 to-secondary-100 flex items-center justify-center overflow-hidden">
+ <div className="aspect-[3/4] bg-gradient-to-br from-primary-100 to-magic-100 overflow-hidden">
  {relatedBook.cover_image ? (
- <img
- src={getImageUrl(relatedBook.cover_image)}
- alt={relatedBook.title}
- className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
- onError={(e) => {
- e.target.style.display = 'none';
- const fallback = e.target.parentElement.querySelector('.book-fallback');
- if (fallback) fallback.style.display = 'flex';
-}}
- />
- ) : null}
- <div className={`${relatedBook.cover_image ? 'hidden' : 'flex'} book-fallback w-full h-full items-center justify-center`}>
- <BookIcon className="w-20 h-20 text-foreground-400" />
- </div>
- </div>
- <div className="p-5">
- <h3 className="font-bold text-foreground line-clamp-2 text-base mb-2">
- {relatedBook.title}
- </h3>
- {relatedBook.author && (
- <p className="text-sm text-foreground-secondary">par {relatedBook.author}</p>
+ <img src={getImageUrl(relatedBook.cover_image)} alt="" className="w-full h-full object-cover" loading="lazy" />
+ ) : (
+ <div className="w-full h-full grid place-items-center"><BookIcon className="w-16 h-16 text-magic-300" /></div>
  )}
+ </div>
+ <div className="p-space-16">
+ <h3 className="text-body font-black text-foreground line-clamp-2">{relatedBook.title}</h3>
  </div>
  </Link>
  </motion.div>
  ))}
  </div>
- </motion.div>
  </div>
- </section>
+ </motion.section>
  )}
  </div>
  );

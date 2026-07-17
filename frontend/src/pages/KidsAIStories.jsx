@@ -754,31 +754,7 @@ function KidsAIStories() {
           </section>
         )}
 
-        {/* Quick KPI Statistics */}
-        <section className="mb-12 grid grid-cols-2 md:grid-cols-4 gap-4">
-          <motion.div {...getHoverMotion(reducedMotion, { whileHover: { y: -5 } })} className={`bg-gradient-to-br ${hubGradientAtIndex(0)} rounded-24 p-6 text-white shadow-floating relative overflow-hidden`}>
-            <BookIcon className="w-12 h-12 text-white/30 absolute right-4 bottom-4" />
-            <p className="text-sm font-bold text-white/80 uppercase tracking-wider mb-1">Bibliothèque</p>
-            <p className="text-4xl font-black">{stories.length}</p>
-          </motion.div>
-          <motion.div {...getHoverMotion(reducedMotion, { whileHover: { y: -5 } })} className={`bg-gradient-to-br ${hubGradientAtIndex(1)} rounded-24 p-6 text-white shadow-floating relative overflow-hidden`}>
-            <HeartIcon className="w-12 h-12 text-white/30 absolute right-4 bottom-4" filled />
-            <p className="text-sm font-bold text-white/80 uppercase tracking-wider mb-1">Favoris</p>
-            <p className="text-4xl font-black">{favoriteStories.length}</p>
-          </motion.div>
-          <motion.div {...getHoverMotion(reducedMotion, { whileHover: { y: -5 } })} className={`bg-gradient-to-br ${hubGradientAtIndex(2)} rounded-24 p-6 text-white shadow-floating relative overflow-hidden`}>
-            <DownloadIcon className="w-12 h-12 text-white/30 absolute right-4 bottom-4" />
-            <p className="text-sm font-bold text-white/80 uppercase tracking-wider mb-1">Sauvegardées</p>
-            <p className="text-4xl font-black">{savedStories.length}</p>
-          </motion.div>
-          <motion.div {...getHoverMotion(reducedMotion, { whileHover: { y: -5 } })} className={`bg-gradient-to-br ${storyGradientAtIndex(3)} rounded-24 p-6 text-white shadow-floating relative overflow-hidden`}>
-            <SparklesIcon className="w-12 h-12 text-white/30 absolute right-4 bottom-4" />
-            <p className="text-sm font-bold text-white/80 uppercase tracking-wider mb-1">Récents</p>
-            <p className="text-4xl font-black">{recentStories.length}</p>
-          </motion.div>
-        </section>
-
-        {/* Recent Creations Carousel (Disney+ Style) */}
+        {/* Recent Creations Carousel */}
         {recentStories.length > 0 && (
           <section className="mb-12">
             <h2 className="text-2xl font-black mb-6 flex items-center gap-3">
@@ -795,8 +771,8 @@ function KidsAIStories() {
           </section>
         )}
 
-        {/* Glassmorphism Filters */}
-        <section className="mb-12 rounded-[2rem] bg-card/60 backdrop-blur-xl border border-border p-6 shadow-glass">
+        {/* Search & filters */}
+        <section className="mb-12 rounded-32 bg-card/60 backdrop-blur-xl border border-border p-space-20 md:p-space-24 shadow-soft">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-6">
             <h2 className="text-xl font-black text-foreground flex items-center gap-2">
               <SearchIcon className="w-6 h-6 text-primary-500" />

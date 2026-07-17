@@ -17,7 +17,8 @@ import { KidsPageShell } from '../components/kids/KidsPageShell';
 import { KidsBookCarousel } from '../components/kids/KidsBookCarousel';
 import { KidsThemePill } from '../components/kids/KidsThemePill';
 import { KidsCategoryAtmosphere } from '../components/kids/KidsCategoryAtmosphere';
-import { HomeIcon, PlayIcon, HeartIcon, StarIcon } from '../components/Icons';
+import { KidsHeroStoryCard } from '../components/kids/KidsHeroStoryCard';
+import { HomeIcon, HeartIcon } from '../components/Icons';
 import { Logo } from '../components/Logo';
 import { BookGridSkeleton } from '../components/SkeletonLoader';
 import { KidsBottomNav } from '../components/kids/KidsBottomNav';
@@ -27,7 +28,6 @@ import { KidsTrustBadges } from '../components/kids/KidsTrustBadges';
 import { KidsAmbientSound } from '../components/kids/KidsAmbientSound';
 import { SearchBar } from '../components/ui';
 import { getKidsContentPath } from '../utils/contentRouting';
-import { getMotionProps, kidsPageEnter } from '../constants/kidsMotion';
 import { useReducedMotion } from '../hooks/useReducedMotion';
 
 const SHELF_THEME_IDS = ['dinosaurs', 'space', 'animals', 'princesses', 'bedtime', 'ocean', 'vehicles', 'world'];
@@ -203,6 +203,22 @@ function KidsLibrary() {
     navigate(getKidsContentPath(book));
   };
 
+  const handleListenBook = (book) => {
+    if (book?.id) {
+      navigate(`/kids/listen/${book.id}`);
+      return;
+    }
+    navigate('/kids/audio');
+  };
+
+  const featuredHeroBook = featuredBook ? {
+    ...featuredBook,
+    progress: readingHistory.find((h) => h.bookId === featuredBook.id)
+      ? Math.round((storage.getLastPage(featuredBook.id) / (featuredBook.page_count || 1)) * 100)
+      : 0,
+    isInProgress: readingHistory.some((h) => h.bookId === featuredBook.id && h.page > 0),
+  } : null;
+
   const carouselProps = {
     isRtl,
     favorites: favoritesIds,
@@ -277,68 +293,16 @@ function KidsLibrary() {
           </div>
         </section>
 
-        {featuredBook && (
-          <motion.section
-            key={`hero-${selectedTheme}-${featuredBook.id}`}
-            {...getMotionProps(reducedMotion, kidsPageEnter)}
-            className="relative overflow-hidden rounded-32 kids-premium-panel p-space-20 md:p-space-32 text-white shadow-card border-4 border-border"
-          >
-            <div className={`absolute inset-0 bg-gradient-to-br ${activeThemeData?.gradient || 'from-primary-500 to-secondary-500'} opacity-95`} />
-            <div className="absolute right-space-8 top-1/2 -translate-y-1/2 text-[12rem] opacity-20 pointer-events-none" aria-hidden="true">
-              {activeThemeData?.pictogram || '⭐'}
-            </div>
-            <div className="relative z-10 flex flex-col md:flex-row items-center gap-space-8 md:gap-space-12">
-              <motion.button
-                type="button"
-                whileHover={reducedMotion ? undefined : { scale: 1.05, y: -6 }}
-                whileTap={reducedMotion ? undefined : { scale: 0.97 }}
-                className="w-44 md:w-56 shrink-0 relative rounded-[2rem] overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.45)] border-4 border-white kids-book-object"
-                onClick={() => handlePlayBook(featuredBook)}
-                aria-label={featuredBook.title}
-              >
-                <img
-                  src={getImageUrl(featuredBook.cover_image, 'book')}
-                  alt=""
-                  className="w-full aspect-[3/4] object-cover"
-                />
-                <div className="absolute inset-0 flex items-center justify-center bg-black/10">
-                  <span className="kids-touch-target grid h-16 w-16 place-items-center rounded-full bg-white/40 border-4 border-white/60">
-                    <PlayIcon className={`h-8 w-8 text-white ${isRtl ? 'rotate-180' : ''}`} filled />
-                  </span>
-                </div>
-              </motion.button>
-
-              <div className="flex flex-col items-center md:items-start gap-space-4">
-                <span className="inline-flex items-center gap-2 rounded-full bg-white/20 backdrop-blur-md border-2 border-white/30 px-5 py-2 text-sm font-black shadow-xl">
-                  <StarIcon className="h-space-20 w-space-20 text-secondary-300" filled />
-                  <span className="line-clamp-1">{selectedTheme === 'all' ? t('forYou') : (activeThemeData?.shortLabel || activeThemeData?.label)}</span>
-                </span>
-                <div className="flex flex-wrap items-center justify-center md:justify-start gap-3">
-                  <motion.button
-                    type="button"
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => handlePlayBook(featuredBook)}
-                    className="kids-touch-target flex items-center gap-3 rounded-full bg-white px-space-8 py-space-4 text-xl font-black text-primary-600 shadow-xl"
-                    aria-label={t('listenAction')}
-                  >
-                    <PlayIcon className={`h-8 w-8 ${isRtl ? 'rotate-180' : ''}`} filled />
-                    <span className="hidden sm:inline">{t('listenAction')}</span>
-                  </motion.button>
-                  <motion.button
-                    type="button"
-                    whileHover={{ scale: 1.08 }}
-                    whileTap={{ scale: 0.92 }}
-                    onClick={() => toggleFavorite(featuredBook.id)}
-                    className="kids-touch-target rounded-full bg-white/25 backdrop-blur-md p-space-4 text-white shadow-xl border-2 border-white/35"
-                    aria-label={t('yourFavorites')}
-                  >
-                    <HeartIcon className="h-8 w-8" filled={favoritesIds.includes(featuredBook.id)} />
-                  </motion.button>
-                </div>
-              </div>
-            </div>
-          </motion.section>
+        {featuredHeroBook && (
+          <KidsHeroStoryCard
+            book={featuredHeroBook}
+            isRtl={isRtl}
+            t={t}
+            onRead={handlePlayBook}
+            onListen={handleListenBook}
+            badgeLabel={selectedTheme === 'all' ? t('kidsStoriesToday') : (activeThemeData?.shortLabel || activeThemeData?.label)}
+            onEmptyAction={() => handleThemeChange('all')}
+          />
         )}
 
         <KidsFamilyMessages />
