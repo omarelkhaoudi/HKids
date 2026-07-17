@@ -170,7 +170,7 @@ function KidsCategoryPage() {
                   isRtl={isRtl}
                   favorites={favoritesIds}
                   showActions={false}
-                  hideTitle
+                  hideTitle={false}
                   modality="books"
                   onPlay={(b) => navigate(getKidsContentPath(b))}
                 />

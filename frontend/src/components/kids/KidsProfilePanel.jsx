@@ -81,7 +81,7 @@ export function KidsProfilePanel({
           <div className="flex gap-5 overflow-x-auto pb-4 px-2 snap-x custom-scrollbar kids-scroll-smooth">
             {favoriteBooks.slice(0, 8).map((book) => (
               <div key={book.id} className="snap-start shrink-0">
-                <KidsMediaCard book={book} variant="carousel" hideTitle isRtl={isRtl} onPlay={onPlayBook} />
+                <KidsMediaCard book={book} variant="carousel" hideTitle={false} isRtl={isRtl} onPlay={onPlayBook} />
               </div>
             ))}
           </div>

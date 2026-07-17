@@ -1,9 +1,10 @@
 import { motion } from 'framer-motion';
-import { getImageUrl } from '../../utils/imageUrl';
+import { resolveBookCoverUrl } from '../../utils/bookCover';
 import { useReducedMotion } from '../../hooks/useReducedMotion';
 import { getMotionProps, getHoverMotion, kidsCardAppear, kidsProgressFill } from '../../constants/kidsMotion';
 import { PlayIcon, AudioIcon, BookIcon } from '../Icons';
 import KidsButton from './KidsButton';
+import { KidsBookCover } from './KidsBookCover';
 
 function formatAge(book, t) {
   if (book?.age_level) return book.age_level;
@@ -42,7 +43,7 @@ export function KidsHeroStoryCard({
   const durationLabel = formatDuration(book, t);
   const subtitle = book?.description || book?.author || t('kidsDiscoverToday');
   const hasProgress = progress > 0 && progress < 100;
-  const cover = book?.cover_image ? getImageUrl(book.cover_image, 'book') : null;
+  const coverUrl = resolveBookCoverUrl(book);
 
   if (!book) {
     return (
@@ -51,12 +52,9 @@ export function KidsHeroStoryCard({
         className="kids-hero-story relative overflow-hidden rounded-32"
         aria-label={emptyLabel || t('goToLibrary')}
       >
-        <div className="kids-hero-story-atmosphere" aria-hidden="true">
-          <span className="kids-hero-star kids-hero-star-a" />
-          <span className="kids-hero-star kids-hero-star-b" />
-        </div>
-        <div className="relative z-10 flex flex-col items-start justify-center gap-space-16 p-space-32 md:p-space-40 min-h-[14rem]">
-          <p className="text-caption font-semibold uppercase tracking-widest text-primary-600/80">
+        <div className="kids-hero-story-atmosphere" aria-hidden="true" />
+        <div className="relative z-10 flex flex-col items-start justify-center gap-space-20 p-space-32 md:p-space-40 min-h-[14rem]">
+          <p className="text-caption font-semibold uppercase tracking-[0.14em] text-primary-600/70">
             {badgeLabel || t('kidsStoriesToday')}
           </p>
           <h2 className="text-heading-xl font-semibold text-foreground max-w-lg leading-snug">
@@ -76,41 +74,34 @@ export function KidsHeroStoryCard({
       className="kids-hero-story relative overflow-hidden rounded-32"
       aria-label={book.title}
     >
-      <div className="kids-hero-story-atmosphere" aria-hidden="true">
-        <span className="kids-hero-star kids-hero-star-a" />
-        <span className="kids-hero-star kids-hero-star-b" />
-        <span className="kids-hero-star kids-hero-star-c" />
-      </div>
-      {cover ? (
+      <div className="kids-hero-story-atmosphere" aria-hidden="true" />
+      {coverUrl ? (
         <div
           className="kids-hero-story-bleed"
-          style={{ backgroundImage: `url(${cover})` }}
+          style={{ backgroundImage: `url(${coverUrl})` }}
           aria-hidden="true"
         />
       ) : null}
 
-      <div className="relative z-10 flex flex-col md:flex-row items-center md:items-stretch gap-space-24 md:gap-space-32 p-space-24 md:p-space-32 lg:p-space-40">
+      <div className="relative z-10 flex flex-col md:flex-row items-center md:items-center gap-space-24 md:gap-space-40 p-space-24 md:p-space-40 lg:p-space-48">
         <motion.div
           {...getHoverMotion(reducedMotion)}
-          className="kids-hero-cover shrink-0 w-44 sm:w-52 md:w-56 lg:w-64 self-center"
+          className="kids-hero-cover shrink-0 w-48 sm:w-56 md:w-60 lg:w-72 self-center"
         >
-          <div className="aspect-[3/4] bg-surface-secondary">
-            {cover ? (
-              <img src={cover} alt="" className="h-full w-full object-cover" />
-            ) : (
-              <div className="h-full w-full grid place-items-center text-5xl bg-gradient-to-br from-primary-100 to-primary-50" aria-hidden="true">
-                📖
-              </div>
-            )}
+          <div className="aspect-[3/4] relative overflow-hidden">
+            <KidsBookCover
+              book={book}
+              imgClassName="absolute inset-0 h-full w-full object-cover"
+            />
           </div>
         </motion.div>
 
-        <div className="flex flex-1 flex-col justify-center min-w-0 gap-space-16 text-center md:text-start py-space-4">
+        <div className="flex flex-1 flex-col justify-center min-w-0 gap-space-16 text-center md:text-start">
           <div className="min-w-0 space-y-space-8">
-            <p className="text-caption font-semibold uppercase tracking-widest text-primary-600/80">
+            <p className="text-caption font-semibold uppercase tracking-[0.14em] text-primary-600/70">
               {badgeLabel || t('kidsStoriesToday')}
             </p>
-            <h2 className="text-heading-xl md:text-hero font-semibold text-foreground leading-tight line-clamp-3">
+            <h2 className="text-heading-xl md:text-hero font-semibold text-foreground leading-[1.15] line-clamp-3">
               {book.title}
             </h2>
             {subtitle ? (
@@ -123,12 +114,12 @@ export function KidsHeroStoryCard({
           {(ageLabel || durationLabel) && (
             <div className="flex flex-wrap items-center justify-center md:justify-start gap-space-8">
               {ageLabel ? (
-                <span className="inline-flex min-h-[44px] items-center rounded-full bg-primary-50 text-primary-700 px-space-16 text-caption font-semibold border border-primary-100">
+                <span className="inline-flex min-h-[44px] items-center rounded-full bg-primary-50 text-primary-700 px-space-16 text-caption font-medium border border-primary-100/80">
                   {ageLabel}
                 </span>
               ) : null}
               {durationLabel ? (
-                <span className="inline-flex min-h-[44px] items-center rounded-full bg-surface-secondary text-foreground-secondary px-space-16 text-caption font-semibold border border-border/60">
+                <span className="inline-flex min-h-[44px] items-center rounded-full bg-surface-secondary text-foreground-secondary px-space-16 text-caption font-medium border border-border/50">
                   {durationLabel}
                 </span>
               ) : null}
@@ -142,7 +133,7 @@ export function KidsHeroStoryCard({
                 <span className="text-caption font-semibold text-primary-600">{Math.round(progress)}%</span>
               </div>
               <div
-                className="h-2 w-full overflow-hidden rounded-full bg-surface-secondary"
+                className="h-1.5 w-full overflow-hidden rounded-full bg-surface-secondary"
                 role="progressbar"
                 aria-valuenow={Math.round(progress)}
                 aria-valuemin={0}
@@ -166,7 +157,7 @@ export function KidsHeroStoryCard({
               icon={PlayIcon}
               onClick={() => onRead?.(book)}
               aria-label={t('readAction')}
-              className="min-w-[8.5rem]"
+              className="min-w-[9rem]"
             >
               {t('readAction')}
             </KidsButton>
@@ -176,7 +167,7 @@ export function KidsHeroStoryCard({
               icon={AudioIcon}
               onClick={() => onListen?.(book)}
               aria-label={t('listenAction')}
-              className="min-w-[8.5rem]"
+              className="min-w-[9rem]"
             >
               {t('listenAction')}
             </KidsButton>
@@ -187,7 +178,7 @@ export function KidsHeroStoryCard({
                 icon={BookIcon}
                 onClick={() => (onContinue || onRead)?.(book)}
                 aria-label={t('resume')}
-                className="min-w-[8.5rem]"
+                className="min-w-[9rem]"
               >
                 {t('resume')}
               </KidsButton>

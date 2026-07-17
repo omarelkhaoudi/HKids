@@ -22,17 +22,17 @@ export function KidsSectionHeader({
   const theme = getKidsModality(modality || 'books');
 
   return (
-    <div className="mb-space-16 flex items-end justify-between gap-space-12 px-space-8 md:px-space-16">
+    <div className="mb-space-20 flex items-end justify-between gap-space-12 px-space-8 md:px-space-16">
       <div className="min-w-0 flex-1">
         <h2 className="kids-shelf-title !mb-0">
-          {emoji && <span className="text-2xl opacity-75" aria-hidden="true">{emoji}</span>}
-          {Icon && <Icon className="h-5 w-5 text-primary-500" />}
+          {emoji && <span className="text-lg opacity-55" aria-hidden="true">{emoji}</span>}
+          {Icon && <Icon className="h-5 w-5 text-primary-500 opacity-80" />}
           {!hideTitle && title && (
             <span className="text-foreground font-semibold">{title}</span>
           )}
         </h2>
         {subtitle && (
-          <p className="mt-space-8 text-body font-medium text-foreground-muted line-clamp-2 px-1 max-w-xl">
+          <p className="mt-space-8 text-body font-medium text-foreground-muted line-clamp-2 px-1 max-w-lg">
             {subtitle}
           </p>
         )}
@@ -85,7 +85,7 @@ export function KidsBookCarousel({
   onFavorite,
   onDownload,
   showActions = true,
-  hideTitle = true,
+  hideTitle = false,
   hideSectionTitle = false,
   modality = 'books',
   seeAllLabel,
@@ -126,7 +126,7 @@ export function KidsBookCarousel({
           <div key={book.id} className="snap-start shrink-0">
             <KidsMediaCard
               book={book}
-              variant={showActions ? 'poster' : 'carousel'}
+              variant="carousel"
               hideTitle={hideTitle}
               showActions={showActions}
               isFavorite={favorites.includes(book.id)}

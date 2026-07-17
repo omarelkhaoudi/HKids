@@ -28,25 +28,16 @@ export function KidCategoryCard({ category, to, compact = false }) {
         to={destination}
         aria-label={category.label}
         className={`kids-world-destination ${toneClass} group focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-400 kids-touch-target ${
-          compact ? 'w-[11.5rem] sm:w-[12.5rem]' : 'w-full min-h-[12rem]'
+          compact ? 'w-[7.5rem] sm:w-[8.25rem]' : 'w-full min-h-[10rem]'
         }`}
       >
-        <span
-          className="absolute top-space-16 inset-inline-end-space-16 text-5xl md:text-6xl opacity-90 drop-shadow-sm transition-transform duration-300 group-hover:scale-110"
-          aria-hidden="true"
-        >
+        <span className="kids-world-pictogram" aria-hidden="true">
           {category.pictogram}
         </span>
-        <div className="relative z-10 pe-12">
-          <p className="text-caption font-semibold uppercase tracking-wide text-foreground-muted mb-space-8">
-            {category.cue}
-          </p>
-          <h3 className="text-heading-m font-semibold text-foreground leading-snug">
+        <div className="relative z-10 text-center w-full">
+          <h3 className="text-body font-semibold text-foreground leading-snug line-clamp-2">
             {category.shortLabel || category.label}
           </h3>
-          <p className="mt-space-8 text-caption font-medium text-foreground-secondary line-clamp-2">
-            {category.label}
-          </p>
         </div>
       </Link>
     </motion.div>

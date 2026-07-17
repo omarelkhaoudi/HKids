@@ -19,7 +19,7 @@ import { KidsThemePill } from '../components/kids/KidsThemePill';
 import { KidsEmptyState } from '../components/kids/KidsEmptyState';
 import { VoiceAssistant } from '../components/kids/VoiceAssistant';
 import { BookGridSkeleton } from '../components/SkeletonLoader';
-import { getImageUrl } from '../utils/imageUrl';
+import { KidsBookCover } from '../components/kids/KidsBookCover';
 
 const TABS = [
   { id: 'all', labelKey: 'audioTabAll', emoji: '🎧' },
@@ -139,7 +139,7 @@ function KidsAudioLibrary() {
     isRtl,
     onPlay: handlePlay,
     showActions: false,
-    hideTitle: true,
+    hideTitle: false,
     modality: 'audio',
   };
 
@@ -164,21 +164,19 @@ function KidsAudioLibrary() {
             className="kids-premium-panel w-full p-4 md:p-6 cursor-pointer"
           >
             <div className="flex flex-col md:flex-row items-center gap-6">
-              <div className="w-40 h-52 md:w-48 md:h-60 shrink-0 rounded-[2rem] overflow-hidden shadow-kids-soft border-4 border-white/60 relative">
-                <img
-                  src={getImageUrl(featuredBook.cover_image, 'book')}
-                  alt=""
-                  className="absolute inset-0 w-full h-full object-cover"
-                />
-                <div className="absolute inset-0 flex items-center justify-center bg-black/20">
-                  <span className="text-5xl">▶️</span>
+              <div className="kids-hero-cover w-40 md:w-48 shrink-0 relative">
+                <div className="aspect-[3/4] relative overflow-hidden">
+                  <KidsBookCover
+                    book={featuredBook}
+                    imgClassName="absolute inset-0 w-full h-full object-cover"
+                  />
                 </div>
               </div>
-              <div className="flex-1 text-center md:text-left">
-                <span className="inline-flex min-h-9 items-center rounded-full bg-primary-100 text-primary-700 px-4 py-1 text-sm font-black mb-3">
-                  ▶️ {t('continueListening')}
+              <div className="flex-1 text-center md:text-left space-y-3">
+                <span className="inline-flex min-h-9 items-center rounded-full bg-primary-50 text-primary-700 px-4 py-1 text-sm font-semibold">
+                  {t('continueListening')}
                 </span>
-                <p className="text-2xl md:text-3xl font-black text-foreground">{featuredBook.title}</p>
+                <p className="text-2xl md:text-3xl font-semibold text-foreground leading-snug">{featuredBook.title}</p>
               </div>
             </div>
           </motion.div>
@@ -247,7 +245,7 @@ function KidsAudioLibrary() {
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 justify-items-center">
             <AnimatePresence>
               {visibleBooks.map((book) => (
-                <KidsMediaCard key={book.id} book={book} variant="poster" hideTitle onPlay={handlePlay} isRtl={isRtl} />
+                <KidsMediaCard key={book.id} book={book} variant="carousel" hideTitle={false} onPlay={handlePlay} isRtl={isRtl} />
               ))}
             </AnimatePresence>
           </div>

@@ -1,7 +1,7 @@
 import { Chip } from '../ui/Chip';
 
 /**
- * Kids theme filter pill — elegant, calm selection.
+ * Kids theme filter pill — calm destination chip.
  */
 export function KidsThemePill({ theme, isActive, onClick }) {
   return (
@@ -11,13 +11,13 @@ export function KidsThemePill({ theme, isActive, onClick }) {
       tone="primary"
       emoji={theme.pictogram}
       aria-label={theme.shortLabel || theme.label}
-      className={`!min-h-touch-kids !text-base !font-bold ${
+      className={`!min-h-touch-kids !text-sm !font-semibold ${
         isActive
-          ? '!bg-primary-50 !text-primary-800 !border-primary-300 !shadow-soft ring-2 ring-primary-200/60'
-          : '!bg-card !border-border/70'
+          ? '!bg-primary-50 !text-primary-800 !border-primary-200 !shadow-soft'
+          : '!bg-card/90 !border-border/50 !text-foreground-secondary'
       }`}
     >
-      <span className="hidden md:inline">{theme.shortLabel || theme.label}</span>
+      <span className="hidden sm:inline">{theme.shortLabel || theme.label}</span>
     </Chip>
   );
 }
