@@ -29,7 +29,7 @@ export function KidsContinueRail({
           <span>{title || t('continueReading')}</span>
         </h2>
         {(subtitle || t('discoverContinueSubtitle')) && (
-          <p className="mt-space-8 text-body font-medium text-foreground-muted max-w-xl">
+          <p className="kids-shelf-subtitle max-w-xl">
             {subtitle || t('discoverContinueSubtitle')}
           </p>
         )}

@@ -345,7 +345,7 @@ function KidsHome() {
           />
           <div className="min-w-0">
             <p className="text-caption font-medium text-foreground-muted">{greeting}</p>
-            <h1 className="text-heading-m md:text-heading-l font-semibold truncate text-foreground">
+            <h1 className="kids-type-h1 truncate">
               {kidName}
             </h1>
           </div>
@@ -373,7 +373,7 @@ function KidsHome() {
             badgeLabel={t('kidsStoriesToday')}
           />
           {featuredBook && (
-            <p className="px-space-8 text-body font-medium text-foreground-muted">
+            <p className="px-space-8 kids-shelf-subtitle">
               {t('discoverAdventureSubtitle')}
             </p>
           )}
@@ -416,7 +416,7 @@ function KidsHome() {
               <h2 className="kids-shelf-title !mb-0">
                 <span>{t('kidsWorldsExplore')}</span>
               </h2>
-              <p className="mt-space-8 text-body font-medium text-foreground-muted">{t('discoverCategoriesSubtitle')}</p>
+              <p className="kids-shelf-subtitle">{t('discoverCategoriesSubtitle')}</p>
             </div>
             <button
               type="button"
@@ -474,7 +474,7 @@ function KidsHome() {
               <h2 className="kids-shelf-title !mb-0">
                 <span>{t('discoverCollections')}</span>
               </h2>
-              <p className="mt-space-8 text-body font-medium text-foreground-muted">{t('discoverCollectionsSubtitle')}</p>
+              <p className="kids-shelf-subtitle">{t('discoverCollectionsSubtitle')}</p>
             </div>
             {collectionLittle.length > 0 && (
               <KidsBookCarousel

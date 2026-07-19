@@ -21,17 +21,35 @@
     --text-hero-size: clamp(2.5rem, 5vw, 3.5rem);
     --text-hero-lh: 1.15;
     --text-heading-xl-size: clamp(1.85rem, 3.5vw, 2.5rem);
-    --text-heading-xl-lh: 1.2;
+    --text-heading-xl-lh: 1.22;
     --text-heading-l-size: clamp(1.4rem, 2.8vw, 1.85rem);
-    --text-heading-l-lh: 1.25;
-    --text-heading-m-size: clamp(1.15rem, 2.2vw, 1.35rem);
+    --text-heading-l-lh: 1.28;
+    --text-heading-m-size: clamp(1.15rem, 2.2vw, 1.4rem);
     --text-heading-m-lh: 1.35;
     --text-body-lg-size: 1.125rem;
-    --text-body-lg-lh: 1.5;
+    --text-body-lg-lh: 1.55;
     --text-body-size: 1rem;
     --text-body-lh: 1.55;
     --text-caption-size: 0.8125rem;
     --text-caption-lh: 1.4;
+
+    /* Kids premium type scale */
+    --kids-type-ink: #24324A;
+    --kids-type-author: #6B7C93;
+    --kids-type-subtitle: #7A8BA0;
+    --kids-type-meta: #5A6B82;
+    --kids-type-h1-size: clamp(1.75rem, 3.2vw, 2.25rem);
+    --kids-type-h1-lh: 1.22;
+    --kids-type-h2-size: clamp(1.35rem, 2.6vw, 1.75rem);
+    --kids-type-h2-lh: 1.28;
+    --kids-type-card-size: clamp(1.02rem, 1.8vw, 1.12rem);
+    --kids-type-card-lh: 1.32;
+    --kids-type-subtitle-size: clamp(0.9rem, 1.5vw, 1rem);
+    --kids-type-subtitle-lh: 1.45;
+    --kids-type-meta-size: 0.68rem;
+    --kids-type-meta-lh: 1.3;
+    --kids-type-caption-size: 0.75rem;
+    --kids-type-caption-lh: 1.4;
 
     /* —— Radius —— */
     --radius-8: 8px;
@@ -177,6 +195,11 @@
   }
 
   .dark {
+    --kids-type-ink: #E8EEF6;
+    --kids-type-author: #A8B4C4;
+    --kids-type-subtitle: #9AA8B8;
+    --kids-type-meta: #B0BBC8;
+
     --shadow-soft: 0 4px 16px -2px rgba(0, 0, 0, 0.35);
     --shadow-card: 0 12px 28px -8px rgba(0, 0, 0, 0.45);
     --shadow-floating: 0 24px 48px -12px rgba(0, 0, 0, 0.55);
@@ -269,47 +292,48 @@
   }
 
   h1, h2, h3, h4, h5, h6 {
-    @apply font-extrabold tracking-tight;
+    @apply font-semibold tracking-tight;
   }
 }
 
 @layer components {
-  /* Design System typography */
+  /* Design System typography — warm, readable, avoid heavy bold */
   .text-hero {
     font-family: var(--font-display);
     font-size: var(--text-hero-size);
     line-height: var(--text-hero-lh);
-    font-weight: 900;
-    letter-spacing: -0.02em;
+    font-weight: 700;
+    letter-spacing: -0.015em;
     @apply text-foreground;
   }
   .text-heading-xl {
     font-family: var(--font-display);
     font-size: var(--text-heading-xl-size);
     line-height: var(--text-heading-xl-lh);
-    font-weight: 800;
-    letter-spacing: -0.02em;
+    font-weight: 600;
+    letter-spacing: -0.015em;
     @apply text-foreground;
   }
   .text-heading-l {
     font-family: var(--font-display);
     font-size: var(--text-heading-l-size);
     line-height: var(--text-heading-l-lh);
-    font-weight: 800;
-    letter-spacing: -0.015em;
+    font-weight: 600;
+    letter-spacing: -0.01em;
     @apply text-foreground;
   }
   .text-heading-m {
     font-family: var(--font-display);
     font-size: var(--text-heading-m-size);
     line-height: var(--text-heading-m-lh);
-    font-weight: 700;
+    font-weight: 600;
+    letter-spacing: -0.005em;
     @apply text-foreground;
   }
   .text-body-lg {
     font-size: var(--text-body-lg-size);
     line-height: var(--text-body-lg-lh);
-    font-weight: 600;
+    font-weight: 500;
     @apply text-foreground-secondary;
   }
   .text-body {
@@ -321,8 +345,52 @@
   .text-caption {
     font-size: var(--text-caption-size);
     line-height: var(--text-caption-lh);
-    font-weight: 600;
+    font-weight: 500;
     @apply text-foreground-muted;
+  }
+
+  /* Kids premium hierarchy */
+  .kids-type-h1 {
+    font-family: var(--font-display);
+    font-size: var(--kids-type-h1-size);
+    line-height: var(--kids-type-h1-lh);
+    font-weight: 600;
+    letter-spacing: -0.012em;
+    color: var(--kids-type-ink);
+  }
+
+  .kids-type-h2,
+  .kids-shelf-title {
+    font-family: var(--font-display);
+    font-size: var(--kids-type-h2-size);
+    line-height: var(--kids-type-h2-lh);
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: var(--kids-type-ink);
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    margin-block: 0.15rem 0.35rem;
+  }
+
+  .kids-type-subtitle,
+  .kids-shelf-subtitle {
+    font-family: var(--font-body);
+    font-size: var(--kids-type-subtitle-size);
+    line-height: var(--kids-type-subtitle-lh);
+    font-weight: 400;
+    letter-spacing: 0.005em;
+    color: var(--kids-type-subtitle);
+    margin-top: 0.35rem;
+    max-width: 36rem;
+  }
+
+  .kids-type-caption {
+    font-family: var(--font-body);
+    font-size: var(--kids-type-caption-size);
+    line-height: var(--kids-type-caption-lh);
+    font-weight: 500;
+    color: var(--kids-type-meta);
   }
 
   /* 3D Button Styles (Duolingo inspired) */
@@ -516,8 +584,9 @@
   }
 
   @media (min-width: 1024px) {
-    .kids-shelf-title {
-      font-size: 1.75rem;
+    .kids-shelf-title,
+    .kids-type-h2 {
+      font-size: 1.8rem;
     }
   }
 
@@ -930,10 +999,6 @@
     opacity: 1;
   }
 
-  .kids-shelf-title {
-    @apply flex items-center gap-3 text-xl md:text-2xl font-semibold text-foreground tracking-tight;
-  }
-
   /* —— Book-first covers —— */
   .kids-book-cover-img {
     display: block;
@@ -945,13 +1010,16 @@
   .kids-book-meta-chip {
     display: inline-flex;
     align-items: center;
-    gap: 0.25rem;
+    gap: 0.3rem;
     border-radius: 999px;
     background: color-mix(in srgb, white 94%, transparent);
     color: var(--color-primary-700);
-    padding: 0.2rem 0.5rem;
-    font-size: 10px;
-    font-weight: 600;
+    padding: 0.22rem 0.55rem;
+    font-family: var(--font-body);
+    font-size: var(--kids-type-meta-size);
+    font-weight: 500;
+    line-height: var(--kids-type-meta-lh);
+    letter-spacing: 0.01em;
     box-shadow: var(--shadow-soft);
     border: 1px solid color-mix(in srgb, var(--color-border) 45%, transparent);
   }
@@ -960,6 +1028,7 @@
     background: color-mix(in srgb, var(--color-primary-600) 92%, transparent);
     color: white;
     border-color: transparent;
+    font-weight: 600;
   }
 
   /* —— KidsHome premium library atmosphere —— */
@@ -1137,50 +1206,65 @@
     min-height: 0;
     display: flex;
     flex-direction: column;
-    gap: 0.2rem;
+    gap: 0.28rem;
   }
 
   .kids-book-title {
-    font-size: 1.02rem;
+    font-family: var(--font-display);
+    font-size: var(--kids-type-card-size);
     font-weight: 600;
-    line-height: 1.3;
-    color: var(--color-text);
+    line-height: var(--kids-type-card-lh);
+    letter-spacing: -0.008em;
+    color: var(--kids-type-ink);
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .kids-book-author {
-    font-size: 0.72rem;
-    font-weight: 400;
-    line-height: 1.35;
-    color: var(--color-text-muted);
+    font-family: var(--font-body);
+    font-size: 0.78rem;
+    font-weight: 500;
+    line-height: 1.4;
+    letter-spacing: 0.01em;
+    color: var(--kids-type-author);
     display: -webkit-box;
     -webkit-line-clamp: 1;
     -webkit-box-orient: vertical;
     overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .kids-book-meta-row {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 0.3rem;
-    margin-top: 0.2rem;
+    gap: 0.35rem;
+    margin-top: 0.15rem;
   }
 
   .kids-book-meta-pill {
     display: inline-flex;
     align-items: center;
-    gap: 0.2rem;
+    gap: 0.28rem;
     border-radius: 999px;
     background: color-mix(in srgb, var(--color-surface-secondary) 85%, transparent);
-    padding: 0.15rem 0.45rem;
-    font-size: 0.6rem;
+    padding: 0.2rem 0.5rem;
+    font-family: var(--font-body);
+    font-size: var(--kids-type-meta-size);
     font-weight: 500;
-    letter-spacing: 0.01em;
-    color: var(--color-text-secondary);
+    line-height: var(--kids-type-meta-lh);
+    letter-spacing: 0.015em;
+    color: var(--kids-type-meta);
+  }
+
+  .kids-book-meta-pill svg {
+    width: 0.7rem;
+    height: 0.7rem;
+    flex-shrink: 0;
+    opacity: 0.85;
   }
 
   .kids-book-meta-pill--audio {
@@ -1192,6 +1276,22 @@
     background: color-mix(in srgb, var(--color-primary-50) 90%, transparent);
     color: var(--color-primary-700);
     font-weight: 600;
+  }
+
+  .kids-world-destination-title {
+    position: relative;
+    z-index: 1;
+    font-family: var(--font-display);
+    font-size: 0.95rem;
+    font-weight: 600;
+    line-height: 1.3;
+    letter-spacing: -0.005em;
+    color: var(--kids-type-ink);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-shadow: 0 1px 0 color-mix(in srgb, white 70%, transparent);
   }
 
   .kids-book-collectible:hover .kids-book-collectible-cover,
@@ -1262,20 +1362,6 @@
     background:
       linear-gradient(180deg, transparent 18%, color-mix(in srgb, white 72%, transparent) 72%, color-mix(in srgb, white 88%, transparent) 100%),
       linear-gradient(165deg, color-mix(in srgb, white 35%, transparent) 0%, transparent 55%);
-  }
-
-  .kids-world-destination-title {
-    position: relative;
-    z-index: 1;
-    font-size: 0.92rem;
-            font-weight: 600;
-    line-height: 1.25;
-    color: var(--color-text);
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    text-shadow: 0 1px 0 color-mix(in srgb, white 70%, transparent);
   }
 
   .kids-world-pictogram {
