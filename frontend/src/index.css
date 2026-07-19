@@ -2172,17 +2172,74 @@
     border-bottom: 2px solid var(--color-border, #e2e8f0);
   }
 
-  /* —— Book Reader 2.0 —— */
+  /* —— Book Reader — immersive premium reading —— */
   .kids-reader-shell {
     position: relative;
     isolation: isolate;
+    --reader-ink: #24324a;
+    --reader-paper: #fffaf3;
+    --reader-muted: #6b7280;
+    --reader-chrome: color-mix(in srgb, #fffaf3 88%, transparent);
+    --reader-border: color-mix(in srgb, #d6cbba 55%, transparent);
+    --reader-progress: var(--color-primary-500);
+    transition: background 0.55s ease, color 0.45s ease;
+  }
+
+  .kids-reader-shell[data-reader-theme="light"] {
+    --reader-ink: #24324a;
+    --reader-paper: #fffcf8;
+    --reader-muted: #5b6577;
+    --reader-chrome: color-mix(in srgb, #fffcf8 90%, transparent);
+    --reader-border: color-mix(in srgb, #d9d0c4 50%, transparent);
+    --reader-progress: var(--color-primary-500);
+    background:
+      radial-gradient(ellipse 70% 45% at 50% -8%, color-mix(in srgb, var(--color-primary-100) 55%, transparent) 0%, transparent 70%),
+      linear-gradient(180deg, #f7f4ee 0%, #fffcf8 45%, #f3efe7 100%);
+    color: var(--reader-ink);
+  }
+
+  .kids-reader-shell[data-reader-theme="warm"] {
+    --reader-ink: #3b2f24;
+    --reader-paper: #f6ead6;
+    --reader-muted: #7a6552;
+    --reader-chrome: color-mix(in srgb, #f6ead6 90%, transparent);
+    --reader-border: color-mix(in srgb, #d4c0a4 60%, transparent);
+    --reader-progress: #c47a3a;
+    background:
+      radial-gradient(ellipse 65% 40% at 50% 0%, rgba(232, 196, 140, 0.35) 0%, transparent 65%),
+      linear-gradient(180deg, #efe0c8 0%, #f6ead6 48%, #e8d5b5 100%);
+    color: var(--reader-ink);
+  }
+
+  .kids-reader-shell[data-reader-theme="sepia"] {
+    --reader-ink: #4a3728;
+    --reader-paper: #f3e6c9;
+    --reader-muted: #7d6548;
+    --reader-chrome: color-mix(in srgb, #f3e6c9 90%, transparent);
+    --reader-border: color-mix(in srgb, #cbb892 55%, transparent);
+    --reader-progress: #a67c52;
+    background:
+      radial-gradient(ellipse 60% 40% at 40% 0%, rgba(210, 180, 120, 0.28) 0%, transparent 70%),
+      linear-gradient(180deg, #e8d7b0 0%, #f3e6c9 50%, #e2cfab 100%);
+    color: var(--reader-ink);
+  }
+
+  .kids-reader-shell[data-reader-theme="night"] {
+    --reader-ink: #e8eef8;
+    --reader-paper: #1c2433;
+    --reader-muted: #9aa7bd;
+    --reader-chrome: color-mix(in srgb, #1c2433 88%, transparent);
+    --reader-border: color-mix(in srgb, #3a465c 70%, transparent);
+    --reader-progress: var(--color-primary-300);
+    background:
+      radial-gradient(ellipse 70% 50% at 50% 0%, rgba(59, 154, 232, 0.12) 0%, transparent 60%),
+      linear-gradient(165deg, #121826 0%, #1c2433 50%, #151b28 100%);
+    color: var(--reader-ink);
   }
 
   .kids-reader-atmosphere {
-    background:
-      radial-gradient(ellipse 80% 55% at 50% 0%, var(--color-kids-glow-sky) 0%, transparent 58%),
-      radial-gradient(ellipse 60% 45% at 85% 100%, var(--color-kids-glow-amber) 0%, transparent 52%),
-      linear-gradient(165deg, var(--color-primary-900) 0%, var(--color-surface-900) 45%, var(--color-magic-900) 100%);
+    /* theme backgrounds handled by data-reader-theme */
+    background: transparent;
   }
 
   .kids-reader-cover-bleed {
@@ -2190,143 +2247,308 @@
     inset: 0;
     background-size: cover;
     background-position: center top;
-    opacity: 0.22;
-    filter: blur(56px) saturate(1.15);
-    transform: scale(1.12);
+    opacity: 0.08;
+    filter: blur(64px) saturate(1.02);
+    transform: scale(1.06);
     pointer-events: none;
     z-index: 0;
+  }
+
+  .kids-reader-shell[data-reader-theme="night"] .kids-reader-cover-bleed {
+    opacity: 0.12;
   }
 
   .kids-reader-cloud {
     position: absolute;
     border-radius: 999px;
-    background: rgba(255, 255, 255, 0.06);
-    filter: blur(2px);
+    background: rgba(255, 255, 255, 0.04);
+    filter: blur(3px);
     pointer-events: none;
+    opacity: 0.4;
   }
 
-  .kids-reader-cloud-a { width: 180px; height: 48px; top: 12%; left: 8%; opacity: 0.5; }
-  .kids-reader-cloud-b { width: 140px; height: 40px; top: 22%; right: 10%; opacity: 0.35; }
-  .kids-reader-cloud-c { width: 200px; height: 52px; bottom: 18%; left: 15%; opacity: 0.3; }
+  .kids-reader-cloud-a { width: 160px; height: 40px; top: 14%; left: 8%; }
+  .kids-reader-cloud-b { width: 120px; height: 34px; top: 24%; right: 12%; opacity: 0.28; }
+  .kids-reader-cloud-c { width: 180px; height: 44px; bottom: 20%; left: 16%; opacity: 0.22; }
+
+  .kids-reader-header {
+    position: absolute;
+    top: 0;
+    inset-inline: 0;
+    z-index: 40;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    background: var(--reader-chrome);
+    border-bottom: 1px solid var(--reader-border);
+    backdrop-filter: blur(14px);
+  }
+
+  @media (min-width: 768px) {
+    .kids-reader-header {
+      padding: 0.85rem 1.5rem;
+      gap: 1rem;
+    }
+  }
+
+  .kids-reader-header-title {
+    font-family: var(--font-display);
+    font-size: clamp(0.95rem, 2.2vw, 1.15rem);
+    font-weight: 600;
+    line-height: 1.25;
+    letter-spacing: -0.01em;
+    color: var(--reader-ink);
+    text-align: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .kids-reader-header-meta {
+    display: none;
+    font-family: var(--font-body);
+    font-size: 0.7rem;
+    font-weight: 500;
+    color: var(--reader-muted);
+    text-align: center;
+  }
+
+  @media (min-width: 640px) {
+    .kids-reader-header-meta {
+      display: block;
+    }
+  }
+
+  .kids-reader-toolbar-btn {
+    display: grid;
+    place-items: center;
+    min-height: 56px;
+    min-width: 56px;
+    width: 3.5rem;
+    height: 3.5rem;
+    border-radius: 999px;
+    border: 1px solid var(--reader-border);
+    background: color-mix(in srgb, var(--reader-paper) 82%, transparent);
+    color: var(--reader-ink);
+    box-shadow: 0 2px 8px rgba(36, 50, 74, 0.06);
+    transition: background 160ms ease, transform 160ms ease, box-shadow 160ms ease;
+  }
+
+  .kids-reader-toolbar-btn:hover {
+    background: color-mix(in srgb, var(--reader-paper) 96%, white);
+  }
+
+  .kids-reader-toolbar-btn:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary-400) 55%, transparent);
+  }
+
+  .kids-reader-toolbar-btn.is-active {
+    color: #be123c;
+    background: color-mix(in srgb, #fff1f2 90%, white);
+  }
+
+  .kids-reader-shell[data-reader-theme="night"] .kids-reader-toolbar-btn {
+    background: color-mix(in srgb, #2a3448 88%, transparent);
+    color: var(--reader-ink);
+  }
 
   .kids-reader-book-shell {
     position: relative;
     z-index: 10;
     width: 100%;
-    max-width: 52rem;
+    max-width: 48rem;
     margin-inline: auto;
+    padding-block: clamp(0.5rem, 2vh, 1.5rem);
   }
 
   .kids-reader-page-card {
-    border-radius: var(--radius-32);
-    border: 4px solid rgba(255, 255, 255, 0.12);
-    box-shadow: var(--shadow-floating, 0 16px 40px rgba(0, 0, 0, 0.12));
-    background: rgba(255, 252, 248, 0.96);
+    border-radius: 1.25rem;
+    border: 1px solid var(--reader-border);
+    box-shadow:
+      0 18px 40px -18px rgba(36, 50, 74, 0.22),
+      0 4px 12px -6px rgba(36, 50, 74, 0.1);
+    background: var(--reader-paper);
     overflow: hidden;
   }
 
-  .dark .kids-reader-page-card,
-  .kids-reader-shell.kids-reader-atmosphere .kids-reader-page-card {
-    background: rgba(30, 41, 59, 0.92);
-    border-color: rgba(255, 255, 255, 0.08);
-  }
-
   .kids-reader-text-page {
-    max-width: 42rem;
+    max-width: 40rem;
     margin-inline: auto;
-    padding: clamp(2rem, 5vw, 4rem);
-    text-align: left;
+    padding: clamp(2rem, 6vw, 3.75rem) clamp(1.5rem, 5vw, 3rem);
+    text-align: start;
   }
 
   .kids-reader-text-body {
-    font-size: clamp(1.25rem, 2.4vw, 1.65rem);
-    line-height: 1.9;
-    letter-spacing: 0.02em;
-    color: var(--color-foreground, #0f172a);
-    max-width: 36ch;
+    font-family: var(--font-body);
+    font-size: clamp(1.35rem, 2.6vw, 1.75rem);
+    font-weight: 450;
+    line-height: 1.85;
+    letter-spacing: 0.01em;
+    color: var(--reader-ink);
+    max-width: 34ch;
     margin-inline: auto;
   }
 
-  .kids-reader-shell.kids-reader-atmosphere .kids-reader-text-body {
-    color: var(--color-surface-50, #f8fafc);
+  .kids-reader-text-body p + p,
+  .kids-reader-text-body > * + * {
+    margin-top: 1.15em;
   }
 
   .kids-reader-illustration-wrap {
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: var(--space-16);
-    min-height: 70vh;
+    padding: clamp(0.75rem, 2vw, 1.5rem);
+    min-height: 72vh;
   }
 
   .kids-reader-illustration {
     max-width: 100%;
     max-height: 78vh;
     object-fit: contain;
-    border-radius: var(--radius-24);
-    box-shadow: var(--shadow-floating, 0 16px 40px rgba(0, 0, 0, 0.12));
-    border: 4px solid rgba(255, 255, 255, 0.15);
+    border-radius: 1.125rem;
+    box-shadow:
+      0 20px 40px -16px rgba(36, 50, 74, 0.24),
+      0 4px 12px -4px rgba(36, 50, 74, 0.1);
+    border: 1px solid var(--reader-border);
+    background: var(--reader-paper);
   }
 
   .kids-reader-illustration-float {
-    animation: kids-reader-float 4.5s ease-in-out infinite;
+    animation: kids-reader-float 5.5s ease-in-out infinite;
   }
 
   @keyframes kids-reader-float {
     0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-8px); }
+    50% { transform: translateY(-4px); }
   }
 
-  .kids-reader-progress-story {
+  .kids-reader-progress-dock {
+    position: absolute;
+    bottom: 0;
+    inset-inline: 0;
+    z-index: 30;
+    padding: 1rem 1rem 1.25rem;
+    pointer-events: none;
+    background: linear-gradient(180deg, transparent 0%, color-mix(in srgb, var(--reader-paper) 55%, transparent) 70%);
+  }
+
+  .kids-reader-progress-panel {
+    pointer-events: none;
+    width: 100%;
+    max-width: 28rem;
+    margin-inline: auto;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: var(--space-8);
-    padding-bottom: var(--space-8);
+    gap: 0.55rem;
   }
 
   .kids-reader-progress-label {
-    font-size: 0.875rem;
-    font-weight: 800;
-    color: rgba(255, 255, 255, 0.85);
-    letter-spacing: 0.04em;
+    font-family: var(--font-body);
+    font-size: 0.8rem;
+    font-weight: 550;
+    letter-spacing: 0.02em;
+    color: var(--reader-muted);
   }
 
-  .kids-reader-star-trail {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    max-width: 36rem;
-  }
-
-  .kids-reader-star {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
+  .kids-reader-progress-track {
+    width: 100%;
+    height: 0.4rem;
     border-radius: 999px;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    background: color-mix(in srgb, var(--reader-border) 70%, transparent);
+    overflow: hidden;
+    border: 1px solid color-mix(in srgb, var(--reader-border) 50%, transparent);
   }
 
-  .kids-reader-star-done {
-    width: 14px;
-    height: 14px;
-    background: var(--color-secondary-300);
-    box-shadow: 0 0 8px rgba(var(--color-secondary-400-rgb), 0.45);
+  .kids-reader-progress-fill {
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, color-mix(in srgb, var(--reader-progress) 75%, white), var(--reader-progress));
+    transition: width 280ms cubic-bezier(0.22, 1, 0.36, 1);
   }
 
-  .kids-reader-star-current {
-    width: 36px;
-    height: 14px;
-    background: linear-gradient(90deg, var(--color-magic-300), var(--color-orange-300));
-    box-shadow: 0 0 14px rgba(var(--color-orange-400-rgb), 0.55);
+  .kids-reader-audio-dock {
+    position: absolute;
+    bottom: 4.75rem;
+    inset-inline: 0;
+    z-index: 45;
+    display: flex;
+    justify-content: center;
+    pointer-events: none;
+    padding-inline: 1rem;
   }
 
-  .kids-reader-star-upcoming {
-    width: 10px;
-    height: 10px;
-    background: rgba(255, 255, 255, 0.28);
+  .kids-reader-audio-panel {
+    pointer-events: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+    width: min(100%, 26rem);
+    padding: 0.85rem 1rem;
+    border-radius: 1.5rem;
+    background: color-mix(in srgb, var(--reader-paper) 92%, transparent);
+    border: 1px solid var(--reader-border);
+    box-shadow: 0 12px 32px -14px rgba(36, 50, 74, 0.22);
+    backdrop-filter: blur(12px);
+  }
+
+  .kids-reader-audio-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.65rem;
+  }
+
+  .kids-reader-audio-timeline {
+    width: 100%;
+    height: 0.35rem;
+    border-radius: 999px;
+    appearance: none;
+    background: color-mix(in srgb, var(--reader-border) 80%, transparent);
+    accent-color: var(--reader-progress);
+  }
+
+  .kids-reader-audio-timeline::-webkit-slider-thumb {
+    appearance: none;
+    width: 1rem;
+    height: 1rem;
+    border-radius: 999px;
+    background: var(--reader-progress);
+    border: 2px solid white;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+  }
+
+  .kids-reader-nav-edge {
+    pointer-events: auto;
+    min-height: 56px;
+    min-width: 56px;
+    width: 3.75rem;
+    height: 3.75rem;
+    border-radius: 999px;
+    display: grid;
+    place-items: center;
+    background: color-mix(in srgb, var(--reader-paper) 88%, transparent);
+    border: 1px solid var(--reader-border);
+    color: var(--reader-ink);
+    box-shadow: 0 6px 18px -8px rgba(36, 50, 74, 0.2);
+    transition: transform 160ms ease, background 160ms ease;
+  }
+
+  .kids-reader-nav-edge:hover {
+    background: var(--reader-paper);
+  }
+
+  .kids-reader-nav-edge:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary-400) 55%, transparent);
+  }
+
+  .kids-reader-nav-edge:disabled {
+    opacity: 0.35;
   }
 
   .kids-reader-sparkle {
@@ -2340,44 +2562,36 @@
   }
 
   .kids-reader-sparkle-burst {
-    font-size: 3rem;
-    filter: drop-shadow(0 0 12px rgba(var(--color-secondary-400-rgb), 0.6));
-    animation: kids-reader-sparkle-pop 0.6s ease-out forwards;
+    width: 0.55rem;
+    height: 0.55rem;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--reader-progress) 70%, white);
+    box-shadow: 0 0 12px color-mix(in srgb, var(--reader-progress) 40%, transparent);
+    animation: kids-reader-sparkle-pop 0.5s ease-out forwards;
   }
 
   @keyframes kids-reader-sparkle-pop {
     0% { opacity: 0; transform: scale(0.4); }
-    40% { opacity: 1; transform: scale(1.1); }
-    100% { opacity: 0; transform: scale(1.4); }
+    40% { opacity: 0.9; transform: scale(1.15); }
+    100% { opacity: 0; transform: scale(1.6); }
   }
 
-  .kids-reader-toolbar-btn {
-    display: grid;
-    place-items: center;
-    min-height: 56px;
-    min-width: 56px;
-    width: 3.5rem;
-    height: 3.5rem;
-    border-radius: 999px;
-    border: 2px solid rgba(255, 255, 255, 0.35);
-    background: rgba(255, 255, 255, 0.2);
-    color: var(--color-primary-700);
-    transition: background 0.2s ease, transform 0.2s ease;
+  .kids-reader-focus-hint {
+    position: absolute;
+    bottom: 1rem;
+    inset-inline: 0;
+    z-index: 25;
+    text-align: center;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--reader-muted);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.35s ease;
   }
 
-  .kids-reader-toolbar-btn:hover {
-    background: rgba(255, 255, 255, 0.38);
-  }
-
-  .kids-reader-toolbar-btn:focus-visible {
-    outline: none;
-    box-shadow: 0 0 0 4px var(--color-primary-300);
-  }
-
-  .kids-reader-audio-active {
-    box-shadow:
-      0 0 0 0 rgba(var(--color-orange-400-rgb), 0.45),
-      0 12px 32px -8px rgba(var(--color-orange-500-rgb), 0.35);
+  .kids-reader-shell.is-focus .kids-reader-focus-hint {
+    opacity: 0.55;
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -2388,6 +2602,23 @@
       animation: none;
       opacity: 0;
     }
+    .kids-reader-shell,
+    .kids-reader-progress-fill {
+      transition: none;
+    }
+    .kids-reader-cover-bleed {
+      filter: blur(28px);
+      transform: none;
+    }
+  }
+
+  .kids-celebration-related {
+    margin-top: 1.25rem;
+    text-align: start;
+  }
+
+  .kids-celebration-related .kids-shelf-title {
+    font-size: 1.05rem;
   }
 
   .kids-glow-books {
