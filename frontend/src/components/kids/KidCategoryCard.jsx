@@ -85,10 +85,13 @@ export function KidCategoryCard({ category, to, compact = false }) {
           style={{ objectPosition }}
         />
         <span className="kids-world-destination-veil" aria-hidden="true" />
-        <div className="relative z-10 mt-auto w-full text-center px-1">
+        <div className="relative z-10 mt-auto w-full text-center px-1.5 pb-0.5">
           <h3 className="kids-world-destination-title">
             {category.shortLabel || category.label}
           </h3>
+          {category.cue ? (
+            <p className="kids-world-destination-cue">{category.cue}</p>
+          ) : null}
         </div>
       </Link>
     </motion.div>

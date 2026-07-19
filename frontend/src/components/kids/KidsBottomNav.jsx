@@ -2,14 +2,14 @@ import { motion } from 'framer-motion';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useLanguage } from '../../context/LanguageContext';
 import { useReducedMotion } from '../../hooks/useReducedMotion';
-import { HomeIcon, BookIcon, AudioIcon, HeartIcon } from '../Icons';
+import { HomeIcon, BookIcon, AudioIcon, HeartIcon, UserIcon } from '../Icons';
 
 const NAV_ITEMS = [
   { id: 'home', path: '/kids', match: 'exact', labelKey: 'kidsNavHome', icon: HomeIcon },
   { id: 'library', path: '/kids/library', match: 'prefix', labelKey: 'library', icon: BookIcon },
   { id: 'audio', path: '/kids/audio', match: 'audio', labelKey: 'kidsNavAudio', icon: AudioIcon },
   { id: 'favorites', path: '/favorites', match: 'exact', labelKey: 'yourFavorites', icon: HeartIcon },
-  { id: 'profile', path: '/kids#profile', match: 'hash', labelKey: 'profile', icon: null, emoji: '👤' },
+  { id: 'profile', path: '/kids#profile', match: 'hash', labelKey: 'profile', icon: UserIcon },
 ];
 
 function isActiveItem(location, item) {
@@ -62,10 +62,8 @@ export function KidsBottomNav() {
             >
               {Icon ? (
                 <Icon className="h-5 w-5 md:h-6 md:w-6" strokeWidth={active ? 2.25 : 1.75} />
-              ) : (
-                <span className="text-lg leading-none" aria-hidden="true">{item.emoji}</span>
-              )}
-              <span className="hidden sm:block max-w-[4.5rem] truncate">{t(item.labelKey)}</span>
+              ) : null}
+              <span className="kids-bottom-nav-label hidden sm:block max-w-[4.5rem] truncate">{t(item.labelKey)}</span>
             </button>
           );
         })}

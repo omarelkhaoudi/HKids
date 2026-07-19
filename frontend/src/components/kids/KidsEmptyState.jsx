@@ -29,6 +29,7 @@ export function KidsEmptyState({
           <KidsMascot mood={mascotMood} size="small" showBubble={false} />
         </div>
       )}
+      {!showMascot && (illustration || emoji) ? (
       <motion.div
         className={`relative inline-flex mb-5 ${compact ? 'text-5xl' : 'text-7xl md:text-8xl'}`}
         {...(reducedMotion ? {} : kidsFloat)}
@@ -36,6 +37,7 @@ export function KidsEmptyState({
       >
         {illustration || emoji}
       </motion.div>
+      ) : null}
       {title && (
         <h3 className={`relative kids-type-h1 mb-2 line-clamp-2 ${compact ? '!text-xl' : '!text-[1.5rem] md:!text-[1.75rem]'}`}>
           {title}
