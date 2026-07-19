@@ -1,7 +1,7 @@
 import { memo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useReducedMotion } from '../../hooks/useReducedMotion';
-import { getHoverMotion, kidsBadgePop } from '../../constants/kidsMotion';
+import { getHoverMotion, kidsBadgePop, kidsTouchFeedback } from '../../constants/kidsMotion';
 import { KidsFeedbackBurst } from './KidsFeedbackBurst';
 import { KidsBookCover } from './KidsBookCover';
 import { PlayIcon, HeartIcon, DownloadIcon, SparklesIcon, ClockIcon, ShieldIcon, AudioIcon } from '../Icons';
@@ -42,6 +42,9 @@ export const KidsMediaCard = memo(function KidsMediaCard({
     ? `${book.age_group_min}–${book.age_group_max}`
     : null);
   const isPoster = variant === 'poster';
+  const isNew = book.is_new === true || book.is_new === 1;
+  const showContinue = progress > 0 && progress < 100;
+  const reason = discoveryReason || book._discoveryReason;
 
   const flashFeedback = (type) => {
     setFeedback(type);
@@ -55,10 +58,7 @@ export const KidsMediaCard = memo(function KidsMediaCard({
       <motion.div
         role="button"
         tabIndex={0}
-        {...getHoverMotion(reducedMotion, {
-          whileHover: { y: -6, scale: 1.02 },
-          whileTap: { scale: 0.985 },
-        })}
+        {...getHoverMotion(reducedMotion, kidsTouchFeedback)}
         className="kids-book-collectible-cover kids-book-collectible-cover--hero w-full cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-400 focus-visible:ring-offset-2"
         onClick={() => onPlay?.(book)}
         onKeyDown={(event) => {
@@ -72,15 +72,23 @@ export const KidsMediaCard = memo(function KidsMediaCard({
         <KidsFeedbackBurst type={feedback} active={Boolean(feedback)} />
         <KidsBookCover
           book={book}
-          imgClassName="absolute inset-0 h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.025]"
+          imgClassName="absolute inset-0 h-full w-full object-cover transition-opacity duration-300 ease-out"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-foreground/20 via-transparent to-transparent pointer-events-none" />
 
-        <div className="absolute inset-inline-start-2 top-2 z-10 flex flex-col gap-1 max-w-[75%]">
-          {(discoveryReason || book._discoveryReason) && (
+        <div className="absolute inset-inline-start-2 top-2 z-10 flex flex-col gap-1 max-w-[78%]">
+          {reason && (
             <span className="kids-book-meta-chip line-clamp-1">
-              {discoveryReason || book._discoveryReason}
+              {reason}
             </span>
+          )}
+          {isNew && (
+            <span className="kids-book-meta-chip kids-book-meta-chip--accent">Nouveau</span>
+          )}
+          {showContinue && (
+            <span className="kids-book-meta-chip kids-book-meta-chip--continue">Continue</span>
+          )}
+          {isFavorite && (
+            <span className="kids-book-meta-chip kids-book-meta-chip--favorite">Favori</span>
           )}
           {book.is_premium && (
             <span className="kids-book-meta-chip kids-book-meta-chip--accent">
@@ -90,11 +98,11 @@ export const KidsMediaCard = memo(function KidsMediaCard({
         </div>
 
         {(isFavorite || showActions) && (
-          <div className="absolute inset-inline-end-2 top-2 z-10 flex flex-col gap-2">
+          <div className="absolute inset-inline-end-1.5 top-1.5 z-10 flex flex-col gap-1.5">
             <motion.button
               type="button"
-              whileHover={reducedMotion ? undefined : { scale: 1.04 }}
-              whileTap={reducedMotion ? undefined : { scale: 0.94 }}
+              whileHover={reducedMotion ? undefined : { scale: 1.03 }}
+              whileTap={reducedMotion ? undefined : { scale: 0.96 }}
               onClick={(e) => {
                 e.stopPropagation();
                 if (showActions) {
@@ -102,10 +110,8 @@ export const KidsMediaCard = memo(function KidsMediaCard({
                   flashFeedback('favorite');
                 }
               }}
-              className={`kids-touch-target !min-h-[48px] !min-w-[48px] rounded-full p-2.5 shadow-soft border transition-colors ${
-                isFavorite
-                  ? 'bg-rose-500 text-white border-rose-300'
-                  : 'bg-card/90 text-foreground-secondary border-border/50 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100'
+              className={`kids-book-action ${
+                isFavorite ? 'kids-book-action--favorite-on' : 'opacity-0 group-hover:opacity-100 group-focus-within:opacity-100'
               }`}
               aria-label="Favorite"
               aria-pressed={isFavorite}
@@ -126,13 +132,13 @@ export const KidsMediaCard = memo(function KidsMediaCard({
                     onDownload?.(book);
                     flashFeedback('download');
                   }}
-                  className="kids-touch-target !min-h-[48px] !min-w-[48px] rounded-full bg-card/90 text-foreground-secondary p-2.5 shadow-soft border border-border/50 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100"
+                  className="kids-book-action opacity-0 group-hover:opacity-100 group-focus-within:opacity-100"
                   aria-label="Download"
                 >
                   <DownloadIcon className="h-5 w-5" />
                 </motion.button>
               ) : (
-                <div className="kids-touch-target !min-h-[48px] !min-w-[48px] rounded-full bg-primary-500 p-2.5 text-white shadow-soft" aria-label="Downloaded">
+                <div className="kids-book-action" aria-label="Downloaded">
                   <DownloadIcon className="h-5 w-5" />
                 </div>
               )
@@ -141,14 +147,14 @@ export const KidsMediaCard = memo(function KidsMediaCard({
         )}
 
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <span className="flex h-11 w-11 items-center justify-center rounded-full bg-card/92 text-primary-700 shadow-card opacity-0 scale-95 transition-all duration-300 group-hover:opacity-100 group-hover:scale-100 group-focus-within:opacity-100 group-focus-within:scale-100">
+          <span className="kids-book-play-hint">
             <PlayIcon className={`h-5 w-5 ${isRtl ? 'me-0.5 rotate-180' : 'ms-0.5'}`} filled />
           </span>
         </div>
 
-        {progress > 0 && progress < 100 && (
-          <div className="absolute inset-x-0 bottom-0 h-1 bg-foreground/15">
-            <div className="h-full bg-primary-500" style={{ width: `${progress}%` }} />
+        {showContinue && (
+          <div className="kids-book-progress" role="progressbar" aria-valuenow={Math.round(progress)} aria-valuemin={0} aria-valuemax={100}>
+            <div className="kids-book-progress-fill" style={{ width: `${progress}%` }} />
           </div>
         )}
       </motion.div>
@@ -179,7 +185,7 @@ export const KidsMediaCard = memo(function KidsMediaCard({
                 <AudioIcon className="h-2.5 w-2.5" />
               </span>
             )}
-            {progress > 0 && progress < 100 && (
+            {showContinue && (
               <span className="kids-book-meta-pill kids-book-meta-pill--progress">
                 {Math.round(progress)}%
               </span>
