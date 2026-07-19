@@ -80,9 +80,9 @@ export function KidsFamilyMessages({ className = '' }) {
   if (loading) {
     return (
       <section className={className}>
-        <h2 className="text-2xl font-black text-foreground mb-4 pl-2 flex items-center gap-2">
+        <h2 className="kids-shelf-title mb-4 pl-2">
           <span aria-hidden="true">💌</span>
-          {t('familyMessagesTitle')}
+          <span>{t('familyMessagesTitle')}</span>
         </h2>
         <div className="flex gap-4">
           {[1, 2].map((i) => (
@@ -97,16 +97,16 @@ export function KidsFamilyMessages({ className = '' }) {
     return (
       <section className={`${className} rounded-[2rem] border border-dashed border-border bg-card/60 p-6 text-center`}>
         <p className="text-4xl mb-2" aria-hidden="true">🎙️</p>
-        <p className="font-bold text-foreground-muted">{t('parentFamilyMessagesEmpty')}</p>
+        <p className="kids-shelf-subtitle !mx-auto !mt-0">{t('parentFamilyMessagesEmpty')}</p>
       </section>
     );
   }
 
   return (
     <section className={className}>
-      <h2 className="text-2xl font-black text-foreground mb-4 pl-2 flex items-center gap-2">
+      <h2 className="kids-shelf-title mb-4 pl-2">
         <span aria-hidden="true">💌</span>
-        {t('familyMessagesTitle')}
+        <span>{t('familyMessagesTitle')}</span>
       </h2>
       <div className="flex gap-4 overflow-x-auto pb-2 snap-x custom-scrollbar">
         {messages.map((message) => (
@@ -117,7 +117,7 @@ export function KidsFamilyMessages({ className = '' }) {
             className="snap-start shrink-0 w-56 rounded-[2rem] bg-gradient-to-br from-rose-100 via-primary-50 to-secondary-50 border-4 border-white shadow-lg p-5 flex flex-col items-center text-center gap-4"
           >
             <div className="text-5xl" aria-hidden="true">🎙️</div>
-            <p className="font-black text-foreground text-lg line-clamp-2">
+            <p className="kids-book-title text-center">
               {message.title || t('familyMessageDefault')}
             </p>
             <KidsButton

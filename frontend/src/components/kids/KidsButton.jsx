@@ -26,7 +26,7 @@ export default function KidsButton({
 }) {
   const reducedMotion = useReducedMotion();
   const baseClasses =
-    'relative flex items-center justify-center font-bold select-none transition-all duration-200 touch-manipulation kids-btn-ripple kids-touch-target focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-400 focus-visible:ring-offset-2';
+    'relative flex items-center justify-center kids-type-button select-none transition-all duration-200 touch-manipulation kids-btn-ripple kids-touch-target focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-400 focus-visible:ring-offset-2';
 
   const sizeClasses = {
     sm: 'px-space-16 py-space-12 min-h-touch-kids text-base rounded-24',

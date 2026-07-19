@@ -344,7 +344,7 @@ function KidsHome() {
             className="w-14 h-14 border border-border/60 shadow-soft bg-gradient-to-br from-primary-400 to-primary-600 text-white shrink-0"
           />
           <div className="min-w-0">
-            <p className="text-caption font-medium text-foreground-muted">{greeting}</p>
+            <p className="kids-type-caption">{greeting}</p>
             <h1 className="kids-type-h1 truncate">
               {kidName}
             </h1>

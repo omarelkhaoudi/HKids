@@ -104,7 +104,7 @@ export function KidsHeroStoryCard({
               {book.title}
             </h2>
             {book.author ? (
-              <p className="kids-book-author !text-[0.9rem]">{book.author}</p>
+              <p className="kids-book-author">{book.author}</p>
             ) : null}
             {book?.description ? (
               <p className="kids-shelf-subtitle line-clamp-2 max-w-xl mx-auto md:mx-0 !mt-1">

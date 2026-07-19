@@ -136,14 +136,14 @@ export const KidsCelebration = memo(function KidsCelebration({
             <motion.div className="flex justify-center mb-4" {...getMotionProps(reducedMotion, kidsBadgePop)}>
               <KidsMascot mood="celebrate" size="small" showBubble={false} className="!pointer-events-none" />
             </motion.div>
-            <h2 className={`text-3xl md:text-4xl font-black mb-2 ${isBedtime ? 'text-magic-600' : 'text-primary-600'}`}>
+            <h2 className={`kids-type-h1 mb-2 ${isBedtime ? 'text-magic-600' : 'text-primary-600'}`}>
               {title || t('kidBookDone')}
             </h2>
             {bookTitle && (
-              <p className="text-body font-bold text-foreground mb-2 line-clamp-2">{bookTitle}</p>
+              <p className="kids-book-title mb-2 mx-auto max-w-sm">{bookTitle}</p>
             )}
             {subtitle && (
-              <p className="text-lg font-bold text-foreground-secondary mb-6 line-clamp-2">{subtitle}</p>
+              <p className="kids-shelf-subtitle !mx-auto mb-6 line-clamp-2">{subtitle}</p>
             )}
             <div className="flex flex-col gap-3">
               {onFavorite && (

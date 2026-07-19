@@ -38,18 +38,24 @@
     --kids-type-author: #6B7C93;
     --kids-type-subtitle: #7A8BA0;
     --kids-type-meta: #5A6B82;
-    --kids-type-h1-size: clamp(1.75rem, 3.2vw, 2.25rem);
+    --kids-type-display-size: clamp(2rem, 4vw, 2.75rem);
+    --kids-type-display-lh: 1.18;
+    --kids-type-h1-size: clamp(1.85rem, 3.4vw, 2.35rem);
     --kids-type-h1-lh: 1.22;
-    --kids-type-h2-size: clamp(1.35rem, 2.6vw, 1.75rem);
+    --kids-type-h2-size: clamp(1.45rem, 2.8vw, 1.85rem);
     --kids-type-h2-lh: 1.28;
-    --kids-type-card-size: clamp(1.02rem, 1.8vw, 1.12rem);
-    --kids-type-card-lh: 1.32;
-    --kids-type-subtitle-size: clamp(0.9rem, 1.5vw, 1rem);
-    --kids-type-subtitle-lh: 1.45;
-    --kids-type-meta-size: 0.68rem;
-    --kids-type-meta-lh: 1.3;
-    --kids-type-caption-size: 0.75rem;
+    --kids-type-card-size: clamp(1.1rem, 2vw, 1.22rem);
+    --kids-type-card-lh: 1.34;
+    --kids-type-subtitle-size: clamp(0.94rem, 1.6vw, 1.05rem);
+    --kids-type-subtitle-lh: 1.5;
+    --kids-type-body-size: 1rem;
+    --kids-type-body-lh: 1.55;
+    --kids-type-meta-size: 0.7rem;
+    --kids-type-meta-lh: 1.35;
+    --kids-type-caption-size: 0.78rem;
     --kids-type-caption-lh: 1.4;
+    --kids-type-nav-size: 0.72rem;
+    --kids-type-button-size: 1.05rem;
 
     /* —— Radius —— */
     --radius-8: 8px;
@@ -349,7 +355,16 @@
     @apply text-foreground-muted;
   }
 
-  /* Kids premium hierarchy */
+  /* Kids premium hierarchy — Display → H1 → H2 → Card → Subtitle → Body → Meta → Caption → Button */
+  .kids-type-display {
+    font-family: var(--font-display);
+    font-size: var(--kids-type-display-size);
+    line-height: var(--kids-type-display-lh);
+    font-weight: 600;
+    letter-spacing: -0.015em;
+    color: var(--kids-type-ink);
+  }
+
   .kids-type-h1 {
     font-family: var(--font-display);
     font-size: var(--kids-type-h1-size);
@@ -369,8 +384,8 @@
     color: var(--kids-type-ink);
     display: flex;
     align-items: center;
-    gap: 0.65rem;
-    margin-block: 0.15rem 0.35rem;
+    gap: 0.5rem;
+    margin-block: 0.5rem 0.5rem;
   }
 
   .kids-type-subtitle,
@@ -379,10 +394,18 @@
     font-size: var(--kids-type-subtitle-size);
     line-height: var(--kids-type-subtitle-lh);
     font-weight: 400;
-    letter-spacing: 0.005em;
+    letter-spacing: 0.01em;
     color: var(--kids-type-subtitle);
-    margin-top: 0.35rem;
+    margin-top: 0.5rem;
     max-width: 36rem;
+  }
+
+  .kids-type-body {
+    font-family: var(--font-body);
+    font-size: var(--kids-type-body-size);
+    line-height: var(--kids-type-body-lh);
+    font-weight: 500;
+    color: var(--kids-type-meta);
   }
 
   .kids-type-caption {
@@ -390,7 +413,16 @@
     font-size: var(--kids-type-caption-size);
     line-height: var(--kids-type-caption-lh);
     font-weight: 500;
+    letter-spacing: 0.01em;
     color: var(--kids-type-meta);
+  }
+
+  .kids-type-button {
+    font-family: var(--font-display);
+    font-size: var(--kids-type-button-size);
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    line-height: 1.2;
   }
 
   /* 3D Button Styles (Duolingo inspired) */
@@ -444,7 +476,7 @@
   }
 
   .brand-section-title {
-    @apply text-2xl sm:text-3xl font-extrabold text-foreground tracking-tight;
+    @apply text-2xl sm:text-3xl font-semibold text-foreground tracking-tight;
   }
   
   /* Cards */
@@ -1201,12 +1233,12 @@
 
   .kids-book-collectible-meta {
     flex: 0 0 auto;
-    margin-top: 0.7rem;
-    padding-inline: 0.2rem;
+    margin-top: 0.75rem;
+    padding-inline: 0.25rem;
     min-height: 0;
     display: flex;
     flex-direction: column;
-    gap: 0.28rem;
+    gap: 0.5rem;
   }
 
   .kids-book-title {
@@ -1214,7 +1246,7 @@
     font-size: var(--kids-type-card-size);
     font-weight: 600;
     line-height: var(--kids-type-card-lh);
-    letter-spacing: -0.008em;
+    letter-spacing: -0.01em;
     color: var(--kids-type-ink);
     display: -webkit-box;
     -webkit-line-clamp: 2;
@@ -1225,11 +1257,12 @@
 
   .kids-book-author {
     font-family: var(--font-body);
-    font-size: 0.78rem;
+    font-size: 0.875rem;
     font-weight: 500;
     line-height: 1.4;
-    letter-spacing: 0.01em;
+    letter-spacing: 0.015em;
     color: var(--kids-type-author);
+    margin-top: 0.125rem;
     display: -webkit-box;
     -webkit-line-clamp: 1;
     -webkit-box-orient: vertical;
@@ -1241,30 +1274,30 @@
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 0.35rem;
-    margin-top: 0.15rem;
+    gap: 0.5rem;
+    margin-top: 0.125rem;
   }
 
   .kids-book-meta-pill {
     display: inline-flex;
     align-items: center;
-    gap: 0.28rem;
+    gap: 0.35rem;
     border-radius: 999px;
     background: color-mix(in srgb, var(--color-surface-secondary) 85%, transparent);
-    padding: 0.2rem 0.5rem;
+    padding: 0.25rem 0.5rem;
     font-family: var(--font-body);
     font-size: var(--kids-type-meta-size);
     font-weight: 500;
     line-height: var(--kids-type-meta-lh);
-    letter-spacing: 0.015em;
+    letter-spacing: 0.02em;
     color: var(--kids-type-meta);
   }
 
   .kids-book-meta-pill svg {
-    width: 0.7rem;
-    height: 0.7rem;
+    width: 0.75rem;
+    height: 0.75rem;
     flex-shrink: 0;
-    opacity: 0.85;
+    opacity: 0.8;
   }
 
   .kids-book-meta-pill--audio {
@@ -1394,19 +1427,23 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 0.15rem;
+    gap: 0.35rem;
     min-height: 56px;
     min-width: 56px;
     padding: 0.4rem 0.65rem;
     border-radius: 1.25rem;
-    color: var(--color-text-muted);
-    font-size: 0.68rem;
-    font-weight: 600;
+    color: var(--kids-type-meta);
+    font-family: var(--font-display);
+    font-size: var(--kids-type-nav-size);
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    line-height: 1.2;
     transition: background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
   }
 
   .kids-bottom-nav-item.is-active {
     color: var(--color-primary-700);
+    font-weight: 600;
     background: color-mix(in srgb, var(--color-primary-100) 70%, white);
     box-shadow: var(--shadow-soft);
   }

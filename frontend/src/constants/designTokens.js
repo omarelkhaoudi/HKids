@@ -17,16 +17,16 @@ export const DS_PALETTE = [
 ];
 
 export const DS_TYPOGRAPHY = [
-  { id: 'hero', className: 'text-hero', label: 'H1 / Hero', sample: 'Lis avec magie' },
-  { id: 'heading-xl', className: 'text-heading-xl', label: 'H1', sample: 'Ta bibliothèque' },
-  { id: 'heading-l', className: 'text-heading-l kids-type-h2', label: 'H2 / Section', sample: 'Nouveautés' },
+  { id: 'display', className: 'kids-type-display', label: 'Display', sample: 'Lis avec magie' },
+  { id: 'h1', className: 'kids-type-h1', label: 'H1', sample: 'Ta bibliothèque' },
+  { id: 'h2', className: 'kids-shelf-title', label: 'H2 / Section', sample: 'Nouveautés' },
   { id: 'card-title', className: 'kids-book-title', label: 'Card Title', sample: 'Le petit dinosaure courageux' },
   { id: 'subtitle', className: 'kids-shelf-subtitle', label: 'Subtitle', sample: 'Des histoires fraîches pour toi' },
   { id: 'author', className: 'kids-book-author', label: 'Author', sample: 'Le Lit Qui Lit' },
+  { id: 'body', className: 'kids-type-body', label: 'Body', sample: 'Choisis un livre et commence.' },
   { id: 'metadata', className: 'kids-book-meta-pill', label: 'Metadata', sample: '3–6 · 5:00' },
   { id: 'caption', className: 'kids-type-caption', label: 'Caption', sample: '6–8 ans · 12 min' },
-  { id: 'body-lg', className: 'text-body-lg', label: 'Body Large', sample: 'Une histoire pour ce soir.' },
-  { id: 'body', className: 'text-body', label: 'Body', sample: 'Choisis un livre et commence.' },
+  { id: 'button', className: 'kids-type-button', label: 'Buttons', sample: 'Lire maintenant' },
 ];
 
 export const DS_RADIUS = [8, 12, 16, 20, 24, 32];
