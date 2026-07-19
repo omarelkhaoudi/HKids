@@ -28,11 +28,11 @@ export function KidsSectionHeader({
           {emoji && <span className="text-lg opacity-55" aria-hidden="true">{emoji}</span>}
           {Icon && <Icon className="h-5 w-5 text-primary-500 opacity-80" />}
           {!hideTitle && title && (
-            <span className="text-foreground font-semibold">{title}</span>
+            <span>{title}</span>
           )}
         </h2>
         {subtitle && (
-          <p className="mt-space-8 text-body font-medium text-foreground-muted line-clamp-2 px-1 max-w-lg">
+          <p className="kids-shelf-subtitle line-clamp-2 px-1">
             {subtitle}
           </p>
         )}

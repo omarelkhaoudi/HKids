@@ -41,7 +41,6 @@ export function KidsHeroStoryCard({
   const progress = Math.min(100, Math.max(0, Number(book?.progress || book?.kid_progress_percent || 0)));
   const ageLabel = formatAge(book, t);
   const durationLabel = formatDuration(book, t);
-  const subtitle = book?.description || book?.author || t('kidsDiscoverToday');
   const hasProgress = progress > 0 && progress < 100;
   const coverUrl = resolveBookCoverUrl(book);
 
@@ -57,7 +56,7 @@ export function KidsHeroStoryCard({
           <p className="text-caption font-semibold uppercase tracking-[0.14em] text-primary-600/70">
             {badgeLabel || t('kidsStoriesToday')}
           </p>
-          <h2 className="text-heading-xl font-semibold text-foreground max-w-lg leading-snug">
+          <h2 className="kids-type-h1 max-w-lg">
             {emptyLabel || t('emptyBooksTitle')}
           </h2>
           <KidsButton variant="primary" size="md" onClick={onEmptyAction} aria-label={t('goToLibrary')}>
@@ -98,15 +97,18 @@ export function KidsHeroStoryCard({
 
         <div className="flex flex-1 flex-col justify-center min-w-0 gap-space-16 text-center md:text-start">
           <div className="min-w-0 space-y-space-8">
-            <p className="text-caption font-semibold uppercase tracking-[0.14em] text-primary-600/70">
+            <p className="kids-type-caption uppercase tracking-[0.14em] text-primary-600/80">
               {badgeLabel || t('kidsStoriesToday')}
             </p>
-            <h2 className="text-heading-xl md:text-hero font-semibold text-foreground leading-[1.15] line-clamp-3">
+            <h2 className="kids-type-h1 line-clamp-2">
               {book.title}
             </h2>
-            {subtitle ? (
-              <p className="text-body-lg text-foreground-secondary font-medium leading-relaxed line-clamp-3 max-w-xl mx-auto md:mx-0">
-                {subtitle}
+            {book.author ? (
+              <p className="kids-book-author !text-[0.9rem]">{book.author}</p>
+            ) : null}
+            {book?.description ? (
+              <p className="kids-shelf-subtitle line-clamp-2 max-w-xl mx-auto md:mx-0 !mt-1">
+                {book.description}
               </p>
             ) : null}
           </div>
