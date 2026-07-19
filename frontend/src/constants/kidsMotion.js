@@ -31,9 +31,9 @@ export const kidsCarouselReveal = {
 };
 
 export const kidsHoverLift = {
-  whileHover: { y: -6, scale: 1.02 },
-  whileTap: { scale: 0.98 },
-  transition: { duration: KIDS_MOTION_DURATION.base, ease: easeOut },
+  whileHover: { y: -4 },
+  whileTap: { scale: 0.985 },
+  transition: { duration: KIDS_MOTION_DURATION.fast, ease: easeOut },
 };
 
 export const kidsTouchFeedback = {

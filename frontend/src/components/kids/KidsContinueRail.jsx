@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { useReducedMotion } from '../../hooks/useReducedMotion';
-import { getMotionProps, getHoverMotion, kidsCarouselReveal, kidsHoverLift } from '../../constants/kidsMotion';
+import { getMotionProps, getHoverMotion, kidsCarouselReveal, kidsTouchFeedback } from '../../constants/kidsMotion';
 import { PlayIcon } from '../Icons';
 import { KidsBookCover } from './KidsBookCover';
 
@@ -42,7 +42,7 @@ export function KidsContinueRail({
           return (
             <motion.article
               key={book.id}
-              {...getHoverMotion(reducedMotion, kidsHoverLift)}
+              {...getHoverMotion(reducedMotion, kidsTouchFeedback)}
               className="kids-continue-book snap-start shrink-0 w-[10.5rem] sm:w-[11.5rem] md:w-[13rem] flex flex-col"
             >
               <button
@@ -53,29 +53,37 @@ export function KidsContinueRail({
               >
                 <KidsBookCover
                   book={book}
-                  imgClassName="absolute inset-0 h-full w-full object-cover"
+                  imgClassName="absolute inset-0 h-full w-full object-cover transition-opacity duration-300 ease-out"
                 />
-                <span className="absolute top-space-10 inset-inline-start-space-10 inline-flex min-h-[32px] items-center rounded-full bg-card/95 px-space-10 text-[10px] font-semibold text-primary-700 shadow-soft border border-border/40">
+                <span className="kids-book-meta-chip kids-book-meta-chip--continue absolute top-space-10 inset-inline-start-space-10 z-10">
                   {t('resume')}
                 </span>
                 {progress > 0 && (
-                  <div className="absolute inset-x-0 bottom-0 h-1 bg-foreground/15">
-                    <div className="h-full bg-primary-500" style={{ width: `${progress}%` }} />
+                  <div
+                    className="kids-book-progress"
+                    role="progressbar"
+                    aria-valuenow={Math.round(progress)}
+                    aria-valuemin={0}
+                    aria-valuemax={100}
+                  >
+                    <div className="kids-book-progress-fill" style={{ width: `${progress}%` }} />
                   </div>
                 )}
               </button>
 
-              <div className="mt-space-12 px-0.5 space-y-space-8 flex flex-col grow">
+              <div className="kids-book-collectible-meta grow">
                 <h3 className="kids-book-title">
                   {book.title}
                 </h3>
-                <div className="flex items-center justify-between gap-2">
-              <span className="kids-type-caption text-foreground-muted">{Math.round(progress)}%</span>
+                <div className="kids-book-meta-row">
+                  <span className="kids-book-meta-pill kids-book-meta-pill--progress">
+                    {Math.round(progress)}%
+                  </span>
                 </div>
                 <button
                   type="button"
                   onClick={() => onResume?.(book)}
-                  className="kids-touch-target mt-auto inline-flex min-h-[48px] w-full items-center justify-center gap-space-8 rounded-full bg-primary-500 px-space-12 text-caption font-semibold text-white shadow-soft hover:bg-primary-600 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-300"
+                  className="kids-touch-target mt-auto inline-flex min-h-[56px] w-full items-center justify-center gap-space-8 rounded-full bg-primary-500 px-space-12 text-caption font-semibold text-white shadow-soft hover:bg-primary-600 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-300"
                   aria-label={`${t('resume')} — ${book.title}`}
                 >
                   <PlayIcon className={`h-4 w-4 ${isRtl ? 'rotate-180' : ''}`} filled />

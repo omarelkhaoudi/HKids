@@ -1,8 +1,7 @@
 import React, { memo } from 'react';
 import { motion } from 'framer-motion';
-import { Badge } from './Badge';
-import { ProgressBar } from './ProgressBar';
 import { useReducedMotion } from '../../hooks/useReducedMotion';
+import { getHoverMotion, kidsTouchFeedback } from '../../constants/kidsMotion';
 import { KidsBookCover } from '../kids/KidsBookCover';
 
 export const BookCard = memo(function BookCard({
@@ -14,51 +13,60 @@ export const BookCard = memo(function BookCard({
   className = '',
 }) {
   const reducedMotion = useReducedMotion();
-  const hoverMotion = reducedMotion ? {} : { whileHover: { y: -8, scale: 1.02 } };
   const title = book?.title || '';
+  const safeProgress = progress == null ? null : Math.min(100, Math.max(0, Number(progress)));
 
   return (
     <motion.button
       type="button"
       onClick={onClick}
-      {...hoverMotion}
+      {...getHoverMotion(reducedMotion, kidsTouchFeedback)}
       className={[
-        'group relative flex flex-col w-[160px] sm:w-[180px] lg:w-[220px]',
-        'rounded-24 overflow-hidden cursor-pointer bg-surface shadow-card border border-border',
-        'text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2',
+        'kids-book-collectible group relative text-left',
+        'focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2',
         className,
       ].join(' ')}
       aria-label={title}
     >
-      <div className="relative aspect-[3/4] overflow-hidden bg-surface-secondary">
+      <div className="kids-book-collectible-cover w-full">
         <KidsBookCover
           book={book}
-          imgClassName="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+          imgClassName="absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ease-out"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-surface-900/70 via-transparent to-transparent opacity-70" />
-        <div className="absolute top-space-12 left-space-12 flex flex-col gap-space-8">
-          {isNew ? <Badge variant="primary" size="sm">Nouveau</Badge> : null}
-          {isRecommended ? <Badge variant="secondary" size="sm">Pour toi</Badge> : null}
+        <div className="absolute top-2 inset-inline-start-2 z-10 flex flex-col gap-1">
+          {isNew ? <span className="kids-book-meta-chip kids-book-meta-chip--accent">Nouveau</span> : null}
+          {isRecommended ? <span className="kids-book-meta-chip">Pour toi</span> : null}
         </div>
-        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-          <span className="w-space-48 h-space-48 bg-primary-500 text-white rounded-full flex items-center justify-center shadow-floating pl-space-4" aria-hidden="true">
-            <svg className="w-space-24 h-space-24" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          <span className="kids-book-play-hint" aria-hidden="true">
+            <svg className="h-5 w-5 ms-0.5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
           </span>
         </div>
+        {safeProgress != null && safeProgress > 0 && safeProgress < 100 ? (
+          <div
+            className="kids-book-progress"
+            role="progressbar"
+            aria-valuenow={Math.round(safeProgress)}
+            aria-valuemin={0}
+            aria-valuemax={100}
+          >
+            <div className="kids-book-progress-fill" style={{ width: `${safeProgress}%` }} />
+          </div>
+        ) : null}
       </div>
 
-      {progress !== null ? (
-        <ProgressBar progress={progress} className="rounded-none" />
-      ) : null}
-
-      <div className="p-space-16 flex flex-col grow bg-surface">
-        <h3 className="text-heading-m text-base line-clamp-1 group-hover:text-primary-600 transition-colors">
+      <div className="kids-book-collectible-meta">
+        <h3 className="kids-book-title">
           {title}
         </h3>
-        <p className="text-caption mt-space-4 line-clamp-1">
-          {book?.age_group ? `${book.age_group} ans` : ''}
-          {book?.duration_minutes ? ` · ${book.duration_minutes} min` : ''}
-        </p>
+        <div className="kids-book-meta-row">
+          {book?.age_group ? (
+            <span className="kids-book-meta-pill">{book.age_group} ans</span>
+          ) : null}
+          {book?.duration_minutes ? (
+            <span className="kids-book-meta-pill">{book.duration_minutes} min</span>
+          ) : null}
+        </div>
       </div>
     </motion.button>
   );
