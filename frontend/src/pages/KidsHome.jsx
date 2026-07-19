@@ -5,7 +5,6 @@ import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { localizeKidCategories, getKidCategory } from '../constants/kidCategories';
 import { VoiceAssistant } from '../components/kids/VoiceAssistant';
-import { KidsMascot } from '../components/kids/KidsMascot';
 import { KidsPageShell } from '../components/kids/KidsPageShell';
 import { KidsBookCarousel } from '../components/kids/KidsBookCarousel';
 import { KidCategoryCard } from '../components/kids/KidCategoryCard';
@@ -23,7 +22,7 @@ import { storage } from '../utils/storage';
 import { getKidsContentPath } from '../utils/contentRouting';
 import { useToast } from '../components/ToastProvider';
 import { getRestrictionMessage } from '../services/parental/parentalAccessService';
-import { LockIcon } from '../components/Icons';
+import { LockIcon, BookIcon, AudioIcon, SparklesIcon, StarIcon } from '../components/Icons';
 import { getCachedKidProfile } from '../services/cloud/cloudSyncService';
 import { Avatar } from '../components/ui';
 import { KidsTrustBadges } from '../components/kids/KidsTrustBadges';
@@ -47,10 +46,10 @@ function getRecommendedBooks(sections = []) {
 }
 
 const AUTONOMY_WORLDS = [
-  { id: 'library', path: '/kids/library', emoji: '📚', labelKey: 'kidsWorldBooks', modality: 'books' },
-  { id: 'audio', path: '/kids/audio', emoji: '🎧', labelKey: 'kidsWorldAudio', modality: 'audio' },
-  { id: 'learning', path: '/kids/learning', emoji: '🎮', labelKey: 'kidsWorldLearn', modality: 'learn' },
-  { id: 'create', path: '/kids/ai-stories', emoji: '✨', labelKey: 'kidsWorldCreate', modality: 'create', studioPath: '/kids/story-studio' },
+  { id: 'library', path: '/kids/library', icon: BookIcon, labelKey: 'kidsWorldBooks', modality: 'books', tone: 'kids-autonomy-tile--books' },
+  { id: 'audio', path: '/kids/audio', icon: AudioIcon, labelKey: 'kidsWorldAudio', modality: 'audio', tone: 'kids-autonomy-tile--audio' },
+  { id: 'learning', path: '/kids/learning', icon: StarIcon, labelKey: 'kidsWorldLearn', modality: 'learn', tone: 'kids-autonomy-tile--learn' },
+  { id: 'create', path: '/kids/ai-stories', icon: SparklesIcon, labelKey: 'kidsWorldCreate', modality: 'create', studioPath: '/kids/story-studio', tone: 'kids-autonomy-tile--create' },
 ];
 
 const WORLD_CATEGORY_IDS = ['animals', 'space', 'princesses', 'bedtime', 'dinosaurs', 'ocean', 'world', 'colors'];
@@ -334,33 +333,34 @@ function KidsHome() {
         <span className="kids-home-star" style={{ top: '40%', left: '14%' }} />
       </div>
 
-      <header className="kids-home-header relative z-10 px-space-24 py-space-16 flex items-center justify-between gap-space-16 sticky top-0">
-        <div className="flex items-center gap-space-16 min-w-0">
+      <header className="kids-home-header relative z-10 px-space-20 md:px-space-32 py-space-12 md:py-space-16 flex items-center justify-between gap-space-16 sticky top-0">
+        <div className="flex items-center gap-space-12 md:gap-space-16 min-w-0">
           <Avatar
             src={avatarSrc}
             initials={avatarInitials}
             alt={kidName}
             size="lg"
-            className="w-14 h-14 border border-border/60 shadow-soft bg-gradient-to-br from-primary-400 to-primary-600 text-white shrink-0"
+            className="w-12 h-12 md:w-14 md:h-14 border border-border/40 shadow-soft bg-primary-50 text-primary-700 shrink-0"
           />
           <div className="min-w-0">
             <p className="kids-type-caption">{greeting}</p>
-            <h1 className="kids-type-h1 truncate">
+            <p className="kids-type-h1 !text-[1.35rem] md:!text-[1.55rem] truncate">
               {kidName}
-            </h1>
+            </p>
           </div>
         </div>
-        <div className="flex items-center gap-space-12 shrink-0">
-          <KidsMascot mood="wave" size="small" showBubble={false} className="hidden sm:block opacity-90" />
-          <Link to="/kids" className="shrink-0 transition-opacity hover:opacity-80 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-300 rounded-full">
-            <Logo size="default" showText={false} />
-          </Link>
-        </div>
+        <Link
+          to="/kids"
+          className="shrink-0 rounded-full opacity-90 transition-opacity hover:opacity-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-300"
+          aria-label="HKids"
+        >
+          <Logo size="default" showText={false} />
+        </Link>
       </header>
 
-      <main className="kids-main kids-main-tablet-wide kids-home-main relative z-20 mt-space-8">
+      <main className="kids-main kids-main-tablet-wide kids-home-main relative z-20">
         {/* 1. Today's Adventure */}
-        <section aria-label={t('kidsStoriesToday')} className="space-y-space-12">
+        <section aria-label={t('kidsStoriesToday')} className="kids-home-hero-section">
           <KidsHeroStoryCard
             book={featuredBook}
             isRtl={isRtl}
@@ -372,11 +372,6 @@ function KidsHome() {
             onEmptyAction={() => navigate('/kids/library')}
             badgeLabel={t('kidsStoriesToday')}
           />
-          {featuredBook && (
-            <p className="px-space-8 kids-shelf-subtitle">
-              {t('discoverAdventureSubtitle')}
-            </p>
-          )}
         </section>
 
         {/* 2. Continue Reading */}
@@ -400,7 +395,6 @@ function KidsHome() {
           />
         ) : (
           <KidsEmptyState
-            emoji="📚"
             title={t('emptyBooksTitle')}
             compact
             actionLabel={t('goToLibrary')}
@@ -410,8 +404,8 @@ function KidsHome() {
         )}
 
         {/* 4. Explore Worlds */}
-        <motion.section aria-label={t('allCategories')} {...getMotionProps(reducedMotion, kidsCarouselReveal)}>
-          <div className="mb-space-20 px-space-8 md:px-space-16 flex items-end justify-between gap-space-12">
+        <motion.section aria-label={t('allCategories')} className="kids-home-primary-shelf" {...getMotionProps(reducedMotion, kidsCarouselReveal)}>
+          <div className="mb-space-24 px-space-8 md:px-space-16 flex items-end justify-between gap-space-12">
             <div>
               <h2 className="kids-shelf-title !mb-0">
                 <span>{t('kidsWorldsExplore')}</span>
@@ -421,12 +415,12 @@ function KidsHome() {
             <button
               type="button"
               onClick={() => navigate('/kids/library')}
-              className="kids-touch-target inline-flex min-h-touch items-center rounded-full border border-border/50 bg-card px-space-16 py-space-8 text-caption font-semibold text-primary-600 shadow-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-300"
+              className="kids-touch-target inline-flex min-h-[56px] items-center rounded-full border border-border/40 bg-card/80 px-space-16 py-space-8 kids-type-caption font-semibold text-primary-700 shadow-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-300"
             >
               {t('seeAll')}
             </button>
           </div>
-          <div className="kids-discovery-rail pb-space-12 !gap-space-16 md:!gap-space-20">
+          <div className="kids-discovery-rail pb-space-8 !gap-space-20 md:!gap-space-24">
             {kidCategories.map((category) => (
               <KidCategoryCard key={category.id} category={category} compact />
             ))}
@@ -443,107 +437,109 @@ function KidsHome() {
           />
         )}
 
-        {/* Because You Liked... */}
-        {becauseYouLikedBooks.length > 0 && (
-          <KidsBookCarousel
-            title={likedTheme
-              ? t('discoverBecauseYouLiked', { theme: likedTheme.shortLabel || likedTheme.label })
-              : t('kidsRecentlyLoved')}
-            subtitle={t('discoverBecauseSubtitle')}
-            books={becauseYouLikedBooks}
-            {...carouselProps}
-            modality="favorites"
-          />
-        )}
+        {/* Secondary discovery — quieter visual weight */}
+        <div className="kids-home-secondary-shelves space-y-[inherit]">
+          {becauseYouLikedBooks.length > 0 && (
+            <KidsBookCarousel
+              title={likedTheme
+                ? t('discoverBecauseYouLiked', { theme: likedTheme.shortLabel || likedTheme.label })
+                : t('kidsRecentlyLoved')}
+              subtitle={t('discoverBecauseSubtitle')}
+              books={becauseYouLikedBooks}
+              {...carouselProps}
+              modality="favorites"
+            />
+          )}
 
-        {/* Bedtime world shelf */}
-        {bedtimeAnnotated.length > 0 && (
-          <KidsBookCarousel
-            title={getKidCategory('bedtime', language)?.label || 'Bedtime'}
-            subtitle={t('discoverReasonBedtime')}
-            books={bedtimeAnnotated}
-            {...carouselProps}
-            onSeeAll={() => navigate('/kids/library?theme=bedtime')}
-          />
-        )}
+          {bedtimeAnnotated.length > 0 && (
+            <KidsBookCarousel
+              title={getKidCategory('bedtime', language)?.label || 'Bedtime'}
+              subtitle={t('discoverReasonBedtime')}
+              books={bedtimeAnnotated}
+              {...carouselProps}
+              onSeeAll={() => navigate('/kids/library?theme=bedtime')}
+            />
+          )}
 
-        {/* Collections */}
-        {(collectionLittle.length > 0 || collectionGrowing.length > 0 || collectionBig.length > 0) && (
-          <section aria-label={t('discoverCollections')} className="space-y-space-24">
-            <div className="px-space-8 md:px-space-16">
-              <h2 className="kids-shelf-title !mb-0">
-                <span>{t('discoverCollections')}</span>
-              </h2>
-              <p className="kids-shelf-subtitle">{t('discoverCollectionsSubtitle')}</p>
-            </div>
-            {collectionLittle.length > 0 && (
-              <KidsBookCarousel
-                title={t('discoverCollectionLittle')}
-                books={collectionLittle}
-                {...carouselProps}
-              />
-            )}
-            {collectionGrowing.length > 0 && (
-              <KidsBookCarousel
-                title={t('discoverCollectionGrowing')}
-                books={collectionGrowing}
-                {...carouselProps}
-              />
-            )}
-            {collectionBig.length > 0 && (
-              <KidsBookCarousel
-                title={t('discoverCollectionBig')}
-                books={collectionBig}
-                {...carouselProps}
-              />
-            )}
-          </section>
-        )}
+          {(collectionLittle.length > 0 || collectionGrowing.length > 0 || collectionBig.length > 0) && (
+            <section aria-label={t('discoverCollections')} className="space-y-space-32">
+              <div className="px-space-8 md:px-space-16">
+                <h2 className="kids-shelf-title !mb-0">
+                  <span>{t('discoverCollections')}</span>
+                </h2>
+                <p className="kids-shelf-subtitle">{t('discoverCollectionsSubtitle')}</p>
+              </div>
+              {collectionLittle.length > 0 && (
+                <KidsBookCarousel
+                  title={t('discoverCollectionLittle')}
+                  books={collectionLittle}
+                  {...carouselProps}
+                />
+              )}
+              {collectionGrowing.length > 0 && (
+                <KidsBookCarousel
+                  title={t('discoverCollectionGrowing')}
+                  books={collectionGrowing}
+                  {...carouselProps}
+                />
+              )}
+              {collectionBig.length > 0 && (
+                <KidsBookCarousel
+                  title={t('discoverCollectionBig')}
+                  books={collectionBig}
+                  {...carouselProps}
+                />
+              )}
+            </section>
+          )}
 
-        {/* Seasonal */}
-        {seasonalBooks.length > 0 && (
-          <KidsBookCarousel
-            title={t('discoverSeasonal')}
-            subtitle={t('discoverSeasonalSubtitle')}
-            books={seasonalBooks}
-            {...carouselProps}
-          />
-        )}
+          {seasonalBooks.length > 0 && (
+            <KidsBookCarousel
+              title={t('discoverSeasonal')}
+              subtitle={t('discoverSeasonalSubtitle')}
+              books={seasonalBooks}
+              {...carouselProps}
+            />
+          )}
+        </div>
 
-        {/* Autonomy worlds */}
+        {/* Autonomy worlds — illustration-first tiles, no emoji game buttons */}
         <motion.section
           aria-label={t('kidsAutonomyWorlds')}
+          className="kids-home-autonomy"
           {...getMotionProps(reducedMotion, kidsCarouselReveal)}
         >
           <h2 className="kids-shelf-title mb-space-20 px-space-8 md:px-space-16">
             <span>{t('kidsAutonomyWorlds')}</span>
           </h2>
-          <div className="kids-discovery-rail !gap-space-16">
-            {autonomyWorlds.map((world) => (
-              <motion.button
-                key={world.id}
-                type="button"
-                {...getHoverMotion(reducedMotion, kidsHoverLift)}
-                onClick={() => navigate(world.path)}
-                className="kids-world-portal kids-world-destination--default shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-300"
-                aria-label={t(world.labelKey)}
-              >
-                <span className="text-4xl" aria-hidden="true">{world.emoji}</span>
-                <span className="text-body font-semibold text-foreground">{t(world.labelKey)}</span>
-              </motion.button>
-            ))}
+          <div className="kids-discovery-rail !gap-space-16 md:!gap-space-20">
+            {autonomyWorlds.map((world) => {
+              const WorldIcon = world.icon;
+              return (
+                <motion.button
+                  key={world.id}
+                  type="button"
+                  {...getHoverMotion(reducedMotion, kidsHoverLift)}
+                  onClick={() => navigate(world.path)}
+                  className={`kids-autonomy-tile ${world.tone} shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-300`}
+                  aria-label={t(world.labelKey)}
+                >
+                  <span className="kids-autonomy-tile-icon" aria-hidden="true">
+                    <WorldIcon className="h-7 w-7" />
+                  </span>
+                  <span className="kids-autonomy-tile-label">{t(world.labelKey)}</span>
+                </motion.button>
+              );
+            })}
           </div>
         </motion.section>
 
         <KidsFamilyMessages />
 
-        <details className="kids-profile-fold rounded-32 border border-border/50 bg-card/80 shadow-soft overflow-hidden">
-          <summary className="kids-touch-target cursor-pointer list-none px-space-24 py-space-16 text-heading-m font-semibold text-foreground flex items-center justify-between gap-space-12 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-300">
-            <span className="flex items-center gap-space-12">
-              <span aria-hidden="true">👤</span>
-              {kidName ? `${kidName}` : t('yourMedals')}
-            </span>
-            <span className="text-caption text-foreground-muted font-medium">{t('yourMedals')}</span>
+        <details className="kids-profile-fold kids-home-profile-fold overflow-hidden">
+          <summary className="kids-touch-target cursor-pointer list-none px-space-24 py-space-16 kids-type-body text-foreground flex items-center justify-between gap-space-12 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-300">
+            <span>{kidName || t('yourMedals')}</span>
+            <span className="kids-type-caption">{t('yourMedals')}</span>
           </summary>
           <div className="px-space-16 pb-space-24 space-y-space-24">
             <section id="kids-profile" className="scroll-mt-24">
@@ -561,12 +557,10 @@ function KidsHome() {
             </section>
             <section id="kids-medals" className="scroll-mt-24">
               <h2 className="kids-shelf-title mb-space-16 pl-space-8">
-                <span className="text-2xl opacity-80" aria-hidden="true">🏆</span>
                 <span>{t('yourMedals')}</span>
               </h2>
               {badges.length === 0 ? (
                 <KidsEmptyState
-                  emoji="🏅"
                   title={t('emptyBadgesTitle')}
                   compact
                   actionLabel={t('goToLibrary')}
@@ -581,7 +575,7 @@ function KidsHome() {
                       key={badge.id}
                       {...getHoverMotion(reducedMotion, kidsHoverLift)}
                       title={`${badge.label} — ${badge.description}`}
-                      className={`relative w-20 h-20 md:w-24 md:h-24 rounded-full flex items-center justify-center text-3xl md:text-4xl shadow-card border-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-300 ${badge.earned ? 'bg-gradient-to-br from-orange-200 to-primary-300 border-orange-100' : 'bg-surface-200 border-surface-300 grayscale opacity-60'}`}
+                      className={`relative w-20 h-20 md:w-24 md:h-24 rounded-full flex items-center justify-center text-3xl md:text-4xl shadow-soft border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-300 ${badge.earned ? 'bg-secondary-50 border-secondary-100/80' : 'bg-surface-100 border-border/50 grayscale opacity-55'}`}
                     >
                       {badge.earned ? (
                         <span className="z-10 relative" aria-hidden="true">{badge.icon}</span>
@@ -596,7 +590,7 @@ function KidsHome() {
           </div>
         </details>
 
-        <KidsTrustBadges t={t} compact className="opacity-70" />
+        <KidsTrustBadges t={t} compact className="opacity-60" />
       </main>
 
       <VoiceAssistant onNavigate={(path) => navigate(path)} />

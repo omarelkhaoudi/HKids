@@ -1127,9 +1127,9 @@
   }
 
   .kids-home-header {
-    background: color-mix(in srgb, white 78%, transparent);
-    backdrop-filter: blur(14px);
-    border-bottom: 1px solid color-mix(in srgb, var(--color-border) 35%, transparent);
+    background: color-mix(in srgb, #faf8f5 82%, transparent);
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid color-mix(in srgb, #d9d0c4 32%, transparent);
   }
 
   .dark .kids-home-header {
@@ -1137,8 +1137,15 @@
   }
 
   .kids-home-main {
-    gap: clamp(3rem, 6vw, 4.5rem) !important;
-    padding-bottom: 7.5rem;
+    gap: clamp(3.5rem, 7vw, 5.5rem) !important;
+    padding-top: clamp(0.75rem, 2vw, 1.25rem);
+    padding-bottom: 8rem;
+  }
+
+  .kids-home-secondary-shelves {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(3rem, 6vw, 4.75rem);
   }
 
   .kids-hero-glow {
@@ -1146,9 +1153,10 @@
   }
 
   .kids-hero-story {
-    background: color-mix(in srgb, white 94%, var(--kids-home-cream, #f7f4ee));
-    border: 1px solid color-mix(in srgb, var(--color-border) 40%, transparent);
-    box-shadow: var(--shadow-soft);
+    background: color-mix(in srgb, white 96%, var(--kids-home-cream, #f7f4ee));
+    border: 1px solid color-mix(in srgb, #d9d0c4 38%, transparent);
+    box-shadow: 0 10px 28px -16px rgba(36, 50, 74, 0.14);
+    border-radius: 1.75rem;
   }
 
   .dark .kids-hero-story {
@@ -1160,9 +1168,9 @@
     inset: 0;
     background-size: cover;
     background-position: center;
-    opacity: 0.1;
-    filter: blur(32px) saturate(1.02);
-    transform: scale(1.05);
+    opacity: 0.08;
+    filter: blur(36px) saturate(1.02);
+    transform: scale(1.04);
     pointer-events: none;
   }
 
@@ -1171,25 +1179,28 @@
     inset: 0;
     pointer-events: none;
     background:
-      radial-gradient(ellipse 48% 42% at 10% 28%, color-mix(in srgb, var(--color-primary-200) 32%, transparent) 0%, transparent 65%);
+      radial-gradient(ellipse 48% 42% at 10% 28%, color-mix(in srgb, var(--color-primary-200) 22%, transparent) 0%, transparent 65%);
   }
 
   .kids-hero-cover {
     position: relative;
     z-index: 1;
-    border-radius: var(--radius-24);
+    border-radius: 1.25rem;
     overflow: hidden;
     box-shadow:
-      0 22px 40px -16px rgba(15, 23, 42, 0.3),
-      0 6px 14px -6px rgba(15, 23, 42, 0.14),
-      10px 0 0 -3px color-mix(in srgb, var(--color-surface-300) 55%, transparent);
-    transform: perspective(900px) rotateY(-2.5deg);
-    transition: transform 0.35s ease, box-shadow 0.35s ease;
+      0 24px 44px -16px rgba(36, 50, 74, 0.28),
+      0 8px 16px -8px rgba(36, 50, 74, 0.12),
+      8px 0 0 -2px color-mix(in srgb, #c9bba8 42%, transparent);
+    transform: perspective(900px) rotateY(-2deg);
+    transition: transform 180ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 180ms ease;
   }
 
   .kids-hero-cover:hover {
     transform: perspective(900px) rotateY(0deg) translateY(-4px);
-    box-shadow: var(--shadow-floating);
+    box-shadow:
+      0 28px 48px -16px rgba(36, 50, 74, 0.3),
+      0 10px 18px -8px rgba(36, 50, 74, 0.14),
+      8px 0 0 -2px color-mix(in srgb, #c9bba8 38%, transparent);
   }
 
   .kids-hero-star {
@@ -1497,11 +1508,76 @@
   .kids-world-destination--colors { background: linear-gradient(165deg, var(--kids-home-peach, #f8eee7) 0%, #fdf8f4 100%); }
   .kids-world-destination--default { background: linear-gradient(165deg, var(--kids-home-cream, #f7f4ee) 0%, white 100%); }
 
+  .kids-world-destination-cue {
+    margin-top: 0.2rem;
+    font-family: var(--font-body);
+    font-size: 0.7rem;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    color: var(--kids-type-meta);
+    opacity: 0.85;
+  }
+
+  .kids-autonomy-tile {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.65rem;
+    min-width: 8.5rem;
+    min-height: 9.5rem;
+    padding: 1.1rem 0.9rem;
+    border-radius: 1.35rem;
+    border: 1px solid color-mix(in srgb, #d9d0c4 42%, transparent);
+    box-shadow: var(--shadow-soft);
+    text-align: center;
+    transition: transform 180ms ease, box-shadow 180ms ease;
+  }
+
+  .kids-autonomy-tile-icon {
+    display: grid;
+    place-items: center;
+    width: 3.25rem;
+    height: 3.25rem;
+    border-radius: 999px;
+    background: color-mix(in srgb, white 70%, transparent);
+    color: var(--kids-type-ink);
+    border: 1px solid color-mix(in srgb, #d9d0c4 40%, transparent);
+  }
+
+  .kids-autonomy-tile-label {
+    font-family: var(--font-display);
+    font-size: 0.95rem;
+    font-weight: 600;
+    line-height: 1.25;
+    color: var(--kids-type-ink);
+  }
+
+  .kids-autonomy-tile--books {
+    background: linear-gradient(165deg, var(--kids-home-sky, #e8f2fa) 0%, #f7fafc 100%);
+  }
+  .kids-autonomy-tile--audio {
+    background: linear-gradient(165deg, var(--kids-home-peach, #f8eee7) 0%, #fdf8f4 100%);
+  }
+  .kids-autonomy-tile--learn {
+    background: linear-gradient(165deg, var(--kids-home-sage, #e7f0ea) 0%, #f8fbf9 100%);
+  }
+  .kids-autonomy-tile--create {
+    background: linear-gradient(165deg, var(--kids-home-lavender, #efeaf8) 0%, #f9f7fc 100%);
+  }
+
+  .kids-home-profile-fold {
+    border-radius: 1.5rem;
+    border: 1px solid color-mix(in srgb, #d9d0c4 40%, transparent);
+    background: color-mix(in srgb, white 86%, var(--kids-home-cream, #f7f4ee));
+    box-shadow: var(--shadow-soft);
+  }
+
   .kids-bottom-nav-shell {
-    background: color-mix(in srgb, white 90%, transparent);
+    background: color-mix(in srgb, #faf8f5 92%, transparent);
     backdrop-filter: blur(18px);
-    border: 1px solid color-mix(in srgb, var(--color-border) 45%, transparent);
-    box-shadow: var(--shadow-floating);
+    border: 1px solid color-mix(in srgb, #d9d0c4 42%, transparent);
+    box-shadow: 0 12px 32px -12px rgba(36, 50, 74, 0.18);
   }
 
   .dark .kids-bottom-nav-shell {
