@@ -1,24 +1,16 @@
-import { memo, useEffect } from 'react';
+import { memo, useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { useReducedMotion } from '../../hooks/useReducedMotion';
 import { useLanguage } from '../../context/LanguageContext';
+import { booksAPI } from '../../api/books';
 import KidsButton from './KidsButton';
-import { KidsMascot } from './KidsMascot';
+import { KidsBookCover } from './KidsBookCover';
+import { KidsMediaCard } from './KidsMediaCard';
 import { getMotionProps, kidsPageEnter, kidsBadgePop } from '../../constants/kidsMotion';
 
-const STAR_COUNT = 12;
-const CONFETTI_COUNT = 24;
-const COLORS = [
-  'var(--color-secondary-400)',
-  'var(--color-primary-400)',
-  'var(--color-success-400)',
-  'var(--color-orange-400)',
-  'var(--color-magic-400)',
-  'var(--color-secondary-300)',
-];
-
 /**
- * Celebration overlay. Bedtime variant: moon/stars, soft encouragement, up to 3 CTAs.
+ * Gentle story-complete overlay — calm celebration, optional related books.
  */
 export const KidsCelebration = memo(function KidsCelebration({
   active = false,
@@ -36,12 +28,16 @@ export const KidsCelebration = memo(function KidsCelebration({
   variant = 'default',
   coverUrl = null,
   bookTitle = '',
+  book = null,
+  progressPercent = 100,
   isFavorite = false,
   onFavorite,
 }) {
   const reducedMotion = useReducedMotion();
-  const { t } = useLanguage();
+  const { t, isRtl } = useLanguage();
+  const navigate = useNavigate();
   const isBedtime = variant === 'bedtime';
+  const [relatedBooks, setRelatedBooks] = useState([]);
 
   useEffect(() => {
     if (!active || !autoDismiss) return undefined;
@@ -49,18 +45,40 @@ export const KidsCelebration = memo(function KidsCelebration({
     return () => clearTimeout(timer);
   }, [active, autoDismiss, durationMs, onComplete]);
 
+  useEffect(() => {
+    if (!active || !book?.id) {
+      setRelatedBooks([]);
+      return undefined;
+    }
+    let cancelled = false;
+    booksAPI.getPublishedBooks({ category_id: book.category_id || undefined })
+      .then((response) => {
+        if (cancelled) return;
+        const next = (response.data || [])
+          .filter((item) => item.id !== book.id)
+          .slice(0, 8);
+        setRelatedBooks(next);
+      })
+      .catch(() => {
+        if (!cancelled) setRelatedBooks([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [active, book?.id, book?.category_id]);
+
   return (
     <AnimatePresence>
       {active && (
         <motion.div
-          className={`fixed inset-0 z-[60] flex items-center justify-center p-6 backdrop-blur-sm ${
-            isBedtime ? 'bg-surface-900/55' : 'bg-black/35'
-          }`}
+          className={`fixed inset-0 z-[60] overflow-y-auto kids-scroll-smooth ${
+            isBedtime ? 'bg-[#121826]/72' : 'bg-[#24324a]/35'
+          } backdrop-blur-sm`}
           {...getMotionProps(reducedMotion, {
             initial: { opacity: 0 },
             animate: { opacity: 1 },
             exit: { opacity: 0 },
-            transition: { duration: 0.25 },
+            transition: { duration: 0.28 },
           })}
           role="dialog"
           aria-modal="true"
@@ -68,111 +86,120 @@ export const KidsCelebration = memo(function KidsCelebration({
         >
           {!reducedMotion && (
             <div className="absolute inset-0 pointer-events-none overflow-hidden" aria-hidden="true">
-              {isBedtime ? (
-                <>
-                  <div className="absolute top-16 right-16 w-24 h-24 rounded-full bg-secondary-100/80 shadow-[0_0_60px_20px_rgba(var(--color-secondary-400-rgb),0.35)]" />
-                  {Array.from({ length: STAR_COUNT }).map((_, i) => (
-                    <motion.span
-                      key={`s-${i}`}
-                      className="absolute text-xl"
-                      style={{ left: `${8 + (i * 7) % 84}%`, top: `${10 + (i * 11) % 55}%` }}
-                      initial={{ opacity: 0, scale: 0.5 }}
-                      animate={{ opacity: [0, 1, 0.6], scale: [0.5, 1.1, 1], y: [0, -10, -4] }}
-                      transition={{ duration: 1.4, delay: i * 0.04 }}
-                    >
-                      ⭐
-                    </motion.span>
-                  ))}
-                </>
-              ) : (
-                <>
-                  {Array.from({ length: CONFETTI_COUNT }).map((_, i) => (
-                    <motion.div
-                      key={`c-${i}`}
-                      className="absolute w-2.5 h-2.5 rounded-full"
-                      style={{
-                        backgroundColor: COLORS[i % COLORS.length],
-                        left: `${(i * 37) % 100}%`,
-                        top: '-8px',
-                      }}
-                      initial={{ y: 0, opacity: 1, rotate: 0 }}
-                      animate={{
-                        y: typeof window !== 'undefined' ? window.innerHeight + 40 : 800,
-                        opacity: 0,
-                        rotate: 180,
-                        x: ((i % 5) - 2) * 40,
-                      }}
-                      transition={{ duration: 1.4 + (i % 5) * 0.08, ease: 'easeOut', delay: (i % 8) * 0.03 }}
-                    />
-                  ))}
-                  {Array.from({ length: STAR_COUNT }).map((_, i) => (
-                    <motion.span
-                      key={`s-${i}`}
-                      className="absolute text-2xl"
-                      style={{ left: `${8 + (i * 7) % 84}%`, top: `${12 + (i * 11) % 60}%` }}
-                      initial={{ opacity: 0, scale: 0.5 }}
-                      animate={{ opacity: [0, 1, 0], scale: [0.5, 1.2, 0.8], y: [0, -16, -8] }}
-                      transition={{ duration: 1.2, delay: i * 0.05 }}
-                    >
-                      ⭐
-                    </motion.span>
-                  ))}
-                </>
-              )}
+              {Array.from({ length: 6 }).map((_, i) => (
+                <motion.span
+                  key={`glow-${i}`}
+                  className="absolute rounded-full"
+                  style={{
+                    width: 4 + (i % 3),
+                    height: 4 + (i % 3),
+                    left: `${12 + (i * 14) % 76}%`,
+                    top: `${14 + (i * 17) % 50}%`,
+                    background: 'color-mix(in srgb, white 55%, transparent)',
+                  }}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: [0, 0.45, 0.15] }}
+                  transition={{ duration: 2.4, delay: i * 0.12 }}
+                />
+              ))}
             </div>
           )}
 
-          <motion.div
-            className={`relative z-10 kids-premium-panel max-w-md w-full p-8 md:p-10 text-center shadow-floating rounded-32 ${
-              isBedtime ? 'border-secondary-100/40' : ''
-            }`}
-            {...getMotionProps(reducedMotion, kidsPageEnter)}
-          >
-            {coverUrl && (
-              <div className="mx-auto mb-6 w-40 h-52 rounded-24 overflow-hidden border-4 border-white/70 shadow-floating">
-                <img src={coverUrl} alt="" className="w-full h-full object-cover" />
-              </div>
-            )}
-            <motion.div className="flex justify-center mb-4" {...getMotionProps(reducedMotion, kidsBadgePop)}>
-              <KidsMascot mood="celebrate" size="small" showBubble={false} className="!pointer-events-none" />
-            </motion.div>
-            <h2 className={`kids-type-h1 mb-2 ${isBedtime ? 'text-magic-600' : 'text-primary-600'}`}>
-              {title || t('kidBookDone')}
-            </h2>
-            {bookTitle && (
-              <p className="kids-book-title mb-2 mx-auto max-w-sm">{bookTitle}</p>
-            )}
-            {subtitle && (
-              <p className="kids-shelf-subtitle !mx-auto mb-6 line-clamp-2">{subtitle}</p>
-            )}
-            <div className="flex flex-col gap-3">
-              {onFavorite && (
-                <KidsButton
-                  onClick={onFavorite}
-                  variant="ghost"
-                  className="!min-h-[56px] !w-full !text-lg"
-                  tone={isFavorite ? 'accent' : 'primary'}
+          <div className="relative z-10 mx-auto flex min-h-full w-full max-w-3xl flex-col items-center justify-center gap-space-24 px-space-16 py-space-32">
+            <motion.div
+              className="kids-premium-panel w-full max-w-md p-space-32 text-center shadow-floating rounded-32"
+              {...getMotionProps(reducedMotion, kidsPageEnter)}
+            >
+              {(coverUrl || book) && (
+                <motion.div
+                  className="mx-auto mb-space-20 w-36 sm:w-40"
+                  {...getMotionProps(reducedMotion, kidsBadgePop)}
                 >
-                  {isFavorite ? t('yourFavorites') : t('addToFavorites')}
-                </KidsButton>
+                  <div className="kids-book-collectible-cover aspect-[3/4] relative overflow-hidden">
+                    {book ? (
+                      <KidsBookCover
+                        book={book}
+                        imgClassName="absolute inset-0 h-full w-full object-cover"
+                      />
+                    ) : (
+                      <img src={coverUrl} alt="" className="absolute inset-0 h-full w-full object-cover" />
+                    )}
+                  </div>
+                </motion.div>
               )}
-              {primaryLabel && onPrimary && (
-                <KidsButton onClick={onPrimary} className="!min-h-[56px] !w-full !text-lg" tone={isBedtime ? 'accent' : 'primary'}>
-                  {primaryLabel}
-                </KidsButton>
-              )}
-              {secondaryLabel && onSecondary && (
-                <KidsButton onClick={onSecondary} variant="ghost" className="!min-h-[56px] !w-full !text-lg">
-                  {secondaryLabel}
-                </KidsButton>
-              )}
-              {tertiaryLabel && onTertiary && (
-                <KidsButton onClick={onTertiary} variant="ghost" className="!min-h-[56px] !w-full !text-lg !text-foreground-muted">
-                  {tertiaryLabel}
-                </KidsButton>
-              )}
-            </div>
-          </motion.div>
+
+              <p className="kids-type-caption uppercase tracking-[0.14em] text-primary-600/80 mb-space-8">
+                Histoire terminée
+              </p>
+              <h2 className="kids-type-h1 mb-space-8">
+                {title || t('kidBookDone')}
+              </h2>
+              {bookTitle ? (
+                <p className="kids-book-title mb-space-8 mx-auto max-w-sm">{bookTitle}</p>
+              ) : null}
+              {subtitle ? (
+                <p className="kids-shelf-subtitle !mx-auto mb-space-16 line-clamp-2">{subtitle}</p>
+              ) : null}
+
+              <div className="mb-space-20 mx-auto w-full max-w-xs">
+                <p className="kids-type-meta text-foreground-muted mb-space-8">
+                  Lecture {Math.round(progressPercent)}%
+                </p>
+                <div className="kids-book-progress !static !inset-auto h-2" role="progressbar" aria-valuenow={Math.round(progressPercent)} aria-valuemin={0} aria-valuemax={100}>
+                  <div className="kids-book-progress-fill" style={{ width: `${Math.min(100, Math.max(0, progressPercent))}%` }} />
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-space-12">
+                {onFavorite && (
+                  <KidsButton
+                    onClick={onFavorite}
+                    variant="ghost"
+                    className="!min-h-[56px] !w-full"
+                    tone={isFavorite ? 'accent' : 'primary'}
+                  >
+                    {isFavorite ? t('yourFavorites') : t('addToFavorites')}
+                  </KidsButton>
+                )}
+                {primaryLabel && onPrimary && (
+                  <KidsButton onClick={onPrimary} className="!min-h-[56px] !w-full" tone="primary">
+                    {primaryLabel}
+                  </KidsButton>
+                )}
+                {secondaryLabel && onSecondary && (
+                  <KidsButton onClick={onSecondary} variant="secondary" className="!min-h-[56px] !w-full">
+                    {secondaryLabel}
+                  </KidsButton>
+                )}
+                {tertiaryLabel && onTertiary && (
+                  <KidsButton onClick={onTertiary} variant="ghost" className="!min-h-[56px] !w-full !text-foreground-muted">
+                    {tertiaryLabel}
+                  </KidsButton>
+                )}
+              </div>
+            </motion.div>
+
+            {relatedBooks.length > 0 ? (
+              <section className="kids-celebration-related w-full" aria-label="Tu pourrais aussi aimer">
+                <h3 className="kids-shelf-title px-space-8 mb-space-16">Tu pourrais aussi aimer</h3>
+                <div className="flex gap-space-24 overflow-x-auto px-space-8 pb-space-12 snap-x snap-mandatory kids-scroll-smooth custom-scrollbar">
+                  {relatedBooks.map((related) => (
+                    <div key={related.id} className="snap-start shrink-0">
+                      <KidsMediaCard
+                        book={related}
+                        showActions={false}
+                        isRtl={isRtl}
+                        onPlay={() => {
+                          onComplete?.();
+                          navigate(`/book-details/${related.id}`);
+                        }}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </section>
+            ) : null}
+          </div>
         </motion.div>
       )}
     </AnimatePresence>
