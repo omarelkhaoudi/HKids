@@ -1,24 +1,20 @@
-import { Chip } from '../ui/Chip';
-
 /**
- * Kids theme filter pill — calm destination chip.
+ * Elegant glass theme filter for the kids library.
+ * Soft selected state — no emoji game pills.
  */
 export function KidsThemePill({ theme, isActive, onClick }) {
+  const label = theme.shortLabel || theme.label;
+
   return (
-    <Chip
-      selected={isActive}
+    <button
+      type="button"
       onClick={onClick}
-      tone="primary"
-      emoji={theme.pictogram}
-      aria-label={theme.shortLabel || theme.label}
-      className={`!min-h-touch-kids !text-sm !font-semibold ${
-        isActive
-          ? '!bg-primary-50 !text-primary-800 !border-primary-200 !shadow-soft'
-          : '!bg-card/90 !border-border/50 !text-foreground-secondary'
-      }`}
+      aria-pressed={isActive}
+      aria-label={label}
+      className={`kids-library-filter-pill kids-touch-target ${isActive ? 'is-active' : ''}`}
     >
-      <span className="hidden sm:inline">{theme.shortLabel || theme.label}</span>
-    </Chip>
+      <span>{label}</span>
+    </button>
   );
 }
 
