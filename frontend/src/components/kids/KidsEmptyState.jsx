@@ -37,12 +37,12 @@ export function KidsEmptyState({
         {illustration || emoji}
       </motion.div>
       {title && (
-        <h3 className={`relative font-black text-foreground mb-2 line-clamp-2 ${compact ? 'text-xl' : 'text-2xl md:text-3xl'}`}>
+        <h3 className={`relative kids-type-h1 mb-2 line-clamp-2 ${compact ? '!text-xl' : '!text-[1.5rem] md:!text-[1.75rem]'}`}>
           {title}
         </h3>
       )}
       {description && (
-        <p className={`relative text-foreground-secondary font-bold mb-6 max-w-md mx-auto line-clamp-2 ${compact ? 'text-sm' : 'text-base'}`}>
+        <p className={`relative kids-shelf-subtitle !mx-auto mb-6 line-clamp-2 ${compact ? '!text-sm' : ''}`}>
           {description}
         </p>
       )}

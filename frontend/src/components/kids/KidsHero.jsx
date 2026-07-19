@@ -31,12 +31,12 @@ export function KidsHero({
       )}
       <div className="relative z-10 max-w-2xl">
         {badge && (
-          <div className="inline-flex items-center gap-2 rounded-full bg-white/20 border border-white/25 px-4 py-2 text-sm font-bold mb-space-16">
+          <div className="inline-flex items-center gap-2 rounded-full bg-white/20 border border-white/25 px-4 py-2 kids-type-caption text-white mb-space-16">
             {badge}
           </div>
         )}
-        {title && <h1 className="text-heading-xl md:text-hero font-bold leading-tight mb-space-12">{title}</h1>}
-        {subtitle && <p className="text-body-lg md:text-xl font-medium text-white/90 leading-relaxed">{subtitle}</p>}
+        {title && <h1 className="kids-type-display text-white mb-space-12">{title}</h1>}
+        {subtitle && <p className="kids-shelf-subtitle !text-white/90 !mt-0">{subtitle}</p>}
         {children}
       </div>
     </motion.section>

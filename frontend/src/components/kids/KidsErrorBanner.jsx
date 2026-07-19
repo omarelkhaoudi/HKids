@@ -11,12 +11,12 @@ export function KidsErrorBanner({ message, onDismiss, className = '' }) {
       role="alert"
     >
       <span className="text-3xl shrink-0" aria-hidden="true">⚠️</span>
-      <p className="flex-1 font-bold text-rose-800 dark:text-rose-200 text-left">{message}</p>
+      <p className="flex-1 kids-type-body text-rose-800 dark:text-rose-200 text-left">{message}</p>
       {onDismiss && (
         <button
           type="button"
           onClick={onDismiss}
-          className="kids-touch-target shrink-0 rounded-full bg-white/80 px-3 py-1 text-sm font-black text-rose-700"
+          className="kids-touch-target kids-type-button shrink-0 rounded-full bg-white/80 px-3 py-1 text-sm text-rose-700"
         >
           OK
         </button>

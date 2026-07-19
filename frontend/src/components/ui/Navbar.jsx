@@ -41,7 +41,7 @@ export function Navbar({
         ) : null}
         {brand}
         {emoji ? <span className="text-3xl shrink-0" aria-hidden="true">{emoji}</span> : null}
-        {title ? <h1 className="text-heading-m truncate">{title}</h1> : null}
+        {title ? <h1 className="kids-type-h2 !m-0 truncate">{title}</h1> : null}
       </div>
       {trailing ? <div className="shrink-0 flex items-center gap-space-8">{trailing}</div> : null}
     </header>

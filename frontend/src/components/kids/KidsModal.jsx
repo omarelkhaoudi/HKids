@@ -35,11 +35,11 @@ export function KidsModal({
           >
             <div className="text-6xl mb-4" aria-hidden="true">{emoji}</div>
             {title && (
-              <h2 id="kids-modal-title" className="text-2xl font-black text-foreground mb-4">
+              <h2 id="kids-modal-title" className="kids-type-h1 mb-4">
                 {title}
               </h2>
             )}
-            <div className="text-foreground-secondary font-bold mb-6">{children}</div>
+            <div className="kids-type-body mb-6">{children}</div>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               {secondaryLabel && onSecondary && (
                 <KidsButton variant="ghost" onClick={onSecondary} className="!min-h-[56px] flex-1">

@@ -35,24 +35,24 @@ export function KidsProfilePanel({
             className="w-28 h-28 md:w-32 md:h-32 border-4 border-white shadow-kids-soft bg-gradient-to-br from-primary-300 to-secondary-400 text-white"
           />
           <div className="flex-1 text-center md:text-left">
-            <h2 className="text-3xl md:text-4xl font-black text-foreground mb-1">{kidName}</h2>
+            <h2 className="kids-type-h1 mb-1">{kidName}</h2>
             {kid?.age && (
-              <p className="text-lg font-bold text-foreground-secondary mb-4">
+              <p className="kids-book-author !text-base mb-4">
                 {t('kidProfileAge', { age: kid.age })}
               </p>
             )}
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
               <div className="rounded-[1.5rem] bg-primary-50 dark:bg-primary-900/30 p-4 text-center">
-                <p className="text-2xl font-black text-primary-600">{completedCount}</p>
-                <p className="text-xs font-bold text-foreground-muted uppercase">{t('kidProfileBooksDone')}</p>
+                <p className="text-2xl font-semibold text-primary-600">{completedCount}</p>
+                <p className="kids-type-caption uppercase tracking-wide">{t('kidProfileBooksDone')}</p>
               </div>
               <div className="rounded-[1.5rem] bg-secondary-50 dark:bg-secondary-900/30 p-4 text-center">
-                <p className="text-2xl font-black text-secondary-600">{inProgressCount}</p>
-                <p className="text-xs font-bold text-foreground-muted uppercase">{t('continueReading')}</p>
+                <p className="text-2xl font-semibold text-secondary-600">{inProgressCount}</p>
+                <p className="kids-type-caption uppercase tracking-wide">{t('continueReading')}</p>
               </div>
               <div className="rounded-[1.5rem] bg-accent-50 dark:bg-accent-900/30 p-4 text-center col-span-2 sm:col-span-1">
-                <p className="text-2xl font-black text-accent-600">{favoriteBooks.length}</p>
-                <p className="text-xs font-bold text-foreground-muted uppercase">{t('yourFavorites')}</p>
+                <p className="text-2xl font-semibold text-accent-600">{favoriteBooks.length}</p>
+                <p className="kids-type-caption uppercase tracking-wide">{t('yourFavorites')}</p>
               </div>
             </div>
           </div>
@@ -65,8 +65,8 @@ export function KidsProfilePanel({
           >
             <span className="text-3xl" aria-hidden="true">📖</span>
             <div>
-              <p className="text-xs font-bold text-foreground-muted uppercase">{t('kidProfileLastActivity')}</p>
-              <p className="font-black text-foreground">{lastActivity}</p>
+              <p className="kids-type-caption uppercase tracking-wide">{t('kidProfileLastActivity')}</p>
+              <p className="kids-book-title !line-clamp-1">{lastActivity}</p>
             </div>
           </motion.div>
         )}
@@ -103,11 +103,11 @@ export function KidsProfilePanel({
           <span aria-hidden="true">⚙️</span>
           <span>{t('kidProfileSettings')}</span>
         </h3>
-        <p className="text-foreground-secondary font-bold mb-4">{t('kidProfileSettingsHint')}</p>
+        <p className="kids-shelf-subtitle !mt-0 mb-4">{t('kidProfileSettingsHint')}</p>
         <button
           type="button"
           onClick={goToLibrary}
-          className="kids-touch-target inline-flex items-center justify-center rounded-[1.5rem] bg-primary-500 px-6 py-3 font-black text-white shadow-md"
+          className="kids-touch-target kids-type-button inline-flex items-center justify-center rounded-[1.5rem] bg-primary-500 px-6 py-3 text-white shadow-md"
         >
           {t('goToLibrary')}
         </button>

@@ -70,7 +70,7 @@ export function KidsContinueRail({
                   {book.title}
                 </h3>
                 <div className="flex items-center justify-between gap-2">
-                  <span className="text-caption font-medium text-foreground-muted">{Math.round(progress)}%</span>
+              <span className="kids-type-caption text-foreground-muted">{Math.round(progress)}%</span>
                 </div>
                 <button
                   type="button"
