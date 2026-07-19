@@ -4,7 +4,6 @@ import { booksAPI } from '../api/books';
 import { recommendationsAPI } from '../api/recommendations';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../components/ToastProvider';
-import { getImageUrl } from '../utils/imageUrl';
 import { storage } from '../utils/storage';
 import { useLanguage } from '../context/LanguageContext';
 import { localizeKidCategories } from '../constants/kidCategories';
@@ -17,7 +16,8 @@ import { KidsBookCarousel } from '../components/kids/KidsBookCarousel';
 import { KidsThemePill } from '../components/kids/KidsThemePill';
 import { KidsCategoryAtmosphere } from '../components/kids/KidsCategoryAtmosphere';
 import { KidsHeroStoryCard } from '../components/kids/KidsHeroStoryCard';
-import { HomeIcon } from '../components/Icons';
+import { KidsContinueRail } from '../components/kids/KidsContinueRail';
+import { ChevronLeftIcon } from '../components/Icons';
 import { Logo } from '../components/Logo';
 import { BookGridSkeleton } from '../components/SkeletonLoader';
 import { KidsBottomNav } from '../components/kids/KidsBottomNav';
@@ -34,7 +34,7 @@ import {
   withDiscoveryReason,
 } from '../utils/discoveryRails';
 
-const SHELF_THEME_IDS = ['dinosaurs', 'space', 'animals', 'princesses', 'bedtime', 'ocean', 'vehicles', 'world'];
+const SHELF_THEME_IDS = ['animals', 'bedtime', 'princesses', 'ocean', 'dinosaurs', 'space', 'vehicles', 'world'];
 
 function inferTheme(book, childThemes) {
   if (book.theme) return book.theme;
@@ -147,8 +147,21 @@ function KidsLibrary() {
   const continueBooks = useMemo(() => {
     const byId = new Map(visibleBooks.map((book) => [book.id, book]));
     return readingHistory
-      .map((entry) => byId.get(entry.bookId))
+      .map((entry) => {
+        const book = byId.get(entry.bookId);
+        if (!book) return null;
+        const lastPage = Number(entry.page ?? storage.getLastPage(book.id) ?? 0);
+        const total = Number(book.page_count || 0);
+        const progress = total > 0 ? Math.min(100, Math.round((lastPage / total) * 100)) : 0;
+        return {
+          ...book,
+          kid_progress_percent: progress,
+          progress,
+          current_page: lastPage,
+        };
+      })
       .filter(Boolean)
+      .filter((book) => Number(book.kid_progress_percent || 0) > 0 && Number(book.kid_progress_percent || 0) < 100)
       .slice(0, 12);
   }, [visibleBooks, readingHistory]);
 
@@ -162,6 +175,13 @@ function KidsLibrary() {
   const todayBooks = recommendedIds.size > 0
     ? visibleBooks.filter((book) => recommendedIds.has(Number(book.id)))
     : visibleBooks.slice(0, 10);
+
+  const popularBooks = useMemo(
+    () => visibleBooks
+      .filter((book) => book.is_popular === true || book.is_popular === 1 || book.is_recommended === true || book.is_recommended === 1)
+      .slice(0, 15),
+    [visibleBooks],
+  );
 
   const themeShelves = useMemo(() => (
     SHELF_THEME_IDS
@@ -218,8 +238,9 @@ function KidsLibrary() {
     ...featuredBook,
     progress: readingHistory.find((h) => h.bookId === featuredBook.id)
       ? Math.round((storage.getLastPage(featuredBook.id) / (featuredBook.page_count || 1)) * 100)
-      : 0,
-    isInProgress: readingHistory.some((h) => h.bookId === featuredBook.id && h.page > 0),
+      : Number(featuredBook.kid_progress_percent || featuredBook.progress || 0),
+    isInProgress: readingHistory.some((h) => h.bookId === featuredBook.id && h.page > 0)
+      || (Number(featuredBook.kid_progress_percent || 0) > 0 && Number(featuredBook.kid_progress_percent || 0) < 100),
   } : null;
 
   const carouselProps = {
@@ -235,10 +256,6 @@ function KidsLibrary() {
     seeAllLabel: t('seeAll'),
   };
 
-  const continueAnnotated = useMemo(
-    () => annotateBooksWithReasons(continueBooks, t('continueReading')),
-    [continueBooks, t],
-  );
   const todayAnnotated = useMemo(
     () => todayBooks.map((book) => {
       if (isShortStory(book)) return withDiscoveryReason(book, t('discoverReasonShort'));
@@ -254,43 +271,83 @@ function KidsLibrary() {
     () => annotateBooksWithReasons(favoriteBooks, t('discoverReasonLoved')),
     [favoriteBooks, t],
   );
+  const popularAnnotated = useMemo(
+    () => annotateBooksWithReasons(popularBooks, t('forYou')),
+    [popularBooks, t],
+  );
   const seasonalAnnotated = useMemo(
     () => annotateBooksWithReasons(filterSeasonalBooks(visibleBooks), t('discoverSeasonal')),
     [visibleBooks, t],
   );
 
+  const libraryTitle = selectedTheme === 'all'
+    ? t('library')
+    : (activeThemeData?.shortLabel || activeThemeData?.label);
+
   return (
-    <KidsPageShell isRtl={isRtl} variant="library" world="books" className={`pb-space-32 kids-library-shell kids-home-shell kids-hero-glow ${selectedTheme === 'bedtime' ? 'kids-night-calm' : ''}`} footer={<KidsBottomNav />}>
+    <KidsPageShell
+      isRtl={isRtl}
+      variant="library"
+      world="books"
+      className={`pb-space-32 kids-library-shell kids-home-shell kids-hero-glow ${selectedTheme === 'bedtime' ? 'kids-night-calm' : ''}`}
+      footer={<KidsBottomNav />}
+    >
+      <div className="kids-home-atmosphere" aria-hidden="true">
+        <span className="kids-home-cloud" style={{ width: '8rem', top: '10%', left: '8%' }} />
+        <span className="kids-home-cloud" style={{ width: '5.5rem', top: '20%', right: '12%' }} />
+        <span className="kids-home-star" style={{ top: '14%', left: '32%' }} />
+        <span className="kids-home-star" style={{ top: '26%', right: '22%' }} />
+      </div>
+
       {selectedTheme !== 'all' && <KidsCategoryAtmosphere categoryId={selectedTheme} />}
 
-      <header className="kids-home-header relative z-10 sticky top-0 px-space-20 sm:px-space-24 py-space-12 flex items-center justify-between gap-space-16">
+      <header className="kids-home-header relative z-10 sticky top-0 px-space-20 md:px-space-32 py-space-12 md:py-space-16 flex items-center justify-between gap-space-16">
         <div className="flex items-center gap-space-12 min-w-0">
           <button
             type="button"
             onClick={() => navigate('/kids')}
-            className="kids-icon-action"
+            className="kids-reader-toolbar-btn !bg-card/70"
             aria-label={t('home')}
           >
-            <HomeIcon />
+            <ChevronLeftIcon className={`h-6 w-6 ${isRtl ? 'rotate-180' : ''}`} />
           </button>
-          <Link to="/kids" className="shrink-0 transition-opacity hover:opacity-80 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-300 rounded-full">
-            <Logo size="default" showText={false} />
-          </Link>
-          <h1 className="text-heading-m font-semibold hidden sm:block truncate text-foreground">
-            {selectedTheme === 'all' ? t('library') : (activeThemeData?.shortLabel || activeThemeData?.label)}
-          </h1>
+          <div className="min-w-0">
+            <p className="kids-type-caption">{t('library')}</p>
+            <h1 className="kids-type-h1 !text-[1.35rem] md:!text-[1.55rem] truncate">
+              {libraryTitle}
+            </h1>
+          </div>
         </div>
+        <Link
+          to="/kids"
+          className="shrink-0 rounded-full opacity-90 transition-opacity hover:opacity-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-300"
+          aria-label="HKids"
+        >
+          <Logo size="default" showText={false} />
+        </Link>
       </header>
 
-      <main className="kids-main kids-main-tablet-wide kids-home-main relative z-20 space-y-space-24">
-        <KidsTrustBadges t={t} compact className="opacity-60" />
+      <main className="kids-main kids-main-tablet-wide kids-home-main kids-library-main relative z-20">
+        <section className="kids-library-toolbar px-space-4 md:px-space-8 space-y-space-16" aria-label={t('library')}>
+          <SearchBar
+            variant="premium"
+            value={searchQuery}
+            onChange={setSearchQuery}
+            placeholder={t('tryAnotherWord') || 'Search…'}
+            aria-label={t('library')}
+          />
 
-        <SearchBar
-          value={searchQuery}
-          onChange={setSearchQuery}
-          placeholder={t('tryAnotherWord') || 'Search…'}
-          aria-label={t('library')}
-        />
+          <div className="kids-discovery-rail !pt-0 !gap-space-10" role="toolbar" aria-label={t('allCategories')}>
+            {childThemes.map((theme) => (
+              <KidsThemePill
+                key={theme.id}
+                theme={theme}
+                isActive={selectedTheme === theme.id}
+                onClick={() => handleThemeChange(theme.id)}
+              />
+            ))}
+          </div>
+        </section>
 
         {selectedTheme === 'bedtime' && (
           <KidsAmbientSound
@@ -307,36 +364,21 @@ function KidsLibrary() {
           />
         )}
 
-        <section aria-label={t('allCategories')}>
-          <div className="kids-discovery-rail !pt-space-4 !gap-space-10">
-            {childThemes.map((theme) => (
-              <KidsThemePill
-                key={theme.id}
-                theme={theme}
-                isActive={selectedTheme === theme.id}
-                onClick={() => handleThemeChange(theme.id)}
-              />
-            ))}
-          </div>
-        </section>
-
         {loading ? (
           <div className="px-space-4">
             <BookGridSkeleton count={8} variant="carousel" />
           </div>
         ) : books.length === 0 ? (
           <KidsEmptyState
-            emoji="📚"
             title={t('emptyBooksTitle')}
             description={t('emptyBooksDescription')}
-            actionLabel={t('goToLibrary')}
+            actionLabel={t('allCategories')}
             onAction={() => handleThemeChange('all')}
             showMascot
           />
         ) : selectedTheme !== 'all' ? (
           themeBooks.length === 0 ? (
             <KidsEmptyState
-              emoji={activeThemeData?.pictogram || '🔍'}
               title={t('nothingFound')}
               description={t('tryAnotherWord')}
               actionLabel={t('allCategories')}
@@ -360,7 +402,6 @@ function KidsLibrary() {
               <KidsBookCarousel
                 title={activeThemeData?.shortLabel || activeThemeData?.label}
                 subtitle={t('discoverCategoriesSubtitle')}
-                emoji={activeThemeData?.pictogram}
                 books={annotateBooksWithReasons(themeBooks, activeThemeData?.shortLabel || activeThemeData?.label)}
                 {...carouselProps}
                 onSeeAll={() => handleThemeChange('all')}
@@ -368,14 +409,15 @@ function KidsLibrary() {
             </>
           )
         ) : (
-          <div className="space-y-space-24">
-            {continueAnnotated.length > 0 && (
-              <KidsBookCarousel
+          <>
+            {continueBooks.length > 0 && (
+              <KidsContinueRail
+                books={continueBooks}
                 title={t('continueReading')}
                 subtitle={t('discoverContinueSubtitle')}
-                books={continueAnnotated}
-                {...carouselProps}
-                seeAllLabel={null}
+                isRtl={isRtl}
+                t={t}
+                onResume={handlePlayBook}
               />
             )}
 
@@ -411,6 +453,16 @@ function KidsLibrary() {
               />
             )}
 
+            {popularAnnotated.length > 0 && (
+              <KidsBookCarousel
+                title={language === 'fr' ? 'Populaires' : language === 'ar' ? 'الأكثر شعبية' : 'Popular'}
+                subtitle={t('discoverRecommendedSubtitle')}
+                books={popularAnnotated}
+                {...carouselProps}
+                seeAllLabel={null}
+              />
+            )}
+
             {favoriteAnnotated.length > 0 && (
               <KidsBookCarousel
                 title={t('yourFavorites')}
@@ -422,31 +474,35 @@ function KidsLibrary() {
               />
             )}
 
-            {seasonalAnnotated.length > 0 && (
-              <KidsBookCarousel
-                title={t('discoverSeasonal')}
-                subtitle={t('discoverSeasonalSubtitle')}
-                books={seasonalAnnotated}
-                {...carouselProps}
-                seeAllLabel={null}
-              />
-            )}
+            <div className="kids-home-secondary-shelves">
+              {seasonalAnnotated.length > 0 && (
+                <KidsBookCarousel
+                  title={t('discoverSeasonal')}
+                  subtitle={t('discoverSeasonalSubtitle')}
+                  books={seasonalAnnotated}
+                  {...carouselProps}
+                  seeAllLabel={null}
+                />
+              )}
 
-            {themeShelves.map(({ theme, books: shelfBooks }) => (
-              <KidsBookCarousel
-                key={theme.id}
-                title={theme.shortLabel || theme.label}
-                subtitle={t('discoverCategoriesSubtitle')}
-                emoji={theme.pictogram}
-                books={annotateBooksWithReasons(shelfBooks, theme.shortLabel || theme.label)}
-                {...carouselProps}
-                onSeeAll={() => handleThemeChange(theme.id)}
-              />
-            ))}
-          </div>
+              {themeShelves.map(({ theme, books: shelfBooks }) => (
+                <KidsBookCarousel
+                  key={theme.id}
+                  title={theme.id === 'princesses'
+                    ? (language === 'fr' ? 'Magie' : language === 'ar' ? 'سحر' : 'Magic')
+                    : (theme.shortLabel || theme.label)}
+                  subtitle={theme.cue || t('discoverCategoriesSubtitle')}
+                  books={annotateBooksWithReasons(shelfBooks, theme.shortLabel || theme.label)}
+                  {...carouselProps}
+                  onSeeAll={() => handleThemeChange(theme.id)}
+                />
+              ))}
+            </div>
+          </>
         )}
 
         <KidsFamilyMessages />
+        <KidsTrustBadges t={t} compact className="opacity-55" />
       </main>
 
       <VoiceAssistant language={language === 'en' ? 'en-US' : language === 'ar' ? 'ar-MA' : 'fr-FR'} onNavigate={(path) => navigate(path)} />
