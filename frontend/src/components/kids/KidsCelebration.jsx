@@ -10,7 +10,7 @@ import { KidsMediaCard } from './KidsMediaCard';
 import { getMotionProps, kidsPageEnter, kidsBadgePop } from '../../constants/kidsMotion';
 
 /**
- * Gentle story-complete overlay — calm celebration, optional related books.
+ * Gentle story-complete overlay — calm celebration with similar books.
  */
 export const KidsCelebration = memo(function KidsCelebration({
   active = false,
@@ -32,10 +32,13 @@ export const KidsCelebration = memo(function KidsCelebration({
   progressPercent = 100,
   isFavorite = false,
   onFavorite,
+  relatedLimit = 3,
+  onPlayBook,
 }) {
   const reducedMotion = useReducedMotion();
   const { t, isRtl } = useLanguage();
   const navigate = useNavigate();
+  const isStory = variant === 'story';
   const isBedtime = variant === 'bedtime';
   const [relatedBooks, setRelatedBooks] = useState([]);
 
@@ -56,7 +59,7 @@ export const KidsCelebration = memo(function KidsCelebration({
         if (cancelled) return;
         const next = (response.data || [])
           .filter((item) => item.id !== book.id)
-          .slice(0, 8);
+          .slice(0, Math.max(1, relatedLimit));
         setRelatedBooks(next);
       })
       .catch(() => {
@@ -65,15 +68,19 @@ export const KidsCelebration = memo(function KidsCelebration({
     return () => {
       cancelled = true;
     };
-  }, [active, book?.id, book?.category_id]);
+  }, [active, book?.id, book?.category_id, relatedLimit]);
+
+  const shellClass = isStory
+    ? 'kids-reader-celebration-backdrop'
+    : isBedtime
+      ? 'bg-[#121826]/72'
+      : 'bg-[#24324a]/35';
 
   return (
     <AnimatePresence>
       {active && (
         <motion.div
-          className={`fixed inset-0 z-[60] overflow-y-auto kids-scroll-smooth ${
-            isBedtime ? 'bg-[#121826]/72' : 'bg-[#24324a]/35'
-          } backdrop-blur-sm`}
+          className={`fixed inset-0 z-[60] overflow-y-auto kids-scroll-smooth ${shellClass} backdrop-blur-sm`}
           {...getMotionProps(reducedMotion, {
             initial: { opacity: 0 },
             animate: { opacity: 1 },
@@ -84,7 +91,7 @@ export const KidsCelebration = memo(function KidsCelebration({
           aria-modal="true"
           aria-label={title || t('kidBookDone')}
         >
-          {!reducedMotion && (
+          {!reducedMotion && !isStory && (
             <div className="absolute inset-0 pointer-events-none overflow-hidden" aria-hidden="true">
               {Array.from({ length: 6 }).map((_, i) => (
                 <motion.span
@@ -107,15 +114,15 @@ export const KidsCelebration = memo(function KidsCelebration({
 
           <div className="relative z-10 mx-auto flex min-h-full w-full max-w-3xl flex-col items-center justify-center gap-space-24 px-space-16 py-space-32">
             <motion.div
-              className="kids-premium-panel w-full max-w-md p-space-32 text-center shadow-floating rounded-32"
+              className={`kids-reader-celebration-panel w-full max-w-md p-space-32 text-center shadow-floating rounded-32 ${isStory ? 'kids-premium-panel' : 'kids-premium-panel'}`}
               {...getMotionProps(reducedMotion, kidsPageEnter)}
             >
               {(coverUrl || book) && (
                 <motion.div
-                  className="mx-auto mb-space-20 w-36 sm:w-40"
+                  className="mx-auto mb-space-20 w-40 sm:w-44"
                   {...getMotionProps(reducedMotion, kidsBadgePop)}
                 >
-                  <div className="kids-book-collectible-cover aspect-[3/4] relative overflow-hidden">
+                  <div className="kids-book-collectible-cover aspect-[3/4] relative overflow-hidden kids-reader-celebration-cover">
                     {book ? (
                       <KidsBookCover
                         book={book}
@@ -129,29 +136,30 @@ export const KidsCelebration = memo(function KidsCelebration({
               )}
 
               <p className="kids-type-caption uppercase tracking-[0.14em] text-primary-600/80 mb-space-8">
-                Histoire terminée
+                {isStory ? t('kidReaderStoryFinished') : t('kidBookDone')}
               </p>
               <h2 className="kids-type-h1 mb-space-8">
-                {title || t('kidBookDone')}
+                {title || t('kidReaderBravo')}
               </h2>
-              {bookTitle ? (
+              {subtitle ? (
+                <p className="kids-shelf-subtitle !mx-auto mb-space-16 line-clamp-3">{subtitle}</p>
+              ) : bookTitle ? (
                 <p className="kids-book-title mb-space-8 mx-auto max-w-sm">{bookTitle}</p>
               ) : null}
-              {subtitle ? (
-                <p className="kids-shelf-subtitle !mx-auto mb-space-16 line-clamp-2">{subtitle}</p>
-              ) : null}
 
-              <div className="mb-space-20 mx-auto w-full max-w-xs">
-                <p className="kids-type-meta text-foreground-muted mb-space-8">
-                  Lecture {Math.round(progressPercent)}%
-                </p>
-                <div className="kids-book-progress !static !inset-auto h-2" role="progressbar" aria-valuenow={Math.round(progressPercent)} aria-valuemin={0} aria-valuemax={100}>
-                  <div className="kids-book-progress-fill" style={{ width: `${Math.min(100, Math.max(0, progressPercent))}%` }} />
+              {!isStory && (
+                <div className="mb-space-20 mx-auto w-full max-w-xs">
+                  <p className="kids-type-meta text-foreground-muted mb-space-8">
+                    {t('kidReaderProgressLabel', { percent: Math.round(progressPercent) })}
+                  </p>
+                  <div className="kids-book-progress !static !inset-auto h-2" role="progressbar" aria-valuenow={Math.round(progressPercent)} aria-valuemin={0} aria-valuemax={100}>
+                    <div className="kids-book-progress-fill" style={{ width: `${Math.min(100, Math.max(0, progressPercent))}%` }} />
+                  </div>
                 </div>
-              </div>
+              )}
 
               <div className="flex flex-col gap-space-12">
-                {onFavorite && (
+                {onFavorite && !isStory && (
                   <KidsButton
                     onClick={onFavorite}
                     variant="ghost"
@@ -161,14 +169,14 @@ export const KidsCelebration = memo(function KidsCelebration({
                     {isFavorite ? t('yourFavorites') : t('addToFavorites')}
                   </KidsButton>
                 )}
-                {primaryLabel && onPrimary && (
-                  <KidsButton onClick={onPrimary} className="!min-h-[56px] !w-full" tone="primary">
-                    {primaryLabel}
-                  </KidsButton>
-                )}
                 {secondaryLabel && onSecondary && (
                   <KidsButton onClick={onSecondary} variant="secondary" className="!min-h-[56px] !w-full">
                     {secondaryLabel}
+                  </KidsButton>
+                )}
+                {primaryLabel && onPrimary && (
+                  <KidsButton onClick={onPrimary} className="!min-h-[56px] !w-full" tone="primary">
+                    {primaryLabel}
                   </KidsButton>
                 )}
                 {tertiaryLabel && onTertiary && (
@@ -180,9 +188,9 @@ export const KidsCelebration = memo(function KidsCelebration({
             </motion.div>
 
             {relatedBooks.length > 0 ? (
-              <section className="kids-celebration-related w-full" aria-label="Tu pourrais aussi aimer">
-                <h3 className="kids-shelf-title px-space-8 mb-space-16">Tu pourrais aussi aimer</h3>
-                <div className="flex gap-space-24 overflow-x-auto px-space-8 pb-space-12 snap-x snap-mandatory kids-scroll-smooth custom-scrollbar">
+              <section className="kids-celebration-related w-full" aria-label={t('kidReaderSimilarStories')}>
+                <h3 className="kids-shelf-title px-space-8 mb-space-16">{t('kidReaderSimilarStories')}</h3>
+                <div className="flex gap-space-24 overflow-x-auto px-space-8 pb-space-12 snap-x snap-mandatory kids-scroll-smooth custom-scrollbar justify-center md:justify-start">
                   {relatedBooks.map((related) => (
                     <div key={related.id} className="snap-start shrink-0">
                       <KidsMediaCard
@@ -191,7 +199,11 @@ export const KidsCelebration = memo(function KidsCelebration({
                         isRtl={isRtl}
                         onPlay={() => {
                           onComplete?.();
-                          navigate(`/book-details/${related.id}`);
+                          if (onPlayBook) {
+                            onPlayBook(related);
+                          } else {
+                            navigate(`/book-details/${related.id}`);
+                          }
                         }}
                       />
                     </div>
