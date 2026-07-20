@@ -8,6 +8,7 @@ import KidsButton from './KidsButton';
 import { KidsBookCover } from './KidsBookCover';
 import { KidsMediaCard } from './KidsMediaCard';
 import { getMotionProps, kidsPageEnter, kidsBadgePop } from '../../constants/kidsMotion';
+import { pickRelatedBooks } from '../../utils/readerRecommendations';
 
 /**
  * Gentle story-complete overlay — calm celebration with similar books.
@@ -54,13 +55,23 @@ export const KidsCelebration = memo(function KidsCelebration({
       return undefined;
     }
     let cancelled = false;
-    booksAPI.getPublishedBooks({ category_id: book.category_id || undefined })
+    booksAPI.getPublishedBooks({
+      category_id: book.category_id || undefined,
+    })
       .then((response) => {
         if (cancelled) return;
-        const next = (response.data || [])
-          .filter((item) => item.id !== book.id)
-          .slice(0, Math.max(1, relatedLimit));
-        setRelatedBooks(next);
+        const candidates = response.data || [];
+        const smart = pickRelatedBooks(book, candidates, relatedLimit);
+        if (smart.length > 0) {
+          setRelatedBooks(smart);
+          return;
+        }
+        // Graceful fallback: category-filtered slice (previous behavior)
+        setRelatedBooks(
+          candidates
+            .filter((item) => item.id !== book.id)
+            .slice(0, Math.max(1, relatedLimit)),
+        );
       })
       .catch(() => {
         if (!cancelled) setRelatedBooks([]);
@@ -68,7 +79,7 @@ export const KidsCelebration = memo(function KidsCelebration({
     return () => {
       cancelled = true;
     };
-  }, [active, book?.id, book?.category_id, relatedLimit]);
+  }, [active, book, relatedLimit]);
 
   const shellClass = isStory
     ? 'kids-reader-celebration-backdrop'

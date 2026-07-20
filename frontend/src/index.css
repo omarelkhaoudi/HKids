@@ -3564,13 +3564,88 @@
 
   .kids-reader-sentence {
     border-radius: 0.45rem;
-    padding: 0.04em 0.08em;
-    transition: background-color 180ms ease, box-shadow 180ms ease, color 180ms ease;
+    padding: 0.05em 0.1em;
+    transition:
+      background-color 320ms cubic-bezier(0.22, 1, 0.36, 1),
+      box-shadow 320ms cubic-bezier(0.22, 1, 0.36, 1),
+      color 320ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .kids-reader-sentence.is-passed {
+    color: color-mix(in srgb, var(--reader-ink) 78%, transparent);
   }
 
   .kids-reader-sentence.is-active {
-    background: color-mix(in srgb, var(--reader-progress) 12%, transparent);
-    box-shadow: inset 0 -0.08em 0 color-mix(in srgb, var(--reader-progress) 30%, transparent);
+    background: color-mix(in srgb, #e8c9a0 28%, transparent);
+    box-shadow: inset 0 -0.1em 0 color-mix(in srgb, #d4a574 42%, transparent);
+    color: var(--reader-ink);
+  }
+
+  .kids-reader-shell[data-reader-theme="night"] .kids-reader-sentence.is-active {
+    background: color-mix(in srgb, #c9a67a 18%, transparent);
+    box-shadow: inset 0 -0.1em 0 color-mix(in srgb, #e8c88a 28%, transparent);
+  }
+
+  .kids-reader-shell.is-read-along .kids-reader-living-art,
+  .kids-reader-shell.is-narrating .kids-reader-living-art {
+    animation: none;
+  }
+
+  .kids-reader-shell.is-read-along .kids-reader-living-art .kids-reader-illustration,
+  .kids-reader-shell.is-narrating .kids-reader-living-art .kids-reader-illustration {
+    animation: none;
+  }
+
+  .kids-reader-dock-meta {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.75rem;
+    width: 100%;
+  }
+
+  .kids-reader-dock-meta .kids-reader-emotional-progress-label {
+    margin: 0;
+    text-align: start;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .kids-reader-remaining-time {
+    margin: 0;
+    flex-shrink: 0;
+    font-family: var(--font-body);
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    color: var(--reader-muted);
+    white-space: nowrap;
+  }
+
+  .kids-reader-speed-chip {
+    display: grid;
+    place-items: center;
+    min-height: 48px;
+    min-width: 48px;
+    padding: 0 0.7rem;
+    border-radius: 999px;
+    border: 1px solid color-mix(in srgb, var(--reader-border) 75%, transparent);
+    background: color-mix(in srgb, var(--reader-paper) 70%, transparent);
+    color: var(--reader-ink);
+    font-family: var(--font-body);
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    transition: background 160ms ease, color 160ms ease, transform 160ms ease;
+  }
+
+  .kids-reader-speed-chip:hover {
+    background: color-mix(in srgb, var(--reader-paper) 92%, white);
+  }
+
+  .kids-reader-speed-chip:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary-400) 45%, transparent);
   }
 
   .kids-reader-illustration-wrap {
