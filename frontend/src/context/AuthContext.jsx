@@ -125,7 +125,12 @@ export function AuthProvider({ children }) {
       let errorMessage = 'Échec de l\'inscription';
       
       if (error.response) {
-        errorMessage = error.response.data?.error || `Erreur ${error.response.status}: ${error.response.statusText}`;
+        const { status, data, statusText } = error.response;
+        errorMessage = data?.error || `Erreur ${status}: ${statusText}`;
+        if (status === 429 && data?.retryAfter) {
+          const minutes = Math.max(1, Math.ceil(Number(data.retryAfter) / 60));
+          errorMessage = `Trop de tentatives. Réessayez dans environ ${minutes} minute${minutes > 1 ? 's' : ''}.`;
+        }
       } else if (error.request) {
         errorMessage = 'Aucune réponse du serveur. Vérifiez que le serveur backend est démarré.';
       } else {

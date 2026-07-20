@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import { getDatabase } from '../database/init.js';
 import { logSecurityEvent } from '../services/security/auditLog.js';
+import { signupRateLimiter } from '../middleware/rateLimiter.js';
 import config from '../config/env.js';
 
 const router = express.Router();
@@ -21,7 +22,7 @@ function getPool() {
 }
 
 // Signup
-router.post('/signup', async (req, res) => {
+router.post('/signup', signupRateLimiter, async (req, res) => {
   const { username, password, role, admin_signup_code } = req.body;
 
   if (!username || !password) {
