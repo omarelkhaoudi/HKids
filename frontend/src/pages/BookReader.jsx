@@ -18,7 +18,7 @@ import {useLanguage} from '../context/LanguageContext';
 import {ChevronLeftIcon, ChevronRightIcon, HomeIcon, BookIcon, StarIcon, PlayIcon, PauseIcon, SettingsIcon, WarningIcon, MoonIcon, SunIcon} from '../components/Icons';
 import {getImageUrl} from '../utils/imageUrl';
 import {resolveBookCoverUrl} from '../utils/bookCover';
-import {kidsProgressFill, kidsReaderPageTurn} from '../constants/kidsMotion';
+import {kidsReaderPageTurn} from '../constants/kidsMotion';
 import {deriveReaderMood, getReaderAmbientStyle} from '../utils/readerAtmosphere';
 import {
  detectReadingMilestone,
@@ -43,6 +43,11 @@ import {KidsStoryOpening} from '../components/kids/KidsStoryOpening';
 import {KidsReadingCompanion} from '../components/kids/KidsReadingCompanion';
 import {ReaderLivingPresence} from '../components/kids/ReaderLivingPresence';
 import {LivingIllustration} from '../components/kids/LivingIllustration';
+import {
+ KidsReaderAmbientPanel,
+ KidsReaderTimeline,
+ KidsReaderVoiceMeta,
+} from '../components/kids/KidsReaderAudioExperience';
 import {useReducedMotion} from '../hooks/useReducedMotion';
 
 // Configuration de pdfjs-dist
@@ -659,6 +664,7 @@ function BookReader() {
 
  if (!shouldPreview || !('speechSynthesis' in window)) return;
 
+ skipPauseEncourageRef.current = true;
  await stopAudio();
  const voices = await waitForSpeechVoices();
 
@@ -821,6 +827,7 @@ function BookReader() {
  // Arrêter l'audio lors du changement de page
  if (window.speechSynthesis && window.speechSynthesis.speaking) {
  try {
+ skipPauseEncourageRef.current = true;
  window.speechSynthesis.cancel();
 } catch (error) {
  console.error('Erreur lors de l\'arrêt de l\'audio:', error);
@@ -855,6 +862,7 @@ function BookReader() {
  // Arrêter l'audio lors du changement de page
  if (window.speechSynthesis && window.speechSynthesis.speaking) {
  try {
+ skipPauseEncourageRef.current = true;
  window.speechSynthesis.cancel();
 } catch (error) {
  console.error('Erreur lors de l\'arrêt de l\'audio:', error);
@@ -1235,6 +1243,12 @@ function BookReader() {
  const [companionMessageKey, setCompanionMessageKey] = useState('');
  const [companionActive, setCompanionActive] = useState(false);
  const milestoneShownRef = useRef(new Set());
+ const wasNarratingRef = useRef(false);
+ const skipPauseEncourageRef = useRef(false);
+ const pauseEncourageIndexRef = useRef(0);
+ const [ambienceId, setAmbienceId] = useState(null);
+ const [ambienceVolume, setAmbienceVolume] = useState(40);
+ const [showAmbiencePanel, setShowAmbiencePanel] = useState(false);
  const reducedMotion = useReducedMotion();
  const canReport = user && (user.role === 'parent' || user.role === 'admin') && !isKidReader;
 
@@ -1291,6 +1305,31 @@ function BookReader() {
  setCompanionMessageKey('');
  }, []);
 
+ const showPauseEncouragement = useCallback(() => {
+ if (!isKidReader || showStoryOpening || showKidCelebration) return;
+ const keys = ['companionPauseWonderful', 'companionPauseContinue', 'companionPauseGreat'];
+ const index = pauseEncourageIndexRef.current % keys.length;
+ pauseEncourageIndexRef.current += 1;
+ const messageKey = keys[index];
+ setCompanionMessageKey(messageKey);
+ setCompanionMessage(t(messageKey));
+ setCompanionActive(true);
+ }, [isKidReader, showKidCelebration, showStoryOpening, t]);
+
+ // Natural pause encouragements — never during narration; skip page-turn stops
+ useEffect(() => {
+ if (!isKidReader || !book) return;
+ const active = book.audio_url ? audioPlayer.playing : isPlaying;
+ if (wasNarratingRef.current && !active) {
+ if (skipPauseEncourageRef.current) {
+ skipPauseEncourageRef.current = false;
+ } else {
+ showPauseEncouragement();
+ }
+ }
+ wasNarratingRef.current = active;
+ }, [isKidReader, book, book?.audio_url, audioPlayer.playing, isPlaying, showPauseEncouragement]);
+
  const toggleBookFavorite = () => {
  if (!book) return;
  if (storage.isFavorite(book.id)) {
@@ -1327,7 +1366,10 @@ function BookReader() {
 }, [showMenu, currentPage, isPlaying, audioPlayer.playing, isKidReader, showKidCelebration, showStoryOpening]);
 
  useEffect(() => {
- if (!showMenu) setShowReaderTools(false);
+ if (!showMenu) {
+ setShowReaderTools(false);
+ setShowAmbiencePanel(false);
+ }
  }, [showMenu]);
 
  // Kid page-turn sparkle (UI only)
@@ -1504,6 +1546,12 @@ function BookReader() {
    audioRemaining: audioRemainingSeconds,
  });
  const remainingReadLabel = formatRemainingReadLabel(remainingReadSeconds);
+ const activeVoiceProfile = voiceProfiles.find((profile) => profile.id === selectedVoiceProfile) || voiceProfiles[0];
+ const activeFamilyVoice = familyVoiceProfiles.find((voice) => String(voice.id) === String(selectedFamilyVoiceId));
+ const voiceNarratorLabel = activeFamilyVoice?.name || activeFamilyVoice?.label || t(`readerVoiceProfile_${activeVoiceProfile.id}`);
+ const voiceStyleLabel = activeFamilyVoice
+   ? t('readerVoiceStyleFamily')
+   : t(`readerVoiceStyle_${activeVoiceProfile.id}`);
 
  return (
  <div 
@@ -1734,7 +1782,7 @@ function BookReader() {
 
  <p className="kids-reader-focus-hint" aria-hidden="true">{t('kidReaderFocusHint')}</p>
 
- {/* Floating Audio Controls */}
+ {/* Floating Audio Controls — premium glass dock */}
  <AnimatePresence>
  {showMenu && (
  <motion.div
@@ -1745,34 +1793,31 @@ function BookReader() {
  className="kids-reader-audio-dock"
  onClick={(e) => e.stopPropagation()}
  >
-   <div className="kids-reader-audio-panel">
-     <div className="kids-reader-dock-meta">
-       {isKidReader && readingPhaseLabel ? (
-         <p className="kids-reader-emotional-progress-label">{readingPhaseLabel}</p>
-       ) : (
-         <p className="kids-reader-emotional-progress-label">{t('kidReaderProgressLabel', { percent: progressRounded })}</p>
-       )}
-       <p className="kids-reader-remaining-time" aria-label={t('kidReaderRemainingTime', { time: remainingReadLabel })}>
-         {t('kidReaderRemainingTime', { time: remainingReadLabel })}
-       </p>
-     </div>
-     <div
-       className="kids-reader-progress-track"
-       role="progressbar"
-       aria-valuenow={currentPage + 1}
-       aria-valuemin={1}
-       aria-valuemax={totalPages}
-       aria-label={isKidReader && readingPhaseLabel
+   <div className="kids-reader-audio-panel kids-reader-audio-panel--premium">
+     <KidsReaderTimeline
+       progress={progress}
+       currentPage={currentPage}
+       totalPages={totalPages}
+       remainingLabel={t('kidReaderRemainingTime', { time: remainingReadLabel })}
+       phaseLabel={isKidReader && readingPhaseLabel
+         ? readingPhaseLabel
+         : t('kidReaderProgressLabel', { percent: progressRounded })}
+       ariaLabel={isKidReader && readingPhaseLabel
          ? `${readingPhaseLabel} · ${progressRounded}%`
          : `Progression · ${progressRounded}%`}
-     >
-       <motion.div
-         className="kids-reader-progress-fill"
-         initial={false}
-         animate={{ width: `${progress}%` }}
-         transition={reducedMotion ? { duration: 0 } : kidsProgressFill.transition}
+       reducedMotion={reducedMotion}
+     />
+
+     {isKidReader && (
+       <KidsReaderVoiceMeta
+         t={t}
+         narrator={voiceNarratorLabel}
+         style={voiceStyleLabel}
+         speedLabel={`${speechRate}x`}
+         remainingLabel={remainingReadLabel}
        />
-     </div>
+     )}
+
      {(book.audio_url || audioPlaybackActive) && (
        <div className="kids-reader-audio-strip">
          {book.audio_url ? (
@@ -1795,6 +1840,7 @@ function BookReader() {
          )}
        </div>
      )}
+
      <div className="kids-reader-primary-row">
        <button
          type="button"
@@ -1838,9 +1884,29 @@ function BookReader() {
        >
          {speechRate}x
        </button>
+       {isKidReader && (
+         <button
+           type="button"
+           onClick={(e) => {
+             e.stopPropagation();
+             setShowAmbiencePanel((open) => !open);
+             setShowReaderTools(false);
+           }}
+           className={`kids-reader-ambience-toggle ${showAmbiencePanel ? 'is-open' : ''} ${ambienceId ? 'is-active' : ''}`}
+           aria-label={t('readerAmbienceTitle')}
+           aria-expanded={showAmbiencePanel}
+           aria-pressed={Boolean(ambienceId)}
+         >
+           <span aria-hidden="true">🌿</span>
+         </button>
+       )}
        <button
          type="button"
-         onClick={(e) => { e.stopPropagation(); setShowReaderTools((open) => !open); }}
+         onClick={(e) => {
+           e.stopPropagation();
+           setShowReaderTools((open) => !open);
+           setShowAmbiencePanel(false);
+         }}
          className={`kids-reader-more-btn ${showReaderTools ? 'is-open' : ''}`}
          aria-label={t('kidReaderMoreOptions')}
          aria-expanded={showReaderTools}
@@ -1852,6 +1918,18 @@ function BookReader() {
          </svg>
        </button>
      </div>
+
+     {isKidReader && (
+       <KidsReaderAmbientPanel
+         t={t}
+         open={showAmbiencePanel}
+         selectedId={ambienceId}
+         volume={ambienceVolume}
+         onSelect={setAmbienceId}
+         onVolumeChange={setAmbienceVolume}
+       />
+     )}
+
      <AnimatePresence>
        {showReaderTools && (
          <motion.div
