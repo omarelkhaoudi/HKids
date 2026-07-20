@@ -2163,6 +2163,524 @@
     box-shadow: var(--shadow-card, 0 8px 24px rgba(0, 0, 0, 0.08));
   }
 
+  .kids-studio-particles {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+    z-index: 0;
+  }
+
+  .kids-studio-particle {
+    position: absolute;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: color-mix(in srgb, white 35%, transparent);
+    opacity: 0.25;
+    animation: kids-studio-particle-float 9s ease-in-out infinite;
+  }
+
+  @keyframes kids-studio-particle-float {
+    0%, 100% { transform: translate3d(0, 0, 0); opacity: 0.12; }
+    50% { transform: translate3d(4px, -12px, 0); opacity: 0.35; }
+  }
+
+  .kids-studio-kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    margin: 0 0 0.85rem;
+    padding: 0.45rem 0.95rem;
+    border-radius: 999px;
+    border: 1px solid color-mix(in srgb, white 18%, transparent);
+    background: color-mix(in srgb, white 8%, transparent);
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: color-mix(in srgb, white 85%, transparent);
+  }
+
+  .kids-studio-title {
+    margin: 0;
+    font-size: clamp(2rem, 5vw, 3.25rem);
+    font-weight: 900;
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+  }
+
+  .kids-studio-subtitle {
+    margin: 0.75rem auto 0;
+    max-width: 36rem;
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: color-mix(in srgb, white 65%, transparent);
+  }
+
+  .kids-studio-journey-progress {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 0.5rem;
+    margin: 0 auto 1.75rem;
+    max-width: 42rem;
+  }
+
+  @media (max-width: 700px) {
+    .kids-studio-journey-progress {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+
+  .kids-studio-journey-dot {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.65rem 0.35rem;
+    border-radius: 1.25rem;
+    border: 1px solid color-mix(in srgb, white 12%, transparent);
+    background: color-mix(in srgb, white 4%, transparent);
+    opacity: 0.55;
+  }
+
+  .kids-studio-journey-dot.is-active,
+  .kids-studio-journey-dot.is-done {
+    opacity: 1;
+    border-color: color-mix(in srgb, var(--color-magic-300) 55%, transparent);
+    background: color-mix(in srgb, var(--color-magic-500) 22%, transparent);
+  }
+
+  .kids-studio-journey-dot-num {
+    width: 1.75rem;
+    height: 1.75rem;
+    display: grid;
+    place-items: center;
+    border-radius: 999px;
+    background: color-mix(in srgb, white 12%, transparent);
+    font-size: 0.8rem;
+    font-weight: 800;
+  }
+
+  .kids-studio-journey-dot-label {
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-align: center;
+    color: color-mix(in srgb, white 80%, transparent);
+  }
+
+  .kids-studio-step-panel {
+    border-radius: 2rem;
+    padding: clamp(1.25rem, 3vw, 2rem);
+    background: color-mix(in srgb, white 6%, transparent);
+    border: 1px solid color-mix(in srgb, white 12%, transparent);
+    backdrop-filter: blur(14px);
+  }
+
+  .kids-studio-step-title {
+    margin: 0;
+    font-size: clamp(1.4rem, 3vw, 1.85rem);
+    font-weight: 900;
+  }
+
+  .kids-studio-step-desc {
+    margin: 0.5rem 0 1.35rem;
+    font-size: 1rem;
+    font-weight: 600;
+    color: color-mix(in srgb, white 62%, transparent);
+  }
+
+  .kids-studio-world-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.85rem;
+  }
+
+  @media (min-width: 640px) {
+    .kids-studio-world-grid {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+
+  .kids-studio-world-card {
+    position: relative;
+    overflow: hidden;
+    min-height: 8.5rem;
+    border-radius: 1.5rem;
+    border: 2px solid color-mix(in srgb, white 10%, transparent);
+    background: color-mix(in srgb, white 5%, transparent);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.55rem;
+    padding: 1rem;
+    transition: border-color 0.25s ease, transform 0.25s ease, background 0.25s ease;
+  }
+
+  .kids-studio-world-card.is-active {
+    border-color: color-mix(in srgb, white 70%, transparent);
+    background: color-mix(in srgb, white 12%, transparent);
+    box-shadow: var(--shadow-floating);
+  }
+
+  .kids-studio-world-card:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-magic-300) 55%, transparent);
+  }
+
+  .kids-studio-world-glow {
+    position: absolute;
+    inset: 0;
+    opacity: 0.22;
+    pointer-events: none;
+  }
+
+  .kids-studio-world-emoji,
+  .kids-studio-hero-emoji,
+  .kids-studio-adventure-emoji,
+  .kids-studio-style-emoji {
+    position: relative;
+    z-index: 1;
+    font-size: 2.4rem;
+    line-height: 1;
+  }
+
+  .kids-studio-world-label,
+  .kids-studio-hero-label,
+  .kids-studio-adventure-label,
+  .kids-studio-style-label {
+    position: relative;
+    z-index: 1;
+    font-size: 0.95rem;
+    font-weight: 800;
+  }
+
+  .kids-studio-hero-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.85rem;
+  }
+
+  @media (min-width: 700px) {
+    .kids-studio-hero-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+
+  .kids-studio-hero-card,
+  .kids-studio-adventure-card,
+  .kids-studio-style-card {
+    min-height: 8rem;
+    border-radius: 1.5rem;
+    border: 2px solid color-mix(in srgb, white 10%, transparent);
+    background: color-mix(in srgb, white 5%, transparent);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    padding: 1rem;
+    text-align: center;
+    transition: border-color 0.25s ease, background 0.25s ease;
+  }
+
+  .kids-studio-hero-card.is-active,
+  .kids-studio-adventure-card.is-active,
+  .kids-studio-style-card.is-active {
+    border-color: color-mix(in srgb, var(--color-magic-300) 80%, white);
+    background: color-mix(in srgb, var(--color-magic-500) 28%, transparent);
+  }
+
+  .kids-studio-hero-card:focus-visible,
+  .kids-studio-adventure-card:focus-visible,
+  .kids-studio-style-card:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-magic-300) 55%, transparent);
+  }
+
+  .kids-studio-hero-trait,
+  .kids-studio-style-meta {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: color-mix(in srgb, white 60%, transparent);
+  }
+
+  .kids-studio-adventure-grid,
+  .kids-studio-style-grid {
+    display: grid;
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+    gap: 0.75rem;
+  }
+
+  @media (min-width: 560px) {
+    .kids-studio-adventure-grid,
+    .kids-studio-style-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (min-width: 900px) {
+    .kids-studio-adventure-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+    .kids-studio-style-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+
+  .kids-studio-custom-hero {
+    display: block;
+    margin-top: 1.15rem;
+  }
+
+  .kids-studio-custom-input {
+    width: 100%;
+    min-height: 3.25rem;
+    border-radius: 1.25rem;
+    border: 2px solid color-mix(in srgb, white 12%, transparent);
+    background: color-mix(in srgb, white 8%, transparent);
+    padding: 0.85rem 1.1rem;
+    color: white;
+    font-weight: 700;
+  }
+
+  .kids-studio-custom-input::placeholder {
+    color: color-mix(in srgb, white 40%, transparent);
+  }
+
+  .kids-studio-custom-input:focus {
+    outline: none;
+    border-color: color-mix(in srgb, var(--color-magic-300) 70%, transparent);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-magic-400) 35%, transparent);
+  }
+
+  .kids-studio-nav-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-top: 1.35rem;
+  }
+
+  .kids-studio-ready-summary {
+    list-style: none;
+    margin: 0 0 1.5rem;
+    padding: 0;
+    display: grid;
+    gap: 0.55rem;
+  }
+
+  .kids-studio-ready-summary li {
+    border-radius: 1rem;
+    padding: 0.85rem 1rem;
+    background: color-mix(in srgb, white 7%, transparent);
+    font-weight: 700;
+  }
+
+  .kids-studio-generate-cta {
+    position: relative;
+    width: 100%;
+    min-height: 4.5rem;
+    border-radius: 1.75rem;
+    overflow: hidden;
+    border: none;
+    cursor: pointer;
+  }
+
+  .kids-studio-generate-cta:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+
+  .kids-studio-generate-cta:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-magic-300) 55%, transparent);
+  }
+
+  .kids-studio-generate-cta-bg {
+    position: absolute;
+    inset: 0;
+    opacity: 0.95;
+  }
+
+  .kids-studio-generate-cta-label {
+    position: relative;
+    z-index: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    width: 100%;
+    min-height: 4.5rem;
+    color: white;
+    font-size: 1.45rem;
+    font-weight: 900;
+  }
+
+  .kids-studio-generate-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    display: grid;
+    place-items: center;
+    padding: 1.5rem;
+    background: color-mix(in srgb, #1a1433 92%, transparent);
+    backdrop-filter: blur(12px);
+  }
+
+  .kids-studio-generate-stage {
+    position: relative;
+    z-index: 1;
+    text-align: center;
+    max-width: 28rem;
+  }
+
+  .kids-studio-magic-book {
+    width: 7.5rem;
+    height: 9.5rem;
+    margin: 0 auto 1.5rem;
+    position: relative;
+    border-radius: 0.65rem 1.1rem 1.1rem 0.65rem;
+    background: linear-gradient(145deg, #f6ead6, #e8d4b8);
+    box-shadow:
+      0 18px 40px color-mix(in srgb, black 28%, transparent),
+      inset -10px 0 0 color-mix(in srgb, #c9a67a 35%, transparent);
+  }
+
+  .kids-studio-magic-book-spine {
+    position: absolute;
+    inset-block: 0;
+    inset-inline-start: 0;
+    width: 0.7rem;
+    background: color-mix(in srgb, #a67c52 70%, transparent);
+    border-radius: 0.65rem 0 0 0.65rem;
+  }
+
+  .kids-studio-magic-book-page {
+    position: absolute;
+    inset: 0.85rem 0.85rem 0.85rem 1.2rem;
+    border-radius: 0.35rem;
+    background:
+      linear-gradient(180deg, transparent 18%, color-mix(in srgb, #c9a67a 18%, transparent) 18.5%, transparent 19%),
+      linear-gradient(180deg, transparent 36%, color-mix(in srgb, #c9a67a 16%, transparent) 36.5%, transparent 37%),
+      linear-gradient(180deg, transparent 54%, color-mix(in srgb, #c9a67a 14%, transparent) 54.5%, transparent 55%);
+  }
+
+  .kids-studio-generate-message {
+    margin: 0;
+    font-size: clamp(1.35rem, 3.5vw, 1.85rem);
+    font-weight: 900;
+    color: white;
+  }
+
+  .kids-studio-generate-hint {
+    margin: 0.75rem 0 0;
+    font-weight: 600;
+    color: color-mix(in srgb, white 55%, transparent);
+  }
+
+  .kids-studio-book-preview {
+    display: grid;
+    gap: 1.25rem;
+    border-radius: 2rem;
+    overflow: hidden;
+    background: #fffaf3;
+    color: #24324a;
+    box-shadow: var(--shadow-floating);
+  }
+
+  @media (min-width: 800px) {
+    .kids-studio-book-preview {
+      grid-template-columns: 15rem 1fr;
+    }
+  }
+
+  .kids-studio-book-cover {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    min-height: 14rem;
+    padding: 1.5rem;
+    background: linear-gradient(160deg, #dce8f5, #efe4d4 55%, #f6ead6);
+  }
+
+  .kids-studio-book-cover-emoji {
+    font-size: 4rem;
+    line-height: 1;
+  }
+
+  .kids-studio-book-cover-theme {
+    margin: 0;
+    font-size: 0.85rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: color-mix(in srgb, #24324a 65%, transparent);
+  }
+
+  .kids-studio-book-body {
+    padding: clamp(1.25rem, 3vw, 2rem);
+  }
+
+  .kids-studio-book-title {
+    margin: 0 0 0.65rem;
+    font-size: clamp(1.6rem, 3vw, 2.2rem);
+    font-weight: 900;
+    letter-spacing: -0.02em;
+    color: #1f2937;
+  }
+
+  .kids-studio-book-summary {
+    margin: 0 0 1rem;
+    font-weight: 650;
+    color: #5b6577;
+  }
+
+  .kids-studio-book-text {
+    max-height: 22rem;
+    overflow-y: auto;
+    white-space: pre-line;
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 1.12rem;
+    font-weight: 600;
+    line-height: 1.85;
+    color: #24324a;
+    padding-inline-end: 0.35rem;
+  }
+
+  .kids-studio-book-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.65rem;
+    margin-top: 1.25rem;
+    padding-top: 1rem;
+    border-top: 1px solid color-mix(in srgb, #d6cbba 55%, transparent);
+  }
+
+  .kids-studio-history-card {
+    border-radius: 1.5rem;
+    border: 1px solid color-mix(in srgb, white 12%, transparent);
+    background: color-mix(in srgb, white 6%, transparent);
+    padding: 1.15rem;
+    text-align: start;
+    transition: background 0.25s ease, transform 0.25s ease;
+  }
+
+  .kids-studio-history-card:hover {
+    background: color-mix(in srgb, white 10%, transparent);
+  }
+
+  .kids-studio-history-card:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-magic-300) 55%, transparent);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .kids-studio-particle {
+      animation: none;
+    }
+  }
+
   .kids-gallery-atmosphere {
     background:
       radial-gradient(ellipse 50% 35% at 15% 0%, var(--color-kids-glow-sky) 0%, transparent 60%),
