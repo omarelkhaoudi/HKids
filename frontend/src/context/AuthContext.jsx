@@ -112,9 +112,19 @@ export function AuthProvider({ children }) {
     }
   };
 
-  const signup = async (username, password, role = 'admin') => {
+  const signup = async (username, password, role = 'admin', adminSignupCode) => {
     try {
-      const response = await axios.post(buildApiUrl('/auth/signup'), { username, password, role }, {
+      const payload = {
+        username,
+        password,
+        role,
+      };
+      const code = adminSignupCode || import.meta.env.VITE_ADMIN_SIGNUP_CODE;
+      if (code) {
+        payload.admin_signup_code = code;
+      }
+
+      const response = await axios.post(buildApiUrl('/auth/signup'), payload, {
         timeout: 10000
       });
       
@@ -130,6 +140,10 @@ export function AuthProvider({ children }) {
         if (status === 429 && data?.retryAfter) {
           const minutes = Math.max(1, Math.ceil(Number(data.retryAfter) / 60));
           errorMessage = `Trop de tentatives. Réessayez dans environ ${minutes} minute${minutes > 1 ? 's' : ''}.`;
+        } else if (status === 403 && errorMessage === 'Admin signup is not available') {
+          errorMessage = 'L\'inscription admin est désactivée sur ce serveur.';
+        } else if (status === 403 && errorMessage.includes('Code d\'inscription admin')) {
+          errorMessage = 'Code d\'inscription admin invalide.';
         }
       } else if (error.request) {
         errorMessage = 'Aucune réponse du serveur. Vérifiez que le serveur backend est démarré.';
