@@ -4396,11 +4396,11 @@
 
   .kids-reader-sentence {
     border-radius: 0.45rem;
-    padding: 0.05em 0.1em;
+    padding: 0.05em 0.12em;
     transition:
-      background-color 320ms cubic-bezier(0.22, 1, 0.36, 1),
-      box-shadow 320ms cubic-bezier(0.22, 1, 0.36, 1),
-      color 320ms cubic-bezier(0.22, 1, 0.36, 1);
+      background-color 480ms cubic-bezier(0.22, 1, 0.36, 1),
+      box-shadow 480ms cubic-bezier(0.22, 1, 0.36, 1),
+      color 420ms cubic-bezier(0.22, 1, 0.36, 1);
   }
 
   .kids-reader-sentence.is-passed {
@@ -4408,14 +4408,14 @@
   }
 
   .kids-reader-sentence.is-active {
-    background: color-mix(in srgb, #e8c9a0 28%, transparent);
-    box-shadow: inset 0 -0.1em 0 color-mix(in srgb, #d4a574 42%, transparent);
+    background: color-mix(in srgb, #e8c9a0 32%, transparent);
+    box-shadow: inset 0 -0.12em 0 color-mix(in srgb, #d4a574 38%, transparent);
     color: var(--reader-ink);
   }
 
   .kids-reader-shell[data-reader-theme="night"] .kids-reader-sentence.is-active {
-    background: color-mix(in srgb, #c9a67a 18%, transparent);
-    box-shadow: inset 0 -0.1em 0 color-mix(in srgb, #e8c88a 28%, transparent);
+    background: color-mix(in srgb, #c9a67a 20%, transparent);
+    box-shadow: inset 0 -0.12em 0 color-mix(in srgb, #e8c88a 26%, transparent);
   }
 
   .kids-reader-shell.is-read-along .kids-reader-living-art,
@@ -4560,7 +4560,7 @@
     justify-content: center;
     pointer-events: none;
     padding: 0.75rem 1rem max(0.85rem, env(safe-area-inset-bottom));
-    background: linear-gradient(180deg, transparent 0%, color-mix(in srgb, var(--reader-paper) 35%, transparent) 45%, color-mix(in srgb, var(--reader-paper) 72%, transparent) 100%);
+    background: linear-gradient(180deg, transparent 0%, color-mix(in srgb, var(--reader-paper) 28%, transparent) 40%, color-mix(in srgb, var(--reader-paper) 68%, transparent) 100%);
   }
 
   .kids-reader-audio-panel {
@@ -4578,6 +4578,287 @@
       0 2px 8px -4px color-mix(in srgb, var(--reader-ink) 10%, transparent);
     backdrop-filter: blur(16px) saturate(1.08);
     -webkit-backdrop-filter: blur(16px) saturate(1.08);
+  }
+
+  .kids-reader-audio-panel--premium {
+    gap: 0.85rem;
+    padding: 1rem 1.1rem 1.05rem;
+    border-radius: 1.85rem;
+    background:
+      linear-gradient(
+        165deg,
+        color-mix(in srgb, var(--reader-paper) 88%, white) 0%,
+        color-mix(in srgb, var(--reader-paper) 72%, transparent) 100%
+      );
+    border: 1px solid color-mix(in srgb, var(--reader-border) 55%, transparent);
+    box-shadow:
+      0 28px 56px -28px color-mix(in srgb, var(--reader-ink) 28%, transparent),
+      0 10px 24px -18px color-mix(in srgb, var(--reader-ink) 14%, transparent),
+      inset 0 1px 0 color-mix(in srgb, white 55%, transparent);
+    backdrop-filter: blur(22px) saturate(1.12);
+    -webkit-backdrop-filter: blur(22px) saturate(1.12);
+  }
+
+  .kids-reader-timeline {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+    width: 100%;
+  }
+
+  .kids-reader-timeline-meta {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.75rem;
+  }
+
+  .kids-reader-timeline-phase {
+    margin: 0;
+    flex: 1;
+    min-width: 0;
+    font-family: var(--font-body);
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    color: var(--reader-ink);
+    text-align: start;
+  }
+
+  .kids-reader-timeline-remaining {
+    margin: 0;
+    flex-shrink: 0;
+    font-family: var(--font-body);
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    color: var(--reader-muted);
+    white-space: nowrap;
+  }
+
+  .kids-reader-timeline-track {
+    position: relative;
+    height: 0.55rem;
+    border-radius: 999px;
+    overflow: visible;
+  }
+
+  .kids-reader-timeline-paper {
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background:
+      linear-gradient(
+        90deg,
+        color-mix(in srgb, var(--reader-border) 55%, transparent),
+        color-mix(in srgb, #e8d9c4 40%, var(--reader-border)) 50%,
+        color-mix(in srgb, var(--reader-border) 50%, transparent)
+      );
+    box-shadow: inset 0 1px 2px color-mix(in srgb, var(--reader-ink) 6%, transparent);
+  }
+
+  .kids-reader-timeline-fill {
+    position: absolute;
+    inset-block: 0;
+    inset-inline-start: 0;
+    border-radius: inherit;
+    background: linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--reader-progress) 70%, white),
+      var(--reader-progress) 55%,
+      color-mix(in srgb, var(--reader-apricot, #e8b896) 65%, var(--reader-progress))
+    );
+    box-shadow: 0 0 10px color-mix(in srgb, var(--reader-progress) 22%, transparent);
+  }
+
+  .kids-reader-timeline-thumb {
+    position: absolute;
+    top: 50%;
+    width: 0.85rem;
+    height: 0.85rem;
+    margin-top: -0.425rem;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--reader-paper) 92%, white);
+    border: 2px solid color-mix(in srgb, var(--reader-progress) 75%, #c4895a);
+    box-shadow: 0 2px 6px color-mix(in srgb, var(--reader-ink) 14%, transparent);
+    z-index: 2;
+    pointer-events: none;
+    transition: inset-inline-start 380ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .kids-reader-timeline-marker {
+    position: absolute;
+    top: 50%;
+    width: 0.28rem;
+    height: 0.28rem;
+    margin-top: -0.14rem;
+    margin-inline-start: -0.14rem;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--reader-muted) 55%, transparent);
+    z-index: 1;
+    pointer-events: none;
+  }
+
+  .kids-reader-timeline-marker.is-passed {
+    background: color-mix(in srgb, var(--reader-progress) 70%, white);
+  }
+
+  .kids-reader-voice-meta {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.45rem;
+  }
+
+  .kids-reader-voice-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.12rem;
+    padding: 0.45rem 0.6rem;
+    border-radius: 0.85rem;
+    background: color-mix(in srgb, var(--reader-paper) 55%, transparent);
+    border: 1px solid color-mix(in srgb, var(--reader-border) 45%, transparent);
+  }
+
+  .kids-reader-voice-card-label {
+    font-family: var(--font-body);
+    font-size: 0.62rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--reader-muted);
+  }
+
+  .kids-reader-voice-card-value {
+    font-family: var(--font-body);
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--reader-ink);
+    line-height: 1.25;
+  }
+
+  .kids-reader-ambience-toggle {
+    display: grid;
+    place-items: center;
+    min-height: 48px;
+    min-width: 48px;
+    width: 3rem;
+    height: 3rem;
+    border-radius: 999px;
+    border: 1px solid color-mix(in srgb, var(--reader-border) 75%, transparent);
+    background: color-mix(in srgb, var(--reader-paper) 65%, transparent);
+    color: var(--reader-muted);
+    font-size: 1.05rem;
+    transition: background 160ms ease, color 160ms ease, transform 160ms ease;
+  }
+
+  .kids-reader-ambience-toggle:hover,
+  .kids-reader-ambience-toggle.is-open,
+  .kids-reader-ambience-toggle.is-active {
+    color: var(--reader-ink);
+    background: color-mix(in srgb, var(--reader-paper) 92%, white);
+  }
+
+  .kids-reader-ambience-toggle:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary-400) 45%, transparent);
+  }
+
+  .kids-reader-ambience-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+    overflow: hidden;
+    padding-top: 0.1rem;
+  }
+
+  .kids-reader-ambience-title {
+    margin: 0;
+    font-family: var(--font-body);
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--reader-ink);
+  }
+
+  .kids-reader-ambience-hint {
+    margin: 0;
+    font-family: var(--font-body);
+    font-size: 0.7rem;
+    font-weight: 500;
+    line-height: 1.35;
+    color: var(--reader-muted);
+  }
+
+  .kids-reader-ambience-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.4rem;
+  }
+
+  .kids-reader-ambience-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.2rem;
+    min-height: 3.4rem;
+    padding: 0.45rem 0.3rem;
+    border-radius: 0.95rem;
+    border: 1px solid color-mix(in srgb, var(--reader-border) 60%, transparent);
+    background: color-mix(in srgb, var(--reader-paper) 50%, transparent);
+    color: var(--reader-ink);
+    transition: background 180ms ease, border-color 180ms ease, transform 160ms ease;
+  }
+
+  .kids-reader-ambience-card:hover {
+    background: color-mix(in srgb, var(--reader-paper) 88%, white);
+  }
+
+  .kids-reader-ambience-card.is-active {
+    border-color: color-mix(in srgb, var(--reader-progress) 45%, var(--reader-border));
+    background: color-mix(in srgb, var(--reader-progress) 10%, var(--reader-paper));
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--reader-progress) 18%, transparent);
+  }
+
+  .kids-reader-ambience-card:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary-400) 45%, transparent);
+  }
+
+  .kids-reader-ambience-icon {
+    font-size: 1.15rem;
+    line-height: 1;
+  }
+
+  .kids-reader-ambience-label {
+    font-family: var(--font-body);
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+  }
+
+  .kids-reader-ambience-volume {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    font-family: var(--font-body);
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--reader-muted);
+  }
+
+  .kids-reader-ambience-volume input[type="range"] {
+    width: 100%;
+    accent-color: var(--reader-progress);
+  }
+
+  .kids-reader-ambience-volume input[type="range"]:disabled {
+    opacity: 0.4;
+  }
+
+  @media (min-width: 640px) {
+    .kids-reader-voice-meta {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
   }
 
   .kids-reader-primary-row {
@@ -4830,7 +5111,9 @@
       opacity: 0;
     }
     .kids-reader-shell,
-    .kids-reader-progress-fill {
+    .kids-reader-progress-fill,
+    .kids-reader-timeline-fill,
+    .kids-reader-timeline-thumb {
       transition: none;
     }
     .kids-reader-illustration-breathe {
