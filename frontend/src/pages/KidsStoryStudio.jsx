@@ -6,59 +6,73 @@ import { generatedStoriesAPI } from '../api/generatedStories';
 import { useAuth } from '../context/AuthContext';
 import { speakText, stopSpeaking } from '../services/ai/browserTextToSpeech';
 import {
-  BookIcon, ChevronLeftIcon, PlayIcon, PauseIcon, HeartIcon, HistoryIcon, SparklesIcon,
+  BookIcon, ChevronLeftIcon, PlayIcon, PauseIcon, HeartIcon, SparklesIcon,
 } from '../components/Icons';
 import { KidsPageShell } from '../components/kids/KidsPageShell';
-import { Button, Badge, Avatar } from '../components/ui';
+import { Button, Avatar } from '../components/ui';
 import { useReducedMotion } from '../hooks/useReducedMotion';
 import { getHoverMotion, getMotionProps, kidsCardAppear, kidsPageEnter } from '../constants/kidsMotion';
-import { BRAND_HERO_GRADIENT, storyGradientAtIndex } from '../constants/brandTheme';
+import { storyGradientAtIndex } from '../constants/brandTheme';
 
 /** Worlds map to existing API theme ids — presentation only. */
 const WORLD_DEFS = [
-  { id: 'nature', worldKey: 'studioWorld_forest', pictogram: '🌲' },
-  { id: 'aventure', worldKey: 'studioWorld_ocean', pictogram: '🌊' },
-  { id: 'espace', worldKey: 'studioWorld_space', pictogram: '🚀' },
-  { id: 'magie', worldKey: 'studioWorld_magic', pictogram: '✨' },
-  { id: 'dinosaures', worldKey: 'studioWorld_dinosaurs', pictogram: '🦕' },
-  { id: 'animaux', worldKey: 'studioWorld_animals', pictogram: '🦊' },
-  { id: 'amitie', worldKey: 'studioWorld_friendship', pictogram: '💛' },
-  { id: 'princesses', worldKey: 'studioWorld_dreams', pictogram: '🌙' },
+  { id: 'nature', worldKey: 'studioWorld_forest', descKey: 'studioWorldDesc_forest', pictogram: '🌲' },
+  { id: 'ocean', worldKey: 'studioWorld_ocean', descKey: 'studioWorldDesc_ocean', pictogram: '🌊' },
+  { id: 'magie', worldKey: 'studioWorld_magic', descKey: 'studioWorldDesc_magic', pictogram: '✨' },
+  { id: 'dinosaures', worldKey: 'studioWorld_dinosaurs', descKey: 'studioWorldDesc_dinosaurs', pictogram: '🦕' },
+  { id: 'espace', worldKey: 'studioWorld_space', descKey: 'studioWorldDesc_space', pictogram: '🚀' },
+  { id: 'animaux', worldKey: 'studioWorld_animals', descKey: 'studioWorldDesc_animals', pictogram: '🦊' },
+  { id: 'princesses', worldKey: 'studioWorld_dreams', descKey: 'studioWorldDesc_dreams', pictogram: '🌙' },
+  { id: 'amitie', worldKey: 'studioWorld_friendship', descKey: 'studioWorldDesc_friendship', pictogram: '💛' },
+  { id: 'aventure', worldKey: 'studioWorld_adventure', descKey: 'studioWorldDesc_adventure', pictogram: '🗺️' },
 ];
 
 const HERO_DEFS = [
-  { id: 'un dragon', labelKey: 'studioHero_dragon', pictogram: '🐉', traitKey: 'studioHeroTrait_brave' },
-  { id: 'un robot', labelKey: 'studioHero_robot', pictogram: '🤖', traitKey: 'studioHeroTrait_clever' },
-  { id: 'une fée', labelKey: 'studioHero_fairy', pictogram: '🧚', traitKey: 'studioHeroTrait_kind' },
-  { id: 'un chat', labelKey: 'studioHero_cat', pictogram: '🐱', traitKey: 'studioHeroTrait_curious' },
-  { id: 'un pirate', labelKey: 'studioHero_pirate', pictogram: '🏴‍☠️', traitKey: 'studioHeroTrait_bold' },
-  { id: 'un extra-terrestre', labelKey: 'studioHero_alien', pictogram: '👽', traitKey: 'studioHeroTrait_wonder' },
+  { id: 'un petit renard', labelKey: 'studioHero_fox', traitKey: 'studioHeroTrait_curious', pictogram: '🦊' },
+  { id: 'un jeune astronaute', labelKey: 'studioHero_astronaut', traitKey: 'studioHeroTrait_brave', pictogram: '🧑‍🚀' },
+  { id: 'un lapin curieux', labelKey: 'studioHero_rabbit', traitKey: 'studioHeroTrait_curious', pictogram: '🐰' },
+  { id: 'une exploratrice', labelKey: 'studioHero_explorer', traitKey: 'studioHeroTrait_bold', pictogram: '🧭' },
+  { id: 'un petit dragon', labelKey: 'studioHero_tinydragon', traitKey: 'studioHeroTrait_brave', pictogram: '🐉' },
+  { id: 'une tortue sage', labelKey: 'studioHero_turtle', traitKey: 'studioHeroTrait_kind', pictogram: '🐢' },
+  { id: 'un inventeur', labelKey: 'studioHero_inventor', traitKey: 'studioHeroTrait_clever', pictogram: '🔬' },
+  { id: 'une princesse', labelKey: 'studioHero_princess', traitKey: 'studioHeroTrait_kind', pictogram: '👑' },
+  { id: 'un robot', labelKey: 'studioHero_robot', traitKey: 'studioHeroTrait_clever', pictogram: '🤖' },
 ];
 
 /** Adventures map to existing educational_value ids. */
 const ADVENTURE_DEFS = [
-  { id: 'curiosity', adventureKey: 'studioAdventure_treasure', pictogram: '💎', cardId: 'treasure' },
-  { id: 'friendship', adventureKey: 'studioAdventure_friend', pictogram: '🤝', cardId: 'friend' },
-  { id: 'courage', adventureKey: 'studioAdventure_courage', pictogram: '⭐', cardId: 'courage' },
-  { id: 'curiosity', adventureKey: 'studioAdventure_stars', pictogram: '🌌', cardId: 'stars' },
-  { id: 'respect', adventureKey: 'studioAdventure_forest', pictogram: '🌳', cardId: 'forest' },
+  { id: 'curiosity', adventureKey: 'studioAdventure_treasure', descKey: 'studioAdventureDesc_treasure', pictogram: '💎', cardId: 'treasure' },
+  { id: 'friendship', adventureKey: 'studioAdventure_friend', descKey: 'studioAdventureDesc_friend', pictogram: '🤝', cardId: 'friend' },
+  { id: 'curiosity', adventureKey: 'studioAdventure_stars', descKey: 'studioAdventureDesc_stars', pictogram: '🌌', cardId: 'stars' },
+  { id: 'respect', adventureKey: 'studioAdventure_forest', descKey: 'studioAdventureDesc_forest', pictogram: '🌳', cardId: 'forest' },
+  { id: 'curiosity', adventureKey: 'studioAdventure_world', descKey: 'studioAdventureDesc_world', pictogram: '🌍', cardId: 'world' },
+  { id: 'courage', adventureKey: 'studioAdventure_flying', descKey: 'studioAdventureDesc_flying', pictogram: '✈️', cardId: 'flying' },
+  { id: 'respect', adventureKey: 'studioAdventure_kindness', descKey: 'studioAdventureDesc_kindness', pictogram: '💗', cardId: 'kindness' },
 ];
 
-/** Styles map to estimated_duration_minutes. */
-const STYLE_DEFS = [
-  { minutes: 8, styleKey: 'studioStyle_bedtime', pictogram: '🌙' },
-  { minutes: 5, styleKey: 'studioStyle_funny', pictogram: '😄' },
-  { minutes: 8, styleKey: 'studioStyle_educational', pictogram: '📚', styleId: 'educational' },
-  { minutes: 5, styleKey: 'studioStyle_adventure', pictogram: '🗺️', styleId: 'adventure' },
-  { minutes: 12, styleKey: 'studioStyle_calm', pictogram: '🍃' },
+/** Mood is journey UX only — does not alter the generation API payload. */
+const MOOD_DEFS = [
+  { moodId: 'bedtime', moodKey: 'studioMood_bedtime', descKey: 'studioMoodDesc_bedtime', pictogram: '🌙' },
+  { moodId: 'funny', moodKey: 'studioMood_funny', descKey: 'studioMoodDesc_funny', pictogram: '😄' },
+  { moodId: 'educational', moodKey: 'studioMood_educational', descKey: 'studioMoodDesc_educational', pictogram: '📚' },
+  { moodId: 'adventure', moodKey: 'studioMood_adventure', descKey: 'studioMoodDesc_adventure', pictogram: '🗺️' },
+  { moodId: 'calm', moodKey: 'studioMood_calm', descKey: 'studioMoodDesc_calm', pictogram: '🍃' },
+  { moodId: 'mystery', moodKey: 'studioMood_mystery', descKey: 'studioMoodDesc_mystery', pictogram: '🔮' },
+];
+
+const LENGTH_DEFS = [
+  { minutes: 5 },
+  { minutes: 10 },
+  { minutes: 15 },
+  { minutes: 20 },
 ];
 
 const LOADING_MESSAGE_KEYS = [
-  'studioLoading_ideas',
   'studioLoading_world',
   'studioLoading_heroes',
-  'studioLoading_pages',
   'studioLoading_writing',
+  'studioLoading_pages',
+  'studioLoading_illustrations',
   'studioLoading_ready',
 ];
 
@@ -66,8 +80,8 @@ const JOURNEY_STEPS = [
   { id: 1, labelKey: 'studioStep_world' },
   { id: 2, labelKey: 'studioStep_hero' },
   { id: 3, labelKey: 'studioStep_adventure' },
-  { id: 4, labelKey: 'studioStep_style' },
-  { id: 5, labelKey: 'studioStep_create' },
+  { id: 4, labelKey: 'studioStep_mood' },
+  { id: 5, labelKey: 'studioStep_length' },
 ];
 
 function getErrorMessage(error) {
@@ -83,7 +97,7 @@ function storyLanguageToSpeechCode(language) {
   return 'fr-FR';
 }
 
-function SoftParticles({ count = 12, reducedMotion }) {
+function SoftParticles({ count = 10, reducedMotion }) {
   if (reducedMotion) return null;
   return (
     <div className="kids-studio-particles" aria-hidden="true">
@@ -136,6 +150,7 @@ function KidsStoryStudio() {
     () => WORLD_DEFS.map((world, index) => ({
       ...world,
       label: t(world.worldKey),
+      description: t(world.descKey),
       gradient: storyGradientAtIndex(index),
     })),
     [t],
@@ -154,28 +169,29 @@ function KidsStoryStudio() {
     () => ADVENTURE_DEFS.map((item) => ({
       ...item,
       label: t(item.adventureKey),
+      description: t(item.descKey),
       educationalValue: item.id,
     })),
     [t],
   );
 
-  const styles = useMemo(
-    () => STYLE_DEFS.map((item, index) => ({
+  const moods = useMemo(
+    () => MOOD_DEFS.map((item) => ({
       ...item,
-      styleId: item.styleId || `${item.styleKey}-${item.minutes}`,
-      label: t(item.styleKey),
-      uniqueKey: `${item.styleKey}-${index}`,
+      label: t(item.moodKey),
+      description: t(item.descKey),
     })),
     [t],
   );
 
+  const [hasStarted, setHasStarted] = useState(false);
   const [journeyStep, setJourneyStep] = useState(1);
-  const [selectedStyleId, setSelectedStyleId] = useState(styles[0]?.uniqueKey);
-  const [selectedAdventureCard, setSelectedAdventureCard] = useState(adventures[0]?.cardId);
+  const [selectedMoodId, setSelectedMoodId] = useState(MOOD_DEFS[0].moodId);
+  const [selectedAdventureCard, setSelectedAdventureCard] = useState(ADVENTURE_DEFS[0].cardId);
   const [form, setForm] = useState({
     theme: WORLD_DEFS[0].id,
     estimated_duration_minutes: 5,
-    educational_value: 'friendship',
+    educational_value: ADVENTURE_DEFS[0].id,
   });
   const [selectedHero, setSelectedHero] = useState(HERO_DEFS[0].id);
   const [customCharacter, setCustomCharacter] = useState('');
@@ -191,10 +207,12 @@ function KidsStoryStudio() {
   const [saving, setSaving] = useState(false);
   const [speaking, setSpeaking] = useState(false);
   const [error, setError] = useState('');
+  const [readingOpen, setReadingOpen] = useState(false);
 
   const canUseStoryStudio = isStoryAuthor;
   const selectedKidProfile = kidProfiles.find((kid) => String(kid.id) === String(selectedKidProfileId));
   const showBookPreview = Boolean(story) && !loading;
+  const showWelcome = !hasStarted && !showBookPreview && !loading;
 
   useEffect(() => {
     if (!canUseStoryStudio) return undefined;
@@ -242,12 +260,13 @@ function KidsStoryStudio() {
     setLoading(true);
     setLoadingStepIndex(0);
     setJourneyStep(5);
+    setReadingOpen(false);
     stopSpeaking();
     setSpeaking(false);
 
     const stepInterval = setInterval(() => {
       setLoadingStepIndex((curr) => Math.min(curr + 1, LOADING_MESSAGE_KEYS.length - 1));
-    }, 2500);
+    }, 2800);
 
     const finalCharacters = [selectedHero, customCharacter.trim()].filter(Boolean).join(', ');
 
@@ -264,13 +283,14 @@ function KidsStoryStudio() {
       setTimeout(() => {
         setLoading(false);
         setStory(nextStory);
+        setHasStarted(true);
         setHistory((current) => [nextStory, ...current.filter((item) => item.id !== nextStory.id)].slice(0, 30));
         window.scrollTo({ top: 0, behavior: reducedMotion ? 'auto' : 'smooth' });
-      }, reducedMotion ? 200 : 900);
+      }, reducedMotion ? 200 : 1000);
     } catch (err) {
       clearInterval(stepInterval);
       setLoading(false);
-      setJourneyStep(4);
+      setJourneyStep(5);
       console.error('Story generation failed:', err);
       setError(getErrorMessage(err));
     }
@@ -285,6 +305,7 @@ function KidsStoryStudio() {
       return;
     }
     setSpeaking(true);
+    setReadingOpen(true);
     try {
       await speakText(`${selectedStory.title}. ${selectedStory.story_text}`, {
         language: storyLanguageToSpeechCode(selectedStory.language),
@@ -314,16 +335,34 @@ function KidsStoryStudio() {
 
   const startNewStory = () => {
     setStory(null);
+    setReadingOpen(false);
+    setHasStarted(true);
     setJourneyStep(1);
     setError('');
     stopSpeaking();
     setSpeaking(false);
   };
 
+  const editStory = () => {
+    setStory(null);
+    setReadingOpen(false);
+    setHasStarted(true);
+    setJourneyStep(1);
+    setError('');
+    stopSpeaking();
+    setSpeaking(false);
+  };
+
+  const beginCreating = () => {
+    setHasStarted(true);
+    setJourneyStep(1);
+    setError('');
+  };
+
   if (!canUseStoryStudio) {
     return (
       <div className="flex min-h-screen items-center justify-center kids-studio-atmosphere px-4">
-        <div className="max-w-md rounded-32 bg-card p-8 text-center shadow-floating">
+        <div className="kids-studio-gate-card max-w-md p-8 text-center">
           <p className="mb-4 text-xl font-black text-foreground">{t('storyStudioParentOnlyTitle')}</p>
           <p className="mb-6 text-sm font-bold text-foreground-secondary">
             {t('storyStudioParentOnlyDescription')}
@@ -336,24 +375,29 @@ function KidsStoryStudio() {
     );
   }
 
-  return (
-    <KidsPageShell variant="library" world="create" className="kids-studio-atmosphere kids-glow-create text-white">
-      <SoftParticles count={reducedMotion ? 0 : 10} reducedMotion={reducedMotion} />
+  const selectedWorld = worlds.find((w) => w.id === form.theme);
+  const selectedHeroDef = heroes.find((h) => h.id === selectedHero);
+  const selectedAdventure = adventures.find((a) => a.cardId === selectedAdventureCard);
+  const selectedMood = moods.find((m) => m.moodId === selectedMoodId);
 
-      <header className="sticky top-0 z-40 bg-magic-900/80 backdrop-blur-xl border-b border-white/10 shadow-lg px-4 py-4 flex items-center justify-between">
-        <Link to={backPath} className="flex items-center gap-2 group min-h-touch">
-          <div className="p-2 rounded-full bg-card/10 group-hover:bg-card/20 transition-colors">
-            <ChevronLeftIcon className="w-6 h-6 text-white" />
-          </div>
+  return (
+    <KidsPageShell variant="library" world="create" className="kids-studio-atmosphere kids-studio-quiet">
+      <SoftParticles count={reducedMotion ? 0 : 8} reducedMotion={reducedMotion} />
+
+      <header className="kids-studio-topbar">
+        <Link to={backPath} className="kids-studio-back-link min-h-touch">
+          <span className="kids-studio-back-icon">
+            <ChevronLeftIcon className="w-6 h-6" />
+          </span>
           <span className="font-black text-xl tracking-wide hidden sm:block">{t('studioBrand')}</span>
         </Link>
         <div className="flex items-center gap-3">
-          <div className="hidden md:flex items-center gap-2 px-4 py-2 bg-card/10 rounded-full">
-            <Avatar src={null} fallback={selectedKidProfile?.name?.charAt(0) || 'K'} className="w-8 h-8 bg-gradient-to-br from-primary-400 to-secondary-500 text-white font-bold" />
+          <div className="hidden md:flex items-center gap-2 kids-studio-profile-chip">
+            <Avatar src={null} fallback={selectedKidProfile?.name?.charAt(0) || 'K'} className="w-8 h-8 bg-gradient-to-br from-amber-400 to-orange-500 text-white font-bold" />
             <span className="font-bold text-sm">{selectedKidProfile?.name || t('parentChild')}</span>
           </div>
           <Link to={storiesPath}>
-            <Button variant="outline" className="rounded-full bg-card/10 border-none text-white hover:bg-card/20 font-bold shadow-lg min-h-touch">
+            <Button variant="outline" className="kids-studio-ghost-btn rounded-full font-bold min-h-touch">
               <BookIcon className="w-5 h-5 mr-2" /> {t('studioMyStories')}
             </Button>
           </Link>
@@ -371,23 +415,35 @@ function KidsStoryStudio() {
             aria-live="polite"
             aria-busy="true"
           >
-            <SoftParticles count={reducedMotion ? 0 : 14} reducedMotion={reducedMotion} />
+            <SoftParticles count={reducedMotion ? 0 : 12} reducedMotion={reducedMotion} />
+            <div className="kids-studio-generate-glow" aria-hidden="true" />
             <div className="kids-studio-generate-stage">
               <motion.div
                 className="kids-studio-magic-book"
-                animate={reducedMotion ? undefined : { y: [0, -8, 0], rotate: [-1.5, 1.5, -1.5] }}
-                transition={{ duration: 4.5, repeat: Infinity, ease: 'easeInOut' }}
+                animate={reducedMotion ? undefined : { y: [0, -10, 0], rotate: [-1.2, 1.2, -1.2] }}
+                transition={{ duration: 5.2, repeat: Infinity, ease: 'easeInOut' }}
                 aria-hidden="true"
               >
                 <span className="kids-studio-magic-book-spine" />
+                <motion.span
+                  className="kids-studio-magic-book-page kids-studio-magic-book-page--turn"
+                  animate={reducedMotion ? undefined : { rotateY: [0, -18, 0] }}
+                  transition={{ duration: 3.6, repeat: Infinity, ease: 'easeInOut' }}
+                />
                 <span className="kids-studio-magic-book-page" />
               </motion.div>
+              <div className="kids-studio-generate-stars" aria-hidden="true">
+                {[0, 1, 2, 3, 4].map((star) => (
+                  <span key={star} className="kids-studio-generate-star" style={{ animationDelay: `${star * 0.55}s` }} />
+                ))}
+              </div>
               <AnimatePresence mode="wait">
                 <motion.h2
                   key={loadingStepIndex}
                   initial={reducedMotion ? false : { y: 12, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   exit={reducedMotion ? undefined : { y: -10, opacity: 0 }}
+                  transition={{ duration: reducedMotion ? 0.12 : 0.45, ease: [0.22, 1, 0.36, 1] }}
                   className="kids-studio-generate-message"
                 >
                   {t(LOADING_MESSAGE_KEYS[loadingStepIndex])}
@@ -400,22 +456,68 @@ function KidsStoryStudio() {
       </AnimatePresence>
 
       <main className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 py-8 pb-28">
-        <motion.div {...getMotionProps(reducedMotion, kidsPageEnter)} className="text-center mb-space-24">
-          <p className="kids-studio-kicker">
-            <SparklesIcon className="w-4 h-4" aria-hidden="true" />
-            {t('studioKicker')}
-          </p>
-          <h1 className="kids-studio-title">{t('studioTitle')}</h1>
-          <p className="kids-studio-subtitle">{t('storyStudioParentSubtitle')}</p>
-          {error ? (
-            <div className="mt-6 inline-block bg-danger-500/20 border border-danger-500/50 text-danger-200 px-6 py-3 rounded-full font-bold" role="alert">
+        {error ? (
+          <div className="mb-6 text-center">
+            <div className="kids-studio-error inline-block px-6 py-3" role="alert">
               {error}
             </div>
-          ) : null}
-        </motion.div>
+          </div>
+        ) : null}
 
-        {!showBookPreview && (
+        {showWelcome && (
+          <motion.section
+            {...getMotionProps(reducedMotion, kidsPageEnter)}
+            className="kids-studio-welcome"
+            aria-labelledby="studio-welcome-heading"
+          >
+            <div className="kids-studio-welcome-art" aria-hidden="true">
+              <span className="kids-studio-welcome-book" />
+              <span className="kids-studio-welcome-orb kids-studio-welcome-orb--a" />
+              <span className="kids-studio-welcome-orb kids-studio-welcome-orb--b" />
+            </div>
+            <p className="kids-studio-kicker">
+              <SparklesIcon className="w-4 h-4" aria-hidden="true" />
+              {t('studioBrand')}
+            </p>
+            <h1 id="studio-welcome-heading" className="kids-studio-welcome-title">
+              {t('studioWelcomeTitle')}
+            </h1>
+            <p className="kids-studio-welcome-subtitle">{t('studioWelcomeSubtitle')}</p>
+            <motion.button
+              type="button"
+              {...getHoverMotion(reducedMotion, { whileHover: { scale: 1.02 }, whileTap: { scale: 0.98 } })}
+              onClick={beginCreating}
+              className="kids-studio-welcome-cta"
+            >
+              {t('studioStartCreating')}
+            </motion.button>
+            {history.length > 0 ? (
+              <button
+                type="button"
+                className="kids-studio-welcome-secondary"
+                onClick={() => {
+                  setStory(history[0]);
+                  setHasStarted(true);
+                  window.scrollTo({ top: 0, behavior: reducedMotion ? 'auto' : 'smooth' });
+                }}
+              >
+                {t('studioContinueEditing')}
+              </button>
+            ) : null}
+          </motion.section>
+        )}
+
+        {!showWelcome && !showBookPreview && (
           <>
+            <motion.div {...getMotionProps(reducedMotion, kidsPageEnter)} className="text-center mb-space-20">
+              <p className="kids-studio-kicker">
+                <SparklesIcon className="w-4 h-4" aria-hidden="true" />
+                {t('studioKicker')}
+              </p>
+              <h1 className="kids-studio-title">{t('studioTitle')}</h1>
+              <p className="kids-studio-subtitle">{t('storyStudioParentSubtitle')}</p>
+            </motion.div>
+
             <JourneyProgress step={journeyStep} t={t} />
 
             <AnimatePresence mode="wait">
@@ -443,6 +545,7 @@ function KidsStoryStudio() {
                           <span className={`kids-studio-world-glow bg-gradient-to-br ${world.gradient}`} aria-hidden="true" />
                           <span className="kids-studio-world-emoji" aria-hidden="true">{world.pictogram}</span>
                           <span className="kids-studio-world-label">{world.label}</span>
+                          <span className="kids-studio-card-desc">{world.description}</span>
                         </motion.button>
                       );
                     })}
@@ -471,7 +574,9 @@ function KidsStoryStudio() {
                           aria-pressed={active}
                           className={`kids-studio-hero-card ${active ? 'is-active' : ''}`}
                         >
-                          <span className="kids-studio-hero-emoji" aria-hidden="true">{hero.pictogram}</span>
+                          <span className="kids-studio-hero-portrait" aria-hidden="true">
+                            <span className="kids-studio-hero-emoji">{hero.pictogram}</span>
+                          </span>
                           <span className="kids-studio-hero-label">{hero.label}</span>
                           <span className="kids-studio-hero-trait">{hero.trait}</span>
                         </motion.button>
@@ -516,6 +621,7 @@ function KidsStoryStudio() {
                         >
                           <span className="kids-studio-adventure-emoji" aria-hidden="true">{adventure.pictogram}</span>
                           <span className="kids-studio-adventure-label">{adventure.label}</span>
+                          <span className="kids-studio-card-desc">{adventure.description}</span>
                         </motion.button>
                       );
                     })}
@@ -525,31 +631,28 @@ function KidsStoryStudio() {
 
               {journeyStep === 4 && (
                 <motion.section
-                  key="style"
+                  key="mood"
                   {...getMotionProps(reducedMotion, kidsCardAppear)}
                   className="kids-studio-step-panel"
-                  aria-labelledby="studio-style-heading"
+                  aria-labelledby="studio-mood-heading"
                 >
-                  <h2 id="studio-style-heading" className="kids-studio-step-title">{t('studioChooseStyle')}</h2>
-                  <p className="kids-studio-step-desc">{t('studioChooseStyleDesc')}</p>
+                  <h2 id="studio-mood-heading" className="kids-studio-step-title">{t('studioChooseMood')}</h2>
+                  <p className="kids-studio-step-desc">{t('studioChooseMoodDesc')}</p>
                   <div className="kids-studio-style-grid">
-                    {styles.map((style) => {
-                      const active = selectedStyleId === style.uniqueKey;
+                    {moods.map((mood) => {
+                      const active = selectedMoodId === mood.moodId;
                       return (
                         <motion.button
-                          key={style.uniqueKey}
+                          key={mood.moodId}
                           type="button"
                           {...getHoverMotion(reducedMotion)}
-                          onClick={() => {
-                            setSelectedStyleId(style.uniqueKey);
-                            patchForm('estimated_duration_minutes', style.minutes);
-                          }}
+                          onClick={() => setSelectedMoodId(mood.moodId)}
                           aria-pressed={active}
                           className={`kids-studio-style-card ${active ? 'is-active' : ''}`}
                         >
-                          <span className="kids-studio-style-emoji" aria-hidden="true">{style.pictogram}</span>
-                          <span className="kids-studio-style-label">{style.label}</span>
-                          <span className="kids-studio-style-meta">{t('studioMinutes', { minutes: style.minutes })}</span>
+                          <span className="kids-studio-style-emoji" aria-hidden="true">{mood.pictogram}</span>
+                          <span className="kids-studio-style-label">{mood.label}</span>
+                          <span className="kids-studio-card-desc">{mood.description}</span>
                         </motion.button>
                       );
                     })}
@@ -559,19 +662,40 @@ function KidsStoryStudio() {
 
               {journeyStep === 5 && !loading && (
                 <motion.section
-                  key="ready"
+                  key="length"
                   {...getMotionProps(reducedMotion, kidsCardAppear)}
                   className="kids-studio-step-panel kids-studio-ready-panel"
-                  aria-labelledby="studio-ready-heading"
+                  aria-labelledby="studio-length-heading"
                 >
-                  <h2 id="studio-ready-heading" className="kids-studio-step-title">{t('studioReadyTitle')}</h2>
-                  <p className="kids-studio-step-desc">{t('studioReadyDesc')}</p>
+                  <h2 id="studio-length-heading" className="kids-studio-step-title">{t('studioChooseLength')}</h2>
+                  <p className="kids-studio-step-desc">{t('studioChooseLengthDesc')}</p>
+                  <div className="kids-studio-length-grid" role="group" aria-label={t('studioChooseLength')}>
+                    {LENGTH_DEFS.map((length) => {
+                      const active = form.estimated_duration_minutes === length.minutes;
+                      return (
+                        <motion.button
+                          key={length.minutes}
+                          type="button"
+                          {...getHoverMotion(reducedMotion)}
+                          onClick={() => patchForm('estimated_duration_minutes', length.minutes)}
+                          aria-pressed={active}
+                          className={`kids-studio-length-card ${active ? 'is-active' : ''}`}
+                        >
+                          <span className="kids-studio-length-value">{length.minutes}</span>
+                          <span className="kids-studio-length-unit">{t('studioMinutesShort')}</span>
+                        </motion.button>
+                      );
+                    })}
+                  </div>
+
                   <ul className="kids-studio-ready-summary">
-                    <li>{t('studioReadyWorld', { world: worlds.find((w) => w.id === form.theme)?.label || form.theme })}</li>
-                    <li>{t('studioReadyHero', { hero: heroes.find((h) => h.id === selectedHero)?.label || selectedHero })}</li>
-                    <li>{t('studioReadyAdventure', { adventure: adventures.find((a) => a.cardId === selectedAdventureCard)?.label || form.educational_value })}</li>
-                    <li>{t('studioReadyStyle', { style: styles.find((s) => s.uniqueKey === selectedStyleId)?.label || form.estimated_duration_minutes })}</li>
+                    <li>{t('studioReadyWorld', { world: selectedWorld?.label || form.theme })}</li>
+                    <li>{t('studioReadyHero', { hero: selectedHeroDef?.label || selectedHero })}</li>
+                    <li>{t('studioReadyAdventure', { adventure: selectedAdventure?.label || form.educational_value })}</li>
+                    <li>{t('studioReadyMood', { mood: selectedMood?.label || selectedMoodId })}</li>
+                    <li>{t('studioReadyLength', { minutes: form.estimated_duration_minutes })}</li>
                   </ul>
+
                   <motion.button
                     type="button"
                     {...getHoverMotion(reducedMotion, { whileHover: { scale: 1.02 }, whileTap: { scale: 0.98 } })}
@@ -579,7 +703,7 @@ function KidsStoryStudio() {
                     disabled={loading || profilesLoading || !selectedKidProfileId}
                     className="kids-studio-generate-cta"
                   >
-                    <span className={`kids-studio-generate-cta-bg bg-gradient-to-r ${BRAND_HERO_GRADIENT}`} aria-hidden="true" />
+                    <span className="kids-studio-generate-cta-bg" aria-hidden="true" />
                     <span className="kids-studio-generate-cta-label">
                       <SparklesIcon className="w-7 h-7" aria-hidden="true" />
                       {t('storyStudioGenerateAction')}
@@ -594,7 +718,7 @@ function KidsStoryStudio() {
                 <Button
                   type="button"
                   variant="outline"
-                  className="rounded-full bg-card/10 border-none text-white hover:bg-card/20 font-bold min-h-touch"
+                  className="kids-studio-ghost-btn rounded-full font-bold min-h-touch"
                   onClick={goBack}
                   disabled={journeyStep === 1}
                 >
@@ -616,7 +740,7 @@ function KidsStoryStudio() {
                 <Button
                   type="button"
                   variant="outline"
-                  className="rounded-full bg-card/10 border-none text-white hover:bg-card/20 font-bold min-h-touch"
+                  className="kids-studio-ghost-btn rounded-full font-bold min-h-touch"
                   onClick={goBack}
                 >
                   {t('studioBack')}
@@ -630,42 +754,54 @@ function KidsStoryStudio() {
           <motion.section
             id="story-result"
             {...getMotionProps(reducedMotion, kidsCardAppear)}
-            className="kids-studio-book-preview"
+            className="kids-studio-book-preview kids-studio-book-preview--premium"
             aria-labelledby="studio-book-title"
           >
             <div className="kids-studio-book-cover" aria-hidden="true">
-              <span className="kids-studio-book-cover-emoji">📖</span>
+              <span className="kids-studio-book-cover-glow" />
+              <span className="kids-studio-book-cover-emoji">{selectedWorld?.pictogram || '📖'}</span>
               <p className="kids-studio-book-cover-theme">{story.theme}</p>
             </div>
             <div className="kids-studio-book-body">
-              <div className="flex flex-wrap gap-2 mb-space-16">
-                <Badge variant="soft" className="bg-card/70 font-black">{story.theme}</Badge>
-                <Badge variant="soft" className="bg-card/70 font-black">
-                  {t('studioMinutes', { minutes: story.estimated_duration_minutes || form.estimated_duration_minutes })}
-                </Badge>
-                <Badge variant="soft" className="bg-card/70 font-black">{story.educational_value}</Badge>
+              <div className="kids-studio-book-meta">
+                <span>{story.theme}</span>
+                <span>{t('studioMinutes', { minutes: story.estimated_duration_minutes || form.estimated_duration_minutes })}</span>
                 {selectedKidProfile?.age ? (
-                  <Badge variant="soft" className="bg-card/70 font-black">
-                    {t('studioAgeLabel', { age: selectedKidProfile.age })}
-                  </Badge>
+                  <span>{t('studioAgeLabel', { age: selectedKidProfile.age })}</span>
                 ) : null}
               </div>
               <h2 id="studio-book-title" className="kids-studio-book-title">{story.title}</h2>
               {story.summary ? <p className="kids-studio-book-summary">{story.summary}</p> : null}
-              <div className="kids-studio-book-text">{story.story_text}</div>
+
+              {readingOpen ? (
+                <div className="kids-studio-book-text">{story.story_text}</div>
+              ) : (
+                <p className="kids-studio-book-teaser">{t('studioPreviewTeaser')}</p>
+              )}
+
               <div className="kids-studio-book-actions">
                 <Button
-                  onClick={() => handleSpeak(story)}
+                  onClick={() => {
+                    if (!readingOpen) setReadingOpen(true);
+                    handleSpeak(story);
+                  }}
                   className={`flex-1 rounded-2xl py-4 font-black shadow-lg min-h-touch ${speaking ? 'bg-rose-500 text-white hover:bg-rose-600' : 'bg-primary-500 text-white hover:bg-primary-600'}`}
                 >
                   {speaking ? <PauseIcon className="w-5 h-5 mr-2" /> : <PlayIcon className="w-5 h-5 mr-2" />}
                   {speaking ? t('pause') : t('studioStartReading')}
                 </Button>
                 <Button
-                  onClick={handleSave}
-                  disabled={story.saved || saving}
+                  onClick={editStory}
                   variant="outline"
                   className="px-6 rounded-2xl font-black min-h-touch"
+                >
+                  {t('studioEditStory')}
+                </Button>
+                <Button
+                  onClick={handleSave}
+                  disabled={story.saved || saving}
+                  variant="ghost"
+                  className="rounded-2xl font-bold min-h-touch"
                   aria-label={t('studioSaveStory')}
                 >
                   <HeartIcon className="w-5 h-5" filled={story.saved} />
@@ -682,32 +818,40 @@ function KidsStoryStudio() {
           </motion.section>
         )}
 
-        {history.length > 0 && !loading && (
-          <section className="mt-space-32" aria-labelledby="studio-history-heading">
-            <h2 id="studio-history-heading" className="text-2xl font-black mb-space-16 flex items-center gap-3">
-              <HistoryIcon className="w-7 h-7 text-white/70" aria-hidden="true" />
-              {t('studioHistoryTitle')}
-            </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-space-16">
-              {history.slice(0, 6).map((item) => (
-                <motion.button
-                  key={item.id}
-                  type="button"
-                  {...getHoverMotion(reducedMotion)}
-                  onClick={() => {
-                    setStory(item);
-                    window.scrollTo({ top: 0, behavior: reducedMotion ? 'auto' : 'smooth' });
-                  }}
-                  className="kids-studio-history-card"
-                >
-                  <div className="flex justify-between items-start mb-3 gap-2">
-                    <h3 className="font-black text-lg text-white line-clamp-2 text-start">{item.title}</h3>
-                    {item.saved ? <HeartIcon className="w-5 h-5 text-rose-400 shrink-0" filled /> : null}
-                  </div>
-                  <p className="text-sm font-medium text-white/55 line-clamp-2 mb-3 text-start">{item.summary || item.story_text}</p>
-                  <Badge variant="soft" className="bg-card/10 text-white/80 text-xs font-bold">{item.theme}</Badge>
-                </motion.button>
-              ))}
+        {history.length > 0 && !loading && (showWelcome || showBookPreview || hasStarted) && (
+          <section className="kids-studio-bookshelf" aria-labelledby="studio-history-heading">
+            <div className="kids-studio-bookshelf-header">
+              <h2 id="studio-history-heading" className="kids-studio-bookshelf-title">
+                {t('studioHistoryTitle')}
+              </h2>
+              <p className="kids-studio-bookshelf-subtitle">{t('studioHistorySubtitle')}</p>
+            </div>
+            <div className="kids-studio-shelf">
+              <div className="kids-studio-shelf-board" aria-hidden="true" />
+              <div className="kids-studio-shelf-grid">
+                {history.slice(0, 8).map((item, index) => (
+                  <motion.button
+                    key={item.id}
+                    type="button"
+                    {...getHoverMotion(reducedMotion)}
+                    onClick={() => {
+                      setStory(item);
+                      setReadingOpen(false);
+                      setHasStarted(true);
+                      window.scrollTo({ top: 0, behavior: reducedMotion ? 'auto' : 'smooth' });
+                    }}
+                    className="kids-studio-shelf-book"
+                    style={{ '--shelf-tint': `hsl(${28 + (index * 18) % 40} 42% 62%)` }}
+                  >
+                    <span className="kids-studio-shelf-cover">
+                      <span className="kids-studio-shelf-cover-mark" aria-hidden="true">📖</span>
+                      {item.saved ? <HeartIcon className="kids-studio-shelf-heart w-4 h-4" filled /> : null}
+                    </span>
+                    <span className="kids-studio-shelf-title">{item.title}</span>
+                    <span className="kids-studio-shelf-meta">{item.theme}</span>
+                  </motion.button>
+                ))}
+              </div>
             </div>
           </section>
         )}

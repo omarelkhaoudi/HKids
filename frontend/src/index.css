@@ -2090,9 +2090,193 @@
   }
 
   .kids-studio-atmosphere {
+    --studio-ink: #2c2419;
+    --studio-muted: #6b5e4e;
+    --studio-paper: #f7f1e8;
+    --studio-panel: color-mix(in srgb, #fffaf3 88%, transparent);
+    --studio-border: color-mix(in srgb, #c9b79a 45%, transparent);
+    --studio-accent: #c4895a;
     background:
-      radial-gradient(ellipse 60% 45% at 20% 0%, var(--color-kids-glow-violet) 0%, transparent 60%),
-      linear-gradient(165deg, #2a2150 0%, #1a1433 50%, #241a42 100%);
+      radial-gradient(ellipse 70% 50% at 15% 0%, color-mix(in srgb, #e8c9a0 28%, transparent) 0%, transparent 58%),
+      radial-gradient(ellipse 55% 40% at 90% 20%, color-mix(in srgb, #b8d4c8 18%, transparent) 0%, transparent 55%),
+      linear-gradient(165deg, #f8f2ea 0%, #efe6da 48%, #f4ebe0 100%);
+    color: var(--studio-ink);
+  }
+
+  .kids-studio-quiet.kids-glow-create,
+  .kids-studio-atmosphere.kids-glow-create {
+    background:
+      radial-gradient(ellipse 70% 50% at 15% 0%, color-mix(in srgb, #e8c9a0 28%, transparent) 0%, transparent 58%),
+      radial-gradient(ellipse 55% 40% at 90% 20%, color-mix(in srgb, #b8d4c8 18%, transparent) 0%, transparent 55%),
+      linear-gradient(165deg, #f8f2ea 0%, #efe6da 48%, #f4ebe0 100%);
+  }
+
+  .kids-studio-topbar {
+    position: sticky;
+    top: 0;
+    z-index: 40;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1rem 1rem;
+    background: color-mix(in srgb, var(--studio-paper) 82%, transparent);
+    border-bottom: 1px solid var(--studio-border);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+  }
+
+  .kids-studio-back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--studio-ink);
+  }
+
+  .kids-studio-back-icon {
+    display: grid;
+    place-items: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 999px;
+    background: color-mix(in srgb, white 70%, transparent);
+    border: 1px solid var(--studio-border);
+  }
+
+  .kids-studio-profile-chip {
+    padding: 0.35rem 0.85rem;
+    border-radius: 999px;
+    background: color-mix(in srgb, white 65%, transparent);
+    border: 1px solid var(--studio-border);
+    color: var(--studio-ink);
+  }
+
+  .kids-studio-ghost-btn {
+    background: color-mix(in srgb, white 70%, transparent) !important;
+    border: 1px solid var(--studio-border) !important;
+    color: var(--studio-ink) !important;
+  }
+
+  .kids-studio-gate-card {
+    border-radius: 2rem;
+    background: var(--studio-panel);
+    border: 1px solid var(--studio-border);
+    box-shadow: 0 20px 48px -28px color-mix(in srgb, var(--studio-ink) 28%, transparent);
+  }
+
+  .kids-studio-error {
+    border-radius: 999px;
+    background: color-mix(in srgb, #e07a5f 14%, white);
+    border: 1px solid color-mix(in srgb, #e07a5f 35%, transparent);
+    color: #8a3b2a;
+    font-weight: 700;
+  }
+
+  .kids-studio-welcome {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: clamp(2rem, 6vw, 4rem) 1rem 2rem;
+    min-height: min(72vh, 36rem);
+    justify-content: center;
+  }
+
+  .kids-studio-welcome-art {
+    position: relative;
+    width: min(16rem, 70vw);
+    height: 11rem;
+    margin-bottom: 1.75rem;
+  }
+
+  .kids-studio-welcome-book {
+    position: absolute;
+    left: 50%;
+    top: 1.25rem;
+    width: 7.5rem;
+    height: 9.5rem;
+    transform: translateX(-50%);
+    border-radius: 0.55rem 1rem 1rem 0.55rem;
+    background: linear-gradient(145deg, #f6ead6, #dfc4a0);
+    box-shadow:
+      0 22px 40px -20px color-mix(in srgb, var(--studio-ink) 35%, transparent),
+      inset -10px 0 0 color-mix(in srgb, #c9a67a 30%, transparent);
+  }
+
+  .kids-studio-welcome-orb {
+    position: absolute;
+    border-radius: 999px;
+    filter: blur(1px);
+    opacity: 0.55;
+  }
+
+  .kids-studio-welcome-orb--a {
+    width: 4.5rem;
+    height: 4.5rem;
+    left: 0.5rem;
+    top: 0.5rem;
+    background: color-mix(in srgb, #e8c9a0 55%, transparent);
+  }
+
+  .kids-studio-welcome-orb--b {
+    width: 3.25rem;
+    height: 3.25rem;
+    right: 0.75rem;
+    bottom: 0.5rem;
+    background: color-mix(in srgb, #b8d4c8 50%, transparent);
+  }
+
+  .kids-studio-welcome-title {
+    margin: 0;
+    max-width: 18ch;
+    font-family: var(--font-display, inherit);
+    font-size: clamp(2.1rem, 5.5vw, 3.4rem);
+    font-weight: 900;
+    letter-spacing: -0.03em;
+    line-height: 1.08;
+    color: var(--studio-ink);
+  }
+
+  .kids-studio-welcome-subtitle {
+    margin: 0.9rem auto 0;
+    max-width: 28rem;
+    font-size: 1.05rem;
+    font-weight: 600;
+    line-height: 1.5;
+    color: var(--studio-muted);
+  }
+
+  .kids-studio-welcome-cta {
+    margin-top: 1.75rem;
+    min-height: 3.75rem;
+    min-width: min(100%, 18rem);
+    padding: 0.9rem 1.75rem;
+    border: none;
+    border-radius: 999px;
+    background: linear-gradient(135deg, #d4a574, #c4895a 55%, #b97848);
+    color: #fffaf3;
+    font-size: 1.15rem;
+    font-weight: 800;
+    box-shadow: 0 16px 32px -18px color-mix(in srgb, #c4895a 70%, transparent);
+    cursor: pointer;
+  }
+
+  .kids-studio-welcome-cta:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px color-mix(in srgb, #c4895a 45%, transparent);
+  }
+
+  .kids-studio-welcome-secondary {
+    margin-top: 0.85rem;
+    background: none;
+    border: none;
+    color: var(--studio-muted);
+    font-weight: 700;
+    font-size: 0.95rem;
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+    cursor: pointer;
+    min-height: 2.75rem;
   }
 
   .kids-listen-atmosphere {
@@ -2176,14 +2360,14 @@
     width: 5px;
     height: 5px;
     border-radius: 50%;
-    background: color-mix(in srgb, white 35%, transparent);
-    opacity: 0.25;
+    background: color-mix(in srgb, var(--studio-accent, #c4895a) 45%, white);
+    opacity: 0.22;
     animation: kids-studio-particle-float 9s ease-in-out infinite;
   }
 
   @keyframes kids-studio-particle-float {
-    0%, 100% { transform: translate3d(0, 0, 0); opacity: 0.12; }
-    50% { transform: translate3d(4px, -12px, 0); opacity: 0.35; }
+    0%, 100% { transform: translate3d(0, 0, 0); opacity: 0.1; }
+    50% { transform: translate3d(4px, -12px, 0); opacity: 0.3; }
   }
 
   .kids-studio-kicker {
@@ -2193,19 +2377,20 @@
     margin: 0 0 0.85rem;
     padding: 0.45rem 0.95rem;
     border-radius: 999px;
-    border: 1px solid color-mix(in srgb, white 18%, transparent);
-    background: color-mix(in srgb, white 8%, transparent);
+    border: 1px solid var(--studio-border, color-mix(in srgb, #c9b79a 45%, transparent));
+    background: color-mix(in srgb, white 55%, transparent);
     font-size: 0.85rem;
     font-weight: 700;
-    color: color-mix(in srgb, white 85%, transparent);
+    color: var(--studio-muted, #6b5e4e);
   }
 
   .kids-studio-title {
     margin: 0;
-    font-size: clamp(2rem, 5vw, 3.25rem);
+    font-size: clamp(2rem, 5vw, 3.1rem);
     font-weight: 900;
     letter-spacing: -0.03em;
     line-height: 1.1;
+    color: var(--studio-ink, #2c2419);
   }
 
   .kids-studio-subtitle {
@@ -2213,7 +2398,7 @@
     max-width: 36rem;
     font-size: 1.05rem;
     font-weight: 600;
-    color: color-mix(in srgb, white 65%, transparent);
+    color: var(--studio-muted, #6b5e4e);
   }
 
   .kids-studio-journey-progress {
@@ -2237,16 +2422,17 @@
     gap: 0.35rem;
     padding: 0.65rem 0.35rem;
     border-radius: 1.25rem;
-    border: 1px solid color-mix(in srgb, white 12%, transparent);
-    background: color-mix(in srgb, white 4%, transparent);
+    border: 1px solid var(--studio-border);
+    background: color-mix(in srgb, white 45%, transparent);
     opacity: 0.55;
+    color: var(--studio-ink);
   }
 
   .kids-studio-journey-dot.is-active,
   .kids-studio-journey-dot.is-done {
     opacity: 1;
-    border-color: color-mix(in srgb, var(--color-magic-300) 55%, transparent);
-    background: color-mix(in srgb, var(--color-magic-500) 22%, transparent);
+    border-color: color-mix(in srgb, var(--studio-accent) 45%, var(--studio-border));
+    background: color-mix(in srgb, #e8c9a0 22%, white);
   }
 
   .kids-studio-journey-dot-num {
@@ -2255,7 +2441,7 @@
     display: grid;
     place-items: center;
     border-radius: 999px;
-    background: color-mix(in srgb, white 12%, transparent);
+    background: color-mix(in srgb, white 70%, transparent);
     font-size: 0.8rem;
     font-weight: 800;
   }
@@ -2264,28 +2450,30 @@
     font-size: 0.68rem;
     font-weight: 700;
     text-align: center;
-    color: color-mix(in srgb, white 80%, transparent);
+    color: var(--studio-muted);
   }
 
   .kids-studio-step-panel {
     border-radius: 2rem;
     padding: clamp(1.25rem, 3vw, 2rem);
-    background: color-mix(in srgb, white 6%, transparent);
-    border: 1px solid color-mix(in srgb, white 12%, transparent);
+    background: var(--studio-panel);
+    border: 1px solid var(--studio-border);
     backdrop-filter: blur(14px);
+    box-shadow: 0 18px 40px -28px color-mix(in srgb, var(--studio-ink) 22%, transparent);
   }
 
   .kids-studio-step-title {
     margin: 0;
     font-size: clamp(1.4rem, 3vw, 1.85rem);
     font-weight: 900;
+    color: var(--studio-ink);
   }
 
   .kids-studio-step-desc {
     margin: 0.5rem 0 1.35rem;
     font-size: 1rem;
     font-weight: 600;
-    color: color-mix(in srgb, white 62%, transparent);
+    color: var(--studio-muted);
   }
 
   .kids-studio-world-grid {
@@ -2296,41 +2484,49 @@
 
   @media (min-width: 640px) {
     .kids-studio-world-grid {
-      grid-template-columns: repeat(4, minmax(0, 1fr));
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+
+  @media (min-width: 980px) {
+    .kids-studio-world-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
     }
   }
 
   .kids-studio-world-card {
     position: relative;
     overflow: hidden;
-    min-height: 8.5rem;
+    min-height: 9.5rem;
     border-radius: 1.5rem;
-    border: 2px solid color-mix(in srgb, white 10%, transparent);
-    background: color-mix(in srgb, white 5%, transparent);
+    border: 2px solid color-mix(in srgb, var(--studio-border) 80%, transparent);
+    background: color-mix(in srgb, white 72%, transparent);
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 0.55rem;
-    padding: 1rem;
-    transition: border-color 0.25s ease, transform 0.25s ease, background 0.25s ease;
+    gap: 0.35rem;
+    padding: 1rem 0.85rem;
+    text-align: center;
+    color: var(--studio-ink);
+    transition: border-color 0.25s ease, transform 0.25s ease, background 0.25s ease, box-shadow 0.25s ease;
   }
 
   .kids-studio-world-card.is-active {
-    border-color: color-mix(in srgb, white 70%, transparent);
-    background: color-mix(in srgb, white 12%, transparent);
-    box-shadow: var(--shadow-floating);
+    border-color: color-mix(in srgb, var(--studio-accent) 65%, transparent);
+    background: color-mix(in srgb, #fffaf3 92%, transparent);
+    box-shadow: 0 14px 28px -18px color-mix(in srgb, var(--studio-ink) 28%, transparent);
   }
 
   .kids-studio-world-card:focus-visible {
     outline: none;
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-magic-300) 55%, transparent);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--studio-accent) 45%, transparent);
   }
 
   .kids-studio-world-glow {
     position: absolute;
     inset: 0;
-    opacity: 0.22;
+    opacity: 0.18;
     pointer-events: none;
   }
 
@@ -2352,6 +2548,17 @@
     z-index: 1;
     font-size: 0.95rem;
     font-weight: 800;
+    color: var(--studio-ink);
+  }
+
+  .kids-studio-card-desc {
+    position: relative;
+    z-index: 1;
+    font-size: 0.72rem;
+    font-weight: 600;
+    line-height: 1.3;
+    color: var(--studio-muted);
+    max-width: 14ch;
   }
 
   .kids-studio-hero-grid {
@@ -2369,39 +2576,52 @@
   .kids-studio-hero-card,
   .kids-studio-adventure-card,
   .kids-studio-style-card {
-    min-height: 8rem;
+    min-height: 9rem;
     border-radius: 1.5rem;
-    border: 2px solid color-mix(in srgb, white 10%, transparent);
-    background: color-mix(in srgb, white 5%, transparent);
+    border: 2px solid color-mix(in srgb, var(--studio-border) 80%, transparent);
+    background: color-mix(in srgb, white 72%, transparent);
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 0.4rem;
+    gap: 0.35rem;
     padding: 1rem;
     text-align: center;
-    transition: border-color 0.25s ease, background 0.25s ease;
+    color: var(--studio-ink);
+    transition: border-color 0.25s ease, background 0.25s ease, box-shadow 0.25s ease;
+  }
+
+  .kids-studio-hero-portrait {
+    display: grid;
+    place-items: center;
+    width: 4.25rem;
+    height: 4.25rem;
+    border-radius: 999px;
+    background: linear-gradient(160deg, #f6ead6, #e8d4b8);
+    border: 1px solid color-mix(in srgb, #c9a67a 35%, transparent);
+    margin-bottom: 0.15rem;
   }
 
   .kids-studio-hero-card.is-active,
   .kids-studio-adventure-card.is-active,
   .kids-studio-style-card.is-active {
-    border-color: color-mix(in srgb, var(--color-magic-300) 80%, white);
-    background: color-mix(in srgb, var(--color-magic-500) 28%, transparent);
+    border-color: color-mix(in srgb, var(--studio-accent) 65%, transparent);
+    background: color-mix(in srgb, #e8c9a0 16%, white);
+    box-shadow: 0 12px 24px -18px color-mix(in srgb, var(--studio-ink) 24%, transparent);
   }
 
   .kids-studio-hero-card:focus-visible,
   .kids-studio-adventure-card:focus-visible,
   .kids-studio-style-card:focus-visible {
     outline: none;
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-magic-300) 55%, transparent);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--studio-accent) 45%, transparent);
   }
 
   .kids-studio-hero-trait,
   .kids-studio-style-meta {
     font-size: 0.75rem;
     font-weight: 600;
-    color: color-mix(in srgb, white 60%, transparent);
+    color: var(--studio-muted);
   }
 
   .kids-studio-adventure-grid,
@@ -2427,6 +2647,57 @@
     }
   }
 
+  .kids-studio-length-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
+    margin-bottom: 1.35rem;
+  }
+
+  @media (min-width: 640px) {
+    .kids-studio-length-grid {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+
+  .kids-studio-length-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.15rem;
+    min-height: 5.5rem;
+    border-radius: 1.35rem;
+    border: 2px solid color-mix(in srgb, var(--studio-border) 80%, transparent);
+    background: color-mix(in srgb, white 72%, transparent);
+    color: var(--studio-ink);
+    transition: border-color 0.25s ease, background 0.25s ease, box-shadow 0.25s ease;
+  }
+
+  .kids-studio-length-card.is-active {
+    border-color: color-mix(in srgb, var(--studio-accent) 65%, transparent);
+    background: color-mix(in srgb, #e8c9a0 18%, white);
+    box-shadow: 0 12px 24px -18px color-mix(in srgb, var(--studio-ink) 24%, transparent);
+  }
+
+  .kids-studio-length-card:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--studio-accent) 45%, transparent);
+  }
+
+  .kids-studio-length-value {
+    font-size: 1.85rem;
+    font-weight: 900;
+    letter-spacing: -0.03em;
+    line-height: 1;
+  }
+
+  .kids-studio-length-unit {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--studio-muted);
+  }
+
   .kids-studio-custom-hero {
     display: block;
     margin-top: 1.15rem;
@@ -2436,21 +2707,21 @@
     width: 100%;
     min-height: 3.25rem;
     border-radius: 1.25rem;
-    border: 2px solid color-mix(in srgb, white 12%, transparent);
-    background: color-mix(in srgb, white 8%, transparent);
+    border: 2px solid var(--studio-border);
+    background: color-mix(in srgb, white 80%, transparent);
     padding: 0.85rem 1.1rem;
-    color: white;
+    color: var(--studio-ink);
     font-weight: 700;
   }
 
   .kids-studio-custom-input::placeholder {
-    color: color-mix(in srgb, white 40%, transparent);
+    color: color-mix(in srgb, var(--studio-muted) 75%, transparent);
   }
 
   .kids-studio-custom-input:focus {
     outline: none;
-    border-color: color-mix(in srgb, var(--color-magic-300) 70%, transparent);
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-magic-400) 35%, transparent);
+    border-color: color-mix(in srgb, var(--studio-accent) 70%, transparent);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--studio-accent) 28%, transparent);
   }
 
   .kids-studio-nav-row {
@@ -2471,8 +2742,10 @@
   .kids-studio-ready-summary li {
     border-radius: 1rem;
     padding: 0.85rem 1rem;
-    background: color-mix(in srgb, white 7%, transparent);
+    background: color-mix(in srgb, white 70%, transparent);
+    border: 1px solid var(--studio-border);
     font-weight: 700;
+    color: var(--studio-ink);
   }
 
   .kids-studio-generate-cta {
@@ -2492,13 +2765,13 @@
 
   .kids-studio-generate-cta:focus-visible {
     outline: none;
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-magic-300) 55%, transparent);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--studio-accent) 45%, transparent);
   }
 
   .kids-studio-generate-cta-bg {
     position: absolute;
     inset: 0;
-    opacity: 0.95;
+    background: linear-gradient(135deg, #d4a574, #c4895a 55%, #b97848);
   }
 
   .kids-studio-generate-cta-label {
@@ -2510,8 +2783,8 @@
     gap: 0.75rem;
     width: 100%;
     min-height: 4.5rem;
-    color: white;
-    font-size: 1.45rem;
+    color: #fffaf3;
+    font-size: 1.35rem;
     font-weight: 900;
   }
 
@@ -2522,8 +2795,17 @@
     display: grid;
     place-items: center;
     padding: 1.5rem;
-    background: color-mix(in srgb, #1a1433 92%, transparent);
-    backdrop-filter: blur(12px);
+    background: color-mix(in srgb, #2c2419 55%, #f7f1e8);
+    backdrop-filter: blur(14px);
+  }
+
+  .kids-studio-generate-glow {
+    position: absolute;
+    width: min(28rem, 80vw);
+    height: min(28rem, 80vw);
+    border-radius: 999px;
+    background: radial-gradient(circle, color-mix(in srgb, #e8c9a0 45%, transparent) 0%, transparent 70%);
+    pointer-events: none;
   }
 
   .kids-studio-generate-stage {
@@ -2541,8 +2823,9 @@
     border-radius: 0.65rem 1.1rem 1.1rem 0.65rem;
     background: linear-gradient(145deg, #f6ead6, #e8d4b8);
     box-shadow:
-      0 18px 40px color-mix(in srgb, black 28%, transparent),
+      0 18px 40px color-mix(in srgb, black 22%, transparent),
       inset -10px 0 0 color-mix(in srgb, #c9a67a 35%, transparent);
+    perspective: 600px;
   }
 
   .kids-studio-magic-book-spine {
@@ -2561,20 +2844,56 @@
     background:
       linear-gradient(180deg, transparent 18%, color-mix(in srgb, #c9a67a 18%, transparent) 18.5%, transparent 19%),
       linear-gradient(180deg, transparent 36%, color-mix(in srgb, #c9a67a 16%, transparent) 36.5%, transparent 37%),
-      linear-gradient(180deg, transparent 54%, color-mix(in srgb, #c9a67a 14%, transparent) 54.5%, transparent 55%);
+      linear-gradient(180deg, transparent 54%, color-mix(in srgb, #c9a67a 14%, transparent) 54.5%, transparent 55%),
+      #fffaf3;
+    transform-origin: left center;
+  }
+
+  .kids-studio-magic-book-page--turn {
+    z-index: 2;
+    background: #fff8ee;
+    box-shadow: 2px 0 8px color-mix(in srgb, var(--studio-ink) 8%, transparent);
+  }
+
+  .kids-studio-generate-stars {
+    position: absolute;
+    inset: -1rem -2rem auto;
+    height: 3rem;
+    pointer-events: none;
+  }
+
+  .kids-studio-generate-star {
+    position: absolute;
+    width: 0.35rem;
+    height: 0.35rem;
+    border-radius: 999px;
+    background: color-mix(in srgb, #fffaf3 80%, #e8c9a0);
+    opacity: 0.35;
+    animation: kids-studio-star-drift 4.8s ease-in-out infinite;
+  }
+
+  .kids-studio-generate-star:nth-child(1) { left: 12%; }
+  .kids-studio-generate-star:nth-child(2) { left: 32%; top: 0.6rem; }
+  .kids-studio-generate-star:nth-child(3) { left: 52%; }
+  .kids-studio-generate-star:nth-child(4) { left: 72%; top: 0.4rem; }
+  .kids-studio-generate-star:nth-child(5) { left: 88%; }
+
+  @keyframes kids-studio-star-drift {
+    0%, 100% { opacity: 0.2; transform: translateY(0); }
+    50% { opacity: 0.7; transform: translateY(-8px); }
   }
 
   .kids-studio-generate-message {
     margin: 0;
     font-size: clamp(1.35rem, 3.5vw, 1.85rem);
     font-weight: 900;
-    color: white;
+    color: #fffaf3;
   }
 
   .kids-studio-generate-hint {
     margin: 0.75rem 0 0;
     font-weight: 600;
-    color: color-mix(in srgb, white 55%, transparent);
+    color: color-mix(in srgb, #fffaf3 70%, transparent);
   }
 
   .kids-studio-book-preview {
@@ -2584,32 +2903,51 @@
     overflow: hidden;
     background: #fffaf3;
     color: #24324a;
-    box-shadow: var(--shadow-floating);
+    box-shadow: 0 24px 48px -28px color-mix(in srgb, var(--studio-ink) 28%, transparent);
+    border: 1px solid var(--studio-border);
+  }
+
+  .kids-studio-book-preview--premium {
+    margin-top: 0.5rem;
   }
 
   @media (min-width: 800px) {
     .kids-studio-book-preview {
-      grid-template-columns: 15rem 1fr;
+      grid-template-columns: 16rem 1fr;
     }
   }
 
   .kids-studio-book-cover {
+    position: relative;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     gap: 0.75rem;
-    min-height: 14rem;
+    min-height: 16rem;
     padding: 1.5rem;
     background: linear-gradient(160deg, #dce8f5, #efe4d4 55%, #f6ead6);
+    overflow: hidden;
+  }
+
+  .kids-studio-book-cover-glow {
+    position: absolute;
+    inset: 15% 10%;
+    border-radius: 999px;
+    background: radial-gradient(circle, color-mix(in srgb, white 55%, transparent) 0%, transparent 70%);
+    pointer-events: none;
   }
 
   .kids-studio-book-cover-emoji {
+    position: relative;
+    z-index: 1;
     font-size: 4rem;
     line-height: 1;
   }
 
   .kids-studio-book-cover-theme {
+    position: relative;
+    z-index: 1;
     margin: 0;
     font-size: 0.85rem;
     font-weight: 800;
@@ -2620,6 +2958,23 @@
 
   .kids-studio-book-body {
     padding: clamp(1.25rem, 3vw, 2rem);
+  }
+
+  .kids-studio-book-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+    margin-bottom: 1rem;
+  }
+
+  .kids-studio-book-meta span {
+    padding: 0.35rem 0.75rem;
+    border-radius: 999px;
+    background: color-mix(in srgb, #efe4d4 70%, white);
+    border: 1px solid color-mix(in srgb, #d6cbba 55%, transparent);
+    font-size: 0.75rem;
+    font-weight: 800;
+    color: #5b6577;
   }
 
   .kids-studio-book-title {
@@ -2633,6 +2988,15 @@
   .kids-studio-book-summary {
     margin: 0 0 1rem;
     font-weight: 650;
+    color: #5b6577;
+  }
+
+  .kids-studio-book-teaser {
+    margin: 0;
+    padding: 1rem 1.1rem;
+    border-radius: 1.1rem;
+    background: color-mix(in srgb, #efe4d4 45%, white);
+    font-weight: 600;
     color: #5b6577;
   }
 
@@ -2657,27 +3021,151 @@
     border-top: 1px solid color-mix(in srgb, #d6cbba 55%, transparent);
   }
 
+  .kids-studio-bookshelf {
+    margin-top: 3rem;
+  }
+
+  .kids-studio-bookshelf-header {
+    margin-bottom: 1.25rem;
+    text-align: center;
+  }
+
+  .kids-studio-bookshelf-title {
+    margin: 0;
+    font-size: clamp(1.4rem, 3vw, 1.85rem);
+    font-weight: 900;
+    color: var(--studio-ink);
+  }
+
+  .kids-studio-bookshelf-subtitle {
+    margin: 0.35rem 0 0;
+    font-weight: 600;
+    color: var(--studio-muted);
+  }
+
+  .kids-studio-shelf {
+    position: relative;
+    padding: 1rem 0.5rem 1.5rem;
+  }
+
+  .kids-studio-shelf-board {
+    position: absolute;
+    inset-inline: 0;
+    bottom: 0.35rem;
+    height: 0.85rem;
+    border-radius: 0.35rem;
+    background: linear-gradient(180deg, #c9a67a, #a67c52);
+    box-shadow: 0 10px 18px -12px color-mix(in srgb, var(--studio-ink) 40%, transparent);
+  }
+
+  .kids-studio-shelf-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+    padding-bottom: 1.25rem;
+  }
+
+  @media (min-width: 640px) {
+    .kids-studio-shelf-grid {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+
+  .kids-studio-shelf-book {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.45rem;
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    color: var(--studio-ink);
+    text-align: center;
+  }
+
+  .kids-studio-shelf-cover {
+    position: relative;
+    width: min(100%, 7.5rem);
+    aspect-ratio: 3 / 4;
+    border-radius: 0.45rem 0.75rem 0.75rem 0.45rem;
+    background:
+      linear-gradient(145deg, color-mix(in srgb, var(--shelf-tint, #c9a67a) 55%, white), var(--shelf-tint, #c9a67a));
+    box-shadow:
+      0 14px 24px -16px color-mix(in srgb, var(--studio-ink) 35%, transparent),
+      inset -8px 0 0 color-mix(in srgb, #5a4632 18%, transparent);
+    display: grid;
+    place-items: center;
+    transition: transform 0.25s ease;
+  }
+
+  .kids-studio-shelf-book:hover .kids-studio-shelf-cover,
+  .kids-studio-shelf-book:focus-visible .kids-studio-shelf-cover {
+    transform: translateY(-6px);
+  }
+
+  .kids-studio-shelf-book:focus-visible {
+    outline: none;
+  }
+
+  .kids-studio-shelf-book:focus-visible .kids-studio-shelf-cover {
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--studio-accent) 45%, transparent);
+  }
+
+  .kids-studio-shelf-cover-mark {
+    font-size: 1.75rem;
+    opacity: 0.85;
+  }
+
+  .kids-studio-shelf-heart {
+    position: absolute;
+    top: 0.45rem;
+    inset-inline-end: 0.45rem;
+    color: #e07a5f;
+  }
+
+  .kids-studio-shelf-title {
+    font-size: 0.85rem;
+    font-weight: 800;
+    line-height: 1.25;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .kids-studio-shelf-meta {
+    font-size: 0.72rem;
+    font-weight: 650;
+    color: var(--studio-muted);
+  }
+
   .kids-studio-history-card {
     border-radius: 1.5rem;
-    border: 1px solid color-mix(in srgb, white 12%, transparent);
-    background: color-mix(in srgb, white 6%, transparent);
+    border: 1px solid var(--studio-border);
+    background: color-mix(in srgb, white 70%, transparent);
     padding: 1.15rem;
     text-align: start;
     transition: background 0.25s ease, transform 0.25s ease;
   }
 
   .kids-studio-history-card:hover {
-    background: color-mix(in srgb, white 10%, transparent);
+    background: color-mix(in srgb, white 88%, transparent);
   }
 
   .kids-studio-history-card:focus-visible {
     outline: none;
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-magic-300) 55%, transparent);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--studio-accent) 45%, transparent);
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .kids-studio-particle {
+    .kids-studio-particle,
+    .kids-studio-generate-star {
       animation: none;
+    }
+    .kids-studio-shelf-book:hover .kids-studio-shelf-cover,
+    .kids-studio-shelf-book:focus-visible .kids-studio-shelf-cover {
+      transform: none;
     }
   }
 
