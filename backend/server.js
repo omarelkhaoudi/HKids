@@ -36,7 +36,7 @@ import supportRouter from './routes/support.js';
 import offlineRouter from './routes/offline.js';
 import { errorHandler, notFound } from './middleware/errorHandler.js';
 import { requestLogger } from './middleware/logger.js';
-import { apiRateLimiter, authRateLimiter, resetRateLimit } from './middleware/rateLimiter.js';
+import { authRateLimiter, getClientIp, resetRateLimit, skipAuthPathsRateLimiter } from './middleware/rateLimiter.js';
 import { securityHeaders } from './middleware/securityHeaders.js';
 import { sanitizeBody } from './middleware/validator.js';
 import { isDevOnlyEndpointEnabled } from './utils/productionGuards.js';
@@ -47,8 +47,8 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = config.port;
 
-// Trust proxy (for rate limiting behind reverse proxy)
-app.set('trust proxy', 1);
+// Trust proxy — required on Vercel so req.ip / X-Forwarded-For resolve to the client
+app.set('trust proxy', true);
 app.disable('x-powered-by');
 app.use(securityHeaders);
 
@@ -93,9 +93,9 @@ app.use(requestLogger);
 // Sanitize input
 app.use(sanitizeBody);
 
-// Rate limiting
+// Rate limiting — auth routes use their own bucket (avoid double-counting)
 app.use('/api/auth', authRateLimiter);
-app.use('/api', apiRateLimiter);
+app.use('/api', skipAuthPathsRateLimiter);
 
 // Serve book uploads without fallback. If a file is missing, returning 404 is
 // required so the reader never displays unrelated old content.
@@ -322,7 +322,7 @@ app.post('/api/reset-rate-limit', (req, res) => {
     return res.status(404).json({ error: 'Not found' });
   }
 
-  const ip = req.ip || req.connection.remoteAddress;
+  const ip = getClientIp(req);
   resetRateLimit(ip);
   res.json({ 
     success: true, 
