@@ -58,8 +58,8 @@ function SignUp() {
  return false;
 }
 
- if (password.length < 6) {
- setError('Le mot de passe doit contenir au moins 6 caractères');
+ if (password.length < 8) {
+ setError('Le mot de passe doit contenir au moins 8 caractères');
  return false;
 }
 
@@ -94,6 +94,10 @@ function SignUp() {
  let errorMessage = result.error || 'Échec de l\'inscription';
  if (errorMessage.includes('already exists') || errorMessage.includes('duplicate')) {
  errorMessage = 'Ce nom d\'utilisateur est déjà utilisé. Veuillez en choisir un autre.';
+} else if (errorMessage.includes('Admin signup is not available') || errorMessage.includes('inscription admin')) {
+ errorMessage = 'L\'inscription admin est désactivée. Contactez l\'équipe HKids ou vérifiez la configuration serveur.';
+} else if (errorMessage.includes('at least 8 characters') || errorMessage.includes('8 caractères')) {
+ errorMessage = 'Le mot de passe doit contenir au moins 8 caractères.';
 } else if (errorMessage.includes('Network Error') || errorMessage.includes('ECONNREFUSED')) {
  errorMessage = 'Impossible de se connecter au serveur. Vérifiez que le serveur backend est démarré.';
 }

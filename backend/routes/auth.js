@@ -4,6 +4,7 @@ import bcrypt from 'bcryptjs';
 import { getDatabase } from '../database/init.js';
 import { logSecurityEvent } from '../services/security/auditLog.js';
 import { signupRateLimiter } from '../middleware/rateLimiter.js';
+import { canRegisterAdmin } from '../utils/adminSignupPolicy.js';
 import config from '../config/env.js';
 
 const router = express.Router();
@@ -44,11 +45,11 @@ router.post('/signup', signupRateLimiter, async (req, res) => {
   let userRole = role && validRoles.includes(role) ? role : 'parent';
 
   if (role === 'admin') {
-    const adminSignupEnabled = process.env.ADMIN_SIGNUP_ENABLED === 'true';
-    const requiredCode = process.env.ADMIN_SIGNUP_CODE;
+    const pool = getPool();
+    const adminSignup = await canRegisterAdmin(pool, admin_signup_code);
 
-    if (!adminSignupEnabled || (requiredCode && admin_signup_code !== requiredCode)) {
-      return res.status(403).json({ error: 'Admin signup is not available' });
+    if (!adminSignup.allowed) {
+      return res.status(403).json({ error: adminSignup.error || 'Admin signup is not available' });
     }
 
     userRole = 'admin';
