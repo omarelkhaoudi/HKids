@@ -8,11 +8,7 @@ import { KidAvatar } from './KidAvatar';
 import { useReducedMotion } from '../../hooks/useReducedMotion';
 import { getHoverMotion, getMotionProps, kidsCardAppear } from '../../constants/kidsMotion';
 import { KidsBookCover } from '../kids/KidsBookCover';
-import { CONTENT_THEMES } from '../../constants/contentOptions';
-
-function themeLabel(themeId) {
-  return CONTENT_THEMES.find((t) => t.id === themeId)?.label || themeId;
-}
+import { collectFavoriteThemes, getThemeLabel } from '../../utils/parentInsights';
 
 export function ParentChildProfilePanel({
   kid,
@@ -30,6 +26,9 @@ export function ParentChildProfilePanel({
   const interests = Array.isArray(kid?.interests) ? kid.interests : [];
   const goal = data?.goal;
   const goalPercent = Math.max(0, Math.min(100, Number(goal?.progress_percent || 0)));
+  const continueBook = (data?.progress?.items || []).find(
+    (book) => (book.progress_percent || 0) > 0 && (book.progress_percent || 0) < 100,
+  ) || (data?.progress?.items || [])[0];
 
   const achievements = [];
   if (Number(summary.books_completed || 0) >= 1) {
@@ -45,9 +44,7 @@ export function ParentChildProfilePanel({
     achievements.push({ emoji: '💛', label: t('parentProfileAchFavorites') });
   }
 
-  const favoriteThemes = [...new Set(
-    favorites.flatMap((b) => (Array.isArray(b.themes) ? b.themes : [])).slice(0, 4),
-  )];
+  const favoriteThemes = collectFavoriteThemes(data, 4);
 
   return (
     <motion.section
@@ -90,6 +87,27 @@ export function ParentChildProfilePanel({
       </div>
 
       <div className="p-space-24 md:p-space-32 grid grid-cols-1 lg:grid-cols-2 gap-space-24">
+        {continueBook ? (
+          <div className="lg:col-span-2 parent-profile-adventure">
+            <div className="parent-profile-adventure-cover">
+              <KidsBookCover
+                book={continueBook}
+                alt={continueBook.title || ''}
+                imgClassName="absolute inset-0 h-full w-full object-cover"
+              />
+            </div>
+            <div className="min-w-0">
+              <p className="text-caption font-bold text-foreground-muted uppercase tracking-wide mb-1">
+                {t('parentProfileCurrentAdventure')}
+              </p>
+              <p className="text-heading-m font-black text-foreground truncate">{continueBook.title}</p>
+              <p className="text-body text-foreground-secondary font-medium mt-1">
+                {t('parentHomeContinueProgress', { percent: continueBook.progress_percent || 0 })}
+              </p>
+            </div>
+          </div>
+        ) : null}
+
         <div>
           <h3 className="text-heading-m font-black text-foreground mb-space-16">{t('parentProfileFavoriteBooks')}</h3>
           {favorites.length === 0 ? (
@@ -117,9 +135,9 @@ export function ParentChildProfilePanel({
             <p className="text-body text-foreground-muted font-medium">{t('parentProfileCategoriesEmpty')}</p>
           ) : (
             <div className="flex flex-wrap gap-2">
-              {favoriteThemes.map((themeId) => (
-                <span key={themeId} className="rounded-full bg-primary-50 dark:bg-primary-950/40 px-3 py-1.5 text-body font-bold text-primary-700 dark:text-primary-300">
-                  {themeLabel(themeId)}
+              {favoriteThemes.map((theme) => (
+                <span key={theme.id} className="rounded-full bg-primary-50 dark:bg-primary-950/40 px-3 py-1.5 text-body font-bold text-primary-700 dark:text-primary-300">
+                  {getThemeLabel(theme.id)}
                 </span>
               ))}
             </div>
