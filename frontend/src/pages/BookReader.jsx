@@ -19,6 +19,7 @@ import {ChevronLeftIcon, ChevronRightIcon, HomeIcon, BookIcon, StarIcon, PlayIco
 import {getImageUrl} from '../utils/imageUrl';
 import {resolveBookCoverUrl} from '../utils/bookCover';
 import {kidsProgressFill, kidsReaderPageTurn} from '../constants/kidsMotion';
+import {deriveReaderMood} from '../utils/readerAtmosphere';
 import ReadingAidPanel from '../components/ReadingAidPanel';
 import {ContentReportModal} from '../components/parent/ContentReportModal';
 import {useAudioPlayer} from '../hooks/useAudioPlayer';
@@ -444,9 +445,10 @@ function BookmarkGlyph({ className = 'w-5 h-5' }) {
  );
 }
 
-function ReaderPaperAtmosphere() {
+function ReaderPaperAtmosphere({ mood = 'warm' }) {
  return (
  <div className="kids-reader-paper-atmosphere" aria-hidden="true">
+   <span className={`kids-reader-mood-glow kids-reader-mood-glow--${mood}`} />
    <span className="kids-reader-paper-glow kids-reader-paper-glow-a" />
    <span className="kids-reader-paper-glow kids-reader-paper-glow-b" />
    <span className="kids-reader-paper-grain" />
@@ -1437,12 +1439,14 @@ function BookReader() {
  const audioProgressValue = Math.min(audioProgressMax, Math.floor(audioPlayer.currentTime || 0));
  const pageText = normalizePageContent(currentPageData?.content);
  const textSentences = splitTextIntoSentences(pageText);
+ const storyMood = isKidReader ? deriveReaderMood(book) : 'warm';
 
  return (
  <div 
  ref={readerRef}
  data-reader-theme={readerTheme}
- className={`kids-reader-shell h-screen w-full flex flex-col relative overflow-hidden ${!showMenu ? 'is-focus' : ''} ${readerTheme === 'night' ? 'kids-night-calm' : ''}`}
+ data-reader-mood={isKidReader ? storyMood : undefined}
+ className={`kids-reader-shell h-screen w-full flex flex-col relative overflow-hidden ${!showMenu ? 'is-focus' : ''} ${showStoryOpening && isKidReader ? 'is-opening' : ''} ${readerTheme === 'night' ? 'kids-night-calm' : ''}`}
  onClick={() => setShowMenu(!showMenu)}
  onTouchStart={onTouchStart}
  onTouchMove={onTouchMove}
@@ -1451,7 +1455,7 @@ function BookReader() {
  {coverBleedUrl && (
  <div className="kids-reader-cover-bleed" style={{ backgroundImage: `url(${coverBleedUrl})` }} aria-hidden="true" />
  )}
- <ReaderPaperAtmosphere />
+ <ReaderPaperAtmosphere mood={storyMood} />
  {isKidReader && readerTheme === 'night' && <ReaderClouds />}
  {isKidReader && readerTheme === 'night' && <KidsBedtimeAtmosphere intensity="soft" />}
  <Confetti show={showConfetti && !isKidReader} />
@@ -1461,8 +1465,10 @@ function BookReader() {
  {isKidReader && (
    <KidsStoryOpening
      active={showStoryOpening && Boolean(book)}
+     book={book}
      coverUrl={book?.cover_image}
      title={book?.title}
+     mood={storyMood}
      onDone={() => setShowStoryOpening(false)}
    />
  )}
@@ -1521,7 +1527,7 @@ function BookReader() {
  )}
 
  {/* Main Content Area */}
- <div className={`kids-reader-canvas relative flex-1 w-full h-full flex items-center justify-center overflow-hidden z-10 ${showMenu ? 'pb-36 md:pb-40' : 'pb-4'}`}>
+ <div className={`kids-reader-canvas relative flex-1 w-full h-full flex items-center justify-center overflow-hidden z-10 ${showMenu ? 'pb-36 md:pb-40' : 'pb-4'} ${isKidReader && !showStoryOpening ? 'is-revealed' : ''}`}>
 
  {/* The Book Canvas */}
  <div className="kids-reader-book-shell relative h-full flex items-center justify-center">
@@ -1536,13 +1542,13 @@ function BookReader() {
  fontFamily: readingSettings.font === 'dyslexic' ? 'OpenDyslexic, sans-serif' : readingSettings.font === 'comic' ? 'Comic Sans MS, cursive' : undefined
 }}
  >
- {currentPageData.image_path ? (() => {
- const fileUrl = getFileUrl(currentPageData.image_path);
- const isPDF = currentPageData.image_path.toLowerCase().endsWith('.pdf');
- 
- if (isPDF) {
+ {(() => {
+ const fileUrl = currentPageData.image_path ? getFileUrl(currentPageData.image_path) : null;
+ const isPagePDF = currentPageData.image_path?.toLowerCase().endsWith('.pdf');
+
+ if (isPagePDF) {
  return (
- <div className={`w-full max-h-[85vh] overflow-hidden kids-reader-page-card`}>
+ <div className="w-full max-h-[85vh] overflow-hidden kids-reader-page-card">
  <PDFPageViewer 
  pdfUrl={fileUrl} 
  pageNumber={currentPage + 1}
@@ -1558,7 +1564,42 @@ function BookReader() {
  </div>
  );
 }
- 
+
+ if (isKidReader) {
+ return (
+ <article className="kids-reader-spread">
+ {currentPageData.image_path ? (
+ <div className="kids-reader-spread-art">
+ <img
+ src={fileUrl}
+ alt={`Page ${currentPage + 1}`}
+ loading="lazy"
+ decoding="async"
+ className="kids-reader-illustration kids-reader-illustration-breathe"
+ />
+ </div>
+ ) : null}
+ {pageText ? (
+ <div className="kids-reader-spread-text">
+ <div className="kids-reader-text-page">
+ <div className="kids-reader-text-body">
+ {textSentences.length > 0 ? textSentences.map((sentence, index) => (
+   <span
+     key={`${index}-${sentence.start}`}
+     className={`kids-reader-sentence ${index === currentSentenceIndex ? 'is-active' : ''}`}
+   >
+     {sentence.text}{' '}
+   </span>
+ )) : pageText}
+ </div>
+ </div>
+ </div>
+ ) : null}
+ </article>
+ );
+}
+
+ if (currentPageData.image_path) {
  return (
  <div className="kids-reader-illustration-wrap w-full">
  <motion.img
@@ -1570,7 +1611,9 @@ function BookReader() {
  />
  </div>
  );
-})() : (
+}
+
+ return (
  <div className="w-full kids-reader-page-card">
  <div className="kids-reader-text-page">
  {pageText && (
@@ -1594,7 +1637,8 @@ function BookReader() {
  )}
  </div>
  </div>
- )}
+ );
+})()}
  </motion.div>
  </AnimatePresence>
  </div>
@@ -1796,32 +1840,30 @@ function BookReader() {
  {isKidReader && (
    <KidsCelebration
      active={showKidCelebration}
-     variant="bedtime"
-     title={t('bedtimeStoryDone')}
-     subtitle={t('bedtimeStoryEncourage')}
+     variant="story"
+     title={t('kidReaderBravo')}
+     subtitle={t('kidReaderStoryComplete')}
      coverUrl={coverBleedUrl}
      book={book}
      bookTitle={book.title}
-     progressPercent={100}
-     isFavorite={isFavorite}
-     onFavorite={toggleBookFavorite}
-     primaryLabel={t('kidReaderAnother')}
+     relatedLimit={3}
+     onPlayBook={(relatedBook) => {
+       if (!relatedBook?.id) return;
+       setShowKidCelebration(false);
+       navigate(`/kids/read/${relatedBook.id}`);
+     }}
+     primaryLabel={t('kidReaderBackToLibrary')}
      onPrimary={() => {
        setShowKidCelebration(false);
        navigate('/kids/library');
      }}
-     secondaryLabel={t('bedtimeListenAgain')}
+     secondaryLabel={t('kidReaderReadAgain')}
      onSecondary={() => {
        setShowKidCelebration(false);
        setCurrentPage(0);
        setHasReachedEnd(false);
        setShowMenu(true);
-       toggleAudio();
-     }}
-     tertiaryLabel={t('kidReaderHome')}
-     onTertiary={() => {
-       setShowKidCelebration(false);
-       navigate('/kids');
+       setShowStoryOpening(false);
      }}
      onComplete={() => setShowKidCelebration(false)}
    />

@@ -62,6 +62,19 @@ export const kidsProgressFill = {
   transition: { duration: KIDS_MOTION_DURATION.slow, ease: easeOut },
 };
 
+/** Picture-book opening — soft fade with gentle zoom */
+export function kidsReaderBookOpening(reduced) {
+  if (reduced) {
+    return getMotionProps(true, {});
+  }
+  return {
+    initial: { opacity: 0, scale: 0.9, y: 12 },
+    animate: { opacity: 1, scale: 1, y: 0 },
+    exit: { opacity: 0, scale: 1.05, y: -8, filter: 'blur(3px)' },
+    transition: { duration: KIDS_MOTION_DURATION.slow, ease: easeOut },
+  };
+}
+
 /** Gentle page turn — cross-fade with soft horizontal drift */
 export function kidsReaderPageTurn(reduced, direction = 'next') {
   if (reduced) {

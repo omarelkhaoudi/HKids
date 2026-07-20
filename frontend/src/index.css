@@ -2873,7 +2873,213 @@
     --reader-progress: var(--color-primary-500);
     --reader-apricot: #d4a574;
     --reader-sage: #8fa88a;
+    --reader-mood-a: color-mix(in srgb, var(--reader-apricot) 28%, transparent);
+    --reader-mood-b: color-mix(in srgb, var(--reader-sage) 18%, transparent);
     transition: background 0.55s ease, color 0.45s ease;
+  }
+
+  .kids-reader-mood-glow {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.85;
+    background:
+      radial-gradient(ellipse 70% 55% at 50% 8%, var(--reader-mood-a) 0%, transparent 68%),
+      radial-gradient(ellipse 55% 45% at 88% 92%, var(--reader-mood-b) 0%, transparent 72%);
+  }
+
+  .kids-reader-shell[data-reader-mood="forest"] {
+    --reader-mood-a: color-mix(in srgb, #8fa88a 22%, transparent);
+    --reader-mood-b: color-mix(in srgb, #6b8f71 14%, transparent);
+  }
+
+  .kids-reader-shell[data-reader-mood="ocean"] {
+    --reader-mood-a: color-mix(in srgb, #8eb5c9 20%, transparent);
+    --reader-mood-b: color-mix(in srgb, #6a9eb8 12%, transparent);
+  }
+
+  .kids-reader-shell[data-reader-mood="night"] {
+    --reader-mood-a: color-mix(in srgb, #4a5c78 18%, transparent);
+    --reader-mood-b: color-mix(in srgb, #3a4660 12%, transparent);
+  }
+
+  .kids-reader-shell[data-reader-mood="fairy"] {
+    --reader-mood-a: color-mix(in srgb, #b8a8d4 18%, transparent);
+    --reader-mood-b: color-mix(in srgb, #c9b8e0 12%, transparent);
+  }
+
+  .kids-reader-shell[data-reader-mood="golden"] {
+    --reader-mood-a: color-mix(in srgb, #e8c88a 22%, transparent);
+    --reader-mood-b: color-mix(in srgb, #d4a574 14%, transparent);
+  }
+
+  .kids-reader-shell[data-reader-mood="twilight"] {
+    --reader-mood-a: color-mix(in srgb, #9aa8c9 16%, transparent);
+    --reader-mood-b: color-mix(in srgb, #7a88a8 10%, transparent);
+  }
+
+  .kids-reader-shell[data-reader-mood="earth"] {
+    --reader-mood-a: color-mix(in srgb, #c4a882 18%, transparent);
+    --reader-mood-b: color-mix(in srgb, #a89272 12%, transparent);
+  }
+
+  .kids-reader-canvas.is-revealed {
+    animation: kids-reader-canvas-reveal 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  @keyframes kids-reader-canvas-reveal {
+    from { opacity: 0; transform: scale(0.985); }
+    to { opacity: 1; transform: scale(1); }
+  }
+
+  .kids-reader-opening {
+    perspective: 1200px;
+  }
+
+  .kids-reader-opening-backdrop {
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 80% 60% at 50% 20%, color-mix(in srgb, #fffaf3 90%, transparent) 0%, transparent 70%),
+      linear-gradient(180deg, #ebe4d8 0%, #f6ead6 45%, #e8dfd0 100%);
+  }
+
+  .kids-reader-opening--forest .kids-reader-opening-backdrop {
+    background:
+      radial-gradient(ellipse 75% 55% at 50% 15%, color-mix(in srgb, #8fa88a 16%, #f6ead6) 0%, transparent 68%),
+      linear-gradient(180deg, #e5ebe6 0%, #f4f7f2 50%, #e8efe8 100%);
+  }
+
+  .kids-reader-opening--ocean .kids-reader-opening-backdrop {
+    background:
+      radial-gradient(ellipse 75% 55% at 50% 15%, color-mix(in srgb, #8eb5c9 14%, #f0f5f8) 0%, transparent 68%),
+      linear-gradient(180deg, #e4edf2 0%, #f3f8fb 50%, #e6eef3 100%);
+  }
+
+  .kids-reader-opening--night .kids-reader-opening-backdrop {
+    background:
+      radial-gradient(ellipse 70% 50% at 50% 10%, color-mix(in srgb, #4a5c78 20%, #1c2433) 0%, transparent 65%),
+      linear-gradient(180deg, #121826 0%, #1c2433 55%, #151b28 100%);
+  }
+
+  .kids-reader-opening--fairy .kids-reader-opening-backdrop {
+    background:
+      radial-gradient(ellipse 75% 55% at 50% 15%, color-mix(in srgb, #c9b8e0 16%, #f7f3fb) 0%, transparent 68%),
+      linear-gradient(180deg, #efeaf8 0%, #f9f7fc 50%, #ebe4f4 100%);
+  }
+
+  .kids-reader-opening--golden .kids-reader-opening-backdrop {
+    background:
+      radial-gradient(ellipse 75% 55% at 50% 15%, color-mix(in srgb, #e8c88a 18%, #faf4ea) 0%, transparent 68%),
+      linear-gradient(180deg, #f5ead8 0%, #fffaf3 50%, #efe4cf 100%);
+  }
+
+  .kids-reader-opening-book {
+    position: relative;
+    z-index: 10;
+    width: min(56vw, 14rem);
+    aspect-ratio: 3 / 4;
+    border-radius: 1.35rem 1.75rem 1.75rem 1.35rem;
+    overflow: hidden;
+    border: 3px solid color-mix(in srgb, white 70%, transparent);
+    box-shadow:
+      0 28px 64px -20px rgba(36, 50, 74, 0.35),
+      inset -6px 0 16px color-mix(in srgb, #24324a 8%, transparent);
+    transform-style: preserve-3d;
+  }
+
+  @media (min-width: 768px) {
+    .kids-reader-opening-book {
+      width: min(42vw, 16rem);
+    }
+  }
+
+  .kids-reader-opening-spine {
+    position: absolute;
+    inset-block: 0;
+    inset-inline-start: 0;
+    width: 0.65rem;
+    background: linear-gradient(90deg, color-mix(in srgb, #24324a 12%, transparent), transparent);
+    z-index: 2;
+    pointer-events: none;
+  }
+
+  .kids-reader-opening-title {
+    position: absolute;
+    bottom: clamp(3rem, 12vh, 5rem);
+    inset-inline: 0;
+    text-align: center;
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: clamp(1.15rem, 3vw, 1.5rem);
+    line-height: 1.25;
+    color: var(--kids-type-ink, #24324a);
+    padding-inline: 2rem;
+  }
+
+  .kids-reader-opening--night .kids-reader-opening-title {
+    color: #e8eef8;
+  }
+
+  .kids-reader-spread {
+    width: min(100%, 46rem);
+    margin-inline: auto;
+    display: flex;
+    flex-direction: column;
+    gap: clamp(1rem, 2.5vw, 1.5rem);
+    padding: clamp(0.75rem, 2vw, 1.25rem);
+  }
+
+  .kids-reader-spread-art {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: clamp(0.35rem, 1.2vw, 0.75rem);
+  }
+
+  .kids-reader-spread-text {
+    width: 100%;
+  }
+
+  .kids-reader-spread .kids-reader-page-card,
+  .kids-reader-spread .kids-reader-text-page {
+    max-width: none;
+    margin-inline: 0;
+  }
+
+  .kids-reader-spread .kids-reader-text-page {
+    padding: clamp(1.75rem, 4vw, 2.75rem) clamp(1.5rem, 4.5vw, 3rem);
+    border-radius: var(--kids-radius-book);
+    border: 1px solid var(--reader-border);
+    background: color-mix(in srgb, var(--reader-paper) 96%, white);
+    box-shadow: var(--kids-shadow-book);
+  }
+
+  .kids-reader-spread .kids-reader-text-body {
+    max-width: 32ch;
+    font-size: clamp(1.35rem, 2.8vw, 1.85rem);
+    line-height: 2;
+  }
+
+  .kids-reader-illustration-breathe {
+    animation: kids-reader-illustration-breathe 5.5s ease-in-out infinite;
+  }
+
+  @keyframes kids-reader-illustration-breathe {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.012); }
+  }
+
+  .kids-reader-celebration-backdrop {
+    background: color-mix(in srgb, #f6ead6 78%, transparent);
+  }
+
+  .kids-reader-celebration-panel {
+    border: 1px solid color-mix(in srgb, #d9d0c4 40%, transparent);
+  }
+
+  .kids-reader-celebration-cover {
+    box-shadow: var(--kids-shadow-book);
   }
 
   .kids-reader-paper-atmosphere {
@@ -3093,6 +3299,16 @@
 
   .kids-reader-toolbar-btn:hover {
     background: color-mix(in srgb, var(--reader-paper) 96%, white);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-soft);
+  }
+
+  .kids-reader-nav-edge:hover {
+    transform: translateY(-1px);
+  }
+
+  .kids-reader-nav-edge:active {
+    transform: scale(0.97);
   }
 
   .kids-reader-toolbar-btn:focus-visible {
@@ -3319,7 +3535,11 @@
 
   .kids-reader-play-btn:hover {
     background: color-mix(in srgb, var(--reader-paper) 96%, white);
-    transform: translateY(-1px);
+    transform: scale(1.03);
+  }
+
+  .kids-reader-play-btn:active {
+    transform: scale(0.97);
   }
 
   .kids-reader-play-btn:focus-visible {
@@ -3541,6 +3761,12 @@
     .kids-reader-shell,
     .kids-reader-progress-fill {
       transition: none;
+    }
+    .kids-reader-illustration-breathe {
+      animation: none;
+    }
+    .kids-reader-canvas.is-revealed {
+      animation: none;
     }
     .kids-reader-cover-bleed {
       filter: blur(28px);
