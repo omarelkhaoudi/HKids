@@ -188,8 +188,10 @@ export const KidsCelebration = memo(function KidsCelebration({
             </motion.div>
 
             {relatedBooks.length > 0 ? (
-              <section className="kids-celebration-related w-full" aria-label={t('kidReaderSimilarStories')}>
-                <h3 className="kids-shelf-title px-space-8 mb-space-16">{t('kidReaderSimilarStories')}</h3>
+              <section className="kids-celebration-related w-full" aria-label={isStory ? t('kidReaderContinueAdventure') : t('kidReaderSimilarStories')}>
+                <h3 className="kids-shelf-title px-space-8 mb-space-16">
+                  {isStory ? t('kidReaderContinueAdventure') : t('kidReaderSimilarStories')}
+                </h3>
                 <div className="flex gap-space-24 overflow-x-auto px-space-8 pb-space-12 snap-x snap-mandatory kids-scroll-smooth custom-scrollbar justify-center md:justify-start">
                   {relatedBooks.map((related) => (
                     <div key={related.id} className="snap-start shrink-0">
