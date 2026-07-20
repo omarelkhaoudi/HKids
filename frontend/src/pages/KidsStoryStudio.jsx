@@ -1,632 +1,719 @@
-import {useEffect, useMemo, useState} from 'react';
-import {useLanguage} from '../context/LanguageContext';
-import {Link, useNavigate} from 'react-router-dom';
-import {motion, AnimatePresence} from 'framer-motion';
-import {generatedStoriesAPI} from '../api/generatedStories';
-import {useAuth} from '../context/AuthContext';
-import {speakText, stopSpeaking} from '../services/ai/browserTextToSpeech';
+import { useEffect, useMemo, useState } from 'react';
+import { useLanguage } from '../context/LanguageContext';
+import { Link, useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
+import { generatedStoriesAPI } from '../api/generatedStories';
+import { useAuth } from '../context/AuthContext';
+import { speakText, stopSpeaking } from '../services/ai/browserTextToSpeech';
 import {
- AudioIcon, BookIcon, ClockIcon, SparklesIcon,
- ChevronLeftIcon, PlayIcon, PauseIcon, BrainIcon, HeartIcon, HistoryIcon
+  BookIcon, ChevronLeftIcon, PlayIcon, PauseIcon, HeartIcon, HistoryIcon, SparklesIcon,
 } from '../components/Icons';
-import {KidsPageShell} from '../components/kids/KidsPageShell';
-import {Button, Badge, Avatar} from '../components/ui';
+import { KidsPageShell } from '../components/kids/KidsPageShell';
+import { Button, Badge, Avatar } from '../components/ui';
 import { useReducedMotion } from '../hooks/useReducedMotion';
-import { getHoverMotion } from '../constants/kidsMotion';
-import { BRAND_HERO_GRADIENT, BRAND_SEMANTIC, storyGradientAtIndex } from '../constants/brandTheme';
+import { getHoverMotion, getMotionProps, kidsCardAppear, kidsPageEnter } from '../constants/kidsMotion';
+import { BRAND_HERO_GRADIENT, storyGradientAtIndex } from '../constants/brandTheme';
 
-const themeOptionDefs = [
- {id: 'aventure', label: 'Aventure', pictogram: '🗺️'},
- {id: 'animaux', label: 'Animaux', pictogram: '🦊'},
- {id: 'espace', label: 'Espace', pictogram: '🚀'},
- {id: 'princesses', label: 'Princesses', pictogram: '👑'},
- {id: 'dinosaures', label: 'Dinosaures', pictogram: '🦖'},
- {id: 'magie', label: 'Magie', pictogram: '🪄'},
- {id: 'nature', label: 'Nature', pictogram: '🌿'},
- {id: 'amitie', label: 'Amitié', pictogram: '🤝'}
-];
-const THEME_LABEL_KEYS = {
- aventure: 'studioTheme_adventure',
- animaux: 'studioTheme_animals',
- espace: 'studioTheme_space',
- princesses: 'studioTheme_princesses',
- dinosaures: 'studioTheme_dinosaurs',
- magie: 'studioTheme_magic',
- nature: 'studioTheme_nature',
- amitie: 'studioTheme_friendship',
-};
-
-const characterOptions = [
- {id: 'un dragon', label: 'Dragon', pictogram: '🐉'},
- {id: 'un robot', label: 'Robot', pictogram: '🤖'},
- {id: 'une fée', label: 'Fée', pictogram: '🧚‍♀️'},
- {id: 'un chat', label: 'Chat', pictogram: '🐱'},
- {id: 'un pirate', label: 'Pirate', pictogram: '🏴‍☠️'},
- {id: 'un extra-terrestre', label: 'Alien', pictogram: '👽'}
+/** Worlds map to existing API theme ids — presentation only. */
+const WORLD_DEFS = [
+  { id: 'nature', worldKey: 'studioWorld_forest', pictogram: '🌲' },
+  { id: 'aventure', worldKey: 'studioWorld_ocean', pictogram: '🌊' },
+  { id: 'espace', worldKey: 'studioWorld_space', pictogram: '🚀' },
+  { id: 'magie', worldKey: 'studioWorld_magic', pictogram: '✨' },
+  { id: 'dinosaures', worldKey: 'studioWorld_dinosaurs', pictogram: '🦕' },
+  { id: 'animaux', worldKey: 'studioWorld_animals', pictogram: '🦊' },
+  { id: 'amitie', worldKey: 'studioWorld_friendship', pictogram: '💛' },
+  { id: 'princesses', worldKey: 'studioWorld_dreams', pictogram: '🌙' },
 ];
 
-const valueOptions = [
- {id: 'friendship', label: 'Amitié'},
- {id: 'courage', label: 'Courage'},
- {id: 'respect', label: 'Respect'},
- {id: 'curiosity', label: 'Curiosité'}
+const HERO_DEFS = [
+  { id: 'un dragon', labelKey: 'studioHero_dragon', pictogram: '🐉', traitKey: 'studioHeroTrait_brave' },
+  { id: 'un robot', labelKey: 'studioHero_robot', pictogram: '🤖', traitKey: 'studioHeroTrait_clever' },
+  { id: 'une fée', labelKey: 'studioHero_fairy', pictogram: '🧚', traitKey: 'studioHeroTrait_kind' },
+  { id: 'un chat', labelKey: 'studioHero_cat', pictogram: '🐱', traitKey: 'studioHeroTrait_curious' },
+  { id: 'un pirate', labelKey: 'studioHero_pirate', pictogram: '🏴‍☠️', traitKey: 'studioHeroTrait_bold' },
+  { id: 'un extra-terrestre', labelKey: 'studioHero_alien', pictogram: '👽', traitKey: 'studioHeroTrait_wonder' },
 ];
 
-const durationOptions = [2, 5, 8, 12];
+/** Adventures map to existing educational_value ids. */
+const ADVENTURE_DEFS = [
+  { id: 'curiosity', adventureKey: 'studioAdventure_treasure', pictogram: '💎', cardId: 'treasure' },
+  { id: 'friendship', adventureKey: 'studioAdventure_friend', pictogram: '🤝', cardId: 'friend' },
+  { id: 'courage', adventureKey: 'studioAdventure_courage', pictogram: '⭐', cardId: 'courage' },
+  { id: 'curiosity', adventureKey: 'studioAdventure_stars', pictogram: '🌌', cardId: 'stars' },
+  { id: 'respect', adventureKey: 'studioAdventure_forest', pictogram: '🌳', cardId: 'forest' },
+];
 
-const loadingSteps = [
-"✨ Récolte d'idées magiques...",
-"📚 Construction de l'aventure...",
-"🧙 Création des personnages...",
-"🎨 Imagination des décors...",
-"📖 Écriture de l'histoire...",
-"🎉 Finalisation de la magie..."
+/** Styles map to estimated_duration_minutes. */
+const STYLE_DEFS = [
+  { minutes: 8, styleKey: 'studioStyle_bedtime', pictogram: '🌙' },
+  { minutes: 5, styleKey: 'studioStyle_funny', pictogram: '😄' },
+  { minutes: 8, styleKey: 'studioStyle_educational', pictogram: '📚', styleId: 'educational' },
+  { minutes: 5, styleKey: 'studioStyle_adventure', pictogram: '🗺️', styleId: 'adventure' },
+  { minutes: 12, styleKey: 'studioStyle_calm', pictogram: '🍃' },
+];
+
+const LOADING_MESSAGE_KEYS = [
+  'studioLoading_ideas',
+  'studioLoading_world',
+  'studioLoading_heroes',
+  'studioLoading_pages',
+  'studioLoading_writing',
+  'studioLoading_ready',
+];
+
+const JOURNEY_STEPS = [
+  { id: 1, labelKey: 'studioStep_world' },
+  { id: 2, labelKey: 'studioStep_hero' },
+  { id: 3, labelKey: 'studioStep_adventure' },
+  { id: 4, labelKey: 'studioStep_style' },
+  { id: 5, labelKey: 'studioStep_create' },
 ];
 
 function getErrorMessage(error) {
- if (error.response?.status === 504) return 'La création a pris trop de temps. Réessaie avec une histoire plus courte.';
- if (error.response?.data?.error) return error.response.data.error;
- if (error.code === 'ECONNABORTED') return 'Le serveur met trop de temps à répondre. Réessaie dans un instant.';
- return error.message ||"Impossible de créer l'histoire pour le moment.";
+  if (error.response?.status === 504) return 'La création a pris trop de temps. Réessaie avec une histoire plus courte.';
+  if (error.response?.data?.error) return error.response.data.error;
+  if (error.code === 'ECONNABORTED') return 'Le serveur met trop de temps à répondre. Réessaie dans un instant.';
+  return error.message || "Impossible de créer l'histoire pour le moment.";
 }
 
 function storyLanguageToSpeechCode(language) {
- if (language === 'en') return 'en-US';
- if (language === 'ar') return 'ar-MA';
- return 'fr-FR';
+  if (language === 'en') return 'en-US';
+  if (language === 'ar') return 'ar-MA';
+  return 'fr-FR';
 }
 
-// Floating Stars Animation Component
-const FloatingStars = () => {
- return (
- <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
- {[...Array(20)].map((_, i) => (
- <motion.div
- key={i}
- className="absolute text-magic-300 opacity-50"
- initial={{
- x: Math.random() * window.innerWidth, 
- y: Math.random() * window.innerHeight,
- scale: Math.random() * 0.5 + 0.5
-}}
- animate={{
- y: [null, Math.random() * -100 - 50],
- opacity: [0.2, 0.8, 0.2]
-}}
- transition={{
- duration: Math.random() * 5 + 5, 
- repeat: Infinity, 
- ease:"easeInOut" 
-}}
- >
- ✨
- </motion.div>
- ))}
- </div>
- );
-};
+function SoftParticles({ count = 12, reducedMotion }) {
+  if (reducedMotion) return null;
+  return (
+    <div className="kids-studio-particles" aria-hidden="true">
+      {Array.from({ length: count }).map((_, index) => (
+        <span
+          key={index}
+          className="kids-studio-particle"
+          style={{
+            left: `${8 + (index * 7) % 84}%`,
+            top: `${12 + (index * 11) % 70}%`,
+            animationDelay: `${index * 0.45}s`,
+          }}
+        />
+      ))}
+    </div>
+  );
+}
 
-// Confetti Component for Success State
-const Confetti = () => {
- const [particles, setParticles] = useState([]);
- 
- useEffect(() => {
- const newParticles = Array.from({length: 100}).map((_, i) => ({
- id: i,
- x: window.innerWidth / 2,
- y: window.innerHeight / 2,
- size: Math.random() * 8 + 4,
- color: ['var(--color-magic-500)', 'var(--color-success-500)', 'var(--color-orange-500)', 'var(--color-magic-400)', 'var(--color-success-400)', 'var(--color-orange-400)'][Math.floor(Math.random() * 6)],
- duration: Math.random() * 2 + 1,
- angle: Math.random() * Math.PI * 2,
- velocity: Math.random() * 300 + 100
-}));
- setParticles(newParticles);
-}, []);
-
- return (
- <div className="fixed inset-0 pointer-events-none z-[100] overflow-hidden">
- {particles.map(p => {
- const endX = p.x + Math.cos(p.angle) * p.velocity;
- const endY = p.y + Math.sin(p.angle) * p.velocity + 200; // gravity effect
- return (
- <motion.div
- key={p.id}
- initial={{x: p.x, y: p.y, opacity: 1, scale: 0}}
- animate={{x: endX, y: endY, opacity: 0, scale: 1, rotate: 720}}
- transition={{duration: p.duration, ease:"easeOut"}}
- style={{position: 'absolute', width: p.size, height: p.size, backgroundColor: p.color, borderRadius: Math.random() > 0.5 ? '50%' : '0%'}}
- />
- );
-})}
- </div>
- );
-};
+function JourneyProgress({ step, t }) {
+  return (
+    <nav className="kids-studio-journey-progress" aria-label={t('studioJourneyProgress')}>
+      {JOURNEY_STEPS.map((item) => {
+        const active = item.id === step;
+        const done = item.id < step;
+        return (
+          <div
+            key={item.id}
+            className={`kids-studio-journey-dot ${active ? 'is-active' : ''} ${done ? 'is-done' : ''}`}
+            aria-current={active ? 'step' : undefined}
+          >
+            <span className="kids-studio-journey-dot-num" aria-hidden="true">{item.id}</span>
+            <span className="kids-studio-journey-dot-label">{t(item.labelKey)}</span>
+          </div>
+        );
+      })}
+    </nav>
+  );
+}
 
 function KidsStoryStudio() {
- const {user} = useAuth();
- const {t} = useLanguage();
- const navigate = useNavigate();
- const reducedMotion = useReducedMotion();
- const isStoryAuthor = user?.role === 'parent' || user?.role === 'admin';
- const storiesPath = isStoryAuthor ? '/parent/ai-stories' : '/kids/ai-stories';
- const backPath = isStoryAuthor ? '/parent' : '/kids/ai-stories';
- const themeOptions = useMemo(
-  () => themeOptionDefs.map((theme, index) => ({
-   ...theme,
-   label: t(THEME_LABEL_KEYS[theme.id] || theme.id),
-   gradient: storyGradientAtIndex(index),
-  })),
-  [t]
- );
+  const { user } = useAuth();
+  const { t } = useLanguage();
+  const navigate = useNavigate();
+  const reducedMotion = useReducedMotion();
+  const isStoryAuthor = user?.role === 'parent' || user?.role === 'admin';
+  const storiesPath = isStoryAuthor ? '/parent/ai-stories' : '/kids/ai-stories';
+  const backPath = isStoryAuthor ? '/parent' : '/kids/ai-stories';
 
- const [form, setForm] = useState({
- theme: themeOptionDefs[0].id,
- estimated_duration_minutes: 5,
- educational_value: 'friendship'
-});
- const [selectedCharacters, setSelectedCharacters] = useState([characterOptions[0].id]);
- const [customCharacter, setCustomCharacter] = useState('');
+  const worlds = useMemo(
+    () => WORLD_DEFS.map((world, index) => ({
+      ...world,
+      label: t(world.worldKey),
+      gradient: storyGradientAtIndex(index),
+    })),
+    [t],
+  );
 
- const [story, setStory] = useState(null);
- const [history, setHistory] = useState([]);
- const [kidProfiles, setKidProfiles] = useState([]);
- const [selectedKidProfileId, setSelectedKidProfileId] = useState('');
- 
- const [profilesLoading, setProfilesLoading] = useState(true);
- const [loading, setLoading] = useState(false);
- const [loadingStepIndex, setLoadingStepIndex] = useState(0);
- const [showSuccess, setShowSuccess] = useState(false);
- const [saving, setSaving] = useState(false);
- const [speaking, setSpeaking] = useState(false);
- const [error, setError] = useState('');
+  const heroes = useMemo(
+    () => HERO_DEFS.map((hero) => ({
+      ...hero,
+      label: t(hero.labelKey),
+      trait: t(hero.traitKey),
+    })),
+    [t],
+  );
 
- const canUseStoryStudio = isStoryAuthor;
- const selectedKidProfile = kidProfiles.find((kid) => String(kid.id) === String(selectedKidProfileId));
+  const adventures = useMemo(
+    () => ADVENTURE_DEFS.map((item) => ({
+      ...item,
+      label: t(item.adventureKey),
+      educationalValue: item.id,
+    })),
+    [t],
+  );
 
- useEffect(() => {
- if (!canUseStoryStudio) return undefined;
- let active = true;
- setProfilesLoading(true);
- generatedStoriesAPI.getKidProfiles()
- .then((response) => {
- if (!active) return;
- const profiles = response.data || [];
- setKidProfiles(profiles);
- setSelectedKidProfileId((current) => current || profiles[0]?.id || '');
-})
- .catch((err) => {
- console.warn('Could not load kid profiles for story studio:', err);
- if (active) setError(getErrorMessage(err));
-})
- .finally(() => {
- if (active) setProfilesLoading(false);
-});
- return () => {active = false; stopSpeaking();};
-}, [canUseStoryStudio]);
+  const styles = useMemo(
+    () => STYLE_DEFS.map((item, index) => ({
+      ...item,
+      styleId: item.styleId || `${item.styleKey}-${item.minutes}`,
+      label: t(item.styleKey),
+      uniqueKey: `${item.styleKey}-${index}`,
+    })),
+    [t],
+  );
 
- useEffect(() => {
- if (!canUseStoryStudio || !selectedKidProfileId) return undefined;
- let active = true;
- generatedStoriesAPI.getHistory({kid_profile_id: selectedKidProfileId})
- .then((response) => {if (active) setHistory(response.data || []);})
- .catch((err) => console.warn('Could not load generated story history:', err));
- return () => {active = false; stopSpeaking();};
-}, [canUseStoryStudio, selectedKidProfileId]);
+  const [journeyStep, setJourneyStep] = useState(1);
+  const [selectedStyleId, setSelectedStyleId] = useState(styles[0]?.uniqueKey);
+  const [selectedAdventureCard, setSelectedAdventureCard] = useState(adventures[0]?.cardId);
+  const [form, setForm] = useState({
+    theme: WORLD_DEFS[0].id,
+    estimated_duration_minutes: 5,
+    educational_value: 'friendship',
+  });
+  const [selectedHero, setSelectedHero] = useState(HERO_DEFS[0].id);
+  const [customCharacter, setCustomCharacter] = useState('');
 
- const patchForm = (key, value) => {
- setForm((current) => ({...current, [key]: value}));
-};
+  const [story, setStory] = useState(null);
+  const [history, setHistory] = useState([]);
+  const [kidProfiles, setKidProfiles] = useState([]);
+  const [selectedKidProfileId, setSelectedKidProfileId] = useState('');
 
- const toggleCharacter = (id) => {
- setSelectedCharacters(curr => 
- curr.includes(id) ? curr.filter(c => c !== id) : [...curr, id]
- );
-};
+  const [profilesLoading, setProfilesLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [loadingStepIndex, setLoadingStepIndex] = useState(0);
+  const [saving, setSaving] = useState(false);
+  const [speaking, setSpeaking] = useState(false);
+  const [error, setError] = useState('');
 
- const handleGenerate = async () => {
- if (!selectedKidProfileId) {
- setError('Choisis un profil enfant avant de créer une histoire.');
- return;
-}
- setError('');
- setLoading(true);
- setLoadingStepIndex(0);
- setShowSuccess(false);
- stopSpeaking();
- setSpeaking(false);
- 
- // Simulate Magical Loading Steps
- const stepInterval = setInterval(() => {
- setLoadingStepIndex(curr => Math.min(curr + 1, loadingSteps.length - 1));
-}, 2500);
+  const canUseStoryStudio = isStoryAuthor;
+  const selectedKidProfile = kidProfiles.find((kid) => String(kid.id) === String(selectedKidProfileId));
+  const showBookPreview = Boolean(story) && !loading;
 
- const allCharacters = [...selectedCharacters];
- if (customCharacter.trim()) allCharacters.push(customCharacter.trim());
- const finalCharacters = allCharacters.join(', ');
+  useEffect(() => {
+    if (!canUseStoryStudio) return undefined;
+    let active = true;
+    setProfilesLoading(true);
+    generatedStoriesAPI.getKidProfiles()
+      .then((response) => {
+        if (!active) return;
+        const profiles = response.data || [];
+        setKidProfiles(profiles);
+        setSelectedKidProfileId((current) => current || profiles[0]?.id || '');
+      })
+      .catch((err) => {
+        console.warn('Could not load kid profiles for story studio:', err);
+        if (active) setError(getErrorMessage(err));
+      })
+      .finally(() => {
+        if (active) setProfilesLoading(false);
+      });
+    return () => { active = false; stopSpeaking(); };
+  }, [canUseStoryStudio]);
 
- try {
- const response = await generatedStoriesAPI.generate({
- ...form,
- characters: finalCharacters || 'un doudou magique',
- kid_profile_id: selectedKidProfileId
-});
- clearInterval(stepInterval);
- setLoadingStepIndex(loadingSteps.length - 1);
- 
- const nextStory = response.data;
- 
- setTimeout(() => {
- setLoading(false);
- setShowSuccess(true);
- setStory(nextStory);
- setHistory((current) => [nextStory, ...current.filter((item) => item.id !== nextStory.id)].slice(0, 30));
- 
- // Hide success confetti after 4s
- setTimeout(() => setShowSuccess(false), 4000);
- 
- // Scroll to story smoothly
- window.scrollTo({top: document.getElementById('story-result')?.offsetTop - 50, behavior: 'smooth'});
-}, 1000);
+  useEffect(() => {
+    if (!canUseStoryStudio || !selectedKidProfileId) return undefined;
+    let active = true;
+    generatedStoriesAPI.getHistory({ kid_profile_id: selectedKidProfileId })
+      .then((response) => { if (active) setHistory(response.data || []); })
+      .catch((err) => console.warn('Could not load generated story history:', err));
+    return () => { active = false; stopSpeaking(); };
+  }, [canUseStoryStudio, selectedKidProfileId]);
 
-} catch (err) {
- clearInterval(stepInterval);
- setLoading(false);
- console.error('Story generation failed:', err);
- setError(getErrorMessage(err));
-}
-};
+  const patchForm = (key, value) => {
+    setForm((current) => ({ ...current, [key]: value }));
+  };
 
- const handleSpeak = async (selectedStory = story) => {
- if (!selectedStory?.story_text) return;
- setError('');
- if (speaking) {
- stopSpeaking();
- setSpeaking(false);
- return;
-}
- setSpeaking(true);
- try {
- await speakText(`${selectedStory.title}. ${selectedStory.story_text}`, {
- language: storyLanguageToSpeechCode(selectedStory.language)
-});
-} catch (err) {
- setError(err.message || 'Lecture audio indisponible.');
-} finally {
- setSpeaking(false);
-}
-};
+  const goNext = () => setJourneyStep((step) => Math.min(5, step + 1));
+  const goBack = () => setJourneyStep((step) => Math.max(1, step - 1));
 
- const handleSave = async () => {
- if (!story?.id) return;
- setError('');
- setSaving(true);
- try {
- const response = await generatedStoriesAPI.save(story.id);
- const savedStory = response.data;
- setStory(savedStory);
- setHistory((current) => current.map((item) => (item.id === savedStory.id ? savedStory : item)));
-} catch (err) {
- setError(getErrorMessage(err));
-} finally {
- setSaving(false);
-}
-};
+  const handleGenerate = async () => {
+    if (!selectedKidProfileId) {
+      setError(t('studioNeedKidProfile'));
+      return;
+    }
+    setError('');
+    setLoading(true);
+    setLoadingStepIndex(0);
+    setJourneyStep(5);
+    stopSpeaking();
+    setSpeaking(false);
 
- if (!canUseStoryStudio) {
- return (
- <div className="flex min-h-screen items-center justify-center kids-studio-atmosphere px-4">
- <div className="max-w-md rounded-32 bg-card p-8 text-center shadow-floating">
- <p className="mb-4 text-xl font-black text-foreground">{t('storyStudioParentOnlyTitle')}</p>
- <p className="mb-6 text-sm font-bold text-foreground-secondary">
-  {t('storyStudioParentOnlyDescription')}
- </p>
- <Button onClick={() => navigate('/kids/ai-stories')} variant="primary" className="rounded-full w-full font-black">
-  {t('back')}
- </Button>
- </div>
- </div>
- );
-}
+    const stepInterval = setInterval(() => {
+      setLoadingStepIndex((curr) => Math.min(curr + 1, LOADING_MESSAGE_KEYS.length - 1));
+    }, 2500);
 
- return (
- <KidsPageShell variant="library" world="create" className="kids-studio-atmosphere kids-glow-create text-white">
- <FloatingStars />
- {showSuccess && <Confetti />}
+    const finalCharacters = [selectedHero, customCharacter.trim()].filter(Boolean).join(', ');
 
- {/* HEADER */}
- <header className="sticky top-0 z-40 bg-magic-900/80 backdrop-blur-xl border-b border-white/10 shadow-lg px-4 py-4 flex items-center justify-between">
- <Link to={backPath} className="flex items-center gap-2 group">
- <div className="p-2 rounded-full bg-card/10 group-hover:bg-card/20 transition-colors">
- <ChevronLeftIcon className="w-6 h-6 text-white" />
- </div>
- <span className="font-black text-xl tracking-wide hidden sm:block">Fabulia</span>
- </Link>
- <div className="flex items-center gap-3">
- <div className="hidden md:flex items-center gap-2 px-4 py-2 bg-card/10 rounded-full">
- <Avatar src={null} fallback={selectedKidProfile?.name?.charAt(0) ||"K"} className="w-8 h-8 bg-gradient-to-br from-primary-400 to-secondary-500 text-white font-bold" />
- <span className="font-bold text-sm">{selectedKidProfile?.name ||"Enfant"}</span>
- </div>
- <Link to={storiesPath}>
- <Button variant="outline" className="rounded-full bg-card/10 border-none text-white hover:bg-card/20 font-bold shadow-lg">
- <BookIcon className="w-5 h-5 mr-2" /> Mes histoires
- </Button>
- </Link>
- </div>
- </header>
+    try {
+      const response = await generatedStoriesAPI.generate({
+        ...form,
+        characters: finalCharacters || 'un doudou magique',
+        kid_profile_id: selectedKidProfileId,
+      });
+      clearInterval(stepInterval);
+      setLoadingStepIndex(LOADING_MESSAGE_KEYS.length - 1);
 
- {/* MAGIC LOADING OVERLAY */}
- <AnimatePresence>
- {loading && (
- <motion.div initial={{opacity: 0}} animate={{opacity: 1}} exit={{opacity: 0}} className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-magic-900/90 backdrop-blur-md">
- <div className="text-center">
- <motion.div animate={{rotate: 360}} transition={{duration: 8, repeat: Infinity, ease: 'linear'}} className="w-32 h-32 mx-auto relative mb-8">
- <div className="absolute inset-0 rounded-full border-4 border-white/10 border-t-magic-400 border-r-orange-400"></div>
- <div className="absolute inset-2 rounded-full border-4 border-white/5 border-b-magic-300 border-l-primary-400" style={{animation: 'spin 4s linear infinite reverse'}}></div>
- <SparklesIcon className="w-12 h-12 text-foreground-400 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" />
- </motion.div>
- 
- <AnimatePresence mode="wait">
- <motion.h2 
- key={loadingStepIndex}
- initial={{y: 20, opacity: 0}} 
- animate={{y: 0, opacity: 1}} 
- exit={{y: -20, opacity: 0}}
- className="text-3xl md:text-4xl font-black text-white mb-2"
- >
- {loadingSteps[loadingStepIndex]}
- </motion.h2>
- </AnimatePresence>
- <p className="text-white/50 font-medium">L'intelligence artificielle travaille sa magie...</p>
- </div>
- </motion.div>
- )}
- </AnimatePresence>
+      const nextStory = response.data;
+      setTimeout(() => {
+        setLoading(false);
+        setStory(nextStory);
+        setHistory((current) => [nextStory, ...current.filter((item) => item.id !== nextStory.id)].slice(0, 30));
+        window.scrollTo({ top: 0, behavior: reducedMotion ? 'auto' : 'smooth' });
+      }, reducedMotion ? 200 : 900);
+    } catch (err) {
+      clearInterval(stepInterval);
+      setLoading(false);
+      setJourneyStep(4);
+      console.error('Story generation failed:', err);
+      setError(getErrorMessage(err));
+    }
+  };
 
- <main className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 py-8">
- 
- {/* HERO TITLE */}
- <div className="text-center mb-12">
- <motion.div initial={{scale: 0}} animate={{scale: 1}} transition={{type: 'spring'}} className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-magic-500/20 to-orange-500/20 border border-magic-400/30 rounded-full text-magic-200 font-bold mb-6">
- <SparklesIcon className="w-4 h-4" /> Le Chaudron Magique
- </motion.div>
- <h1 className="text-4xl md:text-6xl font-black text-white leading-tight mb-4">
- Invente ton aventure !
- </h1>
- <p className="text-lg text-white/60 font-medium max-w-2xl mx-auto">
- {t('storyStudioParentSubtitle')}
- </p>
- {error && (
- <div className="mt-6 inline-block bg-danger-500/20 border border-danger-500/50 text-danger-200 px-6 py-3 rounded-full font-bold">
- {error}
- </div>
- )}
- </div>
+  const handleSpeak = async (selectedStory = story) => {
+    if (!selectedStory?.story_text) return;
+    setError('');
+    if (speaking) {
+      stopSpeaking();
+      setSpeaking(false);
+      return;
+    }
+    setSpeaking(true);
+    try {
+      await speakText(`${selectedStory.title}. ${selectedStory.story_text}`, {
+        language: storyLanguageToSpeechCode(selectedStory.language),
+      });
+    } catch (err) {
+      setError(err.message || 'Lecture audio indisponible.');
+    } finally {
+      setSpeaking(false);
+    }
+  };
 
- <div className="kids-studio-timeline mb-12 max-w-3xl mx-auto" aria-hidden="true">
- {[
-  { label: 'Thème', emoji: '🗺️', active: Boolean(form.theme) },
-  { label: 'Héros', emoji: '🦊', active: selectedCharacters.length > 0 || customCharacter.trim() },
-  { label: 'Réglages', emoji: '⏱️', active: Boolean(form.estimated_duration_minutes) },
-  { label: 'Magie', emoji: '✨', active: Boolean(story) },
- ].map((step) => (
-  <div key={step.label} className={`kids-studio-step ${step.active ? 'kids-studio-step-active' : ''}`}>
-   <span className="text-3xl">{step.emoji}</span>
-   <p className="font-black text-sm mt-2 text-white/90">{step.label}</p>
-  </div>
- ))}
- </div>
+  const handleSave = async () => {
+    if (!story?.id) return;
+    setError('');
+    setSaving(true);
+    try {
+      const response = await generatedStoriesAPI.save(story.id);
+      const savedStory = response.data;
+      setStory(savedStory);
+      setHistory((current) => current.map((item) => (item.id === savedStory.id ? savedStory : item)));
+    } catch (err) {
+      setError(getErrorMessage(err));
+    } finally {
+      setSaving(false);
+    }
+  };
 
- <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
- 
- {/* LEFT: INGREDIENTS FORM */}
- <div className="lg:col-span-8 space-y-8">
- 
- {/* THEME SELECTION */}
- <div className="bg-card/5 backdrop-blur-xl border border-white/10 rounded-32 p-6 md:p-8">
- <h2 className="text-2xl font-black mb-6 flex items-center gap-3">
- <span className="w-8 h-8 rounded-full bg-gradient-to-br from-magic-400 to-orange-500 flex items-center justify-center text-sm">1</span> 
- Choisis un Thème
- </h2>
- <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
- {themeOptions.map(theme => (
- <motion.button
- key={theme.id}
- {...getHoverMotion(reducedMotion, { whileHover: { scale: 1.05, y: -5 }, whileTap: { scale: 0.95 } })}
- onClick={() => patchForm('theme', theme.id)}
- className={`relative overflow-hidden rounded-24 p-4 flex flex-col items-center justify-center gap-2 border-2 transition-all min-h-[120px] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-magic-300 ${form.theme === theme.id ? 'border-white bg-card/20 shadow-card' : 'border-white/5 bg-card/5 hover:bg-card/10'}`}
- >
- {form.theme === theme.id && <div className={`absolute inset-0 opacity-30 bg-gradient-to-br ${theme.gradient}`}></div>}
- <span className="text-4xl relative z-10">{theme.pictogram}</span>
- <span className="font-bold text-sm relative z-10">{theme.label}</span>
- {form.theme === theme.id && <div className="absolute top-2 right-2 w-3 h-3 bg-card rounded-full shadow-[0_0_10px_white]"></div>}
- </motion.button>
- ))}
- </div>
- </div>
+  const startNewStory = () => {
+    setStory(null);
+    setJourneyStep(1);
+    setError('');
+    stopSpeaking();
+    setSpeaking(false);
+  };
 
- {/* CHARACTER SELECTION */}
- <div className="bg-card/5 backdrop-blur-xl border border-white/10 rounded-32 p-6 md:p-8">
- <h2 className="text-2xl font-black mb-6 flex items-center gap-3">
- <span className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-400 to-magic-500 flex items-center justify-center text-sm">2</span> 
- Qui sera dans l'histoire ?
- </h2>
- <div className="grid grid-cols-3 sm:grid-cols-6 gap-3 mb-6">
- {characterOptions.map(char => {
- const isSelected = selectedCharacters.includes(char.id);
- return (
- <motion.button
- key={char.id}
- {...getHoverMotion(reducedMotion, { whileHover: { scale: 1.08 }, whileTap: { scale: 0.92 } })}
- onClick={() => toggleCharacter(char.id)}
- className={`aspect-square rounded-24 flex flex-col items-center justify-center gap-1 border-2 transition-all focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-magic-300 ${isSelected ? 'border-magic-400 bg-magic-400/20' : 'border-white/5 bg-card/5 hover:bg-card/10'}`}
- >
- <span className="text-3xl">{char.pictogram}</span>
- <span className="font-bold text-[10px] leading-tight text-center">{char.label}</span>
- </motion.button>
- );
-})}
- </div>
- <div className="flex gap-3">
- <input 
- value={customCharacter}
- onChange={(e) => setCustomCharacter(e.target.value)}
- placeholder="Ajouter un autre personnage... (ex: Mamie, mon chien)" 
- className="flex-1 rounded-20 bg-card/10 border-2 border-white/10 px-4 py-3 font-bold text-white placeholder-white/40 focus:border-magic-400 focus:outline-none focus-visible:ring-4 focus-visible:ring-magic-300"
- />
- </div>
- </div>
+  if (!canUseStoryStudio) {
+    return (
+      <div className="flex min-h-screen items-center justify-center kids-studio-atmosphere px-4">
+        <div className="max-w-md rounded-32 bg-card p-8 text-center shadow-floating">
+          <p className="mb-4 text-xl font-black text-foreground">{t('storyStudioParentOnlyTitle')}</p>
+          <p className="mb-6 text-sm font-bold text-foreground-secondary">
+            {t('storyStudioParentOnlyDescription')}
+          </p>
+          <Button onClick={() => navigate('/kids/ai-stories')} variant="primary" className="rounded-full w-full font-black">
+            {t('back')}
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
- {/* SETTINGS */}
- <div className="bg-card/5 backdrop-blur-xl border border-white/10 rounded-32 p-6 md:p-8 grid sm:grid-cols-2 gap-8">
- <div>
- <h2 className="text-xl font-black mb-4 flex items-center gap-3">
- <ClockIcon className="w-6 h-6 text-rose-400" /> Durée
- </h2>
- <div className="flex flex-wrap gap-2">
- {durationOptions.map(dur => (
- <button
- key={dur}
- onClick={() => patchForm('estimated_duration_minutes', dur)}
- className={`px-4 py-2 rounded-full font-bold text-sm border-2 transition-all ${Number(form.estimated_duration_minutes) === dur ? 'border-rose-400 bg-rose-400/20 text-rose-200' : 'border-white/10 text-white/60 hover:bg-card/10 hover:text-white'}`}
- >
- {dur} min
- </button>
- ))}
- </div>
- </div>
- <div>
- <h2 className="text-xl font-black mb-4 flex items-center gap-3">
- <BrainIcon className="w-6 h-6 text-magic-400" /> Morale
- </h2>
- <div className="flex flex-wrap gap-2">
- {valueOptions.map(val => (
- <button
- key={val.id}
- onClick={() => patchForm('educational_value', val.id)}
- className={`px-4 py-2 rounded-full font-bold text-sm border-2 transition-all ${form.educational_value === val.id ? 'border-magic-400 bg-magic-400/20 text-magic-200' : 'border-white/10 text-white/60 hover:bg-card/10 hover:text-white'}`}
- >
- {val.label}
- </button>
- ))}
- </div>
- </div>
- </div>
+  return (
+    <KidsPageShell variant="library" world="create" className="kids-studio-atmosphere kids-glow-create text-white">
+      <SoftParticles count={reducedMotion ? 0 : 10} reducedMotion={reducedMotion} />
 
- {/* GENERATE BUTTON */}
- <motion.button
- {...getHoverMotion(reducedMotion, { whileHover: { scale: 1.02 }, whileTap: { scale: 0.98 } })}
- onClick={handleGenerate}
- disabled={loading || profilesLoading || !selectedKidProfileId}
- className="w-full relative group overflow-hidden rounded-32 p-1 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-magic-300"
- >
- <div className={`absolute inset-0 bg-gradient-to-r ${BRAND_HERO_GRADIENT} rounded-32 opacity-70 group-hover:opacity-100 transition-opacity blur-md`}></div>
- <div className={`absolute inset-0 bg-gradient-to-r ${BRAND_HERO_GRADIENT} rounded-32 opacity-90 group-hover:opacity-100 transition-opacity`}></div>
- <div className="relative bg-magic-900/20 backdrop-blur-sm rounded-[1.85rem] py-6 flex items-center justify-center gap-4 border border-white/20">
- <SparklesIcon className="w-8 h-8 text-white" />
- <span className="text-3xl font-black text-white tracking-wide">{t('storyStudioGenerateAction')}</span>
- </div>
- </motion.button>
+      <header className="sticky top-0 z-40 bg-magic-900/80 backdrop-blur-xl border-b border-white/10 shadow-lg px-4 py-4 flex items-center justify-between">
+        <Link to={backPath} className="flex items-center gap-2 group min-h-touch">
+          <div className="p-2 rounded-full bg-card/10 group-hover:bg-card/20 transition-colors">
+            <ChevronLeftIcon className="w-6 h-6 text-white" />
+          </div>
+          <span className="font-black text-xl tracking-wide hidden sm:block">{t('studioBrand')}</span>
+        </Link>
+        <div className="flex items-center gap-3">
+          <div className="hidden md:flex items-center gap-2 px-4 py-2 bg-card/10 rounded-full">
+            <Avatar src={null} fallback={selectedKidProfile?.name?.charAt(0) || 'K'} className="w-8 h-8 bg-gradient-to-br from-primary-400 to-secondary-500 text-white font-bold" />
+            <span className="font-bold text-sm">{selectedKidProfile?.name || t('parentChild')}</span>
+          </div>
+          <Link to={storiesPath}>
+            <Button variant="outline" className="rounded-full bg-card/10 border-none text-white hover:bg-card/20 font-bold shadow-lg min-h-touch">
+              <BookIcon className="w-5 h-5 mr-2" /> {t('studioMyStories')}
+            </Button>
+          </Link>
+        </div>
+      </header>
 
- </div>
+      <AnimatePresence>
+        {loading && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="kids-studio-generate-overlay"
+            role="status"
+            aria-live="polite"
+            aria-busy="true"
+          >
+            <SoftParticles count={reducedMotion ? 0 : 14} reducedMotion={reducedMotion} />
+            <div className="kids-studio-generate-stage">
+              <motion.div
+                className="kids-studio-magic-book"
+                animate={reducedMotion ? undefined : { y: [0, -8, 0], rotate: [-1.5, 1.5, -1.5] }}
+                transition={{ duration: 4.5, repeat: Infinity, ease: 'easeInOut' }}
+                aria-hidden="true"
+              >
+                <span className="kids-studio-magic-book-spine" />
+                <span className="kids-studio-magic-book-page" />
+              </motion.div>
+              <AnimatePresence mode="wait">
+                <motion.h2
+                  key={loadingStepIndex}
+                  initial={reducedMotion ? false : { y: 12, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  exit={reducedMotion ? undefined : { y: -10, opacity: 0 }}
+                  className="kids-studio-generate-message"
+                >
+                  {t(LOADING_MESSAGE_KEYS[loadingStepIndex])}
+                </motion.h2>
+              </AnimatePresence>
+              <p className="kids-studio-generate-hint">{t('studioLoadingHint')}</p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
- {/* RIGHT: STORY RESULT OR EMPTY STATE */}
- <div className="lg:col-span-4" id="story-result">
- <div className="sticky top-24">
- <AnimatePresence mode="wait">
- {!story ? (
- <motion.div 
- key="empty"
- initial={{opacity: 0, scale: 0.9}} animate={{opacity: 1, scale: 1}} exit={{opacity: 0}}
- className="bg-card/5 backdrop-blur-xl border border-white/10 rounded-32 p-8 text-center min-h-[400px] flex flex-col items-center justify-center"
- >
- <div className="w-28 h-28 bg-magic-500/15 rounded-full flex items-center justify-center mb-6 text-6xl" aria-hidden="true">📖</div>
- <h3 className="text-2xl font-black mb-2">Le livre est vide</h3>
- <p className="text-white/60 font-medium max-w-xs">Mélange tes ingrédients à gauche et clique sur &quot;Créer la Magie&quot; pour voir ton histoire apparaître ici !</p>
- </motion.div>
- ) : (
- <motion.div 
- key="story"
- initial={{opacity: 0, y: 20}} animate={{opacity: 1, y: 0}}
- className="bg-orange-50 text-foreground rounded-32 shadow-floating overflow-hidden relative"
- >
- {/* Story Header */}
- <div className="bg-gradient-to-br from-primary-100 to-secondary-100 p-8 border-b border-border">
- <div className="flex flex-wrap gap-2 mb-4">
- <Badge variant="soft" className="bg-card/60 font-black">{story.theme}</Badge>
- <Badge variant="soft" className="bg-card/60 font-black">{story.estimated_duration_minutes} min</Badge>
- <Badge variant="soft" className={`${BRAND_SEMANTIC.success.bg} ${BRAND_SEMANTIC.success.text} font-black`}>{story.educational_value}</Badge>
- </div>
- <h2 className="text-3xl font-black leading-tight mb-2 text-foreground-900">{story.title}</h2>
- {story.summary && <p className="text-sm font-bold text-foreground-secondary leading-snug">{story.summary}</p>}
- </div>
- 
- {/* Story Body */}
- <div className="p-8 max-h-[500px] overflow-y-auto">
- <div className="whitespace-pre-line text-lg font-bold leading-9 text-foreground font-serif">
- {story.story_text}
- </div>
- </div>
- 
- {/* Actions */}
- <div className="p-6 bg-card border-t border-border flex gap-3">
- <Button 
- onClick={() => handleSpeak(story)} 
- className={`flex-1 rounded-2xl py-4 font-black shadow-lg ${speaking ? 'bg-rose-500 text-white hover:bg-rose-600' : 'bg-primary-500 text-white hover:bg-primary-600'}`}
- >
- {speaking ? <PauseIcon className="w-5 h-5 mr-2"/> : <PlayIcon className="w-5 h-5 mr-2"/>}
- {speaking ? 'Pause' : 'Écouter'}
- </Button>
- <Button 
- onClick={handleSave} 
- disabled={story.saved || saving}
- variant="outline" 
- className={`px-6 rounded-2xl font-black border-border shadow-sm ${story.saved ? `${BRAND_SEMANTIC.success.bg} ${BRAND_SEMANTIC.success.text} ${BRAND_SEMANTIC.success.border}` : 'bg-surface-secondary text-foreground-secondary hover:bg-surface-secondary'}`}
- >
- <HeartIcon className="w-5 h-5" filled={story.saved} />
- </Button>
- </div>
- </motion.div>
- )}
- </AnimatePresence>
- </div>
- </div>
- </div>
+      <main className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 py-8 pb-28">
+        <motion.div {...getMotionProps(reducedMotion, kidsPageEnter)} className="text-center mb-space-24">
+          <p className="kids-studio-kicker">
+            <SparklesIcon className="w-4 h-4" aria-hidden="true" />
+            {t('studioKicker')}
+          </p>
+          <h1 className="kids-studio-title">{t('studioTitle')}</h1>
+          <p className="kids-studio-subtitle">{t('storyStudioParentSubtitle')}</p>
+          {error ? (
+            <div className="mt-6 inline-block bg-danger-500/20 border border-danger-500/50 text-danger-200 px-6 py-3 rounded-full font-bold" role="alert">
+              {error}
+            </div>
+          ) : null}
+        </motion.div>
 
- {/* HISTORY SECTION */}
- {history.length > 0 && (
- <section className="mt-24">
- <h2 className="text-3xl font-black mb-8 flex items-center gap-3">
- <HistoryIcon className="w-8 h-8 text-foreground-400" /> Tes anciennes aventures
- </h2>
- <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
- {history.slice(0, 6).map((item) => (
- <motion.button
- key={item.id}
- {...getHoverMotion(reducedMotion, { whileHover: { y: -5 } })}
- onClick={() => {
- setStory(item);
- window.scrollTo({top: document.getElementById('story-result')?.offsetTop - 50, behavior: 'smooth'});
-}}
- className="bg-card/5 backdrop-blur-md border border-white/10 rounded-24 p-6 text-left hover:bg-card/10 transition-colors group focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-magic-300"
- >
- <div className="flex justify-between items-start mb-4">
- <h3 className="font-black text-xl text-white group-hover:text-foreground-300 transition-colors line-clamp-2">{item.title}</h3>
- {item.saved && <HeartIcon className="w-5 h-5 text-rose-400 shrink-0" filled />}
- </div>
- <p className="text-sm font-medium text-white/50 line-clamp-2 mb-4">{item.summary || item.story_text}</p>
- <div className="flex gap-2">
- <Badge variant="soft" className="bg-card/10 text-white/80 text-xs font-bold">{item.theme}</Badge>
- </div>
- </motion.button>
- ))}
- </div>
- </section>
- )}
+        {!showBookPreview && (
+          <>
+            <JourneyProgress step={journeyStep} t={t} />
 
- </main>
- </KidsPageShell>
- );
+            <AnimatePresence mode="wait">
+              {journeyStep === 1 && (
+                <motion.section
+                  key="world"
+                  {...getMotionProps(reducedMotion, kidsCardAppear)}
+                  className="kids-studio-step-panel"
+                  aria-labelledby="studio-world-heading"
+                >
+                  <h2 id="studio-world-heading" className="kids-studio-step-title">{t('studioChooseWorld')}</h2>
+                  <p className="kids-studio-step-desc">{t('studioChooseWorldDesc')}</p>
+                  <div className="kids-studio-world-grid">
+                    {worlds.map((world) => {
+                      const active = form.theme === world.id;
+                      return (
+                        <motion.button
+                          key={world.id}
+                          type="button"
+                          {...getHoverMotion(reducedMotion)}
+                          onClick={() => patchForm('theme', world.id)}
+                          aria-pressed={active}
+                          className={`kids-studio-world-card ${active ? 'is-active' : ''}`}
+                        >
+                          <span className={`kids-studio-world-glow bg-gradient-to-br ${world.gradient}`} aria-hidden="true" />
+                          <span className="kids-studio-world-emoji" aria-hidden="true">{world.pictogram}</span>
+                          <span className="kids-studio-world-label">{world.label}</span>
+                        </motion.button>
+                      );
+                    })}
+                  </div>
+                </motion.section>
+              )}
+
+              {journeyStep === 2 && (
+                <motion.section
+                  key="hero"
+                  {...getMotionProps(reducedMotion, kidsCardAppear)}
+                  className="kids-studio-step-panel"
+                  aria-labelledby="studio-hero-heading"
+                >
+                  <h2 id="studio-hero-heading" className="kids-studio-step-title">{t('studioChooseHero')}</h2>
+                  <p className="kids-studio-step-desc">{t('studioChooseHeroDesc')}</p>
+                  <div className="kids-studio-hero-grid">
+                    {heroes.map((hero) => {
+                      const active = selectedHero === hero.id;
+                      return (
+                        <motion.button
+                          key={hero.id}
+                          type="button"
+                          {...getHoverMotion(reducedMotion)}
+                          onClick={() => setSelectedHero(hero.id)}
+                          aria-pressed={active}
+                          className={`kids-studio-hero-card ${active ? 'is-active' : ''}`}
+                        >
+                          <span className="kids-studio-hero-emoji" aria-hidden="true">{hero.pictogram}</span>
+                          <span className="kids-studio-hero-label">{hero.label}</span>
+                          <span className="kids-studio-hero-trait">{hero.trait}</span>
+                        </motion.button>
+                      );
+                    })}
+                  </div>
+                  <label className="kids-studio-custom-hero">
+                    <span className="sr-only">{t('studioCustomHero')}</span>
+                    <input
+                      value={customCharacter}
+                      onChange={(e) => setCustomCharacter(e.target.value)}
+                      placeholder={t('studioCustomHeroPlaceholder')}
+                      className="kids-studio-custom-input"
+                    />
+                  </label>
+                </motion.section>
+              )}
+
+              {journeyStep === 3 && (
+                <motion.section
+                  key="adventure"
+                  {...getMotionProps(reducedMotion, kidsCardAppear)}
+                  className="kids-studio-step-panel"
+                  aria-labelledby="studio-adventure-heading"
+                >
+                  <h2 id="studio-adventure-heading" className="kids-studio-step-title">{t('studioChooseAdventure')}</h2>
+                  <p className="kids-studio-step-desc">{t('studioChooseAdventureDesc')}</p>
+                  <div className="kids-studio-adventure-grid">
+                    {adventures.map((adventure) => {
+                      const active = selectedAdventureCard === adventure.cardId;
+                      return (
+                        <motion.button
+                          key={adventure.cardId}
+                          type="button"
+                          {...getHoverMotion(reducedMotion)}
+                          onClick={() => {
+                            setSelectedAdventureCard(adventure.cardId);
+                            patchForm('educational_value', adventure.educationalValue);
+                          }}
+                          aria-pressed={active}
+                          className={`kids-studio-adventure-card ${active ? 'is-active' : ''}`}
+                        >
+                          <span className="kids-studio-adventure-emoji" aria-hidden="true">{adventure.pictogram}</span>
+                          <span className="kids-studio-adventure-label">{adventure.label}</span>
+                        </motion.button>
+                      );
+                    })}
+                  </div>
+                </motion.section>
+              )}
+
+              {journeyStep === 4 && (
+                <motion.section
+                  key="style"
+                  {...getMotionProps(reducedMotion, kidsCardAppear)}
+                  className="kids-studio-step-panel"
+                  aria-labelledby="studio-style-heading"
+                >
+                  <h2 id="studio-style-heading" className="kids-studio-step-title">{t('studioChooseStyle')}</h2>
+                  <p className="kids-studio-step-desc">{t('studioChooseStyleDesc')}</p>
+                  <div className="kids-studio-style-grid">
+                    {styles.map((style) => {
+                      const active = selectedStyleId === style.uniqueKey;
+                      return (
+                        <motion.button
+                          key={style.uniqueKey}
+                          type="button"
+                          {...getHoverMotion(reducedMotion)}
+                          onClick={() => {
+                            setSelectedStyleId(style.uniqueKey);
+                            patchForm('estimated_duration_minutes', style.minutes);
+                          }}
+                          aria-pressed={active}
+                          className={`kids-studio-style-card ${active ? 'is-active' : ''}`}
+                        >
+                          <span className="kids-studio-style-emoji" aria-hidden="true">{style.pictogram}</span>
+                          <span className="kids-studio-style-label">{style.label}</span>
+                          <span className="kids-studio-style-meta">{t('studioMinutes', { minutes: style.minutes })}</span>
+                        </motion.button>
+                      );
+                    })}
+                  </div>
+                </motion.section>
+              )}
+
+              {journeyStep === 5 && !loading && (
+                <motion.section
+                  key="ready"
+                  {...getMotionProps(reducedMotion, kidsCardAppear)}
+                  className="kids-studio-step-panel kids-studio-ready-panel"
+                  aria-labelledby="studio-ready-heading"
+                >
+                  <h2 id="studio-ready-heading" className="kids-studio-step-title">{t('studioReadyTitle')}</h2>
+                  <p className="kids-studio-step-desc">{t('studioReadyDesc')}</p>
+                  <ul className="kids-studio-ready-summary">
+                    <li>{t('studioReadyWorld', { world: worlds.find((w) => w.id === form.theme)?.label || form.theme })}</li>
+                    <li>{t('studioReadyHero', { hero: heroes.find((h) => h.id === selectedHero)?.label || selectedHero })}</li>
+                    <li>{t('studioReadyAdventure', { adventure: adventures.find((a) => a.cardId === selectedAdventureCard)?.label || form.educational_value })}</li>
+                    <li>{t('studioReadyStyle', { style: styles.find((s) => s.uniqueKey === selectedStyleId)?.label || form.estimated_duration_minutes })}</li>
+                  </ul>
+                  <motion.button
+                    type="button"
+                    {...getHoverMotion(reducedMotion, { whileHover: { scale: 1.02 }, whileTap: { scale: 0.98 } })}
+                    onClick={handleGenerate}
+                    disabled={loading || profilesLoading || !selectedKidProfileId}
+                    className="kids-studio-generate-cta"
+                  >
+                    <span className={`kids-studio-generate-cta-bg bg-gradient-to-r ${BRAND_HERO_GRADIENT}`} aria-hidden="true" />
+                    <span className="kids-studio-generate-cta-label">
+                      <SparklesIcon className="w-7 h-7" aria-hidden="true" />
+                      {t('storyStudioGenerateAction')}
+                    </span>
+                  </motion.button>
+                </motion.section>
+              )}
+            </AnimatePresence>
+
+            {!loading && journeyStep < 5 && (
+              <div className="kids-studio-nav-row">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="rounded-full bg-card/10 border-none text-white hover:bg-card/20 font-bold min-h-touch"
+                  onClick={goBack}
+                  disabled={journeyStep === 1}
+                >
+                  {t('studioBack')}
+                </Button>
+                <Button
+                  type="button"
+                  variant="primary"
+                  className="rounded-full font-black min-h-touch px-8"
+                  onClick={goNext}
+                >
+                  {t('studioContinue')}
+                </Button>
+              </div>
+            )}
+
+            {!loading && journeyStep === 5 && (
+              <div className="kids-studio-nav-row">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="rounded-full bg-card/10 border-none text-white hover:bg-card/20 font-bold min-h-touch"
+                  onClick={goBack}
+                >
+                  {t('studioBack')}
+                </Button>
+              </div>
+            )}
+          </>
+        )}
+
+        {showBookPreview && (
+          <motion.section
+            id="story-result"
+            {...getMotionProps(reducedMotion, kidsCardAppear)}
+            className="kids-studio-book-preview"
+            aria-labelledby="studio-book-title"
+          >
+            <div className="kids-studio-book-cover" aria-hidden="true">
+              <span className="kids-studio-book-cover-emoji">📖</span>
+              <p className="kids-studio-book-cover-theme">{story.theme}</p>
+            </div>
+            <div className="kids-studio-book-body">
+              <div className="flex flex-wrap gap-2 mb-space-16">
+                <Badge variant="soft" className="bg-card/70 font-black">{story.theme}</Badge>
+                <Badge variant="soft" className="bg-card/70 font-black">
+                  {t('studioMinutes', { minutes: story.estimated_duration_minutes || form.estimated_duration_minutes })}
+                </Badge>
+                <Badge variant="soft" className="bg-card/70 font-black">{story.educational_value}</Badge>
+                {selectedKidProfile?.age ? (
+                  <Badge variant="soft" className="bg-card/70 font-black">
+                    {t('studioAgeLabel', { age: selectedKidProfile.age })}
+                  </Badge>
+                ) : null}
+              </div>
+              <h2 id="studio-book-title" className="kids-studio-book-title">{story.title}</h2>
+              {story.summary ? <p className="kids-studio-book-summary">{story.summary}</p> : null}
+              <div className="kids-studio-book-text">{story.story_text}</div>
+              <div className="kids-studio-book-actions">
+                <Button
+                  onClick={() => handleSpeak(story)}
+                  className={`flex-1 rounded-2xl py-4 font-black shadow-lg min-h-touch ${speaking ? 'bg-rose-500 text-white hover:bg-rose-600' : 'bg-primary-500 text-white hover:bg-primary-600'}`}
+                >
+                  {speaking ? <PauseIcon className="w-5 h-5 mr-2" /> : <PlayIcon className="w-5 h-5 mr-2" />}
+                  {speaking ? t('pause') : t('studioStartReading')}
+                </Button>
+                <Button
+                  onClick={handleSave}
+                  disabled={story.saved || saving}
+                  variant="outline"
+                  className="px-6 rounded-2xl font-black min-h-touch"
+                  aria-label={t('studioSaveStory')}
+                >
+                  <HeartIcon className="w-5 h-5" filled={story.saved} />
+                </Button>
+                <Button
+                  onClick={startNewStory}
+                  variant="ghost"
+                  className="rounded-2xl font-bold text-foreground-secondary min-h-touch"
+                >
+                  {t('studioCreateAnother')}
+                </Button>
+              </div>
+            </div>
+          </motion.section>
+        )}
+
+        {history.length > 0 && !loading && (
+          <section className="mt-space-32" aria-labelledby="studio-history-heading">
+            <h2 id="studio-history-heading" className="text-2xl font-black mb-space-16 flex items-center gap-3">
+              <HistoryIcon className="w-7 h-7 text-white/70" aria-hidden="true" />
+              {t('studioHistoryTitle')}
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-space-16">
+              {history.slice(0, 6).map((item) => (
+                <motion.button
+                  key={item.id}
+                  type="button"
+                  {...getHoverMotion(reducedMotion)}
+                  onClick={() => {
+                    setStory(item);
+                    window.scrollTo({ top: 0, behavior: reducedMotion ? 'auto' : 'smooth' });
+                  }}
+                  className="kids-studio-history-card"
+                >
+                  <div className="flex justify-between items-start mb-3 gap-2">
+                    <h3 className="font-black text-lg text-white line-clamp-2 text-start">{item.title}</h3>
+                    {item.saved ? <HeartIcon className="w-5 h-5 text-rose-400 shrink-0" filled /> : null}
+                  </div>
+                  <p className="text-sm font-medium text-white/55 line-clamp-2 mb-3 text-start">{item.summary || item.story_text}</p>
+                  <Badge variant="soft" className="bg-card/10 text-white/80 text-xs font-bold">{item.theme}</Badge>
+                </motion.button>
+              ))}
+            </div>
+          </section>
+        )}
+      </main>
+    </KidsPageShell>
+  );
 }
 
 export default KidsStoryStudio;
