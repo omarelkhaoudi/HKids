@@ -80,12 +80,12 @@ export function kidsReaderPageTurn(reduced, direction = 'next') {
   if (reduced) {
     return getMotionProps(true, {});
   }
-  const drift = direction === 'next' ? 14 : -14;
+  const drift = direction === 'next' ? 10 : -10;
   return {
-    initial: { opacity: 0, x: drift * 0.35 },
+    initial: { opacity: 0, x: drift * 0.28 },
     animate: { opacity: 1, x: 0 },
-    exit: { opacity: 0, x: -drift * 0.25 },
-    transition: { duration: KIDS_MOTION_DURATION.base, ease: easeOut },
+    exit: { opacity: 0, x: -drift * 0.18 },
+    transition: { duration: KIDS_MOTION_DURATION.slow, ease: easeOut },
   };
 }
 
