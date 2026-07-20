@@ -61,3 +61,13 @@ test('catalog covers all age bands', () => {
   assert.equal(bands['5-7'], true);
   assert.equal(bands['8-10'], true);
 });
+
+test('every catalog book has complete reading pages', () => {
+  for (const item of CATALOG) {
+    assert.ok(Array.isArray(item.pages), `${item.slug} must expose pages`);
+    assert.ok(item.pages.length >= 4, `${item.slug} must have at least 4 pages (${item.pages.length})`);
+    for (const [index, page] of item.pages.entries()) {
+      assert.ok(typeof page.text === 'string' && page.text.trim().length > 12, `${item.slug} page ${index + 1} needs text`);
+    }
+  }
+});
