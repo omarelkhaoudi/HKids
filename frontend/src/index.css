@@ -2491,22 +2491,72 @@
     --reader-ink: #24324a;
     --reader-paper: #fffaf3;
     --reader-muted: #6b7280;
-    --reader-chrome: color-mix(in srgb, #fffaf3 88%, transparent);
-    --reader-border: color-mix(in srgb, #d6cbba 55%, transparent);
+    --reader-chrome: color-mix(in srgb, #fffaf3 72%, transparent);
+    --reader-border: color-mix(in srgb, #d6cbba 45%, transparent);
     --reader-progress: var(--color-primary-500);
+    --reader-apricot: #d4a574;
+    --reader-sage: #8fa88a;
     transition: background 0.55s ease, color 0.45s ease;
+  }
+
+  .kids-reader-paper-atmosphere {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 1;
+    overflow: hidden;
+  }
+
+  .kids-reader-paper-glow {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(72px);
+    opacity: 0.55;
+    pointer-events: none;
+  }
+
+  .kids-reader-paper-glow-a {
+    width: min(70vw, 28rem);
+    height: min(50vw, 20rem);
+    top: -8%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: radial-gradient(circle, color-mix(in srgb, var(--reader-apricot) 35%, transparent) 0%, transparent 70%);
+  }
+
+  .kids-reader-paper-glow-b {
+    width: min(55vw, 22rem);
+    height: min(40vw, 16rem);
+    bottom: 8%;
+    right: -5%;
+    background: radial-gradient(circle, color-mix(in srgb, var(--reader-sage) 22%, transparent) 0%, transparent 72%);
+    opacity: 0.4;
+  }
+
+  .kids-reader-paper-grain {
+    position: absolute;
+    inset: 0;
+    opacity: 0.035;
+    background-image:
+      radial-gradient(circle at 20% 30%, rgba(0, 0, 0, 0.04) 0.5px, transparent 0.5px),
+      radial-gradient(circle at 80% 70%, rgba(0, 0, 0, 0.03) 0.5px, transparent 0.5px);
+    background-size: 3px 3px, 4px 4px;
+    mix-blend-mode: multiply;
   }
 
   .kids-reader-shell[data-reader-theme="light"] {
     --reader-ink: #24324a;
     --reader-paper: #fffcf8;
     --reader-muted: #5b6577;
-    --reader-chrome: color-mix(in srgb, #fffcf8 90%, transparent);
-    --reader-border: color-mix(in srgb, #d9d0c4 50%, transparent);
+    --reader-chrome: color-mix(in srgb, #fffcf8 78%, transparent);
+    --reader-border: color-mix(in srgb, #d9d0c4 40%, transparent);
     --reader-progress: var(--color-primary-500);
+    --reader-apricot: #c9b8a0;
+    --reader-sage: #9ab0a4;
     background:
-      radial-gradient(ellipse 70% 45% at 50% -8%, color-mix(in srgb, var(--color-primary-100) 55%, transparent) 0%, transparent 70%),
-      linear-gradient(180deg, #f7f4ee 0%, #fffcf8 45%, #f3efe7 100%);
+      radial-gradient(ellipse 75% 50% at 50% -5%, color-mix(in srgb, var(--color-primary-100) 40%, transparent) 0%, transparent 68%),
+      radial-gradient(ellipse 45% 35% at 85% 95%, color-mix(in srgb, var(--reader-sage) 12%, transparent) 0%, transparent 70%),
+      linear-gradient(180deg, #f5f1ea 0%, #fffcf8 42%, #f0ebe3 100%);
     color: var(--reader-ink);
   }
 
@@ -2514,12 +2564,16 @@
     --reader-ink: #3b2f24;
     --reader-paper: #f6ead6;
     --reader-muted: #7a6552;
-    --reader-chrome: color-mix(in srgb, #f6ead6 90%, transparent);
-    --reader-border: color-mix(in srgb, #d4c0a4 60%, transparent);
+    --reader-chrome: color-mix(in srgb, #f6ead6 76%, transparent);
+    --reader-border: color-mix(in srgb, #d4c0a4 48%, transparent);
     --reader-progress: #c47a3a;
+    --reader-apricot: #e8b888;
+    --reader-sage: #a8b89e;
     background:
-      radial-gradient(ellipse 65% 40% at 50% 0%, rgba(232, 196, 140, 0.35) 0%, transparent 65%),
-      linear-gradient(180deg, #efe0c8 0%, #f6ead6 48%, #e8d5b5 100%);
+      radial-gradient(ellipse 70% 45% at 50% 0%, rgba(232, 196, 140, 0.28) 0%, transparent 62%),
+      radial-gradient(ellipse 50% 40% at 12% 88%, color-mix(in srgb, var(--reader-sage) 14%, transparent) 0%, transparent 72%),
+      radial-gradient(ellipse 40% 30% at 92% 20%, color-mix(in srgb, var(--reader-apricot) 18%, transparent) 0%, transparent 68%),
+      linear-gradient(180deg, #ebe0cc 0%, #f6ead6 46%, #e5d4b8 100%);
     color: var(--reader-ink);
   }
 
@@ -2527,11 +2581,14 @@
     --reader-ink: #4a3728;
     --reader-paper: #f3e6c9;
     --reader-muted: #7d6548;
-    --reader-chrome: color-mix(in srgb, #f3e6c9 90%, transparent);
-    --reader-border: color-mix(in srgb, #cbb892 55%, transparent);
+    --reader-chrome: color-mix(in srgb, #f3e6c9 78%, transparent);
+    --reader-border: color-mix(in srgb, #cbb892 48%, transparent);
     --reader-progress: #a67c52;
+    --reader-apricot: #c9a67a;
+    --reader-sage: #9a9e7a;
     background:
-      radial-gradient(ellipse 60% 40% at 40% 0%, rgba(210, 180, 120, 0.28) 0%, transparent 70%),
+      radial-gradient(ellipse 60% 40% at 40% 0%, rgba(210, 180, 120, 0.22) 0%, transparent 68%),
+      radial-gradient(ellipse 45% 35% at 88% 90%, color-mix(in srgb, var(--reader-sage) 10%, transparent) 0%, transparent 70%),
       linear-gradient(180deg, #e8d7b0 0%, #f3e6c9 50%, #e2cfab 100%);
     color: var(--reader-ink);
   }
@@ -2540,13 +2597,21 @@
     --reader-ink: #e8eef8;
     --reader-paper: #1c2433;
     --reader-muted: #9aa7bd;
-    --reader-chrome: color-mix(in srgb, #1c2433 88%, transparent);
-    --reader-border: color-mix(in srgb, #3a465c 70%, transparent);
+    --reader-chrome: color-mix(in srgb, #1c2433 76%, transparent);
+    --reader-border: color-mix(in srgb, #3a465c 55%, transparent);
     --reader-progress: var(--color-primary-300);
+    --reader-apricot: #6b5a48;
+    --reader-sage: #4a5c52;
     background:
-      radial-gradient(ellipse 70% 50% at 50% 0%, rgba(59, 154, 232, 0.12) 0%, transparent 60%),
+      radial-gradient(ellipse 70% 50% at 50% 0%, rgba(59, 154, 232, 0.1) 0%, transparent 58%),
+      radial-gradient(ellipse 50% 40% at 15% 85%, rgba(74, 92, 82, 0.08) 0%, transparent 70%),
       linear-gradient(165deg, #121826 0%, #1c2433 50%, #151b28 100%);
     color: var(--reader-ink);
+  }
+
+  .kids-reader-shell[data-reader-theme="night"] .kids-reader-paper-grain {
+    opacity: 0.06;
+    mix-blend-mode: screen;
   }
 
   .kids-reader-atmosphere {
@@ -2592,10 +2657,11 @@
     grid-template-columns: auto minmax(0, 1fr) auto;
     align-items: center;
     gap: 0.75rem;
-    padding: 0.75rem 1rem;
+    padding: 0.65rem 1rem;
     background: var(--reader-chrome);
-    border-bottom: 1px solid var(--reader-border);
-    backdrop-filter: blur(14px);
+    border-bottom: 1px solid color-mix(in srgb, var(--reader-border) 65%, transparent);
+    backdrop-filter: blur(18px) saturate(1.05);
+    -webkit-backdrop-filter: blur(18px) saturate(1.05);
   }
 
   @media (min-width: 768px) {
@@ -2693,9 +2759,18 @@
     position: relative;
     z-index: 10;
     width: 100%;
-    max-width: 48rem;
+    max-width: 52rem;
     margin-inline: auto;
-    padding-block: clamp(0.5rem, 2vh, 1.5rem);
+    padding-inline: clamp(1rem, 4vw, 2.5rem);
+    padding-block: clamp(0.75rem, 2.5vh, 2rem);
+  }
+
+  .kids-reader-canvas {
+    padding-top: clamp(4.5rem, 12vh, 5.5rem);
+  }
+
+  .kids-reader-shell.is-focus .kids-reader-canvas {
+    padding-top: clamp(1rem, 3vh, 2rem);
   }
 
   .kids-reader-page-card {
@@ -2707,20 +2782,20 @@
   }
 
   .kids-reader-text-page {
-    max-width: 40rem;
+    max-width: 42rem;
     margin-inline: auto;
-    padding: clamp(2.35rem, 6vw, 4.25rem) clamp(1.6rem, 5vw, 3.4rem);
+    padding: clamp(2.75rem, 7vw, 4.75rem) clamp(2rem, 6vw, 4rem);
     text-align: start;
   }
 
   .kids-reader-text-body {
-    font-family: Georgia, "Times New Roman", ui-serif, serif;
-    font-size: clamp(1.42rem, 2.8vw, 1.9rem);
-    font-weight: 400;
-    line-height: 1.95;
-    letter-spacing: 0.005em;
+    font-family: var(--font-display), "Nunito", system-ui, sans-serif;
+    font-size: clamp(1.5rem, 3vw, 2.05rem);
+    font-weight: 500;
+    line-height: 2.05;
+    letter-spacing: 0.01em;
     color: var(--reader-ink);
-    max-width: 32ch;
+    max-width: 28ch;
     margin-inline: auto;
     text-wrap: pretty;
   }
@@ -2745,27 +2820,21 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: clamp(0.75rem, 2vw, 1.5rem);
-    min-height: 72vh;
+    padding: clamp(0.5rem, 1.5vw, 1.25rem);
+    min-height: min(76vh, 42rem);
   }
 
   .kids-reader-illustration {
     max-width: 100%;
-    max-height: 78vh;
+    max-height: min(80vh, 44rem);
     object-fit: contain;
     border-radius: var(--kids-radius-book);
-    box-shadow: var(--kids-shadow-book);
-    border: 1px solid var(--reader-border);
+    box-shadow:
+      var(--kids-shadow-book),
+      0 24px 48px -28px color-mix(in srgb, var(--reader-ink) 18%, transparent);
+    border: 1px solid color-mix(in srgb, var(--reader-border) 80%, transparent);
     background: var(--reader-paper);
-  }
-
-  .kids-reader-illustration-float {
-    animation: kids-reader-float 5.5s ease-in-out infinite;
-  }
-
-  @keyframes kids-reader-float {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-4px); }
+    transition: opacity 0.32s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.35s ease;
   }
 
   .kids-reader-progress-dock {
@@ -2799,53 +2868,176 @@
 
   .kids-reader-progress-track {
     width: 100%;
-    height: 0.4rem;
+    height: 0.28rem;
     border-radius: 999px;
-    background: color-mix(in srgb, var(--reader-border) 70%, transparent);
+    background: color-mix(in srgb, var(--reader-border) 55%, transparent);
     overflow: hidden;
-    border: 1px solid color-mix(in srgb, var(--reader-border) 50%, transparent);
   }
 
   .kids-reader-progress-fill {
     height: 100%;
     border-radius: inherit;
-    background: linear-gradient(90deg, color-mix(in srgb, var(--reader-progress) 75%, white), var(--reader-progress));
-    transition: width 280ms cubic-bezier(0.22, 1, 0.36, 1);
+    background: linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--reader-progress) 65%, white),
+      var(--reader-progress) 55%,
+      color-mix(in srgb, var(--reader-apricot) 70%, var(--reader-progress)) 100%
+    );
+    transition: width 380ms cubic-bezier(0.22, 1, 0.36, 1);
+    box-shadow: 0 0 8px color-mix(in srgb, var(--reader-progress) 25%, transparent);
   }
 
   .kids-reader-audio-dock {
     position: absolute;
-    bottom: 4.75rem;
+    bottom: 0;
     inset-inline: 0;
     z-index: 45;
     display: flex;
     justify-content: center;
     pointer-events: none;
-    padding-inline: 1rem;
+    padding: 0.75rem 1rem max(0.85rem, env(safe-area-inset-bottom));
+    background: linear-gradient(180deg, transparent 0%, color-mix(in srgb, var(--reader-paper) 35%, transparent) 45%, color-mix(in srgb, var(--reader-paper) 72%, transparent) 100%);
   }
 
   .kids-reader-audio-panel {
     pointer-events: auto;
     display: flex;
     flex-direction: column;
-    gap: 0.8rem;
-    width: min(100%, 34rem);
-    padding: 0.95rem 1rem 1rem;
-    border-radius: 1.65rem;
-    background: color-mix(in srgb, var(--reader-paper) 90%, transparent);
-    border: 1px solid var(--reader-border);
+    gap: 0.7rem;
+    width: min(100%, 32rem);
+    padding: 0.85rem 1rem 0.95rem;
+    border-radius: 1.75rem;
+    background: color-mix(in srgb, var(--reader-paper) 82%, transparent);
+    border: 1px solid color-mix(in srgb, var(--reader-border) 70%, transparent);
     box-shadow:
-      0 16px 34px -18px rgba(36, 50, 74, 0.24),
-      0 4px 12px -8px rgba(36, 50, 74, 0.12);
-    backdrop-filter: blur(12px);
+      0 20px 40px -24px color-mix(in srgb, var(--reader-ink) 22%, transparent),
+      0 2px 8px -4px color-mix(in srgb, var(--reader-ink) 10%, transparent);
+    backdrop-filter: blur(16px) saturate(1.08);
+    -webkit-backdrop-filter: blur(16px) saturate(1.08);
   }
 
-  .kids-reader-audio-row {
+  .kids-reader-primary-row {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 0.65rem;
+    gap: 0.75rem;
+  }
+
+  .kids-reader-play-btn {
+    display: grid;
+    place-items: center;
+    min-height: 64px;
+    min-width: 64px;
+    width: 4rem;
+    height: 4rem;
+    border-radius: 999px;
+    border: 1px solid color-mix(in srgb, var(--reader-progress) 35%, var(--reader-border));
+    background: color-mix(in srgb, var(--reader-paper) 88%, white);
+    color: var(--reader-ink);
+    box-shadow:
+      var(--kids-shadow-ui),
+      0 0 0 4px color-mix(in srgb, var(--reader-progress) 8%, transparent);
+    transition: transform 160ms ease, background 160ms ease, box-shadow 160ms ease;
+  }
+
+  .kids-reader-play-btn:hover {
+    background: color-mix(in srgb, var(--reader-paper) 96%, white);
+    transform: translateY(-1px);
+  }
+
+  .kids-reader-play-btn:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--reader-progress) 45%, transparent);
+  }
+
+  .kids-reader-play-btn:disabled {
+    opacity: 0.4;
+  }
+
+  .kids-reader-more-btn {
+    display: grid;
+    place-items: center;
+    min-height: 48px;
+    min-width: 48px;
+    width: 3rem;
+    height: 3rem;
+    border-radius: 999px;
+    border: 1px solid color-mix(in srgb, var(--reader-border) 75%, transparent);
+    background: color-mix(in srgb, var(--reader-paper) 65%, transparent);
+    color: var(--reader-muted);
+    transition: background 160ms ease, color 160ms ease, transform 160ms ease;
+  }
+
+  .kids-reader-more-btn:hover,
+  .kids-reader-more-btn.is-open {
+    color: var(--reader-ink);
+    background: color-mix(in srgb, var(--reader-paper) 92%, white);
+  }
+
+  .kids-reader-more-btn:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary-400) 45%, transparent);
+  }
+
+  .kids-reader-more-tools {
+    display: flex;
     flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding-top: 0.15rem;
+    overflow: hidden;
+  }
+
+  .kids-reader-more-tools .kids-reader-toolbar-btn {
+    min-height: 48px;
+    min-width: 48px;
+    width: 3rem;
+    height: 3rem;
+  }
+
+  .kids-reader-audio-strip {
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+    padding: 0.15rem 0.25rem 0;
+  }
+
+  .kids-reader-audio-wave {
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 0.22rem;
+    height: 1.35rem;
+    opacity: 0.55;
+    transition: opacity 0.3s ease;
+  }
+
+  .kids-reader-audio-wave.is-playing {
+    opacity: 0.85;
+  }
+
+  .kids-reader-audio-wave-bar {
+    display: block;
+    width: 0.22rem;
+    height: calc(0.35rem + 0.85rem * var(--bar-scale, 0.5));
+    border-radius: 999px;
+    background: linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--reader-progress) 70%, white),
+      color-mix(in srgb, var(--reader-sage) 55%, var(--reader-progress))
+    );
+    transform-origin: bottom center;
+    transition: height 0.25s ease;
+  }
+
+  .kids-reader-audio-wave.is-playing .kids-reader-audio-wave-bar {
+    animation: kids-reader-wave-pulse 1.4s ease-in-out infinite;
+  }
+
+  @keyframes kids-reader-wave-pulse {
+    0%, 100% { transform: scaleY(0.72); opacity: 0.65; }
+    50% { transform: scaleY(1); opacity: 1; }
   }
 
   .kids-reader-panel-topline {
@@ -2872,36 +3064,36 @@
 
   .kids-reader-audio-timeline {
     width: 100%;
-    height: 0.35rem;
+    height: 0.28rem;
     border-radius: 999px;
     appearance: none;
-    background: color-mix(in srgb, var(--reader-border) 80%, transparent);
+    background: color-mix(in srgb, var(--reader-border) 60%, transparent);
     accent-color: var(--reader-progress);
   }
 
   .kids-reader-audio-timeline::-webkit-slider-thumb {
     appearance: none;
-    width: 1rem;
-    height: 1rem;
+    width: 0.85rem;
+    height: 0.85rem;
     border-radius: 999px;
     background: var(--reader-progress);
-    border: 2px solid white;
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+    border: 2px solid color-mix(in srgb, var(--reader-paper) 90%, white);
+    box-shadow: 0 1px 4px color-mix(in srgb, var(--reader-ink) 12%, transparent);
   }
 
   .kids-reader-nav-edge {
     pointer-events: auto;
     min-height: 56px;
     min-width: 56px;
-    width: 3.75rem;
-    height: 3.75rem;
+    width: 3.5rem;
+    height: 3.5rem;
     border-radius: 999px;
     display: grid;
     place-items: center;
-    background: color-mix(in srgb, var(--reader-paper) 88%, transparent);
-    border: 1px solid var(--reader-border);
+    background: color-mix(in srgb, var(--reader-paper) 78%, transparent);
+    border: 1px solid color-mix(in srgb, var(--reader-border) 75%, transparent);
     color: var(--reader-ink);
-    box-shadow: 0 6px 18px -8px rgba(36, 50, 74, 0.2);
+    box-shadow: 0 4px 14px -6px color-mix(in srgb, var(--reader-ink) 16%, transparent);
     transition: transform 160ms ease, background 160ms ease;
   }
 
@@ -2962,7 +3154,7 @@
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .kids-reader-illustration-float {
+    .kids-reader-audio-wave.is-playing .kids-reader-audio-wave-bar {
       animation: none;
     }
     .kids-reader-sparkle-burst {
