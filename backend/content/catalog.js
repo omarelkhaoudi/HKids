@@ -4,6 +4,7 @@
  */
 
 import { buildExtendedCatalog } from './catalogExtended.js';
+import { enrichCatalogWithPages } from './storyPages.js';
 
 export const BASE_CATALOG = [
   {
@@ -300,7 +301,7 @@ export const BASE_CATALOG = [
   },
 ];
 
-export const CATALOG = [...BASE_CATALOG, ...buildExtendedCatalog()];
+export const CATALOG = enrichCatalogWithPages([...BASE_CATALOG, ...buildExtendedCatalog()]);
 
 export const CATALOG_STATS = {
   total: CATALOG.length,
