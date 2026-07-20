@@ -425,6 +425,10 @@
     line-height: 1.2;
   }
 
+  .kids-type-button svg {
+    flex-shrink: 0;
+  }
+
   /* 3D Button Styles (Duolingo inspired) */
   .btn-3d {
     @apply relative transform transition-all duration-150 active:translate-y-1 active:shadow-none select-none font-bold;
@@ -500,11 +504,23 @@
     --kids-radius-panel: var(--radius-32);
     --kids-radius-card: var(--radius-24);
     --kids-radius-chip: 9999px;
+    --kids-radius-book: 1.5rem;
     --kids-space-page-x: var(--space-20);
     --kids-space-page-y: var(--space-32);
     --kids-space-section: 3.25rem;
     --kids-shadow-card: var(--shadow-card);
     --kids-shadow-panel: var(--shadow-floating);
+    --kids-shadow-book:
+      0 22px 44px -20px rgba(89, 67, 42, 0.28),
+      0 10px 20px -14px rgba(36, 50, 74, 0.14),
+      6px 0 0 -2px color-mix(in srgb, #c9bba8 36%, transparent);
+    --kids-shadow-book-hover:
+      0 28px 52px -22px rgba(89, 67, 42, 0.32),
+      0 12px 24px -14px rgba(36, 50, 74, 0.16),
+      6px 0 0 -2px color-mix(in srgb, #c9bba8 32%, transparent);
+    --kids-shadow-ui:
+      0 16px 30px -24px rgba(36, 50, 74, 0.18),
+      0 6px 14px -12px rgba(36, 50, 74, 0.1);
   }
 
   @media (min-width: 768px) {
@@ -1043,19 +1059,19 @@
   .kids-book-meta-chip {
     display: inline-flex;
     align-items: center;
-    gap: 0.25rem;
+    gap: 0.35rem;
     border-radius: 999px;
-    background: color-mix(in srgb, #faf8f5 92%, transparent);
+    background: color-mix(in srgb, #faf8f5 86%, transparent);
     color: var(--kids-type-meta);
-    padding: 0.2rem 0.5rem;
+    padding: 0.28rem 0.62rem;
     font-family: var(--font-body);
-    font-size: 0.625rem;
-    font-weight: 500;
+    font-size: 0.7rem;
+    font-weight: 600;
     line-height: 1.3;
     letter-spacing: 0.02em;
-    box-shadow: 0 1px 4px rgba(36, 50, 74, 0.06);
-    border: 1px solid color-mix(in srgb, #d9d0c4 55%, transparent);
-    backdrop-filter: blur(8px);
+    box-shadow: var(--kids-shadow-ui);
+    border: 1px solid color-mix(in srgb, #d9d0c4 48%, transparent);
+    backdrop-filter: blur(10px);
   }
 
   .kids-book-meta-chip--accent {
@@ -1113,7 +1129,7 @@
     font-weight: 550;
     letter-spacing: 0.01em;
     backdrop-filter: blur(10px);
-    box-shadow: 0 1px 4px rgba(36, 50, 74, 0.04);
+    box-shadow: var(--kids-shadow-ui);
     transition: background 160ms ease, color 160ms ease, border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
     snap-align: start;
     flex-shrink: 0;
@@ -1188,6 +1204,7 @@
     background: color-mix(in srgb, #faf8f5 82%, transparent);
     backdrop-filter: blur(16px);
     border-bottom: 1px solid color-mix(in srgb, #d9d0c4 32%, transparent);
+    box-shadow: 0 10px 24px -24px rgba(36, 50, 74, 0.18);
   }
 
   .dark .kids-home-header {
@@ -1243,22 +1260,16 @@
   .kids-hero-cover {
     position: relative;
     z-index: 1;
-    border-radius: 1.25rem;
+    border-radius: var(--kids-radius-book);
     overflow: hidden;
-    box-shadow:
-      0 24px 44px -16px rgba(36, 50, 74, 0.28),
-      0 8px 16px -8px rgba(36, 50, 74, 0.12),
-      8px 0 0 -2px color-mix(in srgb, #c9bba8 42%, transparent);
+    box-shadow: var(--kids-shadow-book);
     transform: perspective(900px) rotateY(-2deg);
     transition: transform 180ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 180ms ease;
   }
 
   .kids-hero-cover:hover {
     transform: perspective(900px) rotateY(0deg) translateY(-4px);
-    box-shadow:
-      0 28px 48px -16px rgba(36, 50, 74, 0.3),
-      0 10px 18px -8px rgba(36, 50, 74, 0.14),
-      8px 0 0 -2px color-mix(in srgb, #c9bba8 38%, transparent);
+    box-shadow: var(--kids-shadow-book-hover);
   }
 
   .kids-hero-star {
@@ -1304,14 +1315,11 @@
     aspect-ratio: 3 / 4;
     flex: 0 0 auto;
     width: 100%;
-    border-radius: 1.125rem; /* 18px */
+    border-radius: var(--kids-radius-book); /* shared book shell */
     overflow: hidden;
     background: #f4efe6;
     border: 1px solid color-mix(in srgb, #d6cbba 70%, transparent);
-    box-shadow:
-      0 14px 28px -12px rgba(36, 50, 74, 0.22),
-      0 4px 10px -4px rgba(36, 50, 74, 0.1),
-      6px 0 0 -2px color-mix(in srgb, #c9bba8 45%, transparent);
+    box-shadow: var(--kids-shadow-book);
     transition: transform 180ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 180ms ease;
   }
 
@@ -1358,7 +1366,7 @@
     border: 1px solid color-mix(in srgb, #d9d0c4 55%, transparent);
     background: color-mix(in srgb, #faf8f5 92%, transparent);
     color: var(--kids-type-meta);
-    box-shadow: 0 2px 8px rgba(36, 50, 74, 0.08);
+    box-shadow: var(--kids-shadow-ui);
     backdrop-filter: blur(8px);
     transition: background 160ms ease, color 160ms ease, opacity 160ms ease;
   }
@@ -1396,10 +1404,7 @@
   .kids-continue-book:hover .kids-book-collectible-cover,
   .kids-continue-book:focus-within .kids-book-collectible-cover {
     transform: translateY(-4px);
-    box-shadow:
-      0 20px 36px -14px rgba(36, 50, 74, 0.26),
-      0 8px 14px -6px rgba(36, 50, 74, 0.12),
-      6px 0 0 -2px color-mix(in srgb, #c9bba8 40%, transparent);
+    box-shadow: var(--kids-shadow-book-hover);
   }
 
   .kids-book-collectible:active .kids-book-collectible-cover,
@@ -1962,15 +1967,21 @@
   .kids-book-details-page {
     --kids-details-cream: #f7f4ee;
     --kids-details-sand: #efe8dc;
+    --kids-details-paper: #fffaf2;
+    --kids-details-ink: #2f261f;
+    --kids-details-muted: #7c6a58;
     background:
       radial-gradient(ellipse 55% 40% at 50% -10%, color-mix(in srgb, var(--color-primary-100) 55%, transparent) 0%, transparent 70%),
-      linear-gradient(180deg, var(--kids-details-cream) 0%, #faf8f4 48%, var(--kids-details-cream) 100%);
+      radial-gradient(ellipse 45% 30% at 8% 12%, rgba(248, 214, 167, 0.28) 0%, transparent 68%),
+      radial-gradient(ellipse 40% 24% at 92% 18%, rgba(255, 240, 212, 0.6) 0%, transparent 72%),
+      linear-gradient(180deg, #f7f1e7 0%, #fcf8f1 46%, #f5ede1 100%);
+    color: var(--kids-details-ink);
   }
 
   .kids-book-details-header {
-    background: color-mix(in srgb, #faf8f5 88%, transparent);
-    border-bottom: 1px solid color-mix(in srgb, #d9d0c4 40%, transparent);
-    backdrop-filter: blur(12px);
+    background: color-mix(in srgb, #fdf8f1 80%, transparent);
+    border-bottom: 1px solid color-mix(in srgb, #d9d0c4 28%, transparent);
+    backdrop-filter: blur(16px);
   }
 
   .kids-book-details-shell {
@@ -1990,22 +2001,91 @@
     background: transparent;
   }
 
+  .kids-book-details-back,
+  .kids-book-details-mini-home {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 56px;
+    border-radius: 999px;
+    border: 1px solid color-mix(in srgb, #d9d0c4 46%, transparent);
+    background: color-mix(in srgb, #fffaf2 78%, transparent);
+    color: var(--kids-details-muted);
+    box-shadow: var(--kids-shadow-ui);
+    backdrop-filter: blur(12px);
+    transition: transform 160ms ease, color 160ms ease, background 160ms ease, box-shadow 160ms ease;
+  }
+
+  .kids-book-details-back {
+    gap: 0.5rem;
+    padding: 0 1rem;
+  }
+
+  .kids-book-details-mini-home {
+    min-width: 56px;
+    padding: 0 1rem;
+    font-family: var(--font-display);
+    font-size: 0.88rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .kids-book-details-back:hover,
+  .kids-book-details-mini-home:hover {
+    color: var(--kids-details-ink);
+    background: color-mix(in srgb, white 88%, transparent);
+    transform: translateY(-1px);
+  }
+
+  .kids-book-details-back:focus-visible,
+  .kids-book-details-mini-home:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary-300) 50%, transparent);
+  }
+
   .kids-book-details-bleed {
     position: absolute;
     inset: 0;
     background-size: cover;
     background-position: center;
-    filter: blur(56px) saturate(1.05);
-    opacity: 0.14;
-    transform: scale(1.08);
+    filter: blur(68px) saturate(1.02);
+    opacity: 0.16;
+    transform: scale(1.1);
     pointer-events: none;
   }
 
+  .kids-book-details-orb {
+    position: absolute;
+    border-radius: 999px;
+    pointer-events: none;
+    z-index: 0;
+    filter: blur(14px);
+    opacity: 0.58;
+  }
+
+  .kids-book-details-orb-a {
+    width: 9rem;
+    height: 9rem;
+    top: 1.5rem;
+    left: min(2vw, 1rem);
+    background: radial-gradient(circle, rgba(255, 232, 192, 0.88) 0%, rgba(255, 232, 192, 0) 72%);
+  }
+
+  .kids-book-details-orb-b {
+    width: 10rem;
+    height: 10rem;
+    right: min(1vw, 0.75rem);
+    bottom: 3rem;
+    background: radial-gradient(circle, rgba(255, 244, 220, 0.82) 0%, rgba(255, 244, 220, 0) 74%);
+  }
+
   .kids-book-details-hero {
+    position: relative;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: clamp(1.75rem, 4vw, 2.75rem);
+    gap: clamp(2rem, 4vw, 3.5rem);
     text-align: center;
   }
 
@@ -2021,29 +2101,37 @@
   .kids-book-details-cover {
     position: relative;
     z-index: 1;
-    width: min(16.5rem, 72vw);
+    width: min(18rem, 78vw);
     flex-shrink: 0;
-    border-radius: 1.25rem;
+    border-radius: var(--kids-radius-book);
     overflow: hidden;
     background: #f4efe6;
-    border: 1px solid color-mix(in srgb, #d6cbba 70%, transparent);
+    border: 1px solid color-mix(in srgb, #d6cbba 58%, transparent);
     box-shadow:
-      0 22px 44px -16px rgba(36, 50, 74, 0.28),
-      0 8px 16px -8px rgba(36, 50, 74, 0.12),
-      8px 0 0 -2px color-mix(in srgb, #c9bba8 42%, transparent);
-    transition: transform 180ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 180ms ease;
+      var(--kids-shadow-book),
+      0 0 0 1px rgba(255, 255, 255, 0.35) inset;
+    transition: transform 220ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 220ms ease;
   }
 
   @media (min-width: 768px) {
     .kids-book-details-cover {
-      width: 18.5rem;
+      width: 20.5rem;
     }
   }
 
   @media (min-width: 900px) {
     .kids-book-details-cover {
-      width: 20rem;
+      width: 22rem;
     }
+  }
+
+  .kids-book-details-cover::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.32) 0%, rgba(255, 255, 255, 0) 28%);
+    pointer-events: none;
+    z-index: 1;
   }
 
   .kids-book-details-copy {
@@ -2052,7 +2140,7 @@
     align-items: center;
     min-width: 0;
     flex: 1;
-    gap: var(--space-16);
+    gap: var(--space-18);
   }
 
   @media (min-width: 900px) {
@@ -2061,30 +2149,40 @@
     }
   }
 
+  .kids-book-details-kicker {
+    font-family: var(--font-body);
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: color-mix(in srgb, var(--color-primary-700) 72%, #8a6e46);
+  }
+
   .kids-book-details-title {
-    font-family: var(--font-display);
-    font-size: clamp(1.85rem, 4.2vw, 2.75rem);
-    font-weight: 650;
-    line-height: 1.15;
+    font-family: Georgia, "Times New Roman", ui-serif, serif;
+    font-size: clamp(2.15rem, 5vw, 3.65rem);
+    font-weight: 600;
+    line-height: 1.08;
     letter-spacing: -0.02em;
-    color: var(--kids-type-ink, #24324a);
-    max-width: 18ch;
+    color: var(--kids-details-ink);
+    max-width: 14ch;
+    text-wrap: balance;
   }
 
   .kids-book-details-author {
     font-family: var(--font-body);
-    font-size: 1.05rem;
+    font-size: 0.98rem;
     font-weight: 500;
     line-height: 1.4;
-    color: var(--kids-type-author, #6b7280);
-    margin-top: -0.35rem;
+    color: var(--kids-details-muted);
+    margin-top: -0.2rem;
   }
 
   .kids-book-details-badges {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
-    gap: 0.5rem;
+    gap: 0.65rem;
   }
 
   @media (min-width: 900px) {
@@ -2096,17 +2194,18 @@
   .kids-book-details-badge {
     display: inline-flex;
     align-items: center;
-    gap: 0.35rem;
+    gap: 0.45rem;
     border-radius: 999px;
-    padding: 0.35rem 0.75rem;
+    padding: 0.5rem 0.95rem;
     font-family: var(--font-body);
-    font-size: 0.75rem;
-    font-weight: 500;
+    font-size: 0.8rem;
+    font-weight: 600;
     line-height: 1.3;
-    color: var(--kids-type-meta, #5b6577);
-    background: color-mix(in srgb, #faf8f5 94%, white);
-    border: 1px solid color-mix(in srgb, #d9d0c4 55%, transparent);
-    box-shadow: 0 1px 4px rgba(36, 50, 74, 0.05);
+    color: var(--kids-details-muted);
+    background: color-mix(in srgb, #fffaf2 72%, transparent);
+    border: 1px solid color-mix(in srgb, #dccfbd 54%, transparent);
+    box-shadow: var(--kids-shadow-ui);
+    backdrop-filter: blur(10px);
   }
 
   .kids-book-details-badge--accent {
@@ -2120,17 +2219,81 @@
     display: flex;
     flex-direction: column;
     width: 100%;
-    max-width: 28rem;
-    gap: 0.75rem;
-    margin-top: 0.25rem;
+    max-width: 34rem;
+    gap: 0.9rem;
+    margin-top: 0.5rem;
   }
 
   @media (min-width: 640px) {
     .kids-book-details-actions {
       flex-direction: row;
       flex-wrap: wrap;
-      max-width: 36rem;
+      max-width: 40rem;
     }
+  }
+
+  .kids-book-details-cta {
+    box-shadow:
+      0 20px 40px -22px rgba(36, 50, 74, 0.32),
+      0 8px 18px -10px rgba(196, 122, 58, 0.28) !important;
+  }
+
+  .kids-book-details-secondary-cta {
+    background: color-mix(in srgb, #fffaf2 80%, transparent) !important;
+  }
+
+  .kids-book-details-utility-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.75rem;
+    width: 100%;
+  }
+
+  @media (min-width: 900px) {
+    .kids-book-details-utility-actions {
+      justify-content: flex-start;
+    }
+  }
+
+  .kids-book-details-utility-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    min-height: 56px;
+    padding: 0 1rem;
+    border-radius: 999px;
+    border: 1px solid color-mix(in srgb, #d9d0c4 46%, transparent);
+    background: color-mix(in srgb, #fffaf2 74%, transparent);
+    color: var(--kids-details-muted);
+    font-family: var(--font-body);
+    font-size: 0.88rem;
+    font-weight: 600;
+    box-shadow: var(--kids-shadow-ui);
+    backdrop-filter: blur(12px);
+    transition: transform 160ms ease, box-shadow 160ms ease, color 160ms ease, background 160ms ease, opacity 160ms ease;
+  }
+
+  .kids-book-details-utility-btn:hover:not(:disabled) {
+    transform: translateY(-1px);
+    color: var(--kids-details-ink);
+    background: color-mix(in srgb, white 88%, transparent);
+  }
+
+  .kids-book-details-utility-btn:disabled {
+    opacity: 0.62;
+    cursor: default;
+  }
+
+  .kids-book-details-utility-btn.is-active {
+    color: #b43756;
+    background: color-mix(in srgb, #fff1f3 82%, white);
+    border-color: color-mix(in srgb, #f3b7c6 55%, transparent);
+  }
+
+  .kids-book-details-utility-btn:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary-300) 50%, transparent);
   }
 
   .kids-book-details-continue {
@@ -2141,9 +2304,10 @@
     margin-top: clamp(2rem, 4vw, 2.75rem);
     padding: var(--space-20) var(--space-24);
     border-radius: 1.25rem;
-    background: color-mix(in srgb, white 88%, var(--kids-details-cream));
-    border: 1px solid color-mix(in srgb, #d9d0c4 45%, transparent);
-    box-shadow: 0 8px 24px -12px rgba(36, 50, 74, 0.12);
+    background: color-mix(in srgb, var(--kids-details-paper) 86%, transparent);
+    border: 1px solid color-mix(in srgb, #d9d0c4 42%, transparent);
+    box-shadow: 0 20px 42px -28px rgba(36, 50, 74, 0.18);
+    backdrop-filter: blur(14px);
   }
 
   @media (min-width: 640px) {
@@ -2170,16 +2334,22 @@
 
   .kids-book-details-section {
     margin-top: clamp(2.25rem, 5vw, 3.25rem);
-    max-width: 40rem;
+    max-width: 42rem;
+  }
+
+  .kids-book-details-section-title {
+    font-family: Georgia, "Times New Roman", ui-serif, serif;
+    letter-spacing: -0.015em;
   }
 
   .kids-book-details-desc-text {
-    font-family: var(--font-body);
-    font-size: 1.05rem;
-    font-weight: 450;
-    line-height: 1.75;
-    color: var(--kids-type-ink, #24324a);
-    max-width: 36rem;
+    font-family: Georgia, "Times New Roman", ui-serif, serif;
+    font-size: clamp(1.08rem, 2vw, 1.22rem);
+    font-weight: 400;
+    line-height: 1.9;
+    color: var(--kids-details-ink);
+    max-width: 38rem;
+    text-wrap: pretty;
   }
 
   .kids-book-details-desc > summary {
@@ -2250,28 +2420,30 @@
     display: flex;
     align-items: flex-start;
     gap: 0.75rem;
-    padding: 0.85rem 1rem;
-    border-radius: 1rem;
-    background: color-mix(in srgb, white 82%, var(--kids-details-cream));
-    border: 1px solid color-mix(in srgb, #d9d0c4 40%, transparent);
-    color: var(--kids-type-meta, #5b6577);
+    padding: 1rem 1rem;
+    border-radius: 1.15rem;
+    background: color-mix(in srgb, var(--kids-details-paper) 84%, transparent);
+    border: 1px solid color-mix(in srgb, #d9d0c4 38%, transparent);
+    color: var(--kids-details-muted);
+    box-shadow: 0 14px 28px -24px rgba(36, 50, 74, 0.16);
+    backdrop-filter: blur(12px);
   }
 
   .kids-book-details-info-label {
     font-family: var(--font-body);
     font-size: 0.7rem;
-    font-weight: 500;
-    letter-spacing: 0.04em;
+    font-weight: 600;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
-    color: var(--kids-type-meta, #5b6577);
+    color: var(--kids-details-muted);
     opacity: 0.85;
   }
 
   .kids-book-details-info-value {
-    font-family: var(--font-body);
-    font-size: 0.95rem;
+    font-family: Georgia, "Times New Roman", ui-serif, serif;
+    font-size: 1.05rem;
     font-weight: 600;
-    color: var(--kids-type-ink, #24324a);
+    color: var(--kids-details-ink);
     margin-top: 0.15rem;
   }
 
@@ -2279,9 +2451,10 @@
     margin-top: clamp(2rem, 4vw, 2.75rem);
     max-width: 36rem;
     padding: var(--space-20) var(--space-24);
-    border-radius: 1.25rem;
-    background: color-mix(in srgb, white 78%, var(--kids-details-sand));
-    border: 1px solid color-mix(in srgb, #d9d0c4 42%, transparent);
+    border-radius: 1.5rem;
+    background: color-mix(in srgb, #fffaf2 80%, var(--kids-details-sand));
+    border: 1px solid color-mix(in srgb, #d9d0c4 36%, transparent);
+    box-shadow: 0 18px 34px -24px rgba(36, 50, 74, 0.16);
   }
 
   .kids-book-details-related {
@@ -2290,6 +2463,11 @@
 
   @media (prefers-reduced-motion: reduce) {
     .kids-book-details-cover {
+      transition: none;
+    }
+    .kids-book-details-back,
+    .kids-book-details-mini-home,
+    .kids-book-details-utility-btn {
       transition: none;
     }
     .kids-book-details-bleed {
@@ -2466,7 +2644,7 @@
     border: 1px solid var(--reader-border);
     background: color-mix(in srgb, var(--reader-paper) 82%, transparent);
     color: var(--reader-ink);
-    box-shadow: 0 2px 8px rgba(36, 50, 74, 0.06);
+    box-shadow: var(--kids-shadow-ui);
     transition: background 160ms ease, transform 160ms ease, box-shadow 160ms ease;
   }
 
@@ -2484,9 +2662,31 @@
     background: color-mix(in srgb, #fff1f2 90%, white);
   }
 
+  .kids-reader-toolbar-btn.is-bookmarked {
+    color: #8b5e3c;
+    background: color-mix(in srgb, #f6ead6 88%, white);
+    transform: translateY(-1px);
+  }
+
   .kids-reader-shell[data-reader-theme="night"] .kids-reader-toolbar-btn {
     background: color-mix(in srgb, #2a3448 88%, transparent);
     color: var(--reader-ink);
+  }
+
+  .kids-reader-header-progress {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    min-height: 2.5rem;
+    padding: 0 0.85rem;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--reader-paper) 72%, transparent);
+    border: 1px solid var(--reader-border);
+    font-family: var(--font-body);
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--reader-muted);
+    white-space: nowrap;
   }
 
   .kids-reader-book-shell {
@@ -2499,11 +2699,9 @@
   }
 
   .kids-reader-page-card {
-    border-radius: 1.25rem;
+    border-radius: var(--kids-radius-book);
     border: 1px solid var(--reader-border);
-    box-shadow:
-      0 18px 40px -18px rgba(36, 50, 74, 0.22),
-      0 4px 12px -6px rgba(36, 50, 74, 0.1);
+    box-shadow: var(--kids-shadow-book);
     background: var(--reader-paper);
     overflow: hidden;
   }
@@ -2511,24 +2709,36 @@
   .kids-reader-text-page {
     max-width: 40rem;
     margin-inline: auto;
-    padding: clamp(2rem, 6vw, 3.75rem) clamp(1.5rem, 5vw, 3rem);
+    padding: clamp(2.35rem, 6vw, 4.25rem) clamp(1.6rem, 5vw, 3.4rem);
     text-align: start;
   }
 
   .kids-reader-text-body {
-    font-family: var(--font-body);
-    font-size: clamp(1.35rem, 2.6vw, 1.75rem);
-    font-weight: 450;
-    line-height: 1.85;
-    letter-spacing: 0.01em;
+    font-family: Georgia, "Times New Roman", ui-serif, serif;
+    font-size: clamp(1.42rem, 2.8vw, 1.9rem);
+    font-weight: 400;
+    line-height: 1.95;
+    letter-spacing: 0.005em;
     color: var(--reader-ink);
-    max-width: 34ch;
+    max-width: 32ch;
     margin-inline: auto;
+    text-wrap: pretty;
   }
 
   .kids-reader-text-body p + p,
   .kids-reader-text-body > * + * {
     margin-top: 1.15em;
+  }
+
+  .kids-reader-sentence {
+    border-radius: 0.45rem;
+    padding: 0.04em 0.08em;
+    transition: background-color 180ms ease, box-shadow 180ms ease, color 180ms ease;
+  }
+
+  .kids-reader-sentence.is-active {
+    background: color-mix(in srgb, var(--reader-progress) 12%, transparent);
+    box-shadow: inset 0 -0.08em 0 color-mix(in srgb, var(--reader-progress) 30%, transparent);
   }
 
   .kids-reader-illustration-wrap {
@@ -2543,10 +2753,8 @@
     max-width: 100%;
     max-height: 78vh;
     object-fit: contain;
-    border-radius: 1.125rem;
-    box-shadow:
-      0 20px 40px -16px rgba(36, 50, 74, 0.24),
-      0 4px 12px -4px rgba(36, 50, 74, 0.1);
+    border-radius: var(--kids-radius-book);
+    box-shadow: var(--kids-shadow-book);
     border: 1px solid var(--reader-border);
     background: var(--reader-paper);
   }
@@ -2620,13 +2828,15 @@
     pointer-events: auto;
     display: flex;
     flex-direction: column;
-    gap: 0.65rem;
-    width: min(100%, 26rem);
-    padding: 0.85rem 1rem;
-    border-radius: 1.5rem;
-    background: color-mix(in srgb, var(--reader-paper) 92%, transparent);
+    gap: 0.8rem;
+    width: min(100%, 34rem);
+    padding: 0.95rem 1rem 1rem;
+    border-radius: 1.65rem;
+    background: color-mix(in srgb, var(--reader-paper) 90%, transparent);
     border: 1px solid var(--reader-border);
-    box-shadow: 0 12px 32px -14px rgba(36, 50, 74, 0.22);
+    box-shadow:
+      0 16px 34px -18px rgba(36, 50, 74, 0.24),
+      0 4px 12px -8px rgba(36, 50, 74, 0.12);
     backdrop-filter: blur(12px);
   }
 
@@ -2635,6 +2845,29 @@
     align-items: center;
     justify-content: center;
     gap: 0.65rem;
+    flex-wrap: wrap;
+  }
+
+  .kids-reader-panel-topline {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  .kids-reader-timeline-wrap {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 0.65rem;
+  }
+
+  .kids-reader-time {
+    font-family: var(--font-body);
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--reader-muted);
+    white-space: nowrap;
   }
 
   .kids-reader-audio-timeline {
@@ -2712,7 +2945,7 @@
 
   .kids-reader-focus-hint {
     position: absolute;
-    bottom: 1rem;
+    bottom: 1.15rem;
     inset-inline: 0;
     z-index: 25;
     text-align: center;
@@ -2725,7 +2958,7 @@
   }
 
   .kids-reader-shell.is-focus .kids-reader-focus-hint {
-    opacity: 0.55;
+    opacity: 0.45;
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -2743,6 +2976,9 @@
     .kids-reader-cover-bleed {
       filter: blur(28px);
       transform: none;
+    }
+    .kids-reader-sentence {
+      transition: none;
     }
   }
 
