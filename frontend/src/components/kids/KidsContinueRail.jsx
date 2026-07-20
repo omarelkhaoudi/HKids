@@ -3,6 +3,7 @@ import { useReducedMotion } from '../../hooks/useReducedMotion';
 import { getMotionProps, getHoverMotion, kidsCarouselReveal, kidsTouchFeedback } from '../../constants/kidsMotion';
 import { PlayIcon } from '../Icons';
 import { KidsBookCover } from './KidsBookCover';
+import KidsButton from './KidsButton';
 
 export function KidsContinueRail({
   books = [],
@@ -80,15 +81,16 @@ export function KidsContinueRail({
                     {Math.round(progress)}%
                   </span>
                 </div>
-                <button
-                  type="button"
+                <KidsButton
+                  variant="primary"
+                  size="md"
+                  icon={PlayIcon}
                   onClick={() => onResume?.(book)}
-                  className="kids-touch-target mt-auto inline-flex min-h-[56px] w-full items-center justify-center gap-space-8 rounded-full bg-primary-500 px-space-12 text-caption font-semibold text-white shadow-soft hover:bg-primary-600 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-300"
+                  className="mt-auto w-full"
                   aria-label={`${t('resume')} — ${book.title}`}
                 >
-                  <PlayIcon className={`h-4 w-4 ${isRtl ? 'rotate-180' : ''}`} filled />
                   {t('resume')}
-                </button>
+                </KidsButton>
               </div>
             </motion.article>
           );

@@ -10,12 +10,12 @@ import { resolveBookCoverUrl } from '../utils/bookCover';
 import { KidsBookCover } from '../components/kids/KidsBookCover';
 import { KidsBookCarousel } from '../components/kids/KidsBookCarousel';
 import KidsButton from '../components/kids/KidsButton';
+import { useOfflineContent } from '../hooks/useOfflineContent';
 import {
   HeartIcon, BookIcon, ChevronLeftIcon, RefreshIcon,
   ChildIcon, CategoryIcon, HistoryIcon, WarningIcon, AudioIcon, PlayIcon,
-  ClockIcon, LanguageIcon, MicrophoneIcon,
+  ClockIcon, LanguageIcon, MicrophoneIcon, DownloadIcon,
 } from '../components/Icons';
-import { Logo } from '../components/Logo';
 import { ContentReportModal } from '../components/parent/ContentReportModal';
 import { useLanguage } from '../context/LanguageContext';
 import { useReducedMotion } from '../hooks/useReducedMotion';
@@ -62,6 +62,7 @@ function BookDetails() {
   const { user } = useAuth();
   const { t, isRtl } = useLanguage();
   const reducedMotion = useReducedMotion();
+  const offlineContent = useOfflineContent();
   const isKidAccount = user?.role === 'kid';
   const canReport = user && (user.role === 'parent' || user.role === 'admin');
 
@@ -113,6 +114,18 @@ function BookDetails() {
       showToast(t('addedToFavorites'), 'success', 2000);
     }
     setIsFavorite(!isFavorite);
+  };
+
+  const handleDownload = async () => {
+    try {
+      await offlineContent.downloadBookContent(book);
+      storage.markDownloaded(book.id);
+      showToast(t('downloaded'), 'success');
+    } catch (error) {
+      if (error?.name !== 'AbortError') {
+        showToast(t('downloadError') || 'Impossible de telecharger ce livre pour le moment.', 'error');
+      }
+    }
   };
 
   const handleSubscriptionBlock = (status, context = 'start') => {
@@ -202,6 +215,10 @@ function BookDetails() {
   const narratorLabel = book.narrator || book.narrator_name || book.voice_name || null;
   const hasLongDescription = Boolean(book.description && book.description.length > 220);
   const canListen = Boolean(book.audio_url);
+  const downloadStatus = offlineContent.getBookStatus(book.id);
+  const isDownloading = downloadStatus?.status === 'pending' || downloadStatus?.status === 'running';
+  const isDownloaded = downloadStatus?.status === 'downloaded' || storage.isDownloaded(book.id);
+  const backPath = isKidAccount ? '/kids/library' : '/';
 
   return (
     <div className="min-h-screen kids-book-details-page" dir={isRtl ? 'rtl' : 'ltr'}>
@@ -210,20 +227,20 @@ function BookDetails() {
         className="kids-book-details-header sticky top-0 z-50"
       >
         <div className="kids-book-details-shell flex items-center justify-between gap-space-12 py-space-12">
-          <Link
-            to="/"
-            className="flex items-center shrink-0 rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-400 focus-visible:ring-offset-2"
-          >
-            <Logo size="default" />
-          </Link>
           <button
             type="button"
             onClick={() => navigate(-1)}
-            className="kids-touch-target inline-flex min-h-[56px] items-center gap-space-8 rounded-full px-space-16 text-foreground-secondary hover:text-foreground transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-400 focus-visible:ring-offset-2"
+            className="kids-book-details-back"
           >
             <ChevronLeftIcon className={`h-5 w-5 ${isRtl ? 'rotate-180' : ''}`} />
-            <span className="hidden sm:inline kids-type-meta font-semibold">Retour</span>
+            <span className="kids-type-meta font-semibold">Retour</span>
           </button>
+          <Link
+            to={backPath}
+            className="kids-book-details-mini-home"
+          >
+            HKids
+          </Link>
         </div>
       </motion.header>
 
@@ -240,6 +257,8 @@ function BookDetails() {
         ) : null}
 
         <div className="kids-book-details-shell relative z-10 py-space-32 md:py-space-48 lg:py-space-56">
+          <div className="kids-book-details-orb kids-book-details-orb-a" aria-hidden="true" />
+          <div className="kids-book-details-orb kids-book-details-orb-b" aria-hidden="true" />
           <div className="kids-book-details-hero">
             <motion.div
               {...getHoverMotion(reducedMotion, kidsHoverLift)}
@@ -256,6 +275,7 @@ function BookDetails() {
             </motion.div>
 
             <div className="kids-book-details-copy">
+              <p className="kids-book-details-kicker">Une histoire a savourer doucement</p>
               <h1 className="kids-book-details-title">{book.title}</h1>
 
               {book.author ? (
@@ -296,17 +316,17 @@ function BookDetails() {
                       size="lg"
                       icon={BookIcon}
                       onClick={continueReading}
-                      className="w-full sm:flex-1"
+                      className="w-full sm:flex-1 kids-book-details-cta"
                       aria-label={t('continueReading')}
                     >
-                      {t('resume')}
+                      Reprendre l&apos;histoire
                     </KidsButton>
                     <KidsButton
-                      variant="secondary"
+                      variant="glass"
                       size="md"
                       icon={RefreshIcon}
                       onClick={startReading}
-                      className="w-full sm:flex-1"
+                      className="w-full sm:flex-1 kids-book-details-secondary-cta"
                       aria-label="Recommencer"
                     >
                       Recommencer
@@ -318,10 +338,10 @@ function BookDetails() {
                     size="lg"
                     icon={PlayIcon}
                     onClick={startReading}
-                    className="w-full sm:flex-1"
+                    className="w-full sm:flex-1 kids-book-details-cta"
                     aria-label={t('readAction')}
                   >
-                    {t('readAction')}
+                    Commencer l&apos;histoire
                   </KidsButton>
                 )}
 
@@ -331,23 +351,35 @@ function BookDetails() {
                     size="md"
                     icon={AudioIcon}
                     onClick={() => navigate(`/kids/listen/${id}`)}
-                    className="w-full sm:flex-1"
+                    className="w-full sm:flex-1 kids-book-details-secondary-cta"
                     aria-label={t('listenAction')}
                   >
                     {t('listenAction')}
                   </KidsButton>
                 ) : null}
+              </div>
 
-                <KidsButton
-                  variant="ghost"
-                  size="md"
-                  icon={HeartIcon}
+              <div className="kids-book-details-utility-actions">
+                <button
+                  type="button"
                   onClick={toggleFavorite}
-                  className={`w-full sm:w-auto ${isFavorite ? 'text-rose-600' : ''}`}
+                  className={`kids-book-details-utility-btn ${isFavorite ? 'is-active' : ''}`}
                   aria-label={isFavorite ? t('removedFromFavorites') : t('addToFavorites')}
+                  aria-pressed={isFavorite}
                 >
-                  {isFavorite ? t('yourFavorites') : t('addToFavorites')}
-                </KidsButton>
+                  <HeartIcon className="h-5 w-5" filled={isFavorite} />
+                  <span>{isFavorite ? t('yourFavorites') : 'Favori'}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={handleDownload}
+                  disabled={isDownloading || isDownloaded}
+                  className="kids-book-details-utility-btn"
+                  aria-label={isDownloaded ? 'Livre telecharge' : 'Telecharger ce livre'}
+                >
+                  <DownloadIcon className="h-5 w-5" />
+                  <span>{isDownloading ? 'Téléchargement...' : isDownloaded ? 'Téléchargé' : 'Télécharger'}</span>
+                </button>
               </div>
             </div>
           </div>
@@ -388,7 +420,7 @@ function BookDetails() {
 
           {book.description ? (
             <section className="kids-book-details-section" aria-label="Description">
-              <h2 className="kids-shelf-title !mb-space-12">L&apos;histoire</h2>
+              <h2 className="kids-shelf-title kids-book-details-section-title !mb-space-12">L&apos;histoire</h2>
               {hasLongDescription ? (
                 <details className="kids-book-details-desc">
                   <summary>
@@ -405,7 +437,7 @@ function BookDetails() {
           ) : null}
 
           <section className="kids-book-details-section" aria-label="Informations">
-            <h2 className="kids-shelf-title !mb-space-16">À propos</h2>
+            <h2 className="kids-shelf-title kids-book-details-section-title !mb-space-16">À propos</h2>
             <ul className="kids-book-details-info-grid">
               {ageLabel ? (
                 <li className="kids-book-details-info-item">
@@ -510,6 +542,7 @@ function BookDetails() {
           <div className="kids-book-details-shell">
             <KidsBookCarousel
               title="Tu pourrais aussi aimer"
+              subtitle="D'autres couvertures douces et merveilleuses a ouvrir ensuite."
               books={relatedBooks}
               isRtl={isRtl}
               showActions={false}

@@ -21,7 +21,6 @@ import {resolveBookCoverUrl} from '../utils/bookCover';
 import {getMotionProps, kidsProgressFill} from '../constants/kidsMotion';
 import ReadingAidPanel from '../components/ReadingAidPanel';
 import {ContentReportModal} from '../components/parent/ContentReportModal';
-import {AudioPlayer} from '../components/audio/AudioPlayer';
 import {useAudioPlayer} from '../hooks/useAudioPlayer';
 import {KidsCelebration} from '../components/kids/KidsCelebration';
 import {KidsBedtimeAtmosphere} from '../components/kids/KidsBedtimeAtmosphere';
@@ -399,6 +398,39 @@ function StarParticles({count = 20}) {
  );
 }
 
+function splitTextIntoSentences(text = '') {
+ const normalized = String(text || '').replace(/\s+/g, ' ').trim();
+ if (!normalized) return [];
+
+ const matches = normalized.match(/[^.!?]+[.!?]*\s*/g) || [normalized];
+ let cursor = 0;
+ return matches.map((segment) => {
+ const trimmed = segment.trim();
+ const start = normalized.indexOf(trimmed, cursor);
+ cursor = start + trimmed.length;
+ return {
+ text: trimmed,
+ start,
+ end: start + trimmed.length,
+};
+ }).filter((segment) => segment.text);
+}
+
+function formatReaderTime(seconds = 0) {
+ const safeSeconds = Math.max(0, Math.floor(Number(seconds) || 0));
+ const minutes = Math.floor(safeSeconds / 60);
+ const rest = safeSeconds % 60;
+ return `${minutes}:${String(rest).padStart(2, '0')}`;
+}
+
+function BookmarkGlyph({ className = 'w-5 h-5' }) {
+ return (
+ <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 5.5A1.5 1.5 0 018.5 4h7A1.5 1.5 0 0117 5.5V20l-5-3-5 3V5.5z" />
+ </svg>
+ );
+}
+
 function BookReader() {
  const {id} = useParams();
  const [searchParams] = useSearchParams();
@@ -442,7 +474,6 @@ function BookReader() {
  const [, setPdfDocuments] = useState({}); // Cache pour les documents PDF chargés
  const [pdfTotalPages, setPdfTotalPages] = useState(null); // Nombre total de pages dans le PDF actuel
  const [currentPdfUrl, setCurrentPdfUrl] = useState(null); // URL du PDF actuellement chargé
- const [isFullscreen, setIsFullscreen] = useState(false); // Mode plein écran
  const readerRef = useRef(null);
  const pageTurnMountRef = useRef(true);
  const [pageSparkle, setPageSparkle] = useState(false);
@@ -450,7 +481,7 @@ function BookReader() {
  const {showToast} = useToast();
  const {user} = useAuth();
  const audioPlayer = useAudioPlayer();
- const [showAudioPlayer, setShowAudioPlayer] = useState(false);
+ const [, setShowAudioPlayer] = useState(false);
  const [familyVoiceProfiles, setFamilyVoiceProfiles] = useState([]);
  const [selectedFamilyVoiceId, setSelectedFamilyVoiceId] = useState('');
  const sessionRef = useRef({
@@ -556,6 +587,7 @@ function BookReader() {
  setTimeout(() => {
  setIsPlaying(false);
  setSpeechUtterance(null);
+ setCurrentSentenceIndex(-1);
  resolve();
 }, 100);
 });
@@ -563,11 +595,13 @@ function BookReader() {
  console.error('Erreur lors de l\'arrêt de l\'audio:', error);
  setIsPlaying(false);
  setSpeechUtterance(null);
+ setCurrentSentenceIndex(-1);
  return Promise.resolve();
 }
 }
  setIsPlaying(false);
  setSpeechUtterance(null);
+ setCurrentSentenceIndex(-1);
  return Promise.resolve();
 };
 
@@ -659,16 +693,12 @@ function BookReader() {
  if (e.key === 'ArrowLeft') prevPage();
  if (e.key === 'ArrowRight') nextPage();
  if (e.key === 'Escape') {
- if (isFullscreen) {
- setIsFullscreen(false);
-} else {
  navigate(readerExitPath);
-}
 }
 };
  window.addEventListener('keydown', handleKeyPress);
  return () => window.removeEventListener('keydown', handleKeyPress);
-}, [currentPage, book, isFullscreen, navigate, readerExitPath]);
+}, [currentPage, book, navigate, readerExitPath]);
 
  const loadBook = async () => {
  try {
@@ -906,11 +936,13 @@ function BookReader() {
 
  utterance.onstart = () => {
  setIsPlaying(true);
+ setCurrentSentenceIndex(0);
 };
 
  utterance.onend = () => {
  setIsPlaying(false);
  setSpeechUtterance(null);
+ setCurrentSentenceIndex(-1);
 };
 
  utterance.onerror = (event) => {
@@ -920,12 +952,14 @@ function BookReader() {
  console.warn('Lecture audio interrompue (normal):', event);
  setIsPlaying(false);
  setSpeechUtterance(null);
+ setCurrentSentenceIndex(-1);
  return;
 }
 
  console.error('Erreur de synthèse vocale:', event);
  setIsPlaying(false);
  setSpeechUtterance(null);
+ setCurrentSentenceIndex(-1);
  
  // Messages d'erreur plus spécifiques
  let errorMessage = 'Erreur lors de la lecture audio';
@@ -941,6 +975,13 @@ function BookReader() {
  
  showToast(errorMessage, 'error', 3000);
 };
+
+ utterance.onboundary = (event) => {
+ if (!textSentences.length || event.name !== 'word') return;
+ const charIndex = Number(event.charIndex || 0);
+ const nextIndex = textSentences.findIndex((sentence) => charIndex >= sentence.start && charIndex < sentence.end);
+ if (nextIndex >= 0) setCurrentSentenceIndex(nextIndex);
+ };
 
  setSpeechUtterance(utterance);
  
@@ -1138,19 +1179,25 @@ function BookReader() {
 }
 };
 
- const [themeMode, setThemeMode] = useState(isKidReader ? 'warm' : 'light'); // light | warm | sepia | night
+ const [themeMode, setThemeMode] = useState('warm'); // warm | night
  const [showMenu, setShowMenu] = useState(true);
  const [isFavorite, setIsFavorite] = useState(false);
  const [showEndModal, setShowEndModal] = useState(false);
  const [showKidCelebration, setShowKidCelebration] = useState(false);
  const [showStoryOpening, setShowStoryOpening] = useState(isKidReader);
  const [showReportModal, setShowReportModal] = useState(false);
+ const [currentSentenceIndex, setCurrentSentenceIndex] = useState(-1);
+ const [bookmarkPulse, setBookmarkPulse] = useState(false);
  const reducedMotion = useReducedMotion();
  const canReport = user && (user.role === 'parent' || user.role === 'admin') && !isKidReader;
 
  useEffect(() => {
  setIsFavorite(book ? storage.isFavorite(book.id) : false);
 }, [book?.id]);
+
+ useEffect(() => {
+ setCurrentSentenceIndex(-1);
+ }, [currentPage, book?.id]);
 
  const toggleBookFavorite = () => {
  if (!book) return;
@@ -1162,6 +1209,14 @@ function BookReader() {
  setIsFavorite(true);
 }
 };
+
+ const handleBookmark = () => {
+ if (!book?.id) return;
+ storage.addToHistory(book.id, book.title, currentPage);
+ setBookmarkPulse(true);
+ setTimeout(() => setBookmarkPulse(false), 700);
+ showToast('Page mémorisée', 'success', 1500);
+ };
 
  const handleFamilyVoiceChange = async (voiceId) => {
  setSelectedFamilyVoiceId(voiceId);
@@ -1190,26 +1245,10 @@ function BookReader() {
  return () => clearTimeout(timer);
  }, [currentPage, isKidReader]);
 
- useEffect(() => {
- const onFullscreenChange = () => setIsFullscreen(Boolean(document.fullscreenElement));
- document.addEventListener('fullscreenchange', onFullscreenChange);
- return () => document.removeEventListener('fullscreenchange', onFullscreenChange);
- }, []);
-
- const toggleFullscreen = () => {
- if (!document.fullscreenElement) {
- readerRef.current?.requestFullscreen?.().catch(() => {});
- } else {
- document.exitFullscreen?.().catch(() => {});
- }
- };
-
  const cycleThemeMode = () => {
  setThemeMode((current) => {
- if (current === 'light' || current === 'day') return 'warm';
- if (current === 'warm') return 'sepia';
- if (current === 'sepia') return 'night';
- return 'light';
+ if (current === 'night') return 'warm';
+ return 'night';
  });
  };
 
@@ -1221,7 +1260,7 @@ function BookReader() {
  });
  };
 
- const readerTheme = themeMode === 'day' ? 'light' : themeMode;
+ const readerTheme = themeMode === 'night' ? 'night' : 'warm';
 
  // Reset opening when book id changes
  useEffect(() => {
@@ -1324,17 +1363,29 @@ function BookReader() {
     transition: { duration: 0.28, ease: [0.22, 1, 0.36, 1] },
   };
 
- const themeLabel = readerTheme === 'night'
-  ? 'Mode nuit'
-  : readerTheme === 'sepia'
-    ? 'Mode sépia'
-    : readerTheme === 'warm'
-      ? 'Papier chaud'
-      : 'Mode clair';
+ const themeLabel = readerTheme === 'night' ? 'Mode nuit' : 'Papier chaud';
 
  const progressRounded = Math.round(progress);
  const audioProgressMax = Math.max(0, Math.floor(audioPlayer.duration || 0));
  const audioProgressValue = Math.min(audioProgressMax, Math.floor(audioPlayer.currentTime || 0));
+ const textSentences = splitTextIntoSentences(currentPageData?.content || '');
+
+ useEffect(() => {
+ if (isPDF || currentPageData?.image_path || !textSentences.length) return undefined;
+
+ const preloadPage = (pageData) => {
+ if (!pageData?.image_path) return;
+ const nextUrl = getFileUrl(pageData.image_path);
+ if (!nextUrl || nextUrl.toLowerCase().endsWith('.pdf')) return;
+ const img = new Image();
+ img.decoding = 'async';
+ img.src = nextUrl;
+ };
+
+ preloadPage(book?.pages?.[currentPage - 1]);
+ preloadPage(book?.pages?.[currentPage + 1]);
+ return undefined;
+ }, [book?.pages, currentPage, currentPageData?.image_path, isPDF, textSentences.length]);
 
 
  return (
@@ -1393,46 +1444,13 @@ function BookReader() {
   </div>
 
   <div className="flex items-center gap-2">
-    <button
-      type="button"
-      onClick={cycleThemeMode}
-      className="kids-reader-toolbar-btn"
-      aria-label={themeLabel}
-      title={themeLabel}
-    >
-      {readerTheme === 'night' ? <MoonIcon className="w-6 h-6" /> : <SunIcon className="w-6 h-6" />}
-    </button>
-    <button
-      type="button"
-      onClick={toggleBookFavorite}
-      className={`kids-reader-toolbar-btn ${isFavorite ? 'is-active' : ''}`}
-      aria-label={t('yourFavorites')}
-      aria-pressed={isFavorite}
-    >
-      <svg className="w-6 h-6" fill={isFavorite ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-      </svg>
-    </button>
-    {!isKidReader && (
-      <button
-        type="button"
-        onClick={() => setShowReadingAid(true)}
-        className="kids-reader-toolbar-btn"
-        aria-label="Aide à la lecture"
-      >
-        <SettingsIcon className="w-6 h-6" />
-      </button>
-    )}
-    {canReport && (
-      <button
-        type="button"
-        onClick={() => setShowReportModal(true)}
-        className="kids-reader-toolbar-btn"
-        aria-label={t('reportContentAction')}
-      >
-        <WarningIcon className="w-6 h-6" />
-      </button>
-    )}
+    <div className="kids-reader-header-progress">
+      <span>{currentPage + 1}</span>
+      <span aria-hidden="true">/</span>
+      <span>{totalPages}</span>
+      <span aria-hidden="true">·</span>
+      <span>{progressRounded}%</span>
+    </div>
   </div>
  </motion.header>
  )}
@@ -1452,7 +1470,7 @@ function BookReader() {
  )}
 
  {/* Main Content Area */}
- <div className={`relative flex-1 w-full h-full flex items-center justify-center overflow-hidden z-10 ${showMenu ? 'p-space-16 md:p-space-28 pt-24 pb-28' : 'p-space-8 md:p-space-16'}`}>
+ <div className={`relative flex-1 w-full h-full flex items-center justify-center overflow-hidden z-10 ${showMenu ? 'p-space-12 md:p-space-24 pt-20 pb-32' : 'p-space-6 md:p-space-12'}`}>
  
   <>
   <div className={`absolute ${isRtl ? 'right-3' : 'left-3'} inset-y-0 z-20 flex items-center justify-start pointer-events-none`}>
@@ -1526,7 +1544,7 @@ function BookReader() {
  <div className="w-full kids-reader-page-card">
  <div className="kids-reader-text-page">
  {currentPageData.content && (
- <p 
+ <div 
  className="kids-reader-text-body"
  style={{
  fontSize: isKidReader ? undefined : `${readingSettings.fontSize}px`,
@@ -1534,8 +1552,15 @@ function BookReader() {
  letterSpacing: readingSettings.syllabification ? '0.1em' : undefined
 }}
  >
- {currentPageData.content}
- </p>
+ {textSentences.length > 0 ? textSentences.map((sentence, index) => (
+   <span
+     key={`${index}-${sentence.start}`}
+     className={`kids-reader-sentence ${index === currentSentenceIndex ? 'is-active' : ''}`}
+   >
+     {sentence.text}{' '}
+   </span>
+ )) : currentPageData.content}
+ </div>
  )}
  </div>
  </div>
@@ -1549,7 +1574,7 @@ function BookReader() {
 
  {/* Floating Audio Controls */}
  <AnimatePresence>
- {(showMenu || audioPlaybackActive) && (
+ {showMenu && (
  <motion.div
  initial={reducedMotion ? false : {y: 24, opacity: 0}}
  animate={{y: 0, opacity: 1}}
@@ -1559,16 +1584,41 @@ function BookReader() {
  onClick={(e) => e.stopPropagation()}
  >
    <div className="kids-reader-audio-panel">
-     {book.audio_url && audioProgressMax > 0 && (
-       <input
-         type="range"
-         min={0}
-         max={audioProgressMax}
-         value={audioProgressValue}
-         onChange={(event) => audioPlayer.seekTo(Number(event.target.value))}
-         className="kids-reader-audio-timeline"
-         aria-label="Progression audio"
+     <div className="kids-reader-panel-topline">
+       <span className="kids-reader-progress-label" aria-live="polite">
+         Page {currentPage + 1} sur {totalPages}
+       </span>
+       <span className="kids-reader-progress-label">{progressRounded}%</span>
+     </div>
+     <div
+       className="kids-reader-progress-track"
+       role="progressbar"
+       aria-valuenow={currentPage + 1}
+       aria-valuemin={1}
+       aria-valuemax={totalPages}
+       aria-label={book.title}
+     >
+       <motion.div
+         className="kids-reader-progress-fill"
+         initial={false}
+         animate={{ width: `${progress}%` }}
+         transition={reducedMotion ? { duration: 0 } : kidsProgressFill.transition}
        />
+     </div>
+     {book.audio_url && audioProgressMax > 0 && (
+       <div className="kids-reader-timeline-wrap">
+         <span className="kids-reader-time">{formatReaderTime(audioPlayer.currentTime)}</span>
+         <input
+           type="range"
+           min={0}
+           max={audioProgressMax}
+           value={audioProgressValue}
+           onChange={(event) => audioPlayer.seekTo(Number(event.target.value))}
+           className="kids-reader-audio-timeline"
+           aria-label="Progression audio"
+         />
+         <span className="kids-reader-time">{formatReaderTime(audioPlayer.duration)}</span>
+       </div>
      )}
      <div className="kids-reader-audio-row">
        <button
@@ -1612,68 +1662,59 @@ function BookReader() {
        >
          {speechRate}x
        </button>
+       <button
+         type="button"
+         onClick={handleBookmark}
+         className={`kids-reader-toolbar-btn ${bookmarkPulse ? 'is-bookmarked' : ''}`}
+         aria-label="Mémoriser cette page"
+       >
+         <BookmarkGlyph className="w-6 h-6" />
+       </button>
+       <button
+         type="button"
+         onClick={toggleBookFavorite}
+         className={`kids-reader-toolbar-btn ${isFavorite ? 'is-active' : ''}`}
+         aria-label={t('yourFavorites')}
+         aria-pressed={isFavorite}
+       >
+         <svg className="w-6 h-6" fill={isFavorite ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+         </svg>
+       </button>
+       <button
+         type="button"
+         onClick={cycleThemeMode}
+         className="kids-reader-toolbar-btn"
+         aria-label={themeLabel}
+         title={themeLabel}
+       >
+         {readerTheme === 'night' ? <MoonIcon className="w-6 h-6" /> : <SunIcon className="w-6 h-6" />}
+       </button>
+       {!isKidReader && (
+         <button
+           type="button"
+           onClick={() => setShowReadingAid(true)}
+           className="kids-reader-toolbar-btn"
+           aria-label="Aide à la lecture"
+         >
+           <SettingsIcon className="w-6 h-6" />
+         </button>
+       )}
+       {canReport && (
+         <button
+           type="button"
+           onClick={() => setShowReportModal(true)}
+           className="kids-reader-toolbar-btn"
+           aria-label={t('reportContentAction')}
+         >
+           <WarningIcon className="w-6 h-6" />
+         </button>
+       )}
      </div>
    </div>
  </motion.div>
  )}
  </AnimatePresence>
-
- {/* Reading progress */}
- <div className={`kids-reader-progress-dock ${showMenu ? 'opacity-100' : 'opacity-70'}`}>
-   <div className="kids-reader-progress-panel">
-     <p className="kids-reader-progress-label" aria-live="polite">
-       Page {currentPage + 1} sur {totalPages} · {progressRounded}%
-     </p>
-     <div
-       className="kids-reader-progress-track"
-       role="progressbar"
-       aria-valuenow={currentPage + 1}
-       aria-valuemin={1}
-       aria-valuemax={totalPages}
-       aria-label={book.title}
-     >
-       <motion.div
-         className="kids-reader-progress-fill"
-         initial={false}
-         animate={{ width: `${progress}%` }}
-         transition={reducedMotion ? { duration: 0 } : kidsProgressFill.transition}
-       />
-     </div>
-   </div>
- </div>
-
- {showAudioPlayer && book.audio_url && !isKidReader && showMenu && (
- <div onClick={(event) => event.stopPropagation()}>
- <AudioPlayer
- book={book}
- playing={audioPlayer.playing}
- loading={audioPlayer.loading}
- currentTime={audioPlayer.currentTime}
- duration={audioPlayer.duration}
- volume={audioPlayer.volume}
- favorite={isFavorite}
- error={audioPlayer.error}
- onTogglePlay={() => {
- if (audioPlayer.playing) {
- audioPlayer.pause();
-} else {
- audioPlayer.play(book, {voiceId: selectedFamilyVoiceId || undefined});
-}
-}}
- onSeekBy={audioPlayer.seekBy}
- onSeekTo={audioPlayer.seekTo}
- onVolumeChange={audioPlayer.setVolume}
- onToggleFavorite={toggleBookFavorite}
- onClose={() => {
- audioPlayer.stop();
- setShowAudioPlayer(false);
-}}
- voiceProfiles={familyVoiceProfiles}
- selectedVoiceId={selectedFamilyVoiceId}
- onVoiceChange={handleFamilyVoiceChange}
- />
- </div>
- )}
 
  {/* End of Book Celebration Modal */}
  <Modal isOpen={showEndModal} onClose={() => setShowEndModal(false)} maxWidth="max-w-md">
