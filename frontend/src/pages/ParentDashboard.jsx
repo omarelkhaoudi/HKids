@@ -1,7 +1,7 @@
 import {useState, useEffect, useRef} from 'react';
 import {useNavigate} from 'react-router-dom';
 import {motion, AnimatePresence} from 'framer-motion';
-import {Card, Button, Badge, Input, Skeleton, Avatar} from '../components/ui';
+import {Badge, Button, Input, Skeleton, Avatar} from '../components/ui';
 
 import {useAuth} from '../context/AuthContext';
 import {useLanguage} from '../context/LanguageContext';
@@ -28,6 +28,7 @@ import {ParentEmptyState} from '../components/parent/ParentEmptyState';
 import {SettingsIcon} from '../components/Icons';
 import { PlatformShell } from '../components/layout/PlatformShell';
 import { BRAND_HERO_GRADIENT } from '../constants/brandTheme';
+import { getTodayReadingSeconds } from '../utils/parentInsights';
 
 const bedtimeLanguages = CONTENT_LANGUAGES.map((language) => ({
  id: language.id,
@@ -264,6 +265,12 @@ function ParentDashboard() {
  language === 'ar' ? 'ar-MA' : language === 'en' ? 'en-US' : 'fr-FR',
  {weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'}
 );
+ const todayReadMinutes = Math.floor(getTodayReadingSeconds(dashboardData) / 60);
+ const heroSubtitle = selectedKid
+ ? (todayReadMinutes > 0
+ ? t('parentHomeHeroReadToday', { name: selectedKid.name, minutes: todayReadMinutes })
+ : t('parentHomeHeroNoReadToday', { name: selectedKid.name }))
+ : t('parentHomeTagline');
  
  if (loading) {
  return (
@@ -291,8 +298,12 @@ function ParentDashboard() {
  <Avatar src={null} fallback={user?.username?.[0] || 'P'} size="xl" className="border-4 border-white/25 shadow-floating" />
  <div>
  <p className="text-body-lg text-white/85 font-medium capitalize">{currentDate}</p>
- <h1 className="text-hero font-black tracking-tight mb-space-8">{t('parentHomeGreeting')}, {user?.username || 'Parent'}</h1>
- <p className="text-body-lg text-white/80 font-medium max-w-lg">{t('parentHomeTagline')}</p>
+ <h1 className="text-hero font-black tracking-tight mb-space-8">
+ {t('parentHomeGreeting')}, {user?.username || 'Parent'}
+ </h1>
+ <p className="text-body-lg text-white/90 font-semibold max-w-xl leading-relaxed">
+ {heroSubtitle}
+ </p>
  <div className="flex flex-wrap items-center gap-3 mt-space-16">
  <Badge variant="glass" className="bg-card/20 text-white border-none font-bold">
  {t('parentKidsCount').replace('{count}', String(kids.length))}
@@ -363,6 +374,7 @@ function ParentDashboard() {
  language={language}
  t={t}
  kidName={selectedKid.name}
+ kid={selectedKid}
  />
 
  <ParentChildProfilePanel
@@ -389,14 +401,14 @@ function ParentDashboard() {
  <motion.div initial={{opacity: 0, y: 20}} animate={{opacity: 1, y: 0}} className="grid grid-cols-1 lg:grid-cols-3 gap-space-32">
  
  <div className="lg:col-span-2 flex flex-col gap-space-32">
- <Card className="p-space-24 md:p-space-32 rounded-32 shadow-card border border-border/40">
- <h2 className="text-heading-l font-black text-foreground mb-2">{t('parentPeaceTitle')}</h2>
+ <section className="parent-control-card" aria-labelledby="parent-peace-heading">
+ <h2 id="parent-peace-heading" className="text-heading-l font-black text-foreground mb-2">{t('parentPeaceTitle')}</h2>
  <p className="text-body-lg text-foreground-secondary font-medium mb-space-24">{t('parentPeaceSubtitle')}</p>
  <div className="space-y-space-24">
- <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-space-16 p-space-16 rounded-32 bg-surface-secondary/60">
+ <div className="parent-control-row">
  <div>
  <h3 className="font-black text-foreground">{t('parentScreenTime')}</h3>
- <p className="text-body text-foreground-muted">{t('parentScreenTimeDesc')}</p>
+ <p className="text-body text-foreground-muted mt-1">{t('parentScreenTimeDesc')}</p>
  </div>
  <Input 
  type="number" 
@@ -411,12 +423,14 @@ function ParentDashboard() {
  </div>
 
  <div className="grid grid-cols-1 sm:grid-cols-2 gap-space-16">
- <div className="p-space-16 rounded-32 bg-surface-secondary/60">
+ <div className="parent-control-row !flex-col !items-stretch">
  <h3 className="font-black mb-space-8">{t('parentQuietStart')}</h3>
+ <p className="text-body text-foreground-muted mb-space-8">{t('parentQuietStartDesc')}</p>
  <Input type="time" value={rulesForm.quiet_start_time} onChange={(e) => setRulesForm({...rulesForm, quiet_start_time: e.target.value})} className="w-full font-bold min-h-touch" />
  </div>
- <div className="p-space-16 rounded-32 bg-surface-secondary/60">
+ <div className="parent-control-row !flex-col !items-stretch">
  <h3 className="font-black mb-space-8">{t('parentQuietEnd')}</h3>
+ <p className="text-body text-foreground-muted mb-space-8">{t('parentQuietEndDesc')}</p>
  <Input type="time" value={rulesForm.quiet_end_time} onChange={(e) => setRulesForm({...rulesForm, quiet_end_time: e.target.value})} className="w-full font-bold min-h-touch" />
  </div>
  </div>
@@ -427,17 +441,17 @@ function ParentDashboard() {
  </Button>
  </div>
  </div>
- </Card>
+ </section>
 
- <Card className="p-space-24 md:p-space-32 rounded-32 shadow-card border border-border/40">
- <h2 className="text-heading-l font-black text-foreground mb-2">{t('parentReadingPermissions')}</h2>
+ <section className="parent-control-card" aria-labelledby="parent-permissions-heading">
+ <h2 id="parent-permissions-heading" className="text-heading-l font-black text-foreground mb-2">{t('parentReadingPermissions')}</h2>
  <p className="text-body-lg text-foreground-secondary font-medium mb-space-24">{t('parentPeacePermissionsDesc')}</p>
  <div className="grid grid-cols-1 md:grid-cols-2 gap-space-24">
  <div>
  <h3 className="font-black mb-space-12">{t('parentAllowedLanguages')}</h3>
  <div className="flex flex-wrap gap-2">
  {bedtimeLanguages.map(lang => (
- <button key={lang.id} type="button" onClick={() => toggleRuleValue('allowed_languages', lang.id)} className={`px-4 py-2 rounded-full text-body font-bold cursor-pointer transition-colors border-2 min-h-touch focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-400 ${rulesForm.allowed_languages.includes(lang.id) ? 'bg-primary-500 border-primary-500 text-white' : 'bg-transparent border-border text-foreground-secondary hover:border-primary-300'}`}>
+ <button key={lang.id} type="button" onClick={() => toggleRuleValue('allowed_languages', lang.id)} className={`parent-soft-chip ${rulesForm.allowed_languages.includes(lang.id) ? 'is-active is-primary' : ''}`} aria-pressed={rulesForm.allowed_languages.includes(lang.id)}>
  {lang.label}
  </button>
  ))}
@@ -447,7 +461,7 @@ function ParentDashboard() {
  <h3 className="font-black mb-space-12">{t('parentAllowedThemes')}</h3>
  <div className="flex flex-wrap gap-2">
  {bedtimeThemes.map(theme => (
- <button key={theme.id} type="button" onClick={() => toggleRuleValue('allowed_themes', theme.id)} className={`px-4 py-2 rounded-full text-body font-bold cursor-pointer transition-colors border-2 min-h-touch focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary-400 ${rulesForm.allowed_themes.includes(theme.id) ? 'bg-secondary-500 border-secondary-500 text-white' : 'bg-transparent border-border text-foreground-secondary hover:border-secondary-300'}`}>
+ <button key={theme.id} type="button" onClick={() => toggleRuleValue('allowed_themes', theme.id)} className={`parent-soft-chip ${rulesForm.allowed_themes.includes(theme.id) ? 'is-active is-secondary' : ''}`} aria-pressed={rulesForm.allowed_themes.includes(theme.id)}>
  {theme.label}
  </button>
  ))}
@@ -458,7 +472,7 @@ function ParentDashboard() {
  <h3 className="font-black mb-space-12">{t('parentAllowedContentTypes')}</h3>
  <div className="flex flex-wrap gap-2">
  {contentTypeOptions.map((type) => (
- <button key={type.id} type="button" onClick={() => toggleRuleValue('allowed_content_types', type.id)} className={`px-4 py-2 rounded-full text-body font-bold cursor-pointer transition-colors border-2 min-h-touch focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary-400 ${rulesForm.allowed_content_types.includes(type.id) ? 'bg-secondary-500 border-secondary-600 text-white' : 'bg-transparent border-border text-foreground-secondary hover:border-secondary-300'}`}>
+ <button key={type.id} type="button" onClick={() => toggleRuleValue('allowed_content_types', type.id)} className={`parent-soft-chip ${rulesForm.allowed_content_types.includes(type.id) ? 'is-active is-secondary' : ''}`} aria-pressed={rulesForm.allowed_content_types.includes(type.id)}>
  {type.label}
  </button>
  ))}
@@ -469,7 +483,7 @@ function ParentDashboard() {
  {rulesSaving ? t('parentSaving') : t('parentSaveRules')}
  </Button>
  </div>
- </Card>
+ </section>
 
  <ParentReadingGoalCard
  kidId={selectedKid?.id}
