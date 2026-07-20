@@ -22,7 +22,7 @@ import { storage } from '../utils/storage';
 import { getKidsContentPath } from '../utils/contentRouting';
 import { useToast } from '../components/ToastProvider';
 import { getRestrictionMessage } from '../services/parental/parentalAccessService';
-import { LockIcon, BookIcon, AudioIcon, SparklesIcon, StarIcon } from '../components/Icons';
+import { BookIcon, AudioIcon, SparklesIcon, StarIcon } from '../components/Icons';
 import { getCachedKidProfile } from '../services/cloud/cloudSyncService';
 import { Avatar } from '../components/ui';
 import { KidsTrustBadges } from '../components/kids/KidsTrustBadges';
@@ -536,59 +536,22 @@ function KidsHome() {
 
         <KidsFamilyMessages />
 
-        <details className="kids-profile-fold kids-home-profile-fold overflow-hidden">
-          <summary className="kids-touch-target cursor-pointer list-none px-space-24 py-space-16 kids-type-body text-foreground flex items-center justify-between gap-space-12 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-300">
-            <span>{kidName || t('yourMedals')}</span>
-            <span className="kids-type-caption">{t('yourMedals')}</span>
-          </summary>
-          <div className="px-space-16 pb-space-24 space-y-space-24">
-            <section id="kids-profile" className="scroll-mt-24">
-              <KidsProfilePanel
-                kid={kid}
-                kidName={kidName}
-                progressRows={progressRows}
-                favoriteBooks={favoriteBooks}
-                lastActivity={lastActivityText}
-                t={t}
-                isRtl={isRtl}
-                onPlayBook={handlePlayBook}
-                onGoToLibrary={() => navigate('/kids/library')}
-              />
-            </section>
-            <section id="kids-medals" className="scroll-mt-24">
-              <h2 className="kids-shelf-title mb-space-16 pl-space-8">
-                <span>{t('yourMedals')}</span>
-              </h2>
-              {badges.length === 0 ? (
-                <KidsEmptyState
-                  title={t('emptyBadgesTitle')}
-                  compact
-                  actionLabel={t('goToLibrary')}
-                  onAction={() => navigate('/kids/library')}
-                  showMascot
-                  mascotMood="encourage"
-                />
-              ) : (
-                <div className="flex flex-wrap gap-space-16 justify-center md:justify-start px-space-8">
-                  {badges.map((badge) => (
-                    <motion.div
-                      key={badge.id}
-                      {...getHoverMotion(reducedMotion, kidsHoverLift)}
-                      title={`${badge.label} — ${badge.description}`}
-                      className={`relative w-20 h-20 md:w-24 md:h-24 rounded-full flex items-center justify-center text-3xl md:text-4xl shadow-soft border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-300 ${badge.earned ? 'bg-secondary-50 border-secondary-100/80' : 'bg-surface-100 border-border/50 grayscale opacity-55'}`}
-                    >
-                      {badge.earned ? (
-                        <span className="z-10 relative" aria-hidden="true">{badge.icon}</span>
-                      ) : (
-                        <LockIcon className="w-7 h-7 text-surface-400" />
-                      )}
-                    </motion.div>
-                  ))}
-                </div>
-              )}
-            </section>
-          </div>
-        </details>
+        <section className="kids-profile-universe-wrap px-space-8 md:px-space-16 pb-space-24">
+          <KidsProfilePanel
+            kid={kid}
+            kidName={kidName}
+            greeting={greeting}
+            progressRows={progressRows}
+            favoriteBooks={favoriteBooks}
+            publishedBooks={publishedBooks}
+            badges={badges}
+            lastActivity={lastActivityText}
+            t={t}
+            isRtl={isRtl}
+            onPlayBook={handlePlayBook}
+            onGoToLibrary={() => navigate('/kids/library')}
+          />
+        </section>
 
         <KidsTrustBadges t={t} compact className="opacity-60" />
       </main>
