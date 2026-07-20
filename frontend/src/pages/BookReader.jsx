@@ -1,4 +1,4 @@
-import {useState, useEffect, useRef} from 'react';
+import {useState, useEffect, useRef, useCallback} from 'react';
 import {useParams, useNavigate, useSearchParams, useLocation} from 'react-router-dom';
 import {motion, AnimatePresence} from 'framer-motion';
 import {Button, Modal} from '../components/ui';
@@ -19,13 +19,21 @@ import {ChevronLeftIcon, ChevronRightIcon, HomeIcon, BookIcon, StarIcon, PlayIco
 import {getImageUrl} from '../utils/imageUrl';
 import {resolveBookCoverUrl} from '../utils/bookCover';
 import {kidsProgressFill, kidsReaderPageTurn} from '../constants/kidsMotion';
-import {deriveReaderMood} from '../utils/readerAtmosphere';
+import {deriveReaderMood, getReaderAmbientStyle} from '../utils/readerAtmosphere';
+import {
+ detectReadingMilestone,
+ getReadingPhaseKey,
+ getReadingPhaseLabelKey,
+} from '../utils/readerCompanion';
 import ReadingAidPanel from '../components/ReadingAidPanel';
 import {ContentReportModal} from '../components/parent/ContentReportModal';
 import {useAudioPlayer} from '../hooks/useAudioPlayer';
 import {KidsCelebration} from '../components/kids/KidsCelebration';
 import {KidsBedtimeAtmosphere} from '../components/kids/KidsBedtimeAtmosphere';
 import {KidsStoryOpening} from '../components/kids/KidsStoryOpening';
+import {KidsReadingCompanion} from '../components/kids/KidsReadingCompanion';
+import {ReaderLivingPresence} from '../components/kids/ReaderLivingPresence';
+import {LivingIllustration} from '../components/kids/LivingIllustration';
 import {useReducedMotion} from '../hooks/useReducedMotion';
 
 // Configuration de pdfjs-dist
@@ -1232,6 +1240,10 @@ function BookReader() {
  const [currentSentenceIndex, setCurrentSentenceIndex] = useState(-1);
  const [bookmarkPulse, setBookmarkPulse] = useState(false);
  const [showReaderTools, setShowReaderTools] = useState(false);
+ const [companionMessage, setCompanionMessage] = useState('');
+ const [companionMessageKey, setCompanionMessageKey] = useState('');
+ const [companionActive, setCompanionActive] = useState(false);
+ const milestoneShownRef = useRef(new Set());
  const reducedMotion = useReducedMotion();
  const canReport = user && (user.role === 'parent' || user.role === 'admin') && !isKidReader;
 
@@ -1242,6 +1254,51 @@ function BookReader() {
  useEffect(() => {
  setCurrentSentenceIndex(-1);
  }, [currentPage, book?.id]);
+
+ useEffect(() => {
+ milestoneShownRef.current = new Set();
+ setCompanionActive(false);
+ setCompanionMessage('');
+ setCompanionMessageKey('');
+ }, [book?.id]);
+
+ useEffect(() => {
+ if (!isKidReader || loading || !book?.pages?.length || showStoryOpening || showKidCelebration) {
+ return;
+ }
+
+ const firstPageData = book.pages[0];
+ const isPdfBook = firstPageData?.image_path?.toLowerCase().endsWith('.pdf');
+ const firstPageUrl = firstPageData?.image_path ? getFileUrl(firstPageData.image_path) : null;
+ const total = (isPdfBook && pdfTotalPages && currentPdfUrl === firstPageUrl)
+ ? pdfTotalPages
+ : book.pages.length;
+
+ const milestone = detectReadingMilestone(currentPage, total, milestoneShownRef.current);
+ if (!milestone) return;
+
+ milestoneShownRef.current.add(milestone.id);
+ setCompanionMessageKey(milestone.messageKey);
+ setCompanionMessage(t(milestone.messageKey));
+ setCompanionActive(true);
+ }, [
+ book?.id,
+ book?.pages,
+ currentPage,
+ currentPdfUrl,
+ isKidReader,
+ loading,
+ pdfTotalPages,
+ showKidCelebration,
+ showStoryOpening,
+ t,
+ ]);
+
+ const dismissCompanion = useCallback(() => {
+ setCompanionActive(false);
+ setCompanionMessage('');
+ setCompanionMessageKey('');
+ }, []);
 
  const toggleBookFavorite = () => {
  if (!book) return;
@@ -1440,12 +1497,16 @@ function BookReader() {
  const pageText = normalizePageContent(currentPageData?.content);
  const textSentences = splitTextIntoSentences(pageText);
  const storyMood = isKidReader ? deriveReaderMood(book) : 'warm';
+ const readingPhaseKey = isKidReader ? getReadingPhaseKey(currentPage, totalPages) : null;
+ const readingPhaseLabel = readingPhaseKey ? t(getReadingPhaseLabelKey(readingPhaseKey)) : null;
+ const ambientStyle = isKidReader ? getReaderAmbientStyle(storyMood) : undefined;
 
  return (
  <div 
  ref={readerRef}
  data-reader-theme={readerTheme}
  data-reader-mood={isKidReader ? storyMood : undefined}
+ style={ambientStyle}
  className={`kids-reader-shell h-screen w-full flex flex-col relative overflow-hidden ${!showMenu ? 'is-focus' : ''} ${showStoryOpening && isKidReader ? 'is-opening' : ''} ${readerTheme === 'night' ? 'kids-night-calm' : ''}`}
  onClick={() => setShowMenu(!showMenu)}
  onTouchStart={onTouchStart}
@@ -1460,7 +1521,16 @@ function BookReader() {
  {isKidReader && readerTheme === 'night' && <KidsBedtimeAtmosphere intensity="soft" />}
  <Confetti show={showConfetti && !isKidReader} />
  {isKidReader && readerTheme === 'night' && !showStoryOpening && !showMenu && <StarParticles count={reducedMotion ? 0 : 5} />}
- <PageSparkle active={pageSparkle} reducedMotion={reducedMotion} />
+ {!isKidReader && <PageSparkle active={pageSparkle} reducedMotion={reducedMotion} />}
+
+ {isKidReader && (
+   <KidsReadingCompanion
+     message={companionMessage}
+     messageKey={companionMessageKey}
+     active={companionActive}
+     onDismiss={dismissCompanion}
+   />
+ )}
 
  {isKidReader && (
    <KidsStoryOpening
@@ -1498,16 +1568,27 @@ function BookReader() {
   </div>
 
   <div
-    className="kids-reader-header-progress"
+    className={`kids-reader-header-progress ${isKidReader ? 'kids-reader-emotional-progress' : ''}`}
     role="progressbar"
     aria-valuenow={currentPage + 1}
     aria-valuemin={1}
     aria-valuemax={totalPages}
-    aria-label={`Page ${currentPage + 1} sur ${totalPages}`}
+    aria-label={isKidReader && readingPhaseLabel
+      ? `${readingPhaseLabel} · ${currentPage + 1} / ${totalPages}`
+      : `Page ${currentPage + 1} sur ${totalPages}`}
   >
-    <span>{currentPage + 1}</span>
-    <span aria-hidden="true">/</span>
-    <span>{totalPages}</span>
+    {isKidReader ? (
+      <>
+        <span className="kids-reader-phase-label">{readingPhaseLabel}</span>
+        <span className="sr-only">{currentPage + 1} / {totalPages}</span>
+      </>
+    ) : (
+      <>
+        <span>{currentPage + 1}</span>
+        <span aria-hidden="true">/</span>
+        <span>{totalPages}</span>
+      </>
+    )}
   </div>
  </motion.header>
  )}
@@ -1531,6 +1612,9 @@ function BookReader() {
 
  {/* The Book Canvas */}
  <div className="kids-reader-book-shell relative h-full flex items-center justify-center">
+ {isKidReader && !showStoryOpening && (
+   <ReaderLivingPresence mood={storyMood} active={!showKidCelebration} />
+ )}
  <AnimatePresence mode="wait">
  <motion.div
  key={currentPage}
@@ -1570,12 +1654,9 @@ function BookReader() {
  <article className="kids-reader-spread">
  {currentPageData.image_path ? (
  <div className="kids-reader-spread-art">
- <img
+ <LivingIllustration
  src={fileUrl}
  alt={`Page ${currentPage + 1}`}
- loading="lazy"
- decoding="async"
- className="kids-reader-illustration kids-reader-illustration-breathe"
  />
  </div>
  ) : null}
@@ -1658,13 +1739,18 @@ function BookReader() {
  onClick={(e) => e.stopPropagation()}
  >
    <div className="kids-reader-audio-panel">
+     {isKidReader && readingPhaseLabel ? (
+       <p className="kids-reader-emotional-progress-label">{readingPhaseLabel}</p>
+     ) : null}
      <div
        className="kids-reader-progress-track"
        role="progressbar"
        aria-valuenow={currentPage + 1}
        aria-valuemin={1}
        aria-valuemax={totalPages}
-       aria-label={`Progression · ${progressRounded}%`}
+       aria-label={isKidReader && readingPhaseLabel
+         ? `${readingPhaseLabel} · ${progressRounded}%`
+         : `Progression · ${progressRounded}%`}
      >
        <motion.div
          className="kids-reader-progress-fill"
@@ -1842,7 +1928,7 @@ function BookReader() {
      active={showKidCelebration}
      variant="story"
      title={t('kidReaderBravo')}
-     subtitle={t('kidReaderStoryComplete')}
+     subtitle={t('kidReaderStoryJustFinished')}
      coverUrl={coverBleedUrl}
      book={book}
      bookTitle={book.title}
