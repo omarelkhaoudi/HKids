@@ -399,7 +399,7 @@ function StarParticles({count = 20}) {
 }
 
 function splitTextIntoSentences(text = '') {
- const normalized = String(text || '').replace(/\s+/g, ' ').trim();
+ const normalized = normalizePageContent(text).replace(/\s+/g, ' ').trim();
  if (!normalized) return [];
 
  const matches = normalized.match(/[^.!?]+[.!?]*\s*/g) || [normalized];
@@ -414,6 +414,19 @@ function splitTextIntoSentences(text = '') {
  end: start + trimmed.length,
 };
  }).filter((segment) => segment.text);
+}
+
+function normalizePageContent(content) {
+ if (content == null) return '';
+ if (typeof content === 'string') return content;
+ if (Array.isArray(content)) {
+ return content.map(normalizePageContent).filter(Boolean).join(' ').trim();
+ }
+ if (typeof content === 'object') {
+ if (typeof content.text === 'string') return content.text;
+ if (typeof content.content === 'string') return content.content;
+ }
+ return String(content);
 }
 
 function formatReaderTime(seconds = 0) {
@@ -893,7 +906,7 @@ function BookReader() {
  return;
 }
 
- let textToRead = pageData.content;
+ let textToRead = normalizePageContent(pageData.content);
 
  // Si pas de texte dans la base de données, essayer d'extraire depuis le fichier
  if (!textToRead && pageData.image_path) {
@@ -1319,6 +1332,31 @@ function BookReader() {
  return undefined;
 }, [currentPage, book, pdfTotalPages, hasReachedEnd, isKidReader]);
 
+ useEffect(() => {
+ if (loading || !book?.pages?.length) return undefined;
+
+ const firstPageData = book.pages[0];
+ const isPdfBook = firstPageData?.image_path?.toLowerCase().endsWith('.pdf');
+ const pageData = isPdfBook ? firstPageData : book.pages[currentPage];
+ const pageText = normalizePageContent(pageData?.content);
+ const sentences = splitTextIntoSentences(pageText);
+
+ if (isPdfBook || pageData?.image_path || !sentences.length) return undefined;
+
+ const preloadPage = (nextPageData) => {
+ if (!nextPageData?.image_path) return;
+ const nextUrl = getFileUrl(nextPageData.image_path);
+ if (!nextUrl || nextUrl.toLowerCase().endsWith('.pdf')) return;
+ const img = new Image();
+ img.decoding = 'async';
+ img.src = nextUrl;
+ };
+
+ preloadPage(book.pages[currentPage - 1]);
+ preloadPage(book.pages[currentPage + 1]);
+ return undefined;
+ }, [loading, book, currentPage]);
+
  if (loading) {
  return (
  <div className="min-h-screen flex items-center justify-center kids-reader-shell" data-reader-theme="warm">
@@ -1397,25 +1435,8 @@ function BookReader() {
  const progressRounded = Math.round(progress);
  const audioProgressMax = Math.max(0, Math.floor(audioPlayer.duration || 0));
  const audioProgressValue = Math.min(audioProgressMax, Math.floor(audioPlayer.currentTime || 0));
- const textSentences = splitTextIntoSentences(currentPageData?.content || '');
-
- useEffect(() => {
- if (isPDF || currentPageData?.image_path || !textSentences.length) return undefined;
-
- const preloadPage = (pageData) => {
- if (!pageData?.image_path) return;
- const nextUrl = getFileUrl(pageData.image_path);
- if (!nextUrl || nextUrl.toLowerCase().endsWith('.pdf')) return;
- const img = new Image();
- img.decoding = 'async';
- img.src = nextUrl;
- };
-
- preloadPage(book?.pages?.[currentPage - 1]);
- preloadPage(book?.pages?.[currentPage + 1]);
- return undefined;
- }, [book?.pages, currentPage, currentPageData?.image_path, isPDF, textSentences.length]);
-
+ const pageText = normalizePageContent(currentPageData?.content);
+ const textSentences = splitTextIntoSentences(pageText);
 
  return (
  <div 
@@ -1552,7 +1573,7 @@ function BookReader() {
 })() : (
  <div className="w-full kids-reader-page-card">
  <div className="kids-reader-text-page">
- {currentPageData.content && (
+ {pageText && (
  <div 
  className="kids-reader-text-body"
  style={{
@@ -1568,7 +1589,7 @@ function BookReader() {
    >
      {sentence.text}{' '}
    </span>
- )) : currentPageData.content}
+ )) : pageText}
  </div>
  )}
  </div>
