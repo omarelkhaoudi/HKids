@@ -1,5 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import { useReducedMotion } from '../../hooks/useReducedMotion';
+import { getHoverMotion } from '../../constants/kidsMotion';
 
 const VARIANTS = {
   default: 'bg-surface shadow-card border border-border',
@@ -17,13 +19,16 @@ export function Card({
   as: As = 'div',
   ...props
 }) {
+  const reducedMotion = useReducedMotion();
   const base = `rounded-24 overflow-hidden relative ${VARIANTS[variant] || VARIANTS.default}`;
 
   if (hover) {
     return (
       <motion.div
-        whileHover={{ y: -4, scale: 1.01 }}
-        transition={{ duration: 0.2 }}
+        {...getHoverMotion(reducedMotion, {
+          whileHover: { y: -4, scale: 1.01 },
+          transition: { duration: 0.2 },
+        })}
         className={`${base} transition-shadow hover:shadow-floating ${className}`}
         {...props}
       >

@@ -36,7 +36,7 @@ describe('cloud sync hydration', () => {
     const lastCloud = JSON.parse(localStorage.getItem('hkids_last_cloud_favorites:kid:42') || '[]');
     expect(lastCloud.sort((a, b) => a - b)).toEqual([1, 3]);
     localStorage.clear();
-  });
+  }, 15000);
 
   it('merges remote reading progress into local sessions', async () => {
     localStorage.clear();

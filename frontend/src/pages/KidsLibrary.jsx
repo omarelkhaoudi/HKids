@@ -35,6 +35,7 @@ import {
 } from '../utils/discoveryRails';
 
 const SHELF_THEME_IDS = ['animals', 'bedtime', 'princesses', 'ocean', 'dinosaurs', 'space', 'vehicles', 'world'];
+const RECENT_SEARCHES_KEY = 'hkids_recent_library_searches';
 
 function inferTheme(book, childThemes) {
   if (book.theme) return book.theme;
@@ -77,6 +78,14 @@ function KidsLibrary() {
   const [loading, setLoading] = useState(true);
   const [recommendationSections, setRecommendationSections] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [recentSearches, setRecentSearches] = useState(() => {
+    try {
+      const stored = JSON.parse(window.localStorage.getItem(RECENT_SEARCHES_KEY) || '[]');
+      return Array.isArray(stored) ? stored.slice(0, 6) : [];
+    } catch {
+      return [];
+    }
+  });
   const offlineContent = useOfflineContent();
 
   useEffect(() => {
@@ -129,6 +138,16 @@ function KidsLibrary() {
     } else {
       setSearchParams({ theme: themeId });
     }
+  };
+
+  const saveRecentSearch = (rawValue) => {
+    const value = String(rawValue || '').trim();
+    if (!value) return;
+    setRecentSearches((current) => {
+      const next = [value, ...current.filter((item) => item.toLowerCase() !== value.toLowerCase())].slice(0, 6);
+      window.localStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(next));
+      return next;
+    });
   };
 
   const favoritesIds = storage.getFavorites();
@@ -279,6 +298,18 @@ function KidsLibrary() {
     () => annotateBooksWithReasons(filterSeasonalBooks(visibleBooks), t('discoverSeasonal')),
     [visibleBooks, t],
   );
+  const downloadedBooks = useMemo(
+    () => visibleBooks.filter((book) => {
+      const status = offlineContent.getBookStatus(book.id);
+      return status?.status === 'downloaded' || storage.isDownloaded(book.id);
+    }).slice(0, 10),
+    [visibleBooks, offlineContent],
+  );
+  const downloadingCount = useMemo(
+    () => Object.values(offlineContent.progressById || {}).filter((value) => Number(value) > 0 && Number(value) < 100).length,
+    [offlineContent.progressById],
+  );
+  const noSearchResults = searchQuery.trim().length > 0 && visibleBooks.length === 0;
 
   const libraryTitle = selectedTheme === 'all'
     ? t('library')
@@ -333,9 +364,66 @@ function KidsLibrary() {
             variant="premium"
             value={searchQuery}
             onChange={setSearchQuery}
+            onSubmit={(value) => saveRecentSearch(value)}
             placeholder={t('tryAnotherWord') || 'Search…'}
             aria-label={t('library')}
           />
+
+          <div className="kids-library-search-discovery kids-premium-panel">
+            <div className="kids-library-search-copy">
+              <p className="kids-type-caption">{t('search')}</p>
+              <h2 className="kids-shelf-title !mb-space-8">
+                {searchQuery.trim() ? `✨ ${searchQuery.trim()}` : t('kidsDiscoverToday')}
+              </h2>
+              <p className="kids-shelf-subtitle !mx-0">
+                {searchQuery.trim()
+                  ? t('discoverRecommendedSubtitle')
+                  : 'Retrouve une histoire avec un mot doux, une catégorie aimée, ou une lecture déjà téléchargée.'}
+              </p>
+            </div>
+            {recentSearches.length > 0 && (
+              <div className="kids-library-search-group">
+                <p className="kids-library-search-label">Recherches récentes</p>
+                <div className="kids-library-search-chips">
+                  {recentSearches.map((item) => (
+                    <button
+                      key={item}
+                      type="button"
+                      onClick={() => setSearchQuery(item)}
+                      className="kids-library-search-chip"
+                    >
+                      {item}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+            <div className="kids-library-search-group">
+              <p className="kids-library-search-label">Catégories populaires</p>
+              <div className="kids-library-search-chips">
+                {childThemes.filter((theme) => theme.id !== 'all').slice(0, 5).map((theme) => (
+                  <button
+                    key={theme.id}
+                    type="button"
+                    onClick={() => {
+                      handleThemeChange(theme.id);
+                      saveRecentSearch(theme.label);
+                    }}
+                    className="kids-library-search-chip kids-library-search-chip--theme"
+                  >
+                    <span aria-hidden="true">{theme.pictogram}</span>
+                    {theme.shortLabel || theme.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+            {(downloadedBooks.length > 0 || downloadingCount > 0) && (
+              <div className="kids-library-search-meta">
+                <span>{downloadedBooks.length} livres prêts hors ligne</span>
+                {downloadingCount > 0 && <span>{downloadingCount} téléchargement{downloadingCount > 1 ? 's' : ''} en cours</span>}
+              </div>
+            )}
+          </div>
 
           <div className="kids-discovery-rail !pt-0 !gap-space-10" role="toolbar" aria-label={t('allCategories')}>
             {childThemes.map((theme) => (
@@ -368,6 +456,30 @@ function KidsLibrary() {
           <div className="px-space-4">
             <BookGridSkeleton count={8} variant="carousel" />
           </div>
+        ) : noSearchResults ? (
+          <>
+            <KidsEmptyState
+              emoji="🔎"
+              title="Aucune histoire ne correspond encore"
+              description="Essaie un autre mot, ou repars d'une catégorie lumineuse pour retrouver une lecture."
+              actionLabel={t('allCategories')}
+              onAction={() => {
+                setSearchQuery('');
+                handleThemeChange('all');
+              }}
+              showMascot
+              mascotMood="encourage"
+            />
+            {todayAnnotated.length > 0 && (
+              <KidsBookCarousel
+                title={t('forYou')}
+                subtitle={t('discoverRecommendedSubtitle')}
+                books={todayAnnotated.slice(0, 8)}
+                {...carouselProps}
+                seeAllLabel={null}
+              />
+            )}
+          </>
         ) : books.length === 0 ? (
           <KidsEmptyState
             title={t('emptyBooksTitle')}

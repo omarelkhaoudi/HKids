@@ -1,5 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import { useReducedMotion } from '../../hooks/useReducedMotion';
+import { getHoverMotion } from '../../constants/kidsMotion';
 
 const VARIANTS = {
   primary:
@@ -36,10 +38,14 @@ export function Button({
   fullWidth = false,
   ...props
 }) {
+  const reducedMotion = useReducedMotion();
   return (
     <motion.button
-      whileHover={{ scale: 1.02, y: -1 }}
-      whileTap={{ scale: 0.98 }}
+      {...getHoverMotion(reducedMotion, {
+        whileHover: { scale: 1.02, y: -1 },
+        whileTap: { scale: 0.98 },
+        transition: { duration: 0.2 },
+      })}
       className={[
         'inline-flex items-center justify-center font-bold transition-all',
         'focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2',

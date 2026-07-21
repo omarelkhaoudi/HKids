@@ -15,7 +15,7 @@ import {getFileUrl} from '../utils/fileUrl';
 import {useToast} from '../components/ToastProvider';
 import {useAuth} from '../context/AuthContext';
 import {useLanguage} from '../context/LanguageContext';
-import {ChevronLeftIcon, ChevronRightIcon, HomeIcon, BookIcon, StarIcon, PlayIcon, PauseIcon, SettingsIcon, WarningIcon, MoonIcon, SunIcon} from '../components/Icons';
+import {ChevronLeftIcon, ChevronRightIcon, BookIcon, StarIcon, PlayIcon, PauseIcon, SettingsIcon, WarningIcon, MoonIcon, SunIcon} from '../components/Icons';
 import {getImageUrl} from '../utils/imageUrl';
 import {resolveBookCoverUrl} from '../utils/bookCover';
 import {kidsReaderPageTurn} from '../constants/kidsMotion';
@@ -280,32 +280,39 @@ function PDFPageViewer({pdfUrl, pageNumber, onLoad, onPdfLoaded, imageClassName 
 
  if (loading) {
  return (
- <div className="text-center p-space-8 w-full">
- <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-primary-500 border-t-transparent"></div>
- {!isKidMinimal && <p className="mt-space-4 text-primary-600">Chargement du PDF...</p>}
- </div>
+<div className="w-full p-space-8">
+<div className="kids-reader-page-card relative overflow-hidden min-h-[16rem] md:min-h-[22rem] flex items-center justify-center">
+<div className="absolute inset-0 kids-shimmer opacity-30" aria-hidden="true" />
+<div className="relative z-10 text-center px-space-16">
+<div className="mx-auto mb-space-12 h-16 w-12 rounded-md bg-white/70 shadow-soft border border-white/50" />
+{!isKidMinimal && <p className="kids-type-body text-foreground-secondary">Préparation de la page...</p>}
+</div>
+</div>
+</div>
  );
 }
 
  if (error || !imageUrl) {
  return (
- <div className="text-center p-space-8 w-full">
+<div className="w-full p-space-8">
+<div className="kids-reader-page-card text-center p-space-24">
  <BookIcon className="w-16 h-16 text-primary-400 mx-auto mb-space-4" />
  {!isKidMinimal && (
   <>
-   <p className="text-primary-600 mb-2">Erreur de chargement</p>
-   {error && <p className="text-sm text-primary-400">{error}</p>}
+  <p className="kids-type-h2 !text-[1.2rem] mb-2">La page a besoin d&apos;un nouvel essai</p>
+  {error && <p className="text-sm text-foreground-secondary">{error}</p>}
   </>
  )}
  <button
  onClick={() => {
  setReloadKey(prev => prev + 1);
 }}
- className="mt-space-4 px-space-4 py-2 bg-primary-500 text-white rounded-2xl hover:bg-primary-600 transition-colors"
+className="mt-space-4 px-space-5 py-3 bg-primary-500 text-white rounded-full hover:bg-primary-600 transition-colors"
  aria-label={isKidMinimal ? 'Retry' : undefined}
  >
- {isKidMinimal ? '↻' : 'Réessayer'}
+{isKidMinimal ? '↻' : 'Réessayer calmement'}
  </button>
+</div>
  </div>
  );
 }
@@ -344,6 +351,34 @@ function ReaderClouds() {
  <span className="kids-reader-cloud kids-reader-cloud-b" />
  <span className="kids-reader-cloud kids-reader-cloud-c" />
  </div>
+ );
+}
+
+function PremiumReaderState({ title, description, actionLabel, onAction, reducedMotion, icon = '📖' }) {
+ return (
+  <div className="min-h-screen flex items-center justify-center kids-reader-shell" data-reader-theme="warm">
+   <ReaderPaperAtmosphere />
+   <motion.div
+    initial={reducedMotion ? false : {scale: 0.96, opacity: 0.7}}
+    animate={{scale: 1, opacity: 1}}
+    transition={{duration: reducedMotion ? 0 : 0.35}}
+    className="kids-premium-panel max-w-xl w-full mx-5 md:mx-8 p-8 md:p-10 text-center relative overflow-hidden z-10"
+   >
+    <div className="absolute inset-0 kids-shimmer opacity-20 pointer-events-none" aria-hidden="true" />
+    <div className="text-6xl mb-4" aria-hidden="true">{icon}</div>
+    <h2 className="kids-reader-header-title mb-space-12">{title}</h2>
+    {description ? <p className="kids-type-body text-foreground-secondary mb-space-24">{description}</p> : null}
+    {actionLabel && onAction ? (
+     <button
+      type="button"
+      onClick={onAction}
+      className="kids-reader-toolbar-btn !min-w-[12rem] !w-auto !px-6 mx-auto"
+     >
+      {actionLabel}
+     </button>
+    ) : null}
+   </motion.div>
+  </div>
  );
 }
 
@@ -1451,54 +1486,25 @@ function BookReader() {
 
  if (loading) {
  return (
- <div className="min-h-screen flex items-center justify-center kids-reader-shell" data-reader-theme="warm">
- <ReaderPaperAtmosphere />
- <motion.div
- initial={{scale: 0.96, opacity: 0.6}}
- animate={{scale: 1, opacity: 1}}
- transition={{duration: 0.4}}
- className="text-center"
- >
- <div className="inline-block h-12 w-12 rounded-full border-2 border-primary-200 border-t-primary-600 animate-spin" />
- {!isKidReader && (
- <p className="kids-type-body text-foreground-secondary mt-space-16">
- Chargement de l'histoire...
- </p>
- )}
- </motion.div>
- </div>
+<PremiumReaderState
+ title={isKidReader ? 'Ton histoire arrive' : "Préparation de l'histoire"}
+ description={isKidReader ? null : 'Le livre s’ouvre doucement pour une lecture sans distraction.'}
+ reducedMotion={reducedMotion}
+ icon="📖"
+/>
  );
 }
 
  if (!book || !book.pages || book.pages.length === 0) {
  return (
- <div className="min-h-screen flex items-center justify-center kids-reader-shell" data-reader-theme="warm">
- <ReaderPaperAtmosphere />
- <div className="text-center relative z-10 px-6">
- <motion.div
- initial={{scale: 0.92, opacity: 0}}
- animate={{scale: 1, opacity: 1}}
- transition={{duration: 0.35, ease: [0.22, 1, 0.36, 1]}}
- className="mb-space-24 flex justify-center"
- >
- <div className="p-space-24 kids-reader-page-card rounded-full">
- <BookIcon className="w-16 h-16 text-primary-400" />
- </div>
- </motion.div>
- {!isKidReader && (
-  <p className="kids-reader-header-title mb-space-24">{t('kidBookNotFound')}</p>
- )}
- <motion.button
- whileHover={reducedMotion ? undefined : {scale: 1.03}}
- whileTap={reducedMotion ? undefined : {scale: 0.97}}
- onClick={() => navigate(readerExitPath)}
- className="kids-reader-toolbar-btn !min-w-[4.5rem] !px-6 mx-auto"
- aria-label={t('kidReaderHome')}
- >
- {isKidReader ? <HomeIcon className="w-10 h-10" /> : 'Retour à la bibliothèque'}
- </motion.button>
- </div>
- </div>
+<PremiumReaderState
+ title={isKidReader ? 'Choisissons une autre histoire' : t('kidBookNotFound')}
+ description={isKidReader ? 'Cette lecture n’est pas prête pour le moment. La bibliothèque t’attend avec d’autres aventures.' : 'Le livre n’est pas disponible pour le moment.'}
+ actionLabel={isKidReader ? 'Retour aux histoires' : 'Retour à la bibliothèque'}
+ onAction={() => navigate(readerExitPath)}
+ reducedMotion={reducedMotion}
+ icon={isKidReader ? '✨' : '📚'}
+/>
  );
 }
 

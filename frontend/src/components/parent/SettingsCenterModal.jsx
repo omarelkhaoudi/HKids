@@ -159,10 +159,10 @@ export function SettingsCenterModal({isOpen, onClose}) {
  animate={{opacity: 1, scale: 1, y: 0}}
  exit={{opacity: 0, scale: 0.95, y: 20}}
  transition={{type: 'spring', damping: 25, stiffness: 300}}
- className="relative w-full max-w-6xl h-full max-h-[90vh] bg-surface-secondary rounded-[2rem] shadow-2xl overflow-hidden flex flex-col md:flex-row border border-white/20 /50"
+ className="relative w-full max-w-6xl h-full max-h-[90vh] bg-surface-secondary rounded-[2rem] shadow-2xl overflow-hidden flex flex-col md:flex-row border border-white/20"
  >
  {/* Sidebar */}
- <div className="w-full md:w-72 bg-card/50 /50 backdrop-blur-xl border-r border-border flex flex-col z-10 shrink-0">
+ <div className="w-full md:w-72 bg-card/50 backdrop-blur-xl border-r border-border/70 flex flex-col z-10 shrink-0">
  <div className="p-6 pb-4">
  <div className="flex items-center justify-between mb-6">
  <h2 className="text-xl font-black tracking-tight">Paramètres</h2>
@@ -178,7 +178,7 @@ export function SettingsCenterModal({isOpen, onClose}) {
  placeholder="Rechercher..." 
  value={searchQuery}
  onChange={(e) => setSearchQuery(e.target.value)}
- className="w-full pl-9 pr-4 py-2.5 bg-surface-secondary/50 /50 border border-border rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all placeholder:text-surface-400"
+ className="w-full pl-9 pr-4 py-2.5 bg-surface-secondary/60 border border-border rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all placeholder:text-surface-400"
  />
  </div>
  </div>
@@ -190,7 +190,7 @@ export function SettingsCenterModal({isOpen, onClose}) {
  onClick={() => scrollToSection(section.id)}
  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all duration-200 ${
  activeSection === section.id 
- ? 'bg-primary-50 /10 text-foreground-600 shadow-sm' 
+ ? 'bg-primary-50/80 text-foreground-600 shadow-sm' 
  : 'text-foreground-secondary hover:bg-surface-secondary '
 }`}
  >
@@ -207,7 +207,7 @@ export function SettingsCenterModal({isOpen, onClose}) {
  {/* Content Area */}
  <div className="flex-1 relative overflow-hidden bg-surface-secondary">
  {/* Header Sticky */}
- <div className="absolute top-0 inset-x-0 h-16 bg-surface-secondary/80 /80 backdrop-blur-xl border-b border-border/50 /50 z-10 flex items-center justify-between px-8">
+ <div className="absolute top-0 inset-x-0 h-16 bg-surface-secondary/80 backdrop-blur-xl border-b border-border/50 z-10 flex items-center justify-between px-8">
  <h3 className="font-bold text-foreground capitalize">{SECTIONS.find(s => s.id === activeSection)?.label}</h3>
  <button onClick={onClose} className="hidden md:flex p-2 bg-card hover:bg-surface-secondary shadow-sm border border-border rounded-full transition-colors group">
  <XIcon className="w-5 h-5 text-foreground-muted group-hover:text-foreground dark:group-hover:text-white transition-colors" />
@@ -259,20 +259,20 @@ export function SettingsCenterModal({isOpen, onClose}) {
  </div>
  </div>
  
- <div className="bg-card rounded-3xl p-6 md:p-8 shadow-sm border border-danger-200 /50">
+ <div className="bg-card rounded-3xl p-6 md:p-8 shadow-sm border border-danger-200/50">
  <h3 className="text-lg font-bold text-danger-600 mb-4">Zone de danger</h3>
  <div className="space-y-4">
- <div className="flex items-center justify-between p-4 bg-danger-50/50 /10 rounded-2xl border border-danger-100 /30">
+ <div className="flex items-center justify-between p-4 bg-danger-50/50 rounded-2xl border border-danger-100/30">
  <div>
  <p className="font-bold text-danger-900">Modifier le mot de passe</p>
- <p className="text-sm text-danger-600/80 /80">Il est recommandé de le changer régulièrement.</p>
+ <p className="text-sm text-danger-600/80">Il est recommandé de le changer régulièrement.</p>
  </div>
  <Button variant="outline" className="text-danger-600 border-danger-200 hover:bg-danger-50">Modifier</Button>
  </div>
- <div className="flex items-center justify-between p-4 bg-danger-50/50 /10 rounded-2xl border border-danger-100 /30">
+ <div className="flex items-center justify-between p-4 bg-danger-50/50 rounded-2xl border border-danger-100/30">
  <div>
  <p className="font-bold text-danger-900">Supprimer le compte</p>
- <p className="text-sm text-danger-600/80 /80">Cette action est irréversible et supprimera toutes vos données.</p>
+ <p className="text-sm text-danger-600/80">Cette action est irréversible et supprimera toutes vos données.</p>
  </div>
  <Button
  className="bg-danger-500 hover:bg-danger-600 text-white shadow-md"
@@ -382,7 +382,7 @@ export function SettingsCenterModal({isOpen, onClose}) {
  </div>
  
  <h4 className="font-bold mt-8 mb-4">Appareils connectés</h4>
- <div className="bg-card rounded-3xl p-2 shadow-sm border border-border divide-y divide-border /50">
+ <div className="bg-card rounded-3xl p-2 shadow-sm border border-border divide-y divide-border/50">
  <div className="flex items-center justify-between p-4 rounded-2xl">
  <div className="flex items-center gap-4">
  <div className="p-3 bg-primary-50 text-foreground-600 rounded-xl"><ComputerIcon className="w-5 h-5"/></div>
@@ -416,7 +416,7 @@ export function SettingsCenterModal({isOpen, onClose}) {
  
  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
  {['Français', 'English', 'العربية'].map((lang, i) => (
- <div key={i} className={`p-4 rounded-2xl border-2 cursor-pointer transition-all ${i === 0 ? 'border-primary-500 bg-primary-50 /10' : 'border-border bg-card hover:border-primary-300'}`}>
+ <div key={i} className={`p-4 rounded-2xl border-2 cursor-pointer transition-all ${i === 0 ? 'border-primary-500 bg-primary-50/80' : 'border-border bg-card hover:border-primary-300'}`}>
  <div className="flex items-center justify-between">
  <span className={`font-bold ${i === 0 ? 'text-foreground-700 ' : 'text-foreground-secondary '}`}>{lang}</span>
  {i === 0 && <CheckCircleIcon className="w-5 h-5 text-foreground-500" />}
@@ -445,7 +445,7 @@ export function SettingsCenterModal({isOpen, onClose}) {
  <div>
  <h4 className="font-bold mb-4">Police par défaut</h4>
  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
- <div className="p-4 rounded-2xl border-2 border-primary-500 bg-primary-50 /10 flex items-center justify-center cursor-pointer">
+ <div className="p-4 rounded-2xl border-2 border-primary-500 bg-primary-50/80 flex items-center justify-center cursor-pointer">
  <span className="font-bold font-sans">Classique (Inter)</span>
  </div>
  <div className="p-4 rounded-2xl border-2 border-border hover:border-primary-300 bg-card flex items-center justify-center cursor-pointer">
