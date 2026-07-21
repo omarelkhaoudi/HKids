@@ -806,7 +806,7 @@ function BookReader() {
 }
 };
 
- const minSwipeDistance = 50;
+ const minSwipeDistance = 64;
 
  const onTouchStart = (e) => {
  setTouchEnd(null);

@@ -571,20 +571,17 @@ function KidsAIStories() {
             )}
           </div>
           
-          {/* Animated Play Overlay */}
-          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-[2px]">
-            <motion.div 
-              {...getHoverMotion(reducedMotion, { whileHover: { scale: 1.08 } })}
-              className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white border border-white/40 shadow-glow"
-            >
+          {/* Always-visible play affordance — never hover-only on touch */}
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none bg-gradient-to-t from-black/25 via-transparent to-transparent">
+            <div className="w-16 h-16 min-h-[64px] min-w-[64px] rounded-full bg-white/25 backdrop-blur-md flex items-center justify-center text-white border border-white/40 shadow-soft">
               <AudioIcon className="w-8 h-8 ml-1" />
-            </motion.div>
+            </div>
           </div>
         </div>
 
         <div className="p-5 flex-1 flex flex-col">
           <div className="flex justify-between items-start mb-2 gap-3">
-            <h3 className="font-black text-lg text-foreground line-clamp-2 leading-tight cursor-pointer" onClick={() => setSelectedStory(story)}>
+            <h3 className="font-black text-lg text-foreground line-clamp-2 leading-tight cursor-pointer touch-manipulation" onClick={() => setSelectedStory(story)}>
               {story.title}
             </h3>
           </div>
@@ -602,50 +599,61 @@ function KidsAIStories() {
             </span>
           </div>
           
-          <div className="mt-auto pt-4 border-t border-border flex justify-between items-center gap-2">
+          <div className="mt-auto pt-4 border-t border-border flex flex-wrap justify-between items-center gap-2">
             <button 
+              type="button"
               onClick={() => handleFavorite(story)} 
               disabled={busyStoryId === story.id}
-              className={`p-2 rounded-xl transition ${story.favorite ? 'bg-rose-100 text-rose-600 dark:bg-rose-900/30 dark:text-rose-400' : 'bg-surface-secondary text-foreground-muted hover:bg-rose-50 hover:text-rose-500'}`}
+              aria-label={story.favorite ? t('removeFromFavorites') : t('addToFavorites')}
+              aria-pressed={Boolean(story.favorite)}
+              className={`kids-touch-target touch-manipulation inline-grid place-items-center rounded-xl transition ${story.favorite ? 'bg-rose-100 text-rose-600 dark:bg-rose-900/30 dark:text-rose-400' : 'bg-surface-secondary text-foreground-muted'}`}
             >
-              <HeartIcon className="w-5 h-5" filled={story.favorite} />
+              <HeartIcon className="w-6 h-6" filled={story.favorite} />
             </button>
             
             {canCreateStories && (
               <button 
+                type="button"
                 onClick={() => handleNewVersion(story)} 
                 disabled={busyStoryId === story.id}
-                className="p-2 rounded-xl bg-surface-secondary text-foreground-muted hover:bg-primary-50 hover:text-primary-500 transition"
+                className="kids-touch-target touch-manipulation inline-grid place-items-center rounded-xl bg-surface-secondary text-foreground-muted"
+                aria-label={t('storyStudioVariantAction')}
                 title={t('storyStudioVariantAction')}
               >
-                <RefreshIcon className="w-5 h-5" />
+                <RefreshIcon className="w-6 h-6" />
               </button>
             )}
             
             {offlineReady ? (
               <button 
+                type="button"
                 onClick={() => handleRemoveStoryDownload(story)} 
                 disabled={busyStoryId === story.id}
-                className={`p-2 rounded-xl ${BRAND_SEMANTIC.success.bg} ${BRAND_SEMANTIC.success.text} transition`}
+                aria-label={t('downloaded')}
+                className={`kids-touch-target touch-manipulation inline-grid place-items-center rounded-xl ${BRAND_SEMANTIC.success.bg} ${BRAND_SEMANTIC.success.text}`}
               >
-                <TrashIcon className="w-5 h-5" />
+                <TrashIcon className="w-6 h-6" />
               </button>
             ) : (
               <button 
+                type="button"
                 onClick={() => handleDownloadStory(story)} 
                 disabled={busyStoryId === story.id}
-                className="p-2 rounded-xl bg-surface-secondary text-foreground-muted hover:bg-secondary-50 hover:text-secondary-500 transition"
+                aria-label={t('offlineMode')}
+                className="kids-touch-target touch-manipulation inline-grid place-items-center rounded-xl bg-surface-secondary text-foreground-muted"
               >
-                <DownloadIcon className="w-5 h-5" />
+                <DownloadIcon className="w-6 h-6" />
               </button>
             )}
             
             <button 
+              type="button"
               onClick={() => handleDelete(story)} 
               disabled={busyStoryId === story.id}
-              className="p-2 rounded-xl bg-surface-secondary text-foreground-muted hover:bg-danger-50 hover:text-danger-500 transition ml-auto"
+              aria-label={t('parentDeleteKid')}
+              className="kids-touch-target touch-manipulation inline-grid place-items-center rounded-xl bg-surface-secondary text-foreground-muted ml-auto"
             >
-              <TrashIcon className="w-5 h-5" />
+              <TrashIcon className="w-6 h-6" />
             </button>
           </div>
         </div>

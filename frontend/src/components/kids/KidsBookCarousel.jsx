@@ -48,22 +48,22 @@ export function KidsSectionHeader({
           </button>
         )}
         {(onScrollLeft || onScrollRight) && (
-          <div className="hidden md:flex items-center gap-space-8">
+          <div className="flex items-center gap-space-8">
             <button
               type="button"
               onClick={onScrollLeft}
-              className={`kids-touch-target p-3 rounded-full bg-card shadow-soft border border-border/70 ${theme.borderHover} transition-colors text-foreground-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-300`}
+              className={`kids-touch-target kids-icon-action touch-manipulation ${theme.borderHover} text-foreground-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-300`}
               aria-label="Scroll left"
             >
-              <ChevronLeftIcon className={`w-5 h-5 ${isRtl ? 'rotate-180' : ''}`} />
+              <ChevronLeftIcon className={isRtl ? 'rotate-180' : ''} />
             </button>
             <button
               type="button"
               onClick={onScrollRight}
-              className={`kids-touch-target p-3 rounded-full bg-card shadow-soft border border-border/70 ${theme.borderHover} transition-colors text-foreground-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-300`}
+              className={`kids-touch-target kids-icon-action touch-manipulation ${theme.borderHover} text-foreground-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-300`}
               aria-label="Scroll right"
             >
-              <ChevronRightIcon className={`w-5 h-5 ${isRtl ? 'rotate-180' : ''}`} />
+              <ChevronRightIcon className={isRtl ? 'rotate-180' : ''} />
             </button>
           </div>
         )}

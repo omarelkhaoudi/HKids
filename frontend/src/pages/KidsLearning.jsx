@@ -539,9 +539,9 @@ function KidsLearning() {
                             <span className="text-caption text-white/80 uppercase tracking-wider">{content.category_name || content.content_type}</span>
                           </div>
                           
-                          {/* Play Button Overlay */}
-                          <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-[2px]">
-                            <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center text-success-600 shadow-glow transform scale-50 group-hover:scale-100 transition-transform duration-300">
+                          {/* Always-visible play affordance */}
+                          <div className="absolute inset-0 flex items-center justify-center pointer-events-none bg-gradient-to-t from-black/20 via-transparent to-transparent">
+                            <div className="w-16 h-16 min-h-[64px] min-w-[64px] bg-white/90 rounded-full flex items-center justify-center text-success-600 shadow-soft border border-white/60">
                               <PlayIcon className="w-8 h-8 ml-1" filled />
                             </div>
                           </div>

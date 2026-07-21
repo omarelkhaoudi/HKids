@@ -1168,8 +1168,8 @@
     display: inline-flex;
     align-items: center;
     gap: 0.45rem;
-    min-height: 48px;
-    padding: 0.7rem 1rem;
+    min-height: 56px;
+    padding: 0.75rem 1.15rem;
     border-radius: 999px;
     border: 1px solid color-mix(in srgb, var(--color-border) 80%, transparent);
     background: color-mix(in srgb, white 80%, transparent);
@@ -1179,6 +1179,8 @@
     font-weight: 600;
     box-shadow: var(--shadow-soft);
     transition: transform 160ms ease, background 160ms ease, color 160ms ease;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
   }
 
   .kids-library-search-chip:hover {
@@ -1218,6 +1220,7 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    gap: 0.45rem;
     min-height: 56px;
     padding: 0.55rem 1.15rem;
     border-radius: 999px;
@@ -1233,6 +1236,14 @@
     transition: background 160ms ease, color 160ms ease, border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
     snap-align: start;
     flex-shrink: 0;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .kids-library-filter-pictogram {
+    font-size: 1.15rem;
+    line-height: 1;
+    opacity: 0.92;
   }
 
   .kids-library-filter-pill:hover {
@@ -1468,7 +1479,18 @@
     color: var(--kids-type-meta);
     box-shadow: var(--kids-shadow-ui);
     backdrop-filter: blur(8px);
-    transition: background 160ms ease, color 160ms ease, opacity 160ms ease;
+    transition: background 160ms ease, color 160ms ease, opacity 160ms ease, transform 160ms ease;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .kids-book-action--always {
+    opacity: 1 !important;
+  }
+
+  .kids-book-action--downloaded {
+    color: var(--color-success-600, #15803d);
+    background: color-mix(in srgb, var(--color-success-50, #f0fdf4) 90%, white);
   }
 
   .kids-book-action--favorite-on {
@@ -1479,8 +1501,10 @@
 
   .kids-book-play-hint {
     display: flex;
-    height: 2.75rem;
-    width: 2.75rem;
+    height: 3.5rem;
+    width: 3.5rem;
+    min-height: 56px;
+    min-width: 56px;
     align-items: center;
     justify-content: center;
     border-radius: 999px;
@@ -1488,15 +1512,38 @@
     color: var(--color-primary-700);
     box-shadow: var(--shadow-card);
     border: 1px solid color-mix(in srgb, #d9d0c4 40%, transparent);
-    opacity: 0;
-    transform: scale(0.96);
-    transition: opacity 180ms ease, transform 180ms ease;
+    opacity: 0.92;
+    transform: scale(1);
+    transition: opacity 180ms ease, transform 180ms ease, box-shadow 180ms ease;
+  }
+
+  .kids-book-play-hint--always {
+    opacity: 0.92;
+    transform: scale(1);
   }
 
   .kids-book-collectible:hover .kids-book-play-hint,
-  .kids-book-collectible:focus-within .kids-book-play-hint {
+  .kids-book-collectible:focus-within .kids-book-play-hint,
+  .kids-book-collectible:active .kids-book-play-hint {
     opacity: 1;
-    transform: scale(1);
+    transform: scale(1.04);
+    box-shadow: var(--shadow-floating, 0 12px 28px rgba(36, 50, 74, 0.18));
+  }
+
+  @media (hover: none) {
+    .kids-book-play-hint {
+      opacity: 1;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .kids-book-play-hint,
+    .kids-book-collectible:hover .kids-book-play-hint,
+    .kids-book-collectible:focus-within .kids-book-play-hint,
+    .kids-book-collectible:active .kids-book-play-hint {
+      transform: none;
+      transition: none;
+    }
   }
 
   .kids-book-collectible:hover .kids-book-collectible-cover,
@@ -3317,7 +3364,10 @@
     padding: var(--space-8);
     padding-bottom: var(--space-16);
     scroll-snap-type: x mandatory;
+    scroll-behavior: smooth;
     -webkit-overflow-scrolling: touch;
+    touch-action: pan-x;
+    overscroll-behavior-x: contain;
     scrollbar-width: thin;
   }
 
@@ -5179,9 +5229,9 @@
   .kids-reader-speed-chip {
     display: grid;
     place-items: center;
-    min-height: 48px;
-    min-width: 48px;
-    padding: 0 0.7rem;
+    min-height: 56px;
+    min-width: 56px;
+    padding: 0 0.75rem;
     border-radius: 999px;
     border: 1px solid color-mix(in srgb, var(--reader-border) 75%, transparent);
     background: color-mix(in srgb, var(--reader-paper) 70%, transparent);
@@ -5191,6 +5241,7 @@
     font-weight: 700;
     letter-spacing: 0.02em;
     transition: background 160ms ease, color 160ms ease, transform 160ms ease;
+    touch-action: manipulation;
   }
 
   .kids-reader-speed-chip:hover {
@@ -5461,16 +5512,17 @@
   .kids-reader-ambience-toggle {
     display: grid;
     place-items: center;
-    min-height: 48px;
-    min-width: 48px;
-    width: 3rem;
-    height: 3rem;
+    min-height: 56px;
+    min-width: 56px;
+    width: 3.5rem;
+    height: 3.5rem;
     border-radius: 999px;
     border: 1px solid color-mix(in srgb, var(--reader-border) 75%, transparent);
     background: color-mix(in srgb, var(--reader-paper) 65%, transparent);
     color: var(--reader-muted);
     font-size: 1.05rem;
     transition: background 160ms ease, color 160ms ease, transform 160ms ease;
+    touch-action: manipulation;
   }
 
   .kids-reader-ambience-toggle:hover,
@@ -5628,15 +5680,16 @@
   .kids-reader-more-btn {
     display: grid;
     place-items: center;
-    min-height: 48px;
-    min-width: 48px;
-    width: 3rem;
-    height: 3rem;
+    min-height: 56px;
+    min-width: 56px;
+    width: 3.5rem;
+    height: 3.5rem;
     border-radius: 999px;
     border: 1px solid color-mix(in srgb, var(--reader-border) 75%, transparent);
     background: color-mix(in srgb, var(--reader-paper) 65%, transparent);
     color: var(--reader-muted);
     transition: background 160ms ease, color 160ms ease, transform 160ms ease;
+    touch-action: manipulation;
   }
 
   .kids-reader-more-btn:hover,
@@ -5661,10 +5714,10 @@
   }
 
   .kids-reader-more-tools .kids-reader-toolbar-btn {
-    min-height: 48px;
-    min-width: 48px;
-    width: 3rem;
-    height: 3rem;
+    min-height: 56px;
+    min-width: 56px;
+    width: 3.5rem;
+    height: 3.5rem;
   }
 
   .kids-reader-audio-strip {
