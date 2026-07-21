@@ -39,6 +39,7 @@ import {
 } from '../utils/discoveryRails';
 import { useReducedMotion } from '../hooks/useReducedMotion';
 import { getHoverMotion, kidsHoverLift, getMotionProps, kidsCarouselReveal } from '../constants/kidsMotion';
+import { shouldShowKidOnboarding } from '../utils/onboarding';
 
 function getRecommendedBooks(sections = []) {
   const recommendedSection = sections.find((section) => section.id === 'recommended_for_you');
@@ -79,6 +80,12 @@ function KidsHome() {
   const [recommendationSections, setRecommendationSections] = useState([]);
   const [publishedBooks, setPublishedBooks] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (shouldShowKidOnboarding(user)) {
+      navigate('/welcome', { replace: true });
+    }
+  }, [user, navigate]);
 
   useEffect(() => {
     const hour = new Date().getHours();

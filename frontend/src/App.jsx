@@ -40,6 +40,7 @@ const ContentLibraryHome = lazy(() => import('./pages/ContentLibraryHome'));
 const ContentCategoryContents = lazy(() => import('./pages/ContentCategoryContents'));
 const FeatureDetails = lazy(() => import('./pages/FeatureDetails'));
 const DesignSystem = lazy(() => import('./pages/DesignSystem'));
+const WelcomeOnboarding = lazy(() => import('./pages/WelcomeOnboarding'));
 
 const isProductionBuild = import.meta.env.PROD;
 
@@ -210,6 +211,7 @@ function App() {
                 <Route path="/parent/story-studio" element={<RequireRole roles={['parent', 'admin']}><LazyRoute><KidsStoryStudio /></LazyRoute></RequireRole>} />
                 <Route path="/parent/ai-stories" element={<RequireRole roles={['parent', 'admin']}><LazyRoute><KidsAIStories /></LazyRoute></RequireRole>} />
                 <Route path="/parent/*" element={<RequireRole roles={['parent', 'admin']}><LazyRoute><ParentDashboard /></LazyRoute></RequireRole>} />
+                <Route path="/welcome" element={<LazyRoute><WelcomeOnboarding /></LazyRoute>} />
                 <Route path="/kids" element={<RequireAuth><LazyRoute><KidsHome /></LazyRoute></RequireAuth>} />
                 <Route path="/kids/library" element={<RequireAuth><LazyRoute><KidsLibrary /></LazyRoute></RequireAuth>} />
                 <Route path="/kids/audio" element={<RequireAuth><LazyRoute><KidsAudioLibrary /></LazyRoute></RequireAuth>} />
