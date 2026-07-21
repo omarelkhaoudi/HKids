@@ -22,6 +22,8 @@ export function KidsEmptyState({
     <motion.div
       {...getMotionProps(reducedMotion, kidsCardAppear)}
       className={`kids-premium-panel w-full p-8 md:p-12 text-center relative overflow-hidden ${className}`}
+      role="status"
+      aria-live="polite"
     >
       <div className="absolute inset-0 kids-shimmer opacity-25 pointer-events-none" aria-hidden="true" />
       {showMascot && (

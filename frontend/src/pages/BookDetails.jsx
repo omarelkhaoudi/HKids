@@ -12,6 +12,7 @@ import { KidsBookCarousel } from '../components/kids/KidsBookCarousel';
 import { KidsFeedbackBurst } from '../components/kids/KidsFeedbackBurst';
 import KidsButton from '../components/kids/KidsButton';
 import { useOfflineContent } from '../hooks/useOfflineContent';
+import { getKidsContentPath } from '../utils/contentRouting';
 import {
   HeartIcon, BookIcon, ChevronLeftIcon, RefreshIcon,
   ChildIcon, CategoryIcon, HistoryIcon, WarningIcon, AudioIcon, PlayIcon,
@@ -290,9 +291,10 @@ function BookDetails() {
             type="button"
             onClick={() => navigate(-1)}
             className="kids-book-details-back"
+            aria-label={t('back')}
           >
             <ChevronLeftIcon className={`h-5 w-5 ${isRtl ? 'rotate-180' : ''}`} />
-            <span className="kids-type-meta font-semibold">Retour</span>
+            <span className="kids-type-meta font-semibold">{t('back')}</span>
           </button>
           <Link
             to={backPath}
@@ -605,13 +607,13 @@ function BookDetails() {
         <section className="kids-book-details-related pb-space-48 pt-space-8">
           <div className="kids-book-details-shell">
             <KidsBookCarousel
-              title="Tu pourrais aussi aimer"
-              subtitle="D'autres couvertures douces et merveilleuses a ouvrir ensuite."
+              title={t('bookDetailsRelatedTitle')}
+              subtitle={t('bookDetailsRelatedSubtitle')}
               books={relatedBooks}
               isRtl={isRtl}
               showActions={false}
               favorites={[]}
-              onPlay={(related) => navigate(`/book-details/${related.id}`)}
+              onPlay={(related) => navigate(isKidAccount ? getKidsContentPath(related) : `/book-details/${related.id}`)}
             />
           </div>
         </section>

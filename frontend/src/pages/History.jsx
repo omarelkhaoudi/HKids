@@ -87,7 +87,7 @@ function History() {
  storage.clearReadingHistory();
  setHistory([]);
  setBooks([]);
- showToast('Historique effacé', 'info', 2000);
+ showToast(t('historyCleared'), 'info', 2000);
  setShowClearModal(false);
 };
 
@@ -106,11 +106,12 @@ function History() {
  const now = new Date();
  const diff = now - date;
  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
- 
- if (days === 0) return"Aujourd'hui";
- if (days === 1) return"Hier";
- if (days < 7) return `Il y a ${days} jours`;
- return date.toLocaleDateString('fr-FR');
+ const locale = language === 'ar' ? 'ar-MA' : language === 'en' ? 'en-US' : 'fr-FR';
+
+ if (days === 0) return t('today');
+ if (days === 1) return t('yesterday');
+ if (days < 7) return t('daysAgo', { count: days });
+ return date.toLocaleDateString(locale);
 };
 
  // Calculer les statistiques
@@ -130,6 +131,7 @@ function History() {
        type="button"
        onClick={() => setShowClearModal(true)}
        className="kids-touch-target rounded-full bg-rose-100 text-rose-700 px-4 py-2 font-black text-sm"
+       aria-label={t('clearHistory')}
       >
         🗑️
       </button>
@@ -142,8 +144,8 @@ function History() {
      ) : books.length === 0 ? (
       <KidsEmptyState
        emoji="📖"
-       title={t('emptyBooksTitle')}
-       description={t('emptyBooksDescription')}
+       title={t('emptyHistoryTitle')}
+       description={t('emptyHistoryDescription')}
        actionLabel={t('goToLibrary')}
        onAction={() => navigate('/kids/library')}
        showMascot
@@ -167,12 +169,12 @@ function History() {
      onClose={() => setShowClearModal(false)}
      emoji="🗑️"
      title={t('history')}
-     primaryLabel="OK"
+     primaryLabel={t('confirmAction')}
      onPrimary={clearHistory}
      secondaryLabel={t('back')}
      onSecondary={() => setShowClearModal(false)}
     >
-      Effacer tout l&apos;historique ?
+      {t('historyClearConfirm')}
     </KidsModal>
     <VoiceAssistant onNavigate={navigate} />
    </KidsPageShell>
