@@ -3320,6 +3320,7 @@ export const translations = {
     back: 'رجوع',
 
     parentGreeting: 'مرحباً',
+    parentDefaultName: 'طفل',
     parentKidsCount: '{count} طفل/أطفال',
     parentSettings: 'الإعدادات',
     parentLogout: 'تسجيل الخروج',
