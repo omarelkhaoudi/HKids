@@ -1,5 +1,6 @@
 ﻿import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { AnimatePresence, motion } from 'framer-motion';
 import { booksAPI } from '../api/books';
 import { recommendationsAPI } from '../api/recommendations';
 import { useAuth } from '../context/AuthContext';
@@ -26,6 +27,8 @@ import { KidsFamilyMessages } from '../components/kids/KidsFamilyMessages';
 import { KidsTrustBadges } from '../components/kids/KidsTrustBadges';
 import { KidsAmbientSound } from '../components/kids/KidsAmbientSound';
 import { SearchBar } from '../components/ui';
+import { useReducedMotion } from '../hooks/useReducedMotion';
+import { getMotionProps, kidsPageEnter } from '../constants/kidsMotion';
 import { getKidsContentPath } from '../utils/contentRouting';
 import {
   annotateBooksWithReasons,
@@ -67,6 +70,7 @@ function KidsLibrary() {
   const [searchParams, setSearchParams] = useSearchParams();
   const { showToast } = useToast();
   const { language, isRtl, t } = useLanguage();
+  const reducedMotion = useReducedMotion();
   const childThemes = useMemo(() => [
     { id: 'all', label: t('allCategories'), shortLabel: t('allCategories'), pictogram: '⭐', cue: 'Go', gradient: 'from-primary-400 to-secondary-400', match: [] },
     ...localizeKidCategories(language),
@@ -418,10 +422,14 @@ function KidsLibrary() {
               </div>
             </div>
             {(downloadedBooks.length > 0 || downloadingCount > 0) && (
-              <div className="kids-library-search-meta">
+              <motion.div
+                className="kids-library-search-meta"
+                animate={downloadingCount > 0 && !reducedMotion ? { opacity: [1, 0.72, 1] } : { opacity: 1 }}
+                transition={downloadingCount > 0 && !reducedMotion ? { duration: 2.4, repeat: Infinity, ease: 'easeInOut' } : { duration: 0 }}
+              >
                 <span>{downloadedBooks.length} livres prêts hors ligne</span>
                 {downloadingCount > 0 && <span>{downloadingCount} téléchargement{downloadingCount > 1 ? 's' : ''} en cours</span>}
-              </div>
+              </motion.div>
             )}
           </div>
 
@@ -452,6 +460,11 @@ function KidsLibrary() {
           />
         )}
 
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={`${selectedTheme}-${searchQuery.trim()}-${loading ? 'loading' : 'ready'}`}
+            {...getMotionProps(reducedMotion, kidsPageEnter)}
+          >
         {loading ? (
           <div className="px-space-4">
             <BookGridSkeleton count={8} variant="carousel" />
@@ -612,6 +625,8 @@ function KidsLibrary() {
             </div>
           </>
         )}
+          </motion.div>
+        </AnimatePresence>
 
         <KidsFamilyMessages />
         <KidsTrustBadges t={t} compact className="opacity-55" />

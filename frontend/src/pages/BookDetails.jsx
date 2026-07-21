@@ -9,6 +9,7 @@ import { useToast } from '../components/ToastProvider';
 import { resolveBookCoverUrl } from '../utils/bookCover';
 import { KidsBookCover } from '../components/kids/KidsBookCover';
 import { KidsBookCarousel } from '../components/kids/KidsBookCarousel';
+import { KidsFeedbackBurst } from '../components/kids/KidsFeedbackBurst';
 import KidsButton from '../components/kids/KidsButton';
 import { useOfflineContent } from '../hooks/useOfflineContent';
 import {
@@ -25,6 +26,7 @@ import {
   kidsCardAppear,
   kidsHoverLift,
   kidsPageEnter,
+  KIDS_MOTION_DURATION,
 } from '../constants/kidsMotion';
 
 function formatReadingDuration(book, t) {
@@ -83,6 +85,8 @@ function BookDetails() {
   const [isFavorite, setIsFavorite] = useState(false);
   const [relatedBooks, setRelatedBooks] = useState([]);
   const [showReportModal, setShowReportModal] = useState(false);
+  const [utilityFeedback, setUtilityFeedback] = useState(null);
+  const [isLaunchingReader, setIsLaunchingReader] = useState(false);
   const { showToast } = useToast();
   const { user } = useAuth();
   const { t, isRtl } = useLanguage();
@@ -101,6 +105,12 @@ function BookDetails() {
       loadRelatedBooks();
     }
   }, [book]);
+
+  useEffect(() => {
+    if (!utilityFeedback) return undefined;
+    const timer = window.setTimeout(() => setUtilityFeedback(null), 900);
+    return () => window.clearTimeout(timer);
+  }, [utilityFeedback]);
 
   const loadBook = async () => {
     try {
@@ -133,6 +143,7 @@ function BookDetails() {
     } else {
       storage.addFavorite(book.id);
       showToast(t('addedToFavorites'), 'success', 2000);
+      setUtilityFeedback('favorite');
     }
     setIsFavorite(!isFavorite);
   };
@@ -141,11 +152,27 @@ function BookDetails() {
     try {
       await offlineContent.downloadBookContent(book);
       storage.markDownloaded(book.id);
+      setUtilityFeedback('download');
       showToast(t('downloaded'), 'success');
     } catch (error) {
       if (error?.name !== 'AbortError') {
         showToast(t('downloadError') || 'Impossible de telecharger ce livre pour le moment.', 'error');
       }
+    }
+  };
+
+  const launchReader = async (buildPath, context = 'start') => {
+    try {
+      await subscriptionsAPI.unlockBook(id);
+      if (reducedMotion) {
+        navigate(buildPath());
+        return;
+      }
+      setIsLaunchingReader(true);
+      window.setTimeout(() => navigate(buildPath()), Math.round(KIDS_MOTION_DURATION.slow * 1000));
+    } catch (error) {
+      setIsLaunchingReader(false);
+      handleSubscriptionBlock(error.response?.status, context);
     }
   };
 
@@ -176,23 +203,20 @@ function BookDetails() {
   };
 
   const startReading = async () => {
-    try {
-      await subscriptionsAPI.unlockBook(id);
-      navigate(isKidAccount ? `/kids/read/${id}` : `/book/${id}`);
-    } catch (error) {
-      handleSubscriptionBlock(error.response?.status);
-    }
+    await launchReader(
+      () => (isKidAccount ? `/kids/read/${id}` : `/book/${id}`),
+    );
   };
 
   const continueReading = async () => {
     const lastPage = storage.getLastPage(id);
-    try {
-      await subscriptionsAPI.unlockBook(id);
-      const readerPath = isKidAccount ? `/kids/read/${id}` : `/book/${id}`;
-      navigate(`${readerPath}?page=${lastPage}`);
-    } catch (error) {
-      handleSubscriptionBlock(error.response?.status, 'continue');
-    }
+    await launchReader(
+      () => {
+        const readerPath = isKidAccount ? `/kids/read/${id}` : `/book/${id}`;
+        return `${readerPath}?page=${lastPage}`;
+      },
+      'continue',
+    );
   };
 
   const backPath = isKidAccount ? '/kids/library' : '/';
@@ -298,6 +322,10 @@ function BookDetails() {
             <motion.div
               {...getHoverMotion(reducedMotion, kidsHoverLift)}
               className="kids-book-details-cover"
+              animate={isLaunchingReader && !reducedMotion
+                ? { scale: 1.05, opacity: 0.84, y: -10 }
+                : { scale: 1, opacity: 1, y: 0 }}
+              transition={reducedMotion ? { duration: 0 } : { duration: KIDS_MOTION_DURATION.slow, ease: [0.22, 1, 0.36, 1] }}
             >
               <div className="aspect-[3/4] relative overflow-hidden">
                 <KidsBookCover
@@ -394,7 +422,8 @@ function BookDetails() {
                 ) : null}
               </div>
 
-              <div className="kids-book-details-utility-actions">
+              <div className="kids-book-details-utility-actions relative">
+                <KidsFeedbackBurst type={utilityFeedback} active={Boolean(utilityFeedback)} />
                 <button
                   type="button"
                   onClick={toggleFavorite}

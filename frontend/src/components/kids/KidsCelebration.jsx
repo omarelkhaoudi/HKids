@@ -7,7 +7,7 @@ import { booksAPI } from '../../api/books';
 import KidsButton from './KidsButton';
 import { KidsBookCover } from './KidsBookCover';
 import { KidsMediaCard } from './KidsMediaCard';
-import { getMotionProps, kidsPageEnter, kidsBadgePop } from '../../constants/kidsMotion';
+import { getMotionProps, kidsBadgePop, kidsCarouselReveal, kidsPageEnter } from '../../constants/kidsMotion';
 import { pickRelatedBooks } from '../../utils/readerRecommendations';
 
 /**
@@ -199,7 +199,11 @@ export const KidsCelebration = memo(function KidsCelebration({
             </motion.div>
 
             {relatedBooks.length > 0 ? (
-              <section className="kids-celebration-related w-full" aria-label={isStory ? t('kidReaderContinueAdventure') : t('kidReaderSimilarStories')}>
+              <motion.section
+                className="kids-celebration-related w-full"
+                aria-label={isStory ? t('kidReaderContinueAdventure') : t('kidReaderSimilarStories')}
+                {...getMotionProps(reducedMotion, kidsCarouselReveal)}
+              >
                 <h3 className="kids-shelf-title px-space-8 mb-space-16">
                   {isStory ? t('kidReaderContinueAdventure') : t('kidReaderSimilarStories')}
                 </h3>
@@ -222,7 +226,7 @@ export const KidsCelebration = memo(function KidsCelebration({
                     </div>
                   ))}
                 </div>
-              </section>
+              </motion.section>
             ) : null}
           </div>
         </motion.div>

@@ -18,7 +18,7 @@ import {useLanguage} from '../context/LanguageContext';
 import {ChevronLeftIcon, ChevronRightIcon, BookIcon, StarIcon, PlayIcon, PauseIcon, SettingsIcon, WarningIcon, MoonIcon, SunIcon} from '../components/Icons';
 import {getImageUrl} from '../utils/imageUrl';
 import {resolveBookCoverUrl} from '../utils/bookCover';
-import {kidsReaderPageTurn} from '../constants/kidsMotion';
+import {kidsReaderPageTurn, kidsRouteExit, KIDS_MOTION_DURATION} from '../constants/kidsMotion';
 import {deriveReaderMood, getReaderAmbientStyle} from '../utils/readerAtmosphere';
 import {
  detectReadingMilestone,
@@ -554,6 +554,7 @@ function BookReader() {
  const readerRef = useRef(null);
  const pageTurnMountRef = useRef(true);
  const [pageSparkle, setPageSparkle] = useState(false);
+ const [isExitingReader, setIsExitingReader] = useState(false);
  const workerRef = useRef(null);
  const {showToast} = useToast();
  const {user} = useAuth();
@@ -766,18 +767,6 @@ function BookReader() {
 };
 }, []);
 
- useEffect(() => {
- const handleKeyPress = (e) => {
- if (e.key === 'ArrowLeft') prevPage();
- if (e.key === 'ArrowRight') nextPage();
- if (e.key === 'Escape') {
- navigate(readerExitPath);
-}
-};
- window.addEventListener('keydown', handleKeyPress);
- return () => window.removeEventListener('keydown', handleKeyPress);
-}, [currentPage, book, navigate, readerExitPath]);
-
  const loadBook = async () => {
  try {
  setLoading(true);
@@ -876,7 +865,7 @@ function BookReader() {
 }
  return newPage;
 });
- setTimeout(() => setIsTurning(false), 100);
+ setTimeout(() => setIsTurning(false), Math.round(KIDS_MOTION_DURATION.slow * 1000));
 }, 200);
 }
 };
@@ -899,7 +888,7 @@ function BookReader() {
  
  setTimeout(() => {
  setCurrentPage(prev => prev - 1);
- setTimeout(() => setIsTurning(false), 100);
+ setTimeout(() => setIsTurning(false), Math.round(KIDS_MOTION_DURATION.slow * 1000));
 }, 200);
 }
 };
@@ -1275,6 +1264,28 @@ function BookReader() {
  const reducedMotion = useReducedMotion();
  const canReport = user && (user.role === 'parent' || user.role === 'admin') && !isKidReader;
 
+ const exitReader = useCallback(() => {
+  if (isExitingReader) return;
+  if (reducedMotion) {
+   navigate(readerExitPath);
+   return;
+  }
+  setIsExitingReader(true);
+  window.setTimeout(() => navigate(readerExitPath), Math.round(KIDS_MOTION_DURATION.fast * 1000));
+ }, [isExitingReader, reducedMotion, navigate, readerExitPath]);
+
+ useEffect(() => {
+ const handleKeyPress = (e) => {
+ if (e.key === 'ArrowLeft') prevPage();
+ if (e.key === 'ArrowRight') nextPage();
+ if (e.key === 'Escape') {
+ exitReader();
+}
+};
+ window.addEventListener('keydown', handleKeyPress);
+ return () => window.removeEventListener('keydown', handleKeyPress);
+}, [exitReader]);
+
  useEffect(() => {
  setIsFavorite(book ? storage.isFavorite(book.id) : false);
 }, [book?.id]);
@@ -1489,7 +1500,7 @@ function BookReader() {
  title={isKidReader ? 'Choisissons une autre histoire' : t('kidBookNotFound')}
  description={isKidReader ? 'Cette lecture n’est pas prête pour le moment. La bibliothèque t’attend avec d’autres aventures.' : 'Le livre n’est pas disponible pour le moment.'}
  actionLabel={isKidReader ? 'Retour aux histoires' : 'Retour à la bibliothèque'}
- onAction={() => navigate(readerExitPath)}
+ onAction={exitReader}
  reducedMotion={reducedMotion}
  icon={isKidReader ? '✨' : '📚'}
 />
@@ -1548,13 +1559,15 @@ function BookReader() {
    : t(`readerVoiceStyle_${activeVoiceProfile.id}`);
 
  return (
- <div 
+ <motion.div 
  ref={readerRef}
  data-reader-theme={readerTheme}
  data-reader-mood={isKidReader ? storyMood : undefined}
  data-read-along={isReadAlongActive ? 'true' : undefined}
  style={ambientStyle}
- className={`kids-reader-shell h-screen w-full flex flex-col relative overflow-hidden ${!showMenu ? 'is-focus' : ''} ${showStoryOpening && isKidReader ? 'is-opening' : ''} ${isReadAlongActive ? 'is-read-along' : ''} ${audioPlaybackActive ? 'is-narrating' : ''} ${readerTheme === 'night' ? 'kids-night-calm' : ''}`}
+ className={`kids-reader-shell h-screen w-full flex flex-col relative overflow-hidden ${!showMenu ? 'is-focus' : ''} ${showStoryOpening && isKidReader ? 'is-opening' : ''} ${isReadAlongActive ? 'is-read-along' : ''} ${audioPlaybackActive ? 'is-narrating' : ''} ${readerTheme === 'night' ? 'kids-night-calm' : ''} ${isExitingReader ? 'is-exiting' : ''}`}
+ animate={isExitingReader && !reducedMotion ? kidsRouteExit.exit : { opacity: 1, y: 0, scale: 1 }}
+ transition={isExitingReader && !reducedMotion ? kidsRouteExit.transition : { duration: 0 }}
  onClick={() => setShowMenu(!showMenu)}
  onTouchStart={onTouchStart}
  onTouchMove={onTouchMove}
@@ -1570,7 +1583,7 @@ function BookReader() {
  {isKidReader && readerTheme === 'night' && !showStoryOpening && !showMenu && !audioPlaybackActive && (
    <StarParticles count={reducedMotion ? 0 : 3} />
  )}
- {!isKidReader && <PageSparkle active={pageSparkle} reducedMotion={reducedMotion} />}
+ {isKidReader && <PageSparkle active={pageSparkle} reducedMotion={reducedMotion} />}
 
  {isKidReader && (
    <KidsReadingCompanion
@@ -1605,7 +1618,7 @@ function BookReader() {
  >
   <button
     type="button"
-    onClick={() => navigate(readerExitPath)}
+    onClick={exitReader}
     className="kids-reader-toolbar-btn"
     aria-label={t('kidReaderHome')}
   >
@@ -2002,7 +2015,7 @@ function BookReader() {
  <h2 className="kids-type-h1 mb-space-8">Bravo</h2>
  <p className="kids-shelf-subtitle !mx-auto mb-space-24">Tu as terminé « {book.title} »</p>
  <div className="flex flex-col gap-3">
- <Button variant="primary" fullWidth onClick={() => navigate(readerExitPath)}>
+ <Button variant="primary" fullWidth onClick={exitReader}>
  Continuer à explorer
  </Button>
  <Button variant="ghost" fullWidth onClick={() => { setShowEndModal(false); setCurrentPage(0); setHasReachedEnd(false); }}>
@@ -2038,7 +2051,7 @@ function BookReader() {
        setCurrentPage(0);
        setHasReachedEnd(false);
        setShowMenu(true);
-       setShowStoryOpening(false);
+       setShowStoryOpening(true);
      }}
      onComplete={() => setShowKidCelebration(false)}
    />
@@ -2052,7 +2065,7 @@ function BookReader() {
   targetTitle={book?.title}
  />
 
- </div>
+ </motion.div>
  );
 }
 

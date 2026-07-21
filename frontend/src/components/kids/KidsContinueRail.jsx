@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { useReducedMotion } from '../../hooks/useReducedMotion';
-import { getMotionProps, getHoverMotion, kidsCarouselReveal, kidsTouchFeedback } from '../../constants/kidsMotion';
+import { getMotionProps, getHoverMotion, kidsCarouselReveal, kidsTouchFeedback, kidsProgressFill } from '../../constants/kidsMotion';
 import { PlayIcon } from '../Icons';
 import { KidsBookCover } from './KidsBookCover';
 import KidsButton from './KidsButton';
@@ -67,7 +67,12 @@ export function KidsContinueRail({
                     aria-valuemin={0}
                     aria-valuemax={100}
                   >
-                    <div className="kids-book-progress-fill" style={{ width: `${progress}%` }} />
+                    <motion.div
+                      className="kids-book-progress-fill"
+                      initial={reducedMotion ? false : { width: 0 }}
+                      animate={{ width: `${progress}%` }}
+                      transition={reducedMotion ? { duration: 0 } : kidsProgressFill.transition}
+                    />
                   </div>
                 )}
               </button>
