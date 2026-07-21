@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 
 export function LoadingState({ message = 'Chargement...', fullScreen = false }) {
  const containerClass = fullScreen 
- ?"fixed inset-0 z-50 flex flex-col items-center justify-center bg-card/80 /80 backdrop-blur-sm"
+ ? "fixed inset-0 z-50 flex flex-col items-center justify-center bg-card/80 backdrop-blur-sm"
  :"flex flex-col items-center justify-center p-12 w-full";
 
  return (

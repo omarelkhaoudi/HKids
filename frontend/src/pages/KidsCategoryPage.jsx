@@ -17,6 +17,7 @@ import { KidsBookCarousel } from '../components/kids/KidsBookCarousel';
 import { KidsEmptyState } from '../components/kids/KidsEmptyState';
 import { KidsCategoryAtmosphere } from '../components/kids/KidsCategoryAtmosphere';
 import { BookGridSkeleton } from '../components/SkeletonLoader';
+import { useToast } from '../components/ToastProvider';
 import { useReducedMotion } from '../hooks/useReducedMotion';
 import { getMotionProps, kidsCategoryEnter } from '../constants/kidsMotion';
 
@@ -24,6 +25,7 @@ function KidsCategoryPage() {
   const { categoryId } = useParams();
   const navigate = useNavigate();
   const { language, isRtl, t } = useLanguage();
+  const { showToast } = useToast();
   const reducedMotion = useReducedMotion();
   const category = getKidCategory(categoryId, language);
   const strategy = getCategoryContentStrategy(categoryId);
@@ -72,6 +74,7 @@ function KidsCategoryPage() {
         if (active) {
           setBooks([]);
           setLearningItems([]);
+          showToast(t('loadError'), 'error');
         }
       })
       .finally(() => {
@@ -93,6 +96,7 @@ function KidsCategoryPage() {
 
   const hasContent = books.length > 0 || learningItems.length > 0;
   const featuredBook = books[0] || null;
+  const featuredActionLabel = strategy.type === 'audio' ? t('listenAction') : t('readAction');
 
   return (
     <KidsPageShell isRtl={isRtl} variant="library" world="books" className="pb-32 kids-glow-books relative" footer={<KidsBottomNav />}>
@@ -140,10 +144,10 @@ function KidsCategoryPage() {
               whileTap={{ scale: 0.96 }}
               onClick={() => navigate(getKidsContentPath(featuredBook))}
               className="kids-touch-target mx-auto mt-8 inline-flex min-w-52 items-center justify-center gap-4 rounded-[1.75rem] bg-white px-8 py-4 text-xl md:text-2xl font-black text-foreground shadow-xl"
-              aria-label={t('listenAction')}
+              aria-label={featuredActionLabel}
             >
               <PlayIcon className={`h-9 w-9 text-primary-500 ${isRtl ? 'rotate-180' : ''}`} filled />
-              <span>{t('listenAction')}</span>
+              <span>{featuredActionLabel}</span>
             </motion.button>
           )}
         </motion.main>

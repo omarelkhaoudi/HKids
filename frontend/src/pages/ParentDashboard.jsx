@@ -186,7 +186,8 @@ function ParentDashboard() {
 };
 
  const handleDeleteKid = async (kidId) => {
- if (!window.confirm('Supprimer définitivement ce profil et toutes ses données ?')) return;
+ const kid = kids.find((item) => item.id === kidId);
+ if (!window.confirm(t('parentProfilesDeleteConfirm', { name: kid?.name || kid?.username || t('parentDefaultName') }))) return;
  
  try {
  await parentalAPI.deleteKid(kidId);
@@ -377,7 +378,7 @@ function ParentDashboard() {
  </div>
  <p className="parent-companion-card-label">{t('parentProfileCategories')}</p>
  <p className="parent-companion-card-value">{topThemeLabel || t('parentProfileCategoriesEmpty')}</p>
- <p className="parent-companion-card-subtle">{t('parentHomeBooksCompleted')}</p>
+ <p className="parent-companion-card-subtle">{t('parentHomeCategoriesHint')}</p>
  </article>
 
  <article className="parent-companion-hero-card">

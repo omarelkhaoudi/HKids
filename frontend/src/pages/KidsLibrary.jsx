@@ -369,7 +369,7 @@ function KidsLibrary() {
             value={searchQuery}
             onChange={setSearchQuery}
             onSubmit={(value) => saveRecentSearch(value)}
-            placeholder={t('tryAnotherWord') || 'Search…'}
+            placeholder={t('tryAnotherWord')}
             aria-label={t('library')}
           />
 
@@ -382,12 +382,12 @@ function KidsLibrary() {
               <p className="kids-shelf-subtitle !mx-0">
                 {searchQuery.trim()
                   ? t('discoverRecommendedSubtitle')
-                  : 'Retrouve une histoire avec un mot doux, une catégorie aimée, ou une lecture déjà téléchargée.'}
+                  : t('librarySearchHint')}
               </p>
             </div>
             {recentSearches.length > 0 && (
               <div className="kids-library-search-group">
-                <p className="kids-library-search-label">Recherches récentes</p>
+                <p className="kids-library-search-label">{t('recentSearches')}</p>
                 <div className="kids-library-search-chips">
                   {recentSearches.map((item) => (
                     <button
@@ -403,7 +403,7 @@ function KidsLibrary() {
               </div>
             )}
             <div className="kids-library-search-group">
-              <p className="kids-library-search-label">Catégories populaires</p>
+              <p className="kids-library-search-label">{t('popularCategories')}</p>
               <div className="kids-library-search-chips">
                 {childThemes.filter((theme) => theme.id !== 'all').slice(0, 5).map((theme) => (
                   <button
@@ -427,8 +427,8 @@ function KidsLibrary() {
                 animate={downloadingCount > 0 && !reducedMotion ? { opacity: [1, 0.72, 1] } : { opacity: 1 }}
                 transition={downloadingCount > 0 && !reducedMotion ? { duration: 2.4, repeat: Infinity, ease: 'easeInOut' } : { duration: 0 }}
               >
-                <span>{downloadedBooks.length} livres prêts hors ligne</span>
-                {downloadingCount > 0 && <span>{downloadingCount} téléchargement{downloadingCount > 1 ? 's' : ''} en cours</span>}
+                <span>{t('offlineBooksReady', { count: downloadedBooks.length })}</span>
+                {downloadingCount > 0 && <span>{t('downloadsInProgress', { count: downloadingCount })}</span>}
               </motion.div>
             )}
           </div>
@@ -473,8 +473,8 @@ function KidsLibrary() {
           <>
             <KidsEmptyState
               emoji="🔎"
-              title="Aucune histoire ne correspond encore"
-              description="Essaie un autre mot, ou repars d'une catégorie lumineuse pour retrouver une lecture."
+              title={t('noSearchResultsTitle')}
+              description={t('noSearchResultsDescription')}
               actionLabel={t('allCategories')}
               onAction={() => {
                 setSearchQuery('');
@@ -580,7 +580,7 @@ function KidsLibrary() {
 
             {popularAnnotated.length > 0 && (
               <KidsBookCarousel
-                title={language === 'fr' ? 'Populaires' : language === 'ar' ? 'الأكثر شعبية' : 'Popular'}
+                title={t('popularStories')}
                 subtitle={t('discoverRecommendedSubtitle')}
                 books={popularAnnotated}
                 {...carouselProps}
@@ -613,9 +613,7 @@ function KidsLibrary() {
               {themeShelves.map(({ theme, books: shelfBooks }) => (
                 <KidsBookCarousel
                   key={theme.id}
-                  title={theme.id === 'princesses'
-                    ? (language === 'fr' ? 'Magie' : language === 'ar' ? 'سحر' : 'Magic')
-                    : (theme.shortLabel || theme.label)}
+                  title={theme.shortLabel || theme.label}
                   subtitle={theme.cue || t('discoverCategoriesSubtitle')}
                   books={annotateBooksWithReasons(shelfBooks, theme.shortLabel || theme.label)}
                   {...carouselProps}

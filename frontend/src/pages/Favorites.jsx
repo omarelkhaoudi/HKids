@@ -14,7 +14,6 @@ import {KidsPageShell} from '../components/kids/KidsPageShell';
 import {KidsPageHeader} from '../components/kids/KidsPageHeader';
 import {KidsHero} from '../components/kids/KidsHero';
 import {KidsBottomNav} from '../components/kids/KidsBottomNav';
-import {KidsMediaCard} from '../components/kids/KidsMediaCard';
 import {KidsEmptyState} from '../components/kids/KidsEmptyState';
 import {KidsBookCarousel} from '../components/kids/KidsBookCarousel';
 import {getKidsContentPath} from '../utils/contentRouting';
@@ -83,7 +82,7 @@ function Favorites() {
 
  const removeFavorite = (bookId) => {
  storage.removeFavorite(bookId);
- showToast('Livre retiré des favoris', 'info', 2000);
+ showToast(t('removedFromFavorites'), 'info', 2000);
  loadFavorites();
 };
 
@@ -92,7 +91,7 @@ function Favorites() {
    <KidsPageShell isRtl={isRtl} variant="library" world="favorites" className="pb-32 kids-glow-audio" footer={<KidsBottomNav />}>
     <KidsPageHeader backTo="/kids" emoji="❤️" title={t('yourFavorites')} />
     <main className="kids-main kids-main-tablet-wide relative z-20">
-     <KidsHero modality="favorites" emoji="❤️" title={t('yourFavorites')} subtitle={t('emptyFavoritesTitle')} />
+     <KidsHero modality="favorites" emoji="❤️" title={t('yourFavorites')} subtitle={favoriteBooks.length ? t('favoritesSubtitle') : t('emptyFavoritesTitle')} />
      {loading ? (
       <BookGridSkeleton count={6} variant="carousel" />
      ) : favoriteBooks.length === 0 ? (
@@ -106,33 +105,17 @@ function Favorites() {
        mascotMood="encourage"
       />
      ) : (
-      <>
        <KidsBookCarousel
         title={t('yourFavorites')}
         emoji="❤️"
         books={favoriteBooks}
         isRtl={isRtl}
-        showActions={false}
+        showActions
         hideTitle={false}
         modality="favorites"
         onPlay={(book) => navigate(getKidsContentPath(book))}
+        onFavorite={(bookId) => removeFavorite(bookId)}
        />
-       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 justify-items-center">
-        {favoriteBooks.map((book) => (
-         <KidsMediaCard
-          key={book.id}
-          book={book}
-          variant="carousel"
-          hideTitle={false}
-          isRtl={isRtl}
-          showActions
-          isFavorite
-          onPlay={(b) => navigate(getKidsContentPath(b))}
-          onFavorite={() => removeFavorite(book.id)}
-         />
-        ))}
-       </div>
-      </>
      )}
     </main>
     <VoiceAssistant onNavigate={navigate} />
