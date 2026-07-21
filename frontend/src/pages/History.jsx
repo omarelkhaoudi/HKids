@@ -72,7 +72,6 @@ function History() {
  allBooks.find(b => b.id === h.bookId)
  ).filter(Boolean);
  
- console.log('[History] Loaded books:', sorted.map(b => ({id: b.id, title: b.title, cover_image: b.cover_image})));
  setBooks(sorted);
 }
 } catch (error) {

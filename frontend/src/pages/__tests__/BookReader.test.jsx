@@ -5,6 +5,7 @@ import { act } from 'react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import BookReader from '../BookReader.jsx';
 import { LanguageProvider } from '../../context/LanguageContext.jsx';
+import { ROUTER_FUTURE_FLAGS } from '../../test/setup.js';
 
 const mockBook = {
   id: 83,
@@ -56,7 +57,7 @@ vi.mock('../../api/parental', () => ({
 }));
 
 vi.mock('../../services/parental/kidActivitySyncService', () => ({
-  syncOrQueueKidMutation: vi.fn(),
+  syncOrQueueKidMutation: vi.fn(() => Promise.resolve()),
 }));
 
 vi.mock('../../api/voices', () => ({
@@ -105,7 +106,7 @@ function renderKidReader() {
   act(() => {
     root.render(
       <LanguageProvider>
-        <MemoryRouter initialEntries={['/kids/read/83']}>
+        <MemoryRouter future={ROUTER_FUTURE_FLAGS} initialEntries={['/kids/read/83']}>
           <Routes>
             <Route path="/kids/read/:id" element={<BookReader />} />
           </Routes>

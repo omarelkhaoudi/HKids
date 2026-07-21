@@ -199,8 +199,6 @@ function PDFPageViewer({pdfUrl, pageNumber, onLoad, onPdfLoaded, imageClassName 
  setError(null);
  setImageUrl(null);
  
- console.log('Chargement du PDF:', pdfUrl, 'Page:', pageNumber);
- 
  // Charger le document PDF avec options CORS
  const loadingTask = pdfjsLib.getDocument({
  url: pdfUrl,
@@ -212,8 +210,6 @@ function PDFPageViewer({pdfUrl, pageNumber, onLoad, onPdfLoaded, imageClassName 
  const pdf = await loadingTask.promise;
  
  if (cancelled) return;
- 
- console.log('PDF chargé, nombre de pages:', pdf.numPages);
  
  // Notifier le composant parent du nombre de pages
  if (onPdfLoaded) {
@@ -244,7 +240,6 @@ function PDFPageViewer({pdfUrl, pageNumber, onLoad, onPdfLoaded, imageClassName 
  const dataUrl = canvas.toDataURL('image/png');
  setImageUrl(dataUrl);
  if (onLoad) onLoad(dataUrl);
- console.log('Page PDF rendue avec succès');
 } catch (error) {
  if (cancelled) return;
  console.error('Erreur chargement PDF:', error);
@@ -787,12 +782,8 @@ function BookReader() {
  try {
  setLoading(true);
  setBook(null);
- console.log("Book ID:", id);
  await subscriptionsAPI.unlockBook(id);
  const response = await booksAPI.getBook(id);
- console.log("API response:", response.data);
- console.log("Book loaded:", response.data);
- console.log("Story loaded:", response.data);
  setBook(response.data);
  
  const pageParam = searchParams.get('page');
@@ -1159,9 +1150,6 @@ function BookReader() {
  const loadVoices = () => {
  const voices = window.speechSynthesis.getVoices();
  setAvailableVoices(voices);
- if (voices.length > 0) {
- console.log('Voix disponibles:', voices.map(v => `${v.name} (${v.lang})`));
-}
 };
  
  loadVoices();

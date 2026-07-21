@@ -56,7 +56,6 @@ function AdminLogin({audience = 'admin'}) {
  headers: {'Content-Type': 'application/json'},
 });
  if (response.ok) {
- console.log('Rate limit réinitialisé');
  return true;
 }
 } catch (err) {
