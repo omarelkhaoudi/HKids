@@ -5,7 +5,7 @@ import { booksAPI } from '../../api/books';
 import { useReducedMotion } from '../../hooks/useReducedMotion';
 import { getMotionProps, kidsCardAppear } from '../../constants/kidsMotion';
 import { pickRelatedBooks } from '../../utils/readerRecommendations';
-import { collectFavoriteThemes } from '../../utils/parentInsights';
+import { collectFavoriteThemes, getThemeLabel } from '../../utils/parentInsights';
 import { KidsBookCover } from '../kids/KidsBookCover';
 import { ParentEmptyState } from './ParentEmptyState';
 
@@ -149,7 +149,13 @@ export const ParentRecommendations = memo(function ParentRecommendations({
                   imgClassName="absolute inset-0 h-full w-full object-cover"
                 />
               </div>
+              <p className="text-caption font-bold text-foreground-muted uppercase tracking-wide mb-1">
+                {book.theme ? getThemeLabel(book.theme) : (kid?.age ? t('parentKidAgeYears', { age: kid.age }) : t('featured'))}
+              </p>
               <p className="kids-book-title text-sm line-clamp-2 leading-snug">{book.title}</p>
+              <p className="text-xs font-semibold text-foreground-secondary mt-1">
+                {t('readAction')}
+              </p>
             </motion.button>
           ))}
         </div>

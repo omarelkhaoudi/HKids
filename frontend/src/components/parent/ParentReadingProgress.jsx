@@ -4,6 +4,8 @@ import { getMotionProps, kidsCardAppear } from '../../constants/kidsMotion';
 import {
   buildMonthlyReadingSeconds,
   buildWeeklyProgress,
+  collectFavoriteThemes,
+  getThemeLabel,
   getTodayReadingSeconds,
 } from '../../utils/parentInsights';
 import { formatParentDuration } from './parentFormatters';
@@ -24,6 +26,7 @@ export function ParentReadingProgress({ data, kidName, t, language = 'fr' }) {
   const monthlySeconds = buildMonthlyReadingSeconds(data);
   const todaySeconds = getTodayReadingSeconds(data);
   const summary = data?.summary || {};
+  const favoriteTheme = collectFavoriteThemes(data, 1)[0];
   const continueBook = (data?.progress?.items || []).find(
     (book) => (book.progress_percent || 0) > 0 && (book.progress_percent || 0) < 100,
   ) || (data?.progress?.items || [])[0];
@@ -47,8 +50,19 @@ export function ParentReadingProgress({ data, kidName, t, language = 'fr' }) {
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-space-12 mb-space-24">
           <StatPill label={t('parentProgressToday')} value={formatParentDuration(todaySeconds)} />
           <StatPill label={t('parentProgressWeekly')} value={formatParentDuration(weekly.totalReadingSeconds)} />
-          <StatPill label={t('parentProgressMonthly')} value={formatParentDuration(monthlySeconds)} />
+          <StatPill label={t('parentHomeListening')} value={formatParentDuration(weekly.totalListeningSeconds)} />
           <StatPill label={t('parentProgressBooksDone')} value={String(summary.books_completed || 0)} />
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-space-12 mb-space-24">
+          <div className="parent-progress-spotlight">
+            <p className="parent-progress-pill-label">{t('parentProgressMonthly')}</p>
+            <p className="parent-progress-spotlight-value">{formatParentDuration(monthlySeconds)}</p>
+          </div>
+          <div className="parent-progress-spotlight">
+            <p className="parent-progress-pill-label">{t('parentProfileCategories')}</p>
+            <p className="parent-progress-spotlight-value">{favoriteTheme ? getThemeLabel(favoriteTheme.id) : '—'}</p>
+          </div>
         </div>
 
         <div className="parent-progress-chart" role="img" aria-label={t('parentProgressChartLabel')}>
