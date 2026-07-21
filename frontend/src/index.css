@@ -6141,4 +6141,219 @@ html {
   .text-shadow-sm {
     text-shadow: 0 1px 2px rgba(0,0,0,0.1);
   }
+
+  /* —— Magical onboarding —— */
+  .hkids-onboarding-shell {
+    background: linear-gradient(165deg, #faf6ef 0%, #f5efe4 42%, #f0e8dc 100%);
+    color: var(--kids-type-body, #24324a);
+  }
+
+  .hkids-onboarding-glow {
+    position: absolute;
+    border-radius: 999px;
+    filter: blur(48px);
+    pointer-events: none;
+    opacity: 0.55;
+  }
+
+  .hkids-onboarding-glow--a {
+    width: 18rem;
+    height: 18rem;
+    top: -4rem;
+    inset-inline-start: -3rem;
+    background: color-mix(in srgb, var(--color-secondary-300) 45%, transparent);
+  }
+
+  .hkids-onboarding-glow--b {
+    width: 22rem;
+    height: 22rem;
+    bottom: -6rem;
+    inset-inline-end: -4rem;
+    background: color-mix(in srgb, var(--color-primary-300) 35%, transparent);
+  }
+
+  .hkids-onboarding-particles {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+  }
+
+  .hkids-onboarding-particle {
+    position: absolute;
+    width: 6px;
+    height: 6px;
+    border-radius: 999px;
+    background: color-mix(in srgb, white 70%, var(--color-secondary-300));
+    opacity: 0.45;
+    animation: hkids-onboarding-float 6s ease-in-out infinite;
+  }
+
+  .hkids-onboarding-particle--0 { left: 12%; top: 18%; animation-delay: 0s; }
+  .hkids-onboarding-particle--1 { left: 78%; top: 22%; animation-delay: 1.2s; }
+  .hkids-onboarding-particle--2 { left: 24%; top: 68%; animation-delay: 2.4s; }
+  .hkids-onboarding-particle--3 { left: 66%; top: 72%; animation-delay: 0.8s; }
+
+  @keyframes hkids-onboarding-float {
+    0%, 100% { transform: translateY(0); opacity: 0.35; }
+    50% { transform: translateY(-12px); opacity: 0.7; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .hkids-onboarding-particle { animation: none; }
+    .hkids-onboarding-choice-card:hover,
+    .hkids-onboarding-world-card:hover,
+    .hkids-onboarding-avatar-btn.is-selected,
+    .hkids-onboarding-chip.is-selected {
+      transform: none;
+    }
+  }
+
+  .hkids-onboarding-progress {
+    height: 0.45rem;
+    border-radius: 999px;
+    background: color-mix(in srgb, white 55%, transparent);
+    overflow: hidden;
+  }
+
+  .hkids-onboarding-progress-fill {
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, var(--color-primary-400), var(--color-secondary-400));
+    transition: width 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .hkids-onboarding-panel {
+    padding: 0.5rem;
+  }
+
+  .hkids-onboarding-illustration {
+    position: relative;
+    width: 11rem;
+    height: 8rem;
+    margin-inline: auto;
+  }
+
+  .hkids-onboarding-book {
+    position: absolute;
+    inset: 0.75rem 1.5rem;
+    border-radius: 1.25rem;
+    background: linear-gradient(145deg, #fff8ef, #f2e4d2);
+    box-shadow: 0 24px 48px -28px rgba(36, 50, 74, 0.35);
+    border: 3px solid rgba(255, 255, 255, 0.85);
+  }
+
+  .hkids-onboarding-sparkle {
+    position: absolute;
+    width: 1.25rem;
+    height: 1.25rem;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--color-secondary-300) 70%, white);
+    opacity: 0.8;
+    animation: hkids-onboarding-float 4.5s ease-in-out infinite;
+  }
+
+  .hkids-onboarding-sparkle--a { top: 0.5rem; right: 1rem; }
+  .hkids-onboarding-sparkle--b { bottom: 0.25rem; left: 0.75rem; animation-delay: 1.5s; }
+
+  .hkids-onboarding-choice-card,
+  .hkids-onboarding-world-card {
+    border-radius: 1.75rem;
+    border: 2px solid color-mix(in srgb, white 70%, transparent);
+    background: color-mix(in srgb, #faf8f5 88%, white);
+    box-shadow: 0 18px 40px -28px rgba(36, 50, 74, 0.22);
+    padding: 1.5rem;
+    transition: transform 0.28s ease, box-shadow 0.28s ease, border-color 0.28s ease;
+  }
+
+  .hkids-onboarding-choice-card:hover,
+  .hkids-onboarding-world-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 22px 44px -24px rgba(36, 50, 74, 0.28);
+  }
+
+  .hkids-onboarding-world-card.is-selected,
+  .hkids-onboarding-choice-card:focus-visible {
+    border-color: color-mix(in srgb, var(--color-primary-400) 70%, white);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary-300) 25%, transparent);
+  }
+
+  .hkids-onboarding-world-card.is-selected {
+    background: linear-gradient(160deg, #fffaf3, #f7efe3);
+  }
+
+  .hkids-onboarding-avatar-btn {
+    width: 4rem;
+    height: 4rem;
+    border-radius: 1.25rem;
+    border: 2px solid transparent;
+    background: white;
+    font-size: 2rem;
+    display: grid;
+    place-items: center;
+    box-shadow: 0 10px 24px -18px rgba(36, 50, 74, 0.25);
+    transition: transform 0.2s ease, border-color 0.2s ease;
+  }
+
+  .hkids-onboarding-avatar-btn--small {
+    width: 3.25rem;
+    height: 3.25rem;
+    font-size: 1.6rem;
+    border-radius: 1rem;
+  }
+
+  .hkids-onboarding-avatar-btn.is-selected,
+  .hkids-onboarding-chip.is-selected {
+    border-color: var(--color-primary-400);
+    transform: translateY(-2px);
+  }
+
+  .hkids-onboarding-chip {
+    border-radius: 999px;
+    padding: 0.65rem 1rem;
+    min-height: 3rem;
+    border: 2px solid color-mix(in srgb, var(--color-primary-200) 60%, transparent);
+    background: white;
+    font-weight: 700;
+    color: var(--kids-type-body);
+  }
+
+  .hkids-onboarding-chip--block {
+    width: 100%;
+    text-align: center;
+  }
+
+  .hkids-onboarding-input {
+    border-radius: 1.25rem;
+    border: 2px solid color-mix(in srgb, var(--color-primary-200) 55%, transparent);
+    background: white;
+    padding: 0.95rem 1.1rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--kids-type-body);
+    outline: none;
+  }
+
+  .hkids-onboarding-input:focus {
+    border-color: var(--color-primary-400);
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-primary-300) 20%, transparent);
+  }
+
+  .hkids-onboarding-tour-card {
+    min-height: 12rem;
+    display: grid;
+    place-items: center;
+  }
+
+  .hkids-onboarding-dot {
+    width: 0.55rem;
+    height: 0.55rem;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--color-primary-300) 35%, white);
+  }
+
+  .hkids-onboarding-dot.is-active {
+    width: 1.5rem;
+    background: var(--color-primary-500);
+  }
 }
