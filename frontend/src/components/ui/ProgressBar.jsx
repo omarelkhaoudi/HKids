@@ -1,5 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import { useReducedMotion } from '../../hooks/useReducedMotion';
+import { kidsProgressFill } from '../../constants/kidsMotion';
 
 const TONE_FILL = {
   primary: 'bg-primary-500',
@@ -16,6 +18,7 @@ export function ProgressBar({
   className = '',
   size = 'md',
 }) {
+  const reducedMotion = useReducedMotion();
   const clamped = Math.min(100, Math.max(0, Number(progress) || 0));
   const height = size === 'lg' ? 'h-space-12' : size === 'sm' ? 'h-space-8' : 'h-[10px]';
 
@@ -37,9 +40,9 @@ export function ProgressBar({
       >
         <motion.div
           className={`${height} rounded-full ${TONE_FILL[tone] || TONE_FILL.primary}`}
-          initial={{ width: 0 }}
+          initial={false}
           animate={{ width: `${clamped}%` }}
-          transition={{ duration: 0.45, ease: 'easeOut' }}
+          transition={reducedMotion ? { duration: 0 } : kidsProgressFill.transition}
         />
       </div>
     </div>

@@ -50,6 +50,31 @@ function formatAgeLabel(book, t) {
   return null;
 }
 
+function PremiumBookState({ icon: Icon = BookIcon, title, description, ctaLabel, onCta, reducedMotion }) {
+  return (
+    <div className="min-h-screen flex items-center justify-center kids-book-details-page px-space-20">
+      <motion.div
+        className="kids-premium-panel max-w-xl w-full text-center p-8 md:p-10 relative overflow-hidden"
+        {...getMotionProps(reducedMotion, kidsPageEnter)}
+      >
+        <div className="absolute inset-0 kids-shimmer opacity-20 pointer-events-none" aria-hidden="true" />
+        <div className="mx-auto mb-space-20 flex h-24 w-24 items-center justify-center rounded-full bg-white/70 shadow-soft">
+          <Icon className="h-12 w-12 text-primary-500" />
+        </div>
+        <h1 className="kids-type-h1 !text-[1.7rem] md:!text-[2rem] mb-space-12">{title}</h1>
+        {description ? (
+          <p className="kids-shelf-subtitle !mx-auto mb-space-24 max-w-md">{description}</p>
+        ) : null}
+        {ctaLabel && onCta ? (
+          <KidsButton onClick={onCta} className="mx-auto !min-h-[56px]">
+            {ctaLabel}
+          </KidsButton>
+        ) : null}
+      </motion.div>
+    </div>
+  );
+}
+
 function BookDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -174,15 +199,35 @@ function BookDetails() {
     }
   };
 
+  const backPath = isKidAccount ? '/kids/library' : '/';
+
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center kids-book-details-page">
+      <div className="min-h-screen flex items-center justify-center kids-book-details-page px-space-20">
         <motion.div
-          className="text-center"
+          className="kids-premium-panel kids-book-details-loading max-w-5xl w-full p-6 md:p-8"
           {...getMotionProps(reducedMotion, kidsPageEnter)}
         >
-          <div className="inline-block h-12 w-12 rounded-full border-2 border-primary-200 border-t-primary-600 animate-spin" />
-          <p className="mt-4 kids-type-body text-foreground-secondary">Chargement du livre...</p>
+          <div className="grid gap-6 md:grid-cols-[18rem,minmax(0,1fr)] md:items-center">
+            <div className="aspect-[3/4] rounded-[2rem] bg-white/70 overflow-hidden relative">
+              <div className="absolute inset-0 kids-shimmer opacity-40" aria-hidden="true" />
+            </div>
+            <div className="space-y-4">
+              <div className="h-4 w-32 rounded-full bg-white/70" />
+              <div className="h-8 w-3/4 rounded-full bg-white/80" />
+              <div className="h-8 w-2/3 rounded-full bg-white/70" />
+              <div className="flex flex-wrap gap-3 pt-2">
+                <div className="h-10 w-28 rounded-full bg-white/75" />
+                <div className="h-10 w-24 rounded-full bg-white/70" />
+                <div className="h-10 w-32 rounded-full bg-white/75" />
+              </div>
+              <div className="flex flex-col sm:flex-row gap-3 pt-4">
+                <div className="h-14 flex-1 rounded-full bg-gradient-to-r from-primary-200/80 to-secondary-200/80" />
+                <div className="h-14 flex-1 rounded-full bg-white/80" />
+              </div>
+              <p className="kids-type-body text-foreground-secondary pt-2">Préparation d&apos;une belle page de lecture...</p>
+            </div>
+          </div>
         </motion.div>
       </div>
     );
@@ -190,18 +235,14 @@ function BookDetails() {
 
   if (!book) {
     return (
-      <div className="min-h-screen flex items-center justify-center kids-book-details-page">
-        <motion.div
-          className="text-center px-space-24"
-          {...getMotionProps(reducedMotion, kidsPageEnter)}
-        >
-          <BookIcon className="mx-auto mb-space-16 h-12 w-12 text-foreground-muted opacity-50" />
-          <p className="kids-type-h2 mb-space-20">Livre non trouvé</p>
-          <Link to="/" className="kids-touch-target inline-flex min-h-[56px] items-center rounded-full bg-primary-500 px-space-24 text-white font-semibold">
-            Retour à l'accueil
-          </Link>
-        </motion.div>
-      </div>
+      <PremiumBookState
+        icon={BookIcon}
+        title="Cette histoire n'est pas disponible pour le moment"
+        description="Retournons vers la bibliothèque pour choisir une autre aventure douce et lumineuse."
+        ctaLabel={t('goToLibrary')}
+        onCta={() => navigate(backPath)}
+        reducedMotion={reducedMotion}
+      />
     );
   }
 
@@ -218,8 +259,6 @@ function BookDetails() {
   const downloadStatus = offlineContent.getBookStatus(book.id);
   const isDownloading = downloadStatus?.status === 'pending' || downloadStatus?.status === 'running';
   const isDownloaded = downloadStatus?.status === 'downloaded' || storage.isDownloaded(book.id);
-  const backPath = isKidAccount ? '/kids/library' : '/';
-
   return (
     <div className="min-h-screen kids-book-details-page" dir={isRtl ? 'rtl' : 'ltr'}>
       <motion.header
