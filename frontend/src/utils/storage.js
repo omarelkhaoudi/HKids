@@ -1,9 +1,16 @@
 import { syncOrQueueKidMutation } from '../services/parental/kidActivitySyncService';
 
 function queueMutation(type, payload, conflictKey = null) {
-  syncOrQueueKidMutation(type, payload, conflictKey).catch((error) => {
+  try {
+    const result = syncOrQueueKidMutation(type, payload, conflictKey);
+    if (result && typeof result.catch === 'function') {
+      result.catch((error) => {
+        console.warn('Could not synchronize kid activity:', error);
+      });
+    }
+  } catch (error) {
     console.warn('Could not synchronize kid activity:', error);
-  });
+  }
 }
 
 function scopedActivityKey(baseKey) {

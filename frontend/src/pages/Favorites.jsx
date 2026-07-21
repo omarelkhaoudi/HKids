@@ -71,7 +71,6 @@ function Favorites() {
  // Trier selon l'ordre des favoris
  const sorted = favoriteIds.map(id => allFavorites.find(b => b.id === id)).filter(Boolean);
  
- console.log('[Favorites] Loaded books:', sorted.map(b => ({id: b.id, title: b.title, cover_image: b.cover_image})));
  setFavoriteBooks(sorted);
 } catch (error) {
  console.error('Error loading favorites:', error);

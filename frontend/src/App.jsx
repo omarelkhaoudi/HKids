@@ -46,9 +46,19 @@ const isProductionBuild = import.meta.env.PROD;
 const DEFAULT_ANDROID_KIOSK_IDLE_MS = 10 * 60 * 1000;
 
 function RouteFallback() {
+  const { t } = useLanguage();
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-white">
-      <div className="inline-block rounded-full h-12 w-12 border-4 border-primary-500 border-t-transparent animate-spin" />
+    <div
+      className="min-h-screen flex items-center justify-center bg-background-kids"
+      role="status"
+      aria-live="polite"
+      aria-busy="true"
+    >
+      <div className="kids-premium-panel relative w-72 overflow-hidden p-8">
+        <div className="kids-shimmer absolute inset-0 opacity-25" aria-hidden="true" />
+        <p className="kids-type-body relative text-center text-foreground-secondary">{t('loading')}</p>
+      </div>
     </div>
   );
 }
