@@ -1047,6 +1047,30 @@
     opacity: 1;
   }
 
+  /* —— Landing role selector —— */
+  .landing-role-icon {
+    display: inline-block;
+    font-size: 1.15em;
+    line-height: 1;
+    transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .landing-role-btn:hover .landing-role-icon,
+  .landing-role-btn:focus-visible .landing-role-icon {
+    transform: translateY(-2px) scale(1.08);
+  }
+
+  .landing-role-btn--child {
+    font-weight: 800;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .landing-role-btn:hover .landing-role-icon,
+    .landing-role-btn:focus-visible .landing-role-icon {
+      transform: none;
+    }
+  }
+
   /* —— Book-first covers —— */
   .kids-book-cover-img {
     display: block;

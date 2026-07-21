@@ -2,6 +2,7 @@ import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { StarIcon } from '../../components/Icons';
 import { Button } from '../ui/Button';
+import { LandingRoleSelector } from '../landing/LandingRoleSelector';
 
 export default function HeroSection({ t, totalBooks }) {
   const navigate = useNavigate();
@@ -56,7 +57,7 @@ export default function HeroSection({ t, totalBooks }) {
               {t.heroDescription}
             </p>
 
-            <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 mb-10">
+            <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 mb-space-20">
               <Button size="lg" className="rounded-full shadow-lg w-full sm:w-auto" onClick={() => navigate('/parent/signup')}>
                 {t.startFree}
               </Button>
@@ -64,6 +65,8 @@ export default function HeroSection({ t, totalBooks }) {
                 {t.viewDemo}
               </Button>
             </div>
+
+            <LandingRoleSelector />
 
             <div className="flex flex-wrap items-center justify-center lg:justify-start gap-6 text-sm font-semibold text-foreground-muted">
               <div className="flex items-center gap-2">
