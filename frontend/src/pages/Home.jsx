@@ -127,7 +127,7 @@ function Home({darkMode, setDarkMode}) {
 
  if (!email) {
  setNewsletterStatus('error');
- showToast('Veuillez saisir votre adresse e-mail.', 'info', 2500);
+ showToast(t.homeNewsletterEmailRequired, 'info', 2500);
  return;
 }
 
@@ -138,17 +138,17 @@ function Home({darkMode, setDarkMode}) {
  setNewsletterStatus(emailSent ? 'success' : 'saved');
  setNewsletterEmail('');
  if (!emailSent) {
- showToast("Inscription enregistree, mais l'e-mail n'est pas encore envoye.", 'info', 4500);
+ showToast(t.homeNewsletterPending, 'info', 4500);
  return;
 }
- showToast('Merci ! Vérifiez votre boîte mail pour confirmer votre inscription.', 'success', 3500);
+ showToast(t.homeNewsletterSuccess, 'success', 3500);
 } catch (error) {
  console.error('Newsletter subscription error:', error);
  setNewsletterStatus('error');
  if (error.response?.data?.setup_required) {
- showToast("L'inscription par e-mail est en cours de configuration.", 'error', 3500);
+ showToast(t.homeNewsletterSetup, 'error', 3500);
 } else {
- showToast("Impossible d'envoyer l'e-mail d'inscription.", 'error', 3000);
+ showToast(t.homeNewsletterError, 'error', 3000);
 }
 } finally {
  setNewsletterLoading(false);
@@ -340,9 +340,10 @@ function Home({darkMode, setDarkMode}) {
  <Link 
  to="/parent/login" 
  className="btn-nav flex items-center gap-2 text-foreground hover:text-foreground-700 hover:bg-primary-50"
+ title={t.parentSignIn}
  >
  <LockIcon className="w-4 h-4" />
- <span>{t.admin}</span>
+ <span>{t.parentSignIn}</span>
  </Link>
  <LanguageSelector />
  </nav>
@@ -352,8 +353,11 @@ function Home({darkMode, setDarkMode}) {
  <LanguageSelector />
  <motion.button
  onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
- className="p-2 text-foreground hover:text-foreground-700 hover:bg-primary-50 rounded-2xl transition-colors"
+ className="p-2 text-foreground hover:text-foreground-700 hover:bg-primary-50 rounded-2xl transition-colors min-h-touch min-w-touch"
  whileTap={{scale: 0.95}}
+ aria-expanded={mobileMenuOpen}
+ aria-controls="home-mobile-menu"
+ aria-label={mobileMenuOpen ? t.close : t.homeLibrary}
  >
  {mobileMenuOpen ? (
  <XIcon className="w-6 h-6" />
@@ -383,13 +387,14 @@ function Home({darkMode, setDarkMode}) {
  animate={{opacity: 1, y: 0}}
  exit={{opacity: 0, y: -20}}
  transition={{duration: 0.3}}
- className="md:hidden fixed top-[73px] left-0 right-0 bg-surface-800/95 backdrop-blur-md border-t border-surface-700 z-50 max-h-[calc(100vh-73px)] overflow-y-auto"
+ className="md:hidden fixed top-[73px] left-0 right-0 bg-card/98 backdrop-blur-md border-t border-border z-50 max-h-[calc(100vh-73px)] overflow-y-auto shadow-lg"
+ id="home-mobile-menu"
  >
  <nav className="px-4 py-4 space-y-2">
  <Link 
  to="/favorites" 
  onClick={() => setMobileMenuOpen(false)}
- className="flex items-center gap-3 px-4 py-3 text-surface-100 hover:text-white hover:bg-surface-700/50 rounded-2xl transition-colors"
+ className="flex items-center gap-3 px-4 py-3 text-foreground hover:text-primary-700 hover:bg-primary-50 rounded-2xl transition-colors min-h-touch"
  >
  <HeartIcon className="w-5 h-5" filled={false} />
  <span>{t.favorites}</span>
@@ -397,7 +402,7 @@ function Home({darkMode, setDarkMode}) {
  <Link 
  to="/history" 
  onClick={() => setMobileMenuOpen(false)}
- className="flex items-center gap-3 px-4 py-3 text-surface-100 hover:text-white hover:bg-surface-700/50 rounded-2xl transition-colors"
+ className="flex items-center gap-3 px-4 py-3 text-foreground hover:text-primary-700 hover:bg-primary-50 rounded-2xl transition-colors min-h-touch"
  >
  <HistoryIcon className="w-5 h-5" />
  <span>{t.history}</span>
@@ -405,46 +410,45 @@ function Home({darkMode, setDarkMode}) {
  <Link 
  to="/parent/login" 
  onClick={() => setMobileMenuOpen(false)}
- className="flex items-center gap-3 px-4 py-3 text-surface-100 hover:text-white hover:bg-surface-700/50 rounded-2xl transition-colors"
+ className="flex items-center gap-3 px-4 py-3 text-foreground hover:text-primary-700 hover:bg-primary-50 rounded-2xl transition-colors min-h-touch"
  >
  <LockIcon className="w-5 h-5" />
- <span>{t.admin}</span>
+ <span>{t.parentSignIn}</span>
  </Link>
- <div className="pt-2 border-t border-surface-700">
+ <div className="pt-2 border-t border-border">
  <div className="px-4 py-3">
  <button
  onClick={() => {
  document.getElementById('books-section')?.scrollIntoView({behavior: 'smooth'});
  setMobileMenuOpen(false);
 }}
- className="w-full flex items-center gap-3 px-4 py-3 text-surface-100 hover:text-white hover:bg-surface-700/50 rounded-2xl transition-colors"
+ className="w-full flex items-center gap-3 px-4 py-3 text-foreground hover:text-primary-700 hover:bg-primary-50 rounded-2xl transition-colors min-h-touch"
  >
  <BookIcon className="w-5 h-5" />
- <span>Bibliothèque</span>
+ <span>{t.homeLibrary}</span>
  </button>
  </div>
  {/* Boutons d'âge pour mobile */}
  <div className="px-4 pb-3 space-y-2">
- <p className="text-xs text-surface-400 uppercase tracking-wide px-4 py-2">Filtrer par âge</p>
+ <p className="text-xs text-foreground-muted uppercase tracking-wide px-4 py-2">{t.homeFilterByAge}</p>
  {[
- {age: '3-5', label: '3-5 ans', color: 'bg-primary-500 hover:bg-primary-600'},
- {age: '6-8', label: '6-8 ans', color: 'bg-accent-500 hover:bg-accent-600'},
- {age: '9-12', label: '9-12 ans', color: 'bg-secondary-500 hover:bg-secondary-600'}
+ {age: '3-5', label: t.age3to5, color: 'bg-primary-500 hover:bg-primary-600'},
+ {age: '6-8', label: t.age6to8, color: 'bg-accent-500 hover:bg-accent-600'},
+ {age: '9-12', label: t.age9to12, color: 'bg-secondary-500 hover:bg-secondary-600'}
  ].map((ageBtn) => {
- const ageValue = ageBtn.age.includes('-') ? ageBtn.age.split('-')[0] : ageBtn.age;
- const isSelected = selectedAge === ageValue;
+ const isSelected = selectedAge === ageBtn.age;
  return (
  <button
  key={ageBtn.age}
  onClick={() => {
- setSelectedAge(ageValue);
+ setSelectedAge(ageBtn.age);
  setMobileMenuOpen(false);
  setTimeout(() => {
- document.getElementById('books-section')?.scrollIntoView({behavior: 'smooth'});
+ document.getElementById('popular-stories')?.scrollIntoView({behavior: 'smooth'});
 }, 100);
 }}
- className={`w-full px-4 py-2.5 rounded-2xl text-white font-semibold text-sm transition-all ${
- isSelected ? ageBtn.color + ' ring-2 ring-offset-2 ring-offset-surface-800 ring-white' : ageBtn.color
+ className={`w-full px-4 py-2.5 rounded-2xl text-white font-semibold text-sm transition-all min-h-touch ${
+ isSelected ? ageBtn.color + ' ring-2 ring-offset-2 ring-offset-background ring-primary-300' : ageBtn.color
 }`}
  >
  {ageBtn.label}
@@ -462,11 +466,12 @@ function Home({darkMode, setDarkMode}) {
  <main id="main-content">
  <HeroSection t={t} totalBooks={totalBooks} />
  <BookOfTheWeekSection book={allBooks[0]} t={t} />
- <BrowseByAgeSection t={t} selectedAge={selectedAge} setSelectedAge={setSelectedAge} />
- <StoryPreviewSection books={allBooks} />
- <FeaturesSection t={t} />
- <TestimonialsSection t={t} />
+ <BrowseByAgeSection t={t} selectedAge={selectedAge} setSelectedAge={setSelectedAge} books={allBooks} />
+ <StoryPreviewSection books={books} t={t} selectedAge={selectedAge} />
+ <FeaturesSection />
+ <TestimonialsSection />
  <NewsletterSection 
+ t={t}
  newsletterEmail={newsletterEmail} 
  setNewsletterEmail={setNewsletterEmail} 
  handleNewsletterSubmit={handleNewsletterSubmit} 

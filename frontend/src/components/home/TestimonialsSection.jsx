@@ -1,62 +1,53 @@
 import { motion } from 'framer-motion';
+import { useLanguage } from '../../context/LanguageContext';
+import { useReducedMotion } from '../../hooks/useReducedMotion';
 import { toneAtIndex } from '../../constants/brandTheme';
 
-const TESTIMONIALS = [
-  { quote: "Des histoires magnifiques qui captivent mon fils de 4 ans. L'IA personnalise vraiment les histoires !", author: 'Sophie M.', role: 'Maman de Léo, 4 ans', avatar: '👩', rating: 5 },
-  { quote: 'Une application incroyable pour développer l\'imagination et les valeurs chez les enfants.', author: 'Karim B.', role: 'Papa de Inès, 6 ans', avatar: '👨', rating: 5 },
-  { quote: 'Enfin une app éducative sans publicité. Je la recommande à 100% !', author: 'Nadia E.', role: 'Maman de Youssef, 7 ans', avatar: '👩🏽', rating: 4 },
-  { quote: 'Mon fils attend chaque soir sa nouvelle histoire. Merci HKids !', author: 'Thomas L.', role: 'Papa de Lucas, 5 ans', avatar: '👨🏼', rating: 5 },
+const TRUST_PILLARS = [
+  { titleKey: 'homeTrustCalmTitle', bodyKey: 'homeTrustCalmBody', emoji: '🌙' },
+  { titleKey: 'homeTrustSafeTitle', bodyKey: 'homeTrustSafeBody', emoji: '🛡️' },
+  { titleKey: 'homeTrustQualityTitle', bodyKey: 'homeTrustQualityBody', emoji: '📚' },
+  { titleKey: 'homeTrustPrivacyTitle', bodyKey: 'homeTrustPrivacyBody', emoji: '🔒' },
 ];
 
 export default function TestimonialsSection() {
+  const { t } = useLanguage();
+  const reducedMotion = useReducedMotion();
+
   return (
-    <section className="bg-background py-12 md:py-16 relative z-10">
+    <section className="bg-background py-12 md:py-16 relative z-10" aria-labelledby="home-trust-title">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={reducedMotion ? false : { opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.5 }}
-          className="mb-10"
+          className="mb-10 text-center md:text-start"
         >
-          <h2 className="brand-section-title">Ils nous font confiance</h2>
+          <h2 id="home-trust-title" className="brand-section-title">{t('homeTrustTitle')}</h2>
         </motion.div>
 
-        <div className="relative">
-          <div className="flex overflow-x-auto gap-4 sm:gap-6 pb-6 pt-2 px-2 -mx-2 snap-x snap-mandatory hide-scrollbar">
-            {TESTIMONIALS.map((item, i) => {
-              const tone = toneAtIndex(i);
-              return (
-                <motion.div
-                  key={item.author}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: i * 0.1, duration: 0.5 }}
-                  className="snap-start shrink-0 w-[85vw] sm:w-[350px] md:w-[300px] lg:w-[280px] brand-surface-card p-6 hover:shadow-medium transition-all duration-300 flex flex-col justify-between"
-                >
-                  <p className="text-foreground-secondary font-medium mb-6 leading-relaxed italic relative">
-                    <span className={`text-4xl ${tone.color} absolute -top-4 -left-2 font-serif opacity-40`}>"</span>
-                    <span className="relative z-10">{item.quote}</span>
-                  </p>
-
-                  <div className="flex items-center gap-3">
-                    <div className={`w-10 h-10 rounded-full ${tone.bgColor} flex items-center justify-center text-xl flex-shrink-0`}>
-                      {item.avatar}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h4 className="font-bold text-foreground text-sm truncate">{item.author}</h4>
-                      <p className="text-xs text-foreground-muted truncate">{item.role}</p>
-                    </div>
-                    <div className="flex text-accent-500 text-xs">
-                      {'★'.repeat(item.rating)}{'☆'.repeat(5 - item.rating)}
-                    </div>
-                  </div>
-                </motion.div>
-              );
-            })}
-          </div>
-          <div className="hidden md:block absolute top-0 bottom-0 right-0 w-24 bg-gradient-to-l from-background to-transparent pointer-events-none" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+          {TRUST_PILLARS.map((pillar, i) => {
+            const tone = toneAtIndex(i);
+            return (
+              <motion.article
+                key={pillar.titleKey}
+                initial={reducedMotion ? false : { opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: reducedMotion ? 0 : i * 0.08, duration: 0.5 }}
+                whileHover={reducedMotion ? undefined : { y: -4 }}
+                className="brand-surface-card p-6 hover:shadow-medium transition-all duration-300 h-full"
+              >
+                <div className={`w-12 h-12 rounded-2xl ${tone.bgColor} flex items-center justify-center text-2xl mb-4`} aria-hidden="true">
+                  {pillar.emoji}
+                </div>
+                <h3 className="font-bold text-foreground mb-2">{t(pillar.titleKey)}</h3>
+                <p className="text-sm text-foreground-secondary leading-relaxed">{t(pillar.bodyKey)}</p>
+              </motion.article>
+            );
+          })}
         </div>
       </div>
     </section>
