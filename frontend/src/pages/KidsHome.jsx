@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { localizeKidCategories, getKidCategory } from '../constants/kidCategories';
@@ -34,12 +34,23 @@ import {
   filterByAgeBand,
   filterSeasonalBooks,
   inferLikedThemeId,
-  isShortStory,
-  withDiscoveryReason,
 } from '../utils/discoveryRails';
 import { useReducedMotion } from '../hooks/useReducedMotion';
 import { getHoverMotion, kidsHoverLift, getMotionProps, kidsCarouselReveal } from '../constants/kidsMotion';
 import { shouldShowKidOnboarding } from '../utils/onboarding';
+import { buildKidsGreeting } from '../utils/kidsGreeting';
+import {
+  buildAudioDiscoveries,
+  buildBedtimeShelf,
+  buildPersonalizedRecommended,
+  buildSoftProgressSummary,
+  buildWorldShelves,
+  getKidsPersonalizationProfile,
+  pickFeaturedBook,
+  reorderCategoriesByWorlds,
+  shouldPrioritizeAudio,
+} from '../utils/kidsPersonalization';
+import { KidsHomeProgressStrip } from '../components/kids/KidsHomeProgressStrip';
 
 function getRecommendedBooks(sections = []) {
   const recommendedSection = sections.find((section) => section.id === 'recommended_for_you');
@@ -75,7 +86,7 @@ function KidsHome() {
   const navigate = useNavigate();
   const location = useLocation();
   const reducedMotion = useReducedMotion();
-  const [greeting, setGreeting] = useState(t('goodMorning'));
+  const personalization = getKidsPersonalizationProfile();
   const [homeData, setHomeData] = useState(null);
   const [recommendationSections, setRecommendationSections] = useState([]);
   const [publishedBooks, setPublishedBooks] = useState([]);
@@ -86,13 +97,6 @@ function KidsHome() {
       navigate('/welcome', { replace: true });
     }
   }, [user, navigate]);
-
-  useEffect(() => {
-    const hour = new Date().getHours();
-    if (hour < 12) setGreeting(t('goodMorning'));
-    else if (hour < 18) setGreeting(t('goodAfternoon'));
-    else setGreeting(t('goodEvening'));
-  }, [t]);
 
   useEffect(() => {
     if (loading) return;
@@ -157,9 +161,12 @@ function KidsHome() {
   }, [showToast, language, user?.kid_profile_id]);
 
   const kid = homeData?.kid || null;
-  const kidName = kid?.name || user?.username || '';
+  const displayName = personalization.nickname || kid?.name || user?.username || '';
   const avatarSrc = kid?.photo_url ? getImageUrl(kid.photo_url) : null;
-  const avatarInitials = kid?.avatar || kidName.trim().charAt(0).toUpperCase() || '?';
+  const avatarInitials = personalization.avatar
+    || kid?.avatar
+    || displayName.trim().charAt(0).toUpperCase()
+    || '?';
   const progressRows = Array.isArray(homeData?.progress) ? homeData.progress : [];
   const continueReading = progressRows.find((item) => (
     !item.completed && Number(item.progress_percent || 0) > 0
@@ -197,14 +204,42 @@ function KidsHome() {
     [progressRows, publishedBooks],
   );
 
+  const softProgress = useMemo(
+    () => buildSoftProgressSummary({
+      progressRows,
+      favoriteWorlds: personalization.favoriteWorlds,
+      t,
+    }),
+    [progressRows, personalization.favoriteWorlds, t],
+  );
+
+  const greeting = useMemo(
+    () => buildKidsGreeting({
+      t,
+      nickname: displayName,
+      favoriteWorlds: personalization.favoriteWorlds,
+      readingGoal: personalization.readingGoal,
+      hasContinue: continueBooks.length > 0,
+      completedCount: softProgress.completed,
+    }),
+    [
+      t,
+      displayName,
+      personalization.favoriteWorlds,
+      personalization.readingGoal,
+      continueBooks.length,
+      softProgress.completed,
+    ],
+  );
+
   const featuredBook = useMemo(() => {
-    // Today's Adventure: prefer a recommended pick that is NOT the continue book
-    const continueId = continueReading?.book_id;
-    const adventureCandidate = recommendedBooks.find((book) => book.id !== continueId)
-      || recommendedBooks[0]
-      || newBooks[0]
-      || publishedBooks[0]
-      || null;
+    const adventureCandidate = pickFeaturedBook({
+      recommendedBooks,
+      publishedBooks,
+      continueReading,
+      favoriteWorlds: personalization.favoriteWorlds,
+      ageBand: personalization.ageBand,
+    }) || newBooks[0] || publishedBooks[0] || null;
 
     if (!adventureCandidate?.id) return null;
     const enrichment = publishedBooks.find((book) => book.id === adventureCandidate.id);
@@ -217,10 +252,25 @@ function KidsHome() {
       kid_progress_percent: progress,
       isInProgress: progress > 0 && progress < 100,
     };
-  }, [continueReading, recommendedBooks, newBooks, publishedBooks, progressRows]);
+  }, [
+    continueReading,
+    recommendedBooks,
+    newBooks,
+    publishedBooks,
+    progressRows,
+    personalization.favoriteWorlds,
+    personalization.ageBand,
+  ]);
 
-  const bedtimeBooks = useMemo(() => filterBooksByCategory(publishedBooks, 'bedtime'), [publishedBooks]);
-  const kidCategories = localizeKidCategories(language).filter((category) => WORLD_CATEGORY_IDS.includes(category.id));
+  const kidCategories = useMemo(() => {
+    const categories = localizeKidCategories(language).filter((category) => WORLD_CATEGORY_IDS.includes(category.id));
+    return reorderCategoriesByWorlds(categories, personalization.favoriteWorlds);
+  }, [language, personalization.favoriteWorlds]);
+
+  const worldShelves = useMemo(
+    () => buildWorldShelves(publishedBooks, personalization.favoriteWorlds, t),
+    [publishedBooks, personalization.favoriteWorlds, t],
+  );
 
   const likedThemeId = useMemo(
     () => inferLikedThemeId(favoriteBooks, localizeKidCategories(language)),
@@ -229,6 +279,8 @@ function KidsHome() {
   const likedTheme = likedThemeId ? getKidCategory(likedThemeId, language) : null;
 
   const becauseYouLikedBooks = useMemo(() => {
+    // Prefer onboarding world shelves; fall back to favorites-based affinity
+    if (worldShelves.length > 0) return [];
     if (!likedThemeId) {
       return annotateBooksWithReasons(favoriteBooks.slice(0, 12), t('discoverReasonLoved'));
     }
@@ -237,18 +289,32 @@ function KidsHome() {
       .slice(0, 12);
     const reason = t('discoverBecauseYouLiked', { theme: likedTheme?.shortLabel || likedTheme?.label || likedThemeId });
     return annotateBooksWithReasons(themed.length ? themed : favoriteBooks.slice(0, 12), reason);
-  }, [likedThemeId, likedTheme, publishedBooks, favoriteBooks, favoriteIds, t]);
+  }, [worldShelves.length, likedThemeId, likedTheme, publishedBooks, favoriteBooks, favoriteIds, t]);
 
-  const recommendedForYou = useMemo(
-    () => recommendedBooks.map((book) => {
-      if (isShortStory(book)) return withDiscoveryReason(book, t('discoverReasonShort'));
-      if (book.age_group_min != null && book.age_group_max != null) {
-        return withDiscoveryReason(book, t('discoverReasonAges', { min: book.age_group_min, max: book.age_group_max }));
-      }
-      return withDiscoveryReason(book, t('forYou'));
-    }),
-    [recommendedBooks, t],
-  );
+  const recommendedForYou = useMemo(() => {
+    const personalized = buildPersonalizedRecommended({
+      publishedBooks,
+      recommendedBooks,
+      favoriteWorlds: personalization.favoriteWorlds,
+      ageBand: personalization.ageBand,
+      readingGoal: personalization.readingGoal,
+      t,
+    });
+    const worldBookIds = new Set(
+      worldShelves.flatMap((shelf) => shelf.books.map((book) => book.id)),
+    );
+    const deduped = personalized.filter((book) => !worldBookIds.has(book.id));
+    // Keep a personal shelf even when worlds already filled most of the screen
+    return (deduped.length >= 3 ? deduped : personalized).slice(0, 12);
+  }, [
+    publishedBooks,
+    recommendedBooks,
+    personalization.favoriteWorlds,
+    personalization.ageBand,
+    personalization.readingGoal,
+    worldShelves,
+    t,
+  ]);
 
   const recentlyAdded = useMemo(
     () => annotateBooksWithReasons(newBooks, t('discoverReasonNew')),
@@ -260,23 +326,40 @@ function KidsHome() {
     [publishedBooks, t],
   );
 
-  const collectionLittle = useMemo(
-    () => annotateBooksWithReasons(filterByAgeBand(publishedBooks, 2, 5), t('discoverCollectionLittle')),
-    [publishedBooks, t],
-  );
-  const collectionGrowing = useMemo(
-    () => annotateBooksWithReasons(filterByAgeBand(publishedBooks, 5, 8), t('discoverCollectionGrowing')),
-    [publishedBooks, t],
-  );
-  const collectionBig = useMemo(
-    () => annotateBooksWithReasons(filterByAgeBand(publishedBooks, 8, 12), t('discoverCollectionBig')),
-    [publishedBooks, t],
+  const ageRange = useMemo(() => {
+    const map = {
+      '3-4': [2, 5],
+      '5-6': [4, 7],
+      '7-8': [6, 9],
+      '9+': [8, 12],
+    };
+    return map[personalization.ageBand] || [4, 7];
+  }, [personalization.ageBand]);
+
+  const ageCollection = useMemo(
+    () => annotateBooksWithReasons(
+      filterByAgeBand(publishedBooks, ageRange[0], ageRange[1]),
+      t('kidsHomePickedForYou'),
+    ),
+    [publishedBooks, ageRange, t],
   );
 
   const bedtimeAnnotated = useMemo(
-    () => annotateBooksWithReasons(bedtimeBooks, t('discoverReasonBedtime')),
-    [bedtimeBooks, t],
+    () => buildBedtimeShelf(publishedBooks, personalization.readingGoal, t),
+    [publishedBooks, personalization.readingGoal, t],
   );
+
+  const audioDiscoveries = useMemo(
+    () => buildAudioDiscoveries(publishedBooks, t),
+    [publishedBooks, t],
+  );
+
+  const showAudioEarly = shouldPrioritizeAudio(
+    personalization.readingGoal,
+    personalization.favoriteWorlds,
+  );
+
+  const showBedtimeEarly = personalization.readingGoal === 'bedtime';
 
   const badges = Array.isArray(homeData?.badges) ? homeData.badges : [];
 
@@ -345,15 +428,32 @@ function KidsHome() {
           <Avatar
             src={avatarSrc}
             initials={avatarInitials}
-            alt={kidName}
+            alt={displayName}
             size="lg"
             className="w-12 h-12 md:w-14 md:h-14 border border-border/40 shadow-soft bg-primary-50 text-primary-700 shrink-0"
           />
           <div className="min-w-0">
-            <p className="kids-type-caption">{greeting}</p>
+            <AnimatePresence mode="wait">
+              <motion.p
+                key={greeting.primary}
+                className="kids-type-caption"
+                initial={reducedMotion ? false : { opacity: 0, y: 4 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={reducedMotion ? undefined : { opacity: 0, y: -4 }}
+                transition={{ duration: 0.28 }}
+              >
+                {greeting.primary}
+              </motion.p>
+            </AnimatePresence>
             <p className="kids-type-h1 !text-[1.35rem] md:!text-[1.55rem] truncate">
-              {kidName}
+              {displayName || greeting.secondary}
             </p>
+            {displayName && greeting.secondary ? (
+              <p className="kids-type-meta text-foreground-muted truncate mt-0.5">
+                <span aria-hidden="true">{greeting.worldEmoji} </span>
+                {greeting.secondary}
+              </p>
+            ) : null}
           </div>
         </div>
         <Link
@@ -381,26 +481,49 @@ function KidsHome() {
           />
         </section>
 
+        {/* Soft progress — only when signals exist */}
+        {softProgress.hasSignal && (
+          <KidsHomeProgressStrip
+            completed={softProgress.completed}
+            started={softProgress.started}
+            readingDays={softProgress.readingDays}
+            worlds={softProgress.worlds}
+            t={t}
+          />
+        )}
+
         {/* 2. Continue Reading */}
         {continueBooks.length > 0 && (
           <KidsContinueRail
             books={continueBooks}
-            title={t('continueReading')}
+            title={t('kidsHomeContinueAdventures')}
             isRtl={isRtl}
             t={t}
             onResume={handlePlayBook}
           />
         )}
 
-        {/* 3. Recommended For You */}
+        {/* Onboarding world shelves first — “this library was prepared for me” */}
+        {worldShelves.map((shelf) => (
+          <KidsBookCarousel
+            key={shelf.id}
+            title={shelf.title}
+            subtitle={shelf.subtitle}
+            books={shelf.books}
+            {...carouselProps}
+            onSeeAll={() => navigate(`/kids/library?theme=${shelf.categoryId || ''}`)}
+          />
+        ))}
+
+        {/* Recommended For You — personalized, deduped against world shelves */}
         {recommendedForYou.length > 0 ? (
           <KidsBookCarousel
             title={t('forYou')}
-            subtitle={t('discoverRecommendedSubtitle')}
+            subtitle={t('kidsHomeRecommendedSubtitle')}
             books={recommendedForYou}
             {...carouselProps}
           />
-        ) : (
+        ) : !worldShelves.length ? (
           <KidsEmptyState
             title={t('emptyBooksTitle')}
             compact
@@ -408,16 +531,42 @@ function KidsHome() {
             onAction={() => navigate('/kids/library')}
             showMascot
           />
+        ) : null}
+
+        {/* Early bedtime / audio when goal or music interest fits */}
+        {showBedtimeEarly && bedtimeAnnotated.length > 0 && (
+          <KidsBookCarousel
+            title={t('kidsHomeBedtimeGoal')}
+            subtitle={t('discoverReasonBedtime')}
+            books={bedtimeAnnotated}
+            {...carouselProps}
+            onSeeAll={() => navigate('/kids/library?theme=bedtime')}
+          />
         )}
 
-        {/* 4. Explore Worlds */}
+        {showAudioEarly && audioDiscoveries.length > 0 && (
+          <KidsBookCarousel
+            title={t('kidsHomeListenDiscover')}
+            books={audioDiscoveries}
+            {...carouselProps}
+            modality="audio"
+            onPlay={handleListenBook}
+            onSeeAll={() => navigate('/kids/audio')}
+          />
+        )}
+
+        {/* Explore Worlds — favorite worlds first */}
         <motion.section aria-label={t('allCategories')} className="kids-home-primary-shelf" {...getMotionProps(reducedMotion, kidsCarouselReveal)}>
           <div className="mb-space-24 px-space-8 md:px-space-16 flex items-end justify-between gap-space-12">
             <div>
               <h2 className="kids-shelf-title !mb-0">
                 <span>{t('kidsWorldsExplore')}</span>
               </h2>
-              <p className="kids-shelf-subtitle">{t('discoverCategoriesSubtitle')}</p>
+              <p className="kids-shelf-subtitle">
+                {personalization.favoriteWorlds.length
+                  ? t('kidsHomeWorldsExploreSubtitle')
+                  : t('discoverCategoriesSubtitle')}
+              </p>
             </div>
             <button
               type="button"
@@ -437,7 +586,7 @@ function KidsHome() {
         {/* 5. New Stories */}
         {recentlyAdded.length > 0 && (
           <KidsBookCarousel
-            title={t('newBooks')}
+            title={t('kidsHomeNewDiscoveries')}
             subtitle={t('discoverNewSubtitle')}
             books={recentlyAdded}
             {...carouselProps}
@@ -458,9 +607,9 @@ function KidsHome() {
             />
           )}
 
-          {bedtimeAnnotated.length > 0 && (
+          {!showBedtimeEarly && bedtimeAnnotated.length > 0 && (
             <KidsBookCarousel
-              title={getKidCategory('bedtime', language)?.label || 'Bedtime'}
+              title={getKidCategory('bedtime', language)?.label || t('kidsHomeBedtimeGoal')}
               subtitle={t('discoverReasonBedtime')}
               books={bedtimeAnnotated}
               {...carouselProps}
@@ -468,36 +617,24 @@ function KidsHome() {
             />
           )}
 
-          {(collectionLittle.length > 0 || collectionGrowing.length > 0 || collectionBig.length > 0) && (
-            <section aria-label={t('discoverCollections')} className="space-y-space-32">
-              <div className="px-space-8 md:px-space-16">
-                <h2 className="kids-shelf-title !mb-0">
-                  <span>{t('discoverCollections')}</span>
-                </h2>
-                <p className="kids-shelf-subtitle">{t('discoverCollectionsSubtitle')}</p>
-              </div>
-              {collectionLittle.length > 0 && (
-                <KidsBookCarousel
-                  title={t('discoverCollectionLittle')}
-                  books={collectionLittle}
-                  {...carouselProps}
-                />
-              )}
-              {collectionGrowing.length > 0 && (
-                <KidsBookCarousel
-                  title={t('discoverCollectionGrowing')}
-                  books={collectionGrowing}
-                  {...carouselProps}
-                />
-              )}
-              {collectionBig.length > 0 && (
-                <KidsBookCarousel
-                  title={t('discoverCollectionBig')}
-                  books={collectionBig}
-                  {...carouselProps}
-                />
-              )}
-            </section>
+          {!showAudioEarly && audioDiscoveries.length > 0 && (
+            <KidsBookCarousel
+              title={t('kidsHomeListenDiscover')}
+              books={audioDiscoveries}
+              {...carouselProps}
+              modality="audio"
+              onPlay={handleListenBook}
+              onSeeAll={() => navigate('/kids/audio')}
+            />
+          )}
+
+          {ageCollection.length > 0 && (
+            <KidsBookCarousel
+              title={t('kidsHomePickedForYou')}
+              subtitle={t('kidsHomeRecommendedSubtitle')}
+              books={ageCollection}
+              {...carouselProps}
+            />
           )}
 
           {seasonalBooks.length > 0 && (
@@ -546,8 +683,8 @@ function KidsHome() {
         <section className="kids-profile-universe-wrap px-space-8 md:px-space-16 pb-space-24">
           <KidsProfilePanel
             kid={kid}
-            kidName={kidName}
-            greeting={greeting}
+            kidName={displayName}
+            greeting={greeting.primary}
             progressRows={progressRows}
             favoriteBooks={favoriteBooks}
             publishedBooks={publishedBooks}
