@@ -1,6 +1,6 @@
 /**
  * Elegant glass theme filter for the kids library.
- * Soft selected state — no emoji game pills.
+ * Pictogram + label for visual discovery without reading.
  */
 export function KidsThemePill({ theme, isActive, onClick }) {
   const label = theme.shortLabel || theme.label;
@@ -11,8 +11,13 @@ export function KidsThemePill({ theme, isActive, onClick }) {
       onClick={onClick}
       aria-pressed={isActive}
       aria-label={label}
-      className={`kids-library-filter-pill kids-touch-target ${isActive ? 'is-active' : ''}`}
+      className={`kids-library-filter-pill kids-touch-target touch-manipulation ${isActive ? 'is-active' : ''}`}
     >
+      {theme.pictogram ? (
+        <span className="kids-library-filter-pictogram" aria-hidden="true">
+          {theme.pictogram}
+        </span>
+      ) : null}
       <span>{label}</span>
     </button>
   );

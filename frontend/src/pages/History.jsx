@@ -195,11 +195,11 @@ function History() {
   {books.length > 0 && (
    <button
     type="button"
-    onClick={clearHistory}
-    className="min-h-[56px] min-w-[56px] px-4 py-3 rounded-3xl bg-rose-100 text-rose-700 hover:bg-rose-200 transition-colors font-semibold flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-300"
-    aria-label={t('history')}
+    onClick={() => setShowClearModal(true)}
+    className="min-h-[56px] min-w-[56px] px-4 py-3 rounded-3xl bg-rose-100 text-rose-700 hover:bg-rose-200 transition-colors font-semibold flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-300 touch-manipulation"
+    aria-label={t('clearHistory')}
    >
-    <TrashIcon className="w-4 h-4" />
+    <TrashIcon className="w-5 h-5" />
    </button>
   )}
  </div>
@@ -304,6 +304,18 @@ function History() {
   </div>
  )}
  </main>
+ <KidsModal
+  isOpen={showClearModal}
+  onClose={() => setShowClearModal(false)}
+  emoji="🗑️"
+  title={t('history')}
+  primaryLabel={t('confirmAction')}
+  onPrimary={clearHistory}
+  secondaryLabel={t('back')}
+  onSecondary={() => setShowClearModal(false)}
+ >
+  {t('historyClearConfirm')}
+ </KidsModal>
  </motion.div>
  </PlatformShell>
  );
