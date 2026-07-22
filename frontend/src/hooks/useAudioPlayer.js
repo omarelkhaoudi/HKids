@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { i18nT } from '../utils/i18n';
 import { voicesAPI } from '../api/voices';
 import { getFileUrl } from '../utils/fileUrl';
 import { storage } from '../utils/storage';
@@ -80,7 +81,7 @@ export function useAudioPlayer() {
     audio.onwaiting = () => patchState({ loading: true });
     audio.oncanplay = () => patchState({ loading: false });
     audio.onerror = () => {
-      patchState({ playing: false, loading: false, error: "Impossible de lire l'audio" });
+      patchState({ playing: false, loading: false, error: i18nT('audioPlayerErrorPlay') });
     };
     audio.onended = () => {
       recordListening(true);
@@ -150,7 +151,7 @@ export function useAudioPlayer() {
   const play = async (book = activeBookRef.current, options = {}) => {
     const requestId = ++playRequestRef.current;
     if (!book) {
-      patchState({ error: 'Audio indisponible' });
+      patchState({ error: i18nT('audioPlayerErrorUnavailable') });
       return false;
     }
 
@@ -158,7 +159,7 @@ export function useAudioPlayer() {
     if (requestId !== playRequestRef.current) return false;
 
     if (!resolvedAudioUrl) {
-      patchState({ error: 'Audio indisponible' });
+      patchState({ error: i18nT('audioPlayerErrorUnavailable') });
       return false;
     }
 
@@ -189,7 +190,7 @@ export function useAudioPlayer() {
       patchState({
         playing: false,
         loading: false,
-        error: error?.response ? "Impossible de charger l'audio" : "Le navigateur a bloque la lecture audio"
+        error: error?.response ? i18nT('audioPlayerErrorLoad') : i18nT('audioPlayerErrorBlocked')
       });
       return false;
     }

@@ -311,7 +311,7 @@ function KidsStoryStudio() {
         language: storyLanguageToSpeechCode(selectedStory.language),
       });
     } catch (err) {
-      setError(err.message || 'Lecture audio indisponible.');
+      setError(err.message || t('storyStudioAudioUnavailable'));
     } finally {
       setSpeaking(false);
     }

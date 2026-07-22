@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useLanguage } from '../context/LanguageContext';
 import { XIcon } from './Icons';
 
 function ReadingAidPanel({
@@ -12,33 +13,42 @@ function ReadingAidPanel({
   onVoiceProfileChange = () => {},
   availableVoices = [],
 }) {
+  const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState('voice');
 
-  const fontOptions = [
-    { name: 'Par défaut', value: 'system', class: 'font-sans' },
+  const fontOptions = useMemo(() => [
+    { name: t('readingAidFontDefault'), value: 'system', class: 'font-sans' },
     { name: 'Arial', value: 'arial', class: 'font-sans' },
     { name: 'Times New Roman', value: 'times', class: 'font-serif' },
     { name: 'Comic Sans MS', value: 'comic', class: 'font-sans' },
     { name: 'Open Dyslexic', value: 'dyslexic', class: 'font-sans' }
-  ];
+  ], [t]);
 
-  const fontSizeOptions = [
-    { label: 'Très petit', value: 12 },
-    { label: 'Petit', value: 14 },
-    { label: 'Normal', value: 16 },
-    { label: 'Grand', value: 20 },
-    { label: 'Très grand', value: 24 },
-    { label: 'Énorme', value: 32 }
-  ];
+  const fontSizeOptions = useMemo(() => [
+    { label: t('readingAidSizeTiny'), value: 12 },
+    { label: t('readingAidSizeSmall'), value: 14 },
+    { label: t('readingAidSizeNormal'), value: 16 },
+    { label: t('readingAidSizeLarge'), value: 20 },
+    { label: t('readingAidSizeXLarge'), value: 24 },
+    { label: t('readingAidSizeHuge'), value: 32 }
+  ], [t]);
 
-  const colorOptions = [
-    { name: 'Noir sur blanc', bg: '#FFFFFF', text: '#000000' },
-    { name: 'Blanc sur noir', bg: '#000000', text: '#FFFFFF' },
-    { name: 'Beige sur marron', bg: '#8B4513', text: '#F5DEB3' },
-    { name: 'Jaune sur bleu', bg: '#0000FF', text: '#FFFF00' },
-    { name: 'Vert sur noir', bg: '#000000', text: '#00FF00' },
-    { name: 'Rose sur blanc', bg: '#FFFFFF', text: '#FF69B4' }
-  ];
+  const colorOptions = useMemo(() => [
+    { name: t('readingAidColorBlackWhite'), bg: '#FFFFFF', text: '#000000' },
+    { name: t('readingAidColorWhiteBlack'), bg: '#000000', text: '#FFFFFF' },
+    { name: t('readingAidColorBeigeBrown'), bg: '#8B4513', text: '#F5DEB3' },
+    { name: t('readingAidColorYellowBlue'), bg: '#0000FF', text: '#FFFF00' },
+    { name: t('readingAidColorGreenBlack'), bg: '#000000', text: '#00FF00' },
+    { name: t('readingAidColorPinkWhite'), bg: '#FFFFFF', text: '#FF69B4' }
+  ], [t]);
+
+  const tabs = useMemo(() => [
+    { id: 'voice', label: t('readingAidTabVoice'), icon: 'AI' },
+    { id: 'font', label: t('readingAidTabFont'), icon: '🔤' },
+    { id: 'size', label: t('readingAidTabSize'), icon: '📏' },
+    { id: 'color', label: t('readingAidTabColor'), icon: '🎨' },
+    { id: 'other', label: t('readingAidTabOther'), icon: '⚙️' }
+  ], [t]);
 
   if (!isOpen) return null;
 
@@ -50,6 +60,7 @@ function ReadingAidPanel({
         exit={{ opacity: 0 }}
         className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
         onClick={onClose}
+        role="presentation"
       >
         <motion.div
           initial={{ scale: 0.9, y: 20 }}
@@ -57,29 +68,29 @@ function ReadingAidPanel({
           exit={{ scale: 0.9, y: 20 }}
           onClick={(e) => e.stopPropagation()}
           className="bg-white rounded-3xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="reading-aid-title"
         >
-          {/* Header */}
           <div className="bg-gradient-to-r from-primary-500 via-secondary-500 to-accent-500 text-white p-6 flex justify-between items-center">
-            <h2 className="text-2xl font-bold">Aide à la lecture</h2>
+            <h2 id="reading-aid-title" className="text-2xl font-bold">{t('readingAidTitle')}</h2>
             <button
+              type="button"
               onClick={onClose}
               className="p-2 hover:bg-white/20 rounded-full transition-colors"
+              aria-label={t('readingAidClose')}
             >
               <XIcon className="w-6 h-6" />
             </button>
           </div>
 
-          {/* Tabs */}
-          <div className="flex border-b border-surface-200">
-            {[
-              { id: 'voice', label: 'Voix', icon: 'AI' },
-              { id: 'font', label: 'Police', icon: '🔤' },
-              { id: 'size', label: 'Taille', icon: '📏' },
-              { id: 'color', label: 'Couleurs', icon: '🎨' },
-              { id: 'other', label: 'Autres', icon: '⚙️' }
-            ].map((tab) => (
+          <div className="flex border-b border-surface-200" role="tablist">
+            {tabs.map((tab) => (
               <button
                 key={tab.id}
+                type="button"
+                role="tab"
+                aria-selected={activeTab === tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={`flex-1 px-4 py-3 font-semibold transition-colors ${
                   activeTab === tab.id
@@ -87,23 +98,21 @@ function ReadingAidPanel({
                     : 'text-surface-600 hover:text-surface-900 hover:bg-surface-50'
                 }`}
               >
-                <span className="text-xl mr-2">{tab.icon}</span>
+                <span className="text-xl mr-2" aria-hidden="true">{tab.icon}</span>
                 {tab.label}
               </button>
             ))}
           </div>
 
-          {/* Content */}
           <div className="flex-1 overflow-y-auto p-6">
-            {/* Voice Tab */}
             {activeTab === 'voice' && (
               <div className="space-y-5">
                 <div>
                   <h3 className="text-lg font-bold text-surface-900 mb-2">
-                    Choisir qui raconte l'histoire
+                    {t('readingAidVoiceTitle')}
                   </h3>
                   <p className="mb-4 text-sm text-surface-600">
-                    Appuyez sur une voix pour entendre un apercu immediat, puis lancez Ecouter pour lire la page avec ce narrateur.
+                    {t('readingAidVoiceDesc')}
                   </p>
                 </div>
 
@@ -128,12 +137,12 @@ function ReadingAidPanel({
                             {profile.label}
                             {selectedVoiceProfile === profile.id && (
                               <span className="rounded-full bg-secondary-500 px-2 py-0.5 text-xs font-bold text-white">
-                                Actif
+                                {t('readingAidVoiceActive')}
                               </span>
                             )}
                           </span>
                           <span className="mt-1 block text-sm text-surface-600">{profile.description}</span>
-                          <span className="mt-2 block text-xs font-semibold text-foreground-secondary-600">Cliquer pour ecouter</span>
+                          <span className="mt-2 block text-xs font-semibold text-foreground-secondary-600">{t('readingAidVoiceClickPreview')}</span>
                         </span>
                       </div>
                     </button>
@@ -142,22 +151,22 @@ function ReadingAidPanel({
 
                 <p className="text-xs text-surface-500">
                   {availableVoices.length > 0
-                    ? `${availableVoices.length} voix disponibles sur cet appareil.`
-                    : "Les voix disponibles dependent du navigateur et de l'appareil."}
+                    ? t('readingAidVoiceCount', { count: availableVoices.length })
+                    : t('readingAidVoiceDeviceFallback')}
                 </p>
               </div>
             )}
 
-            {/* Font Tab */}
             {activeTab === 'font' && (
               <div className="space-y-4">
                 <h3 className="text-lg font-bold text-surface-900 mb-4">
-                  Choisissez une police
+                  {t('readingAidFontTitle')}
                 </h3>
                 <div className="grid grid-cols-1 gap-3">
                   {fontOptions.map((font) => (
                     <button
                       key={font.value}
+                      type="button"
                       onClick={() => onSettingsChange({ ...settings, font: font.value })}
                       className={`p-4 rounded-3xl border-2 transition-all text-left ${
                         settings.font === font.value
@@ -174,7 +183,7 @@ function ReadingAidPanel({
                           {font.name}
                         </span>
                         {settings.font === font.value && (
-                          <span className="text-foreground-600 text-xl">✓</span>
+                          <span className="text-foreground-600 text-xl" aria-hidden="true">✓</span>
                         )}
                       </div>
                       <p className={`text-sm mt-2 text-surface-600 ${font.class}`} style={{
@@ -182,7 +191,7 @@ function ReadingAidPanel({
                                     font.value === 'times' ? 'Times New Roman, serif' :
                                     font.value === 'comic' ? 'Comic Sans MS, cursive' : 'Arial, sans-serif'
                       }}>
-                        Exemple de texte avec cette police
+                        {t('readingAidFontSample')}
                       </p>
                     </button>
                   ))}
@@ -190,16 +199,16 @@ function ReadingAidPanel({
               </div>
             )}
 
-            {/* Size Tab */}
             {activeTab === 'size' && (
               <div className="space-y-4">
                 <h3 className="text-lg font-bold text-surface-900 mb-4">
-                  Taille du texte
+                  {t('readingAidSizeTitle')}
                 </h3>
                 <div className="space-y-3">
                   {fontSizeOptions.map((option) => (
                     <button
                       key={option.value}
+                      type="button"
                       onClick={() => onSettingsChange({ ...settings, fontSize: option.value })}
                       className={`w-full p-4 rounded-3xl border-2 transition-all text-left ${
                         settings.fontSize === option.value
@@ -212,11 +221,12 @@ function ReadingAidPanel({
                         <span
                           className="text-surface-900"
                           style={{ fontSize: `${option.value}px` }}
+                          aria-hidden="true"
                         >
                           Aa
                         </span>
                         {settings.fontSize === option.value && (
-                          <span className="text-foreground-600 text-xl">✓</span>
+                          <span className="text-foreground-600 text-xl" aria-hidden="true">✓</span>
                         )}
                       </div>
                     </button>
@@ -225,16 +235,16 @@ function ReadingAidPanel({
               </div>
             )}
 
-            {/* Color Tab */}
             {activeTab === 'color' && (
               <div className="space-y-4">
                 <h3 className="text-lg font-bold text-surface-900 mb-4">
-                  Couleurs d'affichage
+                  {t('readingAidColorTitle')}
                 </h3>
                 <div className="grid grid-cols-2 gap-3">
                   {colorOptions.map((color) => (
                     <button
                       key={color.name}
+                      type="button"
                       onClick={() => onSettingsChange({
                         ...settings,
                         backgroundColor: color.bg,
@@ -253,7 +263,7 @@ function ReadingAidPanel({
                       <div className="flex items-center justify-between">
                         <span className="font-semibold">{color.name}</span>
                         {settings.backgroundColor === color.bg && (
-                          <span className="text-xl">✓</span>
+                          <span className="text-xl" aria-hidden="true">✓</span>
                         )}
                       </div>
                     </button>
@@ -262,19 +272,18 @@ function ReadingAidPanel({
               </div>
             )}
 
-            {/* Other Tab */}
             {activeTab === 'other' && (
               <div className="space-y-6">
                 <div>
                   <h3 className="text-lg font-bold text-surface-900 mb-4">
-                    Options supplémentaires
+                    {t('readingAidOtherTitle')}
                   </h3>
                   <div className="space-y-4">
                     <label className="flex items-center justify-between p-4 rounded-3xl border-2 border-surface-200 hover:border-primary-200 transition-colors cursor-pointer">
                       <div>
-                        <span className="font-semibold block">Syllabisation</span>
+                        <span className="font-semibold block">{t('readingAidSyllabification')}</span>
                         <span className="text-sm text-surface-600">
-                          Afficher les mots en syllabes
+                          {t('readingAidSyllabificationDesc')}
                         </span>
                       </div>
                       <input
@@ -290,9 +299,9 @@ function ReadingAidPanel({
 
                     <label className="flex items-center justify-between p-4 rounded-3xl border-2 border-surface-200 hover:border-primary-200 transition-colors cursor-pointer">
                       <div>
-                        <span className="font-semibold block">Espacement des lignes</span>
+                        <span className="font-semibold block">{t('readingAidLineSpacing')}</span>
                         <span className="text-sm text-surface-600">
-                          Augmenter l'espace entre les lignes
+                          {t('readingAidLineSpacingDesc')}
                         </span>
                       </div>
                       <input
@@ -308,9 +317,9 @@ function ReadingAidPanel({
 
                     <label className="flex items-center justify-between p-4 rounded-3xl border-2 border-surface-200 hover:border-primary-200 transition-colors cursor-pointer">
                       <div>
-                        <span className="font-semibold block">Surbrillance du mot</span>
+                        <span className="font-semibold block">{t('readingAidWordHighlight')}</span>
                         <span className="text-sm text-surface-600">
-                          Mettre en évidence le mot lu
+                          {t('readingAidWordHighlightDesc')}
                         </span>
                       </div>
                       <input
@@ -328,6 +337,7 @@ function ReadingAidPanel({
 
                 <div className="pt-4 border-t border-surface-200">
                   <button
+                    type="button"
                     onClick={() => {
                       onSettingsChange({
                         font: 'system',
@@ -341,7 +351,7 @@ function ReadingAidPanel({
                     }}
                     className="w-full px-6 py-3 bg-surface-100 hover:bg-surface-200 rounded-3xl font-semibold text-surface-700 transition-colors"
                   >
-                    Réinitialiser les paramètres
+                    {t('readingAidReset')}
                   </button>
                 </div>
               </div>
@@ -354,4 +364,3 @@ function ReadingAidPanel({
 }
 
 export default ReadingAidPanel;
-

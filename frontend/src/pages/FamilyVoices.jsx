@@ -227,7 +227,7 @@ function FamilyVoices() {
 } catch (error) {
  clearInterval(progressInterval);
  console.error('Error saving voice profile:', error);
- showToast(error.response?.data?.error || 'Impossible de sauvegarder la voix', 'error');
+ showToast(error.response?.data?.error || t('parentVoiceSaveError'), 'error');
  setWizardStep(2); // Go back to record
 } finally {
  setSavingProfile(false);
@@ -258,18 +258,18 @@ function FamilyVoices() {
 };
 
  const revokeConsent = async (profile) => {
- if (!window.confirm(`Révoquer le consentement et supprimer les données vocales de ${profile.name} ?`)) return;
+ if (!window.confirm(t('parentVoiceRevokeConfirm', { name: profile.name }))) return;
  try {
  const response = await voicesAPI.revokeConsent(profile.id);
  showToast(
  response.data?.status === 'provider_deletion_pending'
- ? 'Consentement révoqué. La suppression ElevenLabs doit être réessayée.'
- : 'Consentement révoqué et données vocales supprimées',
+ ? t('parentVoiceRevokePending')
+ : t('parentVoiceRevokeSuccess'),
  response.data?.status === 'provider_deletion_pending' ? 'warning' : 'info'
  );
  loadData();
  } catch (error) {
- showToast(error.response?.data?.error || 'Impossible de révoquer le consentement', 'error');
+ showToast(error.response?.data?.error || t('parentVoiceRevokeError'), 'error');
  }
 };
 
@@ -402,22 +402,22 @@ function FamilyVoices() {
  <div className="bg-secondary-50 rounded-2xl p-5 border border-secondary-100 flex gap-4">
  <div className="bg-secondary-500 text-white p-3 rounded-full h-fit"><ShieldIcon className="w-6 h-6"/></div>
  <div>
- <h3 className="font-bold text-secondary-900">Stockage Sécurisé</h3>
- <p className="text-sm text-secondary-700 mt-1">Vos données vocales sont protégées par authentification et traitées par ElevenLabs avec votre consentement.</p>
+ <h3 className="font-bold text-secondary-900">{t('parentVoiceSafetyStorageTitle')}</h3>
+ <p className="text-sm text-secondary-700 mt-1">{t('parentVoiceSafetyStorageDesc')}</p>
  </div>
  </div>
  <div className="bg-primary-50 rounded-2xl p-5 border border-primary-100 flex gap-4">
  <div className="bg-primary-500 text-white p-3 rounded-full h-fit"><CheckIcon className="w-6 h-6"/></div>
  <div>
- <h3 className="font-bold text-primary-900">Consentement Requis</h3>
- <p className="text-sm text-primary-700 mt-1">Une voix ne peut être clonée qu'avec l'accord explicite du parent.</p>
+ <h3 className="font-bold text-primary-900">{t('parentVoiceSafetyConsentTitle')}</h3>
+ <p className="text-sm text-primary-700 mt-1">{t('parentVoiceSafetyConsentDesc')}</p>
  </div>
  </div>
  <div className="bg-rose-50 rounded-2xl p-5 border border-rose-100 flex gap-4">
  <div className="bg-rose-500 text-white p-3 rounded-full h-fit"><TrashIcon className="w-6 h-6"/></div>
  <div>
- <h3 className="font-bold text-rose-900">Contrôle Total</h3>
- <p className="text-sm text-rose-700 mt-1">Supprimez définitivement vos empreintes vocales à tout moment.</p>
+ <h3 className="font-bold text-rose-900">{t('parentVoiceSafetyControlTitle')}</h3>
+ <p className="text-sm text-rose-700 mt-1">{t('parentVoiceSafetyControlDesc')}</p>
  </div>
  </div>
  </section>
@@ -469,23 +469,23 @@ function FamilyVoices() {
  <Badge variant="soft" className="bg-surface-secondary text-foreground-secondary font-bold uppercase tracking-wider text-xs">{profile.language}</Badge>
  <Badge variant="soft" className="bg-primary-50 text-foreground-secondary font-bold text-xs">{statusLabel(profile.status, t)}</Badge>
  <Badge variant="soft" className={`${qualityTone(profile.quality_status)} font-bold text-xs`}>
- Qualité {profile.quality_score || '85'}%
+ {t('parentVoiceQualityLabel', { score: profile.quality_score || '85' })}
  </Badge>
 {!profile.consent_given && (
-<Badge variant="soft" className="bg-rose-50 text-rose-700 font-bold text-xs">Consentement révoqué</Badge>
+<Badge variant="soft" className="bg-rose-50 text-rose-700 font-bold text-xs">{t('parentVoiceConsentRevokedBadge')}</Badge>
 )}
  </div>
 
  <div className="grid grid-cols-2 gap-2 mt-auto">
  <Button variant="outline" onClick={() => playPreview(profile)} disabled={!profile.has_preview} className="rounded-full font-bold text-sm bg-surface-secondary border-border">
- <PlayIcon className="w-4 h-4 mr-1"/> Aperçu
+ <PlayIcon className="w-4 h-4 mr-1"/> {t('parentVoicePreview')}
  </Button>
  <div className="flex gap-2">
  <Button variant="outline" onClick={() => editProfile(profile)} className="rounded-full w-full px-0 font-bold text-sm bg-surface-secondary border-border text-foreground-secondary hover:bg-surface-secondary">
  <EditIcon className="w-4 h-4" />
  </Button>
 {(profile.consent_given || profile.status === 'provider_deletion_pending') && (
-<Button variant="outline" title={profile.consent_given ? 'Révoquer le consentement' : 'Réessayer la suppression ElevenLabs'} onClick={() => revokeConsent(profile)} className="rounded-full w-full px-0 font-bold text-sm bg-accent-50 border-accent-100 text-accent-700 hover:bg-accent-100">
+<Button variant="outline" title={profile.consent_given ? t('parentVoiceRevokeConsent') : t('parentVoiceRetryDeletion')} onClick={() => revokeConsent(profile)} className="rounded-full w-full px-0 font-bold text-sm bg-accent-50 border-accent-100 text-accent-700 hover:bg-accent-100">
 <ShieldIcon className="w-4 h-4" />
 </Button>
 )}

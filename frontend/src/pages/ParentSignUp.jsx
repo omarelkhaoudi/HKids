@@ -2,11 +2,11 @@ import {useState, useEffect} from 'react';
 import {Link, useNavigate} from 'react-router-dom';
 import {motion, AnimatePresence} from 'framer-motion';
 import {useAuth} from '../context/AuthContext';
+import {useLanguage} from '../context/LanguageContext';
 import {ChevronLeftIcon, LockIcon, UserIcon, AlertIcon, LoadingSpinnerIcon, CheckCircleIcon, StarIcon, EyeIcon, EyeOffIcon} from '../components/Icons';
 import {Logo} from '../components/Logo';
 
-// Helper for password strength
-const getPasswordStrength = (pass) => {
+const getPasswordStrength = (pass, t) => {
  if (!pass) return {score: 0, label: '', color: 'bg-surface-200'};
  let score = 0;
  if (pass.length > 5) score += 1;
@@ -14,10 +14,10 @@ const getPasswordStrength = (pass) => {
  if (/[A-Z]/.test(pass)) score += 1;
  if (/[0-9]/.test(pass)) score += 1;
  
- if (score <= 1) return {score, label: 'Faible', color: 'bg-red-400'};
- if (score === 2) return {score, label: 'Moyen', color: 'bg-accent-400'};
- if (score === 3) return {score, label: 'Bon', color: 'bg-primary-400'};
- return {score, label: 'Fort', color: 'bg-secondary-500'};
+ if (score <= 1) return {score, label: t('parentSignUpPasswordWeak'), color: 'bg-red-400'};
+ if (score === 2) return {score, label: t('parentSignUpPasswordMedium'), color: 'bg-accent-400'};
+ if (score === 3) return {score, label: t('parentSignUpPasswordGood'), color: 'bg-primary-400'};
+ return {score, label: t('parentSignUpPasswordStrong'), color: 'bg-secondary-500'};
 };
 
 export default function ParentSignUp() {
@@ -35,34 +35,35 @@ export default function ParentSignUp() {
 
  const {signup} = useAuth();
  const navigate = useNavigate();
+ const { t, isRtl } = useLanguage();
 
  useEffect(() => {
  setMounted(true);
 }, []);
 
- const strength = getPasswordStrength(password);
+ const strength = getPasswordStrength(password, t);
 
  const handleSubmit = async (event) => {
  event.preventDefault();
  setError('');
 
  if (username.trim().length < 3) {
- setError("Le nom d'utilisateur doit contenir au moins 3 caractères.");
+ setError(t('parentSignUpErrorUsernameMin'));
  return;
 }
 
  if (password.length < 6) {
- setError('Le mot de passe doit contenir au moins 6 caractères.');
+ setError(t('parentSignUpErrorPasswordMin'));
  return;
 }
 
  if (password !== confirmPassword) {
- setError('Les mots de passe ne correspondent pas.');
+ setError(t('parentSignUpErrorPasswordMismatch'));
  return;
 }
 
  if (!termsAccepted) {
- setError('Vous devez accepter les conditions d\'utilisation.');
+ setError(t('parentSignUpErrorTerms'));
  return;
 }
 
@@ -71,11 +72,10 @@ export default function ParentSignUp() {
  setLoading(false);
 
  if (!result.success) {
- setError(result.error ||"Création du compte impossible.");
+ setError(result.error || t('parentSignUpErrorDefault'));
  return;
 }
 
- // Success animation before navigation
  setSuccess(true);
  setTimeout(() => {
  navigate('/parent/login');
@@ -83,9 +83,8 @@ export default function ParentSignUp() {
 };
 
  return (
- <div className="min-h-screen bg-card flex flex-col lg:flex-row overflow-hidden font-sans">
+ <div className="min-h-screen bg-card flex flex-col lg:flex-row overflow-hidden font-sans" dir={isRtl ? 'rtl' : 'ltr'}>
  
- {/* Back Button */}
  <div className="absolute top-6 left-6 z-50">
  <Link to="/">
  <motion.button 
@@ -94,12 +93,11 @@ export default function ParentSignUp() {
  className="flex items-center gap-2 px-5 py-2.5 bg-card/80 backdrop-blur-md border border-border rounded-[1.5rem] shadow-sm text-foreground-secondary font-bold text-sm hover:text-foreground hover:shadow-md transition-all"
  >
  <ChevronLeftIcon className="w-4 h-4" />
- Retour
+ {t('parentSignUpBack')}
  </motion.button>
  </Link>
  </div>
 
- {/* LEFT PANEL: Visuals */}
  <div className="hidden lg:flex lg:w-1/2 relative bg-gradient-to-br from-secondary-50 via-secondary-100/40 to-primary-50 items-center justify-center p-12 overflow-hidden border-r border-secondary-100">
  <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
  <div className="absolute top-[10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-accent-300/20 blur-[100px]"></div>
@@ -136,13 +134,11 @@ export default function ParentSignUp() {
  transition={{duration: 0.8, delay: 0.2}}
  className="relative z-10 w-full max-w-lg flex flex-col items-center text-center"
  >
- {/* Glassmorphic Image Container */}
  <div className="relative w-full aspect-square mb-12">
  <div className="absolute inset-4 bg-card/40 backdrop-blur-3xl rounded-[3rem] border border-white shadow-[0_30px_60px_-15px_rgba(72,175,202,0.15)] overflow-hidden flex items-center justify-center p-6">
- {/* Using a different existing asset for signup to mix it up */}
  <img 
  src="/enfant 5 8ans.webp" 
- alt="Enfant heureux" 
+ alt={t('parentSignUpHeroAlt')} 
  className="w-full h-full object-contain filter drop-shadow-2xl"
  onError={(e) => {e.currentTarget.src = '/enfant3ans.webp'}}
  />
@@ -154,42 +150,39 @@ export default function ParentSignUp() {
  >
  <div className="w-10 h-10 rounded-full bg-accent-100 flex items-center justify-center text-xl">🎓</div>
  <div className="text-left">
- <div className="text-sm font-extrabold text-foreground">Éducatif</div>
- <div className="text-xs font-bold text-foreground-muted">100% Bienveillant</div>
+ <div className="text-sm font-extrabold text-foreground">{t('parentSignUpBadgeTitle')}</div>
+ <div className="text-xs font-bold text-foreground-muted">{t('parentSignUpBadgeDesc')}</div>
  </div>
  </motion.div>
  </div>
  </div>
 
- <h2 className="text-4xl lg:text-5xl font-extrabold text-foreground tracking-tight leading-[1.1] mb-4">
- Commencez<br/>l'aventure.
+ <h2 className="text-4xl lg:text-5xl font-extrabold text-foreground tracking-tight leading-[1.1] mb-4 whitespace-pre-line">
+ {t('parentSignUpHeroTitle')}
  </h2>
  <p className="text-lg text-foreground-secondary font-medium max-w-sm">
- Créez votre compte pour offrir des histoires magiques personnalisées.
+ {t('parentSignUpHeroDesc')}
  </p>
  </motion.div>
  </div>
 
- {/* RIGHT PANEL: Form */}
  <div className="w-full lg:w-1/2 flex items-center justify-center p-6 sm:p-12 lg:p-20 relative bg-card">
  
  <div className="w-full max-w-[420px] mx-auto">
- {/* Mobile Header */}
  <div className="lg:hidden flex flex-col items-center text-center mb-10 pt-16">
  <div className="w-16 h-16 rounded-3xl bg-secondary-50 flex items-center justify-center mb-6">
  <Logo size="small" showText={false} />
  </div>
- <h1 className="text-3xl font-extrabold text-foreground tracking-tight mb-2">Inscription</h1>
- <p className="text-foreground-secondary font-medium">Créez votre compte parent</p>
+ <h1 className="text-3xl font-extrabold text-foreground tracking-tight mb-2">{t('parentSignUpMobileTitle')}</h1>
+ <p className="text-foreground-secondary font-medium">{t('parentSignUpMobileSubtitle')}</p>
  </div>
 
- {/* Desktop Header */}
  <div className="hidden lg:block mb-8">
  <div className="w-14 h-14 rounded-[1.2rem] bg-gradient-to-br from-secondary-500 to-secondary-600 shadow-lg flex items-center justify-center mb-8">
  <Logo size="small" showText={false} className="text-white" />
  </div>
- <h1 className="text-3xl font-extrabold text-foreground tracking-tight mb-2">Créer un compte</h1>
- <p className="text-foreground-secondary font-medium">Rejoignez-nous en quelques clics.</p>
+ <h1 className="text-3xl font-extrabold text-foreground tracking-tight mb-2">{t('parentSignUpTitle')}</h1>
+ <p className="text-foreground-secondary font-medium">{t('parentSignUpSubtitle')}</p>
  </div>
 
  <AnimatePresence mode="wait">
@@ -208,8 +201,8 @@ export default function ParentSignUp() {
  >
  <CheckCircleIcon className="w-12 h-12" />
  </motion.div>
- <h3 className="text-2xl font-bold text-foreground mb-2">Compte créé !</h3>
- <p className="text-foreground-secondary">Préparation de votre espace magique...</p>
+ <h3 className="text-2xl font-bold text-foreground mb-2">{t('parentSignUpSuccessTitle')}</h3>
+ <p className="text-foreground-secondary">{t('parentSignUpSuccessDesc')}</p>
  </motion.div>
  ) : (
  <motion.div
@@ -218,7 +211,6 @@ export default function ParentSignUp() {
  animate={{opacity: 1, x: 0}}
  exit={{opacity: 0, x: -20}}
  >
- {/* Error Message */}
  <AnimatePresence>
  {error && (
  <motion.div
@@ -226,6 +218,7 @@ export default function ParentSignUp() {
  animate={{opacity: 1, y: 0, scale: 1}}
  exit={{opacity: 0, scale: 0.98}}
  className="mb-8 p-4 bg-red-50/80 backdrop-blur-sm border border-red-100 rounded-2xl flex items-start gap-3 shadow-sm"
+ role="alert"
  >
  <AlertIcon className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
  <p className="text-sm font-semibold text-red-700 leading-relaxed">{error}</p>
@@ -234,54 +227,56 @@ export default function ParentSignUp() {
  </AnimatePresence>
 
  <form onSubmit={handleSubmit} className="space-y-5">
- {/* Username Input */}
  <div className="space-y-1.5">
- <label className="block text-sm font-bold text-foreground-secondary ml-1">
- Nom d'utilisateur
+ <label className="block text-sm font-bold text-foreground-secondary ml-1" htmlFor="parent-signup-username">
+ {t('parentSignUpUsername')}
  </label>
  <div className="relative group">
  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-surface-400 group-focus-within:text-foreground-secondary-500 transition-colors">
  <UserIcon className="w-5 h-5" />
  </div>
  <input
+ id="parent-signup-username"
  type="text"
  value={username}
  onChange={(e) => setUsername(e.target.value)}
  className="w-full pl-12 pr-4 py-4 bg-surface-secondary border-2 border-border rounded-[1.5rem] focus:bg-card focus:border-secondary-500 focus:ring-4 focus:ring-secondary-500/10 transition-all font-medium text-foreground placeholder:text-surface-400 outline-none"
- placeholder="Ex: Sophie.M"
+ placeholder={t('parentSignUpUsernamePlaceholder')}
  required
  minLength={3}
+ autoComplete="username"
  />
  </div>
  </div>
 
- {/* Password Input */}
  <div className="space-y-1.5">
- <label className="block text-sm font-bold text-foreground-secondary ml-1">
- Mot de passe
+ <label className="block text-sm font-bold text-foreground-secondary ml-1" htmlFor="parent-signup-password">
+ {t('parentSignUpPassword')}
  </label>
  <div className="relative group">
  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-surface-400 group-focus-within:text-foreground-secondary-500 transition-colors">
  <LockIcon className="w-5 h-5" />
  </div>
  <input
+ id="parent-signup-password"
  type={showPassword ? 'text' : 'password'}
  value={password}
  onChange={(e) => setPassword(e.target.value)}
  className="w-full pl-12 pr-14 py-4 bg-surface-secondary border-2 border-border rounded-[1.5rem] focus:bg-card focus:border-secondary-500 focus:ring-4 focus:ring-secondary-500/10 transition-all font-medium text-foreground placeholder:text-surface-400 outline-none"
- placeholder="Créer un mot de passe (min. 6)"
+ placeholder={t('parentSignUpPasswordPlaceholder')}
  required
  minLength={6}
+ autoComplete="new-password"
  />
  <button
  type="button"
  onClick={() => setShowPassword(!showPassword)}
  className="absolute right-4 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center rounded-full hover:bg-surface-200 text-surface-400 hover:text-foreground-secondary transition-colors focus:outline-none"
+ aria-label={showPassword ? t('parentLoginHidePassword') : t('parentLoginShowPassword')}
  >
  {showPassword ? <EyeOffIcon className="w-5 h-5" /> : <EyeIcon className="w-5 h-5" />}
  </button>
  </div>
- {/* Password Strength Indicator */}
  {password.length > 0 && (
  <div className="px-2 pt-1 flex items-center gap-2">
  <div className="flex-1 flex gap-1 h-1.5 rounded-full overflow-hidden bg-surface-secondary">
@@ -293,22 +288,22 @@ export default function ParentSignUp() {
  ))}
  </div>
  <span className={`text-[10px] font-bold uppercase tracking-wider ${password.length >= 6 ? 'text-foreground-muted' : 'text-red-400'}`}>
- {password.length < 6 ? 'Trop court' : strength.label}
+ {password.length < 6 ? t('parentSignUpPasswordTooShort') : strength.label}
  </span>
  </div>
  )}
  </div>
 
- {/* Confirm Password Input */}
  <div className="space-y-1.5">
- <label className="block text-sm font-bold text-foreground-secondary ml-1">
- Confirmer le mot de passe
+ <label className="block text-sm font-bold text-foreground-secondary ml-1" htmlFor="parent-signup-confirm">
+ {t('parentSignUpConfirmPassword')}
  </label>
  <div className="relative group">
  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-surface-400 group-focus-within:text-foreground-secondary-500 transition-colors">
  <LockIcon className="w-5 h-5" />
  </div>
  <input
+ id="parent-signup-confirm"
  type={showConfirmPassword ? 'text' : 'password'}
  value={confirmPassword}
  onChange={(e) => setConfirmPassword(e.target.value)}
@@ -317,20 +312,21 @@ export default function ParentSignUp() {
  ? 'border-red-300 focus:border-red-500 focus:ring-red-500/10' 
  : 'border-border focus:border-secondary-500 focus:ring-secondary-500/10'
 }`}
- placeholder="Répétez le mot de passe"
+ placeholder={t('parentSignUpConfirmPlaceholder')}
  required
+ autoComplete="new-password"
  />
  <button
  type="button"
  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
  className="absolute right-4 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center rounded-full hover:bg-surface-200 text-surface-400 hover:text-foreground-secondary transition-colors focus:outline-none"
+ aria-label={showConfirmPassword ? t('parentLoginHidePassword') : t('parentLoginShowPassword')}
  >
  {showConfirmPassword ? <EyeOffIcon className="w-5 h-5" /> : <EyeIcon className="w-5 h-5" />}
  </button>
  </div>
  </div>
 
- {/* Terms Checkbox */}
  <div className="pt-2 pb-2">
  <label className="flex items-start gap-3 cursor-pointer group">
  <div className="relative w-6 h-6 shrink-0 mt-0.5 rounded-lg border-2 border-surface-300 group-hover:border-secondary-500 flex items-center justify-center transition-colors">
@@ -341,31 +337,31 @@ export default function ParentSignUp() {
  className="peer absolute opacity-0 w-full h-full cursor-pointer" 
  />
  <div className="w-full h-full bg-secondary-500 rounded-[6px] opacity-0 peer-checked:opacity-100 flex items-center justify-center transition-opacity">
- <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+ <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3} aria-hidden="true"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
  </div>
  </div>
  <span className="text-sm font-medium text-foreground-secondary leading-snug">
- J'accepte les <span className="text-foreground-secondary-600 hover:underline">conditions d'utilisation</span> et la <span className="text-foreground-secondary-600 hover:underline">politique de confidentialité</span> de HKids.
+ {t('parentSignUpTerms')}
  </span>
  </label>
  </div>
 
- {/* Submit Button */}
  <motion.button
  type="submit"
  disabled={loading || !termsAccepted}
  whileHover={{scale: (loading || !termsAccepted) ? 1 : 1.01}}
  whileTap={{scale: (loading || !termsAccepted) ? 1 : 0.99}}
  className="w-full mt-6 py-4 bg-secondary-500 hover:bg-secondary-600 text-white rounded-[1.5rem] font-bold text-lg shadow-[0_8px_20px_-6px_rgba(72,175,202,0.4)] hover:shadow-[0_12px_25px_-6px_rgba(72,175,202,0.5)] transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-none flex items-center justify-center gap-2 group relative overflow-hidden"
+ aria-busy={loading}
  >
  {loading ? (
  <>
  <LoadingSpinnerIcon className="w-6 h-6 animate-spin" />
- <span>Création...</span>
+ <span>{t('parentSignUpLoading')}</span>
  </>
  ) : (
  <>
- <span className="relative z-10">Créer mon compte</span>
+ <span className="relative z-10">{t('parentSignUpSubmit')}</span>
  {termsAccepted && (
  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite] pointer-events-none" />
  )}
@@ -374,12 +370,11 @@ export default function ParentSignUp() {
  </motion.button>
  </form>
 
- {/* Login link */}
  <div className="mt-8 text-center">
  <p className="text-foreground-secondary font-medium">
- Vous avez déjà un compte ?{' '}
+ {t('parentSignUpHasAccount')}{' '}
  <Link to="/parent/login" className="text-foreground-secondary-600 font-bold hover:text-foreground-secondary-700 hover:underline inline-flex items-center gap-1 transition-colors">
- Se connecter <ChevronLeftIcon className="w-3 h-3 rotate-180" />
+ {t('parentSignUpLogin')} <ChevronLeftIcon className="w-3 h-3 rotate-180" />
  </Link>
  </p>
  </div>

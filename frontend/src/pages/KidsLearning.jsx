@@ -162,7 +162,7 @@ function KidsLearning() {
   const submit = async () => {
     if (!selectedContent) return;
     if (user?.role !== 'kid' && !selectedKidProfileId) {
-      showToast('Choisis un profil enfant pour enregistrer le score', 'info');
+      showToast(t('kidsLearningSelectProfile'), 'info');
       return;
     }
 
@@ -181,7 +181,7 @@ function KidsLearning() {
       const response = await learningAPI.submitAttempt(selectedContent.id, payload);
       setResult(response.data);
       if (response.data?.attempt?.success) {
-        showToast('Bravo !', 'success');
+        showToast(t('kidsLearningBravo'), 'success');
       }
       loadLearning();
     } catch (error) {
@@ -466,7 +466,7 @@ function KidsLearning() {
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         className="h-16 min-h-touch-kids w-full rounded-24 bg-surface-secondary/80 border border-border pl-14 pr-space-16 text-body-lg outline-none transition focus:border-success-400 focus:bg-card focus:ring-4 focus:ring-success-500/10 placeholder:text-foreground-muted"
-                        placeholder="Chercher une activité..."
+                        placeholder={t('kidsLearningSearchPlaceholder')}
                       />
                     </label>
                     <div className="flex gap-space-8 overflow-x-auto pb-space-8 custom-scrollbar items-center px-space-8">
