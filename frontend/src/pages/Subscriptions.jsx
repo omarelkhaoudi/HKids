@@ -12,7 +12,8 @@ import {
 } from '../components/Icons';
 import {Button, Card, Badge, Skeleton} from '../components/ui';
 import { MagicalBackground } from '../components/layout/PlatformShell';
-import { BRAND_HERO_GRADIENT, BRAND_SEMANTIC } from '../constants/brandTheme';
+import { ParentPageShell } from '../components/parent/ParentPageShell';
+import { BRAND_SEMANTIC } from '../constants/brandTheme';
 import { useConfirmDialog } from '../hooks/useConfirmDialog';
 import { getLocaleFromLanguage } from '../utils/translations';
 
@@ -126,7 +127,7 @@ function Subscriptions() {
  const [subscribingPlan, setSubscribingPlan] = useState('');
  const [startingTrial, setStartingTrial] = useState(false);
  const {user, logout} = useAuth();
- const {t, language} = useLanguage();
+ const {t, language, isRtl} = useLanguage();
  const locale = getLocaleFromLanguage(language);
  const {showToast} = useToast();
  const { requestConfirm, confirmDialog } = useConfirmDialog();
@@ -134,6 +135,7 @@ function Subscriptions() {
  const [searchParams, setSearchParams] = useSearchParams();
  const isAuthenticated = Boolean(user || localStorage.getItem('token'));
  const isKidAccount = user?.role === 'kid';
+ const isParentSurface = isAuthenticated && (user?.role === 'parent' || user?.role === 'admin');
  
  const subscriptionEndsAt = currentSubscription?.current_period_end ? new Date(currentSubscription.current_period_end) : null;
  const hasUsableSubscription = Boolean(
@@ -441,11 +443,12 @@ function Subscriptions() {
 }
 
  // DEFAULT PLANS VIEW
- return (
- <div className="min-h-screen bg-background text-foreground overflow-x-hidden font-sans pb-24">
- <MagicalBackground preset="platform" />
+ const plansBody = (
+ <>
+ {!isParentSurface && <MagicalBackground preset="platform" />}
  
  {/* HEADER */}
+ {!isParentSurface && (
  <header className="sticky top-0 z-40 bg-card/80 backdrop-blur-xl border-b border-border shadow-sm">
  <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
  <Link to={isAuthenticated ?"/parent" :"/"} className="flex items-center gap-2 group">
@@ -461,9 +464,16 @@ function Subscriptions() {
  </div>
  </div>
  </header>
+ )}
 
  <main id="main-content" className="relative">
- {/* HERO SECTION */}
+ {isParentSurface ? (
+ <header className="parent-welcome-block text-center sm:text-start">
+ <p className="parent-welcome-kicker">{t('parentNavSubscription')}</p>
+ <h1 className="parent-welcome-title">{t('subscriptionsHeroTitle')}</h1>
+ <p className="parent-welcome-copy mx-auto sm:mx-0">{t('subscriptionsHeroBody')}</p>
+ </header>
+ ) : (
  <section className="pt-16 pb-12 px-4 text-center max-w-4xl mx-auto">
  <motion.div initial={{opacity: 0, y: 20}} animate={{opacity: 1, y: 0}}>
  <Badge variant="soft" className="bg-primary-100 text-foreground-700 font-bold uppercase tracking-widest mb-6">{t('subscriptionsHeroBadge')}</Badge>
@@ -475,6 +485,7 @@ function Subscriptions() {
  </p>
  </motion.div>
  </section>
+ )}
 
  {!isKidAccount && !hasUsableSubscription && isAuthenticated && (
  <section className="max-w-3xl mx-auto px-4 mb-12">
@@ -781,6 +792,24 @@ function Subscriptions() {
  </AnimatePresence>
 
  {confirmDialog}
+ </>
+ );
+
+ if (isParentSurface) {
+ return (
+ <ParentPageShell
+ isRtl={isRtl}
+ userName={user?.username || 'Parent'}
+ onLogout={() => { logout(); navigate('/parent/login'); }}
+ >
+ {plansBody}
+ </ParentPageShell>
+ );
+ }
+
+ return (
+ <div className="min-h-screen bg-background text-foreground overflow-x-hidden font-sans pb-24">
+ {plansBody}
  </div>
  );
 }

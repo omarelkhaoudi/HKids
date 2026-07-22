@@ -1,5 +1,5 @@
 import {useEffect, useMemo, useRef, useState} from 'react';
-import {Link, useNavigate} from 'react-router-dom';
+import {useNavigate} from 'react-router-dom';
 import {motion, AnimatePresence} from 'framer-motion';
 import {voicesAPI} from '../api/voices';
 import {useAuth} from '../context/AuthContext';
@@ -8,14 +8,13 @@ import {useToast} from '../components/ToastProvider';
 import {useOfflineContent} from '../hooks/useOfflineContent';
 import {getDownloads, getOfflineBlobUrl, offlineContentIds, saveVoiceMessageOffline} from '../services/offline/offlineContentService';
 import {
- AudioIcon, CheckIcon, ChevronLeftIcon, DownloadIcon, EditIcon, 
+ AudioIcon, CheckIcon, DownloadIcon, EditIcon, 
  MicrophoneIcon, PlusIcon, TrashIcon, XIcon, ShieldIcon, SparklesIcon,
  PlayIcon, PauseIcon, StarIcon, SettingsIcon
 } from '../components/Icons';
-import {Logo} from '../components/Logo';
 import {Button, Card, Badge, Avatar, ProgressBar, Skeleton} from '../components/ui';
-import { MagicalBackground } from '../components/layout/PlatformShell';
-import { BRAND_HERO_GRADIENT, BRAND_SEMANTIC } from '../constants/brandTheme';
+import { ParentPageShell } from '../components/parent/ParentPageShell';
+import { BRAND_SEMANTIC } from '../constants/brandTheme';
 import { useConfirmDialog } from '../hooks/useConfirmDialog';
 
 // Original empty forms
@@ -126,7 +125,7 @@ function blobToFile(blob, filename) {
 }
 
 function FamilyVoices() {
- const {user} = useAuth();
+ const {user, logout} = useAuth();
  const navigate = useNavigate();
  const {showToast} = useToast();
  const { t, isRtl } = useLanguage();
@@ -379,43 +378,28 @@ function FamilyVoices() {
 
  if (loading && profiles.length === 0) {
  return (
- <div className="min-h-screen bg-background flex items-center justify-center" dir={isRtl ? 'rtl' : 'ltr'}>
- <div className="flex flex-col items-center">
- <motion.div animate={{rotate: 360}} transition={{duration: 2, repeat: Infinity, ease: 'linear'}}>
- <SparklesIcon className="w-12 h-12 text-foreground-500" />
- </motion.div>
+ <ParentPageShell isRtl={isRtl} userName={user?.username || 'Parent'} onLogout={() => { logout(); navigate('/parent/login'); }}>
+ <div className="flex flex-col items-center py-space-32" aria-busy="true">
+ <Skeleton className="h-12 w-12 rounded-full" />
  <p className="mt-4 font-bold text-foreground-secondary">{t('parentVoiceLoading')}</p>
  </div>
- </div>
+ </ParentPageShell>
  );
 }
 
  return (
- <div className="min-h-screen bg-background text-foreground overflow-x-hidden font-sans" dir={isRtl ? 'rtl' : 'ltr'}>
- <MagicalBackground preset="platform" />
- 
- {/* HEADER */}
- <header className="sticky top-0 z-40 bg-card/80 backdrop-blur-xl border-b border-border shadow-sm px-4 py-4 flex items-center justify-between">
- <div className="flex items-center gap-4">
- <Link to="/parent" className="p-2 rounded-full hover:bg-surface-secondary transition-colors">
- <ChevronLeftIcon className="h-6 w-6 text-foreground-secondary" />
- </Link>
- <Link to="/parent" className="shrink-0 hidden md:block">
- <Logo size="default" showText={true} />
- </Link>
- <div className="h-6 w-px bg-surface-300 hidden md:block"></div>
- <h1 className="text-xl md:text-2xl font-black bg-clip-text text-transparent bg-gradient-to-r from-primary-600 to-secondary-600 flex items-center gap-2">
- <MicrophoneIcon className="w-6 h-6 text-foreground-500" />
- {t('parentVoiceStudio')}
- </h1>
+ <ParentPageShell isRtl={isRtl} userName={user?.username || 'Parent'} onLogout={() => { logout(); navigate('/parent/login'); }}>
+ <header className="parent-welcome-block flex flex-col sm:flex-row sm:items-end sm:justify-between gap-space-16">
+ <div>
+ <p className="parent-welcome-kicker">{t('parentNavVoices')}</p>
+ <h1 className="parent-welcome-title">{t('parentVoiceStudio')}</h1>
  </div>
- <Button onClick={() => setWizardStep(1)} variant="primary" className="rounded-full shadow-lg hover:scale-105">
- <PlusIcon className="w-5 h-5 mr-1"/> {t('parentVoiceAdd')}
+ <Button onClick={() => setWizardStep(1)} variant="primary" className="rounded-full min-h-touch font-bold shrink-0">
+ <PlusIcon className="w-5 h-5 me-1" aria-hidden="true"/> {t('parentVoiceAdd')}
  </Button>
  </header>
 
- {/* DASHBOARD */}
- <main className="max-w-7xl mx-auto px-4 sm:px-8 py-8 space-y-12">
+ <main className="space-y-12">
  
  {/* SAFETY CARDS */}
  <section className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -838,7 +822,7 @@ function FamilyVoices() {
  </AnimatePresence>
 
  {confirmDialog}
- </div>
+ </ParentPageShell>
  );
 }
 

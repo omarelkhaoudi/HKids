@@ -1,7 +1,7 @@
 import {useState, useEffect, useRef} from 'react';
 import {useNavigate} from 'react-router-dom';
 import {motion, AnimatePresence} from 'framer-motion';
-import {Badge, Button, Input, Skeleton, Avatar} from '../components/ui';
+import {Badge, Button, Input, Skeleton} from '../components/ui';
 
 import {useAuth} from '../context/AuthContext';
 import {useLanguage} from '../context/LanguageContext';
@@ -10,24 +10,23 @@ import {useToast} from '../components/ToastProvider';
 import { useConfirmDialog } from '../hooks/useConfirmDialog';
 import {clearKidLocalPrivacyData} from '../services/privacy/privacyStorageService';
 import {useReducedMotion} from '../hooks/useReducedMotion';
-import {getMotionProps, kidsPageEnter} from '../constants/kidsMotion';
 import {CONTENT_LANGUAGES, CONTENT_THEMES, CONTENT_TYPE_OPTIONS, localizeContentOptions} from '../constants/contentOptions';
 import {buildKidPayload, createEmptyKidForm, kidToForm} from '../utils/kidProfiles';
 import {
- PlusIcon, XIcon, SettingsIcon, ClockIcon, SparklesIcon, CategoryIcon, StarIcon, BookIcon
+ PlusIcon, XIcon, ClockIcon, AudioIcon, BookIcon, SettingsIcon, ShieldIcon,
 } from '../components/Icons';
 import {KidAvatar} from '../components/parent/KidAvatar';
 import {KidProfileFormModal} from '../components/parent/KidProfileFormModal';
 import {SettingsCenterModal} from '../components/parent/SettingsCenterModal';
 import {ParentCategoryApprovals} from '../components/parent/ParentCategoryApprovals';
 import {ParentDashboardAnalytics} from '../components/parent/ParentDashboardAnalytics';
-import {ParentHubNav} from '../components/parent/ParentHubNav';
+import {ParentOverviewBoard} from '../components/parent/ParentOverviewBoard';
 import {ParentReadingGoalCard} from '../components/parent/ParentReadingGoalCard';
 import {ParentChildProfilePanel} from '../components/parent/ParentChildProfilePanel';
 import {ParentFamilySection} from '../components/parent/ParentFamilySection';
 import {ParentEmptyState} from '../components/parent/ParentEmptyState';
-import { PlatformShell } from '../components/layout/PlatformShell';
-import { BRAND_HERO_GRADIENT } from '../constants/brandTheme';
+import {ParentPageShell} from '../components/parent/ParentPageShell';
+import {ParentHero} from '../components/parent/ParentHero';
 import { collectFavoriteThemes, getThemeLabel, getTodayReadingSeconds } from '../utils/parentInsights';
 
 const bedtimeLanguages = CONTENT_LANGUAGES.map((language) => ({
@@ -285,7 +284,6 @@ function ParentDashboard() {
  const continueBook = progressItems.find((book) => (book.progress_percent || 0) > 0 && (book.progress_percent || 0) < 100) || progressItems[0] || null;
  const favoriteThemes = collectFavoriteThemes(dashboardData, 3);
  const topThemeLabel = favoriteThemes[0] ? getThemeLabel(favoriteThemes[0].id) : null;
- const summary = dashboardData?.summary || {};
  const selectedLanguagesCount = rulesForm.allowed_languages.length || bedtimeLanguages.length;
  const selectedThemesCount = rulesForm.allowed_themes.length || bedtimeThemes.length;
  const selectedContentTypesCount = rulesForm.allowed_content_types.length || contentTypeOptions.length;
@@ -294,122 +292,57 @@ function ParentDashboard() {
  ? t('parentHomeHeroReadToday', { name: selectedKid.name, minutes: todayReadMinutes })
  : t('parentHomeHeroNoReadToday', { name: selectedKid.name }))
  : t('parentHomeTagline');
+
+ const openAddKid = () => {
+ setEditingKid(null);
+ setKidForm(emptyKidForm);
+ setShowKidModal(true);
+ };
+
+ const shellProps = {
+ isRtl,
+ userName: user?.username || 'Parent',
+ onSettings: () => setShowSettingsModal(true),
+ onLogout: handleLogout,
+ subscriptionLabel: dashboardData?.subscription?.plan_name || null,
+ };
  
  if (loading) {
  return (
- <PlatformShell variant="platform" className="p-8 flex flex-col gap-6">
- <Skeleton className="h-48 w-full rounded-3xl" />
- <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
- <Skeleton className="h-32 w-full rounded-3xl" />
- <Skeleton className="h-32 w-full rounded-3xl" />
- <Skeleton className="h-32 w-full rounded-3xl" />
- <Skeleton className="h-32 w-full rounded-3xl" />
+ <ParentPageShell {...shellProps}>
+ <div className="flex flex-col gap-6" aria-busy="true" aria-label={t('parentProfilesLoading')}>
+ <Skeleton className="h-28 w-full max-w-xl rounded-3xl" />
+ <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+ <Skeleton className="h-28 w-full rounded-3xl" />
+ <Skeleton className="h-28 w-full rounded-3xl" />
+ <Skeleton className="h-28 w-full rounded-3xl" />
+ <Skeleton className="h-28 w-full rounded-3xl" />
  </div>
- </PlatformShell>
+ <Skeleton className="h-64 w-full rounded-3xl" />
+ </div>
+ </ParentPageShell>
  );
 }
 
  return (
- <PlatformShell variant="platform" isRtl={isRtl} className="pb-24 parent-home-shell">
- <motion.div {...getMotionProps(reducedMotion, kidsPageEnter)}>
- {/* Parent Home Hero */}
- <header className={`relative bg-gradient-to-br ${BRAND_HERO_GRADIENT} text-white pb-space-32 pt-space-24 px-space-24 md:px-space-32 overflow-hidden`}>
- <div className="absolute inset-0 parent-hero-glow pointer-events-none" aria-hidden="true" />
- 
- <div className="max-w-7xl mx-auto relative z-10 flex flex-col gap-space-24">
- <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-space-24">
- <div className="flex items-center gap-space-24">
- <Avatar src={null} fallback={user?.username?.[0] || 'P'} size="xl" className="border-4 border-white/25 shadow-floating" />
- <div>
- <p className="text-body-lg text-white/85 font-medium capitalize">{currentDate}</p>
- <h1 className="text-hero font-black tracking-tight mb-space-8">
- {t(greetingKey)}, {user?.username || 'Parent'} 👋
- </h1>
- <p className="text-body-lg text-white/90 font-semibold max-w-xl leading-relaxed">
- {heroSubtitle}
- </p>
- <p className="text-body text-white/80 font-medium mt-space-12 max-w-2xl">
- {t('parentInsightsSubtitle', { name: selectedKid?.name || t('parentChild') })}
- </p>
- <div className="flex flex-wrap items-center gap-3 mt-space-16">
- <Badge variant="glass" className="bg-card/20 text-white border-none font-bold">
- {t('parentKidsCount').replace('{count}', String(kids.length))}
- </Badge>
- {dashboardData?.subscription && (
- <Badge variant="glass" className="bg-secondary-500/80 text-white border-none font-bold">
- {dashboardData.subscription.plan_name}
- </Badge>
- )}
- {topThemeLabel ? (
- <Badge variant="glass" className="bg-card/15 text-white border-none font-bold">
- {topThemeLabel}
- </Badge>
- ) : null}
- </div>
- </div>
- </div>
- <div className="flex flex-col sm:flex-row gap-space-12 w-full lg:w-auto">
- <Button variant="glass" onClick={() => setShowSettingsModal(true)} className="bg-card/10 hover:bg-card/20 text-white font-bold border-none shrink-0 min-h-touch">
- <SettingsIcon className="w-5 h-5 me-2" /> {t('parentSettings')}
- </Button>
- <Button variant="glass" onClick={handleLogout} className="bg-card/10 hover:bg-card/20 text-white font-bold border-none shrink-0 min-h-touch">{t('parentLogout')}</Button>
- <Button variant="glass" onClick={() => {setEditingKid(null); setKidForm(emptyKidForm); setShowKidModal(true);}} className="bg-card hover:bg-surface-secondary text-foreground-600 font-bold border-none shadow-floating shrink-0 min-h-touch">
- <PlusIcon className="w-5 h-5 me-2" /> {t('parentAddKid')}
- </Button>
- </div>
- </div>
- <div className="parent-companion-hero-grid">
- <article className="parent-companion-hero-card parent-companion-hero-card--warm">
- <div className="parent-companion-hero-icon" aria-hidden="true">
- <SparklesIcon className="w-5 h-5" />
- </div>
- <p className="parent-companion-card-label">{t('parentHomeTodaySubtitle')}</p>
- <p className="parent-companion-card-value">
- {todayReadMinutes > 0 ? t('parentHomeHeroReadToday', { name: selectedKid?.name || t('parentChild'), minutes: todayReadMinutes }) : t('parentHomeTagline')}
- </p>
- </article>
+ <ParentPageShell {...shellProps}>
+ <ParentHero
+ currentDate={currentDate}
+ greeting={`${t(greetingKey)}, ${user?.username || 'Parent'}`}
+ subtitle={heroSubtitle}
+ kidsCountLabel={t('parentKidsCount').replace('{count}', String(kids.length))}
+ planLabel={dashboardData?.subscription?.plan_name || null}
+ themeLabel={topThemeLabel}
+ selectedKid={selectedKid}
+ continueBook={continueBook}
+ onAddKid={openAddKid}
+ t={t}
+ />
 
- <article className="parent-companion-hero-card">
- <div className="parent-companion-hero-icon" aria-hidden="true">
- <BookIcon className="w-5 h-5" />
- </div>
- <p className="parent-companion-card-label">{t('parentProgressCurrentStory')}</p>
- <p className="parent-companion-card-value">{continueBook?.title || t('parentHomeContinueEmpty')}</p>
- <p className="parent-companion-card-subtle">
- {continueBook ? t('parentHomeContinueProgress', { percent: continueBook.progress_percent || 0 }) : t('parentHomeContinueEmptyDesc')}
- </p>
- </article>
-
- <article className="parent-companion-hero-card">
- <div className="parent-companion-hero-icon" aria-hidden="true">
- <CategoryIcon className="w-5 h-5" />
- </div>
- <p className="parent-companion-card-label">{t('parentProfileCategories')}</p>
- <p className="parent-companion-card-value">{topThemeLabel || t('parentProfileCategoriesEmpty')}</p>
- <p className="parent-companion-card-subtle">{t('parentHomeCategoriesHint')}</p>
- </article>
-
- <article className="parent-companion-hero-card">
- <div className="parent-companion-hero-icon" aria-hidden="true">
- <StarIcon className="w-5 h-5" />
- </div>
- <p className="parent-companion-card-label">{t('parentHomeStreakLabel')}</p>
- <p className="parent-companion-card-value">
- {Number(summary.reading_streak_days || 0) > 0 ? t('parentHomeStreakDays', { days: summary.reading_streak_days }) : '—'}
- </p>
- <p className="parent-companion-card-subtle">{t('parentHomeBooksStarted', { count: progressItems.length || 0 })}</p>
- </article>
- </div>
- </div>
- </header>
-
- <div className="max-w-7xl mx-auto px-space-16 md:px-space-32 py-space-32 flex flex-col gap-space-32">
-
- {/* Kid selector */}
  {kids.length > 0 && (
- <section aria-label={t('parentKidProfiles')}>
+ <section aria-label={t('parentKidProfiles')} className="mb-space-24">
  <h2 className="sr-only">{t('parentKidProfiles')}</h2>
- <div className="flex gap-space-12 overflow-x-auto parent-discovery-rail pb-space-4">
+ <div className="parent-child-rail">
  {kids.map((kid) => {
  const active = selectedKid?.id === kid.id;
  return (
@@ -417,18 +350,19 @@ function ParentDashboard() {
  key={kid.id}
  type="button"
  onClick={() => handleSelectKid(kid)}
- className={`flex items-center gap-space-12 shrink-0 rounded-32 px-space-16 py-space-12 min-h-touch border-2 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-400 ${
- active
- ? 'border-primary-400 bg-primary-50 dark:bg-primary-950/30 shadow-card'
- : 'border-border/60 bg-card hover:shadow-card'
- }`}
+ className={`parent-child-chip ${active ? 'is-active' : ''}`}
  aria-pressed={active}
  >
  <KidAvatar kid={kid} size="sm" />
- <span className="font-black text-foreground pe-space-8">{kid.name}</span>
+ <div className="min-w-0">
+ <p className="parent-child-chip-name truncate">{kid.name}</p>
+ <p className="parent-child-chip-sub">
+ {kid.age ? t('parentKidAgeYears', { age: kid.age }) : t('parentKidAgeUnknown')}
+ </p>
+ </div>
  </button>
  );
-})}
+ })}
  </div>
  </section>
  )}
@@ -439,18 +373,57 @@ function ParentDashboard() {
  title={t('parentNoKids')}
  description={t('parentNoKidsDesc')}
  actionLabel={t('parentAddKid')}
- onAction={() => { setEditingKid(null); setKidForm(emptyKidForm); setShowKidModal(true); }}
+ onAction={openAddKid}
  />
  ) : selectedKid && (
  <>
- <ParentDashboardAnalytics
+ <div id="insights">
+ <ParentOverviewBoard
+ kids={kids}
+ selectedKid={selectedKid}
  data={dashboardData}
- loading={activityLoading}
  language={language}
  t={t}
- kidName={selectedKid.name}
- kid={selectedKid}
  />
+ </div>
+
+ <section className="parent-kids-showcase" aria-label={t('parentKidProfiles')}>
+ {kids.map((kid) => {
+ const active = selectedKid?.id === kid.id;
+ const storyTitle = active && continueBook ? continueBook.title : null;
+ return (
+ <button
+ key={kid.id}
+ type="button"
+ className={`parent-kid-showcase-card ${active ? 'is-active' : ''}`}
+ onClick={() => handleSelectKid(kid)}
+ aria-pressed={active}
+ >
+ <div className="flex justify-center mb-space-16">
+ <KidAvatar kid={kid} size="lg" className="!w-24 !h-24 ring-4 ring-white/80 shadow-floating" />
+ </div>
+ <h3 className="text-heading-m font-black text-foreground">{kid.name}</h3>
+ <p className="text-body text-foreground-secondary font-medium mt-1">
+ {kid.age ? t('parentKidAgeYears', { age: kid.age }) : t('parentKidAgeUnknown')}
+ </p>
+ {active && topThemeLabel ? (
+ <span className="parent-kid-showcase-world">{topThemeLabel}</span>
+ ) : null}
+ {storyTitle ? (
+ <p className="parent-kid-showcase-story">{t('parentProgressCurrentStory')}: {storyTitle}</p>
+ ) : active && dashboardData ? (
+ <p className="parent-kid-showcase-story">
+ {t('parentHomeBooksStarted', { count: dashboardData?.progress?.items?.length || 0 })}
+ </p>
+ ) : null}
+ </button>
+ );
+ })}
+ <button type="button" className="parent-kid-showcase-card parent-kid-showcase-add" onClick={openAddKid}>
+ <PlusIcon className="w-8 h-8" aria-hidden="true" />
+ <span>{t('parentAddKid')}</span>
+ </button>
+ </section>
 
  <ParentChildProfilePanel
  kid={selectedKid}
@@ -462,21 +435,48 @@ function ParentDashboard() {
  onDelete={() => handleDeleteKid(selectedKid.id)}
  />
 
+ <ParentDashboardAnalytics
+ data={dashboardData}
+ loading={activityLoading}
+ language={language}
+ t={t}
+ kidName={selectedKid.name}
+ kid={selectedKid}
+ />
+
  <ParentFamilySection
  t={t}
  kidName={selectedKid.name}
  streakDays={dashboardData?.summary?.reading_streak_days || 0}
  />
 
- <section aria-labelledby="parent-explore-heading">
- <h2 id="parent-explore-heading" className="text-heading-xl font-black text-foreground mb-space-16">{t('parentExploreTitle')}</h2>
- <ParentHubNav />
+ <section aria-labelledby="parent-explore-heading" className="mb-space-32">
+ <h2 id="parent-explore-heading" className="text-heading-xl font-black text-foreground mb-space-16">
+ {t('parentExploreTitle')}
+ </h2>
+ <div className="parent-quick-grid">
+ <button type="button" className="parent-quick-btn" onClick={() => navigate('/parent/voices')}>
+ <AudioIcon className="w-6 h-6 text-primary-600" aria-hidden="true" />
+ <span>{t('parentNavVoices')}</span>
+ </button>
+ <button type="button" className="parent-quick-btn" onClick={() => navigate('/parent/profiles')}>
+ <BookIcon className="w-6 h-6 text-primary-600" aria-hidden="true" />
+ <span>{t('parentNavProfiles')}</span>
+ </button>
+ <button type="button" className="parent-quick-btn" onClick={() => document.getElementById('peace')?.scrollIntoView({ behavior: reducedMotion ? 'auto' : 'smooth' })}>
+ <ClockIcon className="w-6 h-6 text-primary-600" aria-hidden="true" />
+ <span>{t('parentScreenTime')}</span>
+ </button>
+ <button type="button" className="parent-quick-btn" onClick={() => setShowSettingsModal(true)}>
+ <SettingsIcon className="w-6 h-6 text-primary-600" aria-hidden="true" />
+ <span>{t('parentSettings')}</span>
+ </button>
+ </div>
  </section>
 
- <motion.div initial={{opacity: 0, y: 20}} animate={{opacity: 1, y: 0}} className="grid grid-cols-1 lg:grid-cols-3 gap-space-32">
- 
- <div className="lg:col-span-2 flex flex-col gap-space-32">
- <section className="parent-control-card" aria-labelledby="parent-peace-heading">
+ <div id="peace" className="grid grid-cols-1 lg:grid-cols-3 gap-space-24">
+ <div className="lg:col-span-2 flex flex-col gap-space-24">
+ <section className="parent-control-card parent-panel" aria-labelledby="parent-peace-heading">
  <div className="parent-control-header">
  <div>
  <h2 id="parent-peace-heading" className="text-heading-l font-black text-foreground mb-2">{t('parentPeaceTitle')}</h2>
@@ -526,7 +526,7 @@ function ParentDashboard() {
  </div>
  </section>
 
- <section className="parent-control-card" aria-labelledby="parent-permissions-heading">
+ <section className="parent-control-card parent-panel" aria-labelledby="parent-permissions-heading">
  <div className="parent-control-header">
  <div>
  <h2 id="parent-permissions-heading" className="text-heading-l font-black text-foreground mb-2">{t('parentReadingPermissions')}</h2>
@@ -587,18 +587,28 @@ function ParentDashboard() {
  </div>
 
  <div className="flex flex-col gap-space-24">
- <div className={`bg-gradient-to-br ${BRAND_HERO_GRADIENT} text-white p-space-24 md:p-space-32 rounded-32 shadow-floating relative overflow-hidden`}>
- <div className="absolute top-0 end-0 w-32 h-32 bg-accent-500/20 rounded-full blur-2xl pointer-events-none" aria-hidden="true" />
- <Badge variant="glass" className="bg-card/20 text-white border-none font-bold mb-space-16">
+ <article className="parent-panel">
+ <div className="flex items-center gap-3 mb-space-12">
+ <div className="parent-kpi-icon parent-kpi-icon--violet" aria-hidden="true">
+ <ShieldIcon className="w-5 h-5" />
+ </div>
+ <Badge variant="secondary" className="font-bold">
  {dashboardData?.subscription?.status || t('parentFreePlan')}
  </Badge>
- <h2 className="text-heading-l font-black mb-1">{dashboardData?.subscription?.plan_name || t('parentFreePlan')}</h2>
- {dashboardData?.subscription?.current_period_end && (
- <p className="text-white/75 text-body mb-space-24">{t('parentSubscriptionExpiry')} : {formatDate(dashboardData.subscription.current_period_end)}</p>
- )}
- <Button variant="outline" fullWidth onClick={() => navigate('/abonnements')} className="bg-card hover:bg-surface-secondary text-foreground font-bold border-none min-h-touch">{t('parentManageSubscription')}</Button>
  </div>
- <article className="parent-aside-note">
+ <h2 className="text-heading-l font-black mb-1 text-foreground">
+ {dashboardData?.subscription?.plan_name || t('parentFreePlan')}
+ </h2>
+ {dashboardData?.subscription?.current_period_end && (
+ <p className="text-foreground-secondary text-body mb-space-24">
+ {t('parentSubscriptionExpiry')} : {formatDate(dashboardData.subscription.current_period_end)}
+ </p>
+ )}
+ <Button variant="primary" fullWidth onClick={() => navigate('/abonnements')} className="min-h-touch font-bold">
+ {t('parentManageSubscription')}
+ </Button>
+ </article>
+ <article className="parent-aside-note parent-panel">
  <p className="parent-companion-card-label">{t('parentExploreTitle')}</p>
  <p className="parent-companion-card-value">
  {selectedKid ? t('parentHomeTodayTitle', { name: selectedKid.name }) : t('parentHomeTagline')}
@@ -606,14 +616,10 @@ function ParentDashboard() {
  <p className="parent-companion-card-subtle">{t('parentHomeNoDataDesc')}</p>
  </article>
  </div>
-
- </motion.div>
+ </div>
  </>
  )}
- </div>
- </motion.div>
 
- {/* Kid profile modal */}
  <KidProfileFormModal
  open={showKidModal}
  editingKid={editingKid}
@@ -630,7 +636,7 @@ function ParentDashboard() {
  <motion.div initial={{scale: 0.9, opacity: 0}} animate={{scale: 1, opacity: 1}} exit={{scale: 0.9, opacity: 0}} onClick={(e) => e.stopPropagation()} className="bg-card rounded-3xl p-6 w-full max-w-md shadow-2xl">
  <div className="flex items-center justify-between mb-6">
  <h3 className="text-2xl font-black">{t('parentAccountTitle').replace('{name}', selectedKid?.name || '')}</h3>
- <button onClick={() => setShowAccountModal(false)} className="p-2 hover:bg-surface-secondary rounded-full transition-colors"><XIcon className="w-5 h-5" /></button>
+ <button type="button" onClick={() => setShowAccountModal(false)} className="p-2 hover:bg-surface-secondary rounded-full transition-colors min-h-touch min-w-touch" aria-label={t('parentCancel')}><XIcon className="w-5 h-5" /></button>
  </div>
  <div className="space-y-4">
  <div>
@@ -656,7 +662,7 @@ function ParentDashboard() {
  onClose={() => setShowSettingsModal(false)}
  />
  {confirmDialog}
- </PlatformShell>
+ </ParentPageShell>
  );
 }
 
