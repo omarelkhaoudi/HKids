@@ -1,10 +1,20 @@
-import { useRef } from 'react';
+import { useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { AudioIcon, PlayIcon } from '../Icons';
 import { getFileUrl } from '../../utils/fileUrl';
+import { useReducedMotion } from '../../hooks/useReducedMotion';
+import { getHoverMotion } from '../../constants/kidsMotion';
 
 function QuestionAudioButton({ audioUrl, label = 'Écouter' }) {
   const audioRef = useRef(null);
+  const reducedMotion = useReducedMotion();
+
+  useEffect(() => () => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current = null;
+    }
+  }, []);
 
   const play = () => {
     const url = getFileUrl(audioUrl);
@@ -22,8 +32,10 @@ function QuestionAudioButton({ audioUrl, label = 'Écouter' }) {
   return (
     <motion.button
       type="button"
-      whileHover={{ scale: 1.05 }}
-      whileTap={{ scale: 0.95 }}
+      {...getHoverMotion(reducedMotion, {
+        whileHover: { scale: 1.05 },
+        whileTap: { scale: 0.95 },
+      })}
       onClick={play}
       className="mx-auto mb-space-24 flex min-h-touch-kids items-center gap-space-12 rounded-full bg-success-600 px-space-32 py-space-16 text-body-lg font-black text-white shadow-card focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-success-300"
       aria-label={label}
@@ -36,6 +48,8 @@ function QuestionAudioButton({ audioUrl, label = 'Écouter' }) {
 }
 
 function OptionGrid({ options, questionId, answers, onChoose, disabled, columns = 'grid-cols-2 md:grid-cols-3' }) {
+  const reducedMotion = useReducedMotion();
+
   return (
     <div className={`grid ${columns} gap-space-16`}>
       {(options || []).map((option) => {
@@ -44,8 +58,10 @@ function OptionGrid({ options, questionId, answers, onChoose, disabled, columns 
           <motion.button
             key={option.id}
             type="button"
-            whileHover={{ scale: disabled ? 1 : 1.02 }}
-            whileTap={{ scale: disabled ? 1 : 0.92 }}
+            {...getHoverMotion(reducedMotion, {
+              whileHover: { scale: disabled ? 1 : 1.02 },
+              whileTap: { scale: disabled ? 1 : 0.92 },
+            })}
             onClick={() => !disabled && onChoose(questionId, option.id)}
             disabled={disabled}
             className={`flex flex-col items-center justify-center min-h-[8rem] rounded-24 border-4 p-space-16 text-center transition-all shadow-soft focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-success-300 ${
@@ -110,6 +126,7 @@ export function LearningQuizQuestion({
 }
 
 export function LearningMemoryGame({ pairs = [], answers, onChoose, disabled }) {
+  const reducedMotion = useReducedMotion();
   const gameKey = 'memory_game';
   const selected = answers[gameKey] || [];
 
@@ -131,7 +148,7 @@ export function LearningMemoryGame({ pairs = [], answers, onChoose, disabled }) 
             <motion.button
               key={pair.id}
               type="button"
-              whileTap={{ scale: 0.95 }}
+              {...getHoverMotion(reducedMotion, { whileTap: { scale: 0.95 } })}
               onClick={() => handlePick(pair.id)}
               disabled={disabled}
               className={`min-h-[7rem] rounded-20 border-4 p-space-16 text-5xl font-black transition shadow-soft focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-success-300 ${

@@ -1,12 +1,18 @@
 import { motion } from 'framer-motion';
+import { useReducedMotion } from '../../hooks/useReducedMotion';
+import { getMotionProps } from '../../constants/kidsMotion';
 
 export function KidsErrorBanner({ message, onDismiss, className = '' }) {
+  const reducedMotion = useReducedMotion();
+
   if (!message) return null;
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: -8 }}
-      animate={{ opacity: 1, y: 0 }}
+      {...getMotionProps(reducedMotion, {
+        initial: { opacity: 0, y: -8 },
+        animate: { opacity: 1, y: 0 },
+      })}
       className={`kids-premium-panel flex items-start gap-3 p-4 md:p-5 border-rose-200 bg-rose-50/90 dark:bg-rose-950/40 ${className}`}
       role="alert"
     >

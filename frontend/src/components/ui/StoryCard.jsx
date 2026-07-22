@@ -34,6 +34,7 @@ export const StoryCard = memo(function StoryCard({
           alt=""
           className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
           loading="lazy"
+          decoding="async"
           onError={(event) => {
             event.currentTarget.src = `${LOCAL_BOOK_COVERS_BASE}/default.webp`;
           }}

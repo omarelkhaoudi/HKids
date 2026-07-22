@@ -1,4 +1,4 @@
-import { memo, useState } from 'react';
+import { memo, useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '../../context/LanguageContext';
 import { useReducedMotion } from '../../hooks/useReducedMotion';
@@ -37,6 +37,7 @@ export const KidsMediaCard = memo(function KidsMediaCard({
   const { t } = useLanguage();
   const reducedMotion = useReducedMotion();
   const [feedback, setFeedback] = useState(null);
+  const feedbackTimerRef = useRef(null);
   const durationLabel = formatDuration(book.duration_seconds);
   const audioReady = hasAudio(book);
   const progress = Math.min(100, Math.max(0, Number(book.kid_progress_percent || book.progress || 0)));
@@ -51,9 +52,18 @@ export const KidsMediaCard = memo(function KidsMediaCard({
     ? `${t('listen')} — ${book.title}`
     : `${t('read') || t('galleryRead')} — ${book.title}`;
 
+  useEffect(() => () => {
+    if (feedbackTimerRef.current) {
+      window.clearTimeout(feedbackTimerRef.current);
+    }
+  }, []);
+
   const flashFeedback = (type) => {
     setFeedback(type);
-    window.setTimeout(() => setFeedback(null), 700);
+    if (feedbackTimerRef.current) {
+      window.clearTimeout(feedbackTimerRef.current);
+    }
+    feedbackTimerRef.current = window.setTimeout(() => setFeedback(null), 700);
   };
 
   return (

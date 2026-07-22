@@ -3,8 +3,6 @@ import {useParams, useNavigate, useSearchParams, useLocation} from 'react-router
 import {motion, AnimatePresence} from 'framer-motion';
 import {Button, Modal} from '../components/ui';
 
-import {createWorker} from 'tesseract.js';
-import * as pdfjsLib from 'pdfjs-dist';
 import {booksAPI} from '../api/books';
 import {subscriptionsAPI} from '../api/subscriptions';
 import {parentalAPI} from '../api/parental';
@@ -51,10 +49,21 @@ import {
 } from '../components/kids/KidsReaderAudioExperience';
 import {useReducedMotion} from '../hooks/useReducedMotion';
 
-// Configuration de pdfjs-dist
-if (typeof window !== 'undefined') {
- // Utiliser jsdelivr CDN avec la version exacte installée (5.4.624)
- pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@5.4.624/build/pdf.worker.min.mjs';
+const PDFJS_WORKER_SRC = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@5.4.624/build/pdf.worker.min.mjs';
+
+let pdfjsLibPromise = null;
+
+async function loadPdfJs() {
+ if (!pdfjsLibPromise) {
+  pdfjsLibPromise = import('pdfjs-dist').then((mod) => {
+   const pdfjsLib = mod.default || mod;
+   if (typeof window !== 'undefined') {
+    pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS_WORKER_SRC;
+   }
+   return pdfjsLib;
+  });
+ }
+ return pdfjsLibPromise;
 }
 
 const voiceProfiles = [
@@ -199,7 +208,10 @@ function PDFPageViewer({pdfUrl, pageNumber, onLoad, onPdfLoaded, imageClassName 
  setLoading(true);
  setError(null);
  setImageUrl(null);
- 
+
+ const pdfjsLib = await loadPdfJs();
+ if (cancelled) return;
+
  // Charger le document PDF avec options CORS
  const loadingTask = pdfjsLib.getDocument({
  url: pdfUrl,
@@ -1114,25 +1126,26 @@ function BookReader() {
 }
 };
 
- // Initialiser le worker Tesseract
- useEffect(() => {
- const initOCR = async () => {
+ // Lazy OCR worker — only created when image text extraction is needed
+ const ensureOcrWorker = async () => {
+ if (workerRef.current) return workerRef.current;
  try {
- const worker = await createWorker('fra'); // Langue française
- workerRef.current = worker;
-} catch (error) {
- console.error('Erreur lors de l\'initialisation de Tesseract:', error);
-}
-};
- 
- initOCR();
- 
- return () => {
+  const { createWorker } = await import('tesseract.js');
+  const worker = await createWorker('fra');
+  workerRef.current = worker;
+  return worker;
+ } catch (error) {
+  console.error('Erreur lors de l\'initialisation de Tesseract:', error);
+  return null;
+ }
+ };
+
+ useEffect(() => () => {
  if (workerRef.current) {
- workerRef.current.terminate();
-}
-};
-}, []);
+  workerRef.current.terminate();
+  workerRef.current = null;
+ }
+ }, []);
 
  // Charger les voix disponibles au chargement
  useEffect(() => {
@@ -1157,7 +1170,8 @@ function BookReader() {
  try {
  setIsExtracting(true);
  showToast(t('kidReaderToastPdfExtracting'), 'info', 2000);
- 
+
+ const pdfjsLib = await loadPdfJs();
  // Charger le document PDF
  const loadingTask = pdfjsLib.getDocument(pdfUrl);
  const pdf = await loadingTask.promise;
@@ -1211,7 +1225,8 @@ function BookReader() {
 
  // Fonction pour extraire le texte d'une image avec OCR
  const extractTextFromImage = async (imageUrl) => {
- if (!workerRef.current) {
+ const worker = await ensureOcrWorker();
+ if (!worker) {
  showToast(t('kidReaderToastOcrUnavailable'), 'error', 3000);
  return null;
 }
@@ -1220,7 +1235,7 @@ function BookReader() {
  setIsExtracting(true);
  showToast(t('kidReaderToastImageExtracting'), 'info', 2000);
  
- const {data: {text}} = await workerRef.current.recognize(imageUrl);
+ const {data: {text}} = await worker.recognize(imageUrl);
  const cleanedText = text.trim();
  
  if (cleanedText) {

@@ -3,12 +3,15 @@ import { motion } from 'framer-motion';
 import { voicesAPI } from '../../api/voices';
 import { useLanguage } from '../../context/LanguageContext';
 import { useToast } from '../ToastProvider';
+import { useReducedMotion } from '../../hooks/useReducedMotion';
+import { getHoverMotion, kidsTouchFeedback } from '../../constants/kidsMotion';
 import { PlayIcon, PauseIcon } from '../Icons';
 import KidsButton from './KidsButton';
 
 export function KidsFamilyMessages({ className = '' }) {
   const { t } = useLanguage();
   const { showToast } = useToast();
+  const reducedMotion = useReducedMotion();
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [playingId, setPlayingId] = useState(null);
@@ -112,8 +115,11 @@ export function KidsFamilyMessages({ className = '' }) {
         {messages.map((message) => (
           <motion.div
             key={message.id}
-            whileHover={{ scale: 1.03 }}
-            whileTap={{ scale: 0.97 }}
+            {...getHoverMotion(reducedMotion, {
+              whileHover: { scale: 1.03 },
+              whileTap: { scale: 0.97 },
+              ...kidsTouchFeedback,
+            })}
             className="snap-start shrink-0 w-56 rounded-[2rem] bg-gradient-to-br from-rose-100 via-primary-50 to-secondary-50 border-4 border-white shadow-lg p-5 flex flex-col items-center text-center gap-4"
           >
             <div className="text-5xl" aria-hidden="true">🎙️</div>

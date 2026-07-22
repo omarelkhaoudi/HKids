@@ -25,12 +25,10 @@ export default defineConfig(({ mode }) => {
     rollupOptions: {
       output: {
         manualChunks(id) {
-          if (!id.includes('node_modules')) return undefined;
-          if (id.includes('/src/pages/Subscriptions')) return 'subscriptions';
           if (id.includes('pdfjs-dist') || id.includes('tesseract.js')) return 'heavy';
           if (id.includes('@capacitor')) return 'capacitor';
           if (id.includes('framer-motion')) return 'motion';
-          if (id.includes('/src/components/kids/VoiceAssistant') || id.includes('/src/api/ai')) return 'assistant';
+          if (!id.includes('node_modules')) return undefined;
           if (
             id.includes('react-dom')
             || id.includes('react-router')
