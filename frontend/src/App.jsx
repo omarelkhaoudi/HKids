@@ -1,11 +1,5 @@
 import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { useState, useEffect, lazy, Suspense } from 'react';
-import Home from './pages/Home';
-import AdminLogin from './pages/AdminLogin';
-import SignUp from './pages/SignUp';
-import ParentLogin from './pages/ParentLogin';
-import ParentSignUp from './pages/ParentSignUp';
-import ParentKidsProfiles from './pages/ParentKidsProfiles';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { LanguageProvider, useLanguage } from './context/LanguageContext';
 import { ToastProvider } from './components/ToastProvider';
@@ -19,6 +13,12 @@ import ScrollToTop from './components/ScrollToTop';
 import { isNativeAndroid } from './services/mobile/capacitorRuntime';
 import { storage } from './utils/storage';
 
+const Home = lazy(() => import('./pages/Home'));
+const AdminLogin = lazy(() => import('./pages/AdminLogin'));
+const SignUp = lazy(() => import('./pages/SignUp'));
+const ParentLogin = lazy(() => import('./pages/ParentLogin'));
+const ParentSignUp = lazy(() => import('./pages/ParentSignUp'));
+const ParentKidsProfiles = lazy(() => import('./pages/ParentKidsProfiles'));
 const KidsHome = lazy(() => import('./pages/KidsHome'));
 const KidsLibrary = lazy(() => import('./pages/KidsLibrary'));
 const KidsCategoryPage = lazy(() => import('./pages/KidsCategoryPage'));
@@ -179,7 +179,7 @@ function App() {
               <SkipToContent />
               <AndroidKioskIdleReset />
               <Routes>
-                <Route path="/" element={<Home darkMode={darkMode} setDarkMode={setDarkMode} />} />
+                <Route path="/" element={<LazyRoute><Home darkMode={darkMode} setDarkMode={setDarkMode} /></LazyRoute>} />
                 <Route path="/book/:id" element={<RequireAuth><LazyRoute><BookReader /></LazyRoute></RequireAuth>} />
                 <Route path="/book-details/:id" element={<RequireAuth><LazyRoute><BookDetails /></LazyRoute></RequireAuth>} />
                 <Route path="/favorites" element={<RequireAuth><LazyRoute><Favorites /></LazyRoute></RequireAuth>} />
@@ -189,12 +189,12 @@ function App() {
                 <Route path="/content-library/:categoryId" element={<RequireAuth><LazyRoute><ContentCategoryContents /></LazyRoute></RequireAuth>} />
                 <Route path="/abonnements" element={<LazyRoute><Subscriptions /></LazyRoute>} />
                 <Route path="/features/:featureId" element={<LazyRoute><FeatureDetails /></LazyRoute>} />
-                <Route path="/admin/login" element={<AdminLogin />} />
-                <Route path="/admin/signup" element={<SignUp />} />
-                <Route path="/parent/login" element={<ParentLogin />} />
-                <Route path="/parent/signup" element={<ParentSignUp />} />
+                <Route path="/admin/login" element={<LazyRoute><AdminLogin /></LazyRoute>} />
+                <Route path="/admin/signup" element={<LazyRoute><SignUp /></LazyRoute>} />
+                <Route path="/parent/login" element={<LazyRoute><ParentLogin /></LazyRoute>} />
+                <Route path="/parent/signup" element={<LazyRoute><ParentSignUp /></LazyRoute>} />
                 <Route path="/admin/*" element={<RequireRole roles={['admin']}><LazyRoute><AdminDashboard /></LazyRoute></RequireRole>} />
-                <Route path="/parent/profiles" element={<RequireRole roles={['parent', 'admin']}><ParentKidsProfiles /></RequireRole>} />
+                <Route path="/parent/profiles" element={<RequireRole roles={['parent', 'admin']}><LazyRoute><ParentKidsProfiles /></LazyRoute></RequireRole>} />
                 <Route path="/parent/voices" element={<RequireRole roles={['parent', 'admin']}><LazyRoute><FamilyVoices /></LazyRoute></RequireRole>} />
                 <Route path="/parent/story-studio" element={<RequireRole roles={['parent', 'admin']}><LazyRoute><KidsStoryStudio /></LazyRoute></RequireRole>} />
                 <Route path="/parent/ai-stories" element={<RequireRole roles={['parent', 'admin']}><LazyRoute><KidsAIStories /></LazyRoute></RequireRole>} />

@@ -2,6 +2,8 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { useRef } from 'react';
 import KidsButton from './KidsButton';
 import { useModalA11y } from '../../hooks/useModalA11y';
+import { useReducedMotion } from '../../hooks/useReducedMotion';
+import { getMotionProps } from '../../constants/kidsMotion';
 
 export function KidsModal({
   isOpen,
@@ -15,24 +17,33 @@ export function KidsModal({
   onSecondary,
 }) {
   const panelRef = useRef(null);
+  const reducedMotion = useReducedMotion();
   useModalA11y(isOpen, onClose, panelRef);
+
+  const backdropMotion = getMotionProps(reducedMotion, {
+    initial: { opacity: 0 },
+    animate: { opacity: 1 },
+    exit: { opacity: 0 },
+  });
+
+  const panelMotion = getMotionProps(reducedMotion, {
+    initial: { opacity: 0, scale: 0.92, y: 20 },
+    animate: { opacity: 1, scale: 1, y: 0 },
+    exit: { opacity: 0, scale: 0.92, y: 20 },
+    transition: { type: 'spring', damping: 22 },
+  });
 
   return (
     <AnimatePresence>
       {isOpen && (
         <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
+          {...backdropMotion}
           className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
           onClick={onClose}
         >
           <motion.div
             ref={panelRef}
-            initial={{ opacity: 0, scale: 0.92, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.92, y: 20 }}
-            transition={{ type: 'spring', damping: 22 }}
+            {...panelMotion}
             onClick={(e) => e.stopPropagation()}
             className="kids-premium-panel w-full max-w-md p-8 text-center shadow-kids-soft"
             role="dialog"

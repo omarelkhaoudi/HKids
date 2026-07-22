@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useCallback } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
@@ -179,7 +179,11 @@ function KidsHome() {
     !item.completed && Number(item.progress_percent || 0) > 0
   )) || null;
   const recommendedBooks = getRecommendedBooks(recommendationSections);
-  const favoriteIds = storage.getFavorites();
+  const favoriteIdsKey = storage.getFavorites().join(',');
+  const favoriteIds = useMemo(
+    () => (favoriteIdsKey ? storage.getFavorites() : []),
+    [favoriteIdsKey],
+  );
 
   const favoriteBooks = useMemo(
     () => publishedBooks.filter((book) => favoriteIds.includes(book.id)),
@@ -402,7 +406,7 @@ function KidsHome() {
     return world;
   });
 
-  const handlePlayBook = (book) => {
+  const handlePlayBook = useCallback((book) => {
     const progress = progressRows.find((row) => row.book_id === book.id);
     const pageQuery = progress?.current_page ? `?page=${progress.current_page}` : '';
     if (book.id) {
@@ -410,17 +414,19 @@ function KidsHome() {
       return;
     }
     navigate(getKidsContentPath(book));
-  };
+  }, [navigate, progressRows]);
 
-  const handleListenBook = (book) => {
+  const handleListenBook = useCallback((book) => {
     if (book?.id) {
       navigate(`/kids/listen/${book.id}`);
       return;
     }
     navigate('/kids/audio');
-  };
+  }, [navigate]);
 
-  const carouselProps = {
+  const goToLibrary = useCallback(() => navigate('/kids/library'), [navigate]);
+
+  const carouselProps = useMemo(() => ({
     isRtl,
     showActions: false,
     hideTitle: false,
@@ -428,8 +434,8 @@ function KidsHome() {
     onPlay: handlePlayBook,
     modality: 'books',
     seeAllLabel: t('seeAll'),
-    onSeeAll: () => navigate('/kids/library'),
-  };
+    onSeeAll: goToLibrary,
+  }), [isRtl, handlePlayBook, t, goToLibrary]);
 
   const lastActivityBook = progressRows[0];
   const lastActivityText = lastActivityBook?.book_title || null;

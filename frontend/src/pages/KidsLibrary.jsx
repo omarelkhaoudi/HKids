@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState } from 'react';
+﻿import { useEffect, useMemo, useState, useCallback } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { booksAPI } from '../api/books';
@@ -125,45 +125,51 @@ function KidsLibrary() {
   useEffect(() => {
     if (!user) {
       navigate('/parent/login');
-      return;
+      return undefined;
     }
-    loadData();
-  }, [user, navigate, language]);
+    let active = true;
+    const run = async () => {
+      try {
+        setLoading(true);
+        const [booksRes, recommendationsRes] = await Promise.all([
+          booksAPI.getPublishedBooks({ language }),
+          recommendationsAPI.getForKid({ ...getRecommendationContext(), language }).catch((error) => {
+            const message = getRestrictionMessage(error);
+            if (message && active) showToast(message, 'info');
+            return { data: { sections: [] } };
+          }),
+        ]);
+        if (!active) return;
+        setBooks(booksRes.data || []);
+        setRecommendationSections(recommendationsRes.data?.sections || []);
+      } catch (error) {
+        if (!active) return;
+        if (!navigator.onLine) {
+          const downloads = await getDownloads();
+          if (!active) return;
+          const offlineBooks = downloads
+            .filter((item) => item.type === 'book' && item.status === 'downloaded')
+            .map((item) => item.payload);
+          setBooks(offlineBooks);
+          setRecommendationSections([]);
+          showToast(t('offlineMode'), 'info');
+        } else {
+          showToast(getRestrictionMessage(error, t('loadError')), 'error');
+        }
+      } finally {
+        if (active) setLoading(false);
+      }
+    };
+    run();
+    return () => {
+      active = false;
+    };
+  }, [user, navigate, language, showToast, t]);
 
   useEffect(() => {
     const currentTheme = searchParams.get('theme') || 'all';
     setSelectedTheme(currentTheme);
   }, [searchParams]);
-
-  const loadData = async () => {
-    try {
-      setLoading(true);
-      const [booksRes, recommendationsRes] = await Promise.all([
-        booksAPI.getPublishedBooks({ language }),
-        recommendationsAPI.getForKid({ ...getRecommendationContext(), language }).catch((error) => {
-          const message = getRestrictionMessage(error);
-          if (message) showToast(message, 'info');
-          return { data: { sections: [] } };
-        }),
-      ]);
-      setBooks(booksRes.data || []);
-      setRecommendationSections(recommendationsRes.data?.sections || []);
-    } catch (error) {
-      if (!navigator.onLine) {
-        const downloads = await getDownloads();
-        const offlineBooks = downloads
-          .filter((item) => item.type === 'book' && item.status === 'downloaded')
-          .map((item) => item.payload);
-        setBooks(offlineBooks);
-        setRecommendationSections([]);
-        showToast(t('offlineMode'), 'info');
-      } else {
-        showToast(getRestrictionMessage(error, t('loadError')), 'error');
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleThemeChange = (themeId) => {
     setSelectedTheme(themeId);
@@ -184,7 +190,11 @@ function KidsLibrary() {
     });
   };
 
-  const favoritesIds = storage.getFavorites();
+  const favoritesIdsKey = storage.getFavorites().join(',');
+  const favoritesIds = useMemo(
+    () => (favoritesIdsKey ? storage.getFavorites() : []),
+    [favoritesIdsKey],
+  );
   const readingHistory = storage.getReadingHistory();
   const taggedBooks = useMemo(() => withThemeEmoji(books, childThemes), [books, childThemes]);
 
@@ -223,7 +233,10 @@ function KidsLibrary() {
       .slice(0, 12);
   }, [visibleBooks, readingHistory]);
 
-  const favoriteBooks = visibleBooks.filter((b) => favoritesIds.includes(b.id));
+  const favoriteBooks = useMemo(
+    () => visibleBooks.filter((b) => favoritesIds.includes(b.id)),
+    [visibleBooks, favoritesIds],
+  );
   const newBooks = useMemo(
     () => [...discoveryPool]
       .sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0))
@@ -305,7 +318,10 @@ function KidsLibrary() {
     return annotateBooksWithReasons(themed, reason);
   }, [likedThemeId, likedTheme, discoveryPool, favoritesIds, t]);
 
-  const themeBooks = visibleBooks.filter((b) => b._themeId === selectedTheme);
+  const themeBooks = useMemo(
+    () => visibleBooks.filter((b) => b._themeId === selectedTheme),
+    [visibleBooks, selectedTheme],
+  );
   const featuredBook = selectedTheme === 'all'
     ? (continueBooks[0] || todayBooks[0])
     : (themeBooks[0] || null);
@@ -315,7 +331,7 @@ function KidsLibrary() {
     ? `${t('discoverContinueSubtitle')} · ${t('kidsHomeProgressDays', { count: softProgress.readingDays })}`
     : t('discoverContinueSubtitle');
 
-  const toggleFavorite = (bookId) => {
+  const toggleFavorite = useCallback((bookId) => {
     if (storage.isFavorite(bookId)) {
       storage.removeFavorite(bookId);
       showToast(t('removedFromFavorites'), 'info');
@@ -324,9 +340,9 @@ function KidsLibrary() {
       showToast(t('addedToFavorites'), 'success');
     }
     setBooks((current) => [...current]);
-  };
+  }, [showToast, t]);
 
-  const handleDownloadBook = async (book) => {
+  const handleDownloadBook = useCallback(async (book) => {
     try {
       await offlineContent.downloadBookContent(book);
       storage.markDownloaded(book.id);
@@ -336,19 +352,19 @@ function KidsLibrary() {
         showToast(getRestrictionMessage(error, t('downloadError')), 'error');
       }
     }
-  };
+  }, [offlineContent, showToast, t]);
 
-  const handlePlayBook = (book) => {
+  const handlePlayBook = useCallback((book) => {
     navigate(getKidsContentPath(book));
-  };
+  }, [navigate]);
 
-  const handleListenBook = (book) => {
+  const handleListenBook = useCallback((book) => {
     if (book?.id) {
       navigate(`/kids/listen/${book.id}`);
       return;
     }
     navigate('/kids/audio');
-  };
+  }, [navigate]);
 
   const featuredHeroBook = featuredBook ? {
     ...featuredBook,
@@ -359,7 +375,7 @@ function KidsLibrary() {
       || (Number(featuredBook.kid_progress_percent || 0) > 0 && Number(featuredBook.kid_progress_percent || 0) < 100),
   } : null;
 
-  const carouselProps = {
+  const carouselProps = useMemo(() => ({
     isRtl,
     favorites: favoritesIds,
     offlineContent,
@@ -370,7 +386,15 @@ function KidsLibrary() {
     hideTitle: false,
     modality: 'books',
     seeAllLabel: t('seeAll'),
-  };
+  }), [
+    isRtl,
+    favoritesIds,
+    offlineContent,
+    handlePlayBook,
+    toggleFavorite,
+    handleDownloadBook,
+    t,
+  ]);
 
   const todayAnnotated = useMemo(
     () => todayBooks.map((book) => {

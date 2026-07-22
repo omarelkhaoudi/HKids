@@ -49,6 +49,7 @@ export function LitMascot({
         alt={t('litMascotName')}
         className="relative z-10 w-full h-full object-contain drop-shadow-2xl"
         loading="lazy"
+        decoding="async"
       />
     </motion.div>
   );
