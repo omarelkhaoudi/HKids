@@ -29,6 +29,8 @@ import {
   kidsPageEnter,
   KIDS_MOTION_DURATION,
 } from '../constants/kidsMotion';
+import { pickRelatedBooks } from '../utils/readerRecommendations';
+import { buildBookPreviewSignals } from '../utils/bookPreview';
 
 function formatReadingDuration(book, t) {
   if (book?.duration_minutes) {
@@ -130,8 +132,9 @@ function BookDetails() {
       const response = await booksAPI.getPublishedBooks({
         category_id: book.category_id || undefined,
       });
-      const filtered = response.data.filter((b) => b.id !== book.id).slice(0, 8);
-      setRelatedBooks(filtered);
+      const candidates = response.data || [];
+      const smart = pickRelatedBooks(book, candidates, 8);
+      setRelatedBooks(smart.length ? smart : candidates.filter((b) => b.id !== book.id).slice(0, 8));
     } catch (error) {
       console.error('Error loading related books:', error);
     }
@@ -246,7 +249,7 @@ function BookDetails() {
                 <div className="h-14 flex-1 rounded-full bg-gradient-to-r from-primary-200/80 to-secondary-200/80" />
                 <div className="h-14 flex-1 rounded-full bg-white/80" />
               </div>
-              <p className="kids-type-body text-foreground-secondary pt-2">Préparation d&apos;une belle page de lecture...</p>
+              <p className="kids-type-body text-foreground-secondary pt-2">{t('bookDetailsPreparing')}</p>
             </div>
           </div>
         </motion.div>
@@ -258,8 +261,8 @@ function BookDetails() {
     return (
       <PremiumBookState
         icon={BookIcon}
-        title="Cette histoire n'est pas disponible pour le moment"
-        description="Retournons vers la bibliothèque pour choisir une autre aventure douce et lumineuse."
+        title={t('bookDetailsUnavailable')}
+        description={t('bookDetailsUnavailableDesc')}
         ctaLabel={t('goToLibrary')}
         onCta={() => navigate(backPath)}
         reducedMotion={reducedMotion}
@@ -276,10 +279,12 @@ function BookDetails() {
   const languageLabel = book.language || book.lang || null;
   const narratorLabel = book.narrator || book.narrator_name || book.voice_name || null;
   const hasLongDescription = Boolean(book.description && book.description.length > 220);
-  const canListen = Boolean(book.audio_url);
+  const preview = buildBookPreviewSignals(book, t, { hasProgress: hasHistory });
+  const canListen = preview.canListen;
   const downloadStatus = offlineContent.getBookStatus(book.id);
   const isDownloading = downloadStatus?.status === 'pending' || downloadStatus?.status === 'running';
   const isDownloaded = downloadStatus?.status === 'downloaded' || storage.isDownloaded(book.id);
+  const homePath = isKidAccount ? '/kids' : backPath;
   return (
     <div className="min-h-screen kids-book-details-page" dir={isRtl ? 'rtl' : 'ltr'}>
       <motion.header
@@ -297,7 +302,7 @@ function BookDetails() {
             <span className="kids-type-meta font-semibold">{t('back')}</span>
           </button>
           <Link
-            to={backPath}
+            to={homePath}
             className="kids-book-details-mini-home"
           >
             HKids
@@ -323,7 +328,7 @@ function BookDetails() {
           <div className="kids-book-details-hero">
             <motion.div
               {...getHoverMotion(reducedMotion, kidsHoverLift)}
-              className="kids-book-details-cover"
+              className={`kids-book-details-cover ${reducedMotion ? '' : 'kids-book-details-cover--alive'}`}
               animate={isLaunchingReader && !reducedMotion
                 ? { scale: 1.05, opacity: 0.84, y: -10 }
                 : { scale: 1, opacity: 1, y: 0 }}
@@ -340,14 +345,22 @@ function BookDetails() {
             </motion.div>
 
             <div className="kids-book-details-copy">
-              <p className="kids-book-details-kicker">Une histoire a savourer doucement</p>
+              <p className="kids-book-details-kicker">{t('bookDetailsKicker')}</p>
               <h1 className="kids-book-details-title">{book.title}</h1>
 
               {book.author ? (
-                <p className="kids-book-details-author">par {book.author}</p>
+                <p className="kids-book-details-author">{t('bookDetailsByAuthor', { author: book.author })}</p>
               ) : null}
 
+              <p className="kids-book-details-invitation">{preview.invitation}</p>
+
               <div className="kids-book-details-badges" role="list">
+                {preview.modalityHint ? (
+                  <span className="kids-book-details-badge kids-book-details-badge--accent" role="listitem">
+                    {canListen ? <AudioIcon className="h-3.5 w-3.5" /> : <BookIcon className="h-3.5 w-3.5" />}
+                    {preview.modalityHint}
+                  </span>
+                ) : null}
                 {book.category_name ? (
                   <span className="kids-book-details-badge" role="listitem">
                     <CategoryIcon className="h-3.5 w-3.5" />
@@ -368,7 +381,7 @@ function BookDetails() {
                 ) : null}
                 {book.is_new === true || book.is_new === 1 ? (
                   <span className="kids-book-details-badge kids-book-details-badge--accent" role="listitem">
-                    Nouveau
+                    {t('homeNew')}
                   </span>
                 ) : null}
               </div>
@@ -384,7 +397,7 @@ function BookDetails() {
                       className="w-full sm:flex-1 kids-book-details-cta"
                       aria-label={t('continueReading')}
                     >
-                      Reprendre l&apos;histoire
+                      {t('bookDetailsResumeStory')}
                     </KidsButton>
                     <KidsButton
                       variant="glass"
@@ -392,9 +405,9 @@ function BookDetails() {
                       icon={RefreshIcon}
                       onClick={startReading}
                       className="w-full sm:flex-1 kids-book-details-secondary-cta"
-                      aria-label="Recommencer"
+                      aria-label={t('bookDetailsRestart')}
                     >
-                      Recommencer
+                      {t('bookDetailsRestart')}
                     </KidsButton>
                   </>
                 ) : (
@@ -406,7 +419,7 @@ function BookDetails() {
                     className="w-full sm:flex-1 kids-book-details-cta"
                     aria-label={t('readAction')}
                   >
-                    Commencer l&apos;histoire
+                    {t('bookDetailsStartStory')}
                   </KidsButton>
                 )}
 
@@ -430,21 +443,27 @@ function BookDetails() {
                   type="button"
                   onClick={toggleFavorite}
                   className={`kids-book-details-utility-btn ${isFavorite ? 'is-active' : ''}`}
-                  aria-label={isFavorite ? t('removedFromFavorites') : t('addToFavorites')}
+                  aria-label={isFavorite ? t('removeFromFavorites') : t('addToFavorites')}
                   aria-pressed={isFavorite}
                 >
                   <HeartIcon className="h-5 w-5" filled={isFavorite} />
-                  <span>{isFavorite ? t('yourFavorites') : 'Favori'}</span>
+                  <span>{isFavorite ? t('yourFavorites') : t('bookDetailsFavorite')}</span>
                 </button>
                 <button
                   type="button"
                   onClick={handleDownload}
                   disabled={isDownloading || isDownloaded}
                   className="kids-book-details-utility-btn"
-                  aria-label={isDownloaded ? 'Livre telecharge' : 'Telecharger ce livre'}
+                  aria-label={isDownloaded ? t('bookDetailsDownloaded') : t('bookDetailsDownload')}
                 >
                   <DownloadIcon className="h-5 w-5" />
-                  <span>{isDownloading ? 'Téléchargement...' : isDownloaded ? 'Téléchargé' : 'Télécharger'}</span>
+                  <span>
+                    {isDownloading
+                      ? t('bookDetailsDownloading')
+                      : isDownloaded
+                        ? t('bookDetailsDownloaded')
+                        : t('bookDetailsDownload')}
+                  </span>
                 </button>
               </div>
             </div>
@@ -458,10 +477,10 @@ function BookDetails() {
                   <h2 className="kids-type-h2 !mb-0 !text-[1.15rem]">{t('continueReading')}</h2>
                 </div>
                 <p className="kids-type-meta mt-space-8 text-foreground-muted">
-                  Page {lastPage + 1}
-                  {book.page_count ? ` sur ${book.page_count}` : ''}
-                  {' · '}
-                  {progress}%
+                  {book.page_count
+                    ? t('bookDetailsProgressSoft', { page: lastPage + 1, total: book.page_count })
+                    : t('bookDetailsProgressPercent', { percent: progress })}
+                  {book.page_count ? ` · ${t('bookDetailsProgressPercent', { percent: progress })}` : null}
                 </p>
                 <div className="kids-book-progress kids-book-details-continue-bar" role="progressbar" aria-valuenow={progress} aria-valuemin={0} aria-valuemax={100}>
                   <motion.div
@@ -485,14 +504,14 @@ function BookDetails() {
           ) : null}
 
           {book.description ? (
-            <section className="kids-book-details-section" aria-label="Description">
-              <h2 className="kids-shelf-title kids-book-details-section-title !mb-space-12">L&apos;histoire</h2>
+            <section className="kids-book-details-section" aria-label={t('bookDetailsAboutStory')}>
+              <h2 className="kids-shelf-title kids-book-details-section-title !mb-space-12">{t('bookDetailsAboutStory')}</h2>
               {hasLongDescription ? (
                 <details className="kids-book-details-desc">
                   <summary>
                     <p className="kids-book-details-desc-text kids-book-details-desc-preview">{book.description}</p>
-                    <span className="kids-book-details-read-more kids-book-details-read-more--more">Lire plus</span>
-                    <span className="kids-book-details-read-more kids-book-details-read-more--less">Lire moins</span>
+                    <span className="kids-book-details-read-more kids-book-details-read-more--more">{t('bookDetailsReadMore')}</span>
+                    <span className="kids-book-details-read-more kids-book-details-read-more--less">{t('bookDetailsReadLess')}</span>
                   </summary>
                   <p className="kids-book-details-desc-text kids-book-details-desc-full">{book.description}</p>
                 </details>
@@ -502,14 +521,14 @@ function BookDetails() {
             </section>
           ) : null}
 
-          <section className="kids-book-details-section" aria-label="Informations">
-            <h2 className="kids-shelf-title kids-book-details-section-title !mb-space-16">À propos</h2>
+          <section className="kids-book-details-section" aria-label={t('bookDetailsAbout')}>
+            <h2 className="kids-shelf-title kids-book-details-section-title !mb-space-16">{t('bookDetailsAbout')}</h2>
             <ul className="kids-book-details-info-grid">
               {ageLabel ? (
                 <li className="kids-book-details-info-item">
                   <ChildIcon className="h-4 w-4" />
                   <div>
-                    <p className="kids-book-details-info-label">Âge</p>
+                    <p className="kids-book-details-info-label">{t('bookDetailsAge')}</p>
                     <p className="kids-book-details-info-value">{ageLabel}</p>
                   </div>
                 </li>
@@ -518,7 +537,7 @@ function BookDetails() {
                 <li className="kids-book-details-info-item">
                   <ClockIcon className="h-4 w-4" />
                   <div>
-                    <p className="kids-book-details-info-label">Lecture</p>
+                    <p className="kids-book-details-info-label">{t('bookDetailsReadingTime')}</p>
                     <p className="kids-book-details-info-value">{durationLabel}</p>
                   </div>
                 </li>
@@ -527,7 +546,7 @@ function BookDetails() {
                 <li className="kids-book-details-info-item">
                   <CategoryIcon className="h-4 w-4" />
                   <div>
-                    <p className="kids-book-details-info-label">Catégorie</p>
+                    <p className="kids-book-details-info-label">{t('bookDetailsCategory')}</p>
                     <p className="kids-book-details-info-value">{book.category_name}</p>
                   </div>
                 </li>
@@ -536,7 +555,7 @@ function BookDetails() {
                 <li className="kids-book-details-info-item">
                   <LanguageIcon className="h-4 w-4" />
                   <div>
-                    <p className="kids-book-details-info-label">Langue</p>
+                    <p className="kids-book-details-info-label">{t('bookDetailsLanguage')}</p>
                     <p className="kids-book-details-info-value">{languageLabel}</p>
                   </div>
                 </li>
@@ -545,7 +564,7 @@ function BookDetails() {
                 <li className="kids-book-details-info-item">
                   <MicrophoneIcon className="h-4 w-4" />
                   <div>
-                    <p className="kids-book-details-info-label">Narrateur</p>
+                    <p className="kids-book-details-info-label">{t('bookDetailsNarrator')}</p>
                     <p className="kids-book-details-info-value">{narratorLabel}</p>
                   </div>
                 </li>
@@ -554,7 +573,7 @@ function BookDetails() {
                 <li className="kids-book-details-info-item">
                   <BookIcon className="h-4 w-4" />
                   <div>
-                    <p className="kids-book-details-info-label">Pages</p>
+                    <p className="kids-book-details-info-label">{t('bookDetailsPages')}</p>
                     <p className="kids-book-details-info-value">{book.page_count}</p>
                   </div>
                 </li>
@@ -562,21 +581,19 @@ function BookDetails() {
             </ul>
           </section>
 
-          <aside className="kids-book-details-note" aria-label="Abonnement">
+          <aside className="kids-book-details-note" aria-label={isKidAccount ? t('bookDetailsAccessKid') : t('bookDetailsAccessParent')}>
             <p className="kids-type-caption uppercase tracking-[0.12em] text-primary-600/80">
-              {isKidAccount ? 'Accès géré par tes parents' : 'Abonnement mensuel'}
+              {isKidAccount ? t('bookDetailsAccessKid') : t('bookDetailsAccessParent')}
             </p>
             <p className="kids-type-body mt-space-8 text-foreground-secondary">
-              {isKidAccount
-                ? 'Si ce livre est bloqué, demande à ton parent de choisir une formule.'
-                : 'Débloquez 1, 2 ou 3 livres par mois selon votre formule.'}
+              {isKidAccount ? t('bookDetailsAccessKidBody') : t('bookDetailsAccessParentBody')}
             </p>
             {!isKidAccount ? (
               <Link
                 to="/abonnements"
                 className="kids-touch-target mt-space-16 inline-flex min-h-[56px] items-center rounded-full border border-border/60 bg-card px-space-20 text-caption font-semibold text-primary-700 shadow-soft hover:bg-primary-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-400"
               >
-                Voir les formules
+                {t('bookDetailsSeePlans')}
               </Link>
             ) : null}
           </aside>

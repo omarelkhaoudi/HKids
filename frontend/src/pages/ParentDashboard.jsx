@@ -200,7 +200,7 @@ function ParentDashboard() {
  loadData();
 } catch (error) {
  console.error('Error deleting kid:', error);
- showToast(error.response?.data?.error || 'Erreur lors de la suppression', 'error');
+ showToast(error.response?.data?.error || t('parentDeleteError'), 'error');
 }
 };
 
@@ -212,7 +212,7 @@ function ParentDashboard() {
  setAccountForm({username: '', password: ''});
 } catch (error) {
  console.error('Error creating account:', error);
- showToast(error.response?.data?.error || 'Erreur lors de la création du compte', 'error');
+ showToast(error.response?.data?.error || t('parentCreateAccountError'), 'error');
 }
 };
 
@@ -627,11 +627,11 @@ function ParentDashboard() {
  <div className="space-y-4">
  <div>
  <label className="block text-sm font-bold mb-2">{t('parentUsername')}</label>
- <Input type="text" value={accountForm.username} onChange={(e) => setAccountForm({...accountForm, username: e.target.value})} placeholder="Nom d'utilisateur" className="w-full" />
+ <Input type="text" value={accountForm.username} onChange={(e) => setAccountForm({...accountForm, username: e.target.value})} placeholder={t('parentAccountUsernamePlaceholder')} className="w-full" />
  </div>
  <div>
  <label className="block text-sm font-bold mb-2">{t('parentPassword')}</label>
- <Input type="password" value={accountForm.password} onChange={(e) => setAccountForm({...accountForm, password: e.target.value})} placeholder="Mot de passe (min. 6 caractères)" className="w-full" />
+ <Input type="password" value={accountForm.password} onChange={(e) => setAccountForm({...accountForm, password: e.target.value})} placeholder={t('parentAccountPasswordPlaceholder')} className="w-full" />
  </div>
  <div className="flex gap-3 pt-4">
  <Button variant="ghost" className="flex-1" onClick={() => setShowAccountModal(false)}>{t('parentCancel')}</Button>

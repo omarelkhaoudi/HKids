@@ -63,9 +63,9 @@ export default function FooterSection({ t }) {
             <div>
               <h4 className="font-bold text-surface-900 mb-4">{t.footerLegal}</h4>
               <ul className="space-y-3 text-sm text-surface-500 font-medium">
-                <li><Link to="/abonnements" className="hover:text-foreground-600 transition-colors">{t.footerPrivacy}</Link></li>
-                <li><Link to="/abonnements" className="hover:text-foreground-600 transition-colors">{t.footerTerms}</Link></li>
-                <li><Link to="/abonnements" className="hover:text-foreground-600 transition-colors">{t.footerGdpr}</Link></li>
+                <li><span className="text-surface-400">{t.footerPrivacy} · {t.footerComingSoon}</span></li>
+                <li><span className="text-surface-400">{t.footerTerms} · {t.footerComingSoon}</span></li>
+                <li><span className="text-surface-400">{t.footerGdpr} · {t.footerComingSoon}</span></li>
               </ul>
             </div>
           </div>

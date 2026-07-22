@@ -473,45 +473,45 @@ function KidsLibrary() {
           <>
             <KidsEmptyState
               emoji="🔎"
-              title={t('noSearchResultsTitle')}
-              description={t('noSearchResultsDescription')}
-              actionLabel={t('allCategories')}
-              onAction={() => {
-                setSearchQuery('');
-                handleThemeChange('all');
-              }}
-              showMascot
-              mascotMood="encourage"
+            title={t('nothingFound')}
+            description={t('tryAnotherWord')}
+            actionLabel={t('allCategories')}
+            onAction={() => {
+              setSearchQuery('');
+              handleThemeChange('all');
+            }}
+            showMascot
+            mascotMood="encourage"
+          />
+          {todayAnnotated.length > 0 && (
+            <KidsBookCarousel
+              title={t('forYou')}
+              subtitle={t('discoverRecommendedSubtitle')}
+              books={todayAnnotated.slice(0, 8)}
+              {...carouselProps}
+              seeAllLabel={null}
             />
-            {todayAnnotated.length > 0 && (
-              <KidsBookCarousel
-                title={t('forYou')}
-                subtitle={t('discoverRecommendedSubtitle')}
-                books={todayAnnotated.slice(0, 8)}
-                {...carouselProps}
-                seeAllLabel={null}
-              />
-            )}
-          </>
-        ) : books.length === 0 ? (
+          )}
+        </>
+      ) : books.length === 0 ? (
+        <KidsEmptyState
+          title={t('emptyBooksTitle')}
+          description={t('emptyBooksDescription')}
+          actionLabel={t('allCategories')}
+          onAction={() => handleThemeChange('all')}
+          showMascot
+        />
+      ) : selectedTheme !== 'all' ? (
+        themeBooks.length === 0 ? (
           <KidsEmptyState
-            title={t('emptyBooksTitle')}
-            description={t('emptyBooksDescription')}
+            title={t('nothingFound')}
+            description={t('tryAnotherWord')}
             actionLabel={t('allCategories')}
             onAction={() => handleThemeChange('all')}
             showMascot
+            mascotMood="encourage"
           />
-        ) : selectedTheme !== 'all' ? (
-          themeBooks.length === 0 ? (
-            <KidsEmptyState
-              title={t('nothingFound')}
-              description={t('tryAnotherWord')}
-              actionLabel={t('allCategories')}
-              onAction={() => handleThemeChange('all')}
-              showMascot
-              mascotMood="encourage"
-            />
-          ) : (
+        ) : (
             <>
               {featuredHeroBook && (
                 <KidsHeroStoryCard

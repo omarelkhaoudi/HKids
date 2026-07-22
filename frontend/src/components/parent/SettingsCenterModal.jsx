@@ -1,30 +1,40 @@
-import React, {useState, useEffect, useRef} from 'react';
+import React, {useState, useEffect, useRef, useMemo, useId} from 'react';
 import {motion, AnimatePresence} from 'framer-motion';
 import {
- UserIcon, SearchIcon, XIcon, ShieldIcon, LockIcon, LanguageIcon, 
- BellIcon, BookIcon, FontIcon, VolumeIcon, SmartphoneIcon, 
- ComputerIcon, MailIcon, CheckCircleIcon, LogOutIcon, ChildIcon, 
+ UserIcon, SearchIcon, XIcon, ShieldIcon, LockIcon, LanguageIcon,
+ BellIcon, BookIcon, FontIcon, VolumeIcon, SmartphoneIcon,
+ ComputerIcon, MailIcon, CheckCircleIcon, LogOutIcon, ChildIcon,
  HistoryIcon, StarIcon, ArrowRightIcon, AlertIcon
 } from '../Icons';
 import {Button, Badge, Switch, Input, Avatar} from '../ui';
 import {useAuth} from '../../context/AuthContext';
+import {useLanguage} from '../../context/LanguageContext';
 import {useToast} from '../ToastProvider';
 import {subscriptionsAPI} from '../../api/subscriptions';
 import {supportAPI} from '../../api/support';
 import {useNavigate} from 'react-router-dom';
 import PrivacyCenter from './PrivacyCenter';
 import { storage } from '../../utils/storage';
+import {LANGUAGE_OPTIONS} from '../../utils/translations';
 
-const SECTIONS = [
- {id: 'account', label: 'Compte', icon: UserIcon},
- {id: 'appearance', label: 'Apparence', icon: SmartphoneIcon},
- {id: 'profile', label: 'Profil', icon: ChildIcon},
- {id: 'privacy', label: 'Confidentialité', icon: ShieldIcon},
- {id: 'security', label: 'Sécurité', icon: LockIcon},
- {id: 'language', label: 'Langues', icon: LanguageIcon},
- {id: 'reading', label: 'Lecture', icon: FontIcon},
- {id: 'subscription', label: 'Abonnement', icon: StarIcon},
- {id: 'support', label: 'Support', icon: MailIcon},
+const SECTION_ICONS = {
+ account: UserIcon,
+ appearance: SmartphoneIcon,
+ profile: ChildIcon,
+ privacy: ShieldIcon,
+ security: LockIcon,
+ language: LanguageIcon,
+ reading: FontIcon,
+ subscription: StarIcon,
+ support: MailIcon,
+};
+
+const SUPPORT_CATEGORIES = [
+ {value: 'general', key: 'parentSettingsSupportCategoryGeneral'},
+ {value: 'billing', key: 'parentSettingsSupportCategoryBilling'},
+ {value: 'technical', key: 'parentSettingsSupportCategoryTechnical'},
+ {value: 'content', key: 'parentSettingsSupportCategoryContent'},
+ {value: 'bug', key: 'parentSettingsSupportCategoryBug'},
 ];
 
 export function SettingsCenterModal({isOpen, onClose}) {
@@ -33,8 +43,10 @@ export function SettingsCenterModal({isOpen, onClose}) {
  const [isDarkMode, setIsDarkMode] = useState(document.documentElement.classList.contains('dark'));
  const contentRef = useRef(null);
  const sectionRefs = useRef({});
+ const titleId = useId();
  const {user} = useAuth();
  const {showToast} = useToast();
+ const {language, changeLanguage, t, isRtl} = useLanguage();
  const navigate = useNavigate();
  const [subscription, setSubscription] = useState(null);
  const [invoices, setInvoices] = useState([]);
@@ -43,6 +55,32 @@ export function SettingsCenterModal({isOpen, onClose}) {
  const [supportTickets, setSupportTickets] = useState([]);
  const [loadingSupport, setLoadingSupport] = useState(false);
  const [submittingSupport, setSubmittingSupport] = useState(false);
+
+ const sections = useMemo(() => ([
+  {id: 'account', label: t('parentSettingsSectionAccount')},
+  {id: 'appearance', label: t('parentSettingsSectionAppearance')},
+  {id: 'profile', label: t('parentSettingsSectionProfile')},
+  {id: 'privacy', label: t('parentSettingsSectionPrivacy')},
+  {id: 'security', label: t('parentSettingsSectionSecurity')},
+  {id: 'language', label: t('parentSettingsSectionLanguage')},
+  {id: 'reading', label: t('parentSettingsSectionReading')},
+  {id: 'subscription', label: t('parentSettingsSectionSubscription')},
+  {id: 'support', label: t('parentSettingsSectionSupport')},
+ ]), [t]);
+
+ const sectionDescriptions = useMemo(() => ({
+  account: t('parentSettingsAccountDesc'),
+  appearance: t('parentSettingsAppearanceDesc'),
+  profile: t('parentSettingsProfileDesc'),
+  privacy: t('parentSettingsPrivacyDesc'),
+  security: t('parentSettingsSecurityDesc'),
+  language: t('parentSettingsLanguageDesc'),
+  reading: t('parentSettingsReadingDesc'),
+  subscription: t('parentSettingsSubscriptionDesc'),
+  support: t('parentSettingsSupportDesc'),
+ }), [t]);
+
+ const dateLocale = language === 'ar' ? 'ar' : language === 'en' ? 'en-US' : 'fr-FR';
 
  useEffect(() => {
  if (!isOpen || user?.role === 'kid') return;
@@ -83,18 +121,18 @@ export function SettingsCenterModal({isOpen, onClose}) {
  const submitSupportTicket = async (event) => {
  event.preventDefault();
  if (!supportForm.subject.trim() || !supportForm.message.trim()) {
- showToast('Veuillez remplir le sujet et le message.', 'error');
+ showToast(t('parentSettingsSupportFillRequired'), 'error');
  return;
  }
  try {
  setSubmittingSupport(true);
  await supportAPI.createTicket(supportForm);
- showToast('Votre demande a été envoyée au support.', 'success');
+ showToast(t('parentSettingsSupportSent'), 'success');
  setSupportForm({ subject: '', message: '', category: 'general' });
  const response = await supportAPI.getMyTickets({ limit: 10 });
  setSupportTickets(response.data?.items || []);
  } catch (error) {
- showToast(error.response?.data?.error || 'Envoi impossible.', 'error');
+ showToast(error.response?.data?.error || t('parentSomethingWrong'), 'error');
  } finally {
  setSubmittingSupport(false);
  }
@@ -123,9 +161,9 @@ export function SettingsCenterModal({isOpen, onClose}) {
  const handleScroll = () => {
  if (!contentRef.current) return;
  const scrollPosition = contentRef.current.scrollTop + 100;
- 
+
  let currentActive = activeSection;
- for (const section of SECTIONS) {
+ for (const section of sections) {
  const element = sectionRefs.current[section.id];
  if (element && element.offsetTop <= scrollPosition) {
  currentActive = section.id;
@@ -136,25 +174,31 @@ export function SettingsCenterModal({isOpen, onClose}) {
 }
 };
 
- const persistPreference = (key, value, label) => {
+ const persistPreference = (key, value) => {
  storage.setPreference(key, value);
- showToast(`${label} enregistrée`, 'success');
+ showToast(t('parentChangesSaved'), 'success');
  };
 
  if (!isOpen) return null;
 
+ const activeLabel = sections.find((s) => s.id === activeSection)?.label;
+
  return (
  <AnimatePresence>
- <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 md:p-8">
- <motion.div 
- initial={{opacity: 0}} 
- animate={{opacity: 1}} 
- exit={{opacity: 0}} 
+ <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 md:p-8" dir={isRtl ? 'rtl' : 'ltr'}>
+ <motion.div
+ initial={{opacity: 0}}
+ animate={{opacity: 1}}
+ exit={{opacity: 0}}
  className="absolute inset-0 bg-surface-900/40 backdrop-blur-md"
  onClick={onClose}
+ aria-hidden="true"
  />
- 
- <motion.div 
+
+ <motion.div
+ role="dialog"
+ aria-modal="true"
+ aria-labelledby={titleId}
  initial={{opacity: 0, scale: 0.95, y: 20}}
  animate={{opacity: 1, scale: 1, y: 0}}
  exit={{opacity: 0, scale: 0.95, y: 20}}
@@ -165,135 +209,134 @@ export function SettingsCenterModal({isOpen, onClose}) {
  <div className="w-full md:w-72 bg-card/50 backdrop-blur-xl border-r border-border/70 flex flex-col z-10 shrink-0">
  <div className="p-6 pb-4">
  <div className="flex items-center justify-between mb-6">
- <h2 className="text-xl font-black tracking-tight">Paramètres</h2>
- <button onClick={onClose} className="md:hidden p-2 bg-surface-secondary hover:bg-surface-200 rounded-full transition-colors">
+ <h2 id={titleId} className="text-xl font-black tracking-tight">{t('parentSettingsTitle')}</h2>
+ <button type="button" onClick={onClose} aria-label={t('parentCancel')} className="md:hidden p-2 bg-surface-secondary hover:bg-surface-200 rounded-full transition-colors">
  <XIcon className="w-5 h-5 text-foreground-secondary" />
  </button>
  </div>
- 
+
  <div className="relative">
  <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-surface-400" />
- <input 
- type="text" 
- placeholder="Rechercher..." 
+ <input
+ type="search"
+ placeholder={t('parentSettingsSearch')}
  value={searchQuery}
  onChange={(e) => setSearchQuery(e.target.value)}
  className="w-full pl-9 pr-4 py-2.5 bg-surface-secondary/60 border border-border rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all placeholder:text-surface-400"
  />
  </div>
  </div>
- 
+
  <div className="flex-1 overflow-y-auto px-4 pb-6 space-y-1 custom-scrollbar">
- {SECTIONS.filter(s => s.label.toLowerCase().includes(searchQuery.toLowerCase())).map((section) => (
+ {sections.filter((s) => s.label.toLowerCase().includes(searchQuery.toLowerCase())).map((section) => {
+ const Icon = SECTION_ICONS[section.id];
+ return (
  <button
+ type="button"
  key={section.id}
  onClick={() => scrollToSection(section.id)}
- className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all duration-200 ${
- activeSection === section.id 
- ? 'bg-primary-50/80 text-foreground-600 shadow-sm' 
+ className={`relative w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all duration-200 ${
+ activeSection === section.id
+ ? 'bg-primary-50/80 text-foreground-600 shadow-sm'
  : 'text-foreground-secondary hover:bg-surface-secondary '
 }`}
  >
- <section.icon className={`w-5 h-5 ${activeSection === section.id ? 'text-foreground-500' : 'text-surface-400'}`} />
+ <Icon className={`w-5 h-5 ${activeSection === section.id ? 'text-foreground-500' : 'text-surface-400'}`} />
  {section.label}
  {activeSection === section.id && (
  <motion.div layoutId="active-indicator" className="absolute left-0 w-1 h-6 bg-primary-500 rounded-r-full" />
  )}
  </button>
- ))}
+ );
+ })}
  </div>
  </div>
- 
+
  {/* Content Area */}
  <div className="flex-1 relative overflow-hidden bg-surface-secondary">
- {/* Header Sticky */}
  <div className="absolute top-0 inset-x-0 h-16 bg-surface-secondary/80 backdrop-blur-xl border-b border-border/50 z-10 flex items-center justify-between px-8">
- <h3 className="font-bold text-foreground capitalize">{SECTIONS.find(s => s.id === activeSection)?.label}</h3>
- <button onClick={onClose} className="hidden md:flex p-2 bg-card hover:bg-surface-secondary shadow-sm border border-border rounded-full transition-colors group">
+ <h3 className="font-bold text-foreground capitalize">{activeLabel}</h3>
+ <button type="button" onClick={onClose} aria-label={t('parentCancel')} className="hidden md:flex p-2 bg-card hover:bg-surface-secondary shadow-sm border border-border rounded-full transition-colors group">
  <XIcon className="w-5 h-5 text-foreground-muted group-hover:text-foreground dark:group-hover:text-white transition-colors" />
  </button>
  </div>
- 
- {/* Scrollable Settings */}
- <div 
- ref={contentRef} 
+
+ <div
+ ref={contentRef}
  onScroll={handleScroll}
  className="absolute inset-0 overflow-y-auto pt-24 px-4 sm:px-8 md:px-12 pb-24 scroll-smooth custom-scrollbar"
  >
  <div className="max-w-3xl mx-auto space-y-16">
- 
+
  {/* ACCOUNT */}
  <section id="account" ref={el => sectionRefs.current['account'] = el} className="scroll-mt-24 space-y-6">
  <div>
- <h2 className="text-2xl font-black tracking-tight mb-2">Compte</h2>
- <p className="text-foreground-muted">Gérez vos informations personnelles et préférences de sécurité.</p>
+ <h2 className="text-2xl font-black tracking-tight mb-2">{t('parentSettingsSectionAccount')}</h2>
+ <p className="text-foreground-muted">{sectionDescriptions.account}</p>
  </div>
- 
+
  <div className="bg-card rounded-3xl p-6 md:p-8 shadow-sm border border-border">
  <div className="flex flex-col md:flex-row items-center md:items-start gap-8 mb-8">
- <div className="relative group cursor-pointer">
+ <div className="relative group">
  <Avatar src={null} fallback={user?.username?.[0] || 'P'} size="2xl" className="border-4 border-surface-50 shadow-md w-32 h-32 text-4xl" />
- <div className="absolute inset-0 bg-black/40 rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm">
- <span className="text-white text-xs font-bold uppercase tracking-wider">Modifier</span>
+ <div className="absolute inset-0 bg-black/40 rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm pointer-events-none">
+ <span className="text-white text-xs font-bold uppercase tracking-wider">{t('parentSettingsEditPhoto')}</span>
  </div>
  </div>
  <div className="flex-1 w-full space-y-4">
+ <p className="text-sm text-foreground-muted">{t('parentSettingsAccountManagedHint')}</p>
  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
  <div>
- <label className="block text-xs font-bold text-foreground-muted uppercase tracking-wider mb-2">Nom complet</label>
- <Input defaultValue={user?.username || 'Parent'} className="w-full bg-surface-secondary font-medium" />
+ <label className="block text-xs font-bold text-foreground-muted uppercase tracking-wider mb-2">{t('parentSettingsFullName')}</label>
+ <Input defaultValue={user?.username || 'Parent'} readOnly className="w-full bg-surface-secondary font-medium" />
  </div>
  <div>
- <label className="block text-xs font-bold text-foreground-muted uppercase tracking-wider mb-2">Email</label>
- <Input defaultValue={user?.email || 'parent@hkids.com'} className="w-full bg-surface-secondary font-medium" />
- </div>
- <div className="md:col-span-2">
- <label className="block text-xs font-bold text-foreground-muted uppercase tracking-wider mb-2">Téléphone (Optionnel)</label>
- <Input placeholder="+33 6 12 34 56 78" className="w-full bg-surface-secondary font-medium" />
+ <label className="block text-xs font-bold text-foreground-muted uppercase tracking-wider mb-2">{t('parentSettingsEmail')}</label>
+ <Input defaultValue={user?.email || ''} readOnly className="w-full bg-surface-secondary font-medium" />
  </div>
  </div>
  <div className="flex justify-end pt-2">
- <Button onClick={() => showToast('Gérez les profils enfants depuis le tableau de bord parent.', 'info')} className="shadow-md">Enregistrer les modifications</Button>
+ <Button onClick={() => showToast(t('parentSettingsManageKidsHint'), 'info')} className="shadow-md">{t('parentSettingsSaveChanges')}</Button>
  </div>
  </div>
  </div>
  </div>
- 
+
  <div className="bg-card rounded-3xl p-6 md:p-8 shadow-sm border border-danger-200/50">
- <h3 className="text-lg font-bold text-danger-600 mb-4">Zone de danger</h3>
+ <h3 className="text-lg font-bold text-danger-600 mb-4">{t('parentSettingsDangerZone')}</h3>
  <div className="space-y-4">
  <div className="flex items-center justify-between p-4 bg-danger-50/50 rounded-2xl border border-danger-100/30">
  <div>
- <p className="font-bold text-danger-900">Modifier le mot de passe</p>
- <p className="text-sm text-danger-600/80">Il est recommandé de le changer régulièrement.</p>
+ <p className="font-bold text-danger-900">{t('parentSettingsChangePassword')}</p>
+ <p className="text-sm text-danger-600/80">{t('parentSettingsChangePasswordDesc')}</p>
  </div>
- <Button variant="outline" className="text-danger-600 border-danger-200 hover:bg-danger-50">Modifier</Button>
+ <Button disabled variant="outline" className="text-danger-600 border-danger-200">{t('parentComingSoon')}</Button>
  </div>
  <div className="flex items-center justify-between p-4 bg-danger-50/50 rounded-2xl border border-danger-100/30">
  <div>
- <p className="font-bold text-danger-900">Supprimer le compte</p>
- <p className="text-sm text-danger-600/80">Cette action est irréversible et supprimera toutes vos données.</p>
+ <p className="font-bold text-danger-900">{t('parentSettingsDeleteAccount')}</p>
+ <p className="text-sm text-danger-600/80">{t('parentSettingsDeleteAccountDesc')}</p>
  </div>
  <Button
  className="bg-danger-500 hover:bg-danger-600 text-white shadow-md"
  onClick={() => scrollToSection('privacy')}
  >
- Supprimer
+ {t('parentSettingsDeleteAccount')}
  </Button>
  </div>
  </div>
  </div>
  </section>
- 
+
  <hr className="border-border" />
 
  {/* APPARENCE */}
  <section id="appearance" ref={el => sectionRefs.current['appearance'] = el} className="scroll-mt-24 space-y-6">
  <div>
- <h2 className="text-2xl font-black tracking-tight mb-2">Apparence</h2>
- <p className="text-foreground-muted">Personnalisez l'apparence visuelle de HKids.</p>
+ <h2 className="text-2xl font-black tracking-tight mb-2">{t('parentSettingsSectionAppearance')}</h2>
+ <p className="text-foreground-muted">{sectionDescriptions.appearance}</p>
  </div>
- 
+
  <div className="bg-card rounded-3xl p-6 shadow-sm border border-border space-y-6">
  <div className="flex items-center justify-between">
  <div className="flex items-center gap-4">
@@ -301,298 +344,270 @@ export function SettingsCenterModal({isOpen, onClose}) {
  <SmartphoneIcon className="w-6 h-6" />
  </div>
  <div>
- <h4 className="font-bold text-foreground">Mode Sombre</h4>
- <p className="text-sm text-foreground-muted">Un thème sombre élégant et reposant pour les yeux.</p>
+ <h4 className="font-bold text-foreground">{t('parentSettingsDarkMode')}</h4>
+ <p className="text-sm text-foreground-muted">{t('parentSettingsDarkModeDesc')}</p>
  </div>
  </div>
- <Switch 
- checked={isDarkMode} 
+ <Switch
+ checked={isDarkMode}
  onChange={() => {
    const newMode = !isDarkMode;
    setIsDarkMode(newMode);
    window.dispatchEvent(new CustomEvent('toggleDarkMode', { detail: newMode }));
- }} 
+ }}
  />
  </div>
  </div>
  </section>
- 
+
  <hr className="border-border" />
- 
+
  {/* PROFILE */}
  <section id="profile" ref={el => sectionRefs.current['profile'] = el} className="scroll-mt-24 space-y-6">
  <div>
- <h2 className="text-2xl font-black tracking-tight mb-2">Profil</h2>
- <p className="text-foreground-muted">Gérez les préférences globales de votre famille.</p>
+ <h2 className="text-2xl font-black tracking-tight mb-2">{t('parentSettingsSectionProfile')}</h2>
+ <p className="text-foreground-muted">{sectionDescriptions.profile}</p>
  </div>
- 
- <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
  <div className="bg-card rounded-3xl p-6 shadow-sm border border-border">
- <h4 className="font-bold mb-4">Fuseau horaire</h4>
- <select className="w-full bg-surface-secondary border border-border rounded-xl px-4 py-3 font-medium focus:outline-none focus:ring-2 focus:ring-primary-500/20">
- <option>Europe/Paris (GMT+2)</option>
- <option>Europe/London (GMT+1)</option>
- <option>America/New_York (GMT-4)</option>
- </select>
- </div>
- <div className="bg-card rounded-3xl p-6 shadow-sm border border-border">
- <h4 className="font-bold mb-4">Pays de résidence</h4>
- <select className="w-full bg-surface-secondary border border-border rounded-xl px-4 py-3 font-medium focus:outline-none focus:ring-2 focus:ring-primary-500/20">
- <option>France</option>
- <option>Canada</option>
- <option>Suisse</option>
- <option>Belgique</option>
- </select>
+ <div className="flex items-start gap-4">
+ <Badge variant="secondary" className="text-[10px] shrink-0">{t('parentComingSoon')}</Badge>
+ <p className="text-sm text-foreground-muted">{t('parentSettingsProfileComingSoon')}</p>
  </div>
  </div>
  </section>
- 
+
  <hr className="border-border" />
- 
+
  {/* PRIVACY */}
  <section id="privacy" ref={el => sectionRefs.current['privacy'] = el} className="scroll-mt-24 space-y-6">
  <div>
- <h2 className="text-2xl font-black tracking-tight mb-2">Confidentialité</h2>
- <p className="text-foreground-muted">Contrôlez vos données et celles de vos enfants de manière transparente.</p>
+ <h2 className="text-2xl font-black tracking-tight mb-2">{t('parentSettingsSectionPrivacy')}</h2>
+ <p className="text-foreground-muted">{sectionDescriptions.privacy}</p>
  </div>
- 
+
  <PrivacyCenter />
  </section>
- 
+
  <hr className="border-border" />
- 
+
  {/* SECURITY */}
  <section id="security" ref={el => sectionRefs.current['security'] = el} className="scroll-mt-24 space-y-6">
  <div>
- <h2 className="text-2xl font-black tracking-tight mb-2">Sécurité</h2>
- <p className="text-foreground-muted">Protégez l'accès à votre compte familial.</p>
+ <h2 className="text-2xl font-black tracking-tight mb-2">{t('parentSettingsSectionSecurity')}</h2>
+ <p className="text-foreground-muted">{sectionDescriptions.security}</p>
  </div>
- 
+
  <div className="bg-card rounded-3xl p-6 shadow-sm border border-border flex items-center justify-between mb-4">
  <div className="flex flex-col md:flex-row md:items-center gap-4">
  <div className="w-12 h-12 bg-surface-secondary rounded-2xl flex items-center justify-center text-foreground-secondary shrink-0">
  <SmartphoneIcon className="w-6 h-6" />
  </div>
  <div>
- <h4 className="font-bold flex items-center gap-2">Authentification à deux facteurs <Badge variant="primary" className="text-[10px]">Prochainement</Badge></h4>
- <p className="text-sm text-foreground-muted">Ajoutez une couche de sécurité supplémentaire à votre compte.</p>
+ <h4 className="font-bold flex items-center gap-2">{t('parentSettings2faTitle')} <Badge variant="primary" className="text-[10px]">{t('parentComingSoon')}</Badge></h4>
+ <p className="text-sm text-foreground-muted">{t('parentSettings2faDesc')}</p>
  </div>
  </div>
- <Button disabled variant="outline">Configurer</Button>
+ <Button disabled variant="outline">{t('parentSettingsConfigure')}</Button>
  </div>
- 
- <h4 className="font-bold mt-8 mb-4">Appareils connectés</h4>
- <div className="bg-card rounded-3xl p-2 shadow-sm border border-border divide-y divide-border/50">
- <div className="flex items-center justify-between p-4 rounded-2xl">
- <div className="flex items-center gap-4">
+
+ <div className="bg-card rounded-3xl p-6 shadow-sm border border-border">
+ <h4 className="font-bold mb-2">{t('parentSettingsDevicesTitle')}</h4>
+ <p className="text-sm text-foreground-muted mb-4">{t('parentSettingsDevicesDesc')}</p>
+ <div className="flex items-center gap-4 p-4 rounded-2xl bg-surface-secondary">
  <div className="p-3 bg-primary-50 text-foreground-600 rounded-xl"><ComputerIcon className="w-5 h-5"/></div>
  <div>
- <p className="font-bold flex items-center gap-2">MacBook Pro <Badge variant="success" className="text-[10px]">Cet appareil</Badge></p>
- <p className="text-xs text-foreground-muted">Paris, France • En ligne maintenant</p>
+ <p className="font-bold flex items-center gap-2">{t('parentSettingsThisDevice')} <Badge variant="success" className="text-[10px]">{t('parentSettingsOnlineNow')}</Badge></p>
  </div>
- </div>
- </div>
- <div className="flex items-center justify-between p-4 rounded-2xl">
- <div className="flex items-center gap-4">
- <div className="p-3 bg-surface-secondary text-foreground-muted rounded-xl"><SmartphoneIcon className="w-5 h-5"/></div>
- <div>
- <p className="font-bold">iPhone 13</p>
- <p className="text-xs text-foreground-muted">Paris, France • Actif il y a 2 heures</p>
- </div>
- </div>
- <button className="text-xs font-bold text-danger-500 hover:text-danger-600 transition-colors">Déconnecter</button>
  </div>
  </div>
  </section>
- 
+
  <hr className="border-border" />
- 
+
  {/* LANGUAGE */}
  <section id="language" ref={el => sectionRefs.current['language'] = el} className="scroll-mt-24 space-y-6">
  <div>
- <h2 className="text-2xl font-black tracking-tight mb-2">Langues</h2>
- <p className="text-foreground-muted">Gérez les langues de l'interface et du contenu.</p>
+ <h2 className="text-2xl font-black tracking-tight mb-2">{t('parentSettingsSectionLanguage')}</h2>
+ <p className="text-foreground-muted">{sectionDescriptions.language}</p>
  </div>
- 
+
  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
- {['Français', 'English', 'العربية'].map((lang, i) => (
- <div key={i} className={`p-4 rounded-2xl border-2 cursor-pointer transition-all ${i === 0 ? 'border-primary-500 bg-primary-50/80' : 'border-border bg-card hover:border-primary-300'}`}>
+ {LANGUAGE_OPTIONS.map((option) => (
+ <button
+ type="button"
+ key={option.id}
+ onClick={() => changeLanguage(option.id)}
+ className={`p-4 rounded-2xl border-2 cursor-pointer transition-all text-left ${
+ language === option.id ? 'border-primary-500 bg-primary-50/80' : 'border-border bg-card hover:border-primary-300'
+}`}
+ >
  <div className="flex items-center justify-between">
- <span className={`font-bold ${i === 0 ? 'text-foreground-700 ' : 'text-foreground-secondary '}`}>{lang}</span>
- {i === 0 && <CheckCircleIcon className="w-5 h-5 text-foreground-500" />}
+ <span className={`font-bold ${language === option.id ? 'text-foreground-700' : 'text-foreground-secondary'}`}>{option.label}</span>
+ {language === option.id && <CheckCircleIcon className="w-5 h-5 text-foreground-500" />}
  </div>
- </div>
+ </button>
  ))}
  <div className="p-4 rounded-2xl border-2 border-border bg-surface-secondary opacity-50 cursor-not-allowed">
  <div className="flex items-center justify-between">
- <span className="font-bold text-foreground-muted">Español</span>
- <Badge variant="secondary" className="text-[10px]">Bientôt</Badge>
+ <span className="font-bold text-foreground-muted">{t('parentSettingsSpanish')}</span>
+ <Badge variant="secondary" className="text-[10px]">{t('parentComingSoon')}</Badge>
  </div>
  </div>
  </div>
  </section>
- 
+
  <hr className="border-border" />
- 
+
  {/* READING PREFERENCES */}
  <section id="reading" ref={el => sectionRefs.current['reading'] = el} className="scroll-mt-24 space-y-6">
  <div>
- <h2 className="text-2xl font-black tracking-tight mb-2">Préférences de Lecture</h2>
- <p className="text-foreground-muted">Personnalisez l'affichage pour un confort optimal.</p>
+ <h2 className="text-2xl font-black tracking-tight mb-2">{t('parentSettingsSectionReading')}</h2>
+ <p className="text-foreground-muted">{sectionDescriptions.reading}</p>
  </div>
- 
+
  <div className="bg-card rounded-3xl p-6 shadow-sm border border-border space-y-8">
  <div>
- <h4 className="font-bold mb-4">Police par défaut</h4>
- <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
- <div className="p-4 rounded-2xl border-2 border-primary-500 bg-primary-50/80 flex items-center justify-center cursor-pointer">
- <span className="font-bold font-sans">Classique (Inter)</span>
+ <div className="flex items-center gap-2 mb-4">
+ <h4 className="font-bold">{t('parentSettingsFontDefault')}</h4>
+ <Badge variant="secondary" className="text-[10px]">{t('parentComingSoon')}</Badge>
  </div>
- <div className="p-4 rounded-2xl border-2 border-border hover:border-primary-300 bg-card flex items-center justify-center cursor-pointer">
- <span className="font-bold font-serif">Ludique (Comic)</span>
+ <p className="text-sm text-foreground-muted">{t('parentComingSoon')}</p>
  </div>
- <div className="p-4 rounded-2xl border-2 border-border hover:border-primary-300 bg-card flex items-center justify-center cursor-pointer relative overflow-hidden">
- <span className="font-bold" style={{fontFamily: 'OpenDyslexic, sans-serif'}}>Dyslexie</span>
- <div className="absolute top-0 right-0 w-8 h-8 bg-primary-100 rounded-bl-2xl"></div>
- </div>
- </div>
- </div>
- 
+
  <div>
  <div className="flex items-center justify-between mb-4">
- <h4 className="font-bold">Interligne large</h4>
+ <h4 className="font-bold">{t('parentSettingsWideSpacing')}</h4>
  <Switch
  defaultChecked={storage.getPreferences().reading_wide_spacing ?? true}
- onChange={(checked) => persistPreference('reading_wide_spacing', checked, 'Interligne')}
+ onChange={(checked) => persistPreference('reading_wide_spacing', checked)}
  />
  </div>
- <p className="text-sm text-foreground-muted">Augmente l'espace entre les lignes pour faciliter la lecture.</p>
+ <p className="text-sm text-foreground-muted">{t('parentSettingsWideSpacingDesc')}</p>
  </div>
- 
+
  <div>
  <div className="flex items-center justify-between mb-4">
- <h4 className="font-bold">Lecture audio automatique</h4>
+ <h4 className="font-bold">{t('parentSettingsAutoAudio')}</h4>
  <Switch
  defaultChecked={storage.getPreferences().reading_auto_audio ?? false}
- onChange={(checked) => persistPreference('reading_auto_audio', checked, 'Lecture audio')}
+ onChange={(checked) => persistPreference('reading_auto_audio', checked)}
  />
  </div>
- <p className="text-sm text-foreground-muted">Démarre la voix off automatiquement à l'ouverture d'un livre.</p>
+ <p className="text-sm text-foreground-muted">{t('parentSettingsAutoAudioDesc')}</p>
  </div>
  </div>
  </section>
- 
+
  <hr className="border-border" />
- 
+
  {/* SUBSCRIPTION */}
  <section id="subscription" ref={el => sectionRefs.current['subscription'] = el} className="scroll-mt-24 space-y-6">
  <div>
- <h2 className="text-2xl font-black tracking-tight mb-2">Abonnement</h2>
- <p className="text-foreground-muted">Gérez votre facturation et votre plan actuel.</p>
+ <h2 className="text-2xl font-black tracking-tight mb-2">{t('parentSettingsSectionSubscription')}</h2>
+ <p className="text-foreground-muted">{sectionDescriptions.subscription}</p>
  </div>
- 
+
  <div className="bg-gradient-to-br from-gray-900 to-black rounded-3xl p-8 text-white relative overflow-hidden shadow-2xl">
  <div className="absolute top-0 right-0 w-64 h-64 bg-accent-500/20 rounded-full blur-3xl pointer-events-none"></div>
  <div className="relative z-10">
  <div className="flex items-center justify-between mb-8">
  <div>
  <Badge variant="glass" className="bg-card/20 border-none font-bold mb-2">
- {subscription?.plan?.name || 'Sans abonnement actif'}
+ {subscription?.plan?.name || t('parentSettingsNoSubscription')}
  </Badge>
  <h3 className="text-4xl font-black">
  {subscription?.plan
- ? new Intl.NumberFormat('fr-FR', { style: 'currency', currency: subscription.plan.currency || 'EUR' }).format(subscription.plan.monthly_price || 0)
- : '0,00 €'}
- <span className="text-xl font-medium text-white/50"> / mois</span>
+ ? new Intl.NumberFormat(dateLocale, { style: 'currency', currency: subscription.plan.currency || 'EUR' }).format(subscription.plan.monthly_price || 0)
+ : '0'}
+ <span className="text-xl font-medium text-white/50"> {t('parentSettingsPerMonth')}</span>
  </h3>
  <p className="text-sm text-white/70 mt-2">
  {loadingBilling
- ? 'Chargement...'
+ ? t('parentSettingsSubscriptionLoading')
  : subscription?.current_period_end
- ? `Échéance : ${new Date(subscription.current_period_end).toLocaleDateString('fr-FR')}`
- : 'Aucune formule active'}
+ ? `${t('parentSubscriptionExpiry')}: ${new Date(subscription.current_period_end).toLocaleDateString(dateLocale)}`
+ : t('parentSettingsNoActivePlan')}
  </p>
  </div>
  <div className="p-4 bg-card/10 backdrop-blur-md rounded-2xl">
  <StarIcon className="w-8 h-8 text-accent-400" />
  </div>
  </div>
- 
+
  <div className="space-y-3 mb-8">
- <div className="flex items-center gap-3"><CheckCircleIcon className="w-5 h-5 text-secondary-400"/> <span>{subscription?.plan?.book_limit || 0} livre(s) premium / mois</span></div>
- <div className="flex items-center gap-3"><CheckCircleIcon className="w-5 h-5 text-secondary-400"/> <span>Statut : {subscription?.status || 'inactif'}</span></div>
- <div className="flex items-center gap-3"><CheckCircleIcon className="w-5 h-5 text-secondary-400"/> <span>{invoices.length} facture(s) récente(s)</span></div>
+ <div className="flex items-center gap-3"><CheckCircleIcon className="w-5 h-5 text-secondary-400"/> <span>{t('parentSettingsBooksPerMonth', { count: subscription?.plan?.book_limit || 0 })}</span></div>
+ <div className="flex items-center gap-3"><CheckCircleIcon className="w-5 h-5 text-secondary-400"/> <span>{t('parentSettingsStatus', { status: subscription?.status || t('parentSettingsNoActivePlan') })}</span></div>
+ <div className="flex items-center gap-3"><CheckCircleIcon className="w-5 h-5 text-secondary-400"/> <span>{t('parentSettingsRecentInvoices', { count: invoices.length })}</span></div>
  </div>
- 
+
  <div className="flex flex-col sm:flex-row gap-4 pt-6 border-t border-white/10">
  <Button className="bg-card text-black hover:bg-surface-secondary font-bold" onClick={() => navigate('/abonnements')}>
- Gérer l'abonnement
+ {t('parentSettingsManageSubscription')}
  </Button>
  <Button variant="ghost" className="text-white hover:bg-card/10" onClick={() => navigate('/abonnements')}>
- Voir l'historique des factures
+ {t('parentSettingsViewInvoices')}
  </Button>
  </div>
  </div>
  </div>
  </section>
- 
+
  <hr className="border-border" />
- 
+
  {/* SUPPORT */}
  <section id="support" ref={el => sectionRefs.current['support'] = el} className="scroll-mt-24 space-y-6">
  <div>
- <h2 className="text-2xl font-black tracking-tight mb-2">Support</h2>
- <p className="text-foreground-muted">Besoin d'aide ? Contactez notre équipe.</p>
+ <h2 className="text-2xl font-black tracking-tight mb-2">{t('parentSettingsSectionSupport')}</h2>
+ <p className="text-foreground-muted">{sectionDescriptions.support}</p>
  </div>
 
  <form onSubmit={submitSupportTicket} className="bg-card p-6 rounded-3xl border border-border shadow-sm space-y-4">
  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
  <div className="md:col-span-2">
- <label className="block text-sm font-bold mb-1">Sujet</label>
+ <label className="block text-sm font-bold mb-1">{t('parentSettingsSupportSubject')}</label>
  <Input
  required
  value={supportForm.subject}
  onChange={(e) => setSupportForm({ ...supportForm, subject: e.target.value })}
- placeholder="Décrivez brièvement votre demande"
+ placeholder={t('parentSettingsSupportSubjectPlaceholder')}
  />
  </div>
  <div>
- <label className="block text-sm font-bold mb-1">Catégorie</label>
+ <label className="block text-sm font-bold mb-1">{t('parentSettingsSupportCategory')}</label>
  <select
  value={supportForm.category}
  onChange={(e) => setSupportForm({ ...supportForm, category: e.target.value })}
  className="w-full p-3 rounded-xl bg-surface-secondary border border-border font-bold"
  >
- <option value="general">Général</option>
- <option value="billing">Facturation</option>
- <option value="technical">Technique</option>
- <option value="content">Contenu</option>
- <option value="bug">Signaler un bug</option>
+ {SUPPORT_CATEGORIES.map((cat) => (
+ <option key={cat.value} value={cat.value}>{t(cat.key)}</option>
+ ))}
  </select>
  </div>
  <div className="md:col-span-2">
- <label className="block text-sm font-bold mb-1">Message</label>
+ <label className="block text-sm font-bold mb-1">{t('parentSettingsSupportMessage')}</label>
  <textarea
  required
  rows={5}
  value={supportForm.message}
  onChange={(e) => setSupportForm({ ...supportForm, message: e.target.value })}
- placeholder="Détaillez votre demande..."
+ placeholder={t('parentSettingsSupportMessagePlaceholder')}
  className="w-full p-3 rounded-xl bg-surface-secondary border border-border"
  />
  </div>
  </div>
  <Button type="submit" disabled={submittingSupport}>
- {submittingSupport ? 'Envoi...' : 'Envoyer au support'}
+ {submittingSupport ? t('parentSettingsSupportSending') : t('parentSettingsSupportSend')}
  </Button>
  </form>
 
  <div className="bg-card p-6 rounded-3xl border border-border shadow-sm">
- <h3 className="font-black mb-4">Mes demandes</h3>
+ <h3 className="font-black mb-4">{t('parentSettingsSupportTickets')}</h3>
  {loadingSupport ? (
- <p className="text-sm text-foreground-muted">Chargement...</p>
+ <p className="text-sm text-foreground-muted">{t('parentSettingsLoading')}</p>
  ) : supportTickets.length === 0 ? (
- <p className="text-sm text-foreground-muted">Aucune demande envoyée pour le moment.</p>
+ <p className="text-sm text-foreground-muted">{t('parentSettingsSupportNoTickets')}</p>
  ) : (
  <div className="space-y-3">
  {supportTickets.map((ticket) => (
@@ -608,7 +623,7 @@ export function SettingsCenterModal({isOpen, onClose}) {
  </div>
  )}
  </div>
- 
+
  <div className="flex justify-center pt-8">
  <p className="text-xs text-surface-400 font-bold uppercase tracking-widest">HKids Version 2.4.0</p>
  </div>
