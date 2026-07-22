@@ -2,11 +2,12 @@ import {useCallback, useEffect, useState} from 'react';
 import {adminAPI} from '../../api/admin';
 import {Badge} from '../ui';
 import {HistoryIcon, SearchIcon} from '../Icons';
-import {formatAdminDate} from './AdminMetricCard';
+import {formatAdminDate, getAdminDateLocale} from './AdminMetricCard';
 import { useLanguage } from '../../context/LanguageContext';
+import { AdminTableSkeleton } from './AdminListSkeleton';
 
 function AdminAuditLog() {
- const { t } = useLanguage();
+ const { t, language } = useLanguage();
  const [logs, setLogs] = useState([]);
  const [loading, setLoading] = useState(true);
  const [error, setError] = useState('');
@@ -57,7 +58,7 @@ function AdminAuditLog() {
 
  <div className="bg-card rounded-[2rem] border border-border overflow-hidden">
  {loading ? (
- <div className="p-10 text-center text-foreground-muted">{t('adminLoading')}</div>
+ <AdminTableSkeleton rows={6} cols={5} />
  ) : logs.length === 0 ? (
  <div className="p-12 text-center"><HistoryIcon className="w-10 h-10 mx-auto text-surface-300 mb-3" /><p className="font-black">{t('adminAuditNoEntries')}</p></div>
  ) : (
@@ -75,7 +76,7 @@ function AdminAuditLog() {
  <tbody className="divide-y divide-border">
  {logs.map((log) => (
  <tr key={log.id} className="hover:bg-surface-secondary/50">
- <td className="p-4 whitespace-nowrap text-sm">{formatAdminDate(log.created_at)}</td>
+ <td className="p-4 whitespace-nowrap text-sm">{formatAdminDate(log.created_at, t, getAdminDateLocale(language))}</td>
  <td className="p-4 font-bold">{log.actor_name || log.actor_role || t('adminAuditSystem')}</td>
  <td className="p-4"><Badge variant="soft">{log.action}</Badge></td>
  <td className="p-4 text-sm">{log.resource_type || '-'} {log.resource_id ? `#${log.resource_id}` : ''}</td>

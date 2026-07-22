@@ -1,9 +1,10 @@
-import React, {useState, useEffect} from 'react';
+import React, {useState, useEffect, useRef} from 'react';
 import {createPortal} from 'react-dom';
 import {Routes, Route, Navigate, Link, useNavigate, useLocation} from 'react-router-dom';
 import {motion, AnimatePresence} from 'framer-motion';
 import {useAuth} from '../context/AuthContext';
 import {useLanguage} from '../context/LanguageContext';
+import {useModalA11y} from '../hooks/useModalA11y';
 import BookManagement from '../components/admin/BookManagement';
 import CategoryManagement from '../components/admin/CategoryManagement';
 import AdminOverview from '../components/admin/AdminOverview';
@@ -23,7 +24,7 @@ import {
  XIcon, ShieldIcon, WarningIcon, MailIcon
 } from '../components/Icons';
 import { MagicalBackground } from '../components/layout/PlatformShell';
-import {Avatar} from '../components/ui';
+import {Avatar, Skeleton} from '../components/ui';
 
 // QUICK ACTIONS FAB COMPONENT
 const QuickActions = () => {
@@ -101,8 +102,11 @@ const QuickActions = () => {
  <>
  <button 
  ref={buttonRef}
+ type="button"
  onClick={() => setIsOpen(!isOpen)}
- className="fixed bottom-6 right-6 md:bottom-8 md:right-8 z-[9990] w-14 h-14 bg-primary-500 text-white rounded-full flex items-center justify-center shadow-glow hover:scale-105 transition-transform"
+ aria-label={t('adminDashboardQuickActions')}
+ aria-expanded={isOpen}
+ className="fixed bottom-6 right-6 md:bottom-8 md:right-8 z-[9990] w-14 h-14 bg-primary-500 text-white rounded-full flex items-center justify-center shadow-glow hover:scale-105 transition-transform min-h-touch min-w-touch"
  >
  <motion.div animate={{rotate: isOpen ? 45 : 0}}><PlusIcon className="w-6 h-6" /></motion.div>
  </button>
@@ -118,6 +122,8 @@ const CommandPalette = ({isOpen, onClose}) => {
  const [results, setResults] = useState([]);
  const [loading, setLoading] = useState(false);
  const navigate = useNavigate();
+ const panelRef = useRef(null);
+ useModalA11y(isOpen, onClose, panelRef);
 
  useEffect(() => {
  const handleKeyDown = (e) => {
@@ -160,8 +166,12 @@ const CommandPalette = ({isOpen, onClose}) => {
 
  return (
  <div className="fixed inset-0 z-[100] flex items-start justify-center pt-32 px-4">
- <div className="fixed inset-0 bg-surface-900/40 backdrop-blur-sm" onClick={onClose}></div>
+ <div className="fixed inset-0 bg-surface-900/40 backdrop-blur-sm" onClick={onClose} aria-hidden="true"></div>
  <motion.div 
+ ref={panelRef}
+ role="dialog"
+ aria-modal="true"
+ aria-label={t('adminDashboardSearch')}
  initial={{opacity: 0, scale: 0.95}}
  animate={{opacity: 1, scale: 1}}
  exit={{opacity: 0, scale: 0.95}}
@@ -181,7 +191,11 @@ const CommandPalette = ({isOpen, onClose}) => {
  <div className="p-2 max-h-96 overflow-y-auto">
  {query.trim().length >= 2 ? (
  loading ? (
- <div className="p-8 text-center text-foreground-muted">{t('adminLoading')}</div>
+ <div className="p-4 space-y-3" aria-busy="true">
+ <Skeleton className="h-14 w-full rounded-xl" />
+ <Skeleton className="h-14 w-full rounded-xl" />
+ <Skeleton className="h-14 w-full rounded-xl" />
+ </div>
  ) : results.length === 0 ? (
  <div className="p-8 text-center text-foreground-muted">{t('adminDashboardNoSearchResults')}</div>
  ) : results.map((result) => (
@@ -222,11 +236,12 @@ function RequireAdminPermission({permission, permissions, children}) {
 }
 
 function AdminDashboard() {
- const { t } = useLanguage();
+ const { t, language } = useLanguage();
  const {user, logout} = useAuth();
  const navigate = useNavigate();
  const location = useLocation();
  const [isSidebarOpen, setSidebarOpen] = useState(true);
+ const [isMobileNavOpen, setMobileNavOpen] = useState(false);
  const [isSearchOpen, setIsSearchOpen] = useState(false);
  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
  const [permissions, setPermissions] = useState(null);
@@ -294,7 +309,7 @@ function AdminDashboard() {
  className="bg-card border-r border-border z-40 hidden md:flex flex-col h-screen shrink-0 transition-all duration-300 relative"
  >
  <div className="h-16 flex items-center justify-between px-4 border-b border-border">
- {isSidebarOpen && <span className="font-black text-xl tracking-tight">HKids <span className="text-foreground-500">Admin</span></span>}
+ {isSidebarOpen && <span className="font-black text-xl tracking-tight">{t('adminDashboardBrand')}</span>}
  {!isSidebarOpen && <span className="font-black text-xl tracking-tight mx-auto text-foreground-500">H</span>}
  </div>
 
@@ -326,7 +341,9 @@ function AdminDashboard() {
 
  <div className="p-3 border-t border-border">
  <button
+ type="button"
  onClick={() => setSidebarOpen(!isSidebarOpen)}
+ aria-label={t('adminDashboardCollapseSidebar')}
  className="w-full p-2 flex items-center justify-center text-surface-400 hover:text-foreground-secondary hover:bg-surface-secondary rounded-xl transition-colors mb-2"
  >
  <ChevronLeftIcon className={`w-5 h-5 transition-transform ${!isSidebarOpen ? 'rotate-180' : ''}`} />
@@ -349,20 +366,34 @@ function AdminDashboard() {
  {/* TOP BAR */}
  <header className="h-16 bg-card/80 backdrop-blur-md border-b border-border flex items-center justify-between px-6 z-30 shrink-0">
  <div className="flex items-center gap-4">
+ <button
+ type="button"
+ className="md:hidden p-2 text-foreground-muted hover:bg-surface-secondary rounded-full min-h-touch min-w-touch"
+ onClick={() => setMobileNavOpen(true)}
+ aria-label={t('adminDashboardOpenMenu')}
+ >
+ <span className="flex flex-col gap-1" aria-hidden="true">
+ <span className="block h-0.5 w-5 bg-current rounded" />
+ <span className="block h-0.5 w-5 bg-current rounded" />
+ <span className="block h-0.5 w-5 bg-current rounded" />
+ </span>
+ </button>
  <div className="hidden md:flex items-center gap-2 text-sm text-foreground-muted font-medium">
- <span>Admin</span>
+ <span>{t('adminDashboardBrand')}</span>
  <span>/</span>
  <span className="text-foreground font-bold capitalize">
  {location.pathname.split('/')[2] || t('adminDashboardOverview')}
  </span>
  </div>
  {/* Mobile branding */}
- <div className="md:hidden font-black text-lg">HKids Admin</div>
+ <div className="md:hidden font-black text-lg">{t('adminDashboardBrand')}</div>
  </div>
 
  <div className="flex items-center gap-4">
  <button 
+ type="button"
  onClick={() => setIsSearchOpen(true)}
+ aria-label={t('adminDashboardSearchOpen')}
  className="hidden md:flex items-center gap-2 bg-surface-secondary hover:bg-surface-200 text-foreground-muted px-3 py-1.5 rounded-lg transition-colors text-sm font-medium border border-border w-64"
  >
  <SearchIcon className="w-4 h-4" />
@@ -372,12 +403,13 @@ function AdminDashboard() {
  <kbd className="bg-card px-1.5 rounded text-xs font-sans shadow-sm">K</kbd>
  </div>
  </button>
- <button className="md:hidden p-2 text-foreground-muted hover:bg-surface-secondary rounded-full" onClick={() => setIsSearchOpen(true)}>
+ <button type="button" className="md:hidden p-2 text-foreground-muted hover:bg-surface-secondary rounded-full min-h-touch min-w-touch" onClick={() => setIsSearchOpen(true)} aria-label={t('adminDashboardSearchOpen')}>
  <SearchIcon className="w-5 h-5" />
  </button>
 
  <div className="relative">
  <button 
+ type="button"
  onClick={() => {
  setIsNotificationsOpen(!isNotificationsOpen);
  if (!isNotificationsOpen) {
@@ -386,7 +418,9 @@ function AdminDashboard() {
  .catch((error) => console.error('Could not refresh notifications:', error));
  }
  }}
- className="p-2 text-foreground-muted hover:bg-surface-secondary rounded-full relative transition-colors"
+ aria-label={t('adminDashboardNotificationsOpen')}
+ aria-expanded={isNotificationsOpen}
+ className="p-2 text-foreground-muted hover:bg-surface-secondary rounded-full relative transition-colors min-h-touch min-w-touch"
  >
  <BellIcon className="w-5 h-5" />
  {notifications.unread_count > 0 && (
@@ -413,7 +447,7 @@ function AdminDashboard() {
  >
  <p className="text-sm font-bold text-foreground">{item.title}</p>
  <p className="text-xs text-foreground-muted mt-1">{item.message}</p>
- <p className="text-xs text-surface-400 mt-2">{formatNotificationDate(item.created_at)}</p>
+ <p className="text-xs text-surface-400 mt-2">{formatNotificationDate(item.created_at, language)}</p>
  </Link>
  )) : (
  <div className="p-6 text-center text-sm text-foreground-muted">{t('adminDashboardNoAlerts')}</div>
@@ -425,8 +459,10 @@ function AdminDashboard() {
  </div>
  
  <button
+ type="button"
  onClick={handleLogout}
- className="p-2 text-foreground-muted hover:bg-rose-50 hover:text-rose-600 rounded-full transition-colors"
+ aria-label={t('adminDashboardLogout')}
+ className="p-2 text-foreground-muted hover:bg-rose-50 hover:text-rose-600 rounded-full transition-colors min-h-touch min-w-touch"
  title={t('adminDashboardLogout')}
  >
  <LogOutIcon className="w-5 h-5" />
@@ -457,6 +493,56 @@ function AdminDashboard() {
  
  <QuickActions />
  <CommandPalette isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
+
+ <AnimatePresence>
+ {isMobileNavOpen && (
+ <div className="fixed inset-0 z-[80] md:hidden">
+ <motion.button
+ type="button"
+ initial={{ opacity: 0 }}
+ animate={{ opacity: 1 }}
+ exit={{ opacity: 0 }}
+ className="absolute inset-0 bg-surface-900/50"
+ aria-label={t('adminDashboardCloseMenu')}
+ onClick={() => setMobileNavOpen(false)}
+ />
+ <motion.nav
+ initial={{ x: '-100%' }}
+ animate={{ x: 0 }}
+ exit={{ x: '-100%' }}
+ transition={{ type: 'spring', damping: 28, stiffness: 320 }}
+ className="relative h-full w-72 max-w-[85vw] bg-card border-r border-border shadow-2xl flex flex-col"
+ aria-label={t('adminDashboardBrand')}
+ >
+ <div className="flex items-center justify-between p-4 border-b border-border">
+ <span className="font-black text-lg">{t('adminDashboardBrand')}</span>
+ <button type="button" onClick={() => setMobileNavOpen(false)} aria-label={t('adminDashboardCloseMenu')} className="p-2 rounded-full hover:bg-surface-secondary min-h-touch min-w-touch">
+ <XIcon className="w-5 h-5" />
+ </button>
+ </div>
+ <div className="flex-1 overflow-y-auto p-3 space-y-1">
+ {navItems.map((item) => {
+ const Icon = item.icon;
+ const active = item.end ? isActive(item.to) : location.pathname.startsWith(item.to);
+ return (
+ <Link
+ key={item.to}
+ to={item.to}
+ onClick={() => setMobileNavOpen(false)}
+ className={`flex items-center gap-3 px-3 py-3 rounded-xl font-medium transition-all min-h-touch ${
+ active ? 'brand-nav-active text-foreground' : 'text-foreground-secondary hover:bg-surface-secondary'
+}`}
+ >
+ <Icon className="w-5 h-5" />
+ {item.label}
+ </Link>
+ );
+ })}
+ </div>
+ </motion.nav>
+ </div>
+ )}
+ </AnimatePresence>
  </div>
  </div>
  );
@@ -464,9 +550,10 @@ function AdminDashboard() {
 
 export default AdminDashboard;
 
-function formatNotificationDate(value) {
+function formatNotificationDate(value, language = 'fr') {
  if (!value) return '';
  const date = new Date(value);
  if (Number.isNaN(date.getTime())) return '';
- return date.toLocaleString('fr-FR', {day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'});
+ const locale = language === 'ar' ? 'ar' : language === 'en' ? 'en-US' : 'fr-FR';
+ return date.toLocaleString(locale, {day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'});
 }

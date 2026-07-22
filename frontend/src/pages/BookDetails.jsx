@@ -200,7 +200,7 @@ function BookDetails() {
         3000
       );
     } else {
-      showToast("Impossible de debloquer ce livre pour le moment.", 'error', 2500);
+      showToast(t('downloadError'), 'error', 2500);
     }
 
     navigate(isKidAccount ? '/kids' : '/abonnements');

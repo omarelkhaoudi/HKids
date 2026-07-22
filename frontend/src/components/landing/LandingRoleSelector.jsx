@@ -1,9 +1,10 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { useReducedMotion } from '../../hooks/useReducedMotion';
+import { useModalA11y } from '../../hooks/useModalA11y';
 import { getMotionProps, kidsCardAppear } from '../../constants/kidsMotion';
 import KidsButton from '../kids/KidsButton';
 
@@ -69,6 +70,8 @@ export function LandingRoleSelector() {
   const { t, isRtl } = useLanguage();
   const reducedMotion = useReducedMotion();
   const [pendingRole, setPendingRole] = useState(null);
+  const intentRef = useRef(null);
+  const dismissIntent = useCallback(() => setPendingRole(null), []);
 
   const navigateForRole = useCallback((roleId) => {
     navigate(resolveDestination(roleId, user), { replace: false });
@@ -83,6 +86,7 @@ export function LandingRoleSelector() {
   };
 
   const pendingRoleConfig = ROLES.find((role) => role.id === pendingRole?.id);
+  useModalA11y(Boolean(pendingRole), dismissIntent, intentRef);
 
   return (
     <nav
@@ -139,9 +143,11 @@ export function LandingRoleSelector() {
       <AnimatePresence>
         {pendingRoleConfig && (
           <motion.div
+            ref={intentRef}
             {...getMotionProps(reducedMotion, kidsCardAppear)}
             className="mt-space-16 rounded-[1.75rem] border border-primary-100/80 bg-white/85 backdrop-blur-md p-space-20 shadow-[0_18px_40px_-28px_rgba(36,50,74,0.22)]"
             role="dialog"
+            aria-modal="true"
             aria-labelledby="landing-role-intent-title"
             aria-describedby="landing-role-intent-body"
           >

@@ -2,11 +2,12 @@ import {useCallback, useEffect, useState} from 'react';
 import {adminAPI} from '../../api/admin';
 import {Badge, Button} from '../ui';
 import {MailIcon, SearchIcon} from '../Icons';
-import {formatAdminDate} from './AdminMetricCard';
+import {formatAdminDate, getAdminDateLocale} from './AdminMetricCard';
 import { useLanguage } from '../../context/LanguageContext';
+import { AdminListSkeleton } from './AdminListSkeleton';
 
 function AdminSupport() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
   const STATUS_OPTIONS = [
     ['open', t('adminSupportOpen')],
@@ -141,7 +142,7 @@ function AdminSupport() {
 
       <div className="grid gap-4">
         {loading ? (
-          <div className="p-10 text-center text-foreground-muted">{t('adminLoading')}</div>
+          <AdminListSkeleton rows={4} />
         ) : tickets.length === 0 ? (
           <div className="bg-card border border-border rounded-3xl p-12 text-center">
             <MailIcon className="w-10 h-10 mx-auto text-surface-300 mb-3" />
@@ -168,7 +169,7 @@ function AdminSupport() {
                   </p>
                 )}
                 <div className="text-xs text-surface-400 mt-3">
-                  {t('adminSupportByParent').replace('{name}', ticket.requester_name || 'Parent')} · {formatAdminDate(ticket.created_at)}
+                  {t('adminSupportByParent').replace('{name}', ticket.requester_name || t('parentChild'))} · {formatAdminDate(ticket.created_at, t, getAdminDateLocale(language))}
                   {ticket.assigned_admin_name ? ' · ' + t('adminSupportAssignedTo').replace('{name}', ticket.assigned_admin_name) : ''}
                 </div>
               </div>

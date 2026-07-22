@@ -4,9 +4,11 @@ import {categoriesAPI} from '../../api/books';
 import {TagIcon, EditIcon, TrashIcon, PlusIcon, XIcon, SearchIcon, LayersIcon} from '../Icons';
 import {Button, Badge} from '../ui';
 import { useLanguage } from '../../context/LanguageContext';
+import {useToast} from '../ToastProvider';
 
 function CategoryManagement() {
  const { t } = useLanguage();
+ const { showToast } = useToast();
  const [categories, setCategories] = useState([]);
  const [loading, setLoading] = useState(true);
  const [showModal, setShowModal] = useState(false);
@@ -38,7 +40,7 @@ function CategoryManagement() {
  loadCategories();
 } catch (error) {
  console.error('Error saving category:', error);
- alert(t('adminCategoriesSaveError'));
+ showToast(error.response?.data?.error || t('adminCategoriesSaveError'), 'error');
 }
 };
 
@@ -58,7 +60,7 @@ function CategoryManagement() {
  loadCategories();
 } catch (error) {
  console.error('Error deleting category:', error);
- alert(t('adminCategoriesDeleteError'));
+ showToast(error.response?.data?.error || t('adminCategoriesDeleteError'), 'error');
 }
 };
 

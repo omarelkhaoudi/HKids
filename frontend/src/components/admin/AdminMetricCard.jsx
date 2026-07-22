@@ -25,11 +25,17 @@ export function formatAdminDuration(seconds = 0, t = (k) => k) {
  return hours > 0 ? t('adminMetricHoursMinutes').replace('{h}', String(hours)).replace('{m}', String(minutes)) : t('adminMetricMinutes').replace('{m}', String(minutes));
 }
 
-export function formatAdminDate(value, t = (k) => k) {
+export function formatAdminDate(value, t = (k) => k, locale = 'fr-FR') {
  if (!value) return t('adminMetricNever');
- return new Date(value).toLocaleDateString('fr-FR', {
+ return new Date(value).toLocaleDateString(locale, {
  day: '2-digit',
  month: 'short',
  year: 'numeric',
 });
+}
+
+export function getAdminDateLocale(language) {
+ if (language === 'ar') return 'ar';
+ if (language === 'en') return 'en-US';
+ return 'fr-FR';
 }

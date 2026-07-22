@@ -3,6 +3,7 @@ import {adminAPI} from '../../api/admin';
 import {Badge, Button} from '../ui';
 import {BookIcon, CheckIcon, SearchIcon, XIcon} from '../Icons';
 import { useLanguage } from '../../context/LanguageContext';
+import { AdminListSkeleton } from './AdminListSkeleton';
 
 function AdminModeration() {
  const { t } = useLanguage();
@@ -90,7 +91,7 @@ function AdminModeration() {
 
  <div className="bg-card rounded-[2rem] border border-border shadow-sm overflow-hidden">
  {loading ? (
- <div className="p-10 text-center text-foreground-muted">{t('adminLoading')}</div>
+ <AdminListSkeleton rows={5} />
  ) : items.length === 0 ? (
  <div className="p-12 text-center">
  <BookIcon className="w-10 h-10 text-surface-300 mx-auto mb-3" />

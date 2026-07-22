@@ -1,8 +1,9 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { privacyAPI } from '../../api/privacy';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
+import { useModalA11y } from '../../hooks/useModalA11y';
 import {
   clearLocalPrivacyData,
   downloadPrivacyBlob
@@ -45,6 +46,11 @@ export default function PrivacyCenter() {
   const [busyAction, setBusyAction] = useState('');
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
   const [consent, setConsent] = useState(() => getConsent());
+  const deleteDialogRef = useRef(null);
+  useModalA11y(showDeleteConfirmation, () => {
+    setShowDeleteConfirmation(false);
+    setConfirmation('');
+  }, deleteDialogRef);
 
   const dateLocale = language === 'ar' ? 'ar' : language === 'en' ? 'en-US' : 'fr-FR';
   const deleteWord = t('parentPrivacyDeleteConfirmWord');
@@ -381,8 +387,8 @@ export default function PrivacyCenter() {
       </div>
 
       {showDeleteConfirmation && (
-        <div className="fixed inset-0 z-[130] flex items-center justify-center bg-surface-900/60 p-4" role="dialog" aria-modal="true">
-          <div className="w-full max-w-lg rounded-3xl border border-border bg-card p-6">
+        <div className="fixed inset-0 z-[130] flex items-center justify-center bg-surface-900/60 p-4" role="presentation">
+          <div ref={deleteDialogRef} className="w-full max-w-lg rounded-3xl border border-border bg-card p-6" role="dialog" aria-modal="true">
             <h3 className="text-xl font-black text-danger-600">{t('parentPrivacyDeleteConfirmTitle')}</h3>
             <p className="mt-3 text-sm text-foreground-muted">
               {t('parentPrivacyDeleteConfirmDesc', { word: deleteWord })}
