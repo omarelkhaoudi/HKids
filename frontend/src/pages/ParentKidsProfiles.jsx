@@ -1,17 +1,15 @@
 import {useEffect, useMemo, useState} from 'react';
-import {Link, useNavigate} from 'react-router-dom';
+import {useNavigate} from 'react-router-dom';
 import {AnimatePresence} from 'framer-motion';
 import {parentalAPI} from '../api/parental';
 import {useAuth} from '../context/AuthContext';
 import {useLanguage} from '../context/LanguageContext';
 import {useToast} from '../components/ToastProvider';
 import { useConfirmDialog } from '../hooks/useConfirmDialog';
-import {Logo} from '../components/Logo';
 import {KidProfilesList} from '../components/parent/KidProfilesList';
 import {KidProfileFormModal} from '../components/parent/KidProfileFormModal';
-import {ParentHubNav} from '../components/parent/ParentHubNav';
+import {ParentPageShell} from '../components/parent/ParentPageShell';
 import {Skeleton} from '../components/ui';
-import {LogOutIcon} from '../components/Icons';
 import {buildKidPayload, createEmptyKidForm, kidToForm} from '../utils/kidProfiles';
 import {clearKidLocalPrivacyData} from '../services/privacy/privacyStorageService';
 
@@ -89,12 +87,10 @@ function ParentKidsProfiles() {
  const closeModal = () => {
  setShowModal(false);
  setEditingKid(null);
- setForm(createEmptyKidForm());
 };
 
  const handleSave = async () => {
  const payload = buildKidPayload(form);
-
  if (!payload.name) {
  showToast(t('parentFirstNameRequired'), 'error');
  return;
@@ -144,10 +140,16 @@ function ParentKidsProfiles() {
  navigate('/parent/login');
 };
 
+ const shellProps = {
+ isRtl,
+ userName: user?.username || 'Parent',
+ onLogout: handleLogout,
+ };
+
  if (loading) {
  return (
- <div className="min-h-screen parent-home-shell bg-gradient-to-br from-surface-50 to-surface-100 dark:from-surface-900 dark:to-surface-800" dir={isRtl ? 'rtl' : 'ltr'}>
- <div className="mx-auto max-w-7xl px-space-16 py-space-32 sm:px-space-24 lg:px-space-32 flex flex-col gap-space-24">
+ <ParentPageShell {...shellProps}>
+ <div className="flex flex-col gap-space-24" aria-busy="true">
  <Skeleton className="h-20 w-full max-w-md rounded-2xl" />
  <div className="grid grid-cols-1 gap-space-16 sm:grid-cols-3">
  <Skeleton className="h-24 rounded-3xl" />
@@ -156,61 +158,28 @@ function ParentKidsProfiles() {
  </div>
  <Skeleton className="h-96 w-full rounded-3xl" />
  </div>
- </div>
+ </ParentPageShell>
  );
 }
 
  return (
- <div className="min-h-screen parent-home-shell bg-gradient-to-br from-surface-50 to-surface-100 dark:from-surface-900 dark:to-surface-800" dir={isRtl ? 'rtl' : 'ltr'}>
- <div className="mx-auto max-w-7xl px-space-16 py-space-32 sm:px-space-24 lg:px-space-32">
- <header className="mb-space-32 flex flex-col gap-space-16 sm:flex-row sm:items-center sm:justify-between">
- <div className="flex items-center gap-space-16">
- <Link to="/" className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-400 rounded-2xl">
- <Logo size="default" showText={true} />
- </Link>
- <div>
- <h1 className="text-hero font-black text-foreground tracking-tight">
- {t('parentProfilesTitle')}
- </h1>
- <p className="text-body-lg text-foreground-secondary font-medium mt-1">
- {t('parentProfilesDesc')}
- </p>
- </div>
- </div>
- <div className="flex gap-space-12">
- <Link
- to="/parent"
- className="rounded-32 bg-card px-space-16 py-space-12 font-bold text-foreground-secondary shadow-card border border-border/50 transition hover:shadow-floating min-h-touch inline-flex items-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-400"
- >
- {t('parentProfilesDashboard')}
- </Link>
- <button
- type="button"
- onClick={handleLogout}
- className="inline-flex items-center gap-2 rounded-32 bg-primary-500 px-space-16 py-space-12 font-bold text-white transition hover:bg-primary-600 min-h-touch focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-400"
- >
- <LogOutIcon className="h-5 w-5" aria-hidden="true" />
- <span>{t('parentProfilesLogout')}</span>
- </button>
- </div>
+ <ParentPageShell {...shellProps}>
+ <header className="parent-welcome-block">
+ <p className="parent-welcome-kicker">{t('parentNavProfiles')}</p>
+ <h1 className="parent-welcome-title">{t('parentProfilesTitle')}</h1>
+ <p className="parent-welcome-copy">{t('parentProfilesDesc')}</p>
  </header>
 
- <ParentHubNav className="mb-space-32" />
-
  <div className="mb-space-32 grid grid-cols-1 gap-space-16 md:grid-cols-3">
- {stats.map((item) => (
- <div key={item.label} className="parent-warm-card text-center md:text-start">
- <span className="text-3xl mb-space-8 block" aria-hidden="true">
- {item.label === t('parentProfilesStatProfiles') ? '👧' : item.label === t('parentProfilesStatAvatar') ? '📸' : '✨'}
- </span>
- <span className="text-caption font-bold text-foreground-muted uppercase tracking-wide">
- {item.label}
- </span>
- <span className="mt-1 block text-heading-xl font-black text-foreground">
- {item.value}
- </span>
+ {stats.map((item, index) => {
+ const tone = ['violet', 'mint', 'peach'][index] || 'violet';
+ return (
+ <div key={item.label} className={`parent-kpi-card parent-kpi-card--${tone}`}>
+ <p className="parent-kpi-label">{item.label}</p>
+ <p className="parent-kpi-value">{item.value}</p>
  </div>
- ))}
+ );
+ })}
  </div>
 
  <KidProfilesList
@@ -221,7 +190,6 @@ function ParentKidsProfiles() {
  onEdit={openEditModal}
  onDelete={handleDelete}
  />
- </div>
 
  <AnimatePresence>
  {showModal && (
@@ -237,7 +205,7 @@ function ParentKidsProfiles() {
  )}
  </AnimatePresence>
  {confirmDialog}
- </div>
+ </ParentPageShell>
  );
 }
 

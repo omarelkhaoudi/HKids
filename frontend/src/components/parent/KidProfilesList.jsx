@@ -63,7 +63,7 @@ export function KidProfilesList({kids, selectedKidId, onSelect, onAdd, onEdit, o
  transition: { ...kidsCardAppear.transition, delay: index * 0.05 },
  })}
  {...getHoverMotion(reducedMotion)}
- className={`rounded-32 border-2 p-space-24 transition shadow-card ${
+ className={`rounded-32 border-2 p-space-24 transition parent-panel ${
  active
  ? 'border-primary-400 bg-primary-50/40 dark:bg-primary-950/20'
  : 'border-border/60 bg-surface-secondary/40 hover:shadow-floating'

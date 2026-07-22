@@ -49,13 +49,13 @@ export function ParentChildProfilePanel({
   return (
     <motion.section
       {...getMotionProps(reducedMotion, kidsCardAppear)}
-      className="parent-profile-panel rounded-32 shadow-floating bg-card border border-border/40 overflow-hidden"
+      className="parent-profile-panel parent-panel !p-0 overflow-hidden border-0"
       aria-labelledby="parent-profile-heading"
     >
-      <div className="parent-profile-hero bg-gradient-to-br from-primary-50/80 via-card to-secondary-50/60 dark:from-primary-950/30 dark:via-card dark:to-secondary-950/20 p-space-24 md:p-space-32">
+      <div className="parent-profile-hero bg-gradient-to-br from-[#fffaf3] via-[#fff7ee] to-primary-50/70 dark:from-primary-950/30 dark:via-card dark:to-secondary-950/20 p-space-24 md:p-space-32">
         <div className="flex flex-col md:flex-row items-center md:items-start gap-space-24">
           <motion.div {...getHoverMotion(reducedMotion)} className="shrink-0">
-            <KidAvatar kid={kid} size="xl" className="!w-28 !h-28 md:!w-36 md:!h-36 ring-4 ring-card shadow-floating" />
+            <KidAvatar kid={kid} size="xl" className="!w-32 !h-32 md:!w-40 md:!h-40 ring-4 ring-white shadow-floating" />
           </motion.div>
           <div className="flex-1 text-center md:text-start min-w-0">
             <h2 id="parent-profile-heading" className="text-hero font-black text-foreground tracking-tight">
