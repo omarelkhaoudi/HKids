@@ -5,10 +5,12 @@ import {TagIcon, EditIcon, TrashIcon, PlusIcon, XIcon, SearchIcon, LayersIcon} f
 import {Button, Badge} from '../ui';
 import { useLanguage } from '../../context/LanguageContext';
 import {useToast} from '../ToastProvider';
+import { useConfirmDialog } from '../../hooks/useConfirmDialog';
 
 function CategoryManagement() {
  const { t } = useLanguage();
  const { showToast } = useToast();
+ const { requestConfirm, confirmDialog } = useConfirmDialog();
  const [categories, setCategories] = useState([]);
  const [loading, setLoading] = useState(true);
  const [showModal, setShowModal] = useState(false);
@@ -54,7 +56,13 @@ function CategoryManagement() {
 };
 
  const handleDelete = async (id) => {
- if (!confirm(t('adminCategoriesDeleteConfirm'))) return;
+ const ok = await requestConfirm({
+ title: t('confirmTitle'),
+ message: t('adminCategoriesDeleteConfirm'),
+ confirmLabel: t('confirmDelete'),
+ danger: true,
+ });
+ if (!ok) return;
  try {
  await categoriesAPI.delete(id);
  loadCategories();
@@ -197,6 +205,7 @@ function CategoryManagement() {
  </div>
  )}
  </AnimatePresence>
+ {confirmDialog}
  </div>
  );
 }

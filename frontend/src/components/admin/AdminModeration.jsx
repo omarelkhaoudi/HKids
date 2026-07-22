@@ -1,6 +1,6 @@
 import {useCallback, useEffect, useState} from 'react';
 import {adminAPI} from '../../api/admin';
-import {Badge, Button} from '../ui';
+import {Badge, Button, Dialog, Input} from '../ui';
 import {BookIcon, CheckIcon, SearchIcon, XIcon} from '../Icons';
 import { useLanguage } from '../../context/LanguageContext';
 import { AdminListSkeleton } from './AdminListSkeleton';
@@ -17,6 +17,8 @@ function AdminModeration() {
  const [busyId, setBusyId] = useState(null);
  const [filters, setFilters] = useState({q: '', type: 'all', status: 'pending'});
  const [error, setError] = useState('');
+ const [pending, setPending] = useState(null);
+ const [noteDraft, setNoteDraft] = useState('');
 
  const loadItems = useCallback(async () => {
  try {
@@ -36,19 +38,23 @@ function AdminModeration() {
  return () => clearTimeout(timer);
 }, [loadItems]);
 
- const moderate = async (item, status) => {
- const note = window.prompt(
- status === 'rejected' ? t('adminModerationRejectPrompt') : t('adminModerationApproveNote'),
- item.moderation_note || ''
- );
- if (note === null) return;
+ const openModerate = (item, status) => {
+ setNoteDraft(item.moderation_note || '');
+ setPending({ item, status });
+ };
+
+ const moderate = async () => {
+ if (!pending) return;
+ const { item, status } = pending;
  try {
  setBusyId(`${item.type}:${item.id}`);
  await adminAPI.moderateContent(item.type, item.id, {
  status,
- note,
+ note: noteDraft,
  publish: item.type === 'book' && status === 'approved'
 });
+ setPending(null);
+ setNoteDraft('');
  await loadItems();
 } catch (err) {
  setError(err.response?.data?.error || t('adminModerationDecisionError'));
@@ -119,7 +125,7 @@ function AdminModeration() {
  <Button
  variant="outline"
  disabled={busyId === key}
- onClick={() => moderate(item, 'rejected')}
+ onClick={() => openModerate(item, 'rejected')}
  className="text-rose-600 border-rose-200"
  >
  <XIcon className="w-4 h-4 mr-2" /> {t('adminModerationReject')}
@@ -127,7 +133,7 @@ function AdminModeration() {
  <Button
  variant="primary"
  disabled={busyId === key}
- onClick={() => moderate(item, 'approved')}
+ onClick={() => openModerate(item, 'approved')}
  >
  <CheckIcon className="w-4 h-4 mr-2" /> {item.type === 'book' ? t('adminModerationValidatePublish') : t('adminModerationApprove')}
  </Button>
@@ -138,6 +144,26 @@ function AdminModeration() {
  </div>
  )}
  </div>
+ <Dialog
+ isOpen={Boolean(pending)}
+ onClose={() => !busyId && setPending(null)}
+ title={t('confirmTitle')}
+ primaryLabel={t('adminConfirm')}
+ secondaryLabel={t('adminCancel')}
+ primaryVariant={pending?.status === 'rejected' ? 'danger' : 'primary'}
+ onPrimary={moderate}
+ onSecondary={() => setPending(null)}
+ >
+ <label className="block text-sm font-medium text-foreground-secondary mb-2" htmlFor="admin-moderation-note">
+ {pending?.status === 'rejected' ? t('adminModerationRejectPrompt') : t('adminModerationApproveNote')}
+ </label>
+ <Input
+ id="admin-moderation-note"
+ value={noteDraft}
+ onChange={(e) => setNoteDraft(e.target.value)}
+ disabled={Boolean(busyId)}
+ />
+ </Dialog>
  </div>
  );
 }

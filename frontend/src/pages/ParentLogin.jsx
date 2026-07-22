@@ -197,7 +197,7 @@ export default function ParentLogin() {
  value={username}
  onChange={(e) => setUsername(e.target.value)}
  className="w-full pl-12 pr-4 py-4 bg-surface-secondary border-2 border-border rounded-[1.5rem] focus:bg-card focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 transition-all font-medium text-foreground placeholder:text-surface-400 outline-none"
- placeholder="votre_pseudo"
+ placeholder={t('parentLoginUsernamePlaceholder')}
  required
  />
  </div>

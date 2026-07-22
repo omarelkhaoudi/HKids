@@ -5,6 +5,7 @@ import {parentalAPI} from '../api/parental';
 import {useAuth} from '../context/AuthContext';
 import {useLanguage} from '../context/LanguageContext';
 import {useToast} from '../components/ToastProvider';
+import { useConfirmDialog } from '../hooks/useConfirmDialog';
 import {Logo} from '../components/Logo';
 import {KidProfilesList} from '../components/parent/KidProfilesList';
 import {KidProfileFormModal} from '../components/parent/KidProfileFormModal';
@@ -18,6 +19,7 @@ function ParentKidsProfiles() {
  const {user, logout} = useAuth();
  const navigate = useNavigate();
  const {showToast} = useToast();
+ const { requestConfirm, confirmDialog } = useConfirmDialog();
  const { t, isRtl } = useLanguage();
  const [kids, setKids] = useState([]);
  const [selectedKid, setSelectedKid] = useState(null);
@@ -117,7 +119,12 @@ function ParentKidsProfiles() {
 };
 
  const handleDelete = async (kid) => {
- const confirmed = window.confirm(t('parentProfilesDeleteConfirm', { name: kid.name }));
+ const confirmed = await requestConfirm({
+ title: t('confirmTitle'),
+ message: t('parentProfilesDeleteConfirm', { name: kid.name }),
+ confirmLabel: t('confirmDelete'),
+ danger: true,
+ });
  if (!confirmed) return;
 
  try {
@@ -229,6 +236,7 @@ function ParentKidsProfiles() {
  />
  )}
  </AnimatePresence>
+ {confirmDialog}
  </div>
  );
 }

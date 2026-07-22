@@ -11,9 +11,13 @@ import {
   EMPTY_QUESTION,
 } from '../../constants/learningOptions';
 import { useLanguage } from '../../context/LanguageContext';
+import { useToast } from '../ToastProvider';
+import { useConfirmDialog } from '../../hooks/useConfirmDialog';
 
 function LearningManagement() {
   const { t } = useLanguage();
+  const { showToast } = useToast();
+  const { requestConfirm, confirmDialog } = useConfirmDialog();
   const [activeTab, setActiveTab] = useState('contents');
   const [contents, setContents] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -48,7 +52,7 @@ function LearningManagement() {
       setRewards(rewardsRes.data || []);
     } catch (error) {
       console.error('Learning admin load error:', error);
-      alert(t('adminLearningLoadError'));
+      showToast(t('adminLearningLoadError'), 'error');
     } finally {
       setLoading(false);
     }
@@ -90,18 +94,24 @@ function LearningManagement() {
       setShowModal(true);
     } catch (error) {
       console.error('Learning edit load error:', error);
-      alert(t('adminLearningDetailError'));
+      showToast(t('adminLearningDetailError'), 'error');
     }
   };
 
   const handleDelete = async (id) => {
-    if (!confirm(t('adminLearningDeleteConfirm'))) return;
+    const ok = await requestConfirm({
+      title: t('confirmTitle'),
+      message: t('adminLearningDeleteConfirm'),
+      confirmLabel: t('confirmDelete'),
+      danger: true,
+    });
+    if (!ok) return;
     try {
       await learningAPI.deleteContent(id);
       loadData();
     } catch (error) {
       console.error('Learning delete error:', error);
-      alert(t('adminLearningDeleteError'));
+      showToast(t('adminLearningDeleteError'), 'error');
     }
   };
 
@@ -121,7 +131,7 @@ function LearningManagement() {
       setCategoryForm({ code: '', name: '', description: '', pictogram: '⭐', color: 'from-primary-500 to-primary-400' });
       loadData();
     } catch (error) {
-      alert(error.response?.data?.error || t('adminLearningCreateError'));
+      showToast(error.response?.data?.error || t('adminLearningCreateError'), 'error');
     } finally {
       setSubmitting(false);
     }
@@ -139,7 +149,7 @@ function LearningManagement() {
       setChallengeForm({ title: '', description: '', challenge_type: 'quiz_success_count', target_value: 3, category_id: '', status: 'active' });
       loadData();
     } catch (error) {
-      alert(error.response?.data?.error || t('adminLearningCreateError'));
+      showToast(error.response?.data?.error || t('adminLearningCreateError'), 'error');
     } finally {
       setSubmitting(false);
     }
@@ -156,7 +166,7 @@ function LearningManagement() {
       setRewardForm({ code: '', name: '', reward_type: 'stars', icon: '⭐', value: 5, description: '' });
       loadData();
     } catch (error) {
-      alert(error.response?.data?.error || t('adminLearningCreateError'));
+      showToast(error.response?.data?.error || t('adminLearningCreateError'), 'error');
     } finally {
       setSubmitting(false);
     }
@@ -188,7 +198,7 @@ function LearningManagement() {
       loadData();
     } catch (error) {
       console.error('Learning save error:', error);
-      alert(error.response?.data?.error || t('adminLearningSaveError'));
+      showToast(error.response?.data?.error || t('adminLearningSaveError'), 'error');
     } finally {
       setSubmitting(false);
     }
@@ -524,6 +534,7 @@ function LearningManagement() {
           </div>
         )}
       </AnimatePresence>
+      {confirmDialog}
     </div>
   );
 }

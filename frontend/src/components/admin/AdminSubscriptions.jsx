@@ -5,9 +5,13 @@ import {CheckIcon, UserIcon, TrendingUpIcon, WarningIcon, SearchIcon, DownloadIc
 import {Badge, Button} from '../ui';
 import { useLanguage } from '../../context/LanguageContext';
 import { AdminTableSkeleton } from './AdminListSkeleton';
+import { useToast } from '../ToastProvider';
+import { useConfirmDialog } from '../../hooks/useConfirmDialog';
 
 function AdminSubscriptions() {
  const { t, language } = useLanguage();
+ const { showToast } = useToast();
+ const { requestConfirm, confirmDialog } = useConfirmDialog();
  const [subscriptions, setSubscriptions] = useState([]);
  const [loading, setLoading] = useState(true);
  const [search, setSearch] = useState('');
@@ -50,13 +54,19 @@ function AdminSubscriptions() {
 });
 
  const manage = async (subscription, action, status = null) => {
- if (!window.confirm(t('adminSubscriptionsConfirm'))) return;
+ const ok = await requestConfirm({
+ title: t('confirmTitle'),
+ message: t('adminSubscriptionsConfirm'),
+ confirmLabel: t('adminConfirm'),
+ danger: action === 'cancel' || action === 'delete',
+ });
+ if (!ok) return;
  try {
  setBusyId(subscription.id);
  await adminAPI.manageSubscription(subscription.id, {action, status});
  await loadSubscriptions();
 } catch (error) {
- window.alert(error.response?.data?.error || t('adminSubscriptionsActionError'));
+ showToast(error.response?.data?.error || t('adminSubscriptionsActionError'), 'error');
 } finally {
  setBusyId(null);
 }
@@ -218,6 +228,7 @@ function AdminSubscriptions() {
  </table>
  </div>
  </div>
+ {confirmDialog}
  </div>
  );
 }

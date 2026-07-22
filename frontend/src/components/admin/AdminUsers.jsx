@@ -3,11 +3,13 @@ import {motion, AnimatePresence} from 'framer-motion';
 import {adminAPI} from '../../api/admin';
 import {formatAdminDate, formatAdminDuration} from './AdminMetricCard';
 import {ChildIcon, ClockIcon, UserIcon, SearchIcon, MailIcon, StarIcon, XIcon, TrashIcon} from '../Icons';
-import {Avatar, Badge, Button} from '../ui';
+import {Avatar, Badge, Button, Dialog, Input} from '../ui';
 import { useLanguage } from '../../context/LanguageContext';
+import { useToast } from '../ToastProvider';
 
 function AdminUsers() {
  const { t } = useLanguage();
+ const { showToast } = useToast();
  const [parents, setParents] = useState([]);
  const [selectedParent, setSelectedParent] = useState(null);
  const [detail, setDetail] = useState(null);
@@ -15,6 +17,8 @@ function AdminUsers() {
  const [detailLoading, setDetailLoading] = useState(false);
  const [search, setSearch] = useState('');
  const [deleting, setDeleting] = useState(false);
+ const [deleteReasonOpen, setDeleteReasonOpen] = useState(false);
+ const [deleteReason, setDeleteReason] = useState('');
 
  useEffect(() => {
  const loadParents = async () => {
@@ -32,19 +36,24 @@ function AdminUsers() {
  loadParents();
 }, []);
 
+ const openDeleteParent = () => {
+ if (!selectedParent) return;
+ setDeleteReason('');
+ setDeleteReasonOpen(true);
+ };
+
  const deleteParent = async () => {
  if (!selectedParent) return;
- const reason = window.prompt(t('adminUsersDeleteReason'));
- if (reason === null) return;
- if (!window.confirm(t('adminUsersDeleteConfirm').replace('{name}', selectedParent.name))) return;
  try {
  setDeleting(true);
- await adminAPI.deleteUser(selectedParent.id, reason);
+ await adminAPI.deleteUser(selectedParent.id, deleteReason);
  setParents((current) => current.filter((parent) => parent.id !== selectedParent.id));
  setSelectedParent(null);
  setDetail(null);
+ setDeleteReasonOpen(false);
+ setDeleteReason('');
 } catch (err) {
- window.alert(err.response?.data?.error || t('adminUsersDeleteError'));
+ showToast(err.response?.data?.error || t('adminUsersDeleteError'), 'error');
 } finally {
  setDeleting(false);
 }
@@ -219,7 +228,7 @@ function AdminUsers() {
  variant="outline"
  fullWidth
  disabled={deleting}
- onClick={deleteParent}
+ onClick={openDeleteParent}
  className="mt-5 border-rose-200 text-rose-600 hover:bg-rose-50"
  >
  <TrashIcon className="w-4 h-4 mr-2" /> {deleting ? t('adminUsersDeleting') : t('adminUsersDeleteBtn')}
@@ -282,6 +291,26 @@ function AdminUsers() {
  )}
  </AnimatePresence>
  </div>
+ <Dialog
+ isOpen={deleteReasonOpen}
+ onClose={() => !deleting && setDeleteReasonOpen(false)}
+ title={selectedParent ? t('adminUsersDeleteConfirm').replace('{name}', selectedParent.name) : t('confirmTitle')}
+ primaryLabel={deleting ? t('adminSaving') : t('confirmDelete')}
+ secondaryLabel={t('adminCancel')}
+ primaryVariant="danger"
+ onPrimary={deleteParent}
+ onSecondary={() => setDeleteReasonOpen(false)}
+ >
+ <label className="block text-sm font-medium text-foreground-secondary mb-2" htmlFor="admin-delete-reason">
+ {t('adminUsersDeleteReason')}
+ </label>
+ <Input
+ id="admin-delete-reason"
+ value={deleteReason}
+ onChange={(e) => setDeleteReason(e.target.value)}
+ disabled={deleting}
+ />
+ </Dialog>
  </div>
  );
 }

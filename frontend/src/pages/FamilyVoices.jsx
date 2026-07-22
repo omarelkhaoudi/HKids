@@ -16,6 +16,7 @@ import {Logo} from '../components/Logo';
 import {Button, Card, Badge, Avatar, ProgressBar, Skeleton} from '../components/ui';
 import { MagicalBackground } from '../components/layout/PlatformShell';
 import { BRAND_HERO_GRADIENT, BRAND_SEMANTIC } from '../constants/brandTheme';
+import { useConfirmDialog } from '../hooks/useConfirmDialog';
 
 // Original empty forms
 const emptyProfileForm = {
@@ -129,6 +130,7 @@ function FamilyVoices() {
  const navigate = useNavigate();
  const {showToast} = useToast();
  const { t, isRtl } = useLanguage();
+ const { requestConfirm, confirmDialog } = useConfirmDialog();
  const [profiles, setProfiles] = useState([]);
  const [messages, setMessages] = useState([]);
  const [profileForm, setProfileForm] = useState(emptyProfileForm);
@@ -247,7 +249,13 @@ function FamilyVoices() {
 };
 
  const deleteProfile = async (profile) => {
- if (!window.confirm(`Supprimer définitivement la voix de ${profile.name} ?`)) return;
+ const ok = await requestConfirm({
+ title: t('confirmTitle'),
+ message: t('parentVoiceDeleteConfirm', { name: profile.name }),
+ confirmLabel: t('confirmDelete'),
+ danger: true,
+ });
+ if (!ok) return;
  try {
  await voicesAPI.deleteProfile(profile.id);
  showToast(t('parentVoiceProfileDeleted'), 'info');
@@ -258,7 +266,13 @@ function FamilyVoices() {
 };
 
  const revokeConsent = async (profile) => {
- if (!window.confirm(t('parentVoiceRevokeConfirm', { name: profile.name }))) return;
+ const ok = await requestConfirm({
+ title: t('confirmTitle'),
+ message: t('parentVoiceRevokeConfirm', { name: profile.name }),
+ confirmLabel: t('confirmContinue'),
+ danger: true,
+ });
+ if (!ok) return;
  try {
  const response = await voicesAPI.revokeConsent(profile.id);
  showToast(
@@ -313,7 +327,13 @@ function FamilyVoices() {
 };
 
  const deleteMessage = async (message) => {
- if (!window.confirm(`Supprimer le message"${message.title}" ?`)) return;
+ const ok = await requestConfirm({
+ title: t('confirmTitle'),
+ message: t('parentVoiceDeleteMessageConfirm', { title: message.title }),
+ confirmLabel: t('confirmDelete'),
+ danger: true,
+ });
+ if (!ok) return;
  try {
  await voicesAPI.deleteMessage(message.id);
  showToast(t('parentVoiceMessageDeleted'), 'info');
@@ -461,16 +481,22 @@ function FamilyVoices() {
  <p className="text-sm font-bold text-foreground-muted">{profile.relation}</p>
  </div>
  </div>
- {/* Fake default badge */}
- <div className="bg-accent-100 text-accent-700 p-1.5 rounded-full"><StarIcon className="w-4 h-4"/></div>
+ {/* Prefer favorite when API marks it */}
+ {profile.is_default ? (
+ <div className="bg-accent-100 text-accent-700 p-1.5 rounded-full" title={t('parentVoicePreview')}>
+ <StarIcon className="w-4 h-4"/>
+ </div>
+ ) : null}
  </div>
 
  <div className="flex flex-wrap gap-2 mb-6">
  <Badge variant="soft" className="bg-surface-secondary text-foreground-secondary font-bold uppercase tracking-wider text-xs">{profile.language}</Badge>
  <Badge variant="soft" className="bg-primary-50 text-foreground-secondary font-bold text-xs">{statusLabel(profile.status, t)}</Badge>
+ {profile.quality_score != null && profile.quality_score !== '' ? (
  <Badge variant="soft" className={`${qualityTone(profile.quality_status)} font-bold text-xs`}>
- {t('parentVoiceQualityLabel', { score: profile.quality_score || '85' })}
+ {t('parentVoiceQualityLabel', { score: profile.quality_score })}
  </Badge>
+ ) : null}
 {!profile.consent_given && (
 <Badge variant="soft" className="bg-rose-50 text-rose-700 font-bold text-xs">{t('parentVoiceConsentRevokedBadge')}</Badge>
 )}
@@ -651,7 +677,7 @@ function FamilyVoices() {
  </div>
 
  <Button onClick={() => setWizardStep(2)} variant="primary" size="lg" className="w-full md:w-auto rounded-full px-12 shadow-xl shadow-primary-500/30 font-black text-lg">
- Commencer
+ {t('parentVoiceWizardStart')}
  </Button>
  </div>
  )}
@@ -659,22 +685,22 @@ function FamilyVoices() {
  {/* STEP 2: RECORD & FORM */}
  {wizardStep === 2 && (
  <div>
- <h2 className="text-2xl font-black text-foreground mb-2">Informations & Enregistrement</h2>
- <p className="text-foreground-muted mb-6 font-medium">Pour une voix parfaite, placez-vous dans un endroit calme.</p>
+ <h2 className="text-2xl font-black text-foreground mb-2">{t('parentVoiceWizardStep2Title')}</h2>
+ <p className="text-foreground-muted mb-6 font-medium">{t('parentVoiceWizardStep2Desc')}</p>
  
  <form id="voice-form" onSubmit={submitProfile} className="space-y-6">
  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
  <input
  value={profileForm.name}
  onChange={(e) => setProfileForm({...profileForm, name: e.target.value})}
- placeholder="Prénom (ex: Maman)"
+ placeholder={t('parentVoiceNamePlaceholder')}
  className="w-full rounded-2xl border-2 border-border px-4 py-3 font-bold outline-none focus:border-primary-400 bg-surface-secondary focus:bg-card transition-colors"
  required
  />
  <input
  value={profileForm.relation}
  onChange={(e) => setProfileForm({...profileForm, relation: e.target.value})}
- placeholder="Relation (ex: Mère)"
+ placeholder={t('parentVoiceRelationPlaceholder')}
  className="w-full rounded-2xl border-2 border-border px-4 py-3 font-bold outline-none focus:border-primary-400 bg-surface-secondary focus:bg-card transition-colors"
  required
  />
@@ -682,17 +708,20 @@ function FamilyVoices() {
  
  {/* Magical Recording UI */}
  <div className="bg-gradient-to-b from-surface-50 to-surface-100 rounded-3xl p-6 md:p-8 border-2 border-border text-center relative overflow-hidden">
- {/* Quality Meter Mockup */}
- <div className="absolute top-4 left-4 flex gap-2">
+ <div className="absolute top-4 left-4 flex gap-2" aria-hidden="true">
  <div className={`h-2 w-8 rounded-full ${profileRecorder.recording ? 'bg-secondary-400' : 'bg-surface-300'}`}></div>
  <div className={`h-2 w-8 rounded-full ${profileRecorder.recording ? 'bg-secondary-400' : 'bg-surface-300'}`}></div>
  <div className={`h-2 w-8 rounded-full ${profileRecorder.recording && profileRecorder.durationSeconds > 5 ? 'bg-secondary-400' : 'bg-surface-300'}`}></div>
  </div>
- {profileRecorder.recording && <span className="absolute top-3 right-4 text-xs font-black text-secondary-600 bg-secondary-100 px-2 py-1 rounded-full uppercase">Qualité Optimale</span>}
+ {profileRecorder.recording && (
+ <span className="absolute top-3 right-4 text-xs font-black text-secondary-600 bg-secondary-100 px-2 py-1 rounded-full uppercase">
+ {t('parentVoiceRecording')}
+ </span>
+ )}
 
- <h3 className="text-lg font-black text-foreground mb-2 mt-4">Enregistrez un échantillon</h3>
+ <h3 className="text-lg font-black text-foreground mb-2 mt-4">{t('parentVoiceSampleTitle')}</h3>
  <p className="text-sm font-medium text-foreground-muted mb-8 max-w-sm mx-auto">
- Lisez ce texte à voix haute :"Bonjour, je suis très heureux de te raconter une merveilleuse histoire aujourd'hui."
+ {t('parentVoiceSamplePrompt')}
  </p>
 
  <div className="flex justify-center mb-8 relative h-32 items-center">
@@ -808,6 +837,7 @@ function FamilyVoices() {
  )}
  </AnimatePresence>
 
+ {confirmDialog}
  </div>
  );
 }

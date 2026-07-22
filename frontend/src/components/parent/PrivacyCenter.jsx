@@ -17,6 +17,7 @@ import {
 import { AlertIcon, CheckCircleIcon, HistoryIcon, ShieldIcon } from '../Icons';
 import { Button, Input } from '../ui';
 import { useToast } from '../ToastProvider';
+import { useConfirmDialog } from '../../hooks/useConfirmDialog';
 
 function ConsentToggle({ checked, onChange, label, description }) {
   return (
@@ -38,6 +39,7 @@ export default function PrivacyCenter() {
   const { user, logout } = useAuth();
   const { showToast } = useToast();
   const { language, t } = useLanguage();
+  const { requestConfirm, confirmDialog } = useConfirmDialog();
   const navigate = useNavigate();
   const [password, setPassword] = useState('');
   const [confirmation, setConfirmation] = useState('');
@@ -138,7 +140,12 @@ export default function PrivacyCenter() {
   };
 
   const clearDeviceData = async () => {
-    const confirmed = window.confirm(t('parentPrivacyClearLocalConfirm'));
+    const confirmed = await requestConfirm({
+      title: t('confirmTitle'),
+      message: t('parentPrivacyClearLocalConfirm'),
+      confirmLabel: t('confirmContinue'),
+      danger: true,
+    });
     if (!confirmed) return;
     try {
       setBusyAction('local');
@@ -422,6 +429,7 @@ export default function PrivacyCenter() {
           </div>
         </div>
       )}
+      {confirmDialog}
     </div>
   );
 }
