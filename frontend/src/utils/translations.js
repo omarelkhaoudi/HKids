@@ -1306,6 +1306,13 @@ export const translations = {
 
     // --- ADMIN SHARED ---
     adminLoading: 'Loading...',
+    adminDashboardBrand: 'HKids Admin',
+    adminDashboardOpenMenu: 'Open navigation menu',
+    adminDashboardCloseMenu: 'Close navigation menu',
+    adminDashboardSearchOpen: 'Open search',
+    adminDashboardNotificationsOpen: 'Notifications',
+    adminDashboardCollapseSidebar: 'Collapse sidebar',
+    adminSomethingWrong: "Something didn't go as expected. Please try again.",
     adminError: 'An error occurred.',
     adminSave: 'Save',
     adminSaving: 'Saving...',
@@ -3069,6 +3076,13 @@ export const translations = {
 
     // --- ADMIN SHARED ---
     adminLoading: 'Chargement...',
+    adminDashboardBrand: 'HKids Admin',
+    adminDashboardOpenMenu: 'Ouvrir le menu',
+    adminDashboardCloseMenu: 'Fermer le menu',
+    adminDashboardSearchOpen: 'Ouvrir la recherche',
+    adminDashboardNotificationsOpen: 'Notifications',
+    adminDashboardCollapseSidebar: 'Réduire le menu',
+    adminSomethingWrong: "Une erreur s'est produite. Veuillez réessayer.",
     adminError: 'Une erreur est survenue.',
     adminSave: 'Sauvegarder',
     adminSaving: 'Sauvegarde...',
@@ -4832,6 +4846,13 @@ export const translations = {
 
     // --- ADMIN SHARED ---
     adminLoading: 'جار التحميل...',
+    adminDashboardBrand: 'HKids Admin',
+    adminDashboardOpenMenu: 'فتح قائمة التنقل',
+    adminDashboardCloseMenu: 'إغلاق القائمة',
+    adminDashboardSearchOpen: 'فتح البحث',
+    adminDashboardNotificationsOpen: 'الإشعارات',
+    adminDashboardCollapseSidebar: 'طي الشريط الجانبي',
+    adminSomethingWrong: 'حدث خطأ ما. يرجى المحاولة مرة أخرى.',
     adminError: 'حدث خطأ.',
     adminSave: 'حفظ',
     adminSaving: 'جار الحفظ...',

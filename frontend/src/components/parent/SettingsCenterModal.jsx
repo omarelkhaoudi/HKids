@@ -16,6 +16,7 @@ import {useNavigate} from 'react-router-dom';
 import PrivacyCenter from './PrivacyCenter';
 import { storage } from '../../utils/storage';
 import {LANGUAGE_OPTIONS} from '../../utils/translations';
+import {useModalA11y} from '../../hooks/useModalA11y';
 
 const SECTION_ICONS = {
  account: UserIcon,
@@ -44,6 +45,7 @@ export function SettingsCenterModal({isOpen, onClose}) {
  const contentRef = useRef(null);
  const sectionRefs = useRef({});
  const titleId = useId();
+ const dialogRef = useRef(null);
  const {user} = useAuth();
  const {showToast} = useToast();
  const {language, changeLanguage, t, isRtl} = useLanguage();
@@ -81,6 +83,8 @@ export function SettingsCenterModal({isOpen, onClose}) {
  }), [t]);
 
  const dateLocale = language === 'ar' ? 'ar' : language === 'en' ? 'en-US' : 'fr-FR';
+
+ useModalA11y(isOpen, onClose, dialogRef);
 
  useEffect(() => {
  if (!isOpen || user?.role === 'kid') return;
@@ -196,6 +200,7 @@ export function SettingsCenterModal({isOpen, onClose}) {
  />
 
  <motion.div
+ ref={dialogRef}
  role="dialog"
  aria-modal="true"
  aria-labelledby={titleId}

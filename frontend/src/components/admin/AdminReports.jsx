@@ -2,11 +2,12 @@ import {useCallback, useEffect, useState} from 'react';
 import {adminAPI} from '../../api/admin';
 import {Badge, Button} from '../ui';
 import {SearchIcon, WarningIcon} from '../Icons';
-import {formatAdminDate} from './AdminMetricCard';
+import {formatAdminDate, getAdminDateLocale} from './AdminMetricCard';
 import { useLanguage } from '../../context/LanguageContext';
+import { AdminListSkeleton } from './AdminListSkeleton';
 
 function AdminReports() {
- const { t } = useLanguage();
+ const { t, language } = useLanguage();
  const [reports, setReports] = useState([]);
  const [loading, setLoading] = useState(true);
  const [error, setError] = useState('');
@@ -75,7 +76,7 @@ function AdminReports() {
 
  <div className="grid gap-4">
  {loading ? (
- <div className="p-10 text-center text-foreground-muted">{t('adminLoading')}</div>
+ <AdminListSkeleton rows={4} />
  ) : reports.length === 0 ? (
  <div className="bg-card border border-border rounded-3xl p-12 text-center">
  <WarningIcon className="w-10 h-10 mx-auto text-surface-300 mb-3" />
@@ -93,7 +94,7 @@ function AdminReports() {
  <h2 className="font-black text-lg">{report.reason}</h2>
  <p className="text-sm text-foreground-muted mt-1">{report.details || t('adminReportsNoDetails')}</p>
  <div className="text-xs text-surface-400 mt-3">
- {t('adminReportsTarget')} {report.target_label || `#${report.target_id}`} · {t('adminReportsBy').replace('{name}', report.reporter_name || t('adminReportsDeletedUser'))} · {formatAdminDate(report.created_at)}
+ {t('adminReportsTarget')} {report.target_label || `#${report.target_id}`} · {t('adminReportsBy').replace('{name}', report.reporter_name || t('adminReportsDeletedUser'))} · {formatAdminDate(report.created_at, t, getAdminDateLocale(language))}
  </div>
  </div>
  <div className="flex flex-wrap gap-2">

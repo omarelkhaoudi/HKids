@@ -1,5 +1,7 @@
 import { AnimatePresence, motion } from 'framer-motion';
+import { useRef } from 'react';
 import KidsButton from './KidsButton';
+import { useModalA11y } from '../../hooks/useModalA11y';
 
 export function KidsModal({
   isOpen,
@@ -12,6 +14,9 @@ export function KidsModal({
   secondaryLabel,
   onSecondary,
 }) {
+  const panelRef = useRef(null);
+  useModalA11y(isOpen, onClose, panelRef);
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -23,6 +28,7 @@ export function KidsModal({
           onClick={onClose}
         >
           <motion.div
+            ref={panelRef}
             initial={{ opacity: 0, scale: 0.92, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.92, y: 20 }}

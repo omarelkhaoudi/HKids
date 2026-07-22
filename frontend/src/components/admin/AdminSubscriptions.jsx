@@ -1,12 +1,13 @@
 import {useEffect, useState} from 'react';
 import {adminAPI} from '../../api/admin';
-import {formatAdminDate} from './AdminMetricCard';
+import {formatAdminDate, getAdminDateLocale} from './AdminMetricCard';
 import {CheckIcon, UserIcon, TrendingUpIcon, WarningIcon, SearchIcon, DownloadIcon} from '../Icons';
 import {Badge, Button} from '../ui';
 import { useLanguage } from '../../context/LanguageContext';
+import { AdminTableSkeleton } from './AdminListSkeleton';
 
 function AdminSubscriptions() {
- const { t } = useLanguage();
+ const { t, language } = useLanguage();
  const [subscriptions, setSubscriptions] = useState([]);
  const [loading, setLoading] = useState(true);
  const [search, setSearch] = useState('');
@@ -150,7 +151,7 @@ function AdminSubscriptions() {
  <tbody className="divide-y divide-border">
  {loading ? (
  <tr>
- <td colSpan="5" className="p-8 text-center text-foreground-muted">{t('adminLoading')}</td>
+ <td colSpan="5"><AdminTableSkeleton rows={4} cols={5} /></td>
  </tr>
  ) : filteredSubscriptions.length === 0 ? (
  <tr>
@@ -187,7 +188,7 @@ function AdminSubscriptions() {
  <Badge variant={badgeVariant} className="font-bold">{statusText}</Badge>
  </td>
  <td className="px-6 py-4 text-right">
- <div className="text-sm font-medium text-foreground-secondary">{formatAdminDate(sub.current_period_end)}</div>
+ <div className="text-sm font-medium text-foreground-secondary">{formatAdminDate(sub.current_period_end, t, getAdminDateLocale(language))}</div>
  </td>
  <td className="px-6 py-4 text-right">
  <div className="flex justify-end gap-2">

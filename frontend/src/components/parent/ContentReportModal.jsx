@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '../../context/LanguageContext';
 import { useToast } from '../ToastProvider';
+import { useModalA11y } from '../../hooks/useModalA11y';
 import { reportsAPI } from '../../api/reports';
 import { Button } from '../ui';
 import { XIcon, WarningIcon } from '../Icons';
@@ -26,6 +27,8 @@ export function ContentReportModal({
   const [reasonKey, setReasonKey] = useState(REASON_KEYS[0]);
   const [details, setDetails] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const panelRef = useRef(null);
+  useModalA11y(isOpen, onClose, panelRef);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -64,12 +67,14 @@ export function ContentReportModal({
           onClick={onClose}
         >
           <motion.div
+            ref={panelRef}
             initial={{ scale: 0.95, y: 20 }}
             animate={{ scale: 1, y: 0 }}
             exit={{ scale: 0.95, y: 20 }}
             onClick={(e) => e.stopPropagation()}
             className="w-full max-w-md rounded-3xl bg-card p-6 shadow-2xl border border-border"
             role="dialog"
+            aria-modal="true"
             aria-labelledby="content-report-title"
           >
             <div className="flex items-start justify-between gap-4 mb-4">

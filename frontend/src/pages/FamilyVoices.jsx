@@ -253,7 +253,7 @@ function FamilyVoices() {
  showToast(t('parentVoiceProfileDeleted'), 'info');
  loadData();
 } catch (error) {
- showToast('Impossible de supprimer cette voix', 'error');
+ showToast(error.response?.data?.error || t('parentDeleteError'), 'error');
 }
 };
 

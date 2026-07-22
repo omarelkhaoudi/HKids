@@ -68,20 +68,16 @@ function LazyRoute({ children }) {
   return <Suspense fallback={<RouteFallback />}>{children}</Suspense>;
 }
 
+function AuthLoadingFallback() {
+  return <RouteFallback />;
+}
+
 function RequireAuth({ children }) {
   const { user, loading } = useAuth();
-  const { t } = useLanguage();
   const hasToken = Boolean(localStorage.getItem('token'));
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
-        <div className="text-center">
-          <div className="inline-block rounded-full h-12 w-12 border-4 border-primary-500 border-t-transparent animate-spin mb-4"></div>
-          <p className="text-surface-600 font-semibold">{t('loading')}</p>
-        </div>
-      </div>
-    );
+    return <AuthLoadingFallback />;
   }
 
   if (!user && !hasToken) {
@@ -93,17 +89,9 @@ function RequireAuth({ children }) {
 
 function RequireRole({ roles, children }) {
   const { user, loading } = useAuth();
-  const { t } = useLanguage();
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
-        <div className="text-center">
-          <div className="inline-block rounded-full h-12 w-12 border-4 border-primary-500 border-t-transparent animate-spin mb-4"></div>
-          <p className="text-surface-600 font-semibold">{t('loading')}</p>
-        </div>
-      </div>
-    );
+    return <AuthLoadingFallback />;
   }
 
   if (!user) {

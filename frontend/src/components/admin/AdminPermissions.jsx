@@ -4,6 +4,7 @@ import {useAuth} from '../../context/AuthContext';
 import {Badge, Button} from '../ui';
 import {ShieldIcon, UserIcon} from '../Icons';
 import { useLanguage } from '../../context/LanguageContext';
+import { AdminListSkeleton } from './AdminListSkeleton';
 
 function AdminPermissions() {
  const {user} = useAuth();
@@ -84,7 +85,7 @@ function AdminPermissions() {
  {error && <div className="p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 font-bold">{error}</div>}
 
  {loading ? (
- <div className="p-10 text-center text-foreground-muted">{t('adminLoading')}</div>
+ <AdminListSkeleton rows={3} />
  ) : (
  <div className="grid gap-5">
  {admins.map((admin) => {

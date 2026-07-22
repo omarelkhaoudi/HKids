@@ -10,6 +10,7 @@ import {
 } from '../Icons';
 import {Button, Badge, Avatar} from '../ui';
 import { useLanguage } from '../../context/LanguageContext';
+import {useToast} from '../ToastProvider';
 
 // Helper: base URL for images
 const getImageBaseUrl = () => {
@@ -28,6 +29,7 @@ function BookManagement() {
  const [showModal, setShowModal] = useState(false);
  const [editingBook, setEditingBook] = useState(null);
  const { t } = useLanguage();
+ const { showToast } = useToast();
  
  const [formData, setFormData] = useState({
  title: '', author: '', description: '', category_id: '',
@@ -63,7 +65,7 @@ function BookManagement() {
  setCategories(categoriesRes.data);
 } catch (error) {
  console.error('Error loading data:', error);
- alert('Error loading data');
+ showToast(t('adminSomethingWrong'), 'error');
 } finally {
  setLoading(false);
 }
@@ -73,11 +75,11 @@ function BookManagement() {
  e.preventDefault();
  const audioOnly = ['song', 'audio_story'].includes(formData.content_type);
  if (!editingBook && pageFiles.length === 0 && !audioOnly && !audioFile) {
- alert(t('adminBooksValidationPageOrAudio'));
+ showToast(t('adminBooksValidationPageOrAudio'), 'error');
  return;
 }
  if (!editingBook && audioOnly && !audioFile && !formData.audio_url) {
- alert(t('adminBooksValidationAudioRequired'));
+ showToast(t('adminBooksValidationAudioRequired'), 'error');
  return;
 }
  setSubmitting(true);
@@ -96,7 +98,7 @@ function BookManagement() {
  loadData();
 } catch (error) {
  console.error('Error saving book:', error);
- alert(t('adminBooksSaveError') + (error.response?.data?.error || error.message));
+ showToast(error.response?.data?.error || t('adminBooksSaveError'), 'error');
 } finally {
  setSubmitting(false);
 }
@@ -129,7 +131,7 @@ function BookManagement() {
  loadData();
 } catch (error) {
  console.error('Error deleting book:', error);
- alert(t('adminBooksDeleteError'));
+ showToast(t('adminBooksDeleteError'), 'error');
 }
 };
 
@@ -146,7 +148,7 @@ function BookManagement() {
  loadData();
 } catch (error) {
  console.error('Error updating book:', error);
- alert('Error updating book: ' + (error.response?.data?.error || error.message));
+ showToast(error.response?.data?.error || t('adminSomethingWrong'), 'error');
 }
 };
 
@@ -328,13 +330,13 @@ function BookManagement() {
  <Badge variant="soft" className={`font-bold ml-2 ${moderationTone}`}>
  {moderationStatus === 'pending' ? t('adminBooksStatusModeration') : moderationStatus === 'rejected' ? t('adminBooksStatusRejected') : t('adminBooksStatusValidated')}
  </Badge>
- {isPremium && <Badge variant="soft" className="bg-primary-100 text-primary-800 font-bold ml-2">Premium</Badge>}
+ {isPremium && <Badge variant="soft" className="bg-primary-100 text-primary-800 font-bold ml-2">{t('adminBooksStatusPremium')}</Badge>}
  </td>
  <td className="p-4">
  {book.audio_url ? <AudioIcon className="w-5 h-5 text-secondary-500" /> : <AudioIcon className="w-5 h-5 text-surface-300" />}
  </td>
  <td className="p-4 text-right" onClick={(e) => e.stopPropagation()}>
- <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+ <div className="flex items-center justify-end gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
  <button onClick={() => handleEdit(book)} className="p-2 text-surface-400 hover:text-foreground-600 hover:bg-primary-50 rounded-lg transition-colors"><EditIcon className="w-4 h-4" /></button>
  <button onClick={() => handleDelete(book.id)} className="p-2 text-surface-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"><TrashIcon className="w-4 h-4" /></button>
  <button onClick={() => handleTogglePublish(book)} className="p-2 text-surface-400 hover:text-foreground hover:bg-surface-secondary rounded-lg transition-colors">
