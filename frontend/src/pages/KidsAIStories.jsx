@@ -20,6 +20,7 @@ import { KidsHero } from '../components/kids/KidsHero';
 import { KidsModal } from '../components/kids/KidsModal';
 import { BookGridSkeleton } from '../components/SkeletonLoader';
 import { useLanguage } from '../context/LanguageContext';
+import { getLocaleFromLanguage } from '../utils/translations';
 import { useAuth } from '../context/AuthContext';
 import { ContentReportModal } from '../components/parent/ContentReportModal';
 import { useReducedMotion } from '../hooks/useReducedMotion';
@@ -757,7 +758,7 @@ function KidsAIStories() {
                 value={filters.search}
                 onChange={(e) => updateFilter('search', e.target.value)}
                 className="h-14 w-full rounded-2xl bg-surface-secondary/50 border border-border pl-12 pr-4 font-bold outline-none transition focus:border-primary-400 focus:bg-card focus:ring-4 focus:ring-primary-500/10 placeholder:text-foreground-muted"
-                placeholder="Chercher un titre, héros..."
+                placeholder={t('kidsAIStoriesSearchPlaceholder')}
               />
             </label>
             <select
@@ -889,7 +890,7 @@ function KidsAIStories() {
                   </div>
 
                   <p className="text-sm font-bold text-foreground-muted italic text-center mb-6">
-                    Créée le {new Date(selectedStory.created_at || Date.now()).toLocaleDateString('fr-FR')}
+                    {t('kidsAIStoriesCreatedOn', { date: new Date(selectedStory.created_at || Date.now()).toLocaleDateString(getLocaleFromLanguage(language)) })}
                   </p>
 
                   <NarrationPlayer story={selectedStory} canGenerate={canCreateStories} />

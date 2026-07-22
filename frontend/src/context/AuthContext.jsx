@@ -3,6 +3,7 @@ import axios from 'axios';
 import { buildApiUrl } from '../config/api.js';
 import { clearLocalPrivacyData } from '../services/privacy/privacyStorageService';
 import { setUser as setSentryUser } from '../lib/sentry';
+import { i18nT } from '../utils/i18n';
 
 const AuthContext = createContext();
 
@@ -92,17 +93,20 @@ export function AuthProvider({ children }) {
       console.error('Login error:', error);
       
       // Better error handling
-      let errorMessage = 'Échec de la connexion';
+      let errorMessage = i18nT('authErrorLoginFailed');
       
       if (error.response) {
         // Server responded with error
-        errorMessage = error.response.data?.error || `Erreur ${error.response.status}: ${error.response.statusText}`;
+        errorMessage = error.response.data?.error || i18nT('authErrorHttpStatus', {
+          status: error.response.status,
+          statusText: error.response.statusText,
+        });
       } else if (error.request) {
         // Request made but no response
-        errorMessage = 'Aucune réponse du serveur. Vérifiez que le serveur backend est démarré.';
+        errorMessage = i18nT('authErrorServerNoResponse');
       } else {
         // Error setting up request
-        errorMessage = error.message || 'Erreur lors de la connexion';
+        errorMessage = error.message || i18nT('authErrorConnection');
       }
       
       return { 
@@ -132,23 +136,23 @@ export function AuthProvider({ children }) {
     } catch (error) {
       console.error('Signup error:', error);
       
-      let errorMessage = 'Échec de l\'inscription';
+      let errorMessage = i18nT('authErrorSignupFailed');
       
       if (error.response) {
         const { status, data, statusText } = error.response;
-        errorMessage = data?.error || `Erreur ${status}: ${statusText}`;
+        errorMessage = data?.error || i18nT('authErrorHttpStatus', { status, statusText });
         if (status === 429 && data?.retryAfter) {
           const minutes = Math.max(1, Math.ceil(Number(data.retryAfter) / 60));
-          errorMessage = `Trop de tentatives. Réessayez dans environ ${minutes} minute${minutes > 1 ? 's' : ''}.`;
+          errorMessage = i18nT('authErrorRateLimit', { minutes });
         } else if (status === 403 && errorMessage === 'Admin signup is not available') {
-          errorMessage = 'L\'inscription admin est désactivée sur ce serveur.';
+          errorMessage = i18nT('authErrorAdminSignupDisabled');
         } else if (status === 403 && errorMessage.includes('Code d\'inscription admin')) {
-          errorMessage = 'Code d\'inscription admin invalide.';
+          errorMessage = i18nT('authErrorAdminCodeInvalid');
         }
       } else if (error.request) {
-        errorMessage = 'Aucune réponse du serveur. Vérifiez que le serveur backend est démarré.';
+        errorMessage = i18nT('authErrorServerNoResponse');
       } else {
-        errorMessage = error.message || 'Erreur lors de l\'inscription';
+        errorMessage = error.message || i18nT('authErrorConnection');
       }
       
       return { 

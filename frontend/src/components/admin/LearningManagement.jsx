@@ -321,7 +321,7 @@ function LearningManagement() {
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
           <form onSubmit={createCategory} className="bg-card rounded-2xl border border-border p-6 space-y-4">
             <h2 className="font-black text-lg">{t('adminLearningNewCategory')}</h2>
-            <input required placeholder="Code" value={categoryForm.code} onChange={(e) => setCategoryForm({ ...categoryForm, code: e.target.value })} className="w-full p-3 rounded-xl bg-surface-secondary border border-border" />
+            <input required placeholder={t('adminLearningFormCode')} value={categoryForm.code} onChange={(e) => setCategoryForm({ ...categoryForm, code: e.target.value })} className="w-full p-3 rounded-xl bg-surface-secondary border border-border" />
             <input required placeholder={t('adminCategoriesFormName')} value={categoryForm.name} onChange={(e) => setCategoryForm({ ...categoryForm, name: e.target.value })} className="w-full p-3 rounded-xl bg-surface-secondary border border-border" />
             <textarea placeholder={t('adminCategoriesFormDescription')} value={categoryForm.description} onChange={(e) => setCategoryForm({ ...categoryForm, description: e.target.value })} className="w-full p-3 rounded-xl bg-surface-secondary border border-border" />
             <Button type="submit" variant="primary" disabled={submitting}>{t('adminCreate')}</Button>
@@ -344,7 +344,7 @@ function LearningManagement() {
             <h2 className="font-black text-lg">{t('adminLearningNewChallenge')}</h2>
             <input required placeholder={t('adminLearningFormTitle')} value={challengeForm.title} onChange={(e) => setChallengeForm({ ...challengeForm, title: e.target.value })} className="w-full p-3 rounded-xl bg-surface-secondary border border-border" />
             <textarea placeholder={t('adminLearningFormDescription')} value={challengeForm.description} onChange={(e) => setChallengeForm({ ...challengeForm, description: e.target.value })} className="w-full p-3 rounded-xl bg-surface-secondary border border-border" />
-            <input type="number" min={1} placeholder="Objectif" value={challengeForm.target_value} onChange={(e) => setChallengeForm({ ...challengeForm, target_value: e.target.value })} className="w-full p-3 rounded-xl bg-surface-secondary border border-border" />
+            <input type="number" min={1} placeholder={t('adminLearningFormTarget')} value={challengeForm.target_value} onChange={(e) => setChallengeForm({ ...challengeForm, target_value: e.target.value })} className="w-full p-3 rounded-xl bg-surface-secondary border border-border" />
             <select value={challengeForm.category_id} onChange={(e) => setChallengeForm({ ...challengeForm, category_id: e.target.value })} className="w-full p-3 rounded-xl bg-surface-secondary border border-border font-bold">
               <option value="">{t('adminLearningFormCategoryOptional')}</option>
               {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
@@ -367,10 +367,10 @@ function LearningManagement() {
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
           <form onSubmit={createReward} className="bg-card rounded-2xl border border-border p-6 space-y-4">
             <h2 className="font-black text-lg">{t('adminLearningNewReward')}</h2>
-            <input required placeholder="Code" value={rewardForm.code} onChange={(e) => setRewardForm({ ...rewardForm, code: e.target.value })} className="w-full p-3 rounded-xl bg-surface-secondary border border-border" />
-            <input required placeholder="Nom" value={rewardForm.name} onChange={(e) => setRewardForm({ ...rewardForm, name: e.target.value })} className="w-full p-3 rounded-xl bg-surface-secondary border border-border" />
-            <input type="number" min={1} placeholder="Valeur" value={rewardForm.value} onChange={(e) => setRewardForm({ ...rewardForm, value: e.target.value })} className="w-full p-3 rounded-xl bg-surface-secondary border border-border" />
-            <textarea placeholder="Description" value={rewardForm.description} onChange={(e) => setRewardForm({ ...rewardForm, description: e.target.value })} className="w-full p-3 rounded-xl bg-surface-secondary border border-border" />
+            <input required placeholder={t('adminLearningFormCode')} value={rewardForm.code} onChange={(e) => setRewardForm({ ...rewardForm, code: e.target.value })} className="w-full p-3 rounded-xl bg-surface-secondary border border-border" />
+            <input required placeholder={t('adminLearningFormName')} value={rewardForm.name} onChange={(e) => setRewardForm({ ...rewardForm, name: e.target.value })} className="w-full p-3 rounded-xl bg-surface-secondary border border-border" />
+            <input type="number" min={1} placeholder={t('adminLearningFormValue')} value={rewardForm.value} onChange={(e) => setRewardForm({ ...rewardForm, value: e.target.value })} className="w-full p-3 rounded-xl bg-surface-secondary border border-border" />
+            <textarea placeholder={t('adminLearningFormDescription')} value={rewardForm.description} onChange={(e) => setRewardForm({ ...rewardForm, description: e.target.value })} className="w-full p-3 rounded-xl bg-surface-secondary border border-border" />
             <Button type="submit" variant="primary" disabled={submitting}>{t('adminCreate')}</Button>
           </form>
           <div className="bg-card rounded-2xl border border-border p-6 space-y-3">
@@ -497,7 +497,7 @@ function LearningManagement() {
                         />
                         <textarea
                           rows={3}
-                          placeholder='Options JSON: [{"id":"a","label":"A","pictogram":"A"}]'
+                          placeholder={t('adminLearningFormOptionsJson')}
                           value={JSON.stringify(question.options || [])}
                           onChange={(e) => {
                             try {

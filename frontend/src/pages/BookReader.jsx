@@ -12,6 +12,7 @@ import {syncOrQueueKidMutation} from '../services/parental/kidActivitySyncServic
 import {voicesAPI} from '../api/voices';
 import {storage} from '../utils/storage';
 import {getFileUrl} from '../utils/fileUrl';
+import {i18nT, getLocaleFromLanguage, getAppLanguage} from '../utils/i18n';
 import {useToast} from '../components/ToastProvider';
 import {useAuth} from '../context/AuthContext';
 import {useLanguage} from '../context/LanguageContext';
@@ -128,7 +129,7 @@ function applyNarrationProfile(utterance, voices, profile, baseRate = 1) {
  utterance.voice = narrationVoice;
 }
 
- utterance.lang = narrationVoice?.lang?.toLowerCase().startsWith('fr') ? narrationVoice.lang : 'fr-FR';
+ utterance.lang = narrationVoice?.lang || getLocaleFromLanguage(getAppLanguage());
  utterance.rate = Math.min(1.4, Math.max(0.65, baseRate * profile.rate));
  utterance.pitch = profile.pitch;
  utterance.volume = 1.0;
@@ -189,7 +190,7 @@ function PDFPageViewer({pdfUrl, pageNumber, onLoad, onPdfLoaded, imageClassName 
  
  const loadPage = async () => {
  if (!pdfUrl) {
- setError('URL du PDF manquante');
+ setError(i18nT('kidReaderErrorPdfUrlMissing'));
  setLoading(false);
  return;
 }
@@ -246,14 +247,14 @@ function PDFPageViewer({pdfUrl, pageNumber, onLoad, onPdfLoaded, imageClassName 
  console.error('URL du PDF:', pdfUrl);
  
  // Messages d'erreur plus détaillés
- let errorMessage = 'Erreur lors du chargement du PDF';
+ let errorMessage = i18nT('kidReaderErrorPdfLoad');
  if (error.message) {
  if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
- errorMessage = 'Impossible de charger le PDF. Vérifiez votre connexion.';
+ errorMessage = i18nT('kidReaderErrorPdfNetwork');
 } else if (error.message.includes('Invalid PDF')) {
- errorMessage = 'Le fichier PDF est invalide ou corrompu.';
+ errorMessage = i18nT('kidReaderErrorPdfInvalid');
 } else if (error.message.includes('Missing PDF')) {
- errorMessage = 'Le fichier PDF est introuvable.';
+ errorMessage = i18nT('kidReaderErrorPdfNotFound');
 } else {
  errorMessage = error.message;
 }
@@ -280,7 +281,7 @@ function PDFPageViewer({pdfUrl, pageNumber, onLoad, onPdfLoaded, imageClassName 
 <div className="absolute inset-0 kids-shimmer opacity-30" aria-hidden="true" />
 <div className="relative z-10 text-center px-space-16">
 <div className="mx-auto mb-space-12 h-16 w-12 rounded-md bg-white/70 shadow-soft border border-white/50" />
-{!isKidMinimal && <p className="kids-type-body text-foreground-secondary">Préparation de la page...</p>}
+{!isKidMinimal && <p className="kids-type-body text-foreground-secondary">{i18nT('kidReaderPagePreparing')}</p>}
 </div>
 </div>
 </div>
@@ -294,7 +295,7 @@ function PDFPageViewer({pdfUrl, pageNumber, onLoad, onPdfLoaded, imageClassName 
  <BookIcon className="w-16 h-16 text-primary-400 mx-auto mb-space-4" />
  {!isKidMinimal && (
   <>
-  <p className="kids-type-h2 !text-[1.2rem] mb-2">La page a besoin d&apos;un nouvel essai</p>
+  <p className="kids-type-h2 !text-[1.2rem] mb-2">{i18nT('kidReaderPageRetryTitle')}</p>
   {error && <p className="text-sm text-foreground-secondary">{error}</p>}
   </>
  )}
@@ -303,9 +304,9 @@ function PDFPageViewer({pdfUrl, pageNumber, onLoad, onPdfLoaded, imageClassName 
  setReloadKey(prev => prev + 1);
 }}
 className="mt-space-4 px-space-5 py-3 bg-primary-500 text-white rounded-full hover:bg-primary-600 transition-colors"
- aria-label={isKidMinimal ? 'Retry' : undefined}
+ aria-label={isKidMinimal ? i18nT('kidReaderRetry') : undefined}
  >
-{isKidMinimal ? '↻' : 'Réessayer calmement'}
+{isKidMinimal ? '↻' : i18nT('kidReaderRetryCalm')}
  </button>
 </div>
  </div>
@@ -321,7 +322,7 @@ className="mt-space-4 px-space-5 py-3 bg-primary-500 text-white rounded-full hov
  animate={{scale: 1}}
  transition={{delay: 0.2, duration: 0.3}}
  onError={() => {
- setError('Erreur lors de l\'affichage de l\'image');
+ setError(i18nT('kidReaderErrorImageDisplay'));
  setImageUrl(null);
 }}
  />
@@ -514,7 +515,7 @@ function BookReader() {
  const navigate = useNavigate();
  const location = useLocation();
  const isKidReader = location.pathname.startsWith('/kids/read/');
- const { t, isRtl } = useLanguage();
+ const { t, isRtl, language } = useLanguage();
  const [book, setBook] = useState(null);
  const [currentPage, setCurrentPage] = useState(0);
  const [loading, setLoading] = useState(true);
@@ -700,7 +701,7 @@ function BookReader() {
  const voices = await waitForSpeechVoices();
 
  if (voices.length === 0) {
- showToast('Aucune voix disponible pour la lecture audio', 'error', 3000);
+ showToast(t('kidReaderToastNoVoice'), 'error', 3000);
  return;
 }
 
@@ -794,8 +795,8 @@ function BookReader() {
  ? t('kidAskParent')
  : t('kidAskParent')
  : status === 402
- ? 'Choisissez un abonnement pour lire ce livre.'
- : 'Votre quota de livres du mois est atteint.',
+ ? t('subscriptionsChoosePlanForBook')
+ : t('subscriptionsBookQuotaReached'),
  'info',
  3000
  );
@@ -860,7 +861,7 @@ function BookReader() {
  setShowConfetti(true);
  setTimeout(() => setShowConfetti(false), 3000);
  if (!isKidReader) {
-  showToast('Bravo ! Tu as terminé le livre !', 'success', 4000);
+  showToast(t('kidReaderToastBookComplete'), 'success', 4000);
  }
 }
  return newPage;
@@ -896,13 +897,13 @@ function BookReader() {
  const playAudio = async () => {
  try {
  if (!book || !book.pages || book.pages.length === 0) {
- showToast('Cette page ne contient pas de texte à lire', 'info', 3000);
+ showToast(t('kidReaderToastNoTextOnPage'), 'info', 3000);
  return;
 }
 
  // Vérifier si la synthèse vocale est disponible
  if (!('speechSynthesis' in window)) {
- showToast('La lecture audio n\'est pas disponible sur votre navigateur', 'error', 3000);
+ showToast(t('kidReaderToastAudioUnavailable'), 'error', 3000);
  return;
 }
 
@@ -926,7 +927,7 @@ function BookReader() {
  const pageData = isPDF ? firstPageData : book.pages[currentPage];
  
  if (!pageData) {
- showToast('Page introuvable', 'error', 3000);
+ showToast(t('kidReaderToastPageNotFound'), 'error', 3000);
  return;
 }
 
@@ -966,20 +967,20 @@ function BookReader() {
 }
 } catch (extractError) {
  console.error('Erreur lors de l\'extraction du texte:', extractError);
- showToast('Impossible d\'extraire le texte de cette page', 'error', 3000);
+ showToast(t('kidReaderToastTextExtractFailed'), 'error', 3000);
  return;
 }
 }
 
  if (!textToRead || textToRead.trim().length === 0) {
- showToast('Cette page ne contient pas de texte à lire', 'info', 3000);
+ showToast(t('kidReaderToastNoTextOnPage'), 'info', 3000);
  return;
 }
 
  const voices = await waitForSpeechVoices();
  
  if (voices.length === 0) {
- showToast('Aucune voix disponible pour la lecture audio', 'error', 3000);
+ showToast(t('kidReaderToastNoVoice'), 'error', 3000);
  return;
 }
 
@@ -988,11 +989,12 @@ function BookReader() {
  const selectedProfile = voiceProfiles.find((profile) => profile.id === selectedVoiceProfile) || voiceProfiles[0];
  const narrationVoice = pickNarrationVoice(voices, selectedProfile);
  
+ const speechLocale = getLocaleFromLanguage(language);
  if (narrationVoice) {
  utterance.voice = narrationVoice;
- utterance.lang = 'fr-FR';
+ utterance.lang = narrationVoice.lang || speechLocale;
 } else {
- utterance.lang = 'fr-FR';
+ utterance.lang = speechLocale;
 }
 
  utterance.rate = Math.min(1.4, Math.max(0.65, speechRate * selectedProfile.rate));
@@ -1028,15 +1030,15 @@ function BookReader() {
  setCurrentSentenceIndex(-1);
  
  // Messages d'erreur plus spécifiques
- let errorMessage = 'Erreur lors de la lecture audio';
+ let errorMessage = t('kidReaderToastAudioPlayError');
  if (event.error === 'not-allowed') {
- errorMessage = 'Permission refusée pour la lecture audio';
+ errorMessage = t('kidReaderToastAudioUnavailable');
 } else if (event.error === 'network') {
- errorMessage = 'Erreur réseau lors de la lecture audio';
+ errorMessage = t('kidReaderSpeechNetworkError');
 } else if (event.error === 'synthesis-failed') {
- errorMessage = 'La synthèse vocale a échoué';
+ errorMessage = t('kidReaderSpeechFailed');
 } else if (event.error === 'synthesis-unavailable') {
- errorMessage = 'La synthèse vocale n\'est pas disponible';
+ errorMessage = t('kidReaderSpeechNotAvailable');
 }
  
  showToast(errorMessage, 'error', 3000);
@@ -1052,7 +1054,7 @@ function BookReader() {
  
  // Vérifier que speechSynthesis est toujours disponible et qu'il n'est pas déjà en train de parler
  if (!window.speechSynthesis) {
- showToast('La synthèse vocale n\'est plus disponible', 'error', 3000);
+ showToast(t('kidReaderToastSpeechUnavailable'), 'error', 3000);
  setIsPlaying(false);
  setSpeechUtterance(null);
  return;
@@ -1086,13 +1088,13 @@ function BookReader() {
  console.error('Erreur lors de l\'appel à speak():', speakError);
  setIsPlaying(false);
  setSpeechUtterance(null);
- showToast('Impossible de démarrer la lecture audio', 'error', 3000);
+ showToast(t('kidReaderToastAudioStartFailed'), 'error', 3000);
 }
 } catch (error) {
  console.error('Erreur dans playAudio:', error);
  setIsPlaying(false);
  setSpeechUtterance(null);
- showToast('Une erreur est survenue lors de la lecture audio', 'error', 3000);
+ showToast(t('kidReaderToastAudioPlayError'), 'error', 3000);
 }
 };
 
@@ -1154,7 +1156,7 @@ function BookReader() {
  const extractTextFromPDF = async (pdfUrl, pageNumber) => {
  try {
  setIsExtracting(true);
- showToast('Extraction du texte du PDF en cours...', 'info', 2000);
+ showToast(t('kidReaderToastPdfExtracting'), 'info', 2000);
  
  // Charger le document PDF
  const loadingTask = pdfjsLib.getDocument(pdfUrl);
@@ -1183,21 +1185,21 @@ function BookReader() {
 }));
  return fullText;
 } else {
- showToast('Aucun texte détecté dans cette page du PDF', 'info', 3000);
+ showToast(t('kidReaderToastPdfNoText'), 'info', 3000);
  return null;
 }
 } catch (error) {
  console.error('Erreur extraction PDF:', error);
  console.error('URL du PDF:', pdfUrl);
  
- let errorMessage = 'Erreur lors de l\'extraction du texte du PDF';
+ let errorMessage = t('kidReaderPdfExtractError');
  if (error.message) {
  if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
- errorMessage = 'Impossible de charger le PDF pour l\'extraction du texte.';
+ errorMessage = t('kidReaderPdfExtractLoadError');
 } else if (error.message.includes('Invalid PDF')) {
- errorMessage = 'Le fichier PDF est invalide ou corrompu.';
+ errorMessage = t('kidReaderErrorPdfInvalid');
 } else {
- errorMessage = `Erreur: ${error.message}`;
+ errorMessage = error.message;
 }
 }
  showToast(errorMessage, 'error', 3000);
@@ -1210,13 +1212,13 @@ function BookReader() {
  // Fonction pour extraire le texte d'une image avec OCR
  const extractTextFromImage = async (imageUrl) => {
  if (!workerRef.current) {
- showToast('OCR non disponible. Veuillez recharger la page.', 'error', 3000);
+ showToast(t('kidReaderToastOcrUnavailable'), 'error', 3000);
  return null;
 }
 
  try {
  setIsExtracting(true);
- showToast('Extraction du texte de l\'image en cours...', 'info', 2000);
+ showToast(t('kidReaderToastImageExtracting'), 'info', 2000);
  
  const {data: {text}} = await workerRef.current.recognize(imageUrl);
  const cleanedText = text.trim();
@@ -1229,12 +1231,12 @@ function BookReader() {
 }));
  return cleanedText;
 } else {
- showToast('Aucun texte détecté dans l\'image', 'info', 3000);
+ showToast(t('kidReaderToastImageNoText'), 'info', 3000);
  return null;
 }
 } catch (error) {
  console.error('Erreur OCR:', error);
- showToast('Erreur lors de l\'extraction du texte', 'error', 3000);
+ showToast(t('kidReaderToastTextExtractError'), 'error', 3000);
  return null;
 } finally {
  setIsExtracting(false);
@@ -1486,8 +1488,8 @@ function BookReader() {
  if (loading) {
  return (
 <PremiumReaderState
- title={isKidReader ? 'Ton histoire arrive' : "Préparation de l'histoire"}
- description={isKidReader ? null : 'Le livre s’ouvre doucement pour une lecture sans distraction.'}
+ title={isKidReader ? t('kidReaderStoryArriving') : t('kidReaderPreparingStory')}
+ description={isKidReader ? null : t('kidReaderPreparingDesc')}
  reducedMotion={reducedMotion}
  icon="📖"
 />
@@ -1497,9 +1499,9 @@ function BookReader() {
  if (!book || !book.pages || book.pages.length === 0) {
  return (
 <PremiumReaderState
- title={isKidReader ? 'Choisissons une autre histoire' : t('kidBookNotFound')}
- description={isKidReader ? 'Cette lecture n’est pas prête pour le moment. La bibliothèque t’attend avec d’autres aventures.' : 'Le livre n’est pas disponible pour le moment.'}
- actionLabel={isKidReader ? 'Retour aux histoires' : 'Retour à la bibliothèque'}
+ title={isKidReader ? t('kidReaderChooseAnother') : t('kidBookNotFound')}
+ description={isKidReader ? t('kidReaderChooseAnotherDesc') : t('kidReaderBookUnavailable')}
+ actionLabel={isKidReader ? t('kidReaderBackToStories') : t('kidReaderBackToLibrary')}
  onAction={exitReader}
  reducedMotion={reducedMotion}
  icon={isKidReader ? '✨' : '📚'}

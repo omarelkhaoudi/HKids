@@ -1,3 +1,6 @@
+import { getAppLanguage } from './i18n';
+import { getLocaleFromLanguage } from './translations';
+
 export const createEmptyKidForm = () => ({
   name: '',
   age: '',
@@ -33,11 +36,11 @@ export const buildKidPayload = (form) => ({
   interests: form.interests,
 });
 
-export const formatKidBirthDate = (value) => {
+export const formatKidBirthDate = (value, language = getAppLanguage()) => {
   if (!value) return null;
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return null;
-  return date.toLocaleDateString('fr-FR', {
+  return date.toLocaleDateString(getLocaleFromLanguage(language), {
     day: '2-digit',
     month: 'short',
     year: 'numeric',

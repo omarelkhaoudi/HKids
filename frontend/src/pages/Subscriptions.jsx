@@ -13,6 +13,7 @@ import {
 import {Button, Card, Badge, Skeleton} from '../components/ui';
 import { MagicalBackground } from '../components/layout/PlatformShell';
 import { BRAND_HERO_GRADIENT, BRAND_SEMANTIC } from '../constants/brandTheme';
+import { getLocaleFromLanguage } from '../utils/translations';
 
 const fallbackPlans = [
  {
@@ -56,8 +57,8 @@ function getSubscriptionErrorMessage(data, t, fallbackKey) {
  return data?.error || t(fallbackKey);
 }
 
-function formatPrice(plan) {
- return new Intl.NumberFormat('fr-FR', {
+function formatPrice(plan, locale = 'fr-FR') {
+ return new Intl.NumberFormat(locale, {
  style: 'currency',
  currency: plan.currency || 'EUR',
 }).format(plan.monthly_price || 0);
@@ -125,6 +126,7 @@ function Subscriptions() {
  const [startingTrial, setStartingTrial] = useState(false);
  const {user, logout} = useAuth();
  const {t, language} = useLanguage();
+ const locale = getLocaleFromLanguage(language);
  const {showToast} = useToast();
  const navigate = useNavigate();
  const [searchParams, setSearchParams] = useSearchParams();
@@ -153,7 +155,7 @@ function Subscriptions() {
 
  const handleExpiredSession = () => {
  logout();
- showToast('Votre session a expiré. Connectez-vous à nouveau.', 'info', 3500);
+ showToast(t('subscriptionsSessionExpired'), 'info', 3500);
  navigate('/parent/login');
 };
 
@@ -243,7 +245,7 @@ function Subscriptions() {
 
  const openCheckoutModal = (plan) => {
  if (!isAuthenticated) {
- showToast('Connectez-vous pour choisir un abonnement.', 'info', 2500);
+ showToast(t('subscriptionsLoginToSubscribe'), 'info', 2500);
  navigate('/parent/login');
  return;
 }
@@ -330,9 +332,9 @@ function Subscriptions() {
  setBillingAction('cancel');
  const response = await subscriptionsAPI.cancelSubscription(true);
  setCurrentSubscription(response.data.subscription);
- showToast('Annulation programmée à la fin de la période.', 'success');
+ showToast(t('subscriptionsCancelScheduled'), 'success');
  } catch (error) {
- showToast(error.response?.data?.error || 'Annulation impossible.', 'error');
+ showToast(error.response?.data?.error || t('adminSomethingWrong'), 'error');
  } finally {
  setBillingAction('');
  }
@@ -343,15 +345,15 @@ function Subscriptions() {
  setBillingAction('resume');
  const response = await subscriptionsAPI.resumeSubscription();
  setCurrentSubscription(response.data.subscription);
- showToast('Abonnement réactivé.', 'success');
+ showToast(t('subscriptionsReactivated'), 'success');
  } catch (error) {
- showToast(error.response?.data?.error || 'Réactivation impossible.', 'error');
+ showToast(error.response?.data?.error || t('adminSomethingWrong'), 'error');
  } finally {
  setBillingAction('');
  }
  };
 
- const formatMoney = (cents, currency = 'EUR') => new Intl.NumberFormat('fr-FR', {
+ const formatMoney = (cents, currency = 'EUR') => new Intl.NumberFormat(locale, {
  style: 'currency',
  currency: currency || 'EUR'
  }).format((Number(cents) || 0) / 100);
@@ -388,7 +390,7 @@ function Subscriptions() {
  </div>
  <div>
  <p className="text-sm font-bold text-surface-400 uppercase">{t('subscriptionsNextRenewal')}</p>
- <p className="text-lg font-black text-foreground">{subscriptionEndsAt ? subscriptionEndsAt.toLocaleDateString(language === 'ar' ? 'ar-EG' : language === 'en' ? 'en-GB' : 'fr-FR') : '-'}</p>
+ <p className="text-lg font-black text-foreground">{subscriptionEndsAt ? subscriptionEndsAt.toLocaleDateString(locale) : '-'}</p>
  </div>
  </div>
 
@@ -471,9 +473,9 @@ function Subscriptions() {
  <Card className="rounded-[2rem] p-8 border-2 border-dashed border-primary-200 bg-primary-50/40 text-center">
  <Badge variant="soft" className="mb-4 bg-primary-100 text-foreground-800 font-bold">{t('subscriptionsFreeTrialBadge')}</Badge>
  <h2 className="text-2xl font-black mb-3">{t('subscriptionsFreeTrialTitle')}</h2>
- <p className="text-foreground-secondary font-medium mb-6">3 livres premium inclus, sans carte bancaire.</p>
+ <p className="text-foreground-secondary font-medium mb-6">{t('subscriptionsTrialBody')}</p>
  <Button onClick={handleStartTrial} disabled={startingTrial} variant="primary" className="rounded-full px-8 font-black">
- {startingTrial ? 'Activation...' : "Démarrer l'essai gratuit"}
+ {startingTrial ? t('subscriptionsActivating') : t('subscriptionsStartTrial')}
  </Button>
  </Card>
  </section>
@@ -484,32 +486,32 @@ function Subscriptions() {
  <Card className="rounded-[2.5rem] p-8 border border-border shadow-sm">
  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 mb-8">
  <div>
- <Badge variant="soft" className="mb-3 font-bold">Abonnement actif</Badge>
+ <Badge variant="soft" className="mb-3 font-bold">{t('subscriptionsActiveBadge')}</Badge>
  <h2 className="text-3xl font-black">{currentSubscription?.plan?.name}</h2>
  <p className="text-foreground-secondary font-medium mt-2">
- Statut : {currentSubscription?.status}
- {currentSubscription?.cancel_at_period_end ? ' (annulation programmée)' : ''}
+ {t('subscriptionsStatusLabel', { status: currentSubscription?.status })}
+ {currentSubscription?.cancel_at_period_end ? t('subscriptionsCancelPending') : ''}
  </p>
  <p className="text-sm text-foreground-muted mt-1">
  {currentSubscription?.status === 'trialing' && currentSubscription?.trial_end
- ? `Fin de l'essai : ${new Date(currentSubscription.trial_end).toLocaleDateString('fr-FR')}`
- : `Prochain renouvellement : ${subscriptionEndsAt ? subscriptionEndsAt.toLocaleDateString('fr-FR') : '-'}`}
+ ? t('subscriptionsTrialEnds', { date: new Date(currentSubscription.trial_end).toLocaleDateString(locale) })
+ : t('subscriptionsNextRenewalDate', { date: subscriptionEndsAt ? subscriptionEndsAt.toLocaleDateString(locale) : '-' })}
  </p>
  </div>
  <div className="flex flex-wrap gap-3">
  {currentSubscription?.provider === 'stripe' && (
  <Button onClick={handleBillingPortal} disabled={Boolean(billingAction)} variant="outline" className="rounded-full font-bold">
- Gérer la facturation
+ {t('subscriptionsManageBilling')}
  </Button>
  )}
  {currentSubscription?.provider === 'stripe' && !currentSubscription?.cancel_at_period_end && (
  <Button onClick={handleCancelSubscription} disabled={Boolean(billingAction)} variant="ghost" className="rounded-full font-bold text-rose-600">
- Annuler
+ {t('subscriptionsCancel')}
  </Button>
  )}
  {currentSubscription?.provider === 'stripe' && currentSubscription?.cancel_at_period_end && (
  <Button onClick={handleResumeSubscription} disabled={Boolean(billingAction)} variant="primary" className="rounded-full font-bold">
- Réactiver
+ {t('subscriptionsResume')}
  </Button>
  )}
  </div>
@@ -517,32 +519,32 @@ function Subscriptions() {
 
  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
  <div>
- <h3 className="text-lg font-black mb-4 flex items-center gap-2"><HistoryIcon className="w-5 h-5"/> Historique</h3>
+ <h3 className="text-lg font-black mb-4 flex items-center gap-2"><HistoryIcon className="w-5 h-5"/> {t('subscriptionsHistory')}</h3>
  <div className="space-y-3 max-h-64 overflow-y-auto pr-2">
  {history.length === 0 ? (
- <p className="text-sm text-foreground-muted">Aucun événement pour le moment.</p>
+ <p className="text-sm text-foreground-muted">{t('subscriptionsNoHistory')}</p>
  ) : history.map((item) => (
  <div key={item.id} className="rounded-2xl border border-border p-4 bg-surface-secondary/40">
  <p className="font-bold text-sm">{item.event_type}</p>
- <p className="text-xs text-foreground-muted mt-1">{new Date(item.created_at).toLocaleString('fr-FR')}</p>
+ <p className="text-xs text-foreground-muted mt-1">{new Date(item.created_at).toLocaleString(locale)}</p>
  </div>
  ))}
  </div>
  </div>
  <div>
- <h3 className="text-lg font-black mb-4">Factures</h3>
+ <h3 className="text-lg font-black mb-4">{t('subscriptionsInvoices')}</h3>
  <div className="space-y-3 max-h-64 overflow-y-auto pr-2">
  {invoices.length === 0 ? (
- <p className="text-sm text-foreground-muted">Aucune facture disponible.</p>
+ <p className="text-sm text-foreground-muted">{t('subscriptionsNoInvoices')}</p>
  ) : invoices.map((invoice) => (
  <div key={invoice.id} className="rounded-2xl border border-border p-4 flex items-center justify-between gap-4">
  <div>
  <p className="font-bold">{formatMoney(invoice.amount_paid, invoice.currency)}</p>
- <p className="text-xs text-foreground-muted">{invoice.paid_at ? new Date(invoice.paid_at).toLocaleDateString('fr-FR') : invoice.status}</p>
+ <p className="text-xs text-foreground-muted">{invoice.paid_at ? new Date(invoice.paid_at).toLocaleDateString(locale) : invoice.status}</p>
  </div>
  {invoice.hosted_invoice_url && (
  <a href={invoice.hosted_invoice_url} target="_blank" rel="noreferrer" className="text-sm font-bold text-primary-600 hover:underline">
- Voir
+ {t('subscriptionsViewInvoice')}
  </a>
  )}
  </div>
@@ -586,7 +588,7 @@ function Subscriptions() {
  </div>
 
  <div className="mb-8 flex items-end gap-1">
- <span className="text-5xl font-black text-foreground tracking-tighter">{formatPrice(plan)}</span>
+ <span className="text-5xl font-black text-foreground tracking-tighter">{formatPrice(plan, locale)}</span>
  <span className="text-foreground-muted font-bold mb-2">/mois</span>
  </div>
 
@@ -717,12 +719,12 @@ function Subscriptions() {
  <div className="p-6 md:p-8 overflow-y-auto">
  <div className="flex justify-between items-center mb-6 pb-6 border-b border-border">
  <span className="font-bold text-foreground-secondary">Abonnement Mensuel</span>
- <span className="text-xl font-black text-foreground">{formatPrice(checkoutModalPlan)}</span>
+ <span className="text-xl font-black text-foreground">{formatPrice(checkoutModalPlan, locale)}</span>
  </div>
 
  <div className="flex justify-between items-center mb-8">
  <span className="font-black text-lg text-foreground">Total à payer aujourd'hui</span>
- <span className="text-3xl font-black text-foreground">{formatPrice(checkoutModalPlan)}</span>
+ <span className="text-3xl font-black text-foreground">{formatPrice(checkoutModalPlan, locale)}</span>
  </div>
 
  <div className="mb-6">
@@ -731,7 +733,7 @@ function Subscriptions() {
  <input 
  value={promoCode}
  onChange={(e) => setPromoCode(e.target.value)}
- placeholder="Entrez votre code" 
+ placeholder={t('subscriptionsPromoPlaceholder')} 
  className="w-full rounded-2xl border-2 border-border px-4 py-3 font-bold outline-none focus:border-primary-400 bg-surface-secondary focus:bg-card"
  />
  <Button variant="outline" className="rounded-2xl font-bold px-6 border-border bg-card">Appliquer</Button>
