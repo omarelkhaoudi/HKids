@@ -56,6 +56,18 @@ describe('readerRecommendations', () => {
     expect(picked).toHaveLength(2);
   });
 
+  it('skips finished books when excludeIds is provided', () => {
+    const candidates = [
+      { id: 5, title: 'Ami', category_id: 10, theme: 'nature', age_group_min: 3, age_group_max: 5 },
+      { id: 6, title: 'Cousin', category_id: 10, theme: 'animals', age_group_min: 4, age_group_max: 6 },
+      { id: 9, title: 'Done', category_id: 10, theme: 'nature', age_group_min: 3, age_group_max: 6 },
+    ];
+    const picked = pickRelatedBooks(source, candidates, 2, {
+      excludeIds: new Set(['9']),
+    });
+    expect(picked.map((book) => book.id)).toEqual([5, 6]);
+  });
+
   it('estimates remaining reading time from audio when available', () => {
     expect(estimateRemainingReadSeconds({ audioRemaining: 95.4 })).toBe(95);
   });

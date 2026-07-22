@@ -31,6 +31,7 @@ import {
 } from '../constants/kidsMotion';
 import { pickRelatedBooks } from '../utils/readerRecommendations';
 import { buildBookPreviewSignals } from '../utils/bookPreview';
+import { collectCompletedBookIds } from '../utils/kidsPersonalization';
 
 function formatReadingDuration(book, t) {
   if (book?.duration_minutes) {
@@ -133,8 +134,17 @@ function BookDetails() {
         category_id: book.category_id || undefined,
       });
       const candidates = response.data || [];
-      const smart = pickRelatedBooks(book, candidates, 8);
-      setRelatedBooks(smart.length ? smart : candidates.filter((b) => b.id !== book.id).slice(0, 8));
+      const excludeIds = collectCompletedBookIds();
+      if (book?.id != null) excludeIds.add(String(book.id));
+      const smart = pickRelatedBooks(book, candidates, 8, { excludeIds });
+      setRelatedBooks(
+        smart.length
+          ? smart
+          : candidates
+            .filter((b) => b.id !== book.id)
+            .filter((b) => !excludeIds.has(String(b.id)))
+            .slice(0, 8),
+      );
     } catch (error) {
       console.error('Error loading related books:', error);
     }

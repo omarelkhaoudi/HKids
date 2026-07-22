@@ -6,7 +6,7 @@
 
 import { getCategoryContentStrategy, bookMatchesKidCategory } from './kidCategoryContent';
 import { isAudioContent } from './contentRouting';
-import { storage } from './storage';
+import { collectCompletedBookIds } from './kidsPersonalization';
 
 function isBedtimeBook(book) {
   if (!book) return false;
@@ -59,13 +59,7 @@ export function buildFinishedStories({
   t,
   limit = 8,
 } = {}) {
-  const stats = storage.getReadingStats?.() || { completedBookIds: [] };
-  const completedIds = new Set([
-    ...(stats.completedBookIds || []).map(String),
-    ...progressRows
-      .filter((row) => row.completed || Number(row.progress_percent || 0) >= 100)
-      .map((row) => String(row.book_id)),
-  ]);
+  const completedIds = collectCompletedBookIds(progressRows);
 
   if (!completedIds.size) return [];
 

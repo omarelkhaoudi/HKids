@@ -7,7 +7,7 @@ import { useAuth } from '../context/AuthContext';
 import { useToast } from '../components/ToastProvider';
 import { storage } from '../utils/storage';
 import { useLanguage } from '../context/LanguageContext';
-import { localizeKidCategories } from '../constants/kidCategories';
+import { localizeKidCategories, getKidCategory } from '../constants/kidCategories';
 import { useOfflineContent } from '../hooks/useOfflineContent';
 import { getDownloads } from '../services/offline/offlineContentService';
 import { getRestrictionMessage } from '../services/parental/parentalAccessService';
@@ -33,9 +33,19 @@ import { getKidsContentPath } from '../utils/contentRouting';
 import {
   annotateBooksWithReasons,
   filterSeasonalBooks,
+  inferLikedThemeId,
   isShortStory,
   withDiscoveryReason,
 } from '../utils/discoveryRails';
+import {
+  buildPersonalizedRecommended,
+  buildSoftProgressSummary,
+  collectCompletedBookIds,
+  excludeBookIds,
+  getKidsPersonalizationProfile,
+  reorderThemesByWorlds,
+} from '../utils/kidsPersonalization';
+import { getCategoryContentStrategy, bookMatchesKidCategory } from '../utils/kidCategoryContent';
 
 const SHELF_THEME_IDS = ['animals', 'bedtime', 'princesses', 'ocean', 'dinosaurs', 'space', 'vehicles', 'world'];
 const RECENT_SEARCHES_KEY = 'hkids_recent_library_searches';
@@ -64,6 +74,14 @@ function getRecommendationContext() {
   };
 }
 
+function reorderShelfThemeIds(themeIds, favoriteWorlds) {
+  if (!favoriteWorlds?.length) return themeIds;
+  return reorderThemesByWorlds(
+    themeIds.map((id) => ({ id })),
+    favoriteWorlds,
+  ).map((item) => item.id);
+}
+
 function KidsLibrary() {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -71,12 +89,24 @@ function KidsLibrary() {
   const { showToast } = useToast();
   const { language, isRtl, t } = useLanguage();
   const reducedMotion = useReducedMotion();
-  const childThemes = useMemo(() => [
-    { id: 'all', label: t('allCategories'), shortLabel: t('allCategories'), pictogram: '⭐', cue: 'Go', gradient: 'from-primary-400 to-secondary-400', match: [] },
-    ...localizeKidCategories(language),
-  ], [language, t]);
-
+  const personalization = useMemo(() => getKidsPersonalizationProfile(), []);
   const [books, setBooks] = useState([]);
+  const completedBookIds = useMemo(() => collectCompletedBookIds(), [books]);
+  const softProgress = useMemo(
+    () => buildSoftProgressSummary({
+      favoriteWorlds: personalization.favoriteWorlds,
+      t,
+    }),
+    [personalization.favoriteWorlds, t],
+  );
+  const childThemes = useMemo(
+    () => reorderThemesByWorlds([
+      { id: 'all', label: t('allCategories'), shortLabel: t('allCategories'), pictogram: '⭐', cue: 'Go', gradient: 'from-primary-400 to-secondary-400', match: [] },
+      ...localizeKidCategories(language),
+    ], personalization.favoriteWorlds),
+    [language, t, personalization.favoriteWorlds],
+  );
+
   const urlTheme = searchParams.get('theme') || 'all';
   const [selectedTheme, setSelectedTheme] = useState(urlTheme);
   const [loading, setLoading] = useState(true);
@@ -167,6 +197,11 @@ function KidsLibrary() {
     });
   }, [taggedBooks, searchQuery]);
 
+  const discoveryPool = useMemo(
+    () => excludeBookIds(visibleBooks, completedBookIds),
+    [visibleBooks, completedBookIds],
+  );
+
   const continueBooks = useMemo(() => {
     const byId = new Map(visibleBooks.map((book) => [book.id, book]));
     return readingHistory
@@ -189,38 +224,96 @@ function KidsLibrary() {
   }, [visibleBooks, readingHistory]);
 
   const favoriteBooks = visibleBooks.filter((b) => favoritesIds.includes(b.id));
-  const newBooks = [...visibleBooks].sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0)).slice(0, 15);
+  const newBooks = useMemo(
+    () => [...discoveryPool]
+      .sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0))
+      .slice(0, 15),
+    [discoveryPool],
+  );
 
   const recommendedSection = recommendationSections.find((section) => section.id === 'recommended_for_you');
-  const recommendedIds = new Set(
-    (recommendedSection?.items || []).map((item) => Number(item.id ?? item.book_id)).filter(Number.isFinite)
+  const apiRecommendedBooks = useMemo(() => {
+    const recommendedIds = new Set(
+      (recommendedSection?.items || []).map((item) => Number(item.id ?? item.book_id)).filter(Number.isFinite),
+    );
+    if (!recommendedIds.size) return [];
+    return discoveryPool.filter((book) => recommendedIds.has(Number(book.id)));
+  }, [recommendedSection, discoveryPool]);
+
+  const todayBooks = useMemo(
+    () => buildPersonalizedRecommended({
+      publishedBooks: discoveryPool,
+      recommendedBooks: apiRecommendedBooks,
+      favoriteWorlds: personalization.favoriteWorlds,
+      ageBand: personalization.ageBand,
+      readingGoal: personalization.readingGoal,
+      t,
+      excludeIds: completedBookIds,
+    }),
+    [
+      discoveryPool,
+      apiRecommendedBooks,
+      personalization.favoriteWorlds,
+      personalization.ageBand,
+      personalization.readingGoal,
+      t,
+      completedBookIds,
+    ],
   );
-  const todayBooks = recommendedIds.size > 0
-    ? visibleBooks.filter((book) => recommendedIds.has(Number(book.id)))
-    : visibleBooks.slice(0, 10);
 
   const popularBooks = useMemo(
-    () => visibleBooks
+    () => discoveryPool
       .filter((book) => book.is_popular === true || book.is_popular === 1 || book.is_recommended === true || book.is_recommended === 1)
       .slice(0, 15),
-    [visibleBooks],
+    [discoveryPool],
+  );
+
+  const orderedShelfThemeIds = useMemo(
+    () => reorderShelfThemeIds(SHELF_THEME_IDS, personalization.favoriteWorlds),
+    [personalization.favoriteWorlds],
   );
 
   const themeShelves = useMemo(() => (
-    SHELF_THEME_IDS
+    orderedShelfThemeIds
       .map((themeId) => {
         const theme = childThemes.find((item) => item.id === themeId);
         if (!theme) return null;
-        const shelfBooks = visibleBooks.filter((book) => book._themeId === themeId).slice(0, 15);
+        const shelfBooks = discoveryPool.filter((book) => book._themeId === themeId).slice(0, 15);
         if (!shelfBooks.length) return null;
         return { theme, books: shelfBooks };
       })
       .filter(Boolean)
-  ), [childThemes, visibleBooks]);
+  ), [childThemes, discoveryPool, orderedShelfThemeIds]);
+
+  const likedThemeId = useMemo(
+    () => inferLikedThemeId(favoriteBooks, localizeKidCategories(language)),
+    [favoriteBooks, language],
+  );
+  const likedTheme = likedThemeId ? getKidCategory(likedThemeId, language) : null;
+
+  const becauseYouLikedBooks = useMemo(() => {
+    if (!likedThemeId) return [];
+    const strategy = getCategoryContentStrategy(likedThemeId);
+    const themed = discoveryPool
+      .filter((book) => bookMatchesKidCategory(book, strategy))
+      .filter((book) => !favoritesIds.includes(book.id))
+      .slice(0, 12);
+    if (!themed.length) return [];
+    const reason = t('discoverBecauseYouLiked', {
+      theme: likedTheme?.shortLabel || likedTheme?.label || likedThemeId,
+    });
+    return annotateBooksWithReasons(themed, reason);
+  }, [likedThemeId, likedTheme, discoveryPool, favoritesIds, t]);
 
   const themeBooks = visibleBooks.filter((b) => b._themeId === selectedTheme);
-  const featuredBook = selectedTheme === 'all' ? (continueBooks[0] || todayBooks[0]) : (themeBooks[0] || null);
+  const featuredBook = selectedTheme === 'all'
+    ? (continueBooks[0] || todayBooks[0])
+    : (themeBooks[0] || null);
   const activeThemeData = childThemes.find((theme) => theme.id === selectedTheme);
+
+  const continueSubtitle = softProgress.readingDays > 1
+    ? `${t('discoverContinueSubtitle')} · ${t('kidsHomeProgressDays', { count: softProgress.readingDays })}`
+    : t('discoverContinueSubtitle');
 
   const toggleFavorite = (bookId) => {
     if (storage.isFavorite(bookId)) {
@@ -281,6 +374,7 @@ function KidsLibrary() {
 
   const todayAnnotated = useMemo(
     () => todayBooks.map((book) => {
+      if (book._discoveryReason) return book;
       if (isShortStory(book)) return withDiscoveryReason(book, t('discoverReasonShort'));
       return withDiscoveryReason(book, t('forYou'));
     }),
@@ -299,8 +393,8 @@ function KidsLibrary() {
     [popularBooks, t],
   );
   const seasonalAnnotated = useMemo(
-    () => annotateBooksWithReasons(filterSeasonalBooks(visibleBooks), t('discoverSeasonal')),
-    [visibleBooks, t],
+    () => annotateBooksWithReasons(filterSeasonalBooks(discoveryPool), t('discoverSeasonal')),
+    [discoveryPool, t],
   );
   const downloadedBooks = useMemo(
     () => visibleBooks.filter((book) => {
@@ -503,14 +597,25 @@ function KidsLibrary() {
         />
       ) : selectedTheme !== 'all' ? (
         themeBooks.length === 0 ? (
-          <KidsEmptyState
-            title={t('nothingFound')}
-            description={t('tryAnotherWord')}
-            actionLabel={t('allCategories')}
-            onAction={() => handleThemeChange('all')}
-            showMascot
-            mascotMood="encourage"
-          />
+          <>
+            <KidsEmptyState
+              title={t('nothingFound')}
+              description={t('tryAnotherWord')}
+              actionLabel={t('allCategories')}
+              onAction={() => handleThemeChange('all')}
+              showMascot
+              mascotMood="encourage"
+            />
+            {todayAnnotated.length > 0 && (
+              <KidsBookCarousel
+                title={t('forYou')}
+                subtitle={t('discoverRecommendedSubtitle')}
+                books={todayAnnotated.slice(0, 8)}
+                {...carouselProps}
+                seeAllLabel={null}
+              />
+            )}
+          </>
         ) : (
             <>
               {featuredHeroBook && (
@@ -539,7 +644,7 @@ function KidsLibrary() {
               <KidsContinueRail
                 books={continueBooks}
                 title={t('continueReading')}
-                subtitle={t('discoverContinueSubtitle')}
+                subtitle={continueSubtitle}
                 isRtl={isRtl}
                 t={t}
                 onResume={handlePlayBook}
@@ -563,6 +668,18 @@ function KidsLibrary() {
                 title={t('forYou')}
                 subtitle={t('discoverRecommendedSubtitle')}
                 books={todayAnnotated}
+                {...carouselProps}
+                seeAllLabel={null}
+              />
+            )}
+
+            {becauseYouLikedBooks.length > 0 && (
+              <KidsBookCarousel
+                title={likedTheme
+                  ? t('discoverBecauseYouLiked', { theme: likedTheme.shortLabel || likedTheme.label })
+                  : t('discoverBecauseSubtitle')}
+                subtitle={t('discoverBecauseSubtitle')}
+                books={becauseYouLikedBooks}
                 {...carouselProps}
                 seeAllLabel={null}
               />

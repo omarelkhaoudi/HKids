@@ -62,11 +62,13 @@ export function scoreRelatedBook(source, candidate) {
 /**
  * Rank candidates by category / theme / age affinity.
  * Falls back to original order when affinity scores are unavailable.
+ * Optionally skips finished stories via excludeIds (Set of string ids).
  */
-export function pickRelatedBooks(source, candidates = [], limit = 3) {
+export function pickRelatedBooks(source, candidates = [], limit = 3, { excludeIds } = {}) {
   const safeLimit = Math.max(1, Number(limit) || 3);
   const ranked = (candidates || [])
     .filter((item) => item && item.id != null && String(item.id) !== String(source?.id))
+    .filter((item) => !excludeIds?.size || !excludeIds.has(String(item.id)))
     .map((book) => ({ book, score: scoreRelatedBook(source, book) }))
     .sort((a, b) => {
       if (b.score !== a.score) return b.score - a.score;
