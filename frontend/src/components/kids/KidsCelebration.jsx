@@ -23,6 +23,8 @@ export const KidsCelebration = memo(function KidsCelebration({
   onSecondary,
   tertiaryLabel,
   onTertiary,
+  listenLabel,
+  onListen,
   onComplete,
   durationMs = 1800,
   autoDismiss = false,
@@ -170,14 +172,9 @@ export const KidsCelebration = memo(function KidsCelebration({
               )}
 
               <div className="flex flex-col gap-space-12">
-                {onFavorite && !isStory && (
-                  <KidsButton
-                    onClick={onFavorite}
-                    variant="ghost"
-                    className="!min-h-[56px] !w-full"
-                    tone={isFavorite ? 'accent' : 'primary'}
-                  >
-                    {isFavorite ? t('yourFavorites') : t('addToFavorites')}
+                {primaryLabel && onPrimary && (
+                  <KidsButton onClick={onPrimary} className="!min-h-[56px] !w-full" tone="primary">
+                    {primaryLabel}
                   </KidsButton>
                 )}
                 {secondaryLabel && onSecondary && (
@@ -185,9 +182,19 @@ export const KidsCelebration = memo(function KidsCelebration({
                     {secondaryLabel}
                   </KidsButton>
                 )}
-                {primaryLabel && onPrimary && (
-                  <KidsButton onClick={onPrimary} className="!min-h-[56px] !w-full" tone="primary">
-                    {primaryLabel}
+                {listenLabel && onListen && (
+                  <KidsButton onClick={onListen} variant="glass" className="!min-h-[56px] !w-full">
+                    {listenLabel}
+                  </KidsButton>
+                )}
+                {onFavorite && (
+                  <KidsButton
+                    onClick={onFavorite}
+                    variant="ghost"
+                    className="!min-h-[56px] !w-full"
+                    tone={isFavorite ? 'accent' : 'primary'}
+                  >
+                    {isFavorite ? t('yourFavorites') : t('addToFavorites')}
                   </KidsButton>
                 )}
                 {tertiaryLabel && onTertiary && (

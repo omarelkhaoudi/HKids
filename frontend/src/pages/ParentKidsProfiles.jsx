@@ -9,6 +9,7 @@ import {Logo} from '../components/Logo';
 import {KidProfilesList} from '../components/parent/KidProfilesList';
 import {KidProfileFormModal} from '../components/parent/KidProfileFormModal';
 import {ParentHubNav} from '../components/parent/ParentHubNav';
+import {Skeleton} from '../components/ui';
 import {LogOutIcon} from '../components/Icons';
 import {buildKidPayload, createEmptyKidForm, kidToForm} from '../utils/kidProfiles';
 import {clearKidLocalPrivacyData} from '../services/privacy/privacyStorageService';
@@ -138,10 +139,15 @@ function ParentKidsProfiles() {
 
  if (loading) {
  return (
- <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-surface-50 to-surface-100 dark:from-surface-900 dark:to-surface-800" dir={isRtl ? 'rtl' : 'ltr'}>
- <div className="text-center">
- <div className="mx-auto h-12 w-12 animate-spin rounded-full border-b-2 border-primary-500"></div>
- <p className="mt-4 text-foreground-secondary">{t('parentProfilesLoading')}</p>
+ <div className="min-h-screen parent-home-shell bg-gradient-to-br from-surface-50 to-surface-100 dark:from-surface-900 dark:to-surface-800" dir={isRtl ? 'rtl' : 'ltr'}>
+ <div className="mx-auto max-w-7xl px-space-16 py-space-32 sm:px-space-24 lg:px-space-32 flex flex-col gap-space-24">
+ <Skeleton className="h-20 w-full max-w-md rounded-2xl" />
+ <div className="grid grid-cols-1 gap-space-16 sm:grid-cols-3">
+ <Skeleton className="h-24 rounded-3xl" />
+ <Skeleton className="h-24 rounded-3xl" />
+ <Skeleton className="h-24 rounded-3xl" />
+ </div>
+ <Skeleton className="h-96 w-full rounded-3xl" />
  </div>
  </div>
  );

@@ -1380,7 +1380,7 @@ function BookReader() {
  storage.addToHistory(book.id, book.title, currentPage);
  setBookmarkPulse(true);
  setTimeout(() => setBookmarkPulse(false), 700);
- showToast('Page mémorisée', 'success', 1500);
+ showToast(t('pageRemembered'), 'success', 1500);
  };
 
  const handleFamilyVoiceChange = async (voiceId) => {
@@ -2011,15 +2011,15 @@ function BookReader() {
      <img src={coverBleedUrl} alt="" className="absolute inset-0 h-full w-full object-cover" />
    </div>
  </div>
- <p className="kids-type-caption uppercase tracking-[0.14em] text-primary-600/80 mb-space-8">Histoire terminée</p>
- <h2 className="kids-type-h1 mb-space-8">Bravo</h2>
- <p className="kids-shelf-subtitle !mx-auto mb-space-24">Tu as terminé « {book.title} »</p>
+ <p className="kids-type-caption uppercase tracking-[0.14em] text-primary-600/80 mb-space-8">{t('kidReaderStoryFinished')}</p>
+ <h2 className="kids-type-h1 mb-space-8">{t('kidReaderBravo')}</h2>
+ <p className="kids-shelf-subtitle !mx-auto mb-space-24">{t('kidReaderStoryJustFinished')}</p>
  <div className="flex flex-col gap-3">
  <Button variant="primary" fullWidth onClick={exitReader}>
- Continuer à explorer
+ {t('kidReaderContinueAdventure')}
  </Button>
  <Button variant="ghost" fullWidth onClick={() => { setShowEndModal(false); setCurrentPage(0); setHasReachedEnd(false); }}>
- Relire
+ {t('kidReaderReadAgain')}
  </Button>
  </div>
  </div>
@@ -2035,18 +2035,30 @@ function BookReader() {
      book={book}
      bookTitle={book.title}
      relatedLimit={3}
+     isFavorite={isFavorite}
+     onFavorite={toggleBookFavorite}
      onPlayBook={(relatedBook) => {
        if (!relatedBook?.id) return;
        setShowKidCelebration(false);
        navigate(`/kids/read/${relatedBook.id}`);
      }}
-     primaryLabel={t('kidReaderBackToLibrary')}
+     primaryLabel={t('kidReaderBackHome')}
      onPrimary={() => {
+       setShowKidCelebration(false);
+       navigate('/kids');
+     }}
+     secondaryLabel={t('kidReaderContinueAdventure')}
+     onSecondary={() => {
        setShowKidCelebration(false);
        navigate('/kids/library');
      }}
-     secondaryLabel={t('kidReaderReadAgain')}
-     onSecondary={() => {
+     listenLabel={book?.audio_url ? t('kidReaderListenVersion') : undefined}
+     onListen={book?.audio_url ? () => {
+       setShowKidCelebration(false);
+       navigate(`/kids/listen/${book.id}`);
+     } : undefined}
+     tertiaryLabel={t('kidReaderReadAgain')}
+     onTertiary={() => {
        setShowKidCelebration(false);
        setCurrentPage(0);
        setHasReachedEnd(false);

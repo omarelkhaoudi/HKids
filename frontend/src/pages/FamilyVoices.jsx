@@ -32,18 +32,18 @@ const emptyMessageForm = {
  voice_profile_id: '',
 };
 
-function statusLabel(status) {
+function statusLabel(status, t) {
  const labels = {
- draft: 'Brouillon',
- sample_received: 'Échantillon reçu',
- ready: 'Prêt',
- needs_new_sample: 'Nouvel enregistrement requis',
- consent_required: 'Consentement requis',
- consent_revoked: 'Consentement révoqué',
- provider_deletion_pending: 'Suppression ElevenLabs à réessayer',
- deleted: 'Supprimé',
+ draft: t('parentVoiceStatusDraft'),
+ sample_received: t('parentVoiceStatusSample'),
+ ready: t('parentVoiceStatusReady'),
+ needs_new_sample: t('parentVoiceStatusNeedsSample'),
+ consent_required: t('parentVoiceStatusConsentRequired'),
+ consent_revoked: t('parentVoiceStatusConsentRevoked'),
+ provider_deletion_pending: t('parentVoiceStatusDeletionPending'),
+ deleted: t('parentVoiceStatusDeleted'),
 };
- return labels[status] || status || 'En attente';
+ return labels[status] || status || t('parentVoiceStatusPending');
 }
 
 function qualityTone(status) {
@@ -53,7 +53,7 @@ function qualityTone(status) {
 }
 
 // Custom hook from original code
-function useAudioRecorder() {
+function useAudioRecorder(t) {
  const recorderRef = useRef(null);
  const chunksRef = useRef([]);
  const startedAtRef = useRef(null);
@@ -69,7 +69,7 @@ function useAudioRecorder() {
  const start = async () => {
  setError('');
  if (!supported) {
- setError("L'enregistrement audio n'est pas disponible dans ce navigateur.");
+ setError(t('parentVoiceMicUnavailable'));
  return;
 }
 
@@ -94,7 +94,7 @@ function useAudioRecorder() {
  recorder.start();
  setRecording(true);
 } catch (err) {
- setError("Erreur d'accès au microphone.");
+ setError(t('parentVoiceMicError'));
 }
 };
 
@@ -137,8 +137,8 @@ function FamilyVoices() {
  const [loading, setLoading] = useState(true);
  const [savingProfile, setSavingProfile] = useState(false);
  const [savingMessage, setSavingMessage] = useState(false);
- const profileRecorder = useAudioRecorder();
- const messageRecorder = useAudioRecorder();
+ const profileRecorder = useAudioRecorder(t);
+ const messageRecorder = useAudioRecorder(t);
  const offlineContent = useOfflineContent();
 
  // WIZARD STATE
@@ -467,6 +467,7 @@ function FamilyVoices() {
 
  <div className="flex flex-wrap gap-2 mb-6">
  <Badge variant="soft" className="bg-surface-secondary text-foreground-secondary font-bold uppercase tracking-wider text-xs">{profile.language}</Badge>
+ <Badge variant="soft" className="bg-primary-50 text-foreground-secondary font-bold text-xs">{statusLabel(profile.status, t)}</Badge>
  <Badge variant="soft" className={`${qualityTone(profile.quality_status)} font-bold text-xs`}>
  Qualité {profile.quality_score || '85'}%
  </Badge>

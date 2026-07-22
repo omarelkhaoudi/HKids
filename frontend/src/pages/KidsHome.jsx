@@ -50,6 +50,7 @@ import {
   reorderCategoriesByWorlds,
   shouldPrioritizeAudio,
 } from '../utils/kidsPersonalization';
+import { buildFinishedStories } from '../utils/bookPreview';
 import { KidsHomeProgressStrip } from '../components/kids/KidsHomeProgressStrip';
 
 function getRecommendedBooks(sections = []) {
@@ -321,6 +322,16 @@ function KidsHome() {
     [newBooks, t],
   );
 
+  const finishedStories = useMemo(
+    () => buildFinishedStories({
+      publishedBooks,
+      progressRows,
+      t,
+      limit: 8,
+    }),
+    [publishedBooks, progressRows, t],
+  );
+
   const seasonalBooks = useMemo(
     () => annotateBooksWithReasons(filterSeasonalBooks(publishedBooks), t('discoverSeasonal')),
     [publishedBooks, t],
@@ -500,6 +511,15 @@ function KidsHome() {
             isRtl={isRtl}
             t={t}
             onResume={handlePlayBook}
+          />
+        )}
+
+        {finishedStories.length > 0 && (
+          <KidsBookCarousel
+            title={t('kidsHomeFinishedStories')}
+            subtitle={t('kidsHomeFinishedSubtitle')}
+            books={finishedStories}
+            {...carouselProps}
           />
         )}
 
