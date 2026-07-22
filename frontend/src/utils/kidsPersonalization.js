@@ -41,6 +41,23 @@ export function ageBandToRange(ageBand) {
   return AGE_BAND_RANGES[ageBand] || AGE_BAND_RANGES['5-6'];
 }
 
+/** Merge API progress + local reading stats into a Set of finished book ids. */
+export function collectCompletedBookIds(progressRows = []) {
+  const stats = storage.getReadingStats?.() || { completedBookIds: [] };
+  const ids = new Set((stats.completedBookIds || []).map(String));
+  (progressRows || []).forEach((row) => {
+    if (row?.completed || Number(row?.progress_percent || 0) >= 100) {
+      if (row.book_id != null) ids.add(String(row.book_id));
+    }
+  });
+  return ids;
+}
+
+export function excludeBookIds(books = [], idSet) {
+  if (!idSet || !idSet.size) return books;
+  return books.filter((book) => book?.id != null && !idSet.has(String(book.id)));
+}
+
 export function prioritizeBooksForAge(books = [], ageBand) {
   const { min, max } = ageBandToRange(ageBand);
   const matched = filterByAgeBand(books, min, max);
@@ -68,12 +85,31 @@ export function reorderCategoriesByWorlds(categories = [], favoriteWorlds = []) 
   });
 }
 
-export function buildWorldShelves(books = [], favoriteWorlds = [], t) {
+/** Reorder library theme chips / shelves so favorite worlds surface first. */
+export function reorderThemesByWorlds(themes = [], favoriteWorlds = []) {
+  if (!favoriteWorlds.length || !themes.length) return themes;
+  const preferredIds = favoriteWorlds
+    .map((worldId) => ONBOARDING_WORLDS.find((world) => world.id === worldId)?.categoryId)
+    .filter(Boolean);
+  if (!preferredIds.length) return themes;
+
+  const rank = new Map(preferredIds.map((id, index) => [id, index]));
+  return [...themes].sort((a, b) => {
+    if (a.id === 'all') return -1;
+    if (b.id === 'all') return 1;
+    const aRank = rank.has(a.id) ? rank.get(a.id) : 100;
+    const bRank = rank.has(b.id) ? rank.get(b.id) : 100;
+    return aRank - bRank;
+  });
+}
+
+export function buildWorldShelves(books = [], favoriteWorlds = [], t, { excludeIds } = {}) {
+  const pool = excludeBookIds(books, excludeIds);
   return favoriteWorlds.slice(0, 3).map((worldId) => {
     const world = ONBOARDING_WORLDS.find((item) => item.id === worldId);
     if (!world) return null;
     const strategy = getCategoryContentStrategy(world.categoryId);
-    const shelfBooks = books
+    const shelfBooks = pool
       .filter((book) => bookMatchesKidCategory(book, strategy))
       .slice(0, 12);
     if (!shelfBooks.length) return null;
@@ -97,8 +133,12 @@ export function buildPersonalizedRecommended({
   ageBand,
   readingGoal,
   t,
+  excludeIds,
 }) {
-  const pool = recommendedBooks.length ? recommendedBooks : publishedBooks;
+  const pool = excludeBookIds(
+    recommendedBooks.length ? recommendedBooks : publishedBooks,
+    excludeIds,
+  );
   let books = filterBooksForWorlds(pool, favoriteWorlds);
   books = prioritizeBooksForAge(books, ageBand);
 
@@ -114,6 +154,11 @@ export function buildPersonalizedRecommended({
     books = shortFirst;
   }
 
+  // Prefer unseen discoveries; fall back if filtering emptied the shelf
+  if (!books.length) {
+    books = prioritizeBooksForAge(excludeBookIds(publishedBooks, excludeIds), ageBand);
+  }
+
   return books.slice(0, 12).map((book) => {
     if (isShortStory(book)) return withDiscoveryReason(book, t('discoverReasonShort'));
     if (favoriteWorlds.length) {
@@ -123,15 +168,17 @@ export function buildPersonalizedRecommended({
   });
 }
 
-export function buildAudioDiscoveries(books = [], t) {
-  const audio = filterAudioBooks(books).slice(0, 12);
+export function buildAudioDiscoveries(books = [], t, { excludeIds } = {}) {
+  const audio = filterAudioBooks(excludeBookIds(books, excludeIds)).slice(0, 12);
   if (!audio.length) return [];
   return annotateBooksWithReasons(audio, t('kidsHomeListenDiscover'));
 }
 
-export function buildBedtimeShelf(books = [], readingGoal, t) {
+export function buildBedtimeShelf(books = [], readingGoal, t, { excludeIds } = {}) {
   const strategy = getCategoryContentStrategy('bedtime');
-  const bedtime = books.filter((book) => bookMatchesKidCategory(book, strategy)).slice(0, 12);
+  const bedtime = excludeBookIds(books, excludeIds)
+    .filter((book) => bookMatchesKidCategory(book, strategy))
+    .slice(0, 12);
   if (!bedtime.length) return [];
   const reason = readingGoal === 'bedtime'
     ? t('kidsHomeBedtimeGoal')
@@ -145,18 +192,21 @@ export function pickFeaturedBook({
   continueReading = null,
   favoriteWorlds = [],
   ageBand,
+  excludeIds,
 }) {
   const continueId = continueReading?.book_id;
-  const ageFiltered = prioritizeBooksForAge(publishedBooks, ageBand);
+  const published = excludeBookIds(publishedBooks, excludeIds);
+  const recommended = excludeBookIds(recommendedBooks, excludeIds);
+  const ageFiltered = prioritizeBooksForAge(published, ageBand);
   const worldPool = filterBooksForWorlds(
-    recommendedBooks.length ? recommendedBooks : ageFiltered,
+    recommended.length ? recommended : ageFiltered,
     favoriteWorlds,
   );
 
   const candidate = worldPool.find((book) => book.id !== continueId)
     || ageFiltered.find((book) => book.id !== continueId)
-    || recommendedBooks.find((book) => book.id !== continueId)
-    || publishedBooks[0]
+    || recommended.find((book) => book.id !== continueId)
+    || published[0]
     || null;
 
   return candidate;

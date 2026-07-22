@@ -1334,6 +1334,21 @@
     gap: clamp(3rem, 6vw, 4.75rem);
   }
 
+  .kids-library-shell .kids-home-secondary-shelves {
+    animation: kids-library-shelf-breathe 7s ease-in-out infinite;
+  }
+
+  @keyframes kids-library-shelf-breathe {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.94; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .kids-library-shell .kids-home-secondary-shelves {
+      animation: none;
+    }
+  }
+
   .kids-hero-glow {
     background: radial-gradient(ellipse at 30% 0%, var(--color-kids-glow-sky) 0%, transparent 60%);
   }

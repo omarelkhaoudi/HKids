@@ -45,6 +45,8 @@ import {
   buildPersonalizedRecommended,
   buildSoftProgressSummary,
   buildWorldShelves,
+  collectCompletedBookIds,
+  excludeBookIds,
   getKidsPersonalizationProfile,
   pickFeaturedBook,
   reorderCategoriesByWorlds,
@@ -169,6 +171,10 @@ function KidsHome() {
     || displayName.trim().charAt(0).toUpperCase()
     || '?';
   const progressRows = Array.isArray(homeData?.progress) ? homeData.progress : [];
+  const completedBookIds = useMemo(
+    () => collectCompletedBookIds(progressRows),
+    [progressRows],
+  );
   const continueReading = progressRows.find((item) => (
     !item.completed && Number(item.progress_percent || 0) > 0
   )) || null;
@@ -240,6 +246,7 @@ function KidsHome() {
       continueReading,
       favoriteWorlds: personalization.favoriteWorlds,
       ageBand: personalization.ageBand,
+      excludeIds: completedBookIds,
     }) || newBooks[0] || publishedBooks[0] || null;
 
     if (!adventureCandidate?.id) return null;
@@ -261,6 +268,7 @@ function KidsHome() {
     progressRows,
     personalization.favoriteWorlds,
     personalization.ageBand,
+    completedBookIds,
   ]);
 
   const kidCategories = useMemo(() => {
@@ -269,8 +277,10 @@ function KidsHome() {
   }, [language, personalization.favoriteWorlds]);
 
   const worldShelves = useMemo(
-    () => buildWorldShelves(publishedBooks, personalization.favoriteWorlds, t),
-    [publishedBooks, personalization.favoriteWorlds, t],
+    () => buildWorldShelves(publishedBooks, personalization.favoriteWorlds, t, {
+      excludeIds: completedBookIds,
+    }),
+    [publishedBooks, personalization.favoriteWorlds, t, completedBookIds],
   );
 
   const likedThemeId = useMemo(
@@ -282,15 +292,16 @@ function KidsHome() {
   const becauseYouLikedBooks = useMemo(() => {
     // Prefer onboarding world shelves; fall back to favorites-based affinity
     if (worldShelves.length > 0) return [];
+    const discoveryPool = excludeBookIds(publishedBooks, completedBookIds);
     if (!likedThemeId) {
       return annotateBooksWithReasons(favoriteBooks.slice(0, 12), t('discoverReasonLoved'));
     }
-    const themed = filterBooksByCategory(publishedBooks, likedThemeId)
+    const themed = filterBooksByCategory(discoveryPool, likedThemeId)
       .filter((book) => !favoriteIds.includes(book.id))
       .slice(0, 12);
     const reason = t('discoverBecauseYouLiked', { theme: likedTheme?.shortLabel || likedTheme?.label || likedThemeId });
     return annotateBooksWithReasons(themed.length ? themed : favoriteBooks.slice(0, 12), reason);
-  }, [worldShelves.length, likedThemeId, likedTheme, publishedBooks, favoriteBooks, favoriteIds, t]);
+  }, [worldShelves.length, likedThemeId, likedTheme, publishedBooks, favoriteBooks, favoriteIds, completedBookIds, t]);
 
   const recommendedForYou = useMemo(() => {
     const personalized = buildPersonalizedRecommended({
@@ -300,6 +311,7 @@ function KidsHome() {
       ageBand: personalization.ageBand,
       readingGoal: personalization.readingGoal,
       t,
+      excludeIds: completedBookIds,
     });
     const worldBookIds = new Set(
       worldShelves.flatMap((shelf) => shelf.books.map((book) => book.id)),
@@ -314,12 +326,16 @@ function KidsHome() {
     personalization.ageBand,
     personalization.readingGoal,
     worldShelves,
+    completedBookIds,
     t,
   ]);
 
   const recentlyAdded = useMemo(
-    () => annotateBooksWithReasons(newBooks, t('discoverReasonNew')),
-    [newBooks, t],
+    () => annotateBooksWithReasons(
+      excludeBookIds(newBooks, completedBookIds),
+      t('discoverReasonNew'),
+    ),
+    [newBooks, completedBookIds, t],
   );
 
   const finishedStories = useMemo(
@@ -333,8 +349,11 @@ function KidsHome() {
   );
 
   const seasonalBooks = useMemo(
-    () => annotateBooksWithReasons(filterSeasonalBooks(publishedBooks), t('discoverSeasonal')),
-    [publishedBooks, t],
+    () => annotateBooksWithReasons(
+      filterSeasonalBooks(excludeBookIds(publishedBooks, completedBookIds)),
+      t('discoverSeasonal'),
+    ),
+    [publishedBooks, completedBookIds, t],
   );
 
   const ageRange = useMemo(() => {
@@ -349,20 +368,22 @@ function KidsHome() {
 
   const ageCollection = useMemo(
     () => annotateBooksWithReasons(
-      filterByAgeBand(publishedBooks, ageRange[0], ageRange[1]),
+      filterByAgeBand(excludeBookIds(publishedBooks, completedBookIds), ageRange[0], ageRange[1]),
       t('kidsHomePickedForYou'),
     ),
-    [publishedBooks, ageRange, t],
+    [publishedBooks, ageRange, completedBookIds, t],
   );
 
   const bedtimeAnnotated = useMemo(
-    () => buildBedtimeShelf(publishedBooks, personalization.readingGoal, t),
-    [publishedBooks, personalization.readingGoal, t],
+    () => buildBedtimeShelf(publishedBooks, personalization.readingGoal, t, {
+      excludeIds: completedBookIds,
+    }),
+    [publishedBooks, personalization.readingGoal, t, completedBookIds],
   );
 
   const audioDiscoveries = useMemo(
-    () => buildAudioDiscoveries(publishedBooks, t),
-    [publishedBooks, t],
+    () => buildAudioDiscoveries(publishedBooks, t, { excludeIds: completedBookIds }),
+    [publishedBooks, t, completedBookIds],
   );
 
   const showAudioEarly = shouldPrioritizeAudio(

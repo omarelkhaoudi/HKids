@@ -9,6 +9,7 @@ import { KidsBookCover } from './KidsBookCover';
 import { KidsMediaCard } from './KidsMediaCard';
 import { getMotionProps, kidsBadgePop, kidsCarouselReveal, kidsPageEnter } from '../../constants/kidsMotion';
 import { pickRelatedBooks } from '../../utils/readerRecommendations';
+import { collectCompletedBookIds } from '../../utils/kidsPersonalization';
 
 /**
  * Gentle story-complete overlay — calm celebration with similar books.
@@ -63,7 +64,9 @@ export const KidsCelebration = memo(function KidsCelebration({
       .then((response) => {
         if (cancelled) return;
         const candidates = response.data || [];
-        const smart = pickRelatedBooks(book, candidates, relatedLimit);
+        const excludeIds = collectCompletedBookIds();
+        if (book?.id != null) excludeIds.add(String(book.id));
+        const smart = pickRelatedBooks(book, candidates, relatedLimit, { excludeIds });
         if (smart.length > 0) {
           setRelatedBooks(smart);
           return;
@@ -72,6 +75,7 @@ export const KidsCelebration = memo(function KidsCelebration({
         setRelatedBooks(
           candidates
             .filter((item) => item.id !== book.id)
+            .filter((item) => !excludeIds.has(String(item.id)))
             .slice(0, Math.max(1, relatedLimit)),
         );
       })
