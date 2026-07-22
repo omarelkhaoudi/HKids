@@ -11,6 +11,7 @@ import {
 import {Button, Badge, Avatar} from '../ui';
 import { useLanguage } from '../../context/LanguageContext';
 import {useToast} from '../ToastProvider';
+import { useConfirmDialog } from '../../hooks/useConfirmDialog';
 
 // Helper: base URL for images
 const getImageBaseUrl = () => {
@@ -30,6 +31,7 @@ function BookManagement() {
  const [editingBook, setEditingBook] = useState(null);
  const { t } = useLanguage();
  const { showToast } = useToast();
+ const { requestConfirm, confirmDialog } = useConfirmDialog();
  
  const [formData, setFormData] = useState({
  title: '', author: '', description: '', category_id: '',
@@ -125,7 +127,13 @@ function BookManagement() {
 };
 
  const handleDelete = async (id) => {
- if (!confirm(t('adminBooksDeleteConfirm'))) return;
+ const ok = await requestConfirm({
+ title: t('confirmTitle'),
+ message: t('adminBooksDeleteConfirm'),
+ confirmLabel: t('confirmDelete'),
+ danger: true,
+ });
+ if (!ok) return;
  try {
  await booksAPI.deleteBook(id);
  loadData();
@@ -504,6 +512,7 @@ function BookManagement() {
  )}
  </AnimatePresence>
 
+ {confirmDialog}
  </div>
  );
 }

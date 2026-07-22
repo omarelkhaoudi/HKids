@@ -1,6 +1,6 @@
 import {useCallback, useEffect, useState} from 'react';
 import {adminAPI} from '../../api/admin';
-import {Badge, Button} from '../ui';
+import {Badge, Button, Dialog, Input} from '../ui';
 import {MailIcon, SearchIcon} from '../Icons';
 import {formatAdminDate, getAdminDateLocale} from './AdminMetricCard';
 import { useLanguage } from '../../context/LanguageContext';
@@ -8,6 +8,8 @@ import { AdminListSkeleton } from './AdminListSkeleton';
 
 function AdminSupport() {
   const { t, language } = useLanguage();
+  const [noteDialog, setNoteDialog] = useState(null);
+  const [noteDraft, setNoteDraft] = useState('');
 
   const STATUS_OPTIONS = [
     ['open', t('adminSupportOpen')],
@@ -94,15 +96,21 @@ function AdminSupport() {
     });
   };
 
-  const handleAdminNote = async (ticket) => {
-    const adminNote = window.prompt(t('adminSupportAdminNote'), ticket.admin_note || '');
-    if (adminNote === null) return;
-    await updateTicket(ticket, {
-      status: ticket.status,
-      priority: ticket.priority,
-      admin_note: adminNote,
+  const handleAdminNote = (ticket) => {
+    setNoteDraft(ticket.admin_note || '');
+    setNoteDialog(ticket);
+  };
+
+  const saveAdminNote = async () => {
+    if (!noteDialog) return;
+    await updateTicket(noteDialog, {
+      status: noteDialog.status,
+      priority: noteDialog.priority,
+      admin_note: noteDraft,
       assign_to_self: false,
     });
+    setNoteDialog(null);
+    setNoteDraft('');
   };
 
   return (
@@ -203,6 +211,24 @@ function AdminSupport() {
           </div>
         ))}
       </div>
+      <Dialog
+        isOpen={Boolean(noteDialog)}
+        onClose={() => setNoteDialog(null)}
+        title={t('adminSupportAddNote')}
+        primaryLabel={t('adminSave')}
+        secondaryLabel={t('adminCancel')}
+        onPrimary={saveAdminNote}
+        onSecondary={() => setNoteDialog(null)}
+      >
+        <label className="block text-sm font-medium text-foreground-secondary mb-2" htmlFor="admin-support-note">
+          {t('adminSupportAdminNote')}
+        </label>
+        <Input
+          id="admin-support-note"
+          value={noteDraft}
+          onChange={(e) => setNoteDraft(e.target.value)}
+        />
+      </Dialog>
     </div>
   );
 }

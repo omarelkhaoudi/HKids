@@ -15,7 +15,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { getRestrictionMessage } from '../services/parental/parentalAccessService';
 import {
   AudioIcon, BookIcon, ChevronLeftIcon, CheckIcon, HomeIcon, 
-  LogOutIcon, SparklesIcon, StarIcon, TrophyIcon, SearchIcon, PlayIcon
+  LogOutIcon, TrophyIcon, SearchIcon, PlayIcon
 } from '../components/Icons';
 import { KidsPageHeader } from '../components/kids/KidsPageHeader';
 import { useReducedMotion } from '../hooks/useReducedMotion';
@@ -104,7 +104,7 @@ function KidsLearning() {
       setChallenges(challengesRes.data || []);
     } catch (error) {
       console.error('Learning load error:', error);
-      showToast(getRestrictionMessage(error, 'Jeux indisponibles pour le moment'), 'error');
+      showToast(getRestrictionMessage(error, t('kidsLearningUnavailable')), 'error');
     } finally {
       setLoading(false);
     }
@@ -384,30 +384,18 @@ function KidsLearning() {
               )}
 
               {/* QUICK STATS (KPIs) */}
-              <section className="mb-space-40 grid grid-cols-2 md:grid-cols-4 gap-space-16">
+              <section className="mb-space-40 grid grid-cols-2 gap-space-16">
                 <motion.div whileHover={reducedMotion ? undefined : { y: -5 }} className="bg-card/60 backdrop-blur-md rounded-24 p-space-20 shadow-soft border border-border relative overflow-hidden group">
                   <div className="absolute right-0 top-0 w-16 h-16 bg-success-500/10 rounded-bl-full transition-transform group-hover:scale-150" />
                   <BookIcon className="w-8 h-8 text-success-500 mb-space-12 relative z-10" />
-                  <p className="text-caption text-foreground-muted uppercase tracking-wider mb-space-4">Activités</p>
+                  <p className="text-caption text-foreground-muted uppercase tracking-wider mb-space-4">{t('kidsLearningActivities')}</p>
                   <p className="text-heading-l text-foreground">{contents.length}</p>
                 </motion.div>
                 <motion.div whileHover={reducedMotion ? undefined : { y: -5 }} className="bg-card/60 backdrop-blur-md rounded-24 p-space-20 shadow-soft border border-border relative overflow-hidden group">
                   <div className="absolute right-0 top-0 w-16 h-16 bg-success-500/10 rounded-bl-full transition-transform group-hover:scale-150" />
                   <TrophyIcon className="w-8 h-8 text-success-600 mb-space-12 relative z-10" />
-                  <p className="text-caption text-foreground-muted uppercase tracking-wider mb-space-4">Missions</p>
+                  <p className="text-caption text-foreground-muted uppercase tracking-wider mb-space-4">{t('kidsLearningMissions')}</p>
                   <p className="text-heading-l text-foreground">{challenges.length}</p>
-                </motion.div>
-                <motion.div whileHover={reducedMotion ? undefined : { y: -5 }} className="bg-card/60 backdrop-blur-md rounded-24 p-space-20 shadow-soft border border-border relative overflow-hidden group">
-                  <div className="absolute right-0 top-0 w-16 h-16 bg-success-500/10 rounded-bl-full transition-transform group-hover:scale-150" />
-                  <StarIcon className="w-8 h-8 text-success-500 mb-space-12 relative z-10" />
-                  <p className="text-caption text-foreground-muted uppercase tracking-wider mb-space-4">XP Total</p>
-                  <p className="text-heading-m text-success-600 dark:text-success-400 mt-space-4">À venir</p>
-                </motion.div>
-                <motion.div whileHover={reducedMotion ? undefined : { y: -5 }} className="bg-card/60 backdrop-blur-md rounded-24 p-space-20 shadow-soft border border-border relative overflow-hidden group">
-                  <div className="absolute right-0 top-0 w-16 h-16 bg-success-500/10 rounded-bl-full transition-transform group-hover:scale-150" />
-                  <SparklesIcon className="w-8 h-8 text-success-600 mb-space-12 relative z-10" />
-                  <p className="text-caption text-foreground-muted uppercase tracking-wider mb-space-4">Série</p>
-                  <p className="text-heading-m text-success-700 dark:text-success-400 mt-space-4">Bientôt dispo.</p>
                 </motion.div>
               </section>
 
@@ -416,7 +404,7 @@ function KidsLearning() {
                 <section className="mb-space-40">
                   <h2 className="mb-space-24 text-heading-l flex items-center gap-space-12">
                     <TrophyIcon className="w-7 h-7 text-success-600" />
-                    Missions Quotidiennes
+                    {t('kidsLearningDailyMissions')}
                   </h2>
                   <div className="grid gap-space-16 md:grid-cols-2 lg:grid-cols-3">
                     {challenges.map((challenge) => {
@@ -435,7 +423,7 @@ function KidsLearning() {
                               <p className="text-heading-m text-foreground mb-space-4">{challenge.title}</p>
                               <div className="flex justify-between text-caption mb-space-8">
                                 <span className={isComplete ? BRAND_SEMANTIC.success.text : 'text-foreground-muted'}>
-                                  {isComplete ? 'Terminé !' : 'En cours'}
+                                  {isComplete ? t('kidsLearningDone') : t('kidsLearningInProgress')}
                                 </span>
                                 <span className="text-foreground-muted">{challenge.progress_value || 0} / {challenge.target_value || 1}</span>
                               </div>

@@ -13,6 +13,7 @@ import {
 import {Button, Card, Badge, Skeleton} from '../components/ui';
 import { MagicalBackground } from '../components/layout/PlatformShell';
 import { BRAND_HERO_GRADIENT, BRAND_SEMANTIC } from '../constants/brandTheme';
+import { useConfirmDialog } from '../hooks/useConfirmDialog';
 import { getLocaleFromLanguage } from '../utils/translations';
 
 const fallbackPlans = [
@@ -128,6 +129,7 @@ function Subscriptions() {
  const {t, language} = useLanguage();
  const locale = getLocaleFromLanguage(language);
  const {showToast} = useToast();
+ const { requestConfirm, confirmDialog } = useConfirmDialog();
  const navigate = useNavigate();
  const [searchParams, setSearchParams] = useSearchParams();
  const isAuthenticated = Boolean(user || localStorage.getItem('token'));
@@ -327,7 +329,13 @@ function Subscriptions() {
  };
 
  const handleCancelSubscription = async () => {
- if (!window.confirm('Annuler votre abonnement à la fin de la période en cours ?')) return;
+ const ok = await requestConfirm({
+ title: t('confirmTitle'),
+ message: t('subscriptionsCancelConfirm'),
+ confirmLabel: t('subscriptionsCancel'),
+ danger: true,
+ });
+ if (!ok) return;
  try {
  setBillingAction('cancel');
  const response = await subscriptionsAPI.cancelSubscription(true);
@@ -758,12 +766,12 @@ function Subscriptions() {
  variant="primary" 
  className="w-full rounded-full py-4 text-lg font-black shadow-xl shadow-primary-500/20 bg-gradient-to-r from-primary-500 to-secondary-500 border-none"
  >
- {subscribingPlan === checkoutModalPlan.code ? 'Redirection sécurisée...' : 'Procéder au paiement sécurisé'}
+ {subscribingPlan === checkoutModalPlan.code ? t('subscriptionsRedirecting') : t('subscriptionsProceedPayment')}
  </Button>
 
  <div className="mt-4 flex items-center justify-center gap-2 text-sm font-bold text-surface-400">
  <ShieldIcon className="w-4 h-4" />
- Paiement sécurisé par Stripe
+ {t('subscriptionsStripeSecure')}
  </div>
  </div>
 
@@ -772,6 +780,7 @@ function Subscriptions() {
  )}
  </AnimatePresence>
 
+ {confirmDialog}
  </div>
  );
 }

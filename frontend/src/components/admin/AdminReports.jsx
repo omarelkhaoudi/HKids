@@ -1,6 +1,6 @@
 import {useCallback, useEffect, useState} from 'react';
 import {adminAPI} from '../../api/admin';
-import {Badge, Button} from '../ui';
+import {Badge, Button, Dialog, Input} from '../ui';
 import {SearchIcon, WarningIcon} from '../Icons';
 import {formatAdminDate, getAdminDateLocale} from './AdminMetricCard';
 import { useLanguage } from '../../context/LanguageContext';
@@ -12,6 +12,8 @@ function AdminReports() {
  const [loading, setLoading] = useState(true);
  const [error, setError] = useState('');
  const [filters, setFilters] = useState({q: '', status: 'open', priority: 'all', type: 'all'});
+ const [pendingUpdate, setPendingUpdate] = useState(null);
+ const [noteDraft, setNoteDraft] = useState('');
 
  const loadReports = useCallback(async () => {
  try {
@@ -31,11 +33,7 @@ function AdminReports() {
  return () => clearTimeout(timer);
 }, [loadReports]);
 
- const update = async (report, status, priority = report.priority) => {
- const resolutionNote = ['resolved', 'dismissed'].includes(status)
- ? window.prompt(t('adminReportsResolutionNote'), report.resolution_note || '')
- : '';
- if (resolutionNote === null && ['resolved', 'dismissed'].includes(status)) return;
+ const applyUpdate = async (report, status, priority = report.priority, resolutionNote = '') => {
  try {
  await adminAPI.updateReport(report.id, {
  status,
@@ -48,6 +46,22 @@ function AdminReports() {
  setError(err.response?.data?.error || t('adminReportsUpdateError'));
 }
 };
+
+ const update = async (report, status, priority = report.priority) => {
+ if (['resolved', 'dismissed'].includes(status)) {
+ setNoteDraft(report.resolution_note || '');
+ setPendingUpdate({ report, status, priority });
+ return;
+ }
+ await applyUpdate(report, status, priority);
+ };
+
+ const confirmPendingUpdate = async () => {
+ if (!pendingUpdate) return;
+ await applyUpdate(pendingUpdate.report, pendingUpdate.status, pendingUpdate.priority, noteDraft);
+ setPendingUpdate(null);
+ setNoteDraft('');
+ };
 
  return (
  <div className="space-y-6 pb-12">
@@ -119,6 +133,25 @@ function AdminReports() {
  </div>
  ))}
  </div>
+ <Dialog
+ isOpen={Boolean(pendingUpdate)}
+ onClose={() => setPendingUpdate(null)}
+ title={t('confirmTitle')}
+ primaryLabel={t('adminConfirm')}
+ secondaryLabel={t('adminCancel')}
+ primaryVariant="danger"
+ onPrimary={confirmPendingUpdate}
+ onSecondary={() => setPendingUpdate(null)}
+ >
+ <label className="block text-sm font-medium text-foreground-secondary mb-2" htmlFor="admin-report-note">
+ {t('adminReportsResolutionNote')}
+ </label>
+ <Input
+ id="admin-report-note"
+ value={noteDraft}
+ onChange={(e) => setNoteDraft(e.target.value)}
+ />
+ </Dialog>
  </div>
  );
 }

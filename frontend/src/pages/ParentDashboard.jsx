@@ -7,6 +7,7 @@ import {useAuth} from '../context/AuthContext';
 import {useLanguage} from '../context/LanguageContext';
 import {parentalAPI} from '../api/parental';
 import {useToast} from '../components/ToastProvider';
+import { useConfirmDialog } from '../hooks/useConfirmDialog';
 import {clearKidLocalPrivacyData} from '../services/privacy/privacyStorageService';
 import {useReducedMotion} from '../hooks/useReducedMotion';
 import {getMotionProps, kidsPageEnter} from '../constants/kidsMotion';
@@ -49,6 +50,7 @@ function ParentDashboard() {
  const {user, logout} = useAuth();
  const navigate = useNavigate();
  const {showToast} = useToast();
+ const { requestConfirm, confirmDialog } = useConfirmDialog();
  const { language, t, isRtl } = useLanguage();
  const reducedMotion = useReducedMotion();
  const contentTypeOptions = localizeContentOptions(CONTENT_TYPE_OPTIONS, language);
@@ -187,7 +189,13 @@ function ParentDashboard() {
 
  const handleDeleteKid = async (kidId) => {
  const kid = kids.find((item) => item.id === kidId);
- if (!window.confirm(t('parentProfilesDeleteConfirm', { name: kid?.name || kid?.username || t('parentDefaultName') }))) return;
+ const ok = await requestConfirm({
+ title: t('confirmTitle'),
+ message: t('parentProfilesDeleteConfirm', { name: kid?.name || kid?.username || t('parentDefaultName') }),
+ confirmLabel: t('confirmDelete'),
+ danger: true,
+ });
+ if (!ok) return;
  
  try {
  await parentalAPI.deleteKid(kidId);
@@ -647,6 +655,7 @@ function ParentDashboard() {
  isOpen={showSettingsModal}
  onClose={() => setShowSettingsModal(false)}
  />
+ {confirmDialog}
  </PlatformShell>
  );
 }

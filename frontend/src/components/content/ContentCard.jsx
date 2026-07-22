@@ -12,8 +12,10 @@ import {
   TagIcon,
 } from '../Icons';
 import { KidsBookCover } from '../kids/KidsBookCover';
+import { useLanguage } from '../../context/LanguageContext';
 
 export function ContentCard({ content, playing = false, onToggleAudio }) {
+  const { t } = useLanguage();
   const hasAudio = Boolean(content.audio_url);
 
   return (
@@ -39,7 +41,7 @@ export function ContentCard({ content, playing = false, onToggleAudio }) {
             {content.is_downloaded && (
               <span className="inline-flex items-center gap-1 rounded-full bg-secondary-500 px-3 py-1 text-xs font-black text-white shadow">
                 <CheckIcon className="h-3.5 w-3.5" />
-                Telecharge
+                {t('contentDownloaded')}
               </span>
             )}
           </div>
@@ -81,6 +83,7 @@ export function ContentCard({ content, playing = false, onToggleAudio }) {
       {onToggleAudio && (
         <div className="mt-auto px-4 pb-4">
           <button
+            type="button"
             onClick={() => onToggleAudio(content)}
             className={`inline-flex h-12 w-full items-center justify-center gap-2 rounded-3xl text-sm font-black transition ${
               hasAudio
@@ -89,13 +92,14 @@ export function ContentCard({ content, playing = false, onToggleAudio }) {
                   : 'bg-secondary-500 text-white hover:bg-secondary-600'
                 : 'bg-surface-100 text-surface-400 dark:bg-surface-700'
             }`}
-            title={hasAudio ? 'Ecouter' : 'Audio indisponible'}
+            title={hasAudio ? t('contentListen') : t('contentAudioUnavailable')}
+            aria-label={hasAudio ? t('contentListen') : t('contentAudioUnavailable')}
           >
             <AudioIcon className="h-5 w-5" />
             {hasAudio ? (
               playing ? <PauseIcon className="h-5 w-5" /> : <PlayIcon className="h-5 w-5" />
             ) : null}
-            <span>{hasAudio ? 'Ecouter' : 'Audio manquant'}</span>
+            <span>{hasAudio ? t('contentListen') : t('contentAudioMissing')}</span>
           </button>
         </div>
       )}
