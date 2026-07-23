@@ -9,6 +9,7 @@ Guide pour alimenter la bibliothèque avec du **contenu original** prêt pour la
 | `backend/content/catalog.js` | Catalogue livres (illustrés, audio, comptines, religieux + premium) |
 | `backend/content/catalogExtended.js` | Génération des contenus étendus |
 | `backend/content/catalogPremiumExpansion.js` | Expansion premium Sprint 45 (~100 titres originaux FR/EN/AR) |
+| `backend/content/catalogPlus100Expansion.js` | +100 livres premium (slug `plus-*`) |
 | `backend/content/learningCatalog.js` | 20 quiz + 20 jeux éducatifs |
 | `backend/content/storyTemplatesCatalog.js` | 10 histoires personnalisables (templates) |
 | `backend/content/svgAssets.js` | Couvertures et pages SVG |
@@ -19,7 +20,8 @@ Guide pour alimenter la bibliothèque avec du **contenu original** prêt pour la
 
 | Type | Quantité |
 |------|----------|
-| Catalogue total | ≥ 160 (≈ 170 avec expansion premium) |
+| Catalogue total | ≥ 270 (≈ 277 avec +100) |
+| Expansion `plus-*` | **100** |
 | Histoires illustrées (`story`) | ≥ 90 |
 | Histoires audio (`audio_story`) | ≥ 30 |
 | Comptines (`song`) | ≥ 20 |

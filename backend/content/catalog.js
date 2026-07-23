@@ -5,6 +5,7 @@
 
 import { buildExtendedCatalog } from './catalogExtended.js';
 import { buildPremiumExpansionCatalog } from './catalogPremiumExpansion.js';
+import { buildPlus100ExpansionCatalog } from './catalogPlus100Expansion.js';
 import { enrichCatalogWithPages } from './storyPages.js';
 
 export const BASE_CATALOG = [
@@ -306,6 +307,7 @@ export const CATALOG = enrichCatalogWithPages([
   ...BASE_CATALOG,
   ...buildExtendedCatalog(),
   ...buildPremiumExpansionCatalog(),
+  ...buildPlus100ExpansionCatalog(),
 ]);
 
 export const CATALOG_STATS = {
@@ -315,4 +317,6 @@ export const CATALOG_STATS = {
   songs: CATALOG.filter((item) => item.content_type === 'song').length,
   religious: CATALOG.filter((item) => item.theme === 'spiritual' || item.theme === 'spirituality').length,
   premium_expansion: CATALOG.filter((item) => String(item.slug || '').startsWith('prem-')).length,
+  plus_100_expansion: CATALOG.filter((item) => String(item.slug || '').startsWith('plus-')).length,
+  premium_flagged: CATALOG.filter((item) => item.is_premium).length,
 };

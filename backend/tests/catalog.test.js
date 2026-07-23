@@ -5,12 +5,13 @@ import { LEARNING_CATALOG } from '../content/learningCatalog.js';
 import { STORY_TEMPLATES } from '../content/storyTemplatesCatalog.js';
 
 test('demo catalog meets minimum content targets', () => {
-  assert.ok(CATALOG_STATS.total >= 160, `total books: ${CATALOG_STATS.total}`);
+  assert.ok(CATALOG_STATS.total >= 270, `total books: ${CATALOG_STATS.total}`);
   assert.ok(CATALOG_STATS.audio_stories >= 30, `audio stories: ${CATALOG_STATS.audio_stories}`);
   assert.ok(CATALOG_STATS.songs >= 20, `comptines: ${CATALOG_STATS.songs}`);
   assert.ok(CATALOG_STATS.religious >= 10, `religious: ${CATALOG_STATS.religious}`);
   assert.ok(CATALOG_STATS.illustrated_stories >= 90, `illustrated: ${CATALOG_STATS.illustrated_stories}`);
   assert.ok(CATALOG_STATS.premium_expansion >= 100, `premium expansion: ${CATALOG_STATS.premium_expansion}`);
+  assert.equal(CATALOG_STATS.plus_100_expansion, 100, `plus-100: ${CATALOG_STATS.plus_100_expansion}`);
 });
 
 test('catalog items expose required metadata fields', () => {
@@ -39,6 +40,20 @@ test('premium expansion books are localized en/ar', () => {
     assert.ok(item.localizations?.ar?.title, `${item.slug} missing AR title`);
     assert.ok(item.localizations?.en?.description, `${item.slug} missing EN description`);
     assert.ok(item.localizations?.ar?.description, `${item.slug} missing AR description`);
+  }
+});
+
+test('plus-100 expansion is complete and unique', () => {
+  const plus = CATALOG.filter((item) => String(item.slug || '').startsWith('plus-'));
+  assert.equal(plus.length, 100);
+  const titles = new Set();
+  for (const item of plus) {
+    assert.ok(item.localizations?.en?.title, `${item.slug} missing EN`);
+    assert.ok(item.localizations?.ar?.title, `${item.slug} missing AR`);
+    assert.ok(item.pages?.length >= 5, `${item.slug} needs 5+ pages`);
+    assert.ok(Number.isFinite(item.duration_seconds) && item.duration_seconds > 0, `${item.slug} duration`);
+    assert.equal(titles.has(item.title), false, `duplicate title ${item.title}`);
+    titles.add(item.title);
   }
 });
 
