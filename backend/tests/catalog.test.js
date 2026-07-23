@@ -5,10 +5,12 @@ import { LEARNING_CATALOG } from '../content/learningCatalog.js';
 import { STORY_TEMPLATES } from '../content/storyTemplatesCatalog.js';
 
 test('demo catalog meets minimum content targets', () => {
+  assert.ok(CATALOG_STATS.total >= 160, `total books: ${CATALOG_STATS.total}`);
   assert.ok(CATALOG_STATS.audio_stories >= 30, `audio stories: ${CATALOG_STATS.audio_stories}`);
-  assert.equal(CATALOG_STATS.songs, 20, `comptines: ${CATALOG_STATS.songs}`);
-  assert.equal(CATALOG_STATS.religious, 10, `religious: ${CATALOG_STATS.religious}`);
-  assert.ok(CATALOG_STATS.illustrated_stories >= 9, `illustrated: ${CATALOG_STATS.illustrated_stories}`);
+  assert.ok(CATALOG_STATS.songs >= 20, `comptines: ${CATALOG_STATS.songs}`);
+  assert.ok(CATALOG_STATS.religious >= 10, `religious: ${CATALOG_STATS.religious}`);
+  assert.ok(CATALOG_STATS.illustrated_stories >= 90, `illustrated: ${CATALOG_STATS.illustrated_stories}`);
+  assert.ok(CATALOG_STATS.premium_expansion >= 100, `premium expansion: ${CATALOG_STATS.premium_expansion}`);
 });
 
 test('catalog items expose required metadata fields', () => {
@@ -26,6 +28,17 @@ test('catalog items expose required metadata fields', () => {
     assert.ok(Number.isFinite(item.age_group_max));
     assert.ok(item.emoji);
     assert.ok(Array.isArray(item.gradient) && item.gradient.length === 2);
+  }
+});
+
+test('premium expansion books are localized en/ar', () => {
+  const premium = CATALOG.filter((item) => String(item.slug || '').startsWith('prem-'));
+  assert.ok(premium.length >= 100);
+  for (const item of premium) {
+    assert.ok(item.localizations?.en?.title, `${item.slug} missing EN title`);
+    assert.ok(item.localizations?.ar?.title, `${item.slug} missing AR title`);
+    assert.ok(item.localizations?.en?.description, `${item.slug} missing EN description`);
+    assert.ok(item.localizations?.ar?.description, `${item.slug} missing AR description`);
   }
 });
 

@@ -6,8 +6,9 @@ Guide pour alimenter la bibliothèque avec du **contenu original** prêt pour la
 
 | Fichier | Rôle |
 |---------|------|
-| `backend/content/catalog.js` | Catalogue livres (illustrés, audio, comptines, religieux) |
+| `backend/content/catalog.js` | Catalogue livres (illustrés, audio, comptines, religieux + premium) |
 | `backend/content/catalogExtended.js` | Génération des contenus étendus |
+| `backend/content/catalogPremiumExpansion.js` | Expansion premium Sprint 45 (~100 titres originaux FR/EN/AR) |
 | `backend/content/learningCatalog.js` | 20 quiz + 20 jeux éducatifs |
 | `backend/content/storyTemplatesCatalog.js` | 10 histoires personnalisables (templates) |
 | `backend/content/svgAssets.js` | Couvertures et pages SVG |
@@ -18,10 +19,12 @@ Guide pour alimenter la bibliothèque avec du **contenu original** prêt pour la
 
 | Type | Quantité |
 |------|----------|
+| Catalogue total | ≥ 160 (≈ 170 avec expansion premium) |
+| Histoires illustrées (`story`) | ≥ 90 |
 | Histoires audio (`audio_story`) | ≥ 30 |
-| Comptines (`song`) | 20 |
-| Histoires illustrées (`story`) | 9 |
-| Histoires religieuses (`theme: spiritual`) | 10 |
+| Comptines (`song`) | ≥ 20 |
+| Histoires religieuses / spiritualité | ≥ 10 |
+| Expansion premium (`prem-*`) | ≥ 100 |
 | Quiz (`learning_contents`) | 20 |
 | Jeux éducatifs (mémoire) | 20 |
 | Histoires personnalisables (`generated_stories`) | 10 / profil enfant |
