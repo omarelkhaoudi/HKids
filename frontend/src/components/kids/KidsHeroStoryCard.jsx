@@ -2,27 +2,24 @@ import { motion } from 'framer-motion';
 import { resolveBookCoverUrl } from '../../utils/bookCover';
 import { useReducedMotion } from '../../hooks/useReducedMotion';
 import { getMotionProps, getHoverMotion, kidsCardAppear, kidsHoverLift, kidsProgressFill } from '../../constants/kidsMotion';
-import { PlayIcon, AudioIcon, BookIcon } from '../Icons';
 import KidsButton from './KidsButton';
 import { KidsBookCover } from './KidsBookCover';
+import { playKidsUiSound } from '../../utils/kidsUiSound';
+import { KIDS_PICTOGRAMS } from '../../utils/kidsGuidePhrases';
 
-function formatAge(book, t) {
+function formatAge(book) {
   if (book?.age_level) return book.age_level;
   const min = book?.age_group_min;
   const max = book?.age_group_max;
-  if (min != null && max != null) return `${min}–${max} ${t('years')}`;
-  if (book?.age_group) return `${book.age_group} ${t('years')}`;
+  if (min != null && max != null) return `${min}–${max}`;
+  if (book?.age_group) return String(book.age_group);
   return null;
 }
 
-function formatDuration(book, t) {
-  if (book?.duration_minutes) {
-    return t('readingMinutes', { count: book.duration_minutes });
-  }
+function formatDurationMinutes(book) {
+  if (book?.duration_minutes) return `${book.duration_minutes}'`;
   const seconds = Number(book?.duration_seconds || 0);
-  if (seconds > 0) {
-    return t('readingMinutes', { count: Math.max(1, Math.round(seconds / 60)) });
-  }
+  if (seconds > 0) return `${Math.max(1, Math.round(seconds / 60))}'`;
   return null;
 }
 
@@ -39,8 +36,8 @@ export function KidsHeroStoryCard({
 }) {
   const reducedMotion = useReducedMotion();
   const progress = Math.min(100, Math.max(0, Number(book?.progress || book?.kid_progress_percent || 0)));
-  const ageLabel = formatAge(book, t);
-  const durationLabel = formatDuration(book, t);
+  const ageLabel = formatAge(book);
+  const durationLabel = formatDurationMinutes(book);
   const hasProgress = progress > 0 && progress < 100;
   const coverUrl = resolveBookCoverUrl(book);
 
@@ -52,15 +49,20 @@ export function KidsHeroStoryCard({
         aria-label={emptyLabel || t('goToLibrary')}
       >
         <div className="kids-hero-story-atmosphere" aria-hidden="true" />
-        <div className="relative z-10 flex flex-col items-start justify-center gap-space-20 p-space-32 md:p-space-48 min-h-[16rem]">
-          <p className="kids-type-caption uppercase tracking-[0.14em]">
-            {badgeLabel || t('kidsStoriesToday')}
-          </p>
-          <h2 className="kids-type-display max-w-lg">
-            {emptyLabel || t('emptyBooksTitle')}
-          </h2>
-          <KidsButton variant="primary" size="md" onClick={onEmptyAction} aria-label={t('goToLibrary')}>
-            {t('goToLibrary')}
+        <div className="relative z-10 flex flex-col items-center justify-center gap-space-20 p-space-32 md:p-space-48 min-h-[16rem]">
+          <span className="text-6xl" aria-hidden="true">{KIDS_PICTOGRAMS.library}</span>
+          <span className="sr-only">{emptyLabel || t('emptyBooksTitle')}</span>
+          <KidsButton
+            variant="primary"
+            size="lg"
+            onClick={() => {
+              playKidsUiSound('tap');
+              onEmptyAction?.();
+            }}
+            aria-label={t('goToLibrary')}
+            className="!min-w-[4.5rem] !rounded-full"
+          >
+            <span aria-hidden="true">{KIDS_PICTOGRAMS.continue}</span>
           </KidsButton>
         </div>
       </motion.section>
@@ -70,7 +72,7 @@ export function KidsHeroStoryCard({
   return (
     <motion.section
       {...getMotionProps(reducedMotion, kidsCardAppear)}
-      className="kids-hero-story relative overflow-hidden"
+      className="kids-hero-story kids-hero-story--nonreader relative overflow-hidden"
       aria-label={book.title}
     >
       <div className="kids-hero-story-atmosphere" aria-hidden="true" />
@@ -98,41 +100,31 @@ export function KidsHeroStoryCard({
 
         <div className="flex flex-1 flex-col justify-center min-w-0 gap-space-20 text-center md:text-start">
           <div className="min-w-0 space-y-space-12">
-            <p className="kids-type-caption uppercase tracking-[0.14em]">
-              {badgeLabel || t('kidsStoriesToday')}
+            <p className="kids-type-caption uppercase tracking-[0.14em] flex items-center justify-center md:justify-start gap-2">
+              <span aria-hidden="true">⭐</span>
+              <span className="sr-only">{badgeLabel || t('kidsStoriesToday')}</span>
             </p>
-            <h2 className="kids-type-display line-clamp-2">
-              {book.title}
-            </h2>
-            {book.author ? (
-              <p className="kids-book-author">{book.author}</p>
-            ) : null}
-            {book?.description ? (
-              <p className="kids-shelf-subtitle line-clamp-2 max-w-xl mx-auto md:mx-0 !mt-0">
-                {book.description}
-              </p>
-            ) : null}
+            <h2 className="sr-only">{book.title}</h2>
+            {(ageLabel || durationLabel) && (
+              <div className="flex flex-wrap items-center justify-center md:justify-start gap-space-8">
+                {ageLabel ? (
+                  <span className="kids-book-meta-chip kids-book-meta-chip--pictogram" title={ageLabel}>
+                    🧒 {ageLabel}
+                  </span>
+                ) : null}
+                {durationLabel ? (
+                  <span className="kids-book-meta-chip kids-book-meta-chip--pictogram" title={durationLabel}>
+                    ⏱️ {durationLabel}
+                  </span>
+                ) : null}
+              </div>
+            )}
           </div>
-
-          {(ageLabel || durationLabel) && (
-            <div className="flex flex-wrap items-center justify-center md:justify-start gap-space-8">
-              {ageLabel ? (
-                <span className="kids-book-meta-chip">{ageLabel}</span>
-              ) : null}
-              {durationLabel ? (
-                <span className="kids-book-meta-chip">{durationLabel}</span>
-              ) : null}
-            </div>
-          )}
 
           {hasProgress && (
             <div className="w-full max-w-md mx-auto md:mx-0 space-y-space-8">
-              <div className="flex items-center justify-between">
-                <span className="kids-type-caption">{t('continueReading')}</span>
-                <span className="kids-type-caption font-semibold text-primary-700">{Math.round(progress)}%</span>
-              </div>
               <div
-                className="kids-book-progress !static !inset-auto h-2"
+                className="kids-book-progress !static !inset-auto h-2.5"
                 role="progressbar"
                 aria-valuenow={Math.round(progress)}
                 aria-valuemin={0}
@@ -149,37 +141,46 @@ export function KidsHeroStoryCard({
             </div>
           )}
 
-          <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center justify-center md:justify-start gap-space-12 pt-space-4">
+          <div className="flex flex-row flex-wrap items-center justify-center md:justify-start gap-space-12 pt-space-4">
             <KidsButton
               variant="primary"
               size="lg"
-              icon={PlayIcon}
-              onClick={() => onRead?.(book)}
-              aria-label={t('readAction')}
-              className="min-w-[10rem]"
+              onClick={() => {
+                playKidsUiSound('play');
+                onRead?.(book);
+              }}
+              aria-label={t('kidsHeroPlay')}
+              title={t('kidsHeroPlay')}
+              className="!min-w-[4.75rem] !rounded-full !px-6"
             >
-              {t('readAction')}
+              <span className="text-2xl leading-none" aria-hidden="true">{KIDS_PICTOGRAMS.read}</span>
             </KidsButton>
             <KidsButton
               variant="secondary"
-              size="md"
-              icon={AudioIcon}
-              onClick={() => onListen?.(book)}
-              aria-label={t('listenAction')}
-              className="min-w-[10rem]"
+              size="lg"
+              onClick={() => {
+                playKidsUiSound('play');
+                onListen?.(book);
+              }}
+              aria-label={t('kidsHeroListen')}
+              title={t('kidsHeroListen')}
+              className="!min-w-[4.75rem] !rounded-full !px-6"
             >
-              {t('listenAction')}
+              <span className="text-2xl leading-none" aria-hidden="true">{KIDS_PICTOGRAMS.listen}</span>
             </KidsButton>
             {hasProgress && (
               <KidsButton
                 variant="ghost"
-                size="md"
-                icon={BookIcon}
-                onClick={() => (onContinue || onRead)?.(book)}
+                size="lg"
+                onClick={() => {
+                  playKidsUiSound('tap');
+                  (onContinue || onRead)?.(book);
+                }}
                 aria-label={t('resume')}
-                className="min-w-[10rem]"
+                title={t('resume')}
+                className="!min-w-[4.75rem] !rounded-full !px-6"
               >
-                {t('resume')}
+                <span className="text-2xl leading-none" aria-hidden="true">{KIDS_PICTOGRAMS.continue}</span>
               </KidsButton>
             )}
           </div>

@@ -25,15 +25,12 @@ export function KidsContinueRail({
       {...getMotionProps(reducedMotion, kidsCarouselReveal)}
     >
       <div className="mb-space-20 px-space-8 md:px-space-16">
-        <h2 className="kids-shelf-title !mb-0">
-          {emoji ? <span className="text-xl opacity-60" aria-hidden="true">{emoji}</span> : null}
-          <span>{title || t('continueReading')}</span>
+        <h2 className="kids-shelf-title kids-shelf-title--pictogram !mb-0">
+          {emoji ? <span className="kids-shelf-emoji" aria-hidden="true">{emoji}</span> : (
+            <span className="kids-shelf-emoji" aria-hidden="true">▶️</span>
+          )}
+          <span className="sr-only">{title || t('continueReading')}</span>
         </h2>
-        {(subtitle || t('discoverContinueSubtitle')) && (
-          <p className="kids-shelf-subtitle max-w-xl">
-            {subtitle || t('discoverContinueSubtitle')}
-          </p>
-        )}
       </div>
 
       <div className="flex gap-space-28 md:gap-space-32 overflow-x-auto px-space-8 md:px-space-16 pb-space-16 snap-x snap-mandatory kids-scroll-smooth custom-scrollbar">

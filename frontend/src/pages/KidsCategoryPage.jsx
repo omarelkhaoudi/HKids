@@ -16,10 +16,14 @@ import { KidsPageShell } from '../components/kids/KidsPageShell';
 import { KidsBookCarousel } from '../components/kids/KidsBookCarousel';
 import { KidsEmptyState } from '../components/kids/KidsEmptyState';
 import { KidsCategoryAtmosphere } from '../components/kids/KidsCategoryAtmosphere';
+import { KidsGuideCompanion } from '../components/kids/KidsGuideCompanion';
 import { BookGridSkeleton } from '../components/SkeletonLoader';
 import { useToast } from '../components/ToastProvider';
 import { useReducedMotion } from '../hooks/useReducedMotion';
 import { getMotionProps, kidsCategoryEnter } from '../constants/kidsMotion';
+import { getCategoryVoicePhrase, KIDS_PICTOGRAMS } from '../utils/kidsGuidePhrases';
+import { playKidsUiSound } from '../utils/kidsUiSound';
+import { useKidsVoiceGuide } from '../hooks/useKidsVoiceGuide';
 
 function KidsCategoryPage() {
   const { categoryId } = useParams();
@@ -27,13 +31,23 @@ function KidsCategoryPage() {
   const { language, isRtl, t } = useLanguage();
   const { showToast } = useToast();
   const reducedMotion = useReducedMotion();
+  const { speakGuide } = useKidsVoiceGuide(language);
   const category = getKidCategory(categoryId, language);
   const strategy = getCategoryContentStrategy(categoryId);
   const favoritesIds = storage.getFavorites();
+  const voicePhrase = getCategoryVoicePhrase(categoryId, language);
 
   const [books, setBooks] = useState([]);
   const [learningItems, setLearningItems] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!category) return undefined;
+    const timer = window.setTimeout(() => {
+      speakGuide(voicePhrase);
+    }, 450);
+    return () => window.clearTimeout(timer);
+  }, [categoryId, category, voicePhrase, speakGuide]);
 
   useEffect(() => {
     if (!category) return undefined;
@@ -82,7 +96,7 @@ function KidsCategoryPage() {
       });
 
     return () => { active = false; };
-  }, [categoryId, language, category, strategy.type, strategy.contentType, strategy.categoryCode]);
+  }, [categoryId, language, category, strategy.type, strategy.contentType, strategy.categoryCode, showToast, t]);
 
   const listPath = useMemo(() => {
     if (strategy.type === 'audio') return '/kids/audio?type=song';
@@ -103,19 +117,21 @@ function KidsCategoryPage() {
       <KidsCategoryAtmosphere categoryId={categoryId} />
 
       <header className="relative z-10 px-6 py-4 flex items-center justify-between">
-        <Link to="/kids" className="shrink-0 transition-transform hover:scale-105">
+        <Link to="/kids" className="shrink-0 transition-transform hover:scale-105" aria-label={t('back')}>
           <Logo size="default" showText={false} />
         </Link>
-        <span className="text-4xl" aria-hidden="true">{category.pictogram}</span>
+        <span className="text-5xl drop-shadow" aria-hidden="true">{category.pictogram}</span>
       </header>
 
       <div className="kids-main relative z-10">
         <Link
           to="/kids"
-          className="kids-icon-action self-start"
+          className="kids-icon-action self-start text-2xl"
           aria-label={t('back')}
+          onClick={() => playKidsUiSound('tap')}
         >
-          <ChevronLeftIcon className={isRtl ? 'rotate-180' : ''} />
+          <span aria-hidden="true">{KIDS_PICTOGRAMS.back}</span>
+          <span className="sr-only"><ChevronLeftIcon className={isRtl ? 'rotate-180' : ''} /></span>
         </Link>
 
         <motion.main
@@ -133,21 +149,24 @@ function KidsCategoryPage() {
           >
             {category.pictogram}
           </motion.div>
-          <h1 className="text-4xl md:text-5xl font-black leading-tight drop-shadow-md line-clamp-2">
-            {category.shortLabel || category.label}
-          </h1>
+          <h1 className="sr-only">{category.shortLabel || category.label}</h1>
 
           {featuredBook && (
             <motion.button
               type="button"
               whileHover={{ scale: 1.04 }}
               whileTap={{ scale: 0.96 }}
-              onClick={() => navigate(getKidsContentPath(featuredBook))}
-              className="kids-touch-target mx-auto mt-8 inline-flex min-w-52 items-center justify-center gap-4 rounded-[1.75rem] bg-white px-8 py-4 text-xl md:text-2xl font-black text-foreground shadow-xl"
+              onClick={() => {
+                playKidsUiSound('play');
+                speakGuide(getCategoryVoicePhrase(categoryId, language));
+                navigate(getKidsContentPath(featuredBook));
+              }}
+              className="kids-touch-target mx-auto mt-8 inline-flex min-w-[4.75rem] items-center justify-center gap-3 rounded-full bg-white px-8 py-5 text-3xl shadow-xl"
               aria-label={featuredActionLabel}
+              title={featuredActionLabel}
             >
-              <PlayIcon className={`h-9 w-9 text-primary-500 ${isRtl ? 'rotate-180' : ''}`} filled />
-              <span>{featuredActionLabel}</span>
+              <span aria-hidden="true">{strategy.type === 'audio' ? KIDS_PICTOGRAMS.listen : KIDS_PICTOGRAMS.continue}</span>
+              <PlayIcon className="sr-only" />
             </motion.button>
           )}
         </motion.main>
@@ -174,17 +193,21 @@ function KidsCategoryPage() {
                   isRtl={isRtl}
                   favorites={favoritesIds}
                   showActions={false}
-                  hideTitle={false}
+                  hideTitle
+                  pictogramMode
                   modality="books"
-                  onPlay={(b) => navigate(getKidsContentPath(b))}
+                  onPlay={(b) => {
+                    playKidsUiSound('play');
+                    navigate(getKidsContentPath(b));
+                  }}
                 />
               </div>
             )}
             {learningItems.length > 0 && (
               <section>
-                <h2 className="kids-shelf-title mb-5 px-2">
-                  <span aria-hidden="true">🎮</span>
-                  <span className="sr-only sm:not-sr-only">{t('kidsNavLearning')}</span>
+                <h2 className="kids-shelf-title kids-shelf-title--pictogram mb-5 px-2">
+                  <span className="kids-shelf-emoji" aria-hidden="true">🎮</span>
+                  <span className="sr-only">{t('kidsNavLearning')}</span>
                 </h2>
                 <div className="flex gap-5 overflow-x-auto pb-4 px-2 snap-x snap-mandatory custom-scrollbar">
                   {learningItems.slice(0, 8).map((item) => (
@@ -193,12 +216,16 @@ function KidsCategoryPage() {
                       type="button"
                       whileHover={{ scale: 1.03, y: -4 }}
                       whileTap={{ scale: 0.95 }}
-                      onClick={() => navigate('/kids/learning')}
+                      onClick={() => {
+                        playKidsUiSound('tap');
+                        navigate('/kids/learning');
+                      }}
                       className={`kids-touch-target snap-start shrink-0 w-44 md:w-52 rounded-[2rem] bg-gradient-to-br ${item.category_color || 'from-secondary-500 to-primary-500'} p-5 text-center text-white shadow-kids-soft min-h-44 border-4 border-white/40`}
                       aria-label={item.title}
+                      title={item.title}
                     >
                       <span className="text-6xl" aria-hidden="true">{item.category_pictogram || '⭐'}</span>
-                      <PlayIcon className="h-8 w-8 mt-4 mx-auto" filled />
+                      <span className="sr-only">{item.title}</span>
                     </motion.button>
                   ))}
                 </div>
@@ -208,7 +235,8 @@ function KidsCategoryPage() {
         )}
       </div>
 
-      <VoiceAssistant onNavigate={navigate} />
+      <KidsGuideCompanion mood="encourage" message={voicePhrase} />
+      <VoiceAssistant onNavigate={(path) => navigate(path)} />
     </KidsPageShell>
   );
 }

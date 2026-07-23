@@ -16,6 +16,7 @@ export function KidsSectionHeader({
   onScrollLeft,
   onScrollRight,
   hideTitle = false,
+  pictogramMode = true,
   seeAllLabel,
   onSeeAll,
 }) {
@@ -24,27 +25,39 @@ export function KidsSectionHeader({
   return (
     <div className="mb-space-24 flex items-end justify-between gap-space-12 px-space-8 md:px-space-16">
       <div className="min-w-0 flex-1">
-        <h2 className="kids-shelf-title !mb-0">
-          {emoji && <span className="text-lg opacity-55" aria-hidden="true">{emoji}</span>}
-          {Icon && <Icon className="h-5 w-5 text-primary-500 opacity-80" />}
-          {!hideTitle && title && (
-            <span>{title}</span>
+        <h2 className={`kids-shelf-title !mb-0 ${pictogramMode ? 'kids-shelf-title--pictogram' : ''}`}>
+          {emoji && (
+            <span className={pictogramMode ? 'kids-shelf-emoji' : 'text-lg opacity-55'} aria-hidden="true">
+              {emoji}
+            </span>
           )}
+          {Icon && !emoji && <Icon className="h-5 w-5 text-primary-500 opacity-80" />}
+          {title ? (
+            pictogramMode || hideTitle ? (
+              <span className="sr-only">{title}</span>
+            ) : (
+              <span>{title}</span>
+            )
+          ) : null}
         </h2>
-        {subtitle && (
+        {subtitle && !pictogramMode ? (
           <p className="kids-shelf-subtitle line-clamp-2 px-1">
             {subtitle}
           </p>
-        )}
+        ) : subtitle ? (
+          <p className="sr-only">{subtitle}</p>
+        ) : null}
       </div>
       <div className="flex shrink-0 items-center gap-space-8">
         {seeAllLabel && onSeeAll && (
           <button
             type="button"
             onClick={onSeeAll}
-            className="kids-touch-target inline-flex min-h-touch items-center rounded-full border border-border/70 bg-card px-space-16 py-space-8 text-caption font-semibold text-primary-600 shadow-soft hover:bg-primary-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-300"
+            className="kids-touch-target kids-see-all-pictogram inline-flex min-h-touch min-w-touch items-center justify-center rounded-full border border-border/70 bg-card px-space-12 py-space-8 text-xl shadow-soft hover:bg-primary-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-300"
+            aria-label={seeAllLabel}
+            title={seeAllLabel}
           >
-            {seeAllLabel}
+            <span aria-hidden="true">➡️</span>
           </button>
         )}
         {(onScrollLeft || onScrollRight) && (
@@ -85,8 +98,9 @@ export function KidsBookCarousel({
   onFavorite,
   onDownload,
   showActions = true,
-  hideTitle = false,
+  hideTitle = true,
   hideSectionTitle = false,
+  pictogramMode = true,
   modality = 'books',
   seeAllLabel,
   onSeeAll,
@@ -113,6 +127,7 @@ export function KidsBookCarousel({
         isRtl={isRtl}
         modality={modality}
         hideTitle={hideSectionTitle}
+        pictogramMode={pictogramMode}
         seeAllLabel={seeAllLabel}
         onSeeAll={onSeeAll}
         onScrollLeft={() => scroll('left')}
