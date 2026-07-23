@@ -233,6 +233,26 @@ const THEME_OPENINGS = {
     `Rond, carré, triangle : ${title} les reconnaît dans la chambre.`,
     `Une boîte de puzzles s ouvre. ${title} cherche la pièce qui brille.`,
   ],
+  bedtime: (title) => [
+    `La lampe de chevet s allume. ${title} tire la couette jusqu au menton.`,
+    `Dehors, la lune sourit. ${title} bâille tout doucement.`,
+    `Les jouets se rangent. ${title} prépare un rêve tout moelleux.`,
+  ],
+  ocean: (title) => [
+    `Les vagues murmurent sur le sable. ${title} laisse les pieds dans l eau tiède.`,
+    `Un coquillage brille. ${title} y entend une chanson de mer.`,
+    `Sous la surface turquoise, ${title} découvre un jardin d algues calmes.`,
+  ],
+  vehicles: (title) => [
+    `Le moteur ronronne comme un chat. ${title} boucle sa ceinture imaginaire.`,
+    `La route s ouvre devant ${title}, pleine de virages doux et de paysages.`,
+    `Un train siffle au loin. ${title} compte les wagons qui passent.`,
+  ],
+  spirituality: (title) => [
+    `Quand la maison s apaise, ${title} prend un moment pour remercier la journée.`,
+    `Une lumière douce habite le cœur de ${title}. Tout devient plus calme.`,
+    `Assis près de la fenêtre, ${title} pense à ceux qu il aime.`,
+  ],
 };
 
 const THEME_MIDDLES = {
@@ -300,6 +320,26 @@ const THEME_MIDDLES = {
     'Le cercle du soleil ressemble au zero qui ouvre le comptage.',
     'Deux triangles dos à dos forment une maison de papier.',
     'On trouve un carré dans la fenêtre et un ovale dans le miroir.',
+  ],
+  bedtime: [
+    'Le doudou sent encore le soleil de la journée. Il raconte des souvenirs tièdes.',
+    'On compte trois étoiles à la fenêtre. La quatrième est déjà un rêve.',
+    'La respiration devient une vague lente. La chambre est un bateau sûr.',
+  ],
+  ocean: [
+    'Une méduse transparente danse sans bruit. On la regarde avec respect.',
+    'Les poissons forment un ruban d argent. Personne n est seul dans le courant.',
+    'Un phare clignote au loin. Sa lumière dit : « Tu retrouveras le rivage. »',
+  ],
+  vehicles: [
+    'Les clignotants chantent une petite musique. La route devient un jeu.',
+    'On salue un camion rouge. Le chauffeur répond d un grand sourire.',
+    'À chaque arrêt, on découvre un détail : un oiseau, un panneau, un nuage.',
+  ],
+  spirituality: [
+    'On pense à ceux qui ont été gentils aujourd hui. Le cœur devient plus spacieux.',
+    'Une prière silencieuse ressemble à une couverture posée sur les épaules.',
+    'On pardonne à la petite bêtise du matin. Demain recommence, tout neuf.',
   ],
 };
 

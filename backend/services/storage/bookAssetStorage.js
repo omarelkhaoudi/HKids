@@ -30,19 +30,28 @@ export async function persistBookAsset({
 
   if (useSupabaseStorage && supabase) {
     const objectPath = `${folder}/${filename}`;
-    const { error } = await supabase.storage
-      .from(supabaseBucket)
-      .upload(objectPath, buffer, {
-        contentType: contentTypeForFilename(filename),
-        upsert: true,
-      });
+    try {
+      const { error } = await supabase.storage
+        .from(supabaseBucket)
+        .upload(objectPath, buffer, {
+          contentType: contentTypeForFilename(filename),
+          upsert: true,
+        });
 
-    if (error) {
-      throw new Error(`Supabase upload failed for ${objectPath}: ${error.message}`);
+      if (error) {
+        throw new Error(error.message || 'unknown Supabase storage error');
+      }
+
+      const { data } = supabase.storage.from(supabaseBucket).getPublicUrl(objectPath);
+      if (data?.publicUrl) {
+        return data.publicUrl;
+      }
+    } catch (error) {
+      // Network / DNS / auth blips should not abort catalog seeding.
+      console.warn(
+        `[bookAssetStorage] Supabase upload failed for ${objectPath} (${error.message}). Falling back to local uploads.`
+      );
     }
-
-    const { data } = supabase.storage.from(supabaseBucket).getPublicUrl(objectPath);
-    return data.publicUrl;
   }
 
   await fs.ensureDir(localDir);
