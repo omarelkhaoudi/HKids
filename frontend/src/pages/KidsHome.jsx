@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, useCallback } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { AnimatePresence, motion } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { localizeKidCategories, getKidCategory } from '../constants/kidCategories';
@@ -22,8 +22,6 @@ import { storage } from '../utils/storage';
 import { getKidsContentPath } from '../utils/contentRouting';
 import { useToast } from '../components/ToastProvider';
 import { getRestrictionMessage } from '../services/parental/parentalAccessService';
-import { BookIcon, AudioIcon, SparklesIcon, StarIcon } from '../components/Icons';
-import { getCachedKidProfile } from '../services/cloud/cloudSyncService';
 import { Avatar } from '../components/ui';
 import { KidsTrustBadges } from '../components/kids/KidsTrustBadges';
 import { KidsProfilePanel } from '../components/kids/KidsProfilePanel';
@@ -54,6 +52,11 @@ import {
 } from '../utils/kidsPersonalization';
 import { buildFinishedStories } from '../utils/bookPreview';
 import { KidsHomeProgressStrip } from '../components/kids/KidsHomeProgressStrip';
+import { KidsGuideCompanion } from '../components/kids/KidsGuideCompanion';
+import { KIDS_PICTOGRAMS, getGuideVoicePhrase, getCategoryVoicePhrase } from '../utils/kidsGuidePhrases';
+import { playKidsUiSound } from '../utils/kidsUiSound';
+import { useKidsVoiceGuide } from '../hooks/useKidsVoiceGuide';
+import { getCachedKidProfile } from '../services/cloud/cloudSyncService';
 
 function getRecommendedBooks(sections = []) {
   const recommendedSection = sections.find((section) => section.id === 'recommended_for_you');
@@ -61,10 +64,10 @@ function getRecommendedBooks(sections = []) {
 }
 
 const AUTONOMY_WORLDS = [
-  { id: 'library', path: '/kids/library', icon: BookIcon, labelKey: 'kidsWorldBooks', modality: 'books', tone: 'kids-autonomy-tile--books' },
-  { id: 'audio', path: '/kids/audio', icon: AudioIcon, labelKey: 'kidsWorldAudio', modality: 'audio', tone: 'kids-autonomy-tile--audio' },
-  { id: 'learning', path: '/kids/learning', icon: StarIcon, labelKey: 'kidsWorldLearn', modality: 'learn', tone: 'kids-autonomy-tile--learn' },
-  { id: 'create', path: '/kids/ai-stories', icon: SparklesIcon, labelKey: 'kidsWorldCreate', modality: 'create', studioPath: '/kids/story-studio', tone: 'kids-autonomy-tile--create' },
+  { id: 'library', path: '/kids/library', pictogram: KIDS_PICTOGRAMS.library, labelKey: 'kidsWorldBooks', modality: 'books', tone: 'kids-autonomy-tile--books', voiceKey: 'library' },
+  { id: 'audio', path: '/kids/audio', pictogram: KIDS_PICTOGRAMS.audio, labelKey: 'kidsWorldAudio', modality: 'audio', tone: 'kids-autonomy-tile--audio', voiceKey: 'audio' },
+  { id: 'learning', path: '/kids/learning', pictogram: KIDS_PICTOGRAMS.learn, labelKey: 'kidsWorldLearn', modality: 'learn', tone: 'kids-autonomy-tile--learn', voiceKey: 'learning' },
+  { id: 'create', path: '/kids/ai-stories', pictogram: KIDS_PICTOGRAMS.create, labelKey: 'kidsWorldCreate', modality: 'create', studioPath: '/kids/story-studio', tone: 'kids-autonomy-tile--create', voiceKey: 'explore' },
 ];
 
 const WORLD_CATEGORY_IDS = ['animals', 'space', 'princesses', 'bedtime', 'dinosaurs', 'ocean', 'world', 'colors'];
@@ -89,6 +92,8 @@ function KidsHome() {
   const navigate = useNavigate();
   const location = useLocation();
   const reducedMotion = useReducedMotion();
+  const { speakGuide } = useKidsVoiceGuide(language);
+  const [guideMessage, setGuideMessage] = useState(null);
   const personalization = getKidsPersonalizationProfile();
   const [homeData, setHomeData] = useState(null);
   const [recommendationSections, setRecommendationSections] = useState([]);
@@ -429,16 +434,24 @@ function KidsHome() {
   const carouselProps = useMemo(() => ({
     isRtl,
     showActions: false,
-    hideTitle: false,
+    hideTitle: true,
     hideSectionTitle: false,
+    pictogramMode: true,
     onPlay: handlePlayBook,
     modality: 'books',
-    seeAllLabel: t('seeAll'),
+    seeAllLabel: t('kidsNonReaderSeeAll'),
     onSeeAll: goToLibrary,
   }), [isRtl, handlePlayBook, t, goToLibrary]);
 
+  const handleCategorySelect = useCallback((category) => {
+    const phrase = getCategoryVoicePhrase(category.id, language);
+    setGuideMessage(phrase);
+    speakGuide(phrase);
+  }, [language, speakGuide]);
+
   const lastActivityBook = progressRows[0];
   const lastActivityText = lastActivityBook?.book_title || null;
+  const welcomePhrase = getGuideVoicePhrase('welcome', language);
 
   if (loading) {
     return (
@@ -471,27 +484,11 @@ function KidsHome() {
             className="w-12 h-12 md:w-14 md:h-14 border border-border/40 shadow-soft bg-primary-50 text-primary-700 shrink-0"
           />
           <div className="min-w-0">
-            <AnimatePresence mode="wait">
-              <motion.p
-                key={greeting.primary}
-                className="kids-type-caption"
-                initial={reducedMotion ? false : { opacity: 0, y: 4 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={reducedMotion ? undefined : { opacity: 0, y: -4 }}
-                transition={{ duration: 0.28 }}
-              >
-                {greeting.primary}
-              </motion.p>
-            </AnimatePresence>
-            <p className="kids-type-h1 !text-[1.35rem] md:!text-[1.55rem] truncate">
-              {displayName || greeting.secondary}
+            <p className="kids-type-h1 !text-[1.35rem] md:!text-[1.55rem] truncate flex items-center gap-2">
+              <span aria-hidden="true">{greeting.worldEmoji || '👋'}</span>
+              <span className="sr-only">{greeting.primary}</span>
+              {displayName || ''}
             </p>
-            {displayName && greeting.secondary ? (
-              <p className="kids-type-meta text-foreground-muted truncate mt-0.5">
-                <span aria-hidden="true">{greeting.worldEmoji} </span>
-                {greeting.secondary}
-              </p>
-            ) : null}
           </div>
         </div>
         <Link
@@ -535,6 +532,7 @@ function KidsHome() {
           <KidsContinueRail
             books={continueBooks}
             title={t('kidsHomeContinueAdventures')}
+            emoji={KIDS_PICTOGRAMS.continue}
             isRtl={isRtl}
             t={t}
             onResume={handlePlayBook}
@@ -544,29 +542,27 @@ function KidsHome() {
         {finishedStories.length > 0 && (
           <KidsBookCarousel
             title={t('kidsHomeFinishedStories')}
-            subtitle={t('kidsHomeFinishedSubtitle')}
+            emoji="⭐"
             books={finishedStories}
             {...carouselProps}
           />
         )}
 
-        {/* Onboarding world shelves first — “this library was prepared for me” */}
         {worldShelves.map((shelf) => (
           <KidsBookCarousel
             key={shelf.id}
             title={shelf.title}
-            subtitle={shelf.subtitle}
+            emoji={shelf.emoji || getKidCategory(shelf.categoryId, language)?.pictogram || '📚'}
             books={shelf.books}
             {...carouselProps}
             onSeeAll={() => navigate(`/kids/library?theme=${shelf.categoryId || ''}`)}
           />
         ))}
 
-        {/* Recommended For You — personalized, deduped against world shelves */}
         {recommendedForYou.length > 0 ? (
           <KidsBookCarousel
             title={t('forYou')}
-            subtitle={t('kidsHomeRecommendedSubtitle')}
+            emoji={KIDS_PICTOGRAMS.recommended}
             books={recommendedForYou}
             {...carouselProps}
           />
@@ -580,11 +576,10 @@ function KidsHome() {
           />
         ) : null}
 
-        {/* Early bedtime / audio when goal or music interest fits */}
         {showBedtimeEarly && bedtimeAnnotated.length > 0 && (
           <KidsBookCarousel
             title={t('kidsHomeBedtimeGoal')}
-            subtitle={t('discoverReasonBedtime')}
+            emoji="🌙"
             books={bedtimeAnnotated}
             {...carouselProps}
             onSeeAll={() => navigate('/kids/library?theme=bedtime')}
@@ -594,6 +589,7 @@ function KidsHome() {
         {showAudioEarly && audioDiscoveries.length > 0 && (
           <KidsBookCarousel
             title={t('kidsHomeListenDiscover')}
+            emoji={KIDS_PICTOGRAMS.listen}
             books={audioDiscoveries}
             {...carouselProps}
             modality="audio"
@@ -602,52 +598,54 @@ function KidsHome() {
           />
         )}
 
-        {/* Explore Worlds — favorite worlds first */}
         <motion.section aria-label={t('allCategories')} className="kids-home-primary-shelf" {...getMotionProps(reducedMotion, kidsCarouselReveal)}>
           <div className="mb-space-24 px-space-8 md:px-space-16 flex items-end justify-between gap-space-12">
-            <div>
-              <h2 className="kids-shelf-title !mb-0">
-                <span>{t('kidsWorldsExplore')}</span>
-              </h2>
-              <p className="kids-shelf-subtitle">
-                {personalization.favoriteWorlds.length
-                  ? t('kidsHomeWorldsExploreSubtitle')
-                  : t('discoverCategoriesSubtitle')}
-              </p>
-            </div>
+            <h2 className="kids-shelf-title kids-shelf-title--pictogram !mb-0">
+              <span className="kids-shelf-emoji" aria-hidden="true">🗺️</span>
+              <span className="sr-only">{t('kidsWorldsExplore')}</span>
+            </h2>
             <button
               type="button"
-              onClick={() => navigate('/kids/library')}
-              className="kids-touch-target inline-flex min-h-[56px] items-center rounded-full border border-border/40 bg-card/80 px-space-16 py-space-8 kids-type-caption font-semibold text-primary-700 shadow-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-300"
+              onClick={() => {
+                playKidsUiSound('tap');
+                speakGuide(getGuideVoicePhrase('library', language));
+                navigate('/kids/library');
+              }}
+              className="kids-touch-target kids-see-all-pictogram inline-flex min-h-[56px] min-w-[56px] items-center justify-center rounded-full border border-border/40 bg-card/80 text-2xl shadow-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-300"
+              aria-label={t('seeAll')}
             >
-              {t('seeAll')}
+              <span aria-hidden="true">➡️</span>
             </button>
           </div>
           <div className="kids-discovery-rail pb-space-8 !gap-space-20 md:!gap-space-24">
             {kidCategories.map((category) => (
-              <KidCategoryCard key={category.id} category={category} compact />
+              <KidCategoryCard
+                key={category.id}
+                category={category}
+                compact
+                to={`/kids/category/${category.id}`}
+                onSelect={handleCategorySelect}
+              />
             ))}
           </div>
         </motion.section>
 
-        {/* 5. New Stories */}
         {recentlyAdded.length > 0 && (
           <KidsBookCarousel
             title={t('kidsHomeNewDiscoveries')}
-            subtitle={t('discoverNewSubtitle')}
+            emoji={KIDS_PICTOGRAMS.new}
             books={recentlyAdded}
             {...carouselProps}
           />
         )}
 
-        {/* Secondary discovery — quieter visual weight */}
         <div className="kids-home-secondary-shelves space-y-[inherit]">
           {becauseYouLikedBooks.length > 0 && (
             <KidsBookCarousel
               title={likedTheme
                 ? t('discoverBecauseYouLiked', { theme: likedTheme.shortLabel || likedTheme.label })
                 : t('kidsRecentlyLoved')}
-              subtitle={t('discoverBecauseSubtitle')}
+              emoji={likedTheme?.pictogram || KIDS_PICTOGRAMS.favorites}
               books={becauseYouLikedBooks}
               {...carouselProps}
               modality="favorites"
@@ -657,7 +655,7 @@ function KidsHome() {
           {!showBedtimeEarly && bedtimeAnnotated.length > 0 && (
             <KidsBookCarousel
               title={getKidCategory('bedtime', language)?.label || t('kidsHomeBedtimeGoal')}
-              subtitle={t('discoverReasonBedtime')}
+              emoji="🌙"
               books={bedtimeAnnotated}
               {...carouselProps}
               onSeeAll={() => navigate('/kids/library?theme=bedtime')}
@@ -667,6 +665,7 @@ function KidsHome() {
           {!showAudioEarly && audioDiscoveries.length > 0 && (
             <KidsBookCarousel
               title={t('kidsHomeListenDiscover')}
+              emoji={KIDS_PICTOGRAMS.listen}
               books={audioDiscoveries}
               {...carouselProps}
               modality="audio"
@@ -678,7 +677,7 @@ function KidsHome() {
           {ageCollection.length > 0 && (
             <KidsBookCarousel
               title={t('kidsHomePickedForYou')}
-              subtitle={t('kidsHomeRecommendedSubtitle')}
+              emoji={KIDS_PICTOGRAMS.recommended}
               books={ageCollection}
               {...carouselProps}
             />
@@ -687,41 +686,43 @@ function KidsHome() {
           {seasonalBooks.length > 0 && (
             <KidsBookCarousel
               title={t('discoverSeasonal')}
-              subtitle={t('discoverSeasonalSubtitle')}
+              emoji="🍂"
               books={seasonalBooks}
               {...carouselProps}
             />
           )}
         </div>
 
-        {/* Autonomy worlds — illustration-first tiles, no emoji game buttons */}
         <motion.section
           aria-label={t('kidsAutonomyWorlds')}
           className="kids-home-autonomy"
           {...getMotionProps(reducedMotion, kidsCarouselReveal)}
         >
-          <h2 className="kids-shelf-title mb-space-20 px-space-8 md:px-space-16">
-            <span>{t('kidsAutonomyWorlds')}</span>
+          <h2 className="kids-shelf-title kids-shelf-title--pictogram mb-space-20 px-space-8 md:px-space-16">
+            <span className="kids-shelf-emoji" aria-hidden="true">🌈</span>
+            <span className="sr-only">{t('kidsAutonomyWorlds')}</span>
           </h2>
           <div className="kids-discovery-rail !gap-space-16 md:!gap-space-20">
-            {autonomyWorlds.map((world) => {
-              const WorldIcon = world.icon;
-              return (
-                <motion.button
-                  key={world.id}
-                  type="button"
-                  {...getHoverMotion(reducedMotion, kidsHoverLift)}
-                  onClick={() => navigate(world.path)}
-                  className={`kids-autonomy-tile ${world.tone} shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-300`}
-                  aria-label={t(world.labelKey)}
-                >
-                  <span className="kids-autonomy-tile-icon" aria-hidden="true">
-                    <WorldIcon className="h-7 w-7" />
-                  </span>
-                  <span className="kids-autonomy-tile-label">{t(world.labelKey)}</span>
-                </motion.button>
-              );
-            })}
+            {autonomyWorlds.map((world) => (
+              <motion.button
+                key={world.id}
+                type="button"
+                {...getHoverMotion(reducedMotion, kidsHoverLift)}
+                onClick={() => {
+                  playKidsUiSound('tap');
+                  if (world.voiceKey) speakGuide(getGuideVoicePhrase(world.voiceKey, language));
+                  navigate(world.path);
+                }}
+                className={`kids-autonomy-tile kids-autonomy-tile--pictogram ${world.tone} shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-300`}
+                aria-label={t(world.labelKey)}
+                title={t(world.labelKey)}
+              >
+                <span className="kids-autonomy-tile-pictogram" aria-hidden="true">
+                  {world.pictogram}
+                </span>
+                <span className="sr-only">{t(world.labelKey)}</span>
+              </motion.button>
+            ))}
           </div>
         </motion.section>
 
@@ -746,6 +747,13 @@ function KidsHome() {
 
         <KidsTrustBadges t={t} compact className="opacity-60" />
       </main>
+
+      <KidsGuideCompanion
+        mood="wave"
+        message={guideMessage || welcomePhrase}
+        speakOnMount
+        speakText={welcomePhrase}
+      />
 
       <VoiceAssistant onNavigate={(path) => navigate(path)} />
     </KidsPageShell>

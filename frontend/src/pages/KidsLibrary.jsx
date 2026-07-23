@@ -383,9 +383,10 @@ function KidsLibrary() {
     onFavorite: toggleFavorite,
     onDownload: handleDownloadBook,
     showActions: true,
-    hideTitle: false,
+    hideTitle: true,
+    pictogramMode: true,
     modality: 'books',
-    seeAllLabel: t('seeAll'),
+    seeAllLabel: t('kidsNonReaderSeeAll'),
   }), [
     isRtl,
     favoritesIds,

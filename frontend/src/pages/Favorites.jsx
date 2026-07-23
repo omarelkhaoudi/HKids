@@ -111,7 +111,8 @@ function Favorites() {
         books={favoriteBooks}
         isRtl={isRtl}
         showActions
-        hideTitle={false}
+        hideTitle
+        pictogramMode
         modality="favorites"
         onPlay={(book) => navigate(getKidsContentPath(book))}
         onFavorite={(bookId) => removeFavorite(bookId)}

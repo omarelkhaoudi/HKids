@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { useReducedMotion } from '../../hooks/useReducedMotion';
 import { getHoverMotion } from '../../constants/kidsMotion';
 import { LOCAL_BOOK_COVERS_BASE } from '../../utils/bookCover';
+import { playKidsUiSound } from '../../utils/kidsUiSound';
 
 const WORLD_TONE = {
   animals: 'kids-world-destination--animals',
@@ -21,7 +22,6 @@ const WORLD_TONE = {
   vehicles: 'kids-world-destination--default',
 };
 
-/** Theme art used as soft destination backdrop (not the product cover). */
 const WORLD_ART = {
   animals: 'animals',
   space: 'space',
@@ -55,7 +55,7 @@ const OBJECT_POSITION = {
   jobs: '50% 45%',
 };
 
-export function KidCategoryCard({ category, to, compact = false }) {
+export function KidCategoryCard({ category, to, compact = false, onSelect }) {
   const destination = to || `/kids/library?theme=${category.id}`;
   const reducedMotion = useReducedMotion();
   const toneClass = WORLD_TONE[category.id] || 'kids-world-destination--default';
@@ -71,8 +71,13 @@ export function KidCategoryCard({ category, to, compact = false }) {
       <Link
         to={destination}
         aria-label={category.label}
-        className={`kids-world-destination ${toneClass} group focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-400 kids-touch-target ${
-          compact ? 'w-[8.25rem] sm:w-[9rem]' : 'w-full min-h-[11rem]'
+        title={category.label}
+        onClick={() => {
+          playKidsUiSound('tap');
+          onSelect?.(category);
+        }}
+        className={`kids-world-destination kids-world-destination--pictogram ${toneClass} group focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-400 kids-touch-target ${
+          compact ? 'w-[8.5rem] sm:w-[9.5rem]' : 'w-full min-h-[12rem]'
         }`}
       >
         <img
@@ -85,14 +90,10 @@ export function KidCategoryCard({ category, to, compact = false }) {
           style={{ objectPosition }}
         />
         <span className="kids-world-destination-veil" aria-hidden="true" />
-        <div className="relative z-10 mt-auto w-full text-center px-1.5 pb-0.5">
-          <h3 className="kids-world-destination-title">
-            {category.shortLabel || category.label}
-          </h3>
-          {category.cue ? (
-            <p className="kids-world-destination-cue">{category.cue}</p>
-          ) : null}
-        </div>
+        <span className="kids-world-pictogram kids-world-pictogram--hero" aria-hidden="true">
+          {category.pictogram}
+        </span>
+        <span className="sr-only">{category.shortLabel || category.label}</span>
       </Link>
     </motion.div>
   );
