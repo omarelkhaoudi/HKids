@@ -1271,6 +1271,98 @@
     }
   }
 
+  .kids-library-filter-row {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 0.55rem;
+    overflow-x: auto;
+    padding-bottom: 0.15rem;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .kids-library-filter-chip {
+    min-height: 52px;
+    min-width: 52px;
+    border-radius: 999px;
+    border: 1px solid color-mix(in srgb, #d9d0c4 48%, transparent);
+    background: color-mix(in srgb, #fffaf3 90%, transparent);
+    box-shadow: var(--shadow-soft);
+    display: inline-grid;
+    place-items: center;
+    font-size: 1.35rem;
+    flex-shrink: 0;
+    scroll-snap-align: start;
+    transition: background 160ms ease, border-color 160ms ease, transform 160ms ease;
+  }
+
+  .kids-library-filter-chip.is-active {
+    background: color-mix(in srgb, var(--color-primary-100) 80%, white);
+    border-color: color-mix(in srgb, var(--color-primary-300) 65%, transparent);
+    transform: translateY(-1px);
+  }
+
+  .kids-library-filter-chip:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary-300) 55%, transparent);
+  }
+
+  .kids-continue-ring-wrap {
+    position: absolute;
+    inset-inline-end: 0.45rem;
+    bottom: 0.55rem;
+    z-index: 14;
+    width: 2.65rem;
+    height: 2.65rem;
+    display: grid;
+    place-items: center;
+  }
+
+  .kids-continue-ring {
+    width: 100%;
+    height: 100%;
+    transform: rotate(-90deg);
+  }
+
+  .kids-continue-ring-track {
+    fill: none;
+    stroke: rgba(255, 255, 255, 0.45);
+    stroke-width: 4;
+  }
+
+  .kids-continue-ring-value {
+    fill: none;
+    stroke: #f5b942;
+    stroke-width: 4;
+    stroke-linecap: round;
+  }
+
+  .kids-continue-ring-label {
+    position: absolute;
+    font-size: 0.62rem;
+    font-weight: 800;
+    color: white;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+  }
+
+  .kids-continue-remaining {
+    position: absolute;
+    inset-inline-start: 0.45rem;
+    bottom: 0.55rem;
+    z-index: 14;
+    border-radius: 999px;
+    background: color-mix(in srgb, #fffaf3 90%, transparent);
+    color: var(--color-primary-800);
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 0.2rem 0.45rem;
+    box-shadow: 0 4px 10px -4px rgba(36, 50, 74, 0.28);
+  }
+
+  .kids-category-hero {
+    margin-bottom: 1.25rem;
+  }
+
   .kids-library-shell.kids-hero-glow,
   .kids-home-shell.kids-hero-glow {
     background:

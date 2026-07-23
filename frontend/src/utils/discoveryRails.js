@@ -84,3 +84,85 @@ export function isShortStory(book) {
   if (seconds > 0 && seconds <= 300) return true;
   return false;
 }
+
+export function isAudioBook(book) {
+  return Boolean(book?.audio_url)
+    || book?.content_type === 'song'
+    || book?.content_type === 'audio_story';
+}
+
+export function isPremiumBook(book) {
+  return book?.is_premium === true || book?.is_premium === 1;
+}
+
+export function estimateRemainingMinutes(book, progressPercent = 0) {
+  const progress = Math.min(100, Math.max(0, Number(progressPercent) || 0));
+  const totalSeconds = Number(book?.duration_seconds || 0);
+  const totalMinutes = Number(book?.duration_minutes || 0)
+    || (totalSeconds > 0 ? Math.max(1, Math.round(totalSeconds / 60)) : 0)
+    || (Number(book?.page_count || 0) > 0 ? Math.max(1, Math.round(Number(book.page_count) * 0.75)) : 0);
+  if (!totalMinutes) return null;
+  const remaining = Math.ceil(totalMinutes * ((100 - progress) / 100));
+  return Math.max(1, remaining);
+}
+
+function daySeed(date = new Date()) {
+  return `${date.getUTCFullYear()}-${date.getUTCMonth()}-${date.getUTCDate()}`;
+}
+
+function hashSeed(text = '') {
+  let hash = 2166136261;
+  for (let i = 0; i < text.length; i += 1) {
+    hash ^= text.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+  return hash >>> 0;
+}
+
+export function pickDailyFeatured(books = [], date = new Date()) {
+  if (!books.length) return null;
+  const index = hashSeed(daySeed(date)) % books.length;
+  return books[index] || null;
+}
+
+export function pickEditorsChoice(books = [], limit = 12) {
+  const curated = books.filter((book) => (
+    book.is_recommended === true
+    || book.is_recommended === 1
+    || isPremiumBook(book)
+  ));
+  const pool = curated.length ? curated : books;
+  return pool.slice(0, limit);
+}
+
+export function pickPopularThisWeek(books = [], limit = 15) {
+  const scored = [...books].sort((a, b) => {
+    const score = (book) => (
+      (book.is_popular === true || book.is_popular === 1 ? 4 : 0)
+      + (book.is_recommended === true || book.is_recommended === 1 ? 2 : 0)
+      + (book.is_new === true || book.is_new === 1 ? 1 : 0)
+      + (isPremiumBook(book) ? 1 : 0)
+    );
+    return score(b) - score(a);
+  });
+  return scored.slice(0, limit);
+}
+
+export function pickRandomExplore(books = [], limit = 10, seedText = daySeed()) {
+  if (!books.length) return [];
+  const seeded = [...books]
+    .map((book, index) => ({
+      book,
+      rank: hashSeed(`${seedText}:${book.id || index}`),
+    }))
+    .sort((a, b) => a.rank - b.rank);
+  return seeded.slice(0, limit).map((entry) => entry.book);
+}
+
+export function filterAudioBooks(books = [], limit = 15) {
+  return books.filter(isAudioBook).slice(0, limit);
+}
+
+export function filterPremiumBooks(books = [], limit = 15) {
+  return books.filter(isPremiumBook).slice(0, limit);
+}

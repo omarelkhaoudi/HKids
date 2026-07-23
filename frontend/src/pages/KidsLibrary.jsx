@@ -18,7 +18,6 @@ import { KidsThemePill } from '../components/kids/KidsThemePill';
 import { KidsCategoryAtmosphere } from '../components/kids/KidsCategoryAtmosphere';
 import { KidsHeroStoryCard } from '../components/kids/KidsHeroStoryCard';
 import { KidsContinueRail } from '../components/kids/KidsContinueRail';
-import { ChevronLeftIcon } from '../components/Icons';
 import { Logo } from '../components/Logo';
 import { BookGridSkeleton } from '../components/SkeletonLoader';
 import { KidsBottomNav } from '../components/kids/KidsBottomNav';
@@ -32,9 +31,15 @@ import { getMotionProps, kidsPageEnter } from '../constants/kidsMotion';
 import { getKidsContentPath } from '../utils/contentRouting';
 import {
   annotateBooksWithReasons,
+  filterAudioBooks,
+  filterPremiumBooks,
   filterSeasonalBooks,
   inferLikedThemeId,
   isShortStory,
+  pickDailyFeatured,
+  pickEditorsChoice,
+  pickPopularThisWeek,
+  pickRandomExplore,
   withDiscoveryReason,
 } from '../utils/discoveryRails';
 import {
@@ -46,9 +51,30 @@ import {
   reorderThemesByWorlds,
 } from '../utils/kidsPersonalization';
 import { getCategoryContentStrategy, bookMatchesKidCategory } from '../utils/kidCategoryContent';
+import { KidsGuideCompanion } from '../components/kids/KidsGuideCompanion';
+import { getGuideVoicePhrase, KIDS_PICTOGRAMS } from '../utils/kidsGuidePhrases';
+import { playKidsUiSound } from '../utils/kidsUiSound';
+import { useKidsVoiceGuide } from '../hooks/useKidsVoiceGuide';
 
-const SHELF_THEME_IDS = ['animals', 'bedtime', 'princesses', 'ocean', 'dinosaurs', 'space', 'vehicles', 'world'];
+const SHELF_THEME_IDS = [
+  'dinosaurs',
+  'space',
+  'animals',
+  'bedtime',
+  'princesses',
+  'ocean',
+  'world',
+  'spirituality',
+  'colors',
+  'vehicles',
+];
 const RECENT_SEARCHES_KEY = 'hkids_recent_library_searches';
+const AGE_FILTERS = [
+  { id: 'all', labelKey: 'allCategories', pictogram: '🧒' },
+  { id: '2-4', min: 2, max: 4, pictogram: '🌱' },
+  { id: '5-7', min: 5, max: 7, pictogram: '📘' },
+  { id: '8-10', min: 8, max: 10, pictogram: '🚀' },
+];
 
 function inferTheme(book, childThemes) {
   if (book.theme) return book.theme;
@@ -89,6 +115,7 @@ function KidsLibrary() {
   const { showToast } = useToast();
   const { language, isRtl, t } = useLanguage();
   const reducedMotion = useReducedMotion();
+  const { speakGuide } = useKidsVoiceGuide(language);
   const personalization = useMemo(() => getKidsPersonalizationProfile(), []);
   const [books, setBooks] = useState([]);
   const completedBookIds = useMemo(() => collectCompletedBookIds(), [books]);
@@ -112,6 +139,10 @@ function KidsLibrary() {
   const [loading, setLoading] = useState(true);
   const [recommendationSections, setRecommendationSections] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [filterAudio, setFilterAudio] = useState(false);
+  const [filterPremium, setFilterPremium] = useState(false);
+  const [filterFavorites, setFilterFavorites] = useState(false);
+  const [ageFilter, setAgeFilter] = useState('all');
   const [recentSearches, setRecentSearches] = useState(() => {
     try {
       const stored = JSON.parse(window.localStorage.getItem(RECENT_SEARCHES_KEY) || '[]');
@@ -200,12 +231,31 @@ function KidsLibrary() {
 
   const visibleBooks = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
-    if (!q) return taggedBooks;
+    const ageBand = AGE_FILTERS.find((item) => item.id === ageFilter);
     return taggedBooks.filter((book) => {
-      const hay = [book.title, book.description, book.author, book.category_name].filter(Boolean).join(' ').toLowerCase();
-      return hay.includes(q);
+      if (q) {
+        const hay = [book.title, book.description, book.author, book.category_name, book.theme]
+          .filter(Boolean)
+          .join(' ')
+          .toLowerCase();
+        if (!hay.includes(q)) return false;
+      }
+      if (filterFavorites && !favoritesIds.includes(book.id)) return false;
+      if (filterAudio && !(book.audio_url || book.content_type === 'song' || book.content_type === 'audio_story')) {
+        return false;
+      }
+      if (filterPremium && !(book.is_premium === true || book.is_premium === 1)) return false;
+      if (ageBand && ageBand.id !== 'all') {
+        const min = Number(book.age_group_min);
+        const max = Number(book.age_group_max);
+        const bookMin = Number.isFinite(min) ? min : max;
+        const bookMax = Number.isFinite(max) ? max : min;
+        if (!Number.isFinite(bookMin) || !Number.isFinite(bookMax)) return false;
+        if (bookMax < ageBand.min || bookMin > ageBand.max) return false;
+      }
+      return true;
     });
-  }, [taggedBooks, searchQuery]);
+  }, [taggedBooks, searchQuery, filterFavorites, filterAudio, filterPremium, ageFilter, favoritesIds]);
 
   const discoveryPool = useMemo(
     () => excludeBookIds(visibleBooks, completedBookIds),
@@ -275,10 +325,33 @@ function KidsLibrary() {
   );
 
   const popularBooks = useMemo(
-    () => discoveryPool
-      .filter((book) => book.is_popular === true || book.is_popular === 1 || book.is_recommended === true || book.is_recommended === 1)
-      .slice(0, 15),
+    () => pickPopularThisWeek(discoveryPool, 15),
     [discoveryPool],
+  );
+
+  const dailyFeatured = useMemo(
+    () => pickDailyFeatured(discoveryPool),
+    [discoveryPool],
+  );
+
+  const editorsChoice = useMemo(
+    () => annotateBooksWithReasons(pickEditorsChoice(discoveryPool, 12), t('kidsEditorsChoice')),
+    [discoveryPool, t],
+  );
+
+  const randomExplore = useMemo(
+    () => annotateBooksWithReasons(pickRandomExplore(discoveryPool, 10), t('kidsSurpriseExplore')),
+    [discoveryPool, t],
+  );
+
+  const audioFavorites = useMemo(
+    () => annotateBooksWithReasons(filterAudioBooks(discoveryPool, 15), t('kidsAudioFavorites')),
+    [discoveryPool, t],
+  );
+
+  const premiumShelf = useMemo(
+    () => annotateBooksWithReasons(filterPremiumBooks(discoveryPool, 12), t('kidsPremiumShelf')),
+    [discoveryPool, t],
   );
 
   const orderedShelfThemeIds = useMemo(
@@ -414,12 +487,30 @@ function KidsLibrary() {
     [favoriteBooks, t],
   );
   const popularAnnotated = useMemo(
-    () => annotateBooksWithReasons(popularBooks, t('forYou')),
+    () => annotateBooksWithReasons(popularBooks, t('kidsPopularThisWeek')),
     [popularBooks, t],
   );
   const seasonalAnnotated = useMemo(
     () => annotateBooksWithReasons(filterSeasonalBooks(discoveryPool), t('discoverSeasonal')),
     [discoveryPool, t],
+  );
+  const dailyAnnotated = useMemo(
+    () => (dailyFeatured ? [withDiscoveryReason(dailyFeatured, t('kidsDailyPick'))] : []),
+    [dailyFeatured, t],
+  );
+  const themeContinueBooks = useMemo(
+    () => continueBooks.filter((book) => book._themeId === selectedTheme).slice(0, 8),
+    [continueBooks, selectedTheme],
+  );
+  const themePopularBooks = useMemo(
+    () => pickPopularThisWeek(themeBooks, 12),
+    [themeBooks],
+  );
+  const themeNewBooks = useMemo(
+    () => [...themeBooks]
+      .sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0))
+      .slice(0, 12),
+    [themeBooks],
   );
   const downloadedBooks = useMemo(
     () => visibleBooks.filter((book) => {
@@ -432,11 +523,47 @@ function KidsLibrary() {
     () => Object.values(offlineContent.progressById || {}).filter((value) => Number(value) > 0 && Number(value) < 100).length,
     [offlineContent.progressById],
   );
-  const noSearchResults = searchQuery.trim().length > 0 && visibleBooks.length === 0;
+  const noSearchResults = (
+    (searchQuery.trim().length > 0 || filterAudio || filterPremium || filterFavorites || ageFilter !== 'all')
+    && visibleBooks.length === 0
+  );
 
   const libraryTitle = selectedTheme === 'all'
     ? t('library')
     : (activeThemeData?.shortLabel || activeThemeData?.label);
+
+  const clearFilters = () => {
+    setSearchQuery('');
+    setFilterAudio(false);
+    setFilterPremium(false);
+    setFilterFavorites(false);
+    setAgeFilter('all');
+    handleThemeChange('all');
+  };
+
+  const quickFilters = [
+    {
+      id: 'audio',
+      active: filterAudio,
+      pictogram: KIDS_PICTOGRAMS.listen,
+      label: t('kidsFilterAudio'),
+      onClick: () => setFilterAudio((value) => !value),
+    },
+    {
+      id: 'premium',
+      active: filterPremium,
+      pictogram: '✨',
+      label: t('kidsFilterPremium'),
+      onClick: () => setFilterPremium((value) => !value),
+    },
+    {
+      id: 'favorites',
+      active: filterFavorites,
+      pictogram: KIDS_PICTOGRAMS.favorites,
+      label: t('kidsFilterFavorites'),
+      onClick: () => setFilterFavorites((value) => !value),
+    },
+  ];
 
   return (
     <KidsPageShell
@@ -459,17 +586,20 @@ function KidsLibrary() {
         <div className="flex items-center gap-space-12 min-w-0">
           <button
             type="button"
-            onClick={() => navigate('/kids')}
+            onClick={() => {
+              playKidsUiSound('tap');
+              navigate('/kids');
+            }}
             className="kids-reader-toolbar-btn !bg-card/70"
             aria-label={t('home')}
           >
-            <ChevronLeftIcon className={`h-6 w-6 ${isRtl ? 'rotate-180' : ''}`} />
+            <span className="text-xl" aria-hidden="true">{KIDS_PICTOGRAMS.back}</span>
           </button>
-          <div className="min-w-0">
-            <p className="kids-type-caption">{t('library')}</p>
-            <h1 className="kids-type-h1 !text-[1.35rem] md:!text-[1.55rem] truncate">
-              {libraryTitle}
-            </h1>
+          <div className="min-w-0 flex items-center gap-2">
+            <span className="text-3xl" aria-hidden="true">
+              {selectedTheme === 'all' ? KIDS_PICTOGRAMS.library : (activeThemeData?.pictogram || '📚')}
+            </span>
+            <h1 className="sr-only">{libraryTitle}</h1>
           </div>
         </div>
         <Link
@@ -492,18 +622,42 @@ function KidsLibrary() {
             aria-label={t('library')}
           />
 
+          <div className="kids-library-filter-row" role="toolbar" aria-label={t('kidsLibraryFilters')}>
+            {quickFilters.map((filter) => (
+              <button
+                key={filter.id}
+                type="button"
+                onClick={() => {
+                  playKidsUiSound('tap');
+                  filter.onClick();
+                }}
+                className={`kids-library-filter-chip ${filter.active ? 'is-active' : ''}`}
+                aria-pressed={filter.active}
+                title={filter.label}
+              >
+                <span aria-hidden="true">{filter.pictogram}</span>
+                <span className="sr-only">{filter.label}</span>
+              </button>
+            ))}
+            {AGE_FILTERS.map((band) => (
+              <button
+                key={band.id}
+                type="button"
+                onClick={() => {
+                  playKidsUiSound('tap');
+                  setAgeFilter(band.id);
+                }}
+                className={`kids-library-filter-chip ${ageFilter === band.id ? 'is-active' : ''}`}
+                aria-pressed={ageFilter === band.id}
+                title={band.id === 'all' ? t('kidsFilterAllAges') : band.id}
+              >
+                <span aria-hidden="true">{band.pictogram}</span>
+                <span className="sr-only">{band.id === 'all' ? t('kidsFilterAllAges') : band.id}</span>
+              </button>
+            ))}
+          </div>
+
           <div className="kids-library-search-discovery kids-premium-panel">
-            <div className="kids-library-search-copy">
-              <p className="kids-type-caption">{t('search')}</p>
-              <h2 className="kids-shelf-title !mb-space-8">
-                {searchQuery.trim() ? `✨ ${searchQuery.trim()}` : t('kidsDiscoverToday')}
-              </h2>
-              <p className="kids-shelf-subtitle !mx-0">
-                {searchQuery.trim()
-                  ? t('discoverRecommendedSubtitle')
-                  : t('librarySearchHint')}
-              </p>
-            </div>
             {recentSearches.length > 0 && (
               <div className="kids-library-search-group">
                 <p className="kids-library-search-label">{t('recentSearches')}</p>
@@ -512,7 +666,10 @@ function KidsLibrary() {
                     <button
                       key={item}
                       type="button"
-                      onClick={() => setSearchQuery(item)}
+                      onClick={() => {
+                        playKidsUiSound('tap');
+                        setSearchQuery(item);
+                      }}
                       className="kids-library-search-chip"
                     >
                       {item}
@@ -524,18 +681,21 @@ function KidsLibrary() {
             <div className="kids-library-search-group">
               <p className="kids-library-search-label">{t('popularCategories')}</p>
               <div className="kids-library-search-chips">
-                {childThemes.filter((theme) => theme.id !== 'all').slice(0, 5).map((theme) => (
+                {childThemes.filter((theme) => theme.id !== 'all').slice(0, 6).map((theme) => (
                   <button
                     key={theme.id}
                     type="button"
                     onClick={() => {
+                      playKidsUiSound('tap');
                       handleThemeChange(theme.id);
                       saveRecentSearch(theme.label);
+                      speakGuide(getGuideVoicePhrase('library', language));
                     }}
                     className="kids-library-search-chip kids-library-search-chip--theme"
+                    aria-label={theme.label}
+                    title={theme.label}
                   >
                     <span aria-hidden="true">{theme.pictogram}</span>
-                    {theme.shortLabel || theme.label}
                   </button>
                 ))}
               </div>
@@ -558,7 +718,10 @@ function KidsLibrary() {
                 key={theme.id}
                 theme={theme}
                 isActive={selectedTheme === theme.id}
-                onClick={() => handleThemeChange(theme.id)}
+                onClick={() => {
+                  playKidsUiSound('tap');
+                  handleThemeChange(theme.id);
+                }}
               />
             ))}
           </div>
@@ -595,17 +758,14 @@ function KidsLibrary() {
             title={t('nothingFound')}
             description={t('tryAnotherWord')}
             actionLabel={t('allCategories')}
-            onAction={() => {
-              setSearchQuery('');
-              handleThemeChange('all');
-            }}
+            onAction={clearFilters}
             showMascot
             mascotMood="encourage"
           />
           {todayAnnotated.length > 0 && (
             <KidsBookCarousel
               title={t('forYou')}
-              subtitle={t('discoverRecommendedSubtitle')}
+              emoji={KIDS_PICTOGRAMS.recommended}
               books={todayAnnotated.slice(0, 8)}
               {...carouselProps}
               seeAllLabel={null}
@@ -643,6 +803,16 @@ function KidsLibrary() {
           </>
         ) : (
             <>
+              {themeContinueBooks.length > 0 && (
+                <KidsContinueRail
+                  books={themeContinueBooks}
+                  title={t('continueReading')}
+                  emoji={KIDS_PICTOGRAMS.continue}
+                  isRtl={isRtl}
+                  t={t}
+                  onResume={handlePlayBook}
+                />
+              )}
               {featuredHeroBook && (
                 <KidsHeroStoryCard
                   book={featuredHeroBook}
@@ -655,8 +825,24 @@ function KidsLibrary() {
                 />
               )}
               <KidsBookCarousel
+                title={t('forYou')}
+                emoji={KIDS_PICTOGRAMS.recommended}
+                books={annotateBooksWithReasons(themePopularBooks.length ? themePopularBooks : themeBooks.slice(0, 12), activeThemeData?.shortLabel || activeThemeData?.label)}
+                {...carouselProps}
+                onSeeAll={() => handleThemeChange('all')}
+              />
+              {themeNewBooks.length > 0 && (
+                <KidsBookCarousel
+                  title={t('newBooks')}
+                  emoji={KIDS_PICTOGRAMS.new}
+                  books={annotateBooksWithReasons(themeNewBooks, t('discoverReasonNew'))}
+                  {...carouselProps}
+                  seeAllLabel={null}
+                />
+              )}
+              <KidsBookCarousel
                 title={activeThemeData?.shortLabel || activeThemeData?.label}
-                subtitle={t('discoverCategoriesSubtitle')}
+                emoji={activeThemeData?.pictogram || '📚'}
                 books={annotateBooksWithReasons(themeBooks, activeThemeData?.shortLabel || activeThemeData?.label)}
                 {...carouselProps}
                 onSeeAll={() => handleThemeChange('all')}
@@ -670,20 +856,24 @@ function KidsLibrary() {
                 books={continueBooks}
                 title={t('continueReading')}
                 subtitle={continueSubtitle}
+                emoji={KIDS_PICTOGRAMS.continue}
                 isRtl={isRtl}
                 t={t}
                 onResume={handlePlayBook}
               />
             )}
 
-            {featuredHeroBook && !featuredHeroBook.isInProgress && (
+            {dailyAnnotated.length > 0 && (
               <KidsHeroStoryCard
-                book={featuredHeroBook}
+                book={{
+                  ...dailyAnnotated[0],
+                  progress: Number(dailyAnnotated[0].kid_progress_percent || 0),
+                }}
                 isRtl={isRtl}
                 t={t}
                 onRead={handlePlayBook}
                 onListen={handleListenBook}
-                badgeLabel={t('kidsStoriesToday')}
+                badgeLabel={t('kidsDailyPick')}
                 onEmptyAction={() => handleThemeChange('all')}
               />
             )}
@@ -691,8 +881,38 @@ function KidsLibrary() {
             {todayAnnotated.length > 0 && (
               <KidsBookCarousel
                 title={t('forYou')}
-                subtitle={t('discoverRecommendedSubtitle')}
+                emoji={KIDS_PICTOGRAMS.recommended}
                 books={todayAnnotated}
+                {...carouselProps}
+                seeAllLabel={null}
+              />
+            )}
+
+            {popularAnnotated.length > 0 && (
+              <KidsBookCarousel
+                title={t('kidsPopularThisWeek')}
+                emoji="🔥"
+                books={popularAnnotated}
+                {...carouselProps}
+                seeAllLabel={null}
+              />
+            )}
+
+            {newAnnotated.length > 0 && (
+              <KidsBookCarousel
+                title={t('newBooks')}
+                emoji={KIDS_PICTOGRAMS.new}
+                books={newAnnotated}
+                {...carouselProps}
+                seeAllLabel={null}
+              />
+            )}
+
+            {editorsChoice.length > 0 && (
+              <KidsBookCarousel
+                title={t('kidsEditorsChoice')}
+                emoji="💎"
+                books={editorsChoice}
                 {...carouselProps}
                 seeAllLabel={null}
               />
@@ -703,29 +923,21 @@ function KidsLibrary() {
                 title={likedTheme
                   ? t('discoverBecauseYouLiked', { theme: likedTheme.shortLabel || likedTheme.label })
                   : t('discoverBecauseSubtitle')}
-                subtitle={t('discoverBecauseSubtitle')}
+                emoji={likedTheme?.pictogram || '⭐'}
                 books={becauseYouLikedBooks}
                 {...carouselProps}
                 seeAllLabel={null}
               />
             )}
 
-            {newAnnotated.length > 0 && (
+            {audioFavorites.length > 0 && (
               <KidsBookCarousel
-                title={t('newBooks')}
-                subtitle={t('discoverNewSubtitle')}
-                books={newAnnotated}
+                title={t('kidsAudioFavorites')}
+                emoji={KIDS_PICTOGRAMS.listen}
+                books={audioFavorites}
                 {...carouselProps}
-                seeAllLabel={null}
-              />
-            )}
-
-            {popularAnnotated.length > 0 && (
-              <KidsBookCarousel
-                title={t('popularStories')}
-                subtitle={t('discoverRecommendedSubtitle')}
-                books={popularAnnotated}
-                {...carouselProps}
+                modality="audio"
+                onPlay={handleListenBook}
                 seeAllLabel={null}
               />
             )}
@@ -733,10 +945,30 @@ function KidsLibrary() {
             {favoriteAnnotated.length > 0 && (
               <KidsBookCarousel
                 title={t('yourFavorites')}
-                subtitle={t('discoverBecauseSubtitle')}
+                emoji={KIDS_PICTOGRAMS.favorites}
                 books={favoriteAnnotated}
                 {...carouselProps}
                 modality="favorites"
+                seeAllLabel={null}
+              />
+            )}
+
+            {premiumShelf.length > 0 && (
+              <KidsBookCarousel
+                title={t('kidsPremiumShelf')}
+                emoji="✨"
+                books={premiumShelf}
+                {...carouselProps}
+                seeAllLabel={null}
+              />
+            )}
+
+            {randomExplore.length > 0 && (
+              <KidsBookCarousel
+                title={t('kidsSurpriseExplore')}
+                emoji="🎲"
+                books={randomExplore}
+                {...carouselProps}
                 seeAllLabel={null}
               />
             )}
@@ -745,7 +977,7 @@ function KidsLibrary() {
               {seasonalAnnotated.length > 0 && (
                 <KidsBookCarousel
                   title={t('discoverSeasonal')}
-                  subtitle={t('discoverSeasonalSubtitle')}
+                  emoji="🍂"
                   books={seasonalAnnotated}
                   {...carouselProps}
                   seeAllLabel={null}
@@ -756,7 +988,7 @@ function KidsLibrary() {
                 <KidsBookCarousel
                   key={theme.id}
                   title={theme.shortLabel || theme.label}
-                  subtitle={theme.cue || t('discoverCategoriesSubtitle')}
+                  emoji={theme.pictogram}
                   books={annotateBooksWithReasons(shelfBooks, theme.shortLabel || theme.label)}
                   {...carouselProps}
                   onSeeAll={() => handleThemeChange(theme.id)}
@@ -771,6 +1003,13 @@ function KidsLibrary() {
         <KidsFamilyMessages />
         <KidsTrustBadges t={t} compact className="opacity-55" />
       </main>
+
+      <KidsGuideCompanion
+        mood="encourage"
+        message={getGuideVoicePhrase('library', language)}
+        speakOnMount
+        speakText={getGuideVoicePhrase('library', language)}
+      />
 
       <VoiceAssistant language={language === 'en' ? 'en-US' : language === 'ar' ? 'ar-MA' : 'fr-FR'} onNavigate={(path) => navigate(path)} />
     </KidsPageShell>
