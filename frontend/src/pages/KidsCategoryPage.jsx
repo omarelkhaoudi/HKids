@@ -8,12 +8,12 @@ import { getKidCategory } from '../constants/kidCategories';
 import { getCategoryContentStrategy, bookMatchesKidCategory } from '../utils/kidCategoryContent';
 import { getKidsContentPath } from '../utils/contentRouting';
 import { storage } from '../utils/storage';
-import { ChevronLeftIcon, PlayIcon } from '../components/Icons';
 import { Logo } from '../components/Logo';
 import { VoiceAssistant } from '../components/kids/VoiceAssistant';
 import { KidsBottomNav } from '../components/kids/KidsBottomNav';
 import { KidsPageShell } from '../components/kids/KidsPageShell';
 import { KidsBookCarousel } from '../components/kids/KidsBookCarousel';
+import { KidsContinueRail } from '../components/kids/KidsContinueRail';
 import { KidsEmptyState } from '../components/kids/KidsEmptyState';
 import { KidsCategoryAtmosphere } from '../components/kids/KidsCategoryAtmosphere';
 import { KidsGuideCompanion } from '../components/kids/KidsGuideCompanion';
@@ -24,6 +24,10 @@ import { getMotionProps, kidsCategoryEnter } from '../constants/kidsMotion';
 import { getCategoryVoicePhrase, KIDS_PICTOGRAMS } from '../utils/kidsGuidePhrases';
 import { playKidsUiSound } from '../utils/kidsUiSound';
 import { useKidsVoiceGuide } from '../hooks/useKidsVoiceGuide';
+import {
+  annotateBooksWithReasons,
+  pickPopularThisWeek,
+} from '../utils/discoveryRails';
 
 function KidsCategoryPage() {
   const { categoryId } = useParams();
@@ -36,6 +40,7 @@ function KidsCategoryPage() {
   const strategy = getCategoryContentStrategy(categoryId);
   const favoritesIds = storage.getFavorites();
   const voicePhrase = getCategoryVoicePhrase(categoryId, language);
+  const readingHistory = storage.getReadingHistory();
 
   const [books, setBooks] = useState([]);
   const [learningItems, setLearningItems] = useState([]);
@@ -98,6 +103,33 @@ function KidsCategoryPage() {
     return () => { active = false; };
   }, [categoryId, language, category, strategy.type, strategy.contentType, strategy.categoryCode, showToast, t]);
 
+  const continueBooks = useMemo(() => {
+    const byId = new Map(books.map((book) => [book.id, book]));
+    return readingHistory
+      .map((entry) => {
+        const book = byId.get(entry.bookId);
+        if (!book) return null;
+        const lastPage = Number(entry.page ?? storage.getLastPage(book.id) ?? 0);
+        const total = Number(book.page_count || 0);
+        const progress = total > 0 ? Math.min(100, Math.round((lastPage / total) * 100)) : 0;
+        if (progress <= 0 || progress >= 100) return null;
+        return { ...book, kid_progress_percent: progress, progress, current_page: lastPage };
+      })
+      .filter(Boolean)
+      .slice(0, 8);
+  }, [books, readingHistory]);
+
+  const popularBooks = useMemo(() => pickPopularThisWeek(books, 12), [books]);
+  const newBooks = useMemo(
+    () => [...books].sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0)).slice(0, 12),
+    [books],
+  );
+  const recommendedBooks = useMemo(() => {
+    const favored = books.filter((book) => favoritesIds.includes(book.id));
+    if (favored.length) return favored.slice(0, 12);
+    return popularBooks;
+  }, [books, favoritesIds, popularBooks]);
+
   const listPath = useMemo(() => {
     if (strategy.type === 'audio') return '/kids/audio?type=song';
     if (strategy.type === 'learning') return '/kids/learning';
@@ -109,11 +141,23 @@ function KidsCategoryPage() {
   }
 
   const hasContent = books.length > 0 || learningItems.length > 0;
-  const featuredBook = books[0] || null;
+  const featuredBook = recommendedBooks[0] || books[0] || null;
   const featuredActionLabel = strategy.type === 'audio' ? t('listenAction') : t('readAction');
+  const carouselProps = {
+    isRtl,
+    favorites: favoritesIds,
+    showActions: false,
+    hideTitle: true,
+    pictogramMode: true,
+    modality: 'books',
+    onPlay: (book) => {
+      playKidsUiSound('play');
+      navigate(getKidsContentPath(book));
+    },
+  };
 
   return (
-    <KidsPageShell isRtl={isRtl} variant="library" world="books" className="pb-32 kids-glow-books relative" footer={<KidsBottomNav />}>
+    <KidsPageShell isRtl={isRtl} variant="library" world="books" className="pb-32 kids-glow-books kids-category-world relative" footer={<KidsBottomNav />}>
       <KidsCategoryAtmosphere categoryId={categoryId} />
 
       <header className="relative z-10 px-6 py-4 flex items-center justify-between">
@@ -131,12 +175,11 @@ function KidsCategoryPage() {
           onClick={() => playKidsUiSound('tap')}
         >
           <span aria-hidden="true">{KIDS_PICTOGRAMS.back}</span>
-          <span className="sr-only"><ChevronLeftIcon className={isRtl ? 'rotate-180' : ''} /></span>
         </Link>
 
         <motion.main
           {...getMotionProps(reducedMotion, kidsCategoryEnter)}
-          className={`relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br ${category.gradient} p-8 md:p-12 text-center text-white shadow-kids-soft ring-4 ${category.ring}`}
+          className={`kids-category-hero relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br ${category.gradient} p-8 md:p-12 text-center text-white shadow-kids-soft ring-4 ${category.ring}`}
         >
           <div className="absolute -right-10 -top-10 text-[12rem] opacity-20 pointer-events-none" aria-hidden="true">
             {category.pictogram}
@@ -158,7 +201,7 @@ function KidsCategoryPage() {
               whileTap={{ scale: 0.96 }}
               onClick={() => {
                 playKidsUiSound('play');
-                speakGuide(getCategoryVoicePhrase(categoryId, language));
+                speakGuide(voicePhrase);
                 navigate(getKidsContentPath(featuredBook));
               }}
               className="kids-touch-target mx-auto mt-8 inline-flex min-w-[4.75rem] items-center justify-center gap-3 rounded-full bg-white px-8 py-5 text-3xl shadow-xl"
@@ -166,7 +209,6 @@ function KidsCategoryPage() {
               title={featuredActionLabel}
             >
               <span aria-hidden="true">{strategy.type === 'audio' ? KIDS_PICTOGRAMS.listen : KIDS_PICTOGRAMS.continue}</span>
-              <PlayIcon className="sr-only" />
             </motion.button>
           )}
         </motion.main>
@@ -184,24 +226,47 @@ function KidsCategoryPage() {
           />
         ) : (
           <div className="space-y-10">
+            {continueBooks.length > 0 && (
+              <KidsContinueRail
+                books={continueBooks}
+                title={t('continueReading')}
+                emoji={KIDS_PICTOGRAMS.continue}
+                isRtl={isRtl}
+                t={t}
+                onResume={(book) => navigate(getKidsContentPath(book))}
+              />
+            )}
+            {recommendedBooks.length > 0 && (
+              <KidsBookCarousel
+                title={t('forYou')}
+                emoji={KIDS_PICTOGRAMS.recommended}
+                books={annotateBooksWithReasons(recommendedBooks, t('forYou'))}
+                {...carouselProps}
+              />
+            )}
+            {popularBooks.length > 0 && (
+              <KidsBookCarousel
+                title={t('kidsPopularThisWeek')}
+                emoji="🔥"
+                books={annotateBooksWithReasons(popularBooks, t('kidsPopularThisWeek'))}
+                {...carouselProps}
+              />
+            )}
+            {newBooks.length > 0 && (
+              <KidsBookCarousel
+                title={t('newBooks')}
+                emoji={KIDS_PICTOGRAMS.new}
+                books={annotateBooksWithReasons(newBooks, t('discoverReasonNew'))}
+                {...carouselProps}
+              />
+            )}
             {books.length > 0 && (
-              <div className="kids-shelf-rail">
-                <KidsBookCarousel
-                  title={category.shortLabel || category.label}
-                  emoji={category.pictogram}
-                  books={books}
-                  isRtl={isRtl}
-                  favorites={favoritesIds}
-                  showActions={false}
-                  hideTitle
-                  pictogramMode
-                  modality="books"
-                  onPlay={(b) => {
-                    playKidsUiSound('play');
-                    navigate(getKidsContentPath(b));
-                  }}
-                />
-              </div>
+              <KidsBookCarousel
+                title={category.shortLabel || category.label}
+                emoji={category.pictogram}
+                books={books}
+                {...carouselProps}
+              />
             )}
             {learningItems.length > 0 && (
               <section>
