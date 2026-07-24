@@ -5064,6 +5064,45 @@
     box-shadow: var(--shadow-card);
   }
 
+  .parent-control-center-hero {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: var(--space-16);
+  }
+
+  .parent-control-tabs {
+    display: flex;
+    gap: 0.5rem;
+    overflow-x: auto;
+    padding-bottom: 0.25rem;
+    scroll-snap-type: x mandatory;
+  }
+
+  .parent-control-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    flex: 0 0 auto;
+    scroll-snap-align: start;
+    min-height: var(--touch-target, 44px);
+    padding: 0.65rem 1rem;
+    border-radius: 999px;
+    border: 1px solid color-mix(in srgb, var(--color-border) 70%, transparent);
+    background: var(--color-card);
+    color: var(--color-foreground-secondary);
+    font-weight: 800;
+    font-size: 0.9rem;
+    transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+  }
+
+  .parent-control-tab.is-active {
+    background: color-mix(in srgb, var(--color-primary-100) 85%, white);
+    border-color: var(--color-primary-300);
+    color: var(--color-primary-800);
+  }
+
   .parent-control-header {
     display: flex;
     flex-direction: column;
