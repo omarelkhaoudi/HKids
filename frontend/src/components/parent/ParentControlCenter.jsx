@@ -23,6 +23,7 @@ import {
 import { ParentCategoryApprovals } from './ParentCategoryApprovals';
 import { ParentReadingGoalCard } from './ParentReadingGoalCard';
 import { ParentPremiumAnalytics } from './ParentPremiumAnalytics';
+import { ParentLearningPanel } from './ParentLearningPanel';
 import { ParentEmptyState } from './ParentEmptyState';
 import { ParentProgressRing } from './ParentProgressRing';
 import { KidsBookCover } from '../kids/KidsBookCover';
@@ -574,13 +575,16 @@ export function ParentControlCenter({
           )}
 
           {tab === 'analytics' && (
-            <ParentPremiumAnalytics
-              data={dashboardData}
-              loading={activityLoading}
-              language={language}
-              t={t}
-              kidName={kid.name}
-            />
+            <div className="space-y-space-24">
+              <ParentPremiumAnalytics
+                data={dashboardData}
+                loading={activityLoading}
+                language={language}
+                t={t}
+                kidName={kid.name}
+              />
+              <ParentLearningPanel kidId={kid.id} language={language} t={t} />
+            </div>
           )}
 
           {tab === 'actions' && (

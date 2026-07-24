@@ -206,6 +206,7 @@ function App() {
                 <Route path="/kids/listen/:id" element={<RequireAuth><LazyRoute><KidsListen /></LazyRoute></RequireAuth>} />
                 <Route path="/kids/read/:id" element={<RequireAuth><LazyRoute><BookReader /></LazyRoute></RequireAuth>} />
                 <Route path="/kids/learning" element={<RequireAuth><LazyRoute><KidsLearning /></LazyRoute></RequireAuth>} />
+                <Route path="/kids/learning/:worldId" element={<RequireAuth><LazyRoute><KidsLearning /></LazyRoute></RequireAuth>} />
                 <Route path="/kids/story-studio" element={<RequireAuth><LazyRoute><KidsStoryStudio /></LazyRoute></RequireAuth>} />
                 <Route path="/kids/storystudio" element={<Navigate to="/kids/story-studio" replace />} />
                 <Route path="/kids/ai-stories" element={<RequireAuth><LazyRoute><KidsAIStories /></LazyRoute></RequireAuth>} />

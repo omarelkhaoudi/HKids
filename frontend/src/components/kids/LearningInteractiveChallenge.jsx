@@ -1,0 +1,196 @@
+import { useMemo, useState } from 'react';
+import { motion } from 'framer-motion';
+import { eduLabel } from '../../constants/educationalWorldLabels';
+
+function shuffle(list) {
+  return [...list].sort(() => Math.random() - 0.5);
+}
+
+export function LearningInteractiveChallenge({
+  challenge,
+  language = 'fr',
+  onComplete,
+  reducedMotion = false,
+}) {
+  const [selectedLeft, setSelectedLeft] = useState(null);
+  const [matched, setMatched] = useState([]);
+  const [feedback, setFeedback] = useState(null);
+
+  const rightOptions = useMemo(() => {
+    if (challenge?.type !== 'match') return [];
+    return shuffle(challenge.pairs.map((p) => ({ id: p.id, label: p.right })));
+  }, [challenge]);
+
+  if (!challenge) return null;
+
+  const finishSuccess = () => {
+    setFeedback('success');
+    onComplete?.({ success: true, scorePercent: 100 });
+  };
+
+  const finishFail = () => {
+    setFeedback('fail');
+  };
+
+  if (challenge.type === 'match') {
+    const done = matched.length >= challenge.pairs.length;
+    return (
+      <div className="space-y-4">
+        <h3 className="text-heading-m font-black">{eduLabel('eduMatchTitle', language)}</h3>
+        <p className="text-caption text-foreground-muted">{eduLabel('eduMatchHint', language)}</p>
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-2">
+            {challenge.pairs.map((pair) => {
+              const isMatched = matched.includes(pair.id);
+              return (
+                <button
+                  key={`l-${pair.id}`}
+                  type="button"
+                  disabled={isMatched || done}
+                  onClick={() => setSelectedLeft(pair.id)}
+                  className={`w-full min-h-touch-kids rounded-2xl border-2 px-4 py-3 text-2xl font-black transition ${
+                    isMatched
+                      ? 'border-success-300 bg-success-50 opacity-60'
+                      : selectedLeft === pair.id
+                        ? 'border-primary-400 bg-primary-50'
+                        : 'border-border bg-card'
+                  }`}
+                >
+                  {pair.left}
+                </button>
+              );
+            })}
+          </div>
+          <div className="space-y-2">
+            {rightOptions.map((opt) => {
+              const isMatched = matched.includes(opt.id);
+              return (
+                <button
+                  key={`r-${opt.id}`}
+                  type="button"
+                  disabled={isMatched || done || !selectedLeft}
+                  onClick={() => {
+                    if (selectedLeft === opt.id) {
+                      const next = [...matched, opt.id];
+                      setMatched(next);
+                      setSelectedLeft(null);
+                      if (next.length >= challenge.pairs.length) finishSuccess();
+                    } else {
+                      setSelectedLeft(null);
+                      finishFail();
+                    }
+                  }}
+                  className={`w-full min-h-touch-kids rounded-2xl border-2 px-4 py-3 text-lg font-bold transition ${
+                    isMatched ? 'border-success-300 bg-success-50 opacity-60' : 'border-border bg-card'
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+        {feedback === 'success' && (
+          <motion.p
+            initial={reducedMotion ? false : { scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="text-center text-heading-m text-success-700 font-black"
+          >
+            {eduLabel('eduChallengeComplete', language)} ⭐
+          </motion.p>
+        )}
+      </div>
+    );
+  }
+
+  if (challenge.type === 'count') {
+    return (
+      <div className="space-y-4 text-center">
+        <h3 className="text-heading-m font-black">{eduLabel('eduCountTitle', language)}</h3>
+        <p className="text-5xl tracking-widest" aria-hidden="true">{challenge.items.join(' ')}</p>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {challenge.options.map((n) => (
+            <button
+              key={n}
+              type="button"
+              disabled={!!feedback}
+              onClick={() => (n === challenge.answer ? finishSuccess() : finishFail())}
+              className="min-h-touch-kids rounded-2xl bg-card border-2 border-border text-heading-l font-black"
+            >
+              {n}
+            </button>
+          ))}
+        </div>
+        {feedback === 'success' && (
+          <p className="text-heading-m text-success-700 font-black">{eduLabel('eduChallengeComplete', language)}</p>
+        )}
+        {feedback === 'fail' && (
+          <button type="button" className="text-caption font-bold underline" onClick={() => setFeedback(null)}>
+            Retry
+          </button>
+        )}
+      </div>
+    );
+  }
+
+  if (challenge.type === 'sequence') {
+    return (
+      <div className="space-y-4 text-center">
+        <h3 className="text-heading-m font-black">{eduLabel('eduSequenceTitle', language)}</h3>
+        <p className="text-4xl font-black tracking-wider">{challenge.sequence.join('  ')}</p>
+        <div className="flex flex-wrap justify-center gap-3">
+          {challenge.options.map((opt) => (
+            <button
+              key={String(opt)}
+              type="button"
+              disabled={!!feedback}
+              onClick={() => (opt === challenge.answer ? finishSuccess() : finishFail())}
+              className="min-h-touch-kids min-w-[4.5rem] rounded-2xl bg-card border-2 border-border px-4 text-heading-m font-black"
+            >
+              {opt}
+            </button>
+          ))}
+        </div>
+        {feedback === 'success' && (
+          <p className="text-heading-m text-success-700 font-black">{eduLabel('eduChallengeComplete', language)}</p>
+        )}
+        {feedback === 'fail' && (
+          <button type="button" className="text-caption font-bold underline" onClick={() => setFeedback(null)}>
+            Retry
+          </button>
+        )}
+      </div>
+    );
+  }
+
+  // find
+  return (
+    <div className="space-y-4 text-center">
+      <h3 className="text-heading-m font-black">{eduLabel('eduFindTitle', language)}</h3>
+      <p className="text-6xl" aria-hidden="true">{challenge.prompt}</p>
+      <div className="grid grid-cols-2 gap-3">
+        {(challenge.options || []).map((opt) => (
+          <button
+            key={opt.id}
+            type="button"
+            disabled={!!feedback}
+            onClick={() => (opt.correct ? finishSuccess() : finishFail())}
+            className="min-h-[5rem] rounded-2xl bg-card border-2 border-border text-4xl"
+          >
+            {opt.label}
+          </button>
+        ))}
+      </div>
+      {feedback === 'success' && (
+        <p className="text-heading-m text-success-700 font-black">{eduLabel('eduChallengeComplete', language)}</p>
+      )}
+      {feedback === 'fail' && (
+        <button type="button" className="text-caption font-bold underline" onClick={() => setFeedback(null)}>
+          Retry
+        </button>
+      )}
+    </div>
+  );
+}
+
+export default LearningInteractiveChallenge;
