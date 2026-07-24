@@ -23,24 +23,14 @@ const HOME_AGE_CARDS = [
   },
 ];
 
-export default function BrowseByAgeSection({ t, selectedAge, setSelectedAge, books = [] }) {
+export default function BrowseByAgeSection({ t, selectedAge, onAgeSelect, books = [] }) {
   const navigate = useNavigate();
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
   const reducedMotion = useReducedMotion();
   const activeAge = parseAgeGroupId(selectedAge || searchParams.get('age'));
 
   const applyAge = (ageId) => {
-    const next = parseAgeGroupId(ageId);
-    setSelectedAge(next === ALL_AGES_ID ? '' : next);
-    if (next === ALL_AGES_ID) {
-      const params = new URLSearchParams(searchParams);
-      params.delete('age');
-      setSearchParams(params);
-    } else {
-      const params = new URLSearchParams(searchParams);
-      params.set('age', next);
-      setSearchParams(params);
-    }
+    onAgeSelect?.(parseAgeGroupId(ageId));
   };
 
   return (
