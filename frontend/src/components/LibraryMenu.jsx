@@ -2,10 +2,13 @@ import { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { BookIcon, GlobeIcon, TrophyIcon } from './Icons';
+import { AGE_GROUPS, ALL_AGES_ID } from '../constants/ageGroups';
+import { useLanguage } from '../context/LanguageContext';
 
 function LibraryMenu({ categories, onCategorySelect, onAgeSelect, selectedCategory, selectedAge }) {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef(null);
+  const { t } = useLanguage();
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -23,11 +26,12 @@ function LibraryMenu({ categories, onCategorySelect, onAgeSelect, selectedCatego
     };
   }, [isOpen]);
 
-  const ageButtons = [
-    { age: '3-5', label: '3-5 ans', color: 'bg-primary-500 hover:bg-primary-600' },
-    { age: '6-8', label: '6-8 ans', color: 'bg-accent-500 hover:bg-accent-600' },
-    { age: '9-12', label: '9-12 ans', color: 'bg-secondary-500 hover:bg-secondary-600' }
-  ];
+  const ageButtons = AGE_GROUPS.map((group) => ({
+    age: group.id,
+    label: t(group.labelKey) || `${group.min}–${group.max}`,
+    emoji: group.emoji,
+    color: 'bg-primary-500 hover:bg-primary-600',
+  }));
 
   const scrollToBooksSection = () => {
     setTimeout(() => {
@@ -39,8 +43,7 @@ function LibraryMenu({ categories, onCategorySelect, onAgeSelect, selectedCatego
   };
 
   const handleAgeClick = (age) => {
-    // Passer la plage complète (ex: "3-5") au lieu de juste le premier nombre
-    onAgeSelect(age);
+    onAgeSelect(age === ALL_AGES_ID ? '' : age);
     setIsOpen(false);
     scrollToBooksSection();
   };
@@ -81,7 +84,6 @@ function LibraryMenu({ categories, onCategorySelect, onAgeSelect, selectedCatego
               transition={{ duration: 0.2 }}
               className="absolute top-full left-0 sm:left-1/2 sm:transform sm:-translate-x-1/2 mt-2 w-[calc(100vw-2rem)] sm:w-[420px] bg-white rounded-2xl shadow-2xl z-50 overflow-hidden border border-surface-200 mx-2 sm:mx-0"
             >
-              {/* Header avec titre et boutons d'âge */}
               <div className="bg-gradient-to-r from-primary-50 via-secondary-50 to-accent-50 p-4 sm:p-6 border-b border-surface-200">
                 <div className="mb-5 space-y-4">
                   <h2 className="text-2xl font-bold text-surface-900">Bibliothèque</h2>
@@ -103,26 +105,45 @@ function LibraryMenu({ categories, onCategorySelect, onAgeSelect, selectedCatego
                   </div>
                 </div>
 
-                {/* Boutons d'âge */}
                 <div className="grid grid-cols-3 gap-3">
                   {ageButtons.map((ageBtn) => {
-                    // Comparer avec la plage complète (ex: "3-5") ou juste le premier nombre pour compatibilité
-                    const isSelected = selectedAge === ageBtn.age || selectedAge === ageBtn.age.split('-')[0];
+                    const isSelected = selectedAge === ageBtn.age;
                     return (
                       <button
                         key={ageBtn.age}
                         onClick={() => handleAgeClick(ageBtn.age)}
-                        className={`h-11 rounded-3xl px-3 text-sm font-bold text-white transition-all ${
+                        className={`h-11 rounded-3xl px-2 text-sm font-bold text-white transition-all ${
                           isSelected ? ageBtn.color + ' ring-2 ring-offset-2 ring-offset-white ring-surface-900' : ageBtn.color
                         }`}
+                        aria-pressed={isSelected}
                       >
-                        {ageBtn.label}
+                        <span aria-hidden="true">{ageBtn.emoji}</span> {ageBtn.label}
                       </button>
                     );
                   })}
                 </div>
               </div>
 
+              {categories?.length > 0 && (
+                <div className="p-4 max-h-64 overflow-y-auto">
+                  {categories.map((category) => (
+                    <button
+                      key={category.id}
+                      type="button"
+                      onClick={() => {
+                        onCategorySelect?.(category.id);
+                        setIsOpen(false);
+                        scrollToBooksSection();
+                      }}
+                      className={`w-full text-left px-3 py-2 rounded-xl text-sm font-semibold transition ${
+                        selectedCategory === category.id ? 'bg-primary-50 text-primary-700' : 'hover:bg-surface-50'
+                      }`}
+                    >
+                      {category.name || category.label}
+                    </button>
+                  ))}
+                </div>
+              )}
             </motion.div>
           </>
         )}
@@ -132,4 +153,3 @@ function LibraryMenu({ categories, onCategorySelect, onAgeSelect, selectedCatego
 }
 
 export default LibraryMenu;
-

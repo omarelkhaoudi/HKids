@@ -1,4 +1,5 @@
 import { normalizeLanguage } from '../utils/translations';
+import { AGE_GROUPS, ALL_AGES_ID, formatAgeGroupLabel } from './ageGroups';
 
 const categoryLabels = {
   fr: {
@@ -48,12 +49,15 @@ export const CONTENT_LIBRARY_CATEGORIES = [
   },
 ];
 
+/** Derived from official AGE_GROUPS — never hardcode separate ranges. */
 export const CONTENT_AGE_FILTERS = [
-  { id: 'all', label: categoryLabels.fr.allAges, labelKey: 'allAges', value: '' },
-  { id: '0-3', label: '0-3 ans', value: '2' },
-  { id: '4-6', label: '4-6 ans', value: '5' },
-  { id: '7-9', label: '7-9 ans', value: '8' },
-  { id: '10-12', label: '10-12 ans', value: '11' },
+  { id: ALL_AGES_ID, labelKey: 'allAges', value: '' },
+  ...AGE_GROUPS.map((group) => ({
+    id: group.id,
+    label: formatAgeGroupLabel(group, 'fr'),
+    value: group.id,
+    emoji: group.emoji,
+  })),
 ];
 
 export function localizeContentLibraryCategory(category, language) {
@@ -76,10 +80,19 @@ export function localizeContentLibraryCategories(language) {
 
 export function localizeContentAgeFilters(language) {
   const normalized = normalizeLanguage(language);
-  return CONTENT_AGE_FILTERS.map((filter) => ({
-    ...filter,
-    label: filter.labelKey ? (categoryLabels[normalized]?.[filter.labelKey] || categoryLabels.fr[filter.labelKey]) : filter.label,
-  }));
+  return CONTENT_AGE_FILTERS.map((filter) => {
+    if (filter.id === ALL_AGES_ID || filter.labelKey === 'allAges') {
+      return {
+        ...filter,
+        label: categoryLabels[normalized]?.allAges || categoryLabels.fr.allAges,
+      };
+    }
+    const group = AGE_GROUPS.find((item) => item.id === filter.id);
+    return {
+      ...filter,
+      label: group ? formatAgeGroupLabel(group, normalized) : filter.label,
+    };
+  });
 }
 
 export function getContentLibraryCategory(categoryId, language = 'fr') {

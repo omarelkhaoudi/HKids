@@ -57,6 +57,7 @@ import { KIDS_PICTOGRAMS, getGuideVoicePhrase, getCategoryVoicePhrase } from '..
 import { playKidsUiSound } from '../utils/kidsUiSound';
 import { useKidsVoiceGuide } from '../hooks/useKidsVoiceGuide';
 import { getCachedKidProfile } from '../services/cloud/cloudSyncService';
+import { onboardingBandToRange } from '../constants/ageGroups';
 
 function getRecommendedBooks(sections = []) {
   const recommendedSection = sections.find((section) => section.id === 'recommended_for_you');
@@ -366,13 +367,8 @@ function KidsHome() {
   );
 
   const ageRange = useMemo(() => {
-    const map = {
-      '3-4': [2, 5],
-      '5-6': [4, 7],
-      '7-8': [6, 9],
-      '9+': [8, 12],
-    };
-    return map[personalization.ageBand] || [4, 7];
+    const range = onboardingBandToRange(personalization.ageBand);
+    return [range.min, range.max];
   }, [personalization.ageBand]);
 
   const ageCollection = useMemo(

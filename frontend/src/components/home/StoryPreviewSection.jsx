@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { ChevronRightIcon } from '../../components/Icons';
 import { KidsBookCover } from '../kids/KidsBookCover';
 import { useReducedMotion } from '../../hooks/useReducedMotion';
+import { getAgeGroupById, parseAgeGroupId, ALL_AGES_ID } from '../../constants/ageGroups';
 
 export default function StoryPreviewSection({ books, t, selectedAge = '' }) {
   const reducedMotion = useReducedMotion();
@@ -24,8 +25,11 @@ export default function StoryPreviewSection({ books, t, selectedAge = '' }) {
     visible: { opacity: 1, y: 0, transition: { duration: 0.5 } },
   };
 
-  const ageLabelMap = { '3-5': 'age3to5', '6-8': 'age6to8', '9-12': 'age9to12' };
-  const selectedAgeLabel = selectedAge && ageLabelMap[selectedAge] ? t[ageLabelMap[selectedAge]] : '';
+  const ageId = parseAgeGroupId(selectedAge);
+  const ageGroup = getAgeGroupById(ageId);
+  const selectedAgeLabel = ageGroup && ageId !== ALL_AGES_ID
+    ? (t[ageGroup.labelKey] || `${ageGroup.min}–${ageGroup.max}`)
+    : '';
 
   return (
     <section id="popular-stories" className="bg-background py-12 md:py-16 relative z-10" aria-labelledby="popular-stories-title">
