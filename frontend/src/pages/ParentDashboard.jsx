@@ -25,6 +25,7 @@ import {ParentEmptyState} from '../components/parent/ParentEmptyState';
 import {ParentPageShell} from '../components/parent/ParentPageShell';
 import {ParentHero} from '../components/parent/ParentHero';
 import {ParentControlCenter} from '../components/parent/ParentControlCenter';
+import {ParentPremiumPanel} from '../components/parent/ParentPremiumPanel';
 import { normalizeRulesForm } from '../constants/parentControlCenter';
 import { collectFavoriteThemes, getThemeLabel, getTodayReadingSeconds } from '../utils/parentInsights';
 
@@ -500,27 +501,7 @@ function ParentDashboard() {
  </div>
 
  <div className="flex flex-col gap-space-24">
- <article className="parent-panel">
- <div className="flex items-center gap-3 mb-space-12">
- <div className="parent-kpi-icon parent-kpi-icon--violet" aria-hidden="true">
- <ShieldIcon className="w-5 h-5" />
- </div>
- <Badge variant="secondary" className="font-bold">
- {dashboardData?.subscription?.status || t('parentFreePlan')}
- </Badge>
- </div>
- <h2 className="text-heading-l font-black mb-1 text-foreground">
- {dashboardData?.subscription?.plan_name || t('parentFreePlan')}
- </h2>
- {dashboardData?.subscription?.current_period_end && (
- <p className="text-foreground-secondary text-body mb-space-24">
- {t('parentSubscriptionExpiry')} : {formatDate(dashboardData.subscription.current_period_end)}
- </p>
- )}
- <Button variant="primary" fullWidth onClick={() => navigate('/abonnements')} className="min-h-touch font-bold">
- {t('parentManageSubscription')}
- </Button>
- </article>
+ <ParentPremiumPanel language={language} />
  <article className="parent-aside-note parent-panel">
  <p className="parent-companion-card-label">{t('pccEyebrow')}</p>
  <p className="parent-companion-card-value">

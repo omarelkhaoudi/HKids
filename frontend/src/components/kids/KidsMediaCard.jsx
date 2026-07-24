@@ -8,6 +8,7 @@ import { KidsBookCover } from './KidsBookCover';
 import { PlayIcon, HeartIcon, DownloadIcon, AudioIcon } from '../Icons';
 import { playKidsUiSound } from '../../utils/kidsUiSound';
 import { KIDS_PICTOGRAMS } from '../../utils/kidsGuidePhrases';
+import { PremiumRibbon } from '../premium/PremiumPackCard';
 
 function formatDuration(seconds = 0) {
   const safeSeconds = Math.max(0, Number(seconds || 0));
@@ -58,7 +59,7 @@ export const KidsMediaCard = memo(function KidsMediaCard({
   onDownload,
   className = '',
 }) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const reducedMotion = useReducedMotion();
   const [feedback, setFeedback] = useState(null);
   const feedbackTimerRef = useRef(null);
@@ -153,9 +154,9 @@ export const KidsMediaCard = memo(function KidsMediaCard({
             </span>
           )}
           {book.is_premium && (
-            <span className="kids-book-meta-chip kids-book-meta-chip--accent kids-book-meta-chip--pictogram" title="PRO">
-              <span aria-hidden="true">✨</span>
-              <span className="sr-only">PRO</span>
+            <span className="kids-book-meta-chip kids-book-meta-chip--accent" title="Premium">
+              <PremiumRibbon language={language} className="!shadow-none scale-90 origin-start" />
+              <span className="sr-only">Premium</span>
             </span>
           )}
         </div>

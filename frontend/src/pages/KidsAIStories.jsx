@@ -29,6 +29,10 @@ import { KidsBookCover } from '../components/kids/KidsBookCover';
 import {
   BRAND_HERO_GRADIENT, BRAND_SEMANTIC,
 } from '../constants/brandTheme';
+import { subscriptionsAPI } from '../api/subscriptions';
+import { canAccessFeature } from '../utils/premiumAccess';
+import { premLabel } from '../constants/premiumLabels';
+import { PremiumRibbon } from '../components/premium/PremiumPackCard';
 
 // --- MAGIC CELEBRATION PARTICLES ---
 function MagicCelebration({ active, onComplete }) {
@@ -322,6 +326,7 @@ function KidsAIStories() {
   const [busyStoryId, setBusyStoryId] = useState(null);
   const [speaking, setSpeaking] = useState(false);
   const [error, setError] = useState('');
+  const [subscription, setSubscription] = useState(null);
   const offlineContent = useOfflineContent();
 
   // Celebration state
@@ -329,6 +334,9 @@ function KidsAIStories() {
   const [showReportModal, setShowReportModal] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const canReport = user && (user.role === 'parent' || user.role === 'admin');
+  const canAccessAi = canAccessFeature('ai_stories', { subscription });
+  const createPath = canAccessAi ? storyStudioPath : '/abonnements';
+  const createLabel = canAccessAi ? t('storyStudioCreateStory') : premLabel('premUnlock', language);
 
   const selectedKid = kidProfiles.find((kid) => String(kid.id) === String(selectedKidProfileId));
   const themes = useMemo(() => Array.from(new Set(stories.map((s) => s.theme).filter(Boolean))).sort(), [stories]);
@@ -396,6 +404,14 @@ function KidsAIStories() {
       .catch((err) => setError(getErrorMessage(err)))
       .finally(() => {
         if (active) setLoading(false);
+      });
+    subscriptionsAPI.getCurrentSubscription()
+      .then((response) => {
+        if (!active) return;
+        setSubscription(response.data?.subscription ?? null);
+      })
+      .catch(() => {
+        if (active) setSubscription(null);
       });
     return () => { active = false; stopSpeaking(); };
   }, []);
@@ -688,24 +704,25 @@ function KidsAIStories() {
           subtitle={canCreateStories ? t('storyStudioEmptyParentDescription') : t('storyStudioEmptyKidDescription')}
           className="mb-10"
         >
-          {canCreateStories && storyStudioPath && (
-            <motion.div {...getHoverMotion(reducedMotion, { whileHover: { scale: 1.03 }, whileTap: { scale: 0.97 } })} className="mt-6">
+          {canCreateStories && (
+            <motion.div {...getHoverMotion(reducedMotion, { whileHover: { scale: 1.03 }, whileTap: { scale: 0.97 } })} className="mt-6 flex flex-col items-start gap-3">
+              {!canAccessAi && <PremiumRibbon language={language} />}
               <Link
-                to={storyStudioPath}
+                to={createPath || '/abonnements'}
                 className="kids-touch-target inline-flex min-h-touch-kids items-center justify-center gap-3 rounded-32 bg-white px-8 py-4 text-xl font-black text-magic-700 shadow-floating focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-magic-300"
               >
                 <SparklesIcon className="h-6 w-6" />
-                <span>{t('storyStudioCreateStory')}</span>
+                <span>{createLabel}</span>
               </Link>
             </motion.div>
           )}
         </KidsHero>
 
-        {canCreateStories && storyStudioPath && (
+        {canCreateStories && (
           <section className="mb-10 grid grid-cols-1 sm:grid-cols-3 gap-4" aria-label="Parcours de création">
             {[
-              { step: '1', title: 'Imagine', desc: 'Choisis thème et héros', emoji: '🪄', path: storyStudioPath },
-              { step: '2', title: 'Crée', desc: 'Laisse la magie écrire', emoji: '✨', path: storyStudioPath },
+              { step: '1', title: 'Imagine', desc: 'Choisis thème et héros', emoji: '🪄', path: createPath },
+              { step: '2', title: 'Crée', desc: 'Laisse la magie écrire', emoji: '✨', path: createPath },
               { step: '3', title: 'Lis & écoute', desc: 'Retrouve tes histoires ici', emoji: '📖', path: null },
             ].map((item) => (
               <motion.div
@@ -806,8 +823,8 @@ function KidsAIStories() {
                 emoji="🐉"
                 title={canCreateStories ? t('storyStudioEmptyParentTitle') : t('storyStudioEmptyKidTitle')}
                 description={canCreateStories ? t('storyStudioEmptyParentDescription') : t('storyStudioEmptyKidDescription')}
-                actionLabel={canCreateStories ? t('storyStudioCreateFirstStory') : t('goToLibrary')}
-                onAction={() => (canCreateStories && storyStudioPath ? navigate(storyStudioPath) : navigate('/kids/library'))}
+                actionLabel={canCreateStories ? (canAccessAi ? t('storyStudioCreateFirstStory') : premLabel('premUnlock', language)) : t('goToLibrary')}
+                onAction={() => (canCreateStories ? navigate(createPath || '/abonnements') : navigate('/kids/library'))}
                 showMascot
                 mascotMood="encourage"
               />

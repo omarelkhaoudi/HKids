@@ -1,4 +1,4 @@
-import {useEffect, useState, useRef} from 'react';
+import {useEffect, useState, useRef, useMemo} from 'react';
 import {Link, useNavigate, useSearchParams} from 'react-router-dom';
 import {motion, AnimatePresence} from 'framer-motion';
 import {subscriptionsAPI} from '../api/subscriptions';
@@ -16,6 +16,10 @@ import { ParentPageShell } from '../components/parent/ParentPageShell';
 import { BRAND_SEMANTIC } from '../constants/brandTheme';
 import { useConfirmDialog } from '../hooks/useConfirmDialog';
 import { getLocaleFromLanguage } from '../utils/translations';
+import { getSubscriptionComparisonRows, hasActiveSubscription } from '../utils/premiumAccess';
+import { listFeaturedPacks } from '../utils/premiumPackStore';
+import { premLabel, packDisplayTitle } from '../constants/premiumLabels';
+import { PremiumRibbon } from '../components/premium/PremiumPackCard';
 
 const fallbackPlans = [
  {
@@ -363,6 +367,37 @@ function Subscriptions() {
  }
  };
 
+ const handleRestorePurchases = async () => {
+ if (!isAuthenticated) {
+ showToast(t('subscriptionsLoginToSubscribe'), 'info', 2500);
+ navigate('/parent/login');
+ return;
+ }
+ try {
+ setBillingAction('restore');
+ const response = await subscriptionsAPI.getCurrentSubscription();
+ const next = response.data?.subscription ?? null;
+ setCurrentSubscription(next);
+ if (hasActiveSubscription(next)) {
+ showToast(premLabel('premStatusActive', language), 'success');
+ } else if (next?.provider === 'stripe') {
+ await handleBillingPortal();
+ } else {
+ showToast(premLabel('premStatusFree', language), 'info');
+ }
+ } catch (error) {
+ showToast(error.response?.data?.error || t('adminSomethingWrong'), 'error');
+ } finally {
+ setBillingAction('');
+ }
+ };
+
+ const comparisonRows = useMemo(
+ () => getSubscriptionComparisonRows((key) => premLabel(key, language)),
+ [language],
+ );
+ const featuredPacks = useMemo(() => listFeaturedPacks().slice(0, 6), []);
+
  const formatMoney = (cents, currency = 'EUR') => new Intl.NumberFormat(locale, {
  style: 'currency',
  currency: currency || 'EUR'
@@ -499,6 +534,80 @@ function Subscriptions() {
  </Card>
  </section>
  )}
+
+ {/* Free vs Premium + discovery */}
+ <section className="max-w-5xl mx-auto px-4 mb-16">
+ <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
+ <div>
+ <div className="flex items-center gap-2 mb-2">
+ <PremiumRibbon language={language} />
+ <Badge variant="secondary" className="font-bold">
+ {hasUsableSubscription ? premLabel('premStatusActive', language) : premLabel('premStatusFree', language)}
+ </Badge>
+ </div>
+ <h2 className="text-2xl md:text-3xl font-black text-foreground">{premLabel('premCompareTitle', language)}</h2>
+ </div>
+ <div className="flex flex-wrap gap-2">
+ <Button
+ variant="outline"
+ className="rounded-full font-bold"
+ disabled={Boolean(billingAction)}
+ onClick={handleRestorePurchases}
+ >
+ {premLabel('premRestore', language)}
+ </Button>
+ <Button variant="primary" className="rounded-full font-bold" onClick={() => navigate('/kids/premium')}>
+ {premLabel('premPacksTitle', language)}
+ </Button>
+ </div>
+ </div>
+ <div className="overflow-x-auto rounded-3xl border border-border bg-card shadow-sm mb-8">
+ <table className="w-full text-left min-w-[420px]">
+ <thead>
+ <tr className="bg-surface-secondary border-b border-border">
+ <th className="p-4 font-bold text-foreground-muted"> </th>
+ <th className="p-4 font-black text-center">{premLabel('premStatusFree', language)}</th>
+ <th className="p-4 font-black text-center">{premLabel('premNav', language)}</th>
+ </tr>
+ </thead>
+ <tbody>
+ {comparisonRows.map((row) => (
+ <tr key={row.id} className="border-b border-border last:border-0">
+ <td className="p-4 font-bold text-foreground-secondary">{row.label}</td>
+ <td className="p-4 text-center font-bold">
+ {row.free === true ? <CheckIcon className="w-5 h-5 mx-auto text-secondary-500" /> : row.free === 'limited' ? premLabel('premLimited', language) : '—'}
+ </td>
+ <td className="p-4 text-center font-bold">
+ {row.premium ? <CheckIcon className="w-5 h-5 mx-auto text-secondary-500" /> : '—'}
+ </td>
+ </tr>
+ ))}
+ </tbody>
+ </table>
+ </div>
+ {featuredPacks.length > 0 && (
+ <div>
+ <div className="flex items-center justify-between gap-3 mb-4">
+ <h3 className="text-xl font-black">{premLabel('premPopular', language)}</h3>
+ <Link to="/kids/premium" className="text-sm font-black text-primary-600 hover:underline">
+ {premLabel('premNav', language)} →
+ </Link>
+ </div>
+ <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
+ {featuredPacks.map((pack) => (
+ <Link
+ key={pack.id}
+ to="/kids/premium"
+ className={`rounded-2xl bg-gradient-to-br ${pack.gradient} text-white p-4 min-h-[7rem] flex flex-col justify-between shadow-card`}
+ >
+ <span className="text-2xl" aria-hidden="true">{pack.emoji}</span>
+ <span className="text-caption font-black leading-tight">{packDisplayTitle(pack, language)}</span>
+ </Link>
+ ))}
+ </div>
+ </div>
+ )}
+ </section>
 
  {isAuthenticated && hasUsableSubscription && !isKidAccount && (
  <section className="max-w-5xl mx-auto px-4 mb-16">

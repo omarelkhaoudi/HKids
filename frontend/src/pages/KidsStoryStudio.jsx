@@ -13,6 +13,10 @@ import { Button, Avatar } from '../components/ui';
 import { useReducedMotion } from '../hooks/useReducedMotion';
 import { getHoverMotion, getMotionProps, kidsCardAppear, kidsPageEnter } from '../constants/kidsMotion';
 import { storyGradientAtIndex } from '../constants/brandTheme';
+import { subscriptionsAPI } from '../api/subscriptions';
+import { canAccessFeature } from '../utils/premiumAccess';
+import { premLabel } from '../constants/premiumLabels';
+import { PremiumRibbon } from '../components/premium/PremiumPackCard';
 
 /** Worlds map to existing API theme ids — presentation only. */
 const WORLD_DEFS = [
@@ -139,7 +143,7 @@ function JourneyProgress({ step, t }) {
 
 function KidsStoryStudio() {
   const { user } = useAuth();
-  const { t } = useLanguage();
+  const { t, language, isRtl } = useLanguage();
   const navigate = useNavigate();
   const reducedMotion = useReducedMotion();
   const isStoryAuthor = user?.role === 'parent' || user?.role === 'admin';
@@ -208,11 +212,30 @@ function KidsStoryStudio() {
   const [speaking, setSpeaking] = useState(false);
   const [error, setError] = useState('');
   const [readingOpen, setReadingOpen] = useState(false);
+  const [subscription, setSubscription] = useState(null);
+  const [subscriptionChecked, setSubscriptionChecked] = useState(false);
 
-  const canUseStoryStudio = isStoryAuthor;
+  const canAccessAi = canAccessFeature('ai_stories', { subscription });
+  const canUseStoryStudio = isStoryAuthor && canAccessAi;
   const selectedKidProfile = kidProfiles.find((kid) => String(kid.id) === String(selectedKidProfileId));
   const showBookPreview = Boolean(story) && !loading;
   const showWelcome = !hasStarted && !showBookPreview && !loading;
+
+  useEffect(() => {
+    let active = true;
+    subscriptionsAPI.getCurrentSubscription()
+      .then((response) => {
+        if (!active) return;
+        setSubscription(response.data?.subscription ?? null);
+      })
+      .catch(() => {
+        if (active) setSubscription(null);
+      })
+      .finally(() => {
+        if (active) setSubscriptionChecked(true);
+      });
+    return () => { active = false; };
+  }, []);
 
   useEffect(() => {
     if (!canUseStoryStudio) return undefined;
@@ -359,16 +382,32 @@ function KidsStoryStudio() {
     setError('');
   };
 
-  if (!canUseStoryStudio) {
+  if (!subscriptionChecked) {
     return (
       <div className="flex min-h-screen items-center justify-center kids-studio-atmosphere px-4">
+        <p className="font-black text-foreground-muted">…</p>
+      </div>
+    );
+  }
+
+  if (!canUseStoryStudio) {
+    const needsPremium = isStoryAuthor && !canAccessAi;
+    return (
+      <div className="flex min-h-screen items-center justify-center kids-studio-atmosphere px-4" dir={isRtl ? 'rtl' : 'ltr'}>
         <div className="kids-studio-gate-card max-w-md p-8 text-center">
-          <p className="mb-4 text-xl font-black text-foreground">{t('storyStudioParentOnlyTitle')}</p>
-          <p className="mb-6 text-sm font-bold text-foreground-secondary">
-            {t('storyStudioParentOnlyDescription')}
+          {needsPremium && <div className="mb-4 flex justify-center"><PremiumRibbon language={language} /></div>}
+          <p className="mb-4 text-xl font-black text-foreground">
+            {needsPremium ? premLabel('premPackAi', language) : t('storyStudioParentOnlyTitle')}
           </p>
-          <Button onClick={() => navigate('/kids/ai-stories')} variant="primary" className="rounded-full w-full font-black">
-            {t('back')}
+          <p className="mb-6 text-sm font-bold text-foreground-secondary">
+            {needsPremium ? premLabel('premPackAiDesc', language) : t('storyStudioParentOnlyDescription')}
+          </p>
+          <Button
+            onClick={() => navigate(needsPremium ? '/abonnements' : '/kids/ai-stories')}
+            variant="primary"
+            className="rounded-full w-full font-black"
+          >
+            {needsPremium ? premLabel('premUnlock', language) : t('back')}
           </Button>
         </div>
       </div>

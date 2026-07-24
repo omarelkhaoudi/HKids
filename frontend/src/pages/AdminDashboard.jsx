@@ -11,6 +11,7 @@ import AdminOverview from '../components/admin/AdminOverview';
 import AdminUsers from '../components/admin/AdminUsers';
 import AdminStatistics from '../components/admin/AdminStatistics';
 import AdminSubscriptions from '../components/admin/AdminSubscriptions';
+import AdminPremiumPacks from '../components/admin/AdminPremiumPacks';
 import LearningManagement from '../components/admin/LearningManagement';
 import AdminModeration from '../components/admin/AdminModeration';
 import AdminReports from '../components/admin/AdminReports';
@@ -290,6 +291,7 @@ function AdminDashboard() {
  {to: '/admin/categories', label: t('adminDashboardCategories'), icon: TagIcon, permission: 'content.read'},
  {to: '/admin/users', label: t('adminDashboardUsers'), icon: UserIcon, permission: 'users.read'},
  {to: '/admin/subscriptions', label: t('adminDashboardSubscriptions'), icon: CheckIcon, permission: 'subscriptions.read'},
+ {to: '/admin/premium-packs', label: 'Premium packs', icon: PlusIcon, permission: 'subscriptions.read'},
  {to: '/admin/learning', label: t('adminDashboardQuizGames'), icon: BrainIcon, permission: 'content.read'},
  {to: '/admin/statistics', label: t('adminDashboardAnalytics'), icon: HistoryIcon, permission: 'overview.read'},
  {to: '/admin/audit', label: t('adminDashboardAuditLog'), icon: HistoryIcon, permission: 'audit.read'},
@@ -480,6 +482,7 @@ function AdminDashboard() {
  <Route path="learning" element={<RequireAdminPermission permission="content.read" permissions={permissions}><LearningManagement /></RequireAdminPermission>} />
  <Route path="users" element={<RequireAdminPermission permission="users.read" permissions={permissions}><AdminUsers /></RequireAdminPermission>} />
  <Route path="subscriptions" element={<RequireAdminPermission permission="subscriptions.read" permissions={permissions}><AdminSubscriptions /></RequireAdminPermission>} />
+ <Route path="premium-packs" element={<RequireAdminPermission permission="subscriptions.read" permissions={permissions}><AdminPremiumPacks /></RequireAdminPermission>} />
  <Route path="statistics" element={<RequireAdminPermission permission="overview.read" permissions={permissions}><AdminStatistics /></RequireAdminPermission>} />
  <Route path="moderation" element={<RequireAdminPermission permission="content.read" permissions={permissions}><AdminModeration /></RequireAdminPermission>} />
  <Route path="reports" element={<RequireAdminPermission permission="reports.read" permissions={permissions}><AdminReports /></RequireAdminPermission>} />

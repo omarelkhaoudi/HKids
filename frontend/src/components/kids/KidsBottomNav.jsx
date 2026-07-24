@@ -11,6 +11,7 @@ const NAV_ITEMS = [
   { id: 'home', path: '/kids', match: 'exact', labelKey: 'kidsNavHome', pictogram: KIDS_PICTOGRAMS.home, voiceKey: 'home' },
   { id: 'library', path: '/kids/library', match: 'prefix', labelKey: 'library', pictogram: KIDS_PICTOGRAMS.library, voiceKey: 'library' },
   { id: 'explore', path: '/kids/explore', match: 'explore', labelKey: 'kidsNavExplore', pictogram: '✨', voiceKey: 'explore' },
+  { id: 'premium', path: '/kids/premium', match: 'premium', labelKey: 'kidsNavPremium', pictogram: '💎', voiceKey: null },
   { id: 'audio', path: '/kids/audio', match: 'audio', labelKey: 'kidsNavAudio', pictogram: KIDS_PICTOGRAMS.audio, voiceKey: 'audio' },
   { id: 'profile', path: '/kids#profile', match: 'hash', labelKey: 'profile', pictogram: KIDS_PICTOGRAMS.profile, voiceKey: null },
 ];
@@ -29,6 +30,9 @@ function isActiveItem(location, item) {
       || location.pathname === '/kids/learning'
       || location.pathname.startsWith('/kids/learning/')
     );
+  }
+  if (item.match === 'premium') {
+    return location.pathname === '/kids/premium' || location.pathname.startsWith('/kids/premium/');
   }
   if (item.match === 'audio') {
     return (
