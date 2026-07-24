@@ -1,4 +1,4 @@
-import {useState, useEffect} from 'react';
+import {useState, useEffect, useMemo, useCallback} from 'react';
 import {Link, useNavigate, useSearchParams} from 'react-router-dom';
 import {motion, AnimatePresence} from 'framer-motion';
 import {booksAPI, categoriesAPI} from '../api/books';
@@ -23,8 +23,7 @@ import {translations} from '../utils/translations';
 import {
  AGE_GROUPS,
  ALL_AGES_ID,
- bookOverlapsAgeGroup,
- getAgeGroupById,
+ filterBooksByAgeGroupId,
  parseAgeGroupId,
 } from '../constants/ageGroups';
 
@@ -75,14 +74,12 @@ function Home({darkMode, setDarkMode}) {
  const [searchParams, setSearchParams] = useSearchParams();
  const {language} = useLanguage();
  const t = translations[language];
- const [books, setBooks] = useState([]);
  const [allBooks, setAllBooks] = useState([]); // Tous les livres pour la recherche
  const [categories, setCategories] = useState([]);
  const [selectedCategory, setSelectedCategory] = useState('');
- const [selectedAge, setSelectedAge] = useState(() => {
-   const fromUrl = parseAgeGroupId(searchParams.get('age'));
-   return fromUrl === ALL_AGES_ID ? '' : fromUrl;
- });
+ // Single source of truth: ?age= query param (no mirrored local age state).
+ const selectedAgeId = parseAgeGroupId(searchParams.get('age'));
+ const selectedAge = selectedAgeId === ALL_AGES_ID ? '' : selectedAgeId;
  const [searchQuery, setSearchQuery] = useState('');
  const [sortBy, setSortBy] = useState('recent'); // recent, title, author
  const [viewMode, setViewMode] = useState('grid'); // grid, list
@@ -93,6 +90,17 @@ function Home({darkMode, setDarkMode}) {
  const [newsletterStatus, setNewsletterStatus] = useState('');
  const [newsletterLoading, setNewsletterLoading] = useState(false);
  const {showToast} = useToast();
+
+ const applyAgeFilter = useCallback((ageId) => {
+   const next = parseAgeGroupId(ageId);
+   const params = new URLSearchParams(searchParams);
+   if (!next || next === ALL_AGES_ID) {
+     params.delete('age');
+   } else {
+     params.set('age', next);
+   }
+   setSearchParams(params, { replace: true });
+ }, [searchParams, setSearchParams]);
 
  // Fonction pour obtenir une couleur basée sur la catégorie
  const getCategoryColor = (categoryName, index) => {
@@ -128,9 +136,36 @@ function Home({darkMode, setDarkMode}) {
  loadData();
 }, [language]);
 
- useEffect(() => {
- filterAndSortBooks(allBooks);
-}, [searchQuery, allBooks, sortBy, selectedCategory, selectedAge]);
+ const books = useMemo(() => {
+   let filtered = filterBooksByAgeGroupId(allBooks, selectedAgeId);
+
+   if (searchQuery.trim()) {
+     const query = searchQuery.toLowerCase();
+     filtered = filtered.filter((book) =>
+       book.title?.toLowerCase().includes(query) ||
+       book.author?.toLowerCase().includes(query) ||
+       book.description?.toLowerCase().includes(query)
+     );
+   }
+
+   if (selectedCategory) {
+     filtered = filtered.filter((book) => book.category_id == selectedCategory);
+   }
+
+   const sorted = [...filtered];
+   sorted.sort((a, b) => {
+     switch (sortBy) {
+       case 'title':
+         return (a.title || '').localeCompare(b.title || '');
+       case 'author':
+         return (a.author || '').localeCompare(b.author || '');
+       case 'recent':
+       default:
+         return new Date(b.created_at) - new Date(a.created_at);
+     }
+   });
+   return sorted;
+ }, [allBooks, searchQuery, sortBy, selectedCategory, selectedAgeId]);
 
  const handleNewsletterSubmit = async (event) => {
  event.preventDefault();
@@ -166,54 +201,11 @@ function Home({darkMode, setDarkMode}) {
 }
 };
 
- const filterAndSortBooks = (booksToFilter) => {
- let filtered = [...booksToFilter];
-
- // Filtre par recherche
- if (searchQuery.trim()) {
- const query = searchQuery.toLowerCase();
- filtered = filtered.filter(book =>
- book.title?.toLowerCase().includes(query) ||
- book.author?.toLowerCase().includes(query) ||
- book.description?.toLowerCase().includes(query)
- );
-}
-
- // Filtre par catégorie
- if (selectedCategory) {
- filtered = filtered.filter(book => book.category_id == selectedCategory);
-}
-
- // Filtre par âge (plage officielle HKids — chevauchement)
- if (selectedAge) {
- const group = getAgeGroupById(parseAgeGroupId(selectedAge));
- if (group) {
- filtered = filtered.filter((book) => bookOverlapsAgeGroup(book, group));
- }
- }
-
- // Tri
- filtered.sort((a, b) => {
- switch(sortBy) {
- case 'title':
- return (a.title || '').localeCompare(b.title || '');
- case 'author':
- return (a.author || '').localeCompare(b.author || '');
- case 'recent':
- default:
- return new Date(b.created_at) - new Date(a.created_at);
-}
-});
-
- setBooks(filtered);
-};
-
  const loadData = async () => {
  const cachedData = readHomeDataCache(language);
 
  if (cachedData?.books?.length || cachedData?.categories?.length) {
  setAllBooks(cachedData.books);
- filterAndSortBooks(cachedData.books);
  setCategories(cachedData.categories);
  setLoading(false);
 }
@@ -231,8 +223,6 @@ function Home({darkMode, setDarkMode}) {
  categoriesAPI.getAll()
  ]);
  setAllBooks(booksRes.data);
- // Filtrer par recherche si nécessaire
- filterAndSortBooks(booksRes.data);
  setCategories(categoriesRes.data);
  writeHomeDataCache(
  Array.isArray(booksRes.data) ? booksRes.data : [],
@@ -291,11 +281,7 @@ function Home({darkMode, setDarkMode}) {
  <LibraryMenu
  categories={categories}
  onCategorySelect={setSelectedCategory}
- onAgeSelect={(age) => {
-   setSelectedAge(age || '');
-   if (age) setSearchParams({ age });
-   else setSearchParams({});
- }}
+ onAgeSelect={(age) => applyAgeFilter(age || ALL_AGES_ID)}
  selectedCategory={selectedCategory}
  selectedAge={selectedAge}
  />
@@ -421,8 +407,7 @@ function Home({darkMode, setDarkMode}) {
  <button
  key={ageBtn.age}
  onClick={() => {
- setSelectedAge(ageBtn.age);
- setSearchParams({ age: ageBtn.age });
+ applyAgeFilter(ageBtn.age);
  setMobileMenuOpen(false);
  setTimeout(() => {
  document.getElementById('popular-stories')?.scrollIntoView({behavior: 'smooth'});
@@ -447,7 +432,7 @@ function Home({darkMode, setDarkMode}) {
  <main id="main-content">
  <HeroSection t={t} totalBooks={totalBooks} />
  <BookOfTheWeekSection book={allBooks[0]} t={t} />
- <BrowseByAgeSection t={t} selectedAge={selectedAge} setSelectedAge={setSelectedAge} books={allBooks} />
+ <BrowseByAgeSection t={t} selectedAge={selectedAge} onAgeSelect={applyAgeFilter} books={allBooks} />
  <StoryPreviewSection books={books} t={t} selectedAge={selectedAge} />
  <FeaturesSection />
  <TestimonialsSection />

@@ -147,15 +147,14 @@ function KidsLibrary() {
   );
 
   const urlTheme = searchParams.get('theme') || 'all';
-  const urlAge = parseAgeGroupId(searchParams.get('age'));
-  const [selectedTheme, setSelectedTheme] = useState(urlTheme);
+  const ageFilter = parseAgeGroupId(searchParams.get('age'));
+  const selectedTheme = urlTheme;
   const [loading, setLoading] = useState(true);
   const [recommendationSections, setRecommendationSections] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterAudio, setFilterAudio] = useState(false);
   const [filterPremium, setFilterPremium] = useState(false);
   const [filterFavorites, setFilterFavorites] = useState(false);
-  const [ageFilter, setAgeFilter] = useState(urlAge);
   const [recentSearches, setRecentSearches] = useState(() => {
     try {
       const stored = JSON.parse(window.localStorage.getItem(RECENT_SEARCHES_KEY) || '[]');
@@ -210,30 +209,21 @@ function KidsLibrary() {
     };
   }, [user, navigate, language, showToast, t]);
 
-  useEffect(() => {
-    const currentTheme = searchParams.get('theme') || 'all';
-    setSelectedTheme(currentTheme);
-    setAgeFilter(parseAgeGroupId(searchParams.get('age')));
-  }, [searchParams]);
-
   const writeLibraryParams = useCallback((next = {}) => {
     const theme = next.theme !== undefined ? next.theme : selectedTheme;
     const age = parseAgeGroupId(next.age !== undefined ? next.age : ageFilter);
     const params = {};
     if (theme && theme !== 'all') params.theme = theme;
     if (age && age !== ALL_AGES_ID) params.age = age;
-    setSearchParams(params);
+    setSearchParams(params, { replace: true });
   }, [selectedTheme, ageFilter, setSearchParams]);
 
   const handleThemeChange = (themeId) => {
-    setSelectedTheme(themeId);
     writeLibraryParams({ theme: themeId });
   };
 
   const handleAgeFilterChange = (nextAge) => {
-    const age = parseAgeGroupId(nextAge);
-    setAgeFilter(age);
-    writeLibraryParams({ age });
+    writeLibraryParams({ age: parseAgeGroupId(nextAge) });
   };
 
   const saveRecentSearch = (rawValue) => {
@@ -555,9 +545,7 @@ function KidsLibrary() {
     setFilterAudio(false);
     setFilterPremium(false);
     setFilterFavorites(false);
-    setAgeFilter(ALL_AGES_ID);
-    setSelectedTheme('all');
-    setSearchParams({});
+    setSearchParams({}, { replace: true });
   };
 
   const quickFilters = [
@@ -763,7 +751,7 @@ function KidsLibrary() {
 
         <AnimatePresence mode="wait">
           <motion.div
-            key={`${selectedTheme}-${searchQuery.trim()}-${loading ? 'loading' : 'ready'}`}
+            key={`${selectedTheme}-${ageFilter}-${searchQuery.trim()}-${loading ? 'loading' : 'ready'}`}
             {...getMotionProps(reducedMotion, kidsPageEnter)}
           >
         {loading ? (
@@ -870,6 +858,16 @@ function KidsLibrary() {
           )
         ) : (
           <>
+            {ageFilter !== ALL_AGES_ID && visibleBooks.length > 0 && (
+              <KidsBookCarousel
+                title={t(getAgeGroupById(ageFilter)?.labelKey) || ageFilter}
+                emoji={getAgeGroupById(ageFilter)?.emoji || '📚'}
+                books={annotateBooksWithReasons(visibleBooks.slice(0, 24), t(getAgeGroupById(ageFilter)?.labelKey) || ageFilter)}
+                {...carouselProps}
+                seeAllLabel={null}
+              />
+            )}
+
             {continueBooks.length > 0 && (
               <KidsContinueRail
                 books={continueBooks}

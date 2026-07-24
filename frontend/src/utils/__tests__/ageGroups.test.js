@@ -80,4 +80,16 @@ describe('unified age system', () => {
     expect(kidsLibraryAgePath('2-4')).toBe('/kids/library?age=2-4');
     expect(kidsLibraryAgePath('all')).toBe('/kids/library');
   });
+
+  it('recomputes the filtered list when the age query id changes', () => {
+    const catalog = [
+      { id: 'a', age_group_min: 0, age_group_max: 2 },
+      { id: 'b', age_group_min: 9, age_group_max: 12 },
+      { id: 'c', age_group_min: 4, age_group_max: 6 },
+    ];
+    expect(filterBooksByAgeGroupId(catalog, '0-2').map((book) => book.id)).toEqual(['a']);
+    expect(filterBooksByAgeGroupId(catalog, '10-12').map((book) => book.id)).toEqual(['b']);
+    expect(filterBooksByAgeGroupId(catalog, '4-6').map((book) => book.id)).toEqual(['c']);
+    expect(filterBooksByAgeGroupId(catalog, ALL_AGES_ID).map((book) => book.id)).toEqual(['a', 'b', 'c']);
+  });
 });

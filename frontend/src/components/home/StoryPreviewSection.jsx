@@ -7,10 +7,14 @@ import { getAgeGroupById, parseAgeGroupId, ALL_AGES_ID } from '../../constants/a
 
 export default function StoryPreviewSection({ books, t, selectedAge = '' }) {
   const reducedMotion = useReducedMotion();
+  const ageId = parseAgeGroupId(selectedAge);
+  const ageGroup = getAgeGroupById(ageId);
+  const selectedAgeLabel = ageGroup && ageId !== ALL_AGES_ID
+    ? (t[ageGroup.labelKey] || `${ageGroup.min}–${ageGroup.max}`)
+    : '';
+  const displayBooks = (books || []).slice(0, 4);
 
-  if (!books || books.length === 0) return null;
-
-  const displayBooks = books.slice(0, 4);
+  if (displayBooks.length === 0) return null;
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -25,37 +29,30 @@ export default function StoryPreviewSection({ books, t, selectedAge = '' }) {
     visible: { opacity: 1, y: 0, transition: { duration: 0.5 } },
   };
 
-  const ageId = parseAgeGroupId(selectedAge);
-  const ageGroup = getAgeGroupById(ageId);
-  const selectedAgeLabel = ageGroup && ageId !== ALL_AGES_ID
-    ? (t[ageGroup.labelKey] || `${ageGroup.min}–${ageGroup.max}`)
-    : '';
-
   return (
     <section id="popular-stories" className="bg-background py-12 md:py-16 relative z-10" aria-labelledby="popular-stories-title">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 gap-4">
           <motion.div
+            key={`title-${ageId}`}
             initial={reducedMotion ? false : { opacity: 0, x: -20 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.35 }}
           >
             <h2 id="popular-stories-title" className="brand-section-title">
               {selectedAge ? selectedAgeLabel : t.homePopularStories}
             </h2>
             {selectedAge && (
               <p className="text-sm text-foreground-secondary mt-2">
-                {displayBooks.length} {displayBooks.length === 1 ? t.booksFound : t.booksFoundPlural}
+                {books.length} {books.length === 1 ? t.booksFound : t.booksFoundPlural}
               </p>
             )}
           </motion.div>
 
           <motion.div
             initial={reducedMotion ? false : { opacity: 0, x: 20 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.35 }}
           >
             <Link
               to="/stories"
@@ -67,11 +64,12 @@ export default function StoryPreviewSection({ books, t, selectedAge = '' }) {
           </motion.div>
         </div>
 
+        {/* Remount on age change so filtered books are never stuck at opacity:0 after whileInView once */}
         <motion.div
+          key={`stories-${ageId}-${displayBooks.map((book) => book.id).join(',')}`}
           variants={containerVariants}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, margin: '-50px' }}
+          initial={reducedMotion ? false : 'hidden'}
+          animate="visible"
           className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
         >
           {displayBooks.map((book) => (
