@@ -287,6 +287,32 @@ export const storage = {
     } catch (error) {
       console.error('Error setting preference:', error);
     }
-  }
+  },
+
+  getPinnedFavorites: () => {
+    try {
+      const raw = localStorage.getItem(scopedActivityKey('hkids_pinned_favorites_v1'));
+      return raw ? JSON.parse(raw) : [];
+    } catch {
+      return [];
+    }
+  },
+
+  togglePinnedFavorite: (bookId) => {
+    try {
+      const id = Number(bookId) || bookId;
+      const current = storage.getPinnedFavorites();
+      const next = current.includes(id)
+        ? current.filter((x) => x !== id)
+        : [id, ...current].slice(0, 12);
+      localStorage.setItem(scopedActivityKey('hkids_pinned_favorites_v1'), JSON.stringify(next));
+      return next;
+    } catch (error) {
+      console.error('Error toggling pinned favorite:', error);
+      return storage.getPinnedFavorites();
+    }
+  },
+
+  isPinnedFavorite: (bookId) => storage.getPinnedFavorites().includes(Number(bookId) || bookId),
 };
 

@@ -24,17 +24,22 @@ import { getMotionProps, kidsCardAppear, kidsPageEnter } from '../constants/kids
 import { useOfflineContent } from '../hooks/useOfflineContent';
 import { playKidsUiSound } from '../utils/kidsUiSound';
 import { getGuideVoicePhrase, KIDS_PICTOGRAMS } from '../utils/kidsGuidePhrases';
+import { getSmartEmptyRecommendations } from '../utils/personalizationEngine';
+import { withPersonalizationLabels } from '../constants/personalizationLabels';
+import { deriveBookTheme } from '../utils/bookCover';
 
 function Favorites() {
   const [favoriteBooks, setFavoriteBooks] = useState([]);
   const [loading, setLoading] = useState(true);
-  const { language, isRtl, t } = useLanguage();
+  const { language, isRtl, t: tRaw } = useLanguage();
+  const t = useMemo(() => withPersonalizationLabels(tRaw, language), [tRaw, language]);
   const { user } = useAuth();
   const navigate = useNavigate();
   const reducedMotion = useReducedMotion();
   const offlineContent = useOfflineContent();
   const isKidMode = user?.role === 'kid';
   const { showToast } = useToast();
+  const [allBooks, setAllBooks] = useState([]);
 
   useEffect(() => {
     loadFavorites();
@@ -52,6 +57,7 @@ function Favorites() {
       }
 
       const response = await booksAPI.getPublishedBooks({ language });
+      setAllBooks(response.data || []);
       const favorites = response.data.filter((book) => favoriteIds.includes(book.id));
 
       const missingBookIds = favoriteIds.filter((id) => !favorites.find((b) => b.id === id));
@@ -84,8 +90,42 @@ function Favorites() {
     loadFavorites();
   };
 
-  const pinnedFavorites = useMemo(() => favoriteBooks.slice(0, 3), [favoriteBooks]);
+  const [pinnedIds, setPinnedIds] = useState(() => storage.getPinnedFavorites());
+
+  const togglePin = (bookId) => {
+    playKidsUiSound('tap');
+    const next = storage.togglePinnedFavorite(bookId);
+    setPinnedIds(next);
+  };
+
+  const pinnedFavorites = useMemo(() => {
+    const pinned = pinnedIds
+      .map((id) => favoriteBooks.find((book) => book.id === id))
+      .filter(Boolean);
+    if (pinned.length) return pinned;
+    return favoriteBooks.slice(0, 3);
+  }, [favoriteBooks, pinnedIds]);
+
   const recentFavorites = useMemo(() => favoriteBooks.slice(0, 12), [favoriteBooks]);
+
+  const favoriteCollections = useMemo(() => {
+    const byTheme = new Map();
+    favoriteBooks.forEach((book) => {
+      const theme = deriveBookTheme(book) || book.theme || book.category_name || 'collection';
+      if (!byTheme.has(theme)) byTheme.set(theme, []);
+      byTheme.get(theme).push(book);
+    });
+    return [...byTheme.entries()]
+      .filter(([, books]) => books.length >= 2)
+      .slice(0, 3)
+      .map(([theme, books]) => ({ id: theme, title: theme, books: books.slice(0, 8) }));
+  }, [favoriteBooks]);
+
+  const emptyRecs = useMemo(
+    () => getSmartEmptyRecommendations(allBooks.length ? allBooks : favoriteBooks, t),
+    [allBooks, favoriteBooks, t],
+  );
+
   const offlineFavorites = useMemo(
     () => favoriteBooks.filter((book) => {
       const status = offlineContent.getBookStatus?.(book.id);
@@ -105,30 +145,60 @@ function Favorites() {
             <KidsEmptyState
               emoji="❤️"
               title={t('emptyFavoritesTitle')}
-              description={t('emptyBooksDescription')}
+              description={t('persDiscoverHint')}
               actionLabel={t('goToLibrary')}
               onAction={() => navigate('/kids/library')}
               showMascot
               mascotMood="encourage"
+              recommendations={emptyRecs}
+              onRecommendPlay={(book) => navigate(getKidsContentPath(book))}
+              recommendLabel={t('persExploreNew')}
             />
           ) : (
             <>
               {pinnedFavorites.length > 0 && (
-                <KidsBookCarousel
-                  title={t('kidsPinnedFavorites')}
-                  emoji="📌"
-                  books={pinnedFavorites}
-                  isRtl={isRtl}
-                  showActions
-                  hideTitle
-                  pictogramMode
-                  modality="favorites"
-                  onPlay={(book) => {
-                    playKidsUiSound('play');
-                    navigate(getKidsContentPath(book));
-                  }}
-                  onFavorite={(bookId) => removeFavorite(bookId)}
-                />
+                <section className="mb-space-24">
+                  <KidsBookCarousel
+                    title={t('kidsPinnedFavorites')}
+                    emoji="📌"
+                    books={pinnedFavorites}
+                    isRtl={isRtl}
+                    showActions
+                    hideTitle
+                    pictogramMode
+                    modality="favorites"
+                    onPlay={(book) => {
+                      playKidsUiSound('play');
+                      navigate(getKidsContentPath(book));
+                    }}
+                    onFavorite={(bookId) => removeFavorite(bookId)}
+                  />
+                  <div className="flex flex-wrap gap-2 px-space-8 md:px-space-16 mt-2">
+                    {pinnedFavorites.map((book) => (
+                      <button
+                        key={`pin-${book.id}`}
+                        type="button"
+                        onClick={() => togglePin(book.id)}
+                        className="min-h-[44px] rounded-full border border-border bg-card px-3 text-caption font-bold"
+                      >
+                        {storage.isPinnedFavorite(book.id) ? t('persUnpinFavorite') : t('persPinFavorite')} · {book.title}
+                      </button>
+                    ))}
+                    {favoriteBooks
+                      .filter((book) => !pinnedIds.includes(book.id))
+                      .slice(0, 3)
+                      .map((book) => (
+                        <button
+                          key={`unpin-${book.id}`}
+                          type="button"
+                          onClick={() => togglePin(book.id)}
+                          className="min-h-[44px] rounded-full border border-dashed border-border px-3 text-caption font-bold"
+                        >
+                          📌 {t('persPinFavorite')} · {book.title}
+                        </button>
+                      ))}
+                  </div>
+                </section>
               )}
               <KidsBookCarousel
                 title={t('kidsRecentlyFavorited')}
@@ -145,6 +215,24 @@ function Favorites() {
                 }}
                 onFavorite={(bookId) => removeFavorite(bookId)}
               />
+              {favoriteCollections.map((collection) => (
+                <KidsBookCarousel
+                  key={collection.id}
+                  title={`${t('persFavoriteCollections')}: ${collection.title}`}
+                  emoji="🗂️"
+                  books={collection.books}
+                  isRtl={isRtl}
+                  showActions
+                  hideTitle
+                  pictogramMode
+                  modality="favorites"
+                  onPlay={(book) => {
+                    playKidsUiSound('play');
+                    navigate(getKidsContentPath(book));
+                  }}
+                  onFavorite={(bookId) => removeFavorite(bookId)}
+                />
+              ))}
               {offlineFavorites.length > 0 && (
                 <KidsBookCarousel
                   title={t('kidsOfflineFavorites')}

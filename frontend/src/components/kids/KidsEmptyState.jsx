@@ -15,6 +15,9 @@ export function KidsEmptyState({
   illustration,
   showMascot = false,
   mascotMood = 'encourage',
+  recommendations = [],
+  onRecommendPlay = null,
+  recommendLabel = null,
 }) {
   const reducedMotion = useReducedMotion();
 
@@ -49,6 +52,20 @@ export function KidsEmptyState({
         <p className={`relative kids-shelf-subtitle !mx-auto mb-6 line-clamp-2 ${compact ? '!text-sm' : ''}`}>
           {description}
         </p>
+      )}
+      {Array.isArray(recommendations) && recommendations.length > 0 && (
+        <div className="relative mb-6 flex flex-wrap justify-center gap-2">
+          {recommendations.slice(0, 4).map((book) => (
+            <button
+              key={book.id || book.title}
+              type="button"
+              onClick={() => onRecommendPlay?.(book)}
+              className="min-h-[48px] rounded-2xl border border-border bg-card px-3 py-2 text-caption font-bold shadow-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-300"
+            >
+              {book.title || recommendLabel || '✨'}
+            </button>
+          ))}
+        </div>
       )}
       {actionLabel && onAction && (
         <KidsButton onClick={onAction} className="relative !min-h-[56px] !text-lg mx-auto">

@@ -69,7 +69,11 @@ export function KidsContinueRail({
       <div className="flex gap-space-28 md:gap-space-32 overflow-x-auto px-space-8 md:px-space-16 pb-space-16 snap-x snap-mandatory kids-scroll-smooth custom-scrollbar">
         {books.map((book) => {
           const progress = Math.min(100, Math.max(0, Number(book.kid_progress_percent || book.progress || 0)));
-          const remaining = estimateRemainingMinutes(book, progress);
+          const remaining = book.remaining_minutes ?? estimateRemainingMinutes(book, progress);
+          const finished = Boolean(book.finished) || progress >= 100;
+          const lastOpened = book.last_opened_at
+            ? new Date(book.last_opened_at).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })
+            : null;
 
           return (
             <motion.article
@@ -92,8 +96,8 @@ export function KidsContinueRail({
                   imgClassName="absolute inset-0 h-full w-full object-cover transition-opacity duration-300 ease-out"
                 />
                 <span className="kids-book-meta-chip kids-book-meta-chip--continue kids-book-meta-chip--pictogram absolute top-space-10 inset-inline-start-space-10 z-10">
-                  <span aria-hidden="true">{KIDS_PICTOGRAMS.continue}</span>
-                  <span className="sr-only">{t('resume')}</span>
+                  <span aria-hidden="true">{finished ? '⭐' : KIDS_PICTOGRAMS.continue}</span>
+                  <span className="sr-only">{finished ? (t('persFinishedBadge') || 'Finished') : t('resume')}</span>
                 </span>
                 <div className="kids-continue-ring-wrap" aria-hidden="true">
                   <ProgressRing progress={progress} reducedMotion={reducedMotion} />
@@ -108,6 +112,11 @@ export function KidsContinueRail({
 
               <div className="kids-book-collectible-meta grow">
                 <h3 className="sr-only">{book.title}</h3>
+                {lastOpened ? (
+                  <p className="text-caption text-foreground-muted mb-2 px-1">
+                    {t('persLastOpened') || 'Last opened'}: {lastOpened}
+                  </p>
+                ) : null}
                 <KidsButton
                   variant="primary"
                   size="md"

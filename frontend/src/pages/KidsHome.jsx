@@ -3,7 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
-import { localizeKidCategories, getKidCategory } from '../constants/kidCategories';
+import { localizeKidCategories } from '../constants/kidCategories';
 import { VoiceAssistant } from '../components/kids/VoiceAssistant';
 import { KidsPageShell } from '../components/kids/KidsPageShell';
 import { KidsBookCarousel } from '../components/kids/KidsBookCarousel';
@@ -26,38 +26,27 @@ import { Avatar } from '../components/ui';
 import { KidsTrustBadges } from '../components/kids/KidsTrustBadges';
 import { KidsProfilePanel } from '../components/kids/KidsProfilePanel';
 import { BookGridSkeleton } from '../components/SkeletonLoader';
-import { bookMatchesKidCategory, getCategoryContentStrategy } from '../utils/kidCategoryContent';
-import {
-  annotateBooksWithReasons,
-  filterByAgeBand,
-  filterSeasonalBooks,
-  inferLikedThemeId,
-} from '../utils/discoveryRails';
 import { useReducedMotion } from '../hooks/useReducedMotion';
 import { getHoverMotion, kidsHoverLift, getMotionProps, kidsCarouselReveal } from '../constants/kidsMotion';
 import { shouldShowKidOnboarding } from '../utils/onboarding';
 import { buildKidsGreeting } from '../utils/kidsGreeting';
 import {
-  buildAudioDiscoveries,
-  buildBedtimeShelf,
-  buildPersonalizedRecommended,
   buildSoftProgressSummary,
-  buildWorldShelves,
   collectCompletedBookIds,
-  excludeBookIds,
   getKidsPersonalizationProfile,
   pickFeaturedBook,
   reorderCategoriesByWorlds,
-  shouldPrioritizeAudio,
 } from '../utils/kidsPersonalization';
+import { buildSmartHomeSections, recordShownBooks } from '../utils/personalizationEngine';
+import { withPersonalizationLabels } from '../constants/personalizationLabels';
 import { buildFinishedStories } from '../utils/bookPreview';
 import { KidsHomeProgressStrip } from '../components/kids/KidsHomeProgressStrip';
+import { KidsAchievementStrip } from '../components/kids/KidsAchievementStrip';
 import { KidsGuideCompanion } from '../components/kids/KidsGuideCompanion';
 import { KIDS_PICTOGRAMS, getGuideVoicePhrase, getCategoryVoicePhrase } from '../utils/kidsGuidePhrases';
 import { playKidsUiSound } from '../utils/kidsUiSound';
 import { useKidsVoiceGuide } from '../hooks/useKidsVoiceGuide';
 import { getCachedKidProfile } from '../services/cloud/cloudSyncService';
-import { onboardingBandToRange } from '../constants/ageGroups';
 
 function getRecommendedBooks(sections = []) {
   const recommendedSection = sections.find((section) => section.id === 'recommended_for_you');
@@ -73,23 +62,11 @@ const AUTONOMY_WORLDS = [
 
 const WORLD_CATEGORY_IDS = ['animals', 'space', 'princesses', 'bedtime', 'dinosaurs', 'ocean', 'world', 'colors'];
 
-const MAGIC_STRATEGY = {
-  type: 'books',
-  themeId: 'princesses',
-  match: ['princess', 'princesse', 'fairy', 'conte', 'tale', 'magic', 'magie', 'wizard', 'sorci', 'enchant', 'fee'],
-};
-
-function filterBooksByCategory(books, categoryId) {
-  const strategy = categoryId === 'magic'
-    ? MAGIC_STRATEGY
-    : getCategoryContentStrategy(categoryId);
-  return books.filter((book) => bookMatchesKidCategory(book, strategy)).slice(0, 12);
-}
-
 function KidsHome() {
   const { user } = useAuth();
   const { showToast } = useToast();
-  const { language, isRtl, t } = useLanguage();
+  const { language, isRtl, t: tRaw } = useLanguage();
+  const t = useMemo(() => withPersonalizationLabels(tRaw, language), [tRaw, language]);
   const navigate = useNavigate();
   const location = useLocation();
   const reducedMotion = useReducedMotion();
@@ -201,25 +178,25 @@ function KidsHome() {
     [publishedBooks],
   );
 
-  const continueBooks = useMemo(
-    () => progressRows
-      .filter((item) => !item.completed && Number(item.progress_percent || 0) > 0)
-      .map((item) => {
-        const published = publishedBooks.find((book) => book.id === item.book_id);
-        return {
-          ...(published || {}),
-          id: item.book_id,
-          title: item.book_title || published?.title,
-          cover_image: published?.cover_image || item.cover_image,
-          slug: published?.slug || item.slug,
-          theme: published?.theme || item.theme,
-          author: published?.author || item.author,
-          kid_progress_percent: item.progress_percent,
-          current_page: item.current_page,
-        };
-      }),
-    [progressRows, publishedBooks],
+  const smartHome = useMemo(
+    () => buildSmartHomeSections({
+      publishedBooks,
+      recommendedBooks,
+      progressRows,
+      favoriteBooks,
+      t,
+      language,
+    }),
+    [publishedBooks, recommendedBooks, progressRows, favoriteBooks, t, language],
   );
+
+  useEffect(() => {
+    const ids = smartHome.impressionIds || [];
+    if (!ids.length) return;
+    recordShownBooks(ids);
+  }, [smartHome.impressionIds?.join(',')]);
+
+  const continueBooks = smartHome.continueBooks || [];
 
   const softProgress = useMemo(
     () => buildSoftProgressSummary({
@@ -286,68 +263,6 @@ function KidsHome() {
     return reorderCategoriesByWorlds(categories, personalization.favoriteWorlds);
   }, [language, personalization.favoriteWorlds]);
 
-  const worldShelves = useMemo(
-    () => buildWorldShelves(publishedBooks, personalization.favoriteWorlds, t, {
-      excludeIds: completedBookIds,
-    }),
-    [publishedBooks, personalization.favoriteWorlds, t, completedBookIds],
-  );
-
-  const likedThemeId = useMemo(
-    () => inferLikedThemeId(favoriteBooks, localizeKidCategories(language)),
-    [favoriteBooks, language],
-  );
-  const likedTheme = likedThemeId ? getKidCategory(likedThemeId, language) : null;
-
-  const becauseYouLikedBooks = useMemo(() => {
-    // Prefer onboarding world shelves; fall back to favorites-based affinity
-    if (worldShelves.length > 0) return [];
-    const discoveryPool = excludeBookIds(publishedBooks, completedBookIds);
-    if (!likedThemeId) {
-      return annotateBooksWithReasons(favoriteBooks.slice(0, 12), t('discoverReasonLoved'));
-    }
-    const themed = filterBooksByCategory(discoveryPool, likedThemeId)
-      .filter((book) => !favoriteIds.includes(book.id))
-      .slice(0, 12);
-    const reason = t('discoverBecauseYouLiked', { theme: likedTheme?.shortLabel || likedTheme?.label || likedThemeId });
-    return annotateBooksWithReasons(themed.length ? themed : favoriteBooks.slice(0, 12), reason);
-  }, [worldShelves.length, likedThemeId, likedTheme, publishedBooks, favoriteBooks, favoriteIds, completedBookIds, t]);
-
-  const recommendedForYou = useMemo(() => {
-    const personalized = buildPersonalizedRecommended({
-      publishedBooks,
-      recommendedBooks,
-      favoriteWorlds: personalization.favoriteWorlds,
-      ageBand: personalization.ageBand,
-      readingGoal: personalization.readingGoal,
-      t,
-      excludeIds: completedBookIds,
-    });
-    const worldBookIds = new Set(
-      worldShelves.flatMap((shelf) => shelf.books.map((book) => book.id)),
-    );
-    const deduped = personalized.filter((book) => !worldBookIds.has(book.id));
-    // Keep a personal shelf even when worlds already filled most of the screen
-    return (deduped.length >= 3 ? deduped : personalized).slice(0, 12);
-  }, [
-    publishedBooks,
-    recommendedBooks,
-    personalization.favoriteWorlds,
-    personalization.ageBand,
-    personalization.readingGoal,
-    worldShelves,
-    completedBookIds,
-    t,
-  ]);
-
-  const recentlyAdded = useMemo(
-    () => annotateBooksWithReasons(
-      excludeBookIds(newBooks, completedBookIds),
-      t('discoverReasonNew'),
-    ),
-    [newBooks, completedBookIds, t],
-  );
-
   const finishedStories = useMemo(
     () => buildFinishedStories({
       publishedBooks,
@@ -358,47 +273,10 @@ function KidsHome() {
     [publishedBooks, progressRows, t],
   );
 
-  const seasonalBooks = useMemo(
-    () => annotateBooksWithReasons(
-      filterSeasonalBooks(excludeBookIds(publishedBooks, completedBookIds)),
-      t('discoverSeasonal'),
-    ),
-    [publishedBooks, completedBookIds, t],
-  );
-
-  const ageRange = useMemo(() => {
-    const range = onboardingBandToRange(personalization.ageBand);
-    return [range.min, range.max];
-  }, [personalization.ageBand]);
-
-  const ageCollection = useMemo(
-    () => annotateBooksWithReasons(
-      filterByAgeBand(excludeBookIds(publishedBooks, completedBookIds), ageRange[0], ageRange[1]),
-      t('kidsHomePickedForYou'),
-    ),
-    [publishedBooks, ageRange, completedBookIds, t],
-  );
-
-  const bedtimeAnnotated = useMemo(
-    () => buildBedtimeShelf(publishedBooks, personalization.readingGoal, t, {
-      excludeIds: completedBookIds,
-    }),
-    [publishedBooks, personalization.readingGoal, t, completedBookIds],
-  );
-
-  const audioDiscoveries = useMemo(
-    () => buildAudioDiscoveries(publishedBooks, t, { excludeIds: completedBookIds }),
-    [publishedBooks, t, completedBookIds],
-  );
-
-  const showAudioEarly = shouldPrioritizeAudio(
-    personalization.readingGoal,
-    personalization.favoriteWorlds,
-  );
-
-  const showBedtimeEarly = personalization.readingGoal === 'bedtime';
-
   const badges = Array.isArray(homeData?.badges) ? homeData.badges : [];
+  const personalAchievements = smartHome.achievements || [];
+  const dynamicSections = smartHome.sections || [];
+  const hasPersonalizedContent = dynamicSections.length > 0 || Boolean(featuredBook);
 
   const autonomyWorlds = AUTONOMY_WORLDS.map((world) => {
     if (world.id === 'create' && user?.role !== 'kid') {
@@ -497,7 +375,6 @@ function KidsHome() {
       </header>
 
       <main className="kids-main kids-main-tablet-wide kids-home-main relative z-20">
-        {/* 1. Today's Adventure */}
         <section aria-label={t('kidsStoriesToday')} className="kids-home-hero-section">
           <KidsHeroStoryCard
             book={featuredBook}
@@ -512,7 +389,6 @@ function KidsHome() {
           />
         </section>
 
-        {/* Soft progress — only when signals exist */}
         {softProgress.hasSignal && (
           <KidsHomeProgressStrip
             completed={softProgress.completed}
@@ -523,17 +399,61 @@ function KidsHome() {
           />
         )}
 
-        {/* 2. Continue Reading */}
-        {continueBooks.length > 0 && (
-          <KidsContinueRail
-            books={continueBooks}
-            title={t('kidsHomeContinueAdventures')}
-            emoji={KIDS_PICTOGRAMS.continue}
-            isRtl={isRtl}
-            t={t}
-            onResume={handlePlayBook}
+        {personalAchievements.some((a) => a.earned) && (
+          <KidsAchievementStrip
+            achievements={personalAchievements}
+            language={language}
+            reducedMotion={reducedMotion}
           />
         )}
+
+        {!hasPersonalizedContent && (
+          <KidsEmptyState
+            emoji="📚"
+            title={t('emptyBooksTitle')}
+            description={t('persDiscoverHint')}
+            actionLabel={t('goToLibrary')}
+            onAction={() => navigate('/kids/library')}
+            showMascot
+            mascotMood="encourage"
+            recommendations={publishedBooks.slice(0, 4)}
+            onRecommendPlay={handlePlayBook}
+            recommendLabel={t('persExploreNew')}
+          />
+        )}
+
+        {dynamicSections.map((section) => {
+          if (section.type === 'continue') {
+            return (
+              <KidsContinueRail
+                key={section.id}
+                books={section.books}
+                title={section.title}
+                emoji={section.emoji || KIDS_PICTOGRAMS.continue}
+                isRtl={isRtl}
+                t={t}
+                onResume={handlePlayBook}
+              />
+            );
+          }
+
+          return (
+            <KidsBookCarousel
+              key={section.id}
+              title={section.title}
+              emoji={section.emoji || KIDS_PICTOGRAMS.recommended}
+              books={section.books}
+              {...carouselProps}
+              modality={section.modality || 'books'}
+              onPlay={section.modality === 'audio' ? handleListenBook : handlePlayBook}
+              onSeeAll={section.seeAllTheme
+                ? () => navigate(`/kids/library?theme=${section.seeAllTheme}`)
+                : section.categoryId
+                  ? () => navigate(`/kids/library?theme=${section.categoryId}`)
+                  : goToLibrary}
+            />
+          );
+        })}
 
         {finishedStories.length > 0 && (
           <KidsBookCarousel
@@ -541,56 +461,6 @@ function KidsHome() {
             emoji="⭐"
             books={finishedStories}
             {...carouselProps}
-          />
-        )}
-
-        {worldShelves.map((shelf) => (
-          <KidsBookCarousel
-            key={shelf.id}
-            title={shelf.title}
-            emoji={shelf.emoji || getKidCategory(shelf.categoryId, language)?.pictogram || '📚'}
-            books={shelf.books}
-            {...carouselProps}
-            onSeeAll={() => navigate(`/kids/library?theme=${shelf.categoryId || ''}`)}
-          />
-        ))}
-
-        {recommendedForYou.length > 0 ? (
-          <KidsBookCarousel
-            title={t('forYou')}
-            emoji={KIDS_PICTOGRAMS.recommended}
-            books={recommendedForYou}
-            {...carouselProps}
-          />
-        ) : !worldShelves.length ? (
-          <KidsEmptyState
-            title={t('emptyBooksTitle')}
-            compact
-            actionLabel={t('goToLibrary')}
-            onAction={() => navigate('/kids/library')}
-            showMascot
-          />
-        ) : null}
-
-        {showBedtimeEarly && bedtimeAnnotated.length > 0 && (
-          <KidsBookCarousel
-            title={t('kidsHomeBedtimeGoal')}
-            emoji="🌙"
-            books={bedtimeAnnotated}
-            {...carouselProps}
-            onSeeAll={() => navigate('/kids/library?theme=bedtime')}
-          />
-        )}
-
-        {showAudioEarly && audioDiscoveries.length > 0 && (
-          <KidsBookCarousel
-            title={t('kidsHomeListenDiscover')}
-            emoji={KIDS_PICTOGRAMS.listen}
-            books={audioDiscoveries}
-            {...carouselProps}
-            modality="audio"
-            onPlay={handleListenBook}
-            onSeeAll={() => navigate('/kids/audio')}
           />
         )}
 
@@ -625,69 +495,6 @@ function KidsHome() {
             ))}
           </div>
         </motion.section>
-
-        {recentlyAdded.length > 0 && (
-          <KidsBookCarousel
-            title={t('kidsHomeNewDiscoveries')}
-            emoji={KIDS_PICTOGRAMS.new}
-            books={recentlyAdded}
-            {...carouselProps}
-          />
-        )}
-
-        <div className="kids-home-secondary-shelves space-y-[inherit]">
-          {becauseYouLikedBooks.length > 0 && (
-            <KidsBookCarousel
-              title={likedTheme
-                ? t('discoverBecauseYouLiked', { theme: likedTheme.shortLabel || likedTheme.label })
-                : t('kidsRecentlyLoved')}
-              emoji={likedTheme?.pictogram || KIDS_PICTOGRAMS.favorites}
-              books={becauseYouLikedBooks}
-              {...carouselProps}
-              modality="favorites"
-            />
-          )}
-
-          {!showBedtimeEarly && bedtimeAnnotated.length > 0 && (
-            <KidsBookCarousel
-              title={getKidCategory('bedtime', language)?.label || t('kidsHomeBedtimeGoal')}
-              emoji="🌙"
-              books={bedtimeAnnotated}
-              {...carouselProps}
-              onSeeAll={() => navigate('/kids/library?theme=bedtime')}
-            />
-          )}
-
-          {!showAudioEarly && audioDiscoveries.length > 0 && (
-            <KidsBookCarousel
-              title={t('kidsHomeListenDiscover')}
-              emoji={KIDS_PICTOGRAMS.listen}
-              books={audioDiscoveries}
-              {...carouselProps}
-              modality="audio"
-              onPlay={handleListenBook}
-              onSeeAll={() => navigate('/kids/audio')}
-            />
-          )}
-
-          {ageCollection.length > 0 && (
-            <KidsBookCarousel
-              title={t('kidsHomePickedForYou')}
-              emoji={KIDS_PICTOGRAMS.recommended}
-              books={ageCollection}
-              {...carouselProps}
-            />
-          )}
-
-          {seasonalBooks.length > 0 && (
-            <KidsBookCarousel
-              title={t('discoverSeasonal')}
-              emoji="🍂"
-              books={seasonalBooks}
-              {...carouselProps}
-            />
-          )}
-        </div>
 
         <motion.section
           aria-label={t('kidsAutonomyWorlds')}
@@ -733,6 +540,7 @@ function KidsHome() {
             favoriteBooks={favoriteBooks}
             publishedBooks={publishedBooks}
             badges={badges}
+            personalAchievements={personalAchievements}
             lastActivity={lastActivityText}
             t={t}
             isRtl={isRtl}

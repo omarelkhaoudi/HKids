@@ -127,7 +127,13 @@ function mapProgressToBook(row, publishedBooks = []) {
   };
 }
 
-function buildReadingAchievements({ badges = [], completedCount = 0, favoriteCount = 0, t }) {
+function buildReadingAchievements({
+  badges = [],
+  completedCount = 0,
+  favoriteCount = 0,
+  personalAchievements = [],
+  t,
+}) {
   const fromApi = badges.map((badge) => ({
     id: badge.id,
     label: badge.label,
@@ -136,6 +142,16 @@ function buildReadingAchievements({ badges = [], completedCount = 0, favoriteCou
     earned: Boolean(badge.earned),
   }));
 
+  const fromEngine = (personalAchievements || [])
+    .filter((item) => item.earned)
+    .map((item) => ({
+      id: item.id,
+      label: typeof t === 'function' ? (t(item.labelKey) || item.labelKey) : item.labelKey,
+      description: '',
+      icon: item.emoji || '⭐',
+      earned: true,
+    }));
+
   const derived = [
     {
       id: 'first-story',
@@ -143,6 +159,13 @@ function buildReadingAchievements({ badges = [], completedCount = 0, favoriteCou
       description: t('kidProfileAchFirstStoryDesc'),
       icon: '🌱',
       earned: completedCount >= 1,
+    },
+    {
+      id: 'five-stories',
+      label: t('persAchFiveStories'),
+      description: t('kidProfileAchCuriousDesc'),
+      icon: '📖',
+      earned: completedCount >= 5,
     },
     {
       id: 'ten-stories',
@@ -174,8 +197,13 @@ function buildReadingAchievements({ badges = [], completedCount = 0, favoriteCou
     },
   ];
 
-  const seen = new Set(fromApi.map((item) => item.id));
-  return [...fromApi, ...derived.filter((item) => !seen.has(item.id))];
+  const merged = [...fromApi, ...fromEngine, ...derived];
+  const seen = new Set();
+  return merged.filter((item) => {
+    if (seen.has(item.id)) return false;
+    seen.add(item.id);
+    return true;
+  });
 }
 
 function inferFavoriteCategory(favoriteBooks = [], t) {
@@ -208,6 +236,7 @@ export function KidsProfilePanel({
   favoriteBooks = [],
   publishedBooks = [],
   badges = [],
+  personalAchievements = [],
   lastActivity,
   t,
   isRtl,
@@ -263,6 +292,7 @@ export function KidsProfilePanel({
     badges,
     completedCount,
     favoriteCount: favoriteBooks.length,
+    personalAchievements,
     t,
   });
 
