@@ -15,6 +15,10 @@ export const CONTROL_THEME_OPTIONS = [
   { id: 'alphabet', emoji: '🔤', labelKey: 'pccThemeAlphabet' },
   { id: 'numbers', emoji: '🔢', labelKey: 'pccThemeNumbers' },
   { id: 'spirituality', emoji: '🙏', labelKey: 'pccThemeSpirituality' },
+  { id: 'nature', emoji: '🌿', labelKey: 'pccThemeNature' },
+  { id: 'culture', emoji: '🏛️', labelKey: 'pccThemeCulture' },
+  { id: 'adventure', emoji: '🗺️', labelKey: 'pccThemeAdventure' },
+  { id: 'music', emoji: '🎶', labelKey: 'pccThemeMusic' },
 ];
 
 export const CONTROL_AGE_OPTIONS = AGE_GROUPS.map((group) => ({
@@ -140,6 +144,52 @@ export function exportKidProfilePayload(kid, rules, dashboardData) {
     summary: dashboardData?.summary || null,
     goal: dashboardData?.goal || null,
   };
+}
+
+export function exportKidActivityPayload(dashboardData, kid) {
+  return {
+    exported_at: new Date().toISOString(),
+    kid_id: kid?.id,
+    kid_name: kid?.name,
+    favorites: dashboardData?.favorites?.items || [],
+    history: dashboardData?.history?.items || [],
+    progress: dashboardData?.progress?.items || [],
+    summary: dashboardData?.summary || null,
+  };
+}
+
+export function parseImportedProfilePayload(raw) {
+  let data = raw;
+  if (typeof raw === 'string') {
+    data = JSON.parse(raw);
+  }
+  if (!data || typeof data !== 'object') {
+    throw new Error('Invalid profile payload');
+  }
+  return {
+    kid: data.kid || null,
+    rules: normalizeRulesForm(data.rules || {}),
+  };
+}
+
+/** Apply pin/force ordering for Kids library shelves. */
+export function applyLibraryControlOrdering(books = [], libraryControls = DEFAULT_LIBRARY_CONTROLS) {
+  const forced = new Set((libraryControls.forced_book_ids || []).map(Number));
+  const pinned = new Set((libraryControls.pinned_book_ids || []).map(Number));
+  const custom = new Set((libraryControls.custom_library_ids || []).map(Number));
+  return [...books].sort((a, b) => {
+    const aId = Number(a.id);
+    const bId = Number(b.id);
+    const aRank = (forced.has(aId) ? 0 : pinned.has(aId) ? 1 : custom.has(aId) ? 2 : 3);
+    const bRank = (forced.has(bId) ? 0 : pinned.has(bId) ? 1 : custom.has(bId) ? 2 : 3);
+    if (aRank !== bRank) return aRank - bRank;
+    return 0;
+  });
+}
+
+export function isRecommendationRailEnabled(rails, railId) {
+  if (!rails || typeof rails !== 'object') return true;
+  return rails[railId] !== false;
 }
 
 export { ALL_AGES_ID };

@@ -3,6 +3,8 @@ import { Card, Button, Input } from '../ui';
 import { useLanguage } from '../../context/LanguageContext';
 import { useToast } from '../ToastProvider';
 import { parentalAPI } from '../../api/parental';
+import { ParentProgressRing } from './ParentProgressRing';
+import { DAILY_GOAL_MINUTES } from '../../constants/parentControlCenter';
 
 const GOAL_TYPES = [
   { id: 'minutes', labelKey: 'parentGoalMinutes' },
@@ -74,12 +76,36 @@ export function ParentReadingGoalCard({ kidId, goal, onSaved }) {
       <h2 className="text-heading-l font-black text-foreground mb-2">{t('parentReadingGoal')}</h2>
       <p className="text-body-lg text-foreground-secondary font-medium mb-space-24">{t('parentReadingGoalDesc')}</p>
       {goal && (
-        <div className="mb-space-24 rounded-32 bg-surface-secondary/60 p-space-16 border border-border/40">
-          <p className="text-body font-bold text-primary-600">
-            {goal.progress_value} / {goal.target_value} · {Math.round(goal.progress_percent || 0)}%
-          </p>
+        <div className="mb-space-24 flex flex-col sm:flex-row items-center gap-space-16 rounded-32 bg-surface-secondary/60 p-space-16 border border-border/40">
+          <ParentProgressRing
+            percent={goal.progress_percent || 0}
+            size={96}
+            valueLabel={`${Math.round(goal.progress_percent || 0)}%`}
+            label={t(`parentGoal${goal.period === 'daily' ? 'Daily' : goal.period === 'monthly' ? 'Monthly' : 'Weekly'}`)}
+            tone={goal.achieved ? 'success' : 'primary'}
+          />
+          <div>
+            <p className="text-body font-bold text-primary-600">
+              {goal.progress_value} / {goal.target_value}
+            </p>
+            {goal.achieved ? (
+              <p className="text-caption font-bold text-success-600 mt-1">{t('pccGoalAchieved')}</p>
+            ) : null}
+          </div>
         </div>
       )}
+      <div className="flex flex-wrap gap-2 mb-space-16">
+        {DAILY_GOAL_MINUTES.map((minutes) => (
+          <button
+            key={minutes}
+            type="button"
+            className={`parent-soft-chip ${form.goal_type === 'minutes' && Number(form.target_value) === minutes ? 'is-active is-primary' : ''}`}
+            onClick={() => setForm({ ...form, goal_type: 'minutes', target_value: minutes })}
+          >
+            {minutes} min
+          </button>
+        ))}
+      </div>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-space-16 mb-space-24">
         <div>
           <label className="block text-sm font-bold mb-1">{t('parentGoalType')}</label>

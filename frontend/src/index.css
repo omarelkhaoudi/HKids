@@ -5103,6 +5103,101 @@
     color: var(--color-primary-800);
   }
 
+  .parent-progress-ring {
+    position: relative;
+    display: grid;
+    place-items: center;
+  }
+
+  .parent-progress-ring-label {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    pointer-events: none;
+  }
+
+  .parent-progress-ring-label strong {
+    font-size: 1.1rem;
+    font-weight: 900;
+    color: var(--color-foreground);
+  }
+
+  .parent-progress-ring-label span {
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--color-foreground-muted);
+  }
+
+  .parent-analytics-metric {
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    min-height: 7rem;
+  }
+
+  .parent-analytics-metric-value {
+    font-size: 1.5rem;
+    font-weight: 900;
+    color: var(--color-foreground);
+  }
+
+  .parent-analytics-metric-label {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--color-foreground-secondary);
+  }
+
+  .parent-analytics-bars {
+    display: flex;
+    align-items: flex-end;
+    gap: 0.5rem;
+    min-height: 8rem;
+  }
+
+  .parent-analytics-bar-col {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.35rem;
+    min-width: 0;
+  }
+
+  .parent-analytics-bar {
+    width: 100%;
+    max-width: 2rem;
+    border-radius: 999px 999px 0.5rem 0.5rem;
+    background: linear-gradient(180deg, var(--color-primary-400), var(--color-primary-600));
+    min-height: 0.5rem;
+  }
+
+  .parent-analytics-bar-col span {
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: var(--color-foreground-muted);
+  }
+
+  .parent-achievement-card {
+    display: flex;
+    gap: 0.75rem;
+    align-items: flex-start;
+    padding: 0.85rem 1rem;
+    border-radius: 1.25rem;
+    background: color-mix(in srgb, var(--color-success-100, #dcfce7) 80%, white);
+    border: 1px solid color-mix(in srgb, var(--color-success-300, #86efac) 50%, transparent);
+  }
+
+  .parent-analytics-hero {
+    background:
+      radial-gradient(circle at top right, color-mix(in srgb, var(--color-primary-200) 45%, transparent), transparent 55%),
+      color-mix(in srgb, var(--color-card) 94%, white);
+  }
+
   .parent-control-header {
     display: flex;
     flex-direction: column;

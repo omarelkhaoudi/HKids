@@ -10,7 +10,14 @@ import { useLanguage } from '../context/LanguageContext';
 import { localizeKidCategories, getKidCategory } from '../constants/kidCategories';
 import { useOfflineContent } from '../hooks/useOfflineContent';
 import { getDownloads } from '../services/offline/offlineContentService';
-import { getRestrictionMessage } from '../services/parental/parentalAccessService';
+import {
+  filterBooksByParentalPolicy,
+  getCurrentParentalPolicy,
+  getLibraryControlsFromPolicy,
+  getRecommendationRailsFromPolicy,
+  getRestrictionMessage,
+} from '../services/parental/parentalAccessService';
+import { applyLibraryControlOrdering, isRecommendationRailEnabled } from '../constants/parentControlCenter';
 import { VoiceAssistant } from '../components/kids/VoiceAssistant';
 import { KidsPageShell } from '../components/kids/KidsPageShell';
 import { KidsBookCarousel } from '../components/kids/KidsBookCarousel';
@@ -130,6 +137,7 @@ function KidsLibrary() {
   const { speakGuide } = useKidsVoiceGuide(language);
   const personalization = useMemo(() => getKidsPersonalizationProfile(), []);
   const [books, setBooks] = useState([]);
+  const [parentalPolicy, setParentalPolicy] = useState(null);
   const completedBookIds = useMemo(() => collectCompletedBookIds(), [books]);
   const softProgress = useMemo(
     () => buildSoftProgressSummary({
@@ -138,12 +146,24 @@ function KidsLibrary() {
     }),
     [personalization.favoriteWorlds, t],
   );
-  const childThemes = useMemo(
-    () => reorderThemesByWorlds([
+  const childThemes = useMemo(() => {
+    const blocked = new Set(parentalPolicy?.rules?.blocked_themes || []);
+    const allowed = parentalPolicy?.rules?.allowed_themes || [];
+    const base = reorderThemesByWorlds([
       { id: 'all', label: t('allCategories'), shortLabel: t('allCategories'), pictogram: '⭐', cue: 'Go', gradient: 'from-primary-400 to-secondary-400', match: [] },
       ...localizeKidCategories(language),
-    ], personalization.favoriteWorlds),
-    [language, t, personalization.favoriteWorlds],
+    ], personalization.favoriteWorlds);
+    return base.filter((theme) => {
+      if (theme.id === 'all') return true;
+      if (blocked.has(theme.id)) return false;
+      if (allowed.length > 0 && !allowed.includes(theme.id)) return false;
+      return true;
+    });
+  }, [language, t, personalization.favoriteWorlds, parentalPolicy]);
+
+  const recommendationRails = useMemo(
+    () => getRecommendationRailsFromPolicy(parentalPolicy),
+    [parentalPolicy],
   );
 
   const urlTheme = searchParams.get('theme') || 'all';
@@ -183,17 +203,27 @@ function KidsLibrary() {
           }),
         ]);
         if (!active) return;
-        setBooks(booksRes.data || []);
+        const policy = await getCurrentParentalPolicy().catch(() => null);
+        if (!active) return;
+        setParentalPolicy(policy);
+        const rawBooks = booksRes.data || [];
+        const filtered = filterBooksByParentalPolicy(rawBooks, policy);
+        const ordered = applyLibraryControlOrdering(filtered, getLibraryControlsFromPolicy(policy));
+        setBooks(ordered);
         setRecommendationSections(recommendationsRes.data?.sections || []);
       } catch (error) {
         if (!active) return;
         if (!navigator.onLine) {
           const downloads = await getDownloads();
           if (!active) return;
+          const policy = await getCurrentParentalPolicy().catch(() => null);
+          if (!active) return;
+          setParentalPolicy(policy);
           const offlineBooks = downloads
             .filter((item) => item.type === 'book' && item.status === 'downloaded')
             .map((item) => item.payload);
-          setBooks(offlineBooks);
+          const filtered = filterBooksByParentalPolicy(offlineBooks, policy);
+          setBooks(applyLibraryControlOrdering(filtered, getLibraryControlsFromPolicy(policy)));
           setRecommendationSections([]);
           showToast(t('offlineMode'), 'info');
         } else {
@@ -868,7 +898,7 @@ function KidsLibrary() {
               />
             )}
 
-            {continueBooks.length > 0 && (
+            {continueBooks.length > 0 && isRecommendationRailEnabled(recommendationRails, 'continue') && (
               <KidsContinueRail
                 books={continueBooks}
                 title={t('continueReading')}
@@ -880,7 +910,7 @@ function KidsLibrary() {
               />
             )}
 
-            {dailyAnnotated.length > 0 && (
+            {dailyAnnotated.length > 0 && isRecommendationRailEnabled(recommendationRails, 'recommended') && (
               <KidsHeroStoryCard
                 book={{
                   ...dailyAnnotated[0],
@@ -895,7 +925,7 @@ function KidsLibrary() {
               />
             )}
 
-            {todayAnnotated.length > 0 && (
+            {todayAnnotated.length > 0 && isRecommendationRailEnabled(recommendationRails, 'recommended') && (
               <KidsBookCarousel
                 title={t('forYou')}
                 emoji={KIDS_PICTOGRAMS.recommended}
@@ -905,7 +935,7 @@ function KidsLibrary() {
               />
             )}
 
-            {popularAnnotated.length > 0 && (
+            {popularAnnotated.length > 0 && isRecommendationRailEnabled(recommendationRails, 'popular') && (
               <KidsBookCarousel
                 title={t('kidsPopularThisWeek')}
                 emoji="🔥"
@@ -915,7 +945,7 @@ function KidsLibrary() {
               />
             )}
 
-            {newAnnotated.length > 0 && (
+            {newAnnotated.length > 0 && isRecommendationRailEnabled(recommendationRails, 'new') && (
               <KidsBookCarousel
                 title={t('newBooks')}
                 emoji={KIDS_PICTOGRAMS.new}
@@ -970,7 +1000,7 @@ function KidsLibrary() {
               />
             )}
 
-            {premiumShelf.length > 0 && (
+            {premiumShelf.length > 0 && isRecommendationRailEnabled(recommendationRails, 'premium') && (
               <KidsBookCarousel
                 title={t('kidsPremiumShelf')}
                 emoji="✨"
@@ -980,7 +1010,7 @@ function KidsLibrary() {
               />
             )}
 
-            {randomExplore.length > 0 && (
+            {randomExplore.length > 0 && isRecommendationRailEnabled(recommendationRails, 'discover') && (
               <KidsBookCarousel
                 title={t('kidsSurpriseExplore')}
                 emoji="🎲"

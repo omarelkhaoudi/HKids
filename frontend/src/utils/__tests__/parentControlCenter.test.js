@@ -6,6 +6,8 @@ import {
   toggleBookInLibrary,
   toggleListValue,
   exportKidProfilePayload,
+  applyLibraryControlOrdering,
+  parseImportedProfilePayload,
   CONTROL_AGE_OPTIONS,
 } from '../../constants/parentControlCenter';
 import { bookOverlapsAgeGroup, getAgeGroupById } from '../../constants/ageGroups';
@@ -52,5 +54,24 @@ describe('parent control center', () => {
     expect(bookAllowedByAgeGroups(book, [])).toBe(true);
     expect(bookAllowedByAgeGroups(book, ['4-6', '6-8'])).toBe(true);
     expect(bookAllowedByAgeGroups(book, ['0-2', '10-12'])).toBe(false);
+  });
+
+  it('orders forced and pinned books first', () => {
+    const books = [{ id: 1 }, { id: 2 }, { id: 3 }];
+    const ordered = applyLibraryControlOrdering(books, {
+      forced_book_ids: [3],
+      pinned_book_ids: [1],
+      custom_library_ids: [],
+      hidden_book_ids: [],
+    });
+    expect(ordered.map((book) => book.id)).toEqual([3, 1, 2]);
+  });
+
+  it('parses imported profile payloads', () => {
+    const payload = parseImportedProfilePayload({
+      rules: { allowed_age_groups: ['0-2'], recommendation_rails: { popular: false } },
+    });
+    expect(payload.rules.allowed_age_groups).toEqual(['0-2']);
+    expect(payload.rules.recommendation_rails.popular).toBe(false);
   });
 });

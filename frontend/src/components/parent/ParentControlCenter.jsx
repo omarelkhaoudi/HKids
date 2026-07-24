@@ -1,6 +1,6 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Button, Skeleton } from '../ui';
+import { Button } from '../ui';
 import { useLanguage } from '../../context/LanguageContext';
 import { useToast } from '../ToastProvider';
 import { useConfirmDialog } from '../../hooks/useConfirmDialog';
@@ -14,14 +14,17 @@ import {
   DAILY_GOAL_MINUTES,
   RECOMMENDATION_RAIL_OPTIONS,
   SCHOOL_LEVEL_OPTIONS,
+  exportKidActivityPayload,
   exportKidProfilePayload,
+  parseImportedProfilePayload,
   toggleBookInLibrary,
   toggleListValue,
 } from '../../constants/parentControlCenter';
 import { ParentCategoryApprovals } from './ParentCategoryApprovals';
 import { ParentReadingGoalCard } from './ParentReadingGoalCard';
-import { ParentDashboardAnalytics } from './ParentDashboardAnalytics';
+import { ParentPremiumAnalytics } from './ParentPremiumAnalytics';
 import { ParentEmptyState } from './ParentEmptyState';
+import { ParentProgressRing } from './ParentProgressRing';
 import { KidsBookCover } from '../kids/KidsBookCover';
 import { getHoverMotion } from '../../constants/kidsMotion';
 
@@ -66,6 +69,7 @@ export function ParentControlCenter({
   onAddKid,
   onRefreshDashboard,
   onOpenOffline = null,
+  onImportRules = null,
 }) {
   const { t } = useLanguage();
   const { showToast } = useToast();
@@ -73,12 +77,14 @@ export function ParentControlCenter({
   const reducedMotion = useReducedMotion();
   const [tab, setTab] = useState('content');
   const [busy, setBusy] = useState(false);
+  const importInputRef = useRef(null);
   const contentTypes = localizeContentOptions(CONTENT_TYPE_OPTIONS, language);
 
   const favorites = dashboardData?.favorites?.items || [];
   const history = dashboardData?.history?.items || [];
   const progress = dashboardData?.progress?.items || [];
   const continueReading = progress.filter((book) => (book.progress_percent || 0) > 0 && (book.progress_percent || 0) < 100);
+  const hiddenIds = rulesForm.library_controls?.hidden_book_ids || [];
   const libraryBooks = useMemo(() => {
     const map = new Map();
     [...favorites, ...history, ...progress].forEach((book) => {
@@ -88,6 +94,7 @@ export function ParentControlCenter({
     });
     return [...map.values()];
   }, [favorites, history, progress]);
+  const hiddenBooks = libraryBooks.filter((book) => hiddenIds.includes(Number(book.book_id || book.id)));
 
   if (!kid) {
     return (
@@ -148,6 +155,68 @@ export function ParentControlCenter({
     link.click();
     URL.revokeObjectURL(url);
     showToast(t('pccExported'), 'success');
+  };
+
+  const handleExportActivity = () => {
+    const payload = exportKidActivityPayload(dashboardData, kid);
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `hkids-activity-${kid.name || kid.id}.json`;
+    link.click();
+    URL.revokeObjectURL(url);
+    showToast(t('pccActivityExported'), 'success');
+  };
+
+  const handleImportFile = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    try {
+      const text = await file.text();
+      const imported = parseImportedProfilePayload(text);
+      if (imported.rules) {
+        setRulesForm(imported.rules);
+        onImportRules?.(imported.rules);
+        showToast(t('pccImported'), 'success');
+      }
+    } catch (error) {
+      console.error(error);
+      showToast(t('pccImportError'), 'error');
+    } finally {
+      event.target.value = '';
+    }
+  };
+
+  const handleRestoreHidden = (bookId) => {
+    const controls = rulesForm.library_controls || {};
+    patchRules({
+      library_controls: {
+        ...controls,
+        hidden_book_ids: (controls.hidden_book_ids || []).filter((id) => Number(id) !== Number(bookId)),
+      },
+    });
+  };
+
+  const handleResetProgress = async () => {
+    const ok = await requestConfirm({
+      title: t('confirmTitle'),
+      message: t('pccResetProgressConfirm'),
+      confirmLabel: t('confirmDelete'),
+      danger: true,
+    });
+    if (!ok) return;
+    try {
+      setBusy(true);
+      await parentalAPI.clearKidActivity(kid.id, 'progress');
+      showToast(t('pccProgressReset'), 'success');
+      onRefreshDashboard?.();
+    } catch (error) {
+      console.error(error);
+      showToast(t('pccFavoritesError'), 'error');
+    } finally {
+      setBusy(false);
+    }
   };
 
   const saveButton = (
@@ -318,7 +387,7 @@ export function ParentControlCenter({
                     const forced = controls.forced_book_ids?.includes(id);
                     const custom = controls.custom_library_ids?.includes(id);
                     return (
-                      <article key={id} className="rounded-3xl border border-border/50 bg-card p-3 space-y-2">
+                      <article key={id} className={`rounded-3xl border p-3 space-y-2 ${hidden ? 'border-danger-200 opacity-70' : 'border-border/50 bg-card'}`}>
                         <div className="relative aspect-[3/4] rounded-2xl overflow-hidden bg-surface-secondary">
                           <KidsBookCover book={book} alt={book.title || ''} imgClassName="absolute inset-0 w-full h-full object-cover" />
                         </div>
@@ -327,7 +396,7 @@ export function ParentControlCenter({
                           {[
                             { field: 'pinned_book_ids', active: pinned, label: t('pccPin') },
                             { field: 'forced_book_ids', active: forced, label: t('pccForce') },
-                            { field: 'hidden_book_ids', active: hidden, label: t('pccHide') },
+                            { field: 'hidden_book_ids', active: hidden, label: hidden ? t('pccRestore') : t('pccHide') },
                             { field: 'custom_library_ids', active: custom, label: t('pccCustom') },
                           ].map((action) => (
                             <button
@@ -347,22 +416,54 @@ export function ParentControlCenter({
                   })}
                 </div>
               )}
+              {hiddenBooks.length > 0 && (
+                <div className="mt-space-24 pt-space-16 border-t border-border/40">
+                  <h4 className="font-black mb-space-12">{t('pccHiddenBooks')} ({hiddenBooks.length})</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {hiddenBooks.map((book) => (
+                      <button
+                        key={book.book_id || book.id}
+                        type="button"
+                        className="parent-soft-chip"
+                        onClick={() => handleRestoreHidden(book.book_id || book.id)}
+                      >
+                        {t('pccRestore')}: {book.title}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+              <div className="mt-space-24 pt-space-16 border-t border-border/40 flex flex-wrap gap-2">
+                <Button variant="secondary" onClick={() => onOpenOffline?.()} className="min-h-touch font-bold">
+                  {t('pccManageDownloads')}
+                </Button>
+                {saveButton}
+              </div>
             </SectionCard>
           )}
 
           {tab === 'goals' && (
             <>
               <SectionCard title={t('pccGoalsQuickTitle')} subtitle={t('pccGoalsQuickDesc')}>
-                <div className="flex flex-wrap gap-2">
-                  {DAILY_GOAL_MINUTES.map((minutes) => (
-                    <SoftChip
-                      key={minutes}
-                      active={Number(rulesForm.daily_screen_time_minutes) === minutes}
-                      onClick={() => patchRules({ daily_screen_time_minutes: minutes })}
-                    >
-                      {minutes} min
-                    </SoftChip>
-                  ))}
+                <div className="flex flex-col sm:flex-row items-center gap-space-24 mb-space-16">
+                  <ParentProgressRing
+                    percent={dashboardData?.goal?.progress_percent || 0}
+                    size={120}
+                    valueLabel={`${Math.round(dashboardData?.goal?.progress_percent || 0)}%`}
+                    label={t('parentReadingGoal')}
+                    tone={dashboardData?.goal?.achieved ? 'success' : 'primary'}
+                  />
+                  <div className="flex flex-wrap gap-2 flex-1">
+                    {DAILY_GOAL_MINUTES.map((minutes) => (
+                      <SoftChip
+                        key={minutes}
+                        active={Number(rulesForm.daily_screen_time_minutes) === minutes}
+                        onClick={() => patchRules({ daily_screen_time_minutes: minutes })}
+                      >
+                        {minutes} min
+                      </SoftChip>
+                    ))}
+                  </div>
                 </div>
                 <div className="pt-space-16 flex justify-end">{saveButton}</div>
               </SectionCard>
@@ -382,6 +483,7 @@ export function ParentControlCenter({
                 <div className="flex flex-wrap gap-2">
                   <Button variant="ghost" disabled={busy} onClick={() => handleClearActivity('favorites')}>{t('pccClearFavorites')}</Button>
                   <Button variant="ghost" disabled={busy} onClick={() => handleClearActivity('history')}>{t('pccClearHistory')}</Button>
+                  <Button variant="secondary" disabled={busy} onClick={handleExportActivity}>{t('pccExportActivity')}</Button>
                   <Button variant="secondary" disabled={busy} onClick={() => handleClearActivity('all')}>{t('pccClearAll')}</Button>
                 </div>
               )}
@@ -472,30 +574,32 @@ export function ParentControlCenter({
           )}
 
           {tab === 'analytics' && (
-            activityLoading && !dashboardData ? (
-              <div className="space-y-4" aria-busy="true">
-                <Skeleton className="h-40 rounded-3xl" />
-                <Skeleton className="h-56 rounded-3xl" />
-              </div>
-            ) : (
-              <ParentDashboardAnalytics
-                data={dashboardData}
-                loading={activityLoading}
-                language={language}
-                t={t}
-                kidName={kid.name}
-                kid={kid}
-              />
-            )
+            <ParentPremiumAnalytics
+              data={dashboardData}
+              loading={activityLoading}
+              language={language}
+              t={t}
+              kidName={kid.name}
+            />
           )}
 
           {tab === 'actions' && (
             <SectionCard title={t('pccActionsTitle')} subtitle={t('pccActionsDesc')}>
+              <input
+                ref={importInputRef}
+                type="file"
+                accept="application/json,.json"
+                className="hidden"
+                onChange={handleImportFile}
+              />
               <div className="parent-quick-grid">
                 <button type="button" className="parent-quick-btn" onClick={onAddKid}>{t('parentAddKid')}</button>
                 <button type="button" className="parent-quick-btn" onClick={onEditProfile}>{t('pccEditProfile')}</button>
                 <button type="button" className="parent-quick-btn" onClick={handleExportProfile}>{t('pccExportProfile')}</button>
+                <button type="button" className="parent-quick-btn" onClick={() => importInputRef.current?.click()}>{t('pccImportProfile')}</button>
+                <button type="button" className="parent-quick-btn" onClick={handleExportActivity}>{t('pccExportActivity')}</button>
                 <button type="button" className="parent-quick-btn" onClick={() => onOpenOffline?.() || showToast(t('pccOfflineHint'), 'info')}>{t('pccDownloadOffline')}</button>
+                <button type="button" className="parent-quick-btn" onClick={handleResetProgress}>{t('pccResetProgress')}</button>
                 <button type="button" className="parent-quick-btn" onClick={() => handleClearActivity('all')}>{t('pccResetActivity')}</button>
                 <button type="button" className="parent-quick-btn" onClick={onSaveRules}>{t('parentSaveRules')}</button>
               </div>

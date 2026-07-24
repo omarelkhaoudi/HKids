@@ -125,8 +125,34 @@ export function getParentalViolation(policy, content = null) {
     return restriction('AGE_NOT_ALLOWED');
   }
 
+  const allowedAgeGroups = rules.allowed_age_groups || [];
+  if (allowedAgeGroups.length > 0) {
+    const overlapsGroup = allowedAgeGroups.some((groupId) => {
+      const [loRaw, hiRaw] = String(groupId).split('-');
+      const lo = Number(loRaw);
+      const hi = Number(hiRaw);
+      if (!Number.isFinite(lo) || !Number.isFinite(hi)) return false;
+      const bookMin = Number(minimumAge);
+      const bookMax = Number(maximumAge);
+      if (!Number.isFinite(bookMin) && !Number.isFinite(bookMax)) return true;
+      const safeMin = Number.isFinite(bookMin) ? bookMin : bookMax;
+      const safeMax = Number.isFinite(bookMax) ? bookMax : bookMin;
+      return safeMin <= hi && safeMax >= lo;
+    });
+    if (!overlapsGroup) return restriction('AGE_NOT_ALLOWED');
+  }
+
+  const hiddenIds = rules.library_controls?.hidden_book_ids || [];
+  if (hiddenIds.includes(Number(content.id))) {
+    return restriction('CATEGORY_NOT_ALLOWED');
+  }
+
   if (rules.allowed_languages?.length && (!content.language || !rules.allowed_languages.includes(content.language))) {
     return restriction('LANGUAGE_NOT_ALLOWED');
+  }
+  const blockedThemes = rules.blocked_themes || [];
+  if (blockedThemes.length && content.theme && blockedThemes.includes(content.theme)) {
+    return restriction('THEME_NOT_ALLOWED');
   }
   if (rules.allowed_themes?.length && (!content.theme || !rules.allowed_themes.includes(content.theme))) {
     return restriction('THEME_NOT_ALLOWED');
@@ -175,4 +201,22 @@ export function getRestrictionMessage(error, fallback) {
     : error?.parentalRestriction
       ? error.message
       : fallback;
+}
+
+export function filterBooksByParentalPolicy(books = [], policy = null) {
+  if (!policy?.applies) return books;
+  return books.filter((book) => !getParentalViolation(policy, book));
+}
+
+export function getLibraryControlsFromPolicy(policy) {
+  return policy?.rules?.library_controls || {
+    hidden_book_ids: [],
+    pinned_book_ids: [],
+    forced_book_ids: [],
+    custom_library_ids: [],
+  };
+}
+
+export function getRecommendationRailsFromPolicy(policy) {
+  return policy?.rules?.recommendation_rails || null;
 }

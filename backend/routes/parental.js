@@ -614,9 +614,14 @@ router.delete('/kids/:id/activity/:kind', verifyToken, verifyParent, async (req,
       await pool.query('DELETE FROM kid_book_favorites WHERE kid_profile_id = $1', [kidId]);
     } else if (kind === 'history') {
       await pool.query('DELETE FROM kid_book_history WHERE kid_profile_id = $1', [kidId]);
+    } else if (kind === 'progress') {
+      await pool.query('DELETE FROM kid_reading_progress WHERE kid_profile_id = $1', [kidId]);
+      await pool.query('DELETE FROM kid_reading_sessions WHERE kid_profile_id = $1', [kidId]);
     } else if (kind === 'all') {
       await pool.query('DELETE FROM kid_book_favorites WHERE kid_profile_id = $1', [kidId]);
       await pool.query('DELETE FROM kid_book_history WHERE kid_profile_id = $1', [kidId]);
+      await pool.query('DELETE FROM kid_reading_progress WHERE kid_profile_id = $1', [kidId]);
+      await pool.query('DELETE FROM kid_reading_sessions WHERE kid_profile_id = $1', [kidId]);
     } else {
       return res.status(400).json({ error: 'Unsupported activity kind' });
     }

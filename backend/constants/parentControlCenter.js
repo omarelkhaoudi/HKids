@@ -29,6 +29,10 @@ export const CONTROL_THEME_IDS = [
   'alphabet',
   'numbers',
   'spirituality',
+  'nature',
+  'culture',
+  'adventure',
+  'music',
 ];
 
 export const RECOMMENDATION_RAIL_IDS = [
