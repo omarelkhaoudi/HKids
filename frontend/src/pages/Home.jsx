@@ -1,5 +1,5 @@
 import {useState, useEffect} from 'react';
-import {Link, useNavigate} from 'react-router-dom';
+import {Link, useNavigate, useSearchParams} from 'react-router-dom';
 import {motion, AnimatePresence} from 'framer-motion';
 import {booksAPI, categoriesAPI} from '../api/books';
 import {newsletterAPI} from '../api/newsletter';
@@ -20,6 +20,13 @@ import LibraryMenu from '../components/LibraryMenu';
 import LanguageSelector from '../components/LanguageSelector';
 import {useLanguage} from '../context/LanguageContext';
 import {translations} from '../utils/translations';
+import {
+ AGE_GROUPS,
+ ALL_AGES_ID,
+ bookOverlapsAgeGroup,
+ getAgeGroupById,
+ parseAgeGroupId,
+} from '../constants/ageGroups';
 
 import HeroSection from '../components/home/HeroSection';
 import BookOfTheWeekSection from '../components/home/BookOfTheWeekSection';
@@ -65,13 +72,17 @@ const writeHomeDataCache = (books, categories, language = 'fr') => {
 
 function Home({darkMode, setDarkMode}) {
  const navigate = useNavigate();
+ const [searchParams, setSearchParams] = useSearchParams();
  const {language} = useLanguage();
  const t = translations[language];
  const [books, setBooks] = useState([]);
  const [allBooks, setAllBooks] = useState([]); // Tous les livres pour la recherche
  const [categories, setCategories] = useState([]);
  const [selectedCategory, setSelectedCategory] = useState('');
- const [selectedAge, setSelectedAge] = useState('');
+ const [selectedAge, setSelectedAge] = useState(() => {
+   const fromUrl = parseAgeGroupId(searchParams.get('age'));
+   return fromUrl === ALL_AGES_ID ? '' : fromUrl;
+ });
  const [searchQuery, setSearchQuery] = useState('');
  const [sortBy, setSortBy] = useState('recent'); // recent, title, author
  const [viewMode, setViewMode] = useState('grid'); // grid, list
@@ -173,39 +184,13 @@ function Home({darkMode, setDarkMode}) {
  filtered = filtered.filter(book => book.category_id == selectedCategory);
 }
 
- // Filtre par âge (plage d'âge)
+ // Filtre par âge (plage officielle HKids — chevauchement)
  if (selectedAge) {
- // selectedAge peut être"3","6","9" ou"3-5","6-8","9-12"
- let ageMin, ageMax;
- if (selectedAge.includes('-')) {
- // Format"3-5","6-8","9-12"
- [ageMin, ageMax] = selectedAge.split('-').map(a => parseInt(a));
-} else {
- // Format simple"3","6","9" - convertir en plage
- const age = parseInt(selectedAge);
- if (age === 3) {
- ageMin = 3;
- ageMax = 5;
-} else if (age === 6) {
- ageMin = 6;
- ageMax = 8;
-} else if (age === 9) {
- ageMin = 9;
- ageMax = 12;
-} else {
- ageMin = age;
- ageMax = age;
-}
-}
- 
- // Filtrer les livres dont la plage d'âge se chevauche avec la plage sélectionnée
- filtered = filtered.filter(book => {
- const bookMin = book.age_group_min || 0;
- const bookMax = book.age_group_max || 12;
- // Chevauchement : le livre se chevauche si bookMin <= ageMax && bookMax >= ageMin
- return bookMin <= ageMax && bookMax >= ageMin;
-});
-}
+ const group = getAgeGroupById(parseAgeGroupId(selectedAge));
+ if (group) {
+ filtered = filtered.filter((book) => bookOverlapsAgeGroup(book, group));
+ }
+ }
 
  // Tri
  filtered.sort((a, b) => {
@@ -237,21 +222,10 @@ function Home({darkMode, setDarkMode}) {
  if (!cachedData) {
  setLoading(true);
 }
- // Convertir la plage d'âge en un seul nombre pour l'API (prendre le milieu de la plage)
- let ageGroupForAPI = undefined;
- if (selectedAge) {
- if (selectedAge.includes('-')) {
- const [min, max] = selectedAge.split('-').map(a => parseInt(a));
- ageGroupForAPI = Math.floor((min + max) / 2); // Milieu de la plage
-} else {
- ageGroupForAPI = parseInt(selectedAge);
-}
-}
- 
+ // Load full catalog; age filtering is client-side via official AGE_GROUPS overlap.
  const [booksRes, categoriesRes] = await Promise.all([
  booksAPI.getPublishedBooks({
  category_id: selectedCategory || undefined,
- age_group: ageGroupForAPI,
  language
 }),
  categoriesAPI.getAll()
@@ -317,7 +291,11 @@ function Home({darkMode, setDarkMode}) {
  <LibraryMenu
  categories={categories}
  onCategorySelect={setSelectedCategory}
- onAgeSelect={setSelectedAge}
+ onAgeSelect={(age) => {
+   setSelectedAge(age || '');
+   if (age) setSearchParams({ age });
+   else setSearchParams({});
+ }}
  selectedCategory={selectedCategory}
  selectedAge={selectedAge}
  />
@@ -432,9 +410,11 @@ function Home({darkMode, setDarkMode}) {
  <div className="px-4 pb-3 space-y-2">
  <p className="text-xs text-foreground-muted uppercase tracking-wide px-4 py-2">{t.homeFilterByAge}</p>
  {[
- {age: '3-5', label: t.age3to5, color: 'bg-primary-500 hover:bg-primary-600'},
- {age: '6-8', label: t.age6to8, color: 'bg-accent-500 hover:bg-accent-600'},
- {age: '9-12', label: t.age9to12, color: 'bg-secondary-500 hover:bg-secondary-600'}
+ ...AGE_GROUPS.map((group) => ({
+ age: group.id,
+ label: t[group.labelKey] || `${group.min}–${group.max}`,
+ color: 'bg-primary-500 hover:bg-primary-600',
+ })),
  ].map((ageBtn) => {
  const isSelected = selectedAge === ageBtn.age;
  return (
@@ -442,6 +422,7 @@ function Home({darkMode, setDarkMode}) {
  key={ageBtn.age}
  onClick={() => {
  setSelectedAge(ageBtn.age);
+ setSearchParams({ age: ageBtn.age });
  setMobileMenuOpen(false);
  setTimeout(() => {
  document.getElementById('popular-stories')?.scrollIntoView({behavior: 'smooth'});

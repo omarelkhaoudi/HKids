@@ -3,6 +3,11 @@
  * No API calls; filters already-loaded books.
  */
 
+import {
+  bookOverlapsAgeRange,
+  getBookAgeRange,
+} from '../constants/ageGroups';
+
 const SEASONAL_KEYWORDS = {
   winter: ['winter', 'hiver', 'snow', 'neige', 'noel', 'christmas', 'froid', 'ice'],
   spring: ['spring', 'printemps', 'flower', 'fleur', 'easter', 'paques', 'jardin'],
@@ -41,16 +46,10 @@ export function annotateBooksWithReasons(books, reason) {
   return books.map((book) => withDiscoveryReason(book, reason));
 }
 
+/** Overlap-based age filter (official HKids age model). */
 export function filterByAgeBand(books = [], minAge, maxAge) {
   return books
-    .filter((book) => {
-      const min = Number(book.age_group_min);
-      const max = Number(book.age_group_max);
-      if (!Number.isFinite(min) && !Number.isFinite(max)) return false;
-      const bookMin = Number.isFinite(min) ? min : max;
-      const bookMax = Number.isFinite(max) ? max : min;
-      return bookMax >= minAge && bookMin <= maxAge;
-    })
+    .filter((book) => bookOverlapsAgeRange(book, minAge, maxAge))
     .slice(0, 12);
 }
 
@@ -84,6 +83,8 @@ export function isShortStory(book) {
   if (seconds > 0 && seconds <= 300) return true;
   return false;
 }
+
+export { getBookAgeRange };
 
 export function isAudioBook(book) {
   return Boolean(book?.audio_url)

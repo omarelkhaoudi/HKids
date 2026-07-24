@@ -51,6 +51,13 @@ import {
   reorderThemesByWorlds,
 } from '../utils/kidsPersonalization';
 import { getCategoryContentStrategy, bookMatchesKidCategory } from '../utils/kidCategoryContent';
+import {
+  AGE_GROUPS,
+  ALL_AGES_ID,
+  bookOverlapsAgeGroup,
+  getAgeGroupById,
+  parseAgeGroupId,
+} from '../constants/ageGroups';
 import { KidsGuideCompanion } from '../components/kids/KidsGuideCompanion';
 import { getGuideVoicePhrase, KIDS_PICTOGRAMS } from '../utils/kidsGuidePhrases';
 import { playKidsUiSound } from '../utils/kidsUiSound';
@@ -69,11 +76,16 @@ const SHELF_THEME_IDS = [
   'vehicles',
 ];
 const RECENT_SEARCHES_KEY = 'hkids_recent_library_searches';
+
 const AGE_FILTERS = [
-  { id: 'all', labelKey: 'allCategories', pictogram: '🧒' },
-  { id: '2-4', min: 2, max: 4, pictogram: '🌱' },
-  { id: '5-7', min: 5, max: 7, pictogram: '📘' },
-  { id: '8-10', min: 8, max: 10, pictogram: '🚀' },
+  { id: ALL_AGES_ID, pictogram: '🧒', labelKey: 'kidsFilterAllAges' },
+  ...AGE_GROUPS.map((group) => ({
+    id: group.id,
+    pictogram: group.emoji,
+    labelKey: group.labelKey,
+    min: group.min,
+    max: group.max,
+  })),
 ];
 
 function inferTheme(book, childThemes) {
@@ -135,6 +147,7 @@ function KidsLibrary() {
   );
 
   const urlTheme = searchParams.get('theme') || 'all';
+  const urlAge = parseAgeGroupId(searchParams.get('age'));
   const [selectedTheme, setSelectedTheme] = useState(urlTheme);
   const [loading, setLoading] = useState(true);
   const [recommendationSections, setRecommendationSections] = useState([]);
@@ -142,7 +155,7 @@ function KidsLibrary() {
   const [filterAudio, setFilterAudio] = useState(false);
   const [filterPremium, setFilterPremium] = useState(false);
   const [filterFavorites, setFilterFavorites] = useState(false);
-  const [ageFilter, setAgeFilter] = useState('all');
+  const [ageFilter, setAgeFilter] = useState(urlAge);
   const [recentSearches, setRecentSearches] = useState(() => {
     try {
       const stored = JSON.parse(window.localStorage.getItem(RECENT_SEARCHES_KEY) || '[]');
@@ -200,15 +213,27 @@ function KidsLibrary() {
   useEffect(() => {
     const currentTheme = searchParams.get('theme') || 'all';
     setSelectedTheme(currentTheme);
+    setAgeFilter(parseAgeGroupId(searchParams.get('age')));
   }, [searchParams]);
+
+  const writeLibraryParams = useCallback((next = {}) => {
+    const theme = next.theme !== undefined ? next.theme : selectedTheme;
+    const age = parseAgeGroupId(next.age !== undefined ? next.age : ageFilter);
+    const params = {};
+    if (theme && theme !== 'all') params.theme = theme;
+    if (age && age !== ALL_AGES_ID) params.age = age;
+    setSearchParams(params);
+  }, [selectedTheme, ageFilter, setSearchParams]);
 
   const handleThemeChange = (themeId) => {
     setSelectedTheme(themeId);
-    if (themeId === 'all') {
-      setSearchParams({});
-    } else {
-      setSearchParams({ theme: themeId });
-    }
+    writeLibraryParams({ theme: themeId });
+  };
+
+  const handleAgeFilterChange = (nextAge) => {
+    const age = parseAgeGroupId(nextAge);
+    setAgeFilter(age);
+    writeLibraryParams({ age });
   };
 
   const saveRecentSearch = (rawValue) => {
@@ -231,7 +256,7 @@ function KidsLibrary() {
 
   const visibleBooks = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
-    const ageBand = AGE_FILTERS.find((item) => item.id === ageFilter);
+    const ageGroup = getAgeGroupById(ageFilter);
     return taggedBooks.filter((book) => {
       if (q) {
         const hay = [book.title, book.description, book.author, book.category_name, book.theme]
@@ -245,14 +270,7 @@ function KidsLibrary() {
         return false;
       }
       if (filterPremium && !(book.is_premium === true || book.is_premium === 1)) return false;
-      if (ageBand && ageBand.id !== 'all') {
-        const min = Number(book.age_group_min);
-        const max = Number(book.age_group_max);
-        const bookMin = Number.isFinite(min) ? min : max;
-        const bookMax = Number.isFinite(max) ? max : min;
-        if (!Number.isFinite(bookMin) || !Number.isFinite(bookMax)) return false;
-        if (bookMax < ageBand.min || bookMin > ageBand.max) return false;
-      }
+      if (ageGroup && !bookOverlapsAgeGroup(book, ageGroup)) return false;
       return true;
     });
   }, [taggedBooks, searchQuery, filterFavorites, filterAudio, filterPremium, ageFilter, favoritesIds]);
@@ -537,8 +555,9 @@ function KidsLibrary() {
     setFilterAudio(false);
     setFilterPremium(false);
     setFilterFavorites(false);
-    setAgeFilter('all');
-    handleThemeChange('all');
+    setAgeFilter(ALL_AGES_ID);
+    setSelectedTheme('all');
+    setSearchParams({});
   };
 
   const quickFilters = [
@@ -645,14 +664,14 @@ function KidsLibrary() {
                 type="button"
                 onClick={() => {
                   playKidsUiSound('tap');
-                  setAgeFilter(band.id);
+                  handleAgeFilterChange(band.id);
                 }}
                 className={`kids-library-filter-chip ${ageFilter === band.id ? 'is-active' : ''}`}
                 aria-pressed={ageFilter === band.id}
-                title={band.id === 'all' ? t('kidsFilterAllAges') : band.id}
+                title={band.labelKey ? t(band.labelKey) : band.id}
               >
                 <span aria-hidden="true">{band.pictogram}</span>
-                <span className="sr-only">{band.id === 'all' ? t('kidsFilterAllAges') : band.id}</span>
+                <span className="sr-only">{band.labelKey ? t(band.labelKey) : band.id}</span>
               </button>
             ))}
           </div>

@@ -17,13 +17,7 @@ import {
 } from './discoveryRails';
 import { isAudioContent, filterAudioBooks } from './contentRouting';
 import { storage } from './storage';
-
-const AGE_BAND_RANGES = {
-  '3-4': { min: 2, max: 5 },
-  '5-6': { min: 4, max: 7 },
-  '7-8': { min: 6, max: 9 },
-  '9+': { min: 8, max: 12 },
-};
+import { onboardingBandToRange } from '../constants/ageGroups';
 
 export function getKidsPersonalizationProfile() {
   const profile = getOnboardingProfile();
@@ -38,7 +32,7 @@ export function getKidsPersonalizationProfile() {
 }
 
 export function ageBandToRange(ageBand) {
-  return AGE_BAND_RANGES[ageBand] || AGE_BAND_RANGES['5-6'];
+  return onboardingBandToRange(ageBand);
 }
 
 /** Merge API progress + local reading stats into a Set of finished book ids. */
