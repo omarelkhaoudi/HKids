@@ -13,7 +13,7 @@ describe('resolveVoiceNavigation', () => {
   });
 
   it('routes learning and studio intents', () => {
-    expect(resolveVoiceNavigation('je veux jouer')).toBe('/kids/learning');
+    expect(resolveVoiceNavigation('je veux jouer')).toBe('/kids/explore');
     expect(resolveVoiceNavigation('open story studio')).toBe('/kids/story-studio');
     expect(resolveVoiceNavigation('je veux une histoire')).toBeNull();
   });

@@ -10,8 +10,8 @@ import { useKidsVoiceGuide } from '../../hooks/useKidsVoiceGuide';
 const NAV_ITEMS = [
   { id: 'home', path: '/kids', match: 'exact', labelKey: 'kidsNavHome', pictogram: KIDS_PICTOGRAMS.home, voiceKey: 'home' },
   { id: 'library', path: '/kids/library', match: 'prefix', labelKey: 'library', pictogram: KIDS_PICTOGRAMS.library, voiceKey: 'library' },
+  { id: 'explore', path: '/kids/explore', match: 'explore', labelKey: 'kidsNavExplore', pictogram: '✨', voiceKey: 'explore' },
   { id: 'audio', path: '/kids/audio', match: 'audio', labelKey: 'kidsNavAudio', pictogram: KIDS_PICTOGRAMS.audio, voiceKey: 'audio' },
-  { id: 'favorites', path: '/favorites', match: 'exact', labelKey: 'yourFavorites', pictogram: KIDS_PICTOGRAMS.favorites, voiceKey: 'favorites' },
   { id: 'profile', path: '/kids#profile', match: 'hash', labelKey: 'profile', pictogram: KIDS_PICTOGRAMS.profile, voiceKey: null },
 ];
 
@@ -21,6 +21,14 @@ function isActiveItem(location, item) {
   }
   if (item.match === 'prefix') {
     return location.pathname === item.path || location.pathname.startsWith(`${item.path}/`);
+  }
+  if (item.match === 'explore') {
+    return (
+      location.pathname === '/kids/explore'
+      || location.pathname.startsWith('/kids/explore/')
+      || location.pathname === '/kids/learning'
+      || location.pathname.startsWith('/kids/learning/')
+    );
   }
   if (item.match === 'audio') {
     return (

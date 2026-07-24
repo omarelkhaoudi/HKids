@@ -48,6 +48,7 @@ import {
  KidsReaderVoiceMeta,
 } from '../components/kids/KidsReaderAudioExperience';
 import {useReducedMotion} from '../hooks/useReducedMotion';
+import {recordBookCompleted} from '../utils/learningUniverseProgress';
 
 const PDFJS_WORKER_SRC = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@5.4.624/build/pdf.worker.min.mjs';
 
@@ -1469,11 +1470,19 @@ function BookReader() {
  return () => clearTimeout(timeoutId);
 }
  if (hasReachedEnd && isLastPage && isKidReader) {
- const timeoutId = setTimeout(() => setShowKidCelebration(true), 600);
+ const timeoutId = setTimeout(() => {
+   try {
+     const kidId = user?.role === 'kid' ? (user.kid_profile_id || user.id) : (user?.id || 'guest');
+     recordBookCompleted(kidId, { bookId: book.id, readSeconds: 60 });
+   } catch {
+     /* offline progress is best-effort */
+   }
+   setShowKidCelebration(true);
+ }, 600);
  return () => clearTimeout(timeoutId);
 }
  return undefined;
-}, [currentPage, book, pdfTotalPages, hasReachedEnd, isKidReader]);
+}, [currentPage, book, pdfTotalPages, hasReachedEnd, isKidReader, user]);
 
  useEffect(() => {
  if (loading || !book?.pages?.length) return undefined;

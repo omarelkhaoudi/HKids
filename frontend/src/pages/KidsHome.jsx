@@ -56,7 +56,7 @@ function getRecommendedBooks(sections = []) {
 const AUTONOMY_WORLDS = [
   { id: 'library', path: '/kids/library', pictogram: KIDS_PICTOGRAMS.library, labelKey: 'kidsWorldBooks', modality: 'books', tone: 'kids-autonomy-tile--books', voiceKey: 'library' },
   { id: 'audio', path: '/kids/audio', pictogram: KIDS_PICTOGRAMS.audio, labelKey: 'kidsWorldAudio', modality: 'audio', tone: 'kids-autonomy-tile--audio', voiceKey: 'audio' },
-  { id: 'learning', path: '/kids/learning', pictogram: KIDS_PICTOGRAMS.learn, labelKey: 'kidsWorldLearn', modality: 'learn', tone: 'kids-autonomy-tile--learn', voiceKey: 'learning' },
+  { id: 'learning', path: '/kids/explore', pictogram: KIDS_PICTOGRAMS.learn, labelKey: 'kidsWorldLearn', modality: 'learn', tone: 'kids-autonomy-tile--learn', voiceKey: 'explore' },
   { id: 'create', path: '/kids/ai-stories', pictogram: KIDS_PICTOGRAMS.create, labelKey: 'kidsWorldCreate', modality: 'create', studioPath: '/kids/story-studio', tone: 'kids-autonomy-tile--create', voiceKey: 'explore' },
 ];
 

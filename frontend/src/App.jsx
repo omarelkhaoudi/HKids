@@ -29,6 +29,7 @@ const FamilyVoices = lazy(() => import('./pages/FamilyVoices'));
 const KidsStoryStudio = lazy(() => import('./pages/KidsStoryStudio'));
 const KidsAIStories = lazy(() => import('./pages/KidsAIStories'));
 const KidsLearning = lazy(() => import('./pages/KidsLearning'));
+const KidsExplore = lazy(() => import('./pages/KidsExplore'));
 const KidsListen = lazy(() => import('./pages/KidsListen'));
 const KidsAudioLibrary = lazy(() => import('./pages/KidsAudioLibrary'));
 const Subscriptions = lazy(() => import('./pages/Subscriptions'));
@@ -207,6 +208,7 @@ function App() {
                 <Route path="/kids/read/:id" element={<RequireAuth><LazyRoute><BookReader /></LazyRoute></RequireAuth>} />
                 <Route path="/kids/learning" element={<RequireAuth><LazyRoute><KidsLearning /></LazyRoute></RequireAuth>} />
                 <Route path="/kids/learning/:worldId" element={<RequireAuth><LazyRoute><KidsLearning /></LazyRoute></RequireAuth>} />
+                <Route path="/kids/explore" element={<RequireAuth><LazyRoute><KidsExplore /></LazyRoute></RequireAuth>} />
                 <Route path="/kids/story-studio" element={<RequireAuth><LazyRoute><KidsStoryStudio /></LazyRoute></RequireAuth>} />
                 <Route path="/kids/storystudio" element={<Navigate to="/kids/story-studio" replace />} />
                 <Route path="/kids/ai-stories" element={<RequireAuth><LazyRoute><KidsAIStories /></LazyRoute></RequireAuth>} />

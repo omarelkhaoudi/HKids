@@ -3,16 +3,20 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useReducedMotion } from '../../hooks/useReducedMotion';
 import { useLanguage } from '../../context/LanguageContext';
+import { useAuth } from '../../context/AuthContext';
 import { booksAPI } from '../../api/books';
 import KidsButton from './KidsButton';
 import { KidsBookCover } from './KidsBookCover';
 import { KidsMediaCard } from './KidsMediaCard';
+import { StorySmartQuiz } from './StorySmartQuiz';
 import { getMotionProps, kidsBadgePop, kidsCarouselReveal, kidsPageEnter } from '../../constants/kidsMotion';
 import { pickRelatedBooks } from '../../utils/readerRecommendations';
 import { collectCompletedBookIds } from '../../utils/kidsPersonalization';
+import { buildStoryQuiz } from '../../constants/learningUniverse';
+import { recordStoryQuizResult } from '../../utils/learningUniverseProgress';
 
 /**
- * Gentle story-complete overlay — calm celebration with similar books.
+ * Gentle story-complete overlay — calm celebration with similar books + smart quiz.
  */
 export const KidsCelebration = memo(function KidsCelebration({
   active = false,
@@ -40,11 +44,19 @@ export const KidsCelebration = memo(function KidsCelebration({
   onPlayBook,
 }) {
   const reducedMotion = useReducedMotion();
-  const { t, isRtl } = useLanguage();
+  const { t, isRtl, language } = useLanguage();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const isStory = variant === 'story';
   const isBedtime = variant === 'bedtime';
   const [relatedBooks, setRelatedBooks] = useState([]);
+  const [quizDone, setQuizDone] = useState(false);
+  const storyQuiz = isStory && book ? buildStoryQuiz(book) : null;
+  const kidId = user?.role === 'kid' ? (user.kid_profile_id || user.id) : (user?.id || 'guest');
+
+  useEffect(() => {
+    if (!active) setQuizDone(false);
+  }, [active, book?.id]);
 
   useEffect(() => {
     if (!active || !autoDismiss) return undefined;
@@ -71,7 +83,6 @@ export const KidsCelebration = memo(function KidsCelebration({
           setRelatedBooks(smart);
           return;
         }
-        // Graceful fallback: category-filtered slice (previous behavior)
         setRelatedBooks(
           candidates
             .filter((item) => item.id !== book.id)
@@ -92,6 +103,8 @@ export const KidsCelebration = memo(function KidsCelebration({
     : isBedtime
       ? 'bg-[#121826]/72'
       : 'bg-[#24324a]/35';
+
+  const showQuiz = Boolean(storyQuiz && !quizDone);
 
   return (
     <AnimatePresence>
@@ -131,7 +144,7 @@ export const KidsCelebration = memo(function KidsCelebration({
 
           <div className="relative z-10 mx-auto flex min-h-full w-full max-w-3xl flex-col items-center justify-center gap-space-24 px-space-16 py-space-32">
             <motion.div
-              className={`kids-reader-celebration-panel w-full max-w-md p-space-32 text-center shadow-floating rounded-32 ${isStory ? 'kids-premium-panel' : 'kids-premium-panel'}`}
+              className="kids-reader-celebration-panel w-full max-w-md p-space-32 text-center shadow-floating rounded-32 kids-premium-panel"
               {...getMotionProps(reducedMotion, kidsPageEnter)}
             >
               {(coverUrl || book) && (
@@ -175,41 +188,54 @@ export const KidsCelebration = memo(function KidsCelebration({
                 </div>
               )}
 
-              <div className="flex flex-col gap-space-12">
-                {primaryLabel && onPrimary && (
-                  <KidsButton onClick={onPrimary} className="!min-h-[56px] !w-full" tone="primary">
-                    {primaryLabel}
-                  </KidsButton>
-                )}
-                {secondaryLabel && onSecondary && (
-                  <KidsButton onClick={onSecondary} variant="secondary" className="!min-h-[56px] !w-full">
-                    {secondaryLabel}
-                  </KidsButton>
-                )}
-                {listenLabel && onListen && (
-                  <KidsButton onClick={onListen} variant="glass" className="!min-h-[56px] !w-full">
-                    {listenLabel}
-                  </KidsButton>
-                )}
-                {onFavorite && (
-                  <KidsButton
-                    onClick={onFavorite}
-                    variant="ghost"
-                    className="!min-h-[56px] !w-full"
-                    tone={isFavorite ? 'accent' : 'primary'}
-                  >
-                    {isFavorite ? t('yourFavorites') : t('addToFavorites')}
-                  </KidsButton>
-                )}
-                {tertiaryLabel && onTertiary && (
-                  <KidsButton onClick={onTertiary} variant="ghost" className="!min-h-[56px] !w-full !text-foreground-muted">
-                    {tertiaryLabel}
-                  </KidsButton>
-                )}
-              </div>
+              {showQuiz ? (
+                <StorySmartQuiz
+                  quiz={storyQuiz}
+                  language={language}
+                  reducedMotion={reducedMotion}
+                  onAnswer={(success) => {
+                    recordStoryQuizResult(kidId, { success, bookId: book?.id });
+                    if (success) setTimeout(() => setQuizDone(true), 700);
+                  }}
+                  onSkip={() => setQuizDone(true)}
+                />
+              ) : (
+                <div className="flex flex-col gap-space-12">
+                  {primaryLabel && onPrimary && (
+                    <KidsButton onClick={onPrimary} className="!min-h-[56px] !w-full" tone="primary">
+                      {primaryLabel}
+                    </KidsButton>
+                  )}
+                  {secondaryLabel && onSecondary && (
+                    <KidsButton onClick={onSecondary} variant="secondary" className="!min-h-[56px] !w-full">
+                      {secondaryLabel}
+                    </KidsButton>
+                  )}
+                  {listenLabel && onListen && (
+                    <KidsButton onClick={onListen} variant="glass" className="!min-h-[56px] !w-full">
+                      {listenLabel}
+                    </KidsButton>
+                  )}
+                  {onFavorite && (
+                    <KidsButton
+                      onClick={onFavorite}
+                      variant="ghost"
+                      className="!min-h-[56px] !w-full"
+                      tone={isFavorite ? 'accent' : 'primary'}
+                    >
+                      {isFavorite ? t('yourFavorites') : t('addToFavorites')}
+                    </KidsButton>
+                  )}
+                  {tertiaryLabel && onTertiary && (
+                    <KidsButton onClick={onTertiary} variant="ghost" className="!min-h-[56px] !w-full !text-foreground-muted">
+                      {tertiaryLabel}
+                    </KidsButton>
+                  )}
+                </div>
+              )}
             </motion.div>
 
-            {relatedBooks.length > 0 ? (
+            {!showQuiz && relatedBooks.length > 0 ? (
               <motion.section
                 className="kids-celebration-related w-full"
                 aria-label={isStory ? t('kidReaderContinueAdventure') : t('kidReaderSimilarStories')}

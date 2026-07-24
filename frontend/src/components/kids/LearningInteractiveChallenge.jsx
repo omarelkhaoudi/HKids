@@ -163,6 +163,60 @@ export function LearningInteractiveChallenge({
     );
   }
 
+  if (challenge.type === 'shadow' || challenge.type === 'size') {
+    return (
+      <div className="space-y-4 text-center">
+        <h3 className="text-heading-m font-black">{challenge.pictogram} {challenge.type === 'size' ? '📏' : '🌑'}</h3>
+        <p className="text-6xl" aria-hidden="true">{challenge.prompt === 'big' ? '⬆️' : challenge.prompt}</p>
+        <div className="grid grid-cols-3 gap-3">
+          {(challenge.options || []).map((opt) => (
+            <button
+              key={opt.id}
+              type="button"
+              disabled={!!feedback}
+              onClick={() => (opt.correct ? finishSuccess() : finishFail())}
+              className="min-h-[5rem] rounded-2xl bg-card border-2 border-border text-4xl"
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+        {feedback === 'success' && (
+          <p className="text-heading-m text-success-700 font-black">{eduLabel('eduChallengeComplete', language)}</p>
+        )}
+        {feedback === 'fail' && (
+          <button type="button" className="text-caption font-bold underline" onClick={() => setFeedback(null)}>
+            Retry
+          </button>
+        )}
+      </div>
+    );
+  }
+
+  if (challenge.type === 'puzzle') {
+    return (
+      <PuzzleChallenge
+        challenge={challenge}
+        language={language}
+        onSuccess={finishSuccess}
+        onFail={finishFail}
+        feedback={feedback}
+        setFeedback={setFeedback}
+      />
+    );
+  }
+
+  if (challenge.type === 'memory') {
+    return (
+      <SimpleMemoryChallenge
+        challenge={challenge}
+        language={language}
+        onSuccess={finishSuccess}
+        disabled={!!feedback}
+      />
+    );
+  }
+
   // find
   return (
     <div className="space-y-4 text-center">
