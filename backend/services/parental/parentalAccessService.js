@@ -1,4 +1,9 @@
 import { getDatabase } from '../../database/init.js';
+import {
+  bookAllowedByAgeGroups,
+  normalizeLibraryControls,
+  normalizeRecommendationRails,
+} from '../../constants/parentControlCenter.js';
 
 const THEME_KEYWORDS = {
   dinosaurs: ['dinosaure', 'dinosaur', 'dino'],
@@ -219,7 +224,11 @@ export async function loadChildAccessPolicy({
       quiet_end_time: rules?.quiet_end_time ? String(rules.quiet_end_time).slice(0, 5) : null,
       allowed_languages: normalizeList(rules?.allowed_languages),
       allowed_themes: normalizeList(rules?.allowed_themes),
-      allowed_content_types: normalizeList(rules?.allowed_content_types)
+      allowed_content_types: normalizeList(rules?.allowed_content_types),
+      allowed_age_groups: normalizeList(rules?.allowed_age_groups),
+      blocked_themes: normalizeList(rules?.blocked_themes),
+      recommendation_rails: normalizeRecommendationRails(rules?.recommendation_rails),
+      library_controls: normalizeLibraryControls(rules?.library_controls),
     },
     categoryRestrictionsActive: explicitApprovals.length > 0,
     explicitCategoryApprovals: explicitApprovals.length > 0,
@@ -274,11 +283,36 @@ export function getContentAccessViolation(policy, content = {}, { includeGlobal 
     });
   }
 
+  const allowedAgeGroups = policy.rules?.allowed_age_groups || [];
+  if (allowedAgeGroups.length > 0 && !bookAllowedByAgeGroups(content, allowedAgeGroups)) {
+    return new ParentalAccessError('AGE_NOT_ALLOWED', {
+      allowed_age_groups: allowedAgeGroups,
+      age_group_min: ageMin ?? null,
+      age_group_max: ageMax ?? null,
+    });
+  }
+
+  const hiddenBookIds = policy.rules?.library_controls?.hidden_book_ids || [];
+  if (hiddenBookIds.includes(Number(content.id))) {
+    return new ParentalAccessError('CATEGORY_NOT_ALLOWED', {
+      content_id: content.id,
+      reason: 'hidden_by_parent',
+    });
+  }
+
   const allowedLanguages = policy.rules?.allowed_languages || [];
   if (allowedLanguages.length > 0 && (!content.language || !allowedLanguages.includes(content.language))) {
     return new ParentalAccessError('LANGUAGE_NOT_ALLOWED', {
       language: content.language || null,
       allowed_languages: allowedLanguages
+    });
+  }
+
+  const blockedThemes = policy.rules?.blocked_themes || [];
+  if (blockedThemes.length > 0 && content.theme && blockedThemes.includes(content.theme)) {
+    return new ParentalAccessError('THEME_NOT_ALLOWED', {
+      theme: content.theme || null,
+      blocked_themes: blockedThemes,
     });
   }
 

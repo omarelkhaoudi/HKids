@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
 import {CONTENT_LANGUAGES} from '../../constants/contentOptions';
+import {CONTROL_THEME_OPTIONS, SCHOOL_LEVEL_OPTIONS} from '../../constants/parentControlCenter';
 import {useLanguage} from '../../context/LanguageContext';
 import {XIcon} from '../Icons';
 import {KidAvatar} from './KidAvatar';
@@ -184,6 +185,52 @@ export function KidProfileFormModal({
  className="w-full rounded-2xl border border-surface-300 px-4 py-2 outline-none transition focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20"
  placeholder={t('parentKidFormInterestsPlaceholder')}
  />
+ </div>
+
+ <div>
+ <label className="mb-2 block text-sm font-bold text-foreground-secondary">
+ {t('pccSchoolLevel')}
+ </label>
+ <select
+ value={form.school_level || ''}
+ onChange={(event) => updateField('school_level', event.target.value)}
+ className="w-full rounded-2xl border border-surface-300 px-4 py-2 outline-none transition focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20"
+ >
+ <option value="">{t('pccSchoolLevel')}</option>
+ {SCHOOL_LEVEL_OPTIONS.map((level) => (
+ <option key={level.id} value={level.id}>
+ {t(level.labelKey)}
+ </option>
+ ))}
+ </select>
+ </div>
+
+ <div className="md:col-span-2">
+ <label className="mb-2 block text-sm font-bold text-foreground-secondary">
+ {t('pccFavoriteThemes')}
+ </label>
+ <div className="flex flex-wrap gap-2">
+ {CONTROL_THEME_OPTIONS.slice(0, 8).map((theme) => {
+ const active = Array.isArray(form.favorite_themes) && form.favorite_themes.includes(theme.id);
+ return (
+ <button
+ key={theme.id}
+ type="button"
+ className={`parent-soft-chip ${active ? 'is-active is-secondary' : ''}`}
+ aria-pressed={active}
+ onClick={() => {
+ const current = Array.isArray(form.favorite_themes) ? form.favorite_themes : [];
+ updateField(
+ 'favorite_themes',
+ active ? current.filter((id) => id !== theme.id) : [...current, theme.id],
+ );
+ }}
+ >
+ <span aria-hidden="true">{theme.emoji}</span> {t(theme.labelKey)}
+ </button>
+ );
+ })}
+ </div>
  </div>
  </div>
 

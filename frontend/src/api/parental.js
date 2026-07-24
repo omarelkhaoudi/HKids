@@ -135,6 +135,14 @@ export const parentalAPI = {
 
   saveRules: (kidId, data) => {
     return axios.put(buildApiUrl(`/parental/kids/${kidId}/rules`), data, { headers: getAuthHeaders() });
-  }
+  },
+
+  removeKidFavorite: (kidId, bookId) => {
+    return axios.delete(buildApiUrl(`/parental/kids/${kidId}/favorites/${bookId}`), { headers: getAuthHeaders() });
+  },
+
+  clearKidActivity: (kidId, kind = 'favorites') => {
+    return axios.delete(buildApiUrl(`/parental/kids/${kidId}/activity/${kind}`), { headers: getAuthHeaders() });
+  },
 };
 

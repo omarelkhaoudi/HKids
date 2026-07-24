@@ -9,6 +9,8 @@ export const createEmptyKidForm = () => ({
   photo_url: '',
   preferred_language: 'fr',
   interests: '',
+  school_level: '',
+  favorite_themes: [],
 });
 
 export const getKidBirthDateInputValue = (value) => {
@@ -24,6 +26,8 @@ export const kidToForm = (kid = {}) => ({
   photo_url: kid.photo_url || '',
   preferred_language: kid.preferred_language || 'fr',
   interests: Array.isArray(kid.interests) ? kid.interests.join(', ') : kid.interests || '',
+  school_level: kid.school_level || '',
+  favorite_themes: Array.isArray(kid.favorite_themes) ? kid.favorite_themes : [],
 });
 
 export const buildKidPayload = (form) => ({
@@ -34,6 +38,8 @@ export const buildKidPayload = (form) => ({
   photo_url: form.photo_url.trim() || null,
   preferred_language: form.preferred_language || 'fr',
   interests: form.interests,
+  school_level: form.school_level || null,
+  favorite_themes: Array.isArray(form.favorite_themes) ? form.favorite_themes : [],
 });
 
 export const formatKidBirthDate = (value, language = getAppLanguage()) => {

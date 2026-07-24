@@ -591,7 +591,13 @@ export async function initDatabase() {
     await client.query(`ALTER TABLE parental_rules ADD COLUMN IF NOT EXISTS allowed_languages TEXT[] DEFAULT '{}'`);
     await client.query(`ALTER TABLE parental_rules ADD COLUMN IF NOT EXISTS allowed_themes TEXT[] DEFAULT '{}'`);
     await client.query(`ALTER TABLE parental_rules ADD COLUMN IF NOT EXISTS allowed_content_types TEXT[] DEFAULT '{}'`);
+    await client.query(`ALTER TABLE parental_rules ADD COLUMN IF NOT EXISTS allowed_age_groups TEXT[] DEFAULT '{}'`);
+    await client.query(`ALTER TABLE parental_rules ADD COLUMN IF NOT EXISTS blocked_themes TEXT[] DEFAULT '{}'`);
+    await client.query(`ALTER TABLE parental_rules ADD COLUMN IF NOT EXISTS recommendation_rails JSONB DEFAULT '{}'::jsonb`);
+    await client.query(`ALTER TABLE parental_rules ADD COLUMN IF NOT EXISTS library_controls JSONB DEFAULT '{}'::jsonb`);
     await client.query(`ALTER TABLE parental_rules ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW()`);
+    await client.query(`ALTER TABLE kids_profiles ADD COLUMN IF NOT EXISTS school_level TEXT`);
+    await client.query(`ALTER TABLE kids_profiles ADD COLUMN IF NOT EXISTS favorite_themes TEXT[] DEFAULT '{}'`);
     await client.query(`ALTER TABLE generated_stories ADD COLUMN IF NOT EXISTS user_id INTEGER REFERENCES users(id) ON DELETE SET NULL`);
     await client.query(`ALTER TABLE generated_stories ADD COLUMN IF NOT EXISTS title TEXT NOT NULL DEFAULT 'Histoire personnalisee'`);
     await client.query(`ALTER TABLE generated_stories ADD COLUMN IF NOT EXISTS story_text TEXT NOT NULL DEFAULT ''`);

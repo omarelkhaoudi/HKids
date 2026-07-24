@@ -10,34 +10,23 @@ import {useToast} from '../components/ToastProvider';
 import { useConfirmDialog } from '../hooks/useConfirmDialog';
 import {clearKidLocalPrivacyData} from '../services/privacy/privacyStorageService';
 import {useReducedMotion} from '../hooks/useReducedMotion';
-import {CONTENT_LANGUAGES, CONTENT_THEMES, CONTENT_TYPE_OPTIONS, localizeContentOptions} from '../constants/contentOptions';
 import {buildKidPayload, createEmptyKidForm, kidToForm} from '../utils/kidProfiles';
 import {
- PlusIcon, XIcon, ClockIcon, AudioIcon, BookIcon, SettingsIcon, ShieldIcon,
+ PlusIcon, XIcon, ClockIcon, AudioIcon, SettingsIcon, ShieldIcon,
 } from '../components/Icons';
 import {KidAvatar} from '../components/parent/KidAvatar';
 import {KidProfileFormModal} from '../components/parent/KidProfileFormModal';
 import {SettingsCenterModal} from '../components/parent/SettingsCenterModal';
-import {ParentCategoryApprovals} from '../components/parent/ParentCategoryApprovals';
 import {ParentDashboardAnalytics} from '../components/parent/ParentDashboardAnalytics';
 import {ParentOverviewBoard} from '../components/parent/ParentOverviewBoard';
-import {ParentReadingGoalCard} from '../components/parent/ParentReadingGoalCard';
 import {ParentChildProfilePanel} from '../components/parent/ParentChildProfilePanel';
 import {ParentFamilySection} from '../components/parent/ParentFamilySection';
 import {ParentEmptyState} from '../components/parent/ParentEmptyState';
 import {ParentPageShell} from '../components/parent/ParentPageShell';
 import {ParentHero} from '../components/parent/ParentHero';
+import {ParentControlCenter} from '../components/parent/ParentControlCenter';
+import { normalizeRulesForm } from '../constants/parentControlCenter';
 import { collectFavoriteThemes, getThemeLabel, getTodayReadingSeconds } from '../utils/parentInsights';
-
-const bedtimeLanguages = CONTENT_LANGUAGES.map((language) => ({
- id: language.id,
- label: language.shortLabel,
-}));
-
-const bedtimeThemes = CONTENT_THEMES.map((theme) => ({
- id: theme.id,
- label: theme.libraryLabel || theme.label,
-}));
 
 function getGreetingKey(hour) {
  if (hour < 12) return 'goodMorning';
@@ -52,7 +41,6 @@ function ParentDashboard() {
  const { requestConfirm, confirmDialog } = useConfirmDialog();
  const { language, t, isRtl } = useLanguage();
  const reducedMotion = useReducedMotion();
- const contentTypeOptions = localizeContentOptions(CONTENT_TYPE_OPTIONS, language);
  const dashboardRequestRef = useRef(0);
  const rulesRequestRef = useRef(0);
  const [kids, setKids] = useState([]);
@@ -69,14 +57,11 @@ function ParentDashboard() {
  const [kidForm, setKidForm] = useState(emptyKidForm);
  const [accountForm, setAccountForm] = useState({username: '', password: ''});
  const [kidSaving, setKidSaving] = useState(false);
- const [rulesForm, setRulesForm] = useState({
+ const [rulesForm, setRulesForm] = useState(() => normalizeRulesForm({
  daily_screen_time_minutes: 30,
  quiet_start_time: '19:00',
  quiet_end_time: '21:00',
- allowed_languages: [],
- allowed_themes: [],
- allowed_content_types: []
-});
+}));
 
  useEffect(() => {
  if (!user) {
@@ -135,14 +120,7 @@ function ParentDashboard() {
  try {
  const res = await parentalAPI.getRules(kidId);
  if (requestId !== rulesRequestRef.current) return;
- setRulesForm({
- daily_screen_time_minutes: res.data?.daily_screen_time_minutes ?? 30,
- quiet_start_time: res.data?.quiet_start_time || '19:00',
- quiet_end_time: res.data?.quiet_end_time || '21:00',
- allowed_languages: res.data?.allowed_languages || [],
- allowed_themes: res.data?.allowed_themes || [],
- allowed_content_types: res.data?.allowed_content_types || []
-});
+ setRulesForm(normalizeRulesForm(res.data));
 } catch (error) {
  if (requestId !== rulesRequestRef.current) return;
  console.error('Error loading parental rules:', error);
@@ -228,31 +206,13 @@ function ParentDashboard() {
  navigate('/parent/login');
 };
 
- const toggleRuleValue = (field, value) => {
- setRulesForm((current) => {
- const values = current[field] || [];
- const nextValues = values.includes(value)
- ? values.filter((item) => item !== value)
- : [...values, value];
-
- return {...current, [field]: nextValues};
-});
-};
-
  const handleSaveRules = async () => {
  if (!selectedKid) return;
 
  try {
  setRulesSaving(true);
  const res = await parentalAPI.saveRules(selectedKid.id, rulesForm);
- setRulesForm({
- daily_screen_time_minutes: res.data?.daily_screen_time_minutes ?? rulesForm.daily_screen_time_minutes,
- quiet_start_time: res.data?.quiet_start_time || rulesForm.quiet_start_time,
- quiet_end_time: res.data?.quiet_end_time || rulesForm.quiet_end_time,
- allowed_languages: res.data?.allowed_languages || [],
- allowed_themes: res.data?.allowed_themes || [],
- allowed_content_types: res.data?.allowed_content_types || []
-});
+ setRulesForm(normalizeRulesForm(res.data));
  showToast(t('parentRulesSaved'), 'success');
  await loadKidDashboard(selectedKid.id);
 } catch (error) {
@@ -284,9 +244,6 @@ function ParentDashboard() {
  const continueBook = progressItems.find((book) => (book.progress_percent || 0) > 0 && (book.progress_percent || 0) < 100) || progressItems[0] || null;
  const favoriteThemes = collectFavoriteThemes(dashboardData, 3);
  const topThemeLabel = favoriteThemes[0] ? getThemeLabel(favoriteThemes[0].id) : null;
- const selectedLanguagesCount = rulesForm.allowed_languages.length || bedtimeLanguages.length;
- const selectedThemesCount = rulesForm.allowed_themes.length || bedtimeThemes.length;
- const selectedContentTypesCount = rulesForm.allowed_content_types.length || contentTypeOptions.length;
  const heroSubtitle = selectedKid
  ? (todayReadMinutes > 0
  ? t('parentHomeHeroReadToday', { name: selectedKid.name, minutes: todayReadMinutes })
@@ -455,17 +412,17 @@ function ParentDashboard() {
  {t('parentExploreTitle')}
  </h2>
  <div className="parent-quick-grid">
+ <button type="button" className="parent-quick-btn" onClick={openAddKid}>
+ <PlusIcon className="w-6 h-6 text-primary-600" aria-hidden="true" />
+ <span>{t('parentAddKid')}</span>
+ </button>
+ <button type="button" className="parent-quick-btn" onClick={() => document.getElementById('control-center')?.scrollIntoView({ behavior: reducedMotion ? 'auto' : 'smooth' })}>
+ <ShieldIcon className="w-6 h-6 text-primary-600" aria-hidden="true" />
+ <span>{t('pccEyebrow')}</span>
+ </button>
  <button type="button" className="parent-quick-btn" onClick={() => navigate('/parent/voices')}>
  <AudioIcon className="w-6 h-6 text-primary-600" aria-hidden="true" />
  <span>{t('parentNavVoices')}</span>
- </button>
- <button type="button" className="parent-quick-btn" onClick={() => navigate('/parent/profiles')}>
- <BookIcon className="w-6 h-6 text-primary-600" aria-hidden="true" />
- <span>{t('parentNavProfiles')}</span>
- </button>
- <button type="button" className="parent-quick-btn" onClick={() => document.getElementById('peace')?.scrollIntoView({ behavior: reducedMotion ? 'auto' : 'smooth' })}>
- <ClockIcon className="w-6 h-6 text-primary-600" aria-hidden="true" />
- <span>{t('parentScreenTime')}</span>
  </button>
  <button type="button" className="parent-quick-btn" onClick={() => setShowSettingsModal(true)}>
  <SettingsIcon className="w-6 h-6 text-primary-600" aria-hidden="true" />
@@ -473,6 +430,21 @@ function ParentDashboard() {
  </button>
  </div>
  </section>
+
+ <ParentControlCenter
+ kid={selectedKid}
+ rulesForm={rulesForm}
+ setRulesForm={setRulesForm}
+ onSaveRules={handleSaveRules}
+ rulesSaving={rulesSaving}
+ dashboardData={dashboardData}
+ activityLoading={activityLoading}
+ language={language}
+ onEditProfile={() => { setEditingKid(selectedKid); setKidForm(kidToForm(selectedKid)); setShowKidModal(true); }}
+ onAddKid={openAddKid}
+ onRefreshDashboard={() => loadKidDashboard(selectedKid.id)}
+ onOpenOffline={() => navigate('/kids/library')}
+ />
 
  <div id="peace" className="grid grid-cols-1 lg:grid-cols-3 gap-space-24">
  <div className="lg:col-span-2 flex flex-col gap-space-24">
@@ -525,65 +497,6 @@ function ParentDashboard() {
  </div>
  </div>
  </section>
-
- <section className="parent-control-card parent-panel" aria-labelledby="parent-permissions-heading">
- <div className="parent-control-header">
- <div>
- <h2 id="parent-permissions-heading" className="text-heading-l font-black text-foreground mb-2">{t('parentReadingPermissions')}</h2>
- <p className="text-body-lg text-foreground-secondary font-medium">{t('parentPeacePermissionsDesc')}</p>
- </div>
- <div className="parent-control-counts" aria-hidden="true">
- <span className="parent-control-count">{selectedLanguagesCount}</span>
- <span className="parent-control-count">{selectedThemesCount}</span>
- <span className="parent-control-count">{selectedContentTypesCount}</span>
- </div>
- </div>
- <div className="grid grid-cols-1 md:grid-cols-2 gap-space-24">
- <div>
- <h3 className="font-black mb-space-12">{t('parentAllowedLanguages')}</h3>
- <div className="flex flex-wrap gap-2">
- {bedtimeLanguages.map(lang => (
- <button key={lang.id} type="button" onClick={() => toggleRuleValue('allowed_languages', lang.id)} className={`parent-soft-chip ${rulesForm.allowed_languages.includes(lang.id) ? 'is-active is-primary' : ''}`} aria-pressed={rulesForm.allowed_languages.includes(lang.id)}>
- {lang.label}
- </button>
- ))}
- </div>
- </div>
- <div>
- <h3 className="font-black mb-space-12">{t('parentAllowedThemes')}</h3>
- <div className="flex flex-wrap gap-2">
- {bedtimeThemes.map(theme => (
- <button key={theme.id} type="button" onClick={() => toggleRuleValue('allowed_themes', theme.id)} className={`parent-soft-chip ${rulesForm.allowed_themes.includes(theme.id) ? 'is-active is-secondary' : ''}`} aria-pressed={rulesForm.allowed_themes.includes(theme.id)}>
- {theme.label}
- </button>
- ))}
- </div>
- </div>
- </div>
- <div className="mt-space-24">
- <h3 className="font-black mb-space-12">{t('parentAllowedContentTypes')}</h3>
- <div className="flex flex-wrap gap-2">
- {contentTypeOptions.map((type) => (
- <button key={type.id} type="button" onClick={() => toggleRuleValue('allowed_content_types', type.id)} className={`parent-soft-chip ${rulesForm.allowed_content_types.includes(type.id) ? 'is-active is-secondary' : ''}`} aria-pressed={rulesForm.allowed_content_types.includes(type.id)}>
- {type.label}
- </button>
- ))}
- </div>
- </div>
- <div className="pt-space-16 border-t border-border/50 flex justify-end mt-space-24">
- <Button variant="primary" onClick={handleSaveRules} disabled={rulesSaving} className="min-h-touch font-bold">
- {rulesSaving ? t('parentSaving') : t('parentSaveRules')}
- </Button>
- </div>
- </section>
-
- <ParentReadingGoalCard
- kidId={selectedKid?.id}
- goal={dashboardData?.goal}
- onSaved={() => loadKidDashboard(selectedKid.id)}
- />
-
- <ParentCategoryApprovals kidId={selectedKid?.id} />
  </div>
 
  <div className="flex flex-col gap-space-24">
@@ -609,11 +522,11 @@ function ParentDashboard() {
  </Button>
  </article>
  <article className="parent-aside-note parent-panel">
- <p className="parent-companion-card-label">{t('parentExploreTitle')}</p>
+ <p className="parent-companion-card-label">{t('pccEyebrow')}</p>
  <p className="parent-companion-card-value">
- {selectedKid ? t('parentHomeTodayTitle', { name: selectedKid.name }) : t('parentHomeTagline')}
+ {t('pccTitle', { name: selectedKid.name })}
  </p>
- <p className="parent-companion-card-subtle">{t('parentHomeNoDataDesc')}</p>
+ <p className="parent-companion-card-subtle">{t('pccSubtitle')}</p>
  </article>
  </div>
  </div>

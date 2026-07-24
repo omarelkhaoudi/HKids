@@ -27,6 +27,16 @@ import {
 import { pullCloudSync, pushCloudSync } from '../services/cloud/cloudSyncService.js';
 import { permanentlyDeleteKid } from '../services/privacy/privacyService.js';
 
+import {
+  CONTROL_THEME_IDS,
+  DEFAULT_LIBRARY_CONTROLS,
+  DEFAULT_RECOMMENDATION_RAILS,
+  OFFICIAL_AGE_GROUP_IDS,
+  normalizeIdList,
+  normalizeLibraryControls,
+  normalizeRecommendationRails,
+} from '../constants/parentControlCenter.js';
+
 const router = express.Router();
 
 // Helper function to get database pool safely
@@ -106,19 +116,12 @@ function normalizeAge(value) {
 }
 
 const allowedLanguages = ['fr', 'ar', 'en'];
-const allowedThemes = ['dinosaurs', 'space', 'animals', 'princesses', 'jobs', 'world'];
+const allowedThemes = CONTROL_THEME_IDS;
 const allowedContentTypes = ['story', 'audio_story', 'educational', 'song', 'quiz'];
+const allowedAgeGroups = OFFICIAL_AGE_GROUP_IDS;
 
 function normalizeAllowedList(value, allowedValues) {
-  const items = Array.isArray(value)
-    ? value
-    : typeof value === 'string'
-    ? value.split(',')
-    : [];
-
-  return items
-    .map((item) => String(item).trim())
-    .filter((item, index, self) => item && allowedValues.includes(item) && self.indexOf(item) === index);
+  return normalizeIdList(value, allowedValues);
 }
 
 function normalizeTime(value) {
@@ -135,7 +138,11 @@ function normalizeRules(row) {
       quiet_end_time: '',
       allowed_languages: [],
       allowed_themes: [],
-      allowed_content_types: []
+      allowed_content_types: [],
+      allowed_age_groups: [],
+      blocked_themes: [],
+      recommendation_rails: { ...DEFAULT_RECOMMENDATION_RAILS },
+      library_controls: { ...DEFAULT_LIBRARY_CONTROLS },
     };
   }
 
@@ -150,7 +157,11 @@ function normalizeRules(row) {
     allowed_languages: row.allowed_languages || [],
     allowed_themes: row.allowed_themes || [],
     allowed_content_types: row.allowed_content_types || [],
-    updated_at: row.updated_at
+    allowed_age_groups: row.allowed_age_groups || [],
+    blocked_themes: row.blocked_themes || [],
+    recommendation_rails: normalizeRecommendationRails(row.recommendation_rails),
+    library_controls: normalizeLibraryControls(row.library_controls),
+    updated_at: row.updated_at,
   };
 }
 
@@ -172,7 +183,7 @@ router.get('/kids', verifyToken, verifyParent, async (req, res) => {
 // Create a new kid profile
 router.post('/kids', verifyToken, verifyParent, async (req, res) => {
   try {
-    const { name, avatar, age, date_of_birth, photo_url, preferred_language, interests } = req.body;
+    const { name, avatar, age, date_of_birth, photo_url, preferred_language, interests, school_level, favorite_themes } = req.body;
     
     if (!name) {
       return res.status(400).json({ error: 'Name is required' });
@@ -181,9 +192,9 @@ router.post('/kids', verifyToken, verifyParent, async (req, res) => {
     const pool = getPool();
     const result = await pool.query(
       `INSERT INTO kids_profiles (
-        parent_id, name, avatar, age, date_of_birth, photo_url, preferred_language, interests
+        parent_id, name, avatar, age, date_of_birth, photo_url, preferred_language, interests, school_level, favorite_themes
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
       RETURNING *`,
       [
         req.user.id,
@@ -193,7 +204,9 @@ router.post('/kids', verifyToken, verifyParent, async (req, res) => {
         normalizeBirthDate(date_of_birth),
         photo_url || null,
         preferred_language || 'fr',
-        normalizeInterests(interests)
+        normalizeInterests(interests),
+        school_level ? String(school_level).trim().slice(0, 64) : null,
+        normalizeAllowedList(favorite_themes, allowedThemes),
       ]
     );
 
@@ -216,7 +229,7 @@ router.post('/kids', verifyToken, verifyParent, async (req, res) => {
 // Update a kid profile
 router.put('/kids/:id', verifyToken, verifyParent, async (req, res) => {
   try {
-    const { name, avatar, age, date_of_birth, photo_url, preferred_language, interests } = req.body;
+    const { name, avatar, age, date_of_birth, photo_url, preferred_language, interests, school_level, favorite_themes } = req.body;
     const pool = getPool();
 
     if (!name) {
@@ -242,8 +255,10 @@ router.put('/kids/:id', verifyToken, verifyParent, async (req, res) => {
            photo_url = $5,
            preferred_language = $6,
            interests = $7,
+           school_level = $8,
+           favorite_themes = $9,
            updated_at = NOW()
-       WHERE id = $8 AND parent_id = $9
+       WHERE id = $10 AND parent_id = $11
        RETURNING *`,
       [
         String(name).trim(),
@@ -253,6 +268,8 @@ router.put('/kids/:id', verifyToken, verifyParent, async (req, res) => {
         photo_url || null,
         preferred_language || 'fr',
         normalizeInterests(interests),
+        school_level ? String(school_level).trim().slice(0, 64) : null,
+        normalizeAllowedList(favorite_themes, allowedThemes),
         req.params.id,
         req.user.id
       ]
@@ -469,7 +486,11 @@ router.put('/kids/:id/rules', verifyToken, verifyParent, async (req, res) => {
       quiet_end_time,
       allowed_languages,
       allowed_themes,
-      allowed_content_types
+      allowed_content_types,
+      allowed_age_groups,
+      blocked_themes,
+      recommendation_rails,
+      library_controls,
     } = req.body;
 
     const safeDailyMinutes = Math.max(
@@ -479,6 +500,10 @@ router.put('/kids/:id/rules', verifyToken, verifyParent, async (req, res) => {
     const normalizedLanguages = normalizeAllowedList(allowed_languages, allowedLanguages);
     const normalizedThemes = normalizeAllowedList(allowed_themes, allowedThemes);
     const normalizedContentTypes = normalizeAllowedList(allowed_content_types, allowedContentTypes);
+    const normalizedAgeGroups = normalizeAllowedList(allowed_age_groups, allowedAgeGroups);
+    const normalizedBlockedThemes = normalizeAllowedList(blocked_themes, allowedThemes);
+    const normalizedRails = normalizeRecommendationRails(recommendation_rails);
+    const normalizedLibrary = normalizeLibraryControls(library_controls);
     const startTime = normalizeTime(quiet_start_time);
     const endTime = normalizeTime(quiet_end_time);
 
@@ -502,9 +527,13 @@ router.put('/kids/:id/rules', verifyToken, verifyParent, async (req, res) => {
         allowed_languages,
         allowed_themes,
         allowed_content_types,
+        allowed_age_groups,
+        blocked_themes,
+        recommendation_rails,
+        library_controls,
         updated_at
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10::jsonb, $11::jsonb, NOW())
       ON CONFLICT (kid_profile_id)
       DO UPDATE SET
         daily_screen_time_minutes = EXCLUDED.daily_screen_time_minutes,
@@ -513,6 +542,10 @@ router.put('/kids/:id/rules', verifyToken, verifyParent, async (req, res) => {
         allowed_languages = EXCLUDED.allowed_languages,
         allowed_themes = EXCLUDED.allowed_themes,
         allowed_content_types = EXCLUDED.allowed_content_types,
+        allowed_age_groups = EXCLUDED.allowed_age_groups,
+        blocked_themes = EXCLUDED.blocked_themes,
+        recommendation_rails = EXCLUDED.recommendation_rails,
+        library_controls = EXCLUDED.library_controls,
         updated_at = NOW()
       RETURNING *`,
       [
@@ -522,7 +555,11 @@ router.put('/kids/:id/rules', verifyToken, verifyParent, async (req, res) => {
         endTime,
         normalizedLanguages,
         normalizedThemes,
-        normalizedContentTypes
+        normalizedContentTypes,
+        normalizedAgeGroups,
+        normalizedBlockedThemes,
+        JSON.stringify(normalizedRails),
+        JSON.stringify(normalizedLibrary),
       ]
     );
 
@@ -530,6 +567,64 @@ router.put('/kids/:id/rules', verifyToken, verifyParent, async (req, res) => {
     res.json(normalizeRules(result.rows[0]));
   } catch (err) {
     console.error('Error saving parental rules:', err);
+    res.status(500).json({ error: 'Database error' });
+  }
+});
+
+// Remove one favorite for a kid (parent control center)
+router.delete('/kids/:id/favorites/:bookId', verifyToken, verifyParent, async (req, res) => {
+  try {
+    const pool = getPool();
+    const kidId = Number.parseInt(req.params.id, 10);
+    const bookId = Number.parseInt(req.params.bookId, 10);
+    const kidCheck = await pool.query(
+      'SELECT id FROM kids_profiles WHERE id = $1 AND parent_id = $2',
+      [kidId, req.user.id],
+    );
+    if (kidCheck.rows.length === 0) {
+      return res.status(404).json({ error: 'Kid profile not found' });
+    }
+    await pool.query(
+      'DELETE FROM kid_book_favorites WHERE kid_profile_id = $1 AND book_id = $2',
+      [kidId, bookId],
+    );
+    await invalidateParentDashboardCache(kidId);
+    res.json({ ok: true, book_id: bookId, favorite: false });
+  } catch (err) {
+    console.error('Error removing kid favorite:', err);
+    res.status(500).json({ error: 'Database error' });
+  }
+});
+
+// Clear all favorites / history for a kid
+router.delete('/kids/:id/activity/:kind', verifyToken, verifyParent, async (req, res) => {
+  try {
+    const pool = getPool();
+    const kidId = Number.parseInt(req.params.id, 10);
+    const kind = String(req.params.kind || '').toLowerCase();
+    const kidCheck = await pool.query(
+      'SELECT id FROM kids_profiles WHERE id = $1 AND parent_id = $2',
+      [kidId, req.user.id],
+    );
+    if (kidCheck.rows.length === 0) {
+      return res.status(404).json({ error: 'Kid profile not found' });
+    }
+
+    if (kind === 'favorites') {
+      await pool.query('DELETE FROM kid_book_favorites WHERE kid_profile_id = $1', [kidId]);
+    } else if (kind === 'history') {
+      await pool.query('DELETE FROM kid_book_history WHERE kid_profile_id = $1', [kidId]);
+    } else if (kind === 'all') {
+      await pool.query('DELETE FROM kid_book_favorites WHERE kid_profile_id = $1', [kidId]);
+      await pool.query('DELETE FROM kid_book_history WHERE kid_profile_id = $1', [kidId]);
+    } else {
+      return res.status(400).json({ error: 'Unsupported activity kind' });
+    }
+
+    await invalidateParentDashboardCache(kidId);
+    res.json({ ok: true, cleared: kind });
+  } catch (err) {
+    console.error('Error clearing kid activity:', err);
     res.status(500).json({ error: 'Database error' });
   }
 });
