@@ -23,10 +23,14 @@ export function subscribeDownloadQueue(listener) {
 }
 
 export function getQueueSnapshot() {
+  const list = [...jobs.entries()].map(([id, job]) => ({ id, ...job }));
+  list.sort((a, b) => (b.priority || 0) - (a.priority || 0) || (a.startedAt || 0) - (b.startedAt || 0));
   return {
     jobs: Object.fromEntries(jobs.entries()),
+    ordered: list,
     activeCount: [...jobs.values()].filter((j) => j.status === 'downloading').length,
     pausedCount: [...jobs.values()].filter((j) => j.status === 'paused').length,
+    queuedCount: [...jobs.values()].filter((j) => j.status === 'queued').length,
   };
 }
 
@@ -52,6 +56,10 @@ export function upsertJob(jobId, patch) {
     etaSeconds: null,
     error: null,
     label: jobId,
+    priority: 0,
+    reason: null,
+    kind: null,
+    sourceId: null,
   };
   const next = { ...current, ...patch };
   if (next.status === 'downloading') {

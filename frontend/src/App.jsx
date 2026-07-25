@@ -7,6 +7,7 @@ import ErrorBoundary from './components/ErrorBoundary';
 import { SkipToContent } from './components/SkipToContent';
 import { OfflineStatusBanner } from './components/offline/OfflineStatusBanner';
 import { CatalogUpdateBanner } from './components/offline/CatalogUpdateBanner';
+import { OfflineDownloadManager } from './components/offline/OfflineDownloadManager';
 import { CookieConsentBanner } from './components/CookieConsentBanner';
 import { OfflineSyncBridge } from './components/offline/OfflineSyncBridge';
 import { KidScreenTimeTracker } from './components/kids/KidScreenTimeTracker';
@@ -226,6 +227,11 @@ function App() {
               <OfflineSyncBridge />
               <OfflineStatusBanner />
               <CatalogUpdateBanner />
+              <div className="fixed bottom-20 inset-x-0 z-40 px-3 pointer-events-none md:bottom-6 md:end-6 md:inset-x-auto md:w-96">
+                <div className="pointer-events-auto">
+                  <OfflineDownloadManager compact />
+                </div>
+              </div>
               <CookieConsentBanner />
             </div>
           </ToastProvider>

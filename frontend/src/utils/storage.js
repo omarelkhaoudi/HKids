@@ -47,6 +47,11 @@ export const storage = {
           favorite: true,
           favoritedAt: new Date().toISOString()
         }, `book:${bookId}:favorite`);
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('hkids:favorite-changed', {
+            detail: { bookId, favorite: true },
+          }));
+        }
       }
     } catch (error) {
       console.error('Error adding favorite:', error);
@@ -59,6 +64,11 @@ export const storage = {
       const filtered = favorites.filter(id => id !== bookId);
       localStorage.setItem(scopedActivityKey('hkids_favorites'), JSON.stringify(filtered));
       queueMutation('favorite_remove', { bookId, favorite: false }, `book:${bookId}:favorite`);
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('hkids:favorite-changed', {
+          detail: { bookId, favorite: false },
+        }));
+      }
     } catch (error) {
       console.error('Error removing favorite:', error);
     }

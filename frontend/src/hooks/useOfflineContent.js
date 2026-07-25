@@ -1,11 +1,16 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
-  downloadBook,
   getDownloads,
   offlineContentIds,
   removeDownload,
   saveGeneratedStoryOffline
 } from '../services/offline/offlineContentService';
+import {
+  DOWNLOAD_PRIORITY,
+  cancelBookJob,
+  enqueueBookDownload,
+} from '../services/contentDelivery/smartDownloadService';
+import { subscribeDownloadQueue, pauseJob } from '../services/contentDelivery/downloadQueueService';
 
 function mapById(downloads) {
   return downloads.reduce((acc, item) => {
@@ -32,27 +37,24 @@ export function useOfflineContent() {
     };
   }, [refreshDownloads]);
 
-  const downloadBookContent = useCallback(async (book) => {
-    const id = offlineContentIds.book(book.id);
-    const controller = new AbortController();
-    abortControllersRef.current.set(id, controller);
-    setProgressById((current) => ({ ...current, [id]: 1 }));
+  useEffect(() => subscribeDownloadQueue((snapshot) => {
+    const nextProgress = {};
+    Object.entries(snapshot.jobs || {}).forEach(([id, job]) => {
+      if (job.kind === 'book' && (job.status === 'downloading' || job.status === 'queued' || job.status === 'paused')) {
+        nextProgress[id] = job.progress || 0;
+      }
+    });
+    setProgressById((current) => ({ ...current, ...nextProgress }));
+  }), []);
 
-    try {
-      const record = await downloadBook(book, {
-        signal: controller.signal,
-        onProgress: (progress) => setProgressById((current) => ({ ...current, [id]: progress }))
-      });
-      await refreshDownloads();
-      return record;
-    } finally {
-      abortControllersRef.current.delete(id);
-      setProgressById((current) => {
-        const next = { ...current };
-        delete next[id];
-        return next;
-      });
-    }
+  const downloadBookContent = useCallback(async (book) => {
+    const result = await enqueueBookDownload(book, {
+      priority: DOWNLOAD_PRIORITY.MANUAL,
+      label: book.title,
+      reason: 'manual',
+    });
+    await refreshDownloads();
+    return result;
   }, [refreshDownloads]);
 
   const saveStoryContent = useCallback(async (story) => {
@@ -64,6 +66,7 @@ export function useOfflineContent() {
   const deleteDownload = useCallback(async (id) => {
     abortControllersRef.current.get(id)?.abort();
     abortControllersRef.current.delete(id);
+    cancelBookJob(id);
     await removeDownload(id);
     await refreshDownloads();
   }, [refreshDownloads]);
@@ -71,11 +74,13 @@ export function useOfflineContent() {
   const cancelDownload = useCallback((id) => {
     abortControllersRef.current.get(id)?.abort();
     abortControllersRef.current.delete(id);
+    cancelBookJob(id);
   }, []);
 
   const pauseDownload = useCallback((id) => {
     abortControllersRef.current.get(id)?.abort();
     abortControllersRef.current.delete(id);
+    pauseJob(id);
   }, []);
 
   return {

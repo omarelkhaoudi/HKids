@@ -1,11 +1,15 @@
 /**
  * Smart storage stats over IndexedDB downloads + blobs.
+ * Optimizer protects favorites when preference is on and honors soft limits.
  */
 
-import { getDownloads } from '../offline/offlineContentService';
+import { getDownloads, offlineContentIds } from '../offline/offlineContentService';
 import { offlineDb } from '../offline/offlineDb';
+import { storage } from '../../utils/storage';
 import { getLocalCatalogState } from './catalogDeliveryService';
 import { formatBytes } from './downloadQueueService';
+import { getOfflinePrefs } from './offlinePrefs';
+import { recordOfflineEvent } from './offlineAnalyticsService';
 
 async function estimateBlobBytes() {
   try {
@@ -32,6 +36,14 @@ async function estimateAvailableStorage() {
   return { quota: 0, usage: 0, available: 0 };
 }
 
+function favoriteDownloadIds() {
+  try {
+    return new Set((storage.getFavorites() || []).map((id) => offlineContentIds.book(id)));
+  } catch {
+    return new Set();
+  }
+}
+
 export async function getStorageStats() {
   const [downloads, blobBytes, disk, catalog] = await Promise.all([
     getDownloads({ includeRestricted: true }),
@@ -50,6 +62,8 @@ export async function getStorageStats() {
   const books = downloads.filter((d) => d.type === 'book' && d.status === 'downloaded');
   const failed = downloads.filter((d) => d.status === 'failed');
   const downloading = downloads.filter((d) => d.status === 'downloading' || d.status === 'paused');
+  const prefs = getOfflinePrefs();
+  const protectedIds = prefs.protectFavorites ? favoriteDownloadIds() : new Set();
 
   return {
     downloadedBytes: blobBytes,
@@ -60,12 +74,15 @@ export async function getStorageStats() {
     usageBytes: disk.usage,
     lastSync: catalog.lastSync,
     catalogVersion: catalog.active?.version || null,
+    softLimit: prefs.softLimit,
+    protectFavorites: prefs.protectFavorites,
     counts: {
       total: downloads.length,
       books: books.length,
       packs: packs.length,
       failed: failed.length,
       downloading: downloading.length,
+      protected: [...protectedIds].filter((id) => downloads.some((d) => d.id === id)).length,
       byType,
     },
     packs: packs.map((p) => ({
@@ -88,36 +105,97 @@ export async function clearFailedDownloads() {
   return failed.length;
 }
 
-export async function optimizeStorage() {
+/**
+ * Smart optimize:
+ * 1) remove failed
+ * 2) remove oldest non-protected completed items beyond soft limit
+ * 3) if quota nearly full, keep trimming unprotected oldest
+ */
+export async function optimizeStorage({ aggressive = false } = {}) {
+  const prefs = getOfflinePrefs();
   const downloads = await getDownloads({ includeRestricted: true });
   const { removeDownload } = await import('../offline/offlineContentService');
+  const protectedIds = prefs.protectFavorites ? favoriteDownloadIds() : new Set();
 
-  // Remove failed first, then oldest completed beyond soft limit (50)
   const failed = downloads.filter((d) => d.status === 'failed');
   await Promise.all(failed.map((item) => removeDownload(item.id)));
 
   const completed = downloads
     .filter((d) => d.status === 'downloaded' && d.type !== 'pack')
-    .sort((a, b) => String(a.updatedAt).localeCompare(String(b.updatedAt)));
+    .filter((d) => !protectedIds.has(d.id))
+    .sort((a, b) => String(a.updatedAt || '').localeCompare(String(b.updatedAt || '')));
 
-  const softLimit = 50;
-  const excess = completed.slice(0, Math.max(0, completed.length - softLimit));
+  const softLimit = prefs.softLimit;
+  const protectedCount = downloads.filter(
+    (d) => d.status === 'downloaded' && d.type !== 'pack' && protectedIds.has(d.id),
+  ).length;
+  const allowedUnprotected = Math.max(0, softLimit - protectedCount);
+  let excess = completed.slice(0, Math.max(0, completed.length - allowedUnprotected));
+
+  if (aggressive) {
+    const disk = await estimateAvailableStorage();
+    if (disk.quota && disk.usage / disk.quota > 0.9) {
+      excess = completed;
+    }
+  }
+
   await Promise.all(excess.map((item) => removeDownload(item.id)));
 
-  return {
+  const result = {
     removedFailed: failed.length,
     removedOld: excess.length,
+    protectedKept: protectedCount,
   };
+
+  await recordOfflineEvent('optimize_run', {
+    removed: result.removedFailed + result.removedOld,
+  });
+
+  return result;
 }
 
-export async function clearAllOfflineCache() {
+export async function clearAllOfflineCache({ keepFavorites = false } = {}) {
   const downloads = await getDownloads({ includeRestricted: true });
   const { removeDownload } = await import('../offline/offlineContentService');
-  await Promise.all(downloads.map((item) => removeDownload(item.id)));
-  try {
-    await offlineDb.clear(offlineDb.stores.blobs);
-  } catch {
-    /* ignore */
+  const protectedIds = keepFavorites && getOfflinePrefs().protectFavorites
+    ? favoriteDownloadIds()
+    : new Set();
+
+  const removable = downloads.filter((d) => !protectedIds.has(d.id));
+  await Promise.all(removable.map((item) => removeDownload(item.id)));
+
+  if (!keepFavorites) {
+    try {
+      await offlineDb.clear(offlineDb.stores.blobs);
+    } catch {
+      /* ignore */
+    }
   }
-  return downloads.length;
+
+  return removable.length;
+}
+
+/** Suggest items the optimizer would remove (for parent UI). */
+export async function suggestCacheCleanup() {
+  const prefs = getOfflinePrefs();
+  const downloads = await getDownloads({ includeRestricted: true });
+  const protectedIds = prefs.protectFavorites ? favoriteDownloadIds() : new Set();
+  const failed = downloads.filter((d) => d.status === 'failed');
+  const completed = downloads
+    .filter((d) => d.status === 'downloaded' && d.type !== 'pack')
+    .filter((d) => !protectedIds.has(d.id))
+    .sort((a, b) => String(a.updatedAt || '').localeCompare(String(b.updatedAt || '')));
+
+  const protectedCount = downloads.filter(
+    (d) => d.status === 'downloaded' && d.type !== 'pack' && protectedIds.has(d.id),
+  ).length;
+  const allowedUnprotected = Math.max(0, prefs.softLimit - protectedCount);
+  const excess = completed.slice(0, Math.max(0, completed.length - allowedUnprotected));
+
+  return {
+    failed,
+    excess,
+    protectedCount,
+    softLimit: prefs.softLimit,
+  };
 }

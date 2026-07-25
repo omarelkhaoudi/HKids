@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useLanguage } from '../../context/LanguageContext';
 import { useToast } from '../ToastProvider';
-import { Button, Badge } from '../ui';
+import { Button, Badge, Switch } from '../ui';
 import { cdLabel } from '../../constants/contentDeliveryLabels';
 import { formatBytes, formatEta, getJob, subscribeDownloadQueue } from '../../services/contentDelivery/downloadQueueService';
 import {
@@ -23,9 +23,13 @@ import {
 } from '../../services/contentDelivery/contentPackDownloadService';
 import {
   clearAllOfflineCache,
+  clearFailedDownloads,
   getStorageStats,
   optimizeStorage,
 } from '../../services/contentDelivery/storageStatsService';
+import { getOfflineAnalytics } from '../../services/contentDelivery/offlineAnalyticsService';
+import { getOfflinePrefs, setOfflinePref, OFFLINE_PREF_KEYS } from '../../services/contentDelivery/offlinePrefs';
+import { OfflineDownloadManager } from '../offline/OfflineDownloadManager';
 
 function HistoryList({ title, items }) {
   if (!items?.length) return null;
@@ -55,20 +59,25 @@ export function ParentContentDeliveryPanel({ language: languageProp }) {
   const [catalog, setCatalog] = useState(null);
   const [queueTick, setQueueTick] = useState(0);
   const [busy, setBusy] = useState('');
+  const [prefs, setPrefs] = useState(() => getOfflinePrefs());
+  const [analytics, setAnalytics] = useState(null);
 
   const refresh = useCallback(async () => {
-    const [nextStats, available, localPacks, hist, local] = await Promise.all([
+    const [nextStats, available, localPacks, hist, local, analyticsNext] = await Promise.all([
       getStorageStats(),
       listAvailablePacks(),
       listDownloadedPacks(),
       getUpdateHistory({ limit: 50 }),
       getLocalCatalogState(),
+      getOfflineAnalytics(),
     ]);
     setStats(nextStats);
     setPacks(available);
     setDownloaded(localPacks);
     setHistory(hist);
     setCatalog(local);
+    setAnalytics(analyticsNext);
+    setPrefs(getOfflinePrefs());
   }, []);
 
   useEffect(() => {
@@ -122,9 +131,17 @@ export function ParentContentDeliveryPanel({ language: languageProp }) {
             </Button>
             <Button
               size="sm"
+              variant="outline"
+              disabled={Boolean(busy)}
+              onClick={() => run('failed', () => clearFailedDownloads(), 'cdApplied')}
+            >
+              {cdLabel('cdClearFailed', language)}
+            </Button>
+            <Button
+              size="sm"
               variant="ghost"
               disabled={Boolean(busy)}
-              onClick={() => run('clear', () => clearAllOfflineCache(), 'cdApplied')}
+              onClick={() => run('clear', () => clearAllOfflineCache({ keepFavorites: prefs.protectFavorites }), 'cdApplied')}
             >
               {cdLabel('cdClearCache', language)}
             </Button>
@@ -151,6 +168,55 @@ export function ParentContentDeliveryPanel({ language: languageProp }) {
           </div>
         </div>
       </header>
+
+      <div className="parent-panel p-space-24 space-y-4">
+        <h4 className="text-heading-m font-black">{cdLabel('cdPrefsTitle', language)}</h4>
+        {[
+          { key: 'autoDownloadFavorites', pref: OFFLINE_PREF_KEYS.autoDownloadFavorites, title: 'cdPrefAutoFavorites', desc: 'cdPrefAutoFavoritesDesc' },
+          { key: 'predictiveDownloads', pref: OFFLINE_PREF_KEYS.predictiveDownloads, title: 'cdPrefPredictive', desc: 'cdPrefPredictiveDesc' },
+          { key: 'wifiOnly', pref: OFFLINE_PREF_KEYS.wifiOnly, title: 'cdPrefWifiOnly', desc: 'cdPrefWifiOnlyDesc' },
+          { key: 'protectFavorites', pref: OFFLINE_PREF_KEYS.protectFavorites, title: 'cdPrefProtectFavorites', desc: 'cdPrefProtectFavoritesDesc' },
+        ].map((row) => (
+          <div key={row.key} className="flex items-start justify-between gap-4">
+            <div>
+              <p className="font-bold">{cdLabel(row.title, language)}</p>
+              <p className="text-caption text-foreground-muted font-medium">{cdLabel(row.desc, language)}</p>
+            </div>
+            <Switch
+              checked={Boolean(prefs[row.key])}
+              onChange={(checked) => {
+                const next = setOfflinePref(row.pref, checked);
+                setPrefs(next);
+                showToast(cdLabel('cdApplied', language), 'success');
+              }}
+            />
+          </div>
+        ))}
+      </div>
+
+      <OfflineDownloadManager />
+
+      {analytics && (
+        <div className="parent-panel p-space-24">
+          <h4 className="text-heading-m font-black mb-3">{cdLabel('cdAnalyticsTitle', language)}</h4>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {[
+              ['cdAnalyticsCompleted', analytics.downloadsCompleted],
+              ['cdAnalyticsFailed', analytics.downloadsFailed],
+              ['cdAnalyticsSkipped', analytics.downloadsSkippedDuplicate],
+              ['cdAnalyticsCacheHits', analytics.cacheHits],
+              ['cdAnalyticsFavorites', analytics.favoritesAutoQueued],
+              ['cdAnalyticsPredictive', analytics.predictiveQueued],
+              ['cdAnalyticsOptimize', analytics.optimizeRuns],
+            ].map(([key, value]) => (
+              <div key={key} className="rounded-2xl bg-surface-secondary/80 p-3">
+                <p className="text-caption text-foreground-muted font-bold">{cdLabel(key, language)}</p>
+                <p className="text-heading-m font-black">{value ?? 0}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div>
         <h4 className="text-heading-m font-black mb-3">{cdLabel('cdPacksTitle', language)}</h4>

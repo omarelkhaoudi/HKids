@@ -16,6 +16,10 @@ import {
   setNetworkOnline,
 } from '../../services/offline/syncStatusService';
 import { checkCatalogUpdate } from '../../services/contentDelivery/catalogDeliveryService';
+import { syncFavoriteDownloads, bindFavoriteAutoDownload } from '../../services/contentDelivery/favoritesAutoDownloadService';
+import { runPredictiveDownloads } from '../../services/contentDelivery/predictiveDownloadService';
+import { getStorageStats, optimizeStorage } from '../../services/contentDelivery/storageStatsService';
+import { drainQueue } from '../../services/contentDelivery/smartDownloadService';
 
 const syncHandlers = {
   reading_progress: (payload) => parentalAPI.recordReadingProgress(payload),
@@ -31,6 +35,8 @@ export function OfflineSyncBridge() {
   useEffect(() => {
     setNetworkOnline(online);
   }, [online, changedAt]);
+
+  useEffect(() => bindFavoriteAutoDownload(), []);
 
   useEffect(() => {
     if (!online) return;
@@ -73,6 +79,19 @@ export function OfflineSyncBridge() {
           await checkCatalogUpdate();
         } catch (error) {
           console.warn('Catalog update check failed:', error);
+        }
+
+        // Smart offline pass: favorites → predictive → resume queue → quota trim
+        try {
+          await syncFavoriteDownloads({ limit: 12 });
+          await runPredictiveDownloads({ limit: 3 });
+          await drainQueue();
+          const stats = await getStorageStats();
+          if (stats.quotaBytes && stats.usageBytes / stats.quotaBytes > 0.9) {
+            await optimizeStorage({ aggressive: true });
+          }
+        } catch (error) {
+          console.warn('Smart offline pass failed:', error);
         }
       } catch (error) {
         syncError = error;

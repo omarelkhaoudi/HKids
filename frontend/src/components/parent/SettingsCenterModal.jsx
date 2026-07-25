@@ -17,6 +17,8 @@ import PrivacyCenter from './PrivacyCenter';
 import { storage } from '../../utils/storage';
 import {LANGUAGE_OPTIONS} from '../../utils/translations';
 import {useModalA11y} from '../../hooks/useModalA11y';
+import { cdLabel } from '../../constants/contentDeliveryLabels';
+import { getOfflinePrefs, setOfflinePref, OFFLINE_PREF_KEYS } from '../../services/contentDelivery/offlinePrefs';
 
 const SECTION_ICONS = {
  account: UserIcon,
@@ -26,6 +28,7 @@ const SECTION_ICONS = {
  security: LockIcon,
  language: LanguageIcon,
  reading: FontIcon,
+ offline: HistoryIcon,
  subscription: StarIcon,
  support: MailIcon,
 };
@@ -66,9 +69,10 @@ export function SettingsCenterModal({isOpen, onClose}) {
   {id: 'security', label: t('parentSettingsSectionSecurity')},
   {id: 'language', label: t('parentSettingsSectionLanguage')},
   {id: 'reading', label: t('parentSettingsSectionReading')},
+  {id: 'offline', label: cdLabel('cdPrefsTitle', language)},
   {id: 'subscription', label: t('parentSettingsSectionSubscription')},
   {id: 'support', label: t('parentSettingsSectionSupport')},
- ]), [t]);
+ ]), [t, language]);
 
  const sectionDescriptions = useMemo(() => ({
   account: t('parentSettingsAccountDesc'),
@@ -78,9 +82,10 @@ export function SettingsCenterModal({isOpen, onClose}) {
   security: t('parentSettingsSecurityDesc'),
   language: t('parentSettingsLanguageDesc'),
   reading: t('parentSettingsReadingDesc'),
+  offline: cdLabel('cdPrefPredictiveDesc', language),
   subscription: t('parentSettingsSubscriptionDesc'),
   support: t('parentSettingsSupportDesc'),
- }), [t]);
+ }), [t, language]);
 
  const dateLocale = language === 'ar' ? 'ar' : language === 'en' ? 'en-US' : 'fr-FR';
 
@@ -501,6 +506,41 @@ export function SettingsCenterModal({isOpen, onClose}) {
  </div>
  <p className="text-sm text-foreground-muted">{t('parentSettingsAutoAudioDesc')}</p>
  </div>
+ </div>
+ </section>
+
+ <hr className="border-border" />
+
+ {/* OFFLINE PREFERENCES */}
+ <section id="offline" ref={el => sectionRefs.current['offline'] = el} className="scroll-mt-24 space-y-6">
+ <div>
+ <h2 className="text-2xl font-black tracking-tight mb-2">{cdLabel('cdPrefsTitle', language)}</h2>
+ <p className="text-foreground-muted">{sectionDescriptions.offline}</p>
+ </div>
+ <div className="bg-card rounded-3xl p-6 shadow-sm border border-border space-y-6">
+ {[
+ { pref: OFFLINE_PREF_KEYS.autoDownloadFavorites, stateKey: 'autoDownloadFavorites', title: 'cdPrefAutoFavorites', desc: 'cdPrefAutoFavoritesDesc' },
+ { pref: OFFLINE_PREF_KEYS.predictiveDownloads, stateKey: 'predictiveDownloads', title: 'cdPrefPredictive', desc: 'cdPrefPredictiveDesc' },
+ { pref: OFFLINE_PREF_KEYS.wifiOnly, stateKey: 'wifiOnly', title: 'cdPrefWifiOnly', desc: 'cdPrefWifiOnlyDesc' },
+ { pref: OFFLINE_PREF_KEYS.protectFavorites, stateKey: 'protectFavorites', title: 'cdPrefProtectFavorites', desc: 'cdPrefProtectFavoritesDesc' },
+ ].map((row) => {
+ const prefs = getOfflinePrefs();
+ return (
+ <div key={row.pref}>
+ <div className="flex items-center justify-between mb-2 gap-4">
+ <h4 className="font-bold">{cdLabel(row.title, language)}</h4>
+ <Switch
+ defaultChecked={Boolean(prefs[row.stateKey])}
+ onChange={(checked) => {
+ setOfflinePref(row.pref, checked);
+ showToast(t('parentChangesSaved'), 'success');
+ }}
+ />
+ </div>
+ <p className="text-sm text-foreground-muted">{cdLabel(row.desc, language)}</p>
+ </div>
+ );
+ })}
  </div>
  </section>
 
