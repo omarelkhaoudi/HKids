@@ -73,6 +73,11 @@ export function useOfflineContent() {
     abortControllersRef.current.delete(id);
   }, []);
 
+  const pauseDownload = useCallback((id) => {
+    abortControllersRef.current.get(id)?.abort();
+    abortControllersRef.current.delete(id);
+  }, []);
+
   return {
     downloadsById,
     progressById,
@@ -81,6 +86,7 @@ export function useOfflineContent() {
     saveStoryContent,
     deleteDownload,
     cancelDownload,
+    pauseDownload,
     getBookStatus: (bookId) => downloadsById[offlineContentIds.book(bookId)] || null,
     getStoryStatus: (storyId) => downloadsById[offlineContentIds.generatedStory(storyId)] || null
   };

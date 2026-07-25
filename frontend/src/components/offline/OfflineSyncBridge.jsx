@@ -15,6 +15,7 @@ import {
   completeSync,
   setNetworkOnline,
 } from '../../services/offline/syncStatusService';
+import { checkCatalogUpdate } from '../../services/contentDelivery/catalogDeliveryService';
 
 const syncHandlers = {
   reading_progress: (payload) => parentalAPI.recordReadingProgress(payload),
@@ -66,6 +67,12 @@ export function OfflineSyncBridge() {
             syncError = error;
             console.warn('Cloud sync failed:', error);
           }
+        }
+
+        try {
+          await checkCatalogUpdate();
+        } catch (error) {
+          console.warn('Catalog update check failed:', error);
         }
       } catch (error) {
         syncError = error;

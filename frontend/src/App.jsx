@@ -6,6 +6,7 @@ import { ToastProvider } from './components/ToastProvider';
 import ErrorBoundary from './components/ErrorBoundary';
 import { SkipToContent } from './components/SkipToContent';
 import { OfflineStatusBanner } from './components/offline/OfflineStatusBanner';
+import { CatalogUpdateBanner } from './components/offline/CatalogUpdateBanner';
 import { CookieConsentBanner } from './components/CookieConsentBanner';
 import { OfflineSyncBridge } from './components/offline/OfflineSyncBridge';
 import { KidScreenTimeTracker } from './components/kids/KidScreenTimeTracker';
@@ -224,6 +225,7 @@ function App() {
               <KidScreenTimeTracker />
               <OfflineSyncBridge />
               <OfflineStatusBanner />
+              <CatalogUpdateBanner />
               <CookieConsentBanner />
             </div>
           </ToastProvider>

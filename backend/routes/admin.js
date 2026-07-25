@@ -565,4 +565,85 @@ router.patch('/support-tickets/:id', requireAdminPermission('support.manage'), a
   }
 });
 
+router.get('/catalog-versions', requireAdminPermission('content.read'), async (req, res) => {
+  try {
+    const {
+      listCatalogVersions,
+    } = await import('../services/content/catalogVersionService.js');
+    res.json(await listCatalogVersions({ includeArchived: true }));
+  } catch (error) {
+    console.error('Error listing catalog versions:', error);
+    sendAdminError(res, error);
+  }
+});
+
+router.post('/catalog-versions', requireAdminPermission('content.moderate'), async (req, res) => {
+  try {
+    const { createCatalogVersion } = await import('../services/content/catalogVersionService.js');
+    const version = await createCatalogVersion({
+      bump: req.body.bump || 'patch',
+      changelog: req.body.changelog || [],
+      packs: req.body.packs,
+      packageBytes: req.body.package_bytes,
+      contentFingerprint: req.body.content_fingerprint,
+      scheduleAt: req.body.scheduled_at || null,
+      featured: req.body.featured === true,
+    });
+    res.status(201).json({ version });
+  } catch (error) {
+    console.error('Error creating catalog version:', error);
+    sendAdminError(res, error);
+  }
+});
+
+router.post('/catalog-versions/:id/publish', requireAdminPermission('content.moderate'), async (req, res) => {
+  try {
+    const { publishCatalogVersion } = await import('../services/content/catalogVersionService.js');
+    res.json(await publishCatalogVersion(req.params.id));
+  } catch (error) {
+    console.error('Error publishing catalog version:', error);
+    sendAdminError(res, error);
+  }
+});
+
+router.post('/catalog-versions/rollback', requireAdminPermission('content.moderate'), async (req, res) => {
+  try {
+    const { rollbackCatalogVersion } = await import('../services/content/catalogVersionService.js');
+    res.json(await rollbackCatalogVersion(req.body?.target_version_id || null));
+  } catch (error) {
+    console.error('Error rolling back catalog version:', error);
+    sendAdminError(res, error);
+  }
+});
+
+router.post('/catalog-versions/:id/archive', requireAdminPermission('content.moderate'), async (req, res) => {
+  try {
+    const { archiveCatalogVersion } = await import('../services/content/catalogVersionService.js');
+    res.json({ version: await archiveCatalogVersion(req.params.id) });
+  } catch (error) {
+    console.error('Error archiving catalog version:', error);
+    sendAdminError(res, error);
+  }
+});
+
+router.post('/catalog-versions/:id/feature', requireAdminPermission('content.moderate'), async (req, res) => {
+  try {
+    const { featureCatalogVersion } = await import('../services/content/catalogVersionService.js');
+    res.json({ version: await featureCatalogVersion(req.params.id, req.body?.featured !== false) });
+  } catch (error) {
+    console.error('Error featuring catalog version:', error);
+    sendAdminError(res, error);
+  }
+});
+
+router.post('/catalog-versions/:id/schedule', requireAdminPermission('content.moderate'), async (req, res) => {
+  try {
+    const { scheduleCatalogVersion } = await import('../services/content/catalogVersionService.js');
+    res.json({ version: await scheduleCatalogVersion(req.params.id, req.body?.scheduled_at) });
+  } catch (error) {
+    console.error('Error scheduling catalog version:', error);
+    sendAdminError(res, error);
+  }
+});
+
 export default router;

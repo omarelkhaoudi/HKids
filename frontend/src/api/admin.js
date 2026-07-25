@@ -43,4 +43,15 @@ export const adminAPI = {
   getNotifications: () => adminGet('/notifications'),
   getSupportTickets: (params = {}) => adminGet('/support-tickets', params),
   updateSupportTicket: (id, data) => adminPatch(`/support-tickets/${id}`, data),
+  getCatalogVersions: () => adminGet('/catalog-versions'),
+  createCatalogVersion: (data) => axios.post(buildApiUrl('/admin/catalog-versions'), data, { headers: authHeaders() }),
+  publishCatalogVersion: (id) => axios.post(buildApiUrl(`/admin/catalog-versions/${id}/publish`), {}, { headers: authHeaders() }),
+  rollbackCatalogVersion: (targetVersionId = null) => axios.post(buildApiUrl('/admin/catalog-versions/rollback'), {
+    target_version_id: targetVersionId,
+  }, { headers: authHeaders() }),
+  archiveCatalogVersion: (id) => axios.post(buildApiUrl(`/admin/catalog-versions/${id}/archive`), {}, { headers: authHeaders() }),
+  featureCatalogVersion: (id, featured = true) => axios.post(buildApiUrl(`/admin/catalog-versions/${id}/feature`), { featured }, { headers: authHeaders() }),
+  scheduleCatalogVersion: (id, scheduledAt) => axios.post(buildApiUrl(`/admin/catalog-versions/${id}/schedule`), {
+    scheduled_at: scheduledAt,
+  }, { headers: authHeaders() }),
 };

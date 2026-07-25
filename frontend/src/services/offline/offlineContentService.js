@@ -159,21 +159,42 @@ export async function getVoiceMessageDownload(messageId) {
 export async function downloadBook(book, { signal, onProgress } = {}) {
   await assertParentalAccess(book);
   const draft = serializeBook(book);
-  const startedAt = nowIso();
+  const existing = await getDownload(draft.id);
+  const startedAt = existing?.createdAt || nowIso();
+
+  // Incremental reuse: skip fully downloaded unchanged books
+  if (existing?.status === 'downloaded' && Array.isArray(existing.assetKeys) && existing.assetKeys.length >= draft.assets.length) {
+    onProgress?.(100);
+    return existing;
+  }
+
+  const reusedKeys = [];
+  if (existing?.assetKeys?.length) {
+    for (const key of existing.assetKeys) {
+      const blob = await offlineDb.get(offlineDb.stores.blobs, key);
+      if (blob?.blob) reusedKeys.push(key);
+    }
+  }
 
   await putDownload({
     ...draft,
     version: DOWNLOAD_VERSION,
     status: 'downloading',
-    progress: 0,
-    assetKeys: [],
+    progress: reusedKeys.length ? Math.round((reusedKeys.length / Math.max(1, draft.assets.length)) * 100) : 0,
+    assetKeys: reusedKeys,
     createdAt: startedAt,
-    updatedAt: startedAt
+    updatedAt: nowIso()
   });
 
-  const assetKeys = [];
+  const assetKeys = [...reusedKeys];
   try {
     for (const asset of draft.assets) {
+      const blobId = `${draft.id}:${asset.key}`;
+      if (assetKeys.includes(blobId)) {
+        const weighted = Math.min(99, Math.round((assetKeys.length / Math.max(1, draft.assets.length)) * 100));
+        onProgress?.(weighted);
+        continue;
+      }
       const blob = await fetchAsBlob(asset.url, {
         signal,
         onProgress: (progress) => {
@@ -182,7 +203,6 @@ export async function downloadBook(book, { signal, onProgress } = {}) {
           onProgress?.(weighted);
         }
       });
-      const blobId = `${draft.id}:${asset.key}`;
       await putBlob(blobId, blob, { url: asset.url, type: asset.key, contentId: draft.id });
       assetKeys.push(blobId);
     }
@@ -204,7 +224,16 @@ export async function downloadBook(book, { signal, onProgress } = {}) {
     return completed;
   } catch (error) {
     if (error.name === 'AbortError') {
-      await removeDownload(draft.id);
+      // Keep partial progress for resume (safe — do not corrupt completed assets)
+      await putDownload({
+        ...draft,
+        version: DOWNLOAD_VERSION,
+        status: 'paused',
+        progress: Math.round((assetKeys.length / Math.max(1, draft.assets.length)) * 100),
+        assetKeys,
+        createdAt: startedAt,
+        updatedAt: nowIso()
+      });
       throw error;
     }
     await putDownload({
