@@ -1,0 +1,27 @@
+{
+  "_comment": [
+    "QR / NFC provisioning payload for HKids dedicated tablets (Android 7+).",
+    "Encode this JSON as a QR code and scan it from the 'Welcome' screen of a",
+    "factory-reset tablet (tap the screen 6 times to open the QR reader).",
+    "",
+    "Before use, replace:",
+    "  DOWNLOAD_LOCATION  -> HTTPS URL serving the signed release APK",
+    "  SIGNATURE_CHECKSUM -> url-safe base64 SHA-256 of the signing certificate:",
+    "    keytool -list -printcert -jarfile app-release.apk",
+    "    (or) apksigner verify --print-certs app-release.apk",
+    "    then base64url-encode the SHA-256 digest bytes without padding.",
+    "",
+    "Remove every _comment field before encoding: unknown keys are rejected."
+  ],
+  "android.app.extra.PROVISIONING_DEVICE_ADMIN_COMPONENT_NAME": "com.lelitquilit.app/.HKidsDeviceAdminReceiver",
+  "android.app.extra.PROVISIONING_DEVICE_ADMIN_PACKAGE_DOWNLOAD_LOCATION": "https://DOWNLOAD_LOCATION/app-release.apk",
+  "android.app.extra.PROVISIONING_DEVICE_ADMIN_SIGNATURE_CHECKSUM": "SIGNATURE_CHECKSUM",
+  "android.app.extra.PROVISIONING_LEAVE_ALL_SYSTEM_APPS_ENABLED": true,
+  "android.app.extra.PROVISIONING_SKIP_ENCRYPTION": false,
+  "android.app.extra.PROVISIONING_SKIP_USER_CONSENT": true,
+  "android.app.extra.PROVISIONING_LOCALE": "fr_FR",
+  "android.app.extra.PROVISIONING_TIME_ZONE": "Europe/Paris",
+  "android.app.extra.PROVISIONING_ADMIN_EXTRAS_BUNDLE": {
+    "kiosk_enabled": "true"
+  }
+}

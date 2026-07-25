@@ -39,7 +39,9 @@ describe('kioskService (web fallback)', () => {
   it('getKioskStatus returns web defaults', async () => {
     const status = await kiosk.getKioskStatus();
     expect(status.kioskActive).toBe(false);
+    expect(status.kioskEnabled).toBe(false);
     expect(status.deviceOwner).toBe(false);
+    expect(status.tablet).toBe(false);
     expect(status.platform).toBe('web');
   });
 
@@ -64,5 +66,72 @@ describe('kioskService (web fallback)', () => {
 
   it('stopSleepCycle does not throw on web', () => {
     expect(() => kiosk.stopSleepCycle()).not.toThrow();
+  });
+
+  it('device owner policy helpers report no capability on web', async () => {
+    expect((await kiosk.applyDeviceOwnerPolicies()).applied).toBe(false);
+    expect((await kiosk.clearDeviceOwnerPolicies()).cleared).toBe(false);
+    expect((await kiosk.setKioskLauncher(true)).launcher).toBe(false);
+  });
+
+  it('wake lock helpers report an unheld lock on web', async () => {
+    expect((await kiosk.acquireWakeLock()).held).toBe(false);
+    expect((await kiosk.releaseWakeLock()).held).toBe(false);
+  });
+
+  it('orientation and immersive helpers stay inert on web', async () => {
+    expect((await kiosk.setOrientation('landscape')).mode).toBe('auto');
+    expect((await kiosk.refreshImmersiveMode()).immersive).toBe(false);
+  });
+
+  it('provisioning helpers refuse to run outside Android', async () => {
+    const provisioned = await kiosk.provisionKioskTablet();
+    expect(provisioned.provisioned).toBe(false);
+    expect(provisioned.reason).toBe('not_android');
+
+    const released = await kiosk.releaseKioskTablet();
+    expect(released.released).toBe(false);
+    expect(released.reason).toBe('not_android');
+  });
+});
+
+describe('kiosk exit code', () => {
+  let kiosk;
+
+  beforeEach(async () => {
+    localStorage.clear();
+    kiosk = await import('./kioskService');
+  });
+
+  it('falls back to the build-time code when nothing is stored', () => {
+    expect(kiosk.getKioskExitCode()).toBe(import.meta.env.VITE_KIOSK_EXIT_CODE || '1379');
+  });
+
+  it('stores and verifies a numeric code of 4 to 8 digits', () => {
+    expect(kiosk.setKioskExitCode('482913')).toBe(true);
+    expect(kiosk.getKioskExitCode()).toBe('482913');
+    expect(kiosk.verifyKioskExitCode('482913')).toBe(true);
+    expect(kiosk.verifyKioskExitCode('482914')).toBe(false);
+  });
+
+  it('rejects codes that are too short, too long or not numeric', () => {
+    expect(kiosk.setKioskExitCode('123')).toBe(false);
+    expect(kiosk.setKioskExitCode('123456789')).toBe(false);
+    expect(kiosk.setKioskExitCode('12a4')).toBe(false);
+    expect(kiosk.setKioskExitCode('')).toBe(false);
+  });
+
+  it('never exits kiosk mode with a wrong code', async () => {
+    kiosk.setKioskExitCode('9182');
+    const result = await kiosk.requestKioskExit('0000');
+    expect(result.exited).toBe(false);
+    expect(result.reason).toBe('invalid_code');
+  });
+
+  it('reports not_android once the code is correct but no bridge exists', async () => {
+    kiosk.setKioskExitCode('9182');
+    const result = await kiosk.requestKioskExit('9182');
+    expect(result.exited).toBe(false);
+    expect(result.reason).toBe('not_android');
   });
 });

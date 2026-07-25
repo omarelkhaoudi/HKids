@@ -11,6 +11,7 @@ import { OfflineDownloadManager } from './components/offline/OfflineDownloadMana
 import { CookieConsentBanner } from './components/CookieConsentBanner';
 import { OfflineSyncBridge } from './components/offline/OfflineSyncBridge';
 import { KidScreenTimeTracker } from './components/kids/KidScreenTimeTracker';
+import { KioskExitGate } from './components/kiosk/KioskExitGate';
 import ScrollToTop from './components/ScrollToTop';
 import { isNativeAndroid } from './services/mobile/capacitorRuntime';
 import { storage } from './utils/storage';
@@ -182,6 +183,7 @@ function App() {
             <div className={darkMode ? 'dark' : ''}>
               <SkipToContent />
               <AndroidKioskIdleReset />
+              <KioskExitGate />
               <Routes>
                 <Route path="/" element={<LazyRoute><Home darkMode={darkMode} setDarkMode={setDarkMode} /></LazyRoute>} />
                 <Route path="/book/:id" element={<RequireAuth><LazyRoute><BookReader /></LazyRoute></RequireAuth>} />

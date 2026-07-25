@@ -292,6 +292,31 @@
   .touch-kiosk select {
     min-height: 44px;
   }
+
+  /* Dedicated tablets: larger reading text and 56px touch targets at arm's length. */
+  .kiosk-tablet {
+    font-size: 17px;
+  }
+
+  .kiosk-tablet .touch-kiosk button,
+  .kiosk-tablet .touch-kiosk a,
+  .kiosk-tablet .touch-kiosk [role="button"],
+  .kiosk-tablet .touch-kiosk input,
+  .kiosk-tablet .touch-kiosk select {
+    min-height: 56px;
+  }
+
+  /* Kiosk devices are shared and wall-mounted: never offer text selection or callouts. */
+  .kiosk-locked body {
+    -webkit-touch-callout: none;
+    overscroll-behavior: none;
+  }
+
+  .kiosk-locked ::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+  }
+
   
   * {
     @apply transition-colors duration-200;

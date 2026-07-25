@@ -1,6 +1,8 @@
 /**
- * Bridge to the native KioskPlugin for Lock Task Mode, screen control,
- * and embedded-device features. All methods are safe no-ops on web/iOS.
+ * Bridge to the native KioskPlugin: Lock Task Mode, Device Owner policies, launcher
+ * takeover, wake lock, brightness and orientation.
+ *
+ * Every method is a safe no-op on web and iOS, so the same code runs in the browser.
  */
 import { Capacitor, registerPlugin } from '@capacitor/core';
 
@@ -8,54 +10,82 @@ const Kiosk = Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'andro
   ? registerPlugin('Kiosk')
   : null;
 
+const EXIT_CODE_KEY = 'hkids_kiosk_exit_code';
+const DEFAULT_EXIT_CODE = '1379';
+
+const WEB_STATUS = {
+  platform: 'web',
+  kioskActive: false,
+  kioskEnabled: false,
+  deviceOwner: false,
+  provisioningAllowed: false,
+  launcherEnabled: false,
+  wakeLockHeld: false,
+  tablet: false,
+};
+
 function isAndroid() {
   return Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'android';
 }
 
-export async function enableKiosk() {
-  if (!isAndroid() || !Kiosk) return { enabled: false, reason: 'not_android' };
+async function invoke(method, options, fallback) {
+  if (!isAndroid() || !Kiosk?.[method]) return fallback;
   try {
-    return await Kiosk.enableKiosk();
-  } catch (err) {
-    console.warn('Kiosk enableKiosk failed:', err);
-    return { enabled: false, error: err.message };
+    return await Kiosk[method](options);
+  } catch (error) {
+    console.warn(`Kiosk ${method} failed:`, error);
+    return { ...fallback, error: error?.message || 'kiosk_error' };
   }
 }
 
-export async function disableKiosk() {
+export async function enableKiosk({ persistent = true } = {}) {
+  if (!isAndroid() || !Kiosk) return { enabled: false, reason: 'not_android' };
+  try {
+    return await Kiosk.enableKiosk({ persistent });
+  } catch (error) {
+    console.warn('Kiosk enableKiosk failed:', error);
+    return { enabled: false, error: error.message };
+  }
+}
+
+export async function disableKiosk({ clearPolicies = false } = {}) {
   if (!isAndroid() || !Kiosk) return { enabled: false };
   try {
-    return await Kiosk.disableKiosk();
-  } catch (err) {
-    console.warn('Kiosk disableKiosk failed:', err);
-    return { enabled: true, error: err.message };
+    return await Kiosk.disableKiosk({ clearPolicies });
+  } catch (error) {
+    console.warn('Kiosk disableKiosk failed:', error);
+    return { enabled: true, error: error.message };
   }
 }
 
 export async function isKioskActive() {
-  if (!isAndroid() || !Kiosk) return { active: false };
-  try {
-    return await Kiosk.isKioskActive();
-  } catch {
-    return { active: false };
-  }
+  return invoke('isKioskActive', undefined, { active: false, enabled: false });
 }
 
 export async function isDeviceOwner() {
-  if (!isAndroid() || !Kiosk) return { owner: false };
-  try {
-    return await Kiosk.isDeviceOwner();
-  } catch {
-    return { owner: false };
-  }
+  return invoke('isDeviceOwner', undefined, { owner: false, provisioningAllowed: false });
+}
+
+/** Applies the dedicated-tablet policies (keyguard, status bar, restrictions, launcher). */
+export async function applyDeviceOwnerPolicies() {
+  return invoke('applyDeviceOwnerPolicies', undefined, { applied: false, deviceOwner: false });
+}
+
+/** Restores a normal Android device without removing the Device Owner grant. */
+export async function clearDeviceOwnerPolicies() {
+  return invoke('clearDeviceOwnerPolicies', undefined, { cleared: false });
+}
+
+export async function setKioskLauncher(enabled = true) {
+  return invoke('setKioskLauncher', { enabled }, { launcher: false });
 }
 
 export async function setScreenBrightness(brightness) {
   if (!isAndroid() || !Kiosk) return;
   try {
     return await Kiosk.setScreenBrightness({ brightness });
-  } catch (err) {
-    console.warn('setScreenBrightness failed:', err);
+  } catch (error) {
+    console.warn('setScreenBrightness failed:', error);
   }
 }
 
@@ -63,17 +93,105 @@ export async function keepScreenOn(enabled = true) {
   if (!isAndroid() || !Kiosk) return;
   try {
     return await Kiosk.keepScreenOn({ enabled });
-  } catch (err) {
-    console.warn('keepScreenOn failed:', err);
+  } catch (error) {
+    console.warn('keepScreenOn failed:', error);
   }
 }
 
+/** Holds a wake lock so long audio sessions are never cut short by the device sleeping. */
+export async function acquireWakeLock({ screen = true, timeoutMs = 0 } = {}) {
+  return invoke('acquireWakeLock', { screen, timeoutMs }, { held: false });
+}
+
+export async function releaseWakeLock() {
+  return invoke('releaseWakeLock', undefined, { held: false });
+}
+
+/** `auto` follows the device class: portrait on phones, free rotation on tablets. */
+export async function setOrientation(mode = 'auto') {
+  return invoke('setOrientation', { mode }, { mode: 'auto' });
+}
+
+export async function refreshImmersiveMode() {
+  return invoke('refreshImmersiveMode', undefined, { immersive: false });
+}
+
 export async function getKioskStatus() {
-  if (!isAndroid() || !Kiosk) return { kioskActive: false, deviceOwner: false, platform: 'web' };
+  if (!isAndroid() || !Kiosk) return { ...WEB_STATUS };
   try {
-    return await Kiosk.getStatus();
+    return { ...WEB_STATUS, platform: 'android', ...(await Kiosk.getStatus()) };
   } catch {
-    return { kioskActive: false, deviceOwner: false, platform: 'android', error: true };
+    return { ...WEB_STATUS, platform: 'android', error: true };
+  }
+}
+
+/**
+ * Full provisioning pass for a dedicated tablet: lock task, dedicated-device policies,
+ * HOME takeover and wake lock, in the order the system expects.
+ */
+export async function provisionKioskTablet() {
+  if (!isAndroid()) return { provisioned: false, reason: 'not_android' };
+
+  const owner = await isDeviceOwner();
+  await applyDeviceOwnerPolicies();
+  await setKioskLauncher(true);
+  const enabled = await enableKiosk({ persistent: true });
+  await acquireWakeLock({ screen: true });
+
+  return {
+    provisioned: Boolean(enabled.enabled),
+    deviceOwner: Boolean(owner.owner),
+    mode: enabled.mode || (owner.owner ? 'lock_task' : 'screen_pinning'),
+  };
+}
+
+/** Returns the tablet to normal Android mode, keeping the Device Owner grant intact. */
+export async function releaseKioskTablet({ clearPolicies = true } = {}) {
+  if (!isAndroid()) return { released: false, reason: 'not_android' };
+
+  await releaseWakeLock();
+  const result = await disableKiosk({ clearPolicies });
+  return { released: !result.enabled, ...result };
+}
+
+export function getKioskExitCode() {
+  try {
+    const stored = localStorage.getItem(EXIT_CODE_KEY);
+    if (stored) return stored;
+  } catch {
+    // Private browsing or a locked-down WebView: fall back to the build-time code.
+  }
+  return import.meta.env?.VITE_KIOSK_EXIT_CODE || DEFAULT_EXIT_CODE;
+}
+
+export function setKioskExitCode(code) {
+  const normalized = String(code || '').trim();
+  if (!/^\d{4,8}$/.test(normalized)) return false;
+  try {
+    localStorage.setItem(EXIT_CODE_KEY, normalized);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export function verifyKioskExitCode(code) {
+  return String(code || '').trim() === getKioskExitCode();
+}
+
+/**
+ * Leaves kiosk mode only when the parent code matches. This is the single authorised exit
+ * path: everything else (back, home, recents, task switch) is blocked natively.
+ */
+export async function requestKioskExit(code) {
+  if (!verifyKioskExitCode(code)) return { exited: false, reason: 'invalid_code' };
+  if (!isAndroid() || !Kiosk) return { exited: false, reason: 'not_android' };
+
+  try {
+    return await Kiosk.requestExit({ background: true });
+  } catch (error) {
+    console.warn('Kiosk requestExit failed:', error);
+    return { exited: false, error: error.message };
   }
 }
 
@@ -84,7 +202,7 @@ let sleepTimer = null;
 let dimTimer = null;
 
 /**
- * Managed sleep cycle: dim after `dimAfterMs`, then optionally lock after `sleepAfterMs`.
+ * Managed sleep cycle: dim after `dimAfterMs`, then further after `sleepAfterMs`.
  * Any user interaction should call `wakeScreen()` to reset timers.
  */
 export function startSleepCycle({ dimAfterMs = 120000, sleepAfterMs = 300000 } = {}) {

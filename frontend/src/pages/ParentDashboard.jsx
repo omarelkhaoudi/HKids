@@ -27,6 +27,7 @@ import {ParentHero} from '../components/parent/ParentHero';
 import {ParentControlCenter} from '../components/parent/ParentControlCenter';
 import {ParentPremiumPanel} from '../components/parent/ParentPremiumPanel';
 import {ParentContentDeliveryPanel} from '../components/parent/ParentContentDeliveryPanel';
+import {ParentKioskPanel} from '../components/kiosk/ParentKioskPanel';
 import { normalizeRulesForm } from '../constants/parentControlCenter';
 import { collectFavoriteThemes, getThemeLabel, getTodayReadingSeconds } from '../utils/parentInsights';
 
@@ -504,6 +505,7 @@ function ParentDashboard() {
  <div className="flex flex-col gap-space-24">
  <ParentPremiumPanel language={language} />
  <ParentContentDeliveryPanel language={language} />
+ <ParentKioskPanel />
  <article className="parent-aside-note parent-panel">
  <p className="parent-companion-card-label">{t('pccEyebrow')}</p>
  <p className="parent-companion-card-value">

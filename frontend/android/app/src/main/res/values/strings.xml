@@ -4,4 +4,6 @@
     <string name="title_activity_main">Le Lit Qui Lit</string>
     <string name="package_name">com.lelitquilit.app</string>
     <string name="custom_url_scheme">com.lelitquilit.app</string>
+    <string name="kiosk_launcher_label">Le Lit Qui Lit — Tablette</string>
+    <string name="kiosk_admin_disable_warning">Le mode kiosk sera désactivé. L\'appareil ne sera plus verrouillé sur Le Lit Qui Lit.</string>
 </resources>

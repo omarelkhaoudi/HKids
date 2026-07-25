@@ -12,15 +12,19 @@
         android:hardwareAccelerated="true"
         android:largeHeap="true">
 
+        <!--
+          screenOrientation is intentionally unspecified: MainActivity locks phones to
+          portrait and lets tablets (sw600dp) rotate freely.
+        -->
         <activity
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode|navigation|density"
             android:name=".MainActivity"
             android:label="@string/title_activity_main"
             android:theme="@style/AppTheme.NoActionBarLaunch"
             android:launchMode="singleTask"
-            android:screenOrientation="portrait"
             android:exported="true"
             android:lockTaskMode="if_whitelisted"
+            android:resizeableActivity="true"
             android:windowSoftInputMode="adjustResize">
 
             <intent-filter>
@@ -28,14 +32,25 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
-            <!-- Act as home screen when set as device owner -->
+        </activity>
+
+        <!--
+          Kiosk launcher: carries the HOME intent filter so a provisioned tablet boots
+          straight into HKids. Disabled by default so a normal install never shows up in
+          the Android launcher chooser; enabled at runtime by KioskPolicyManager.
+        -->
+        <activity-alias
+            android:name=".KioskLauncherAlias"
+            android:targetActivity=".MainActivity"
+            android:label="@string/kiosk_launcher_label"
+            android:enabled="false"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.HOME" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
-
-        </activity>
+        </activity-alias>
 
         <!-- Device Admin receiver (required for Lock Task / Device Owner) -->
         <receiver
@@ -47,17 +62,22 @@
                 android:resource="@xml/device_admin_policies" />
             <intent-filter>
                 <action android:name="android.app.action.DEVICE_ADMIN_ENABLED" />
+                <action android:name="android.app.action.PROFILE_PROVISIONING_COMPLETE" />
+                <action android:name="android.app.action.LOCK_TASK_ENTERING" />
+                <action android:name="android.app.action.LOCK_TASK_EXITING" />
             </intent-filter>
         </receiver>
 
-        <!-- Auto-start on boot / app update -->
+        <!-- Auto-start after reboot / app update (kiosk mode only) -->
         <receiver
             android:name=".BootReceiver"
             android:enabled="true"
             android:exported="true">
-            <intent-filter>
+            <intent-filter android:priority="1000">
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
                 <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+                <action android:name="android.intent.action.QUICKBOOT_POWERON" />
+                <action android:name="com.htc.intent.action.QUICKBOOT_POWERON" />
             </intent-filter>
         </receiver>
 
@@ -80,8 +100,21 @@
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.REORDER_TASKS" />
 
     <uses-feature
         android:name="android.hardware.microphone"
         android:required="false" />
+    <uses-feature
+        android:name="android.hardware.touchscreen"
+        android:required="false" />
+
+    <!-- Tablet-first deployment, phones remain supported -->
+    <supports-screens
+        android:smallScreens="false"
+        android:normalScreens="true"
+        android:largeScreens="true"
+        android:xlargeScreens="true"
+        android:anyDensity="true"
+        android:resizeable="true" />
 </manifest>

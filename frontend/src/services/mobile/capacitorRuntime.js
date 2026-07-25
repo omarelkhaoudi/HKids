@@ -5,13 +5,25 @@ import { SplashScreen } from '@capacitor/splash-screen';
 import { StatusBar, Style } from '@capacitor/status-bar';
 import { unlockAndroidAudio } from './androidAudio';
 import { cleanupAndroidNetwork, initAndroidNetwork } from './androidNetwork';
-import { isKioskActive, wakeScreen, startSleepCycle, stopSleepCycle } from './kioskService';
+import {
+  acquireWakeLock,
+  enableKiosk,
+  getKioskStatus,
+  isKioskActive,
+  refreshImmersiveMode,
+  releaseWakeLock,
+  setOrientation,
+  startSleepCycle,
+  stopSleepCycle,
+  wakeScreen,
+} from './kioskService';
 
 let initialized = false;
 let removeBackButtonListener = null;
 let removeClickListener = null;
 let removeResumeListener = null;
 let removeWakeListener = null;
+let kioskStatus = null;
 
 export function isNativeAndroid() {
   return Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'android';
@@ -72,8 +84,44 @@ function installTouchFeedback() {
 
 function installResumeHandling() {
   removeResumeListener = App.addListener('appStateChange', ({ isActive }) => {
-    if (isActive) unlockAndroidAudio();
+    if (!isActive) return;
+    unlockAndroidAudio();
+    // A system dialog or the keyboard can reveal the status bar: hide it again.
+    refreshImmersiveMode();
   });
+}
+
+/**
+ * Reads the native kiosk status once and mirrors it into the DOM so layout and styling
+ * can adapt to a dedicated tablet without querying the bridge on every render.
+ */
+async function configureKioskEnvironment() {
+  kioskStatus = await getKioskStatus();
+
+  const root = document.documentElement;
+  root.classList.toggle('kiosk-tablet', Boolean(kioskStatus.tablet));
+  root.classList.toggle('kiosk-locked', Boolean(kioskStatus.kioskEnabled));
+  root.dataset.kioskMode = kioskStatus.deviceOwner
+    ? 'device_owner'
+    : kioskStatus.kioskEnabled ? 'soft' : 'off';
+
+  await setOrientation('auto');
+
+  // Opt-in for dedicated tablets that are not device owner yet (demo units, pilots).
+  if (!kioskStatus.kioskEnabled && import.meta.env?.VITE_KIOSK_AUTO_ENABLE === 'true') {
+    await enableKiosk({ persistent: true });
+    kioskStatus = await getKioskStatus();
+  }
+
+  if (kioskStatus.kioskEnabled) {
+    await acquireWakeLock({ screen: true });
+  }
+
+  return kioskStatus;
+}
+
+export function getCachedKioskStatus() {
+  return kioskStatus;
 }
 
 export async function initCapacitorRuntime() {
@@ -86,6 +134,7 @@ export async function initCapacitorRuntime() {
   try {
     await configureAndroidChrome();
     await initAndroidNetwork();
+    await configureKioskEnvironment();
   } catch (error) {
     console.warn('Android chrome configuration unavailable:', error);
   }
@@ -139,6 +188,8 @@ export async function cleanupCapacitorRuntime() {
     removeWakeListener = null;
   }
 
+  await releaseWakeLock();
   await cleanupAndroidNetwork();
+  kioskStatus = null;
   initialized = false;
 }
