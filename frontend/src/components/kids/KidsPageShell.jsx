@@ -1,10 +1,8 @@
 import { motion } from 'framer-motion';
-import { PlatformShell, MagicalBackground, KidsMagicalBackground } from '../layout/PlatformShell';
+import { PlatformShell } from '../layout/PlatformShell';
 import { KidsAmbientBackground } from './KidsAmbientBackground';
 import { useReducedMotion } from '../../hooks/useReducedMotion';
 import { getMotionProps, kidsPageEnter } from '../../constants/kidsMotion';
-
-export { MagicalBackground, KidsMagicalBackground };
 
 export function KidsPageShell({
   children,

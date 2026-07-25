@@ -47,7 +47,9 @@ describe('kidProfiles utils', () => {
       avatar: null,
       photo_url: null,
       preferred_language: 'fr',
-      interests: 'space'
+      interests: 'space',
+      favorite_themes: [],
+      school_level: null
     });
   });
 

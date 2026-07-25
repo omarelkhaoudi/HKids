@@ -100,7 +100,14 @@ export function CatalogUpdateBanner() {
               <span>✨ {cdLabel('cdDownloading', language)}</span>
               <span>{cdLabel('cdProgress', language, { percent: activeJob.progress || 0 })}</span>
             </div>
-            <div className="mt-2 h-2 rounded-full bg-surface-secondary overflow-hidden">
+            <div
+              className="mt-2 h-2 rounded-full bg-surface-secondary overflow-hidden"
+              role="progressbar"
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-valuenow={Math.min(100, activeJob.progress || 0)}
+              aria-label={cdLabel('cdDownloading', language)}
+            >
               <div
                 className="h-full rounded-full bg-primary-500 transition-all"
                 style={{ width: `${Math.min(100, activeJob.progress || 0)}%` }}

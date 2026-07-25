@@ -174,7 +174,14 @@ export function ParentContentDeliveryPanel({ language: languageProp }) {
                 </div>
                 {(status === 'downloading' || status === 'paused') && (
                   <div className="mb-3">
-                    <div className="h-2 rounded-full bg-surface-secondary overflow-hidden">
+                    <div
+                      className="h-2 rounded-full bg-surface-secondary overflow-hidden"
+                      role="progressbar"
+                      aria-valuemin={0}
+                      aria-valuemax={100}
+                      aria-valuenow={progress}
+                      aria-label={cdLabel('cdDownloading', language)}
+                    >
                       <div className="h-full bg-primary-500" style={{ width: `${progress}%` }} />
                     </div>
                     <p className="text-caption mt-1 font-bold">

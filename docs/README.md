@@ -2,6 +2,8 @@
 
 Cette section contient toute la documentation technique du projet HKids.
 
+**Release notes v1.0 :** voir [`../RELEASE_NOTES.md`](../RELEASE_NOTES.md).
+
 ## Documents Disponibles
 
 ### 0. [Analyse Cahier des Charges - Le Lit Qui Lit](./LE_LIT_QUI_LIT_GAP_ANALYSIS.md)

@@ -1,7 +1,7 @@
 import {useState, useEffect, useRef} from 'react';
 import {useNavigate} from 'react-router-dom';
 import {motion, AnimatePresence} from 'framer-motion';
-import {Badge, Button, Input, Skeleton} from '../components/ui';
+import {Button, Input, Skeleton} from '../components/ui';
 
 import {useAuth} from '../context/AuthContext';
 import {useLanguage} from '../context/LanguageContext';

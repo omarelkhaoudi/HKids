@@ -1,240 +1,130 @@
-# HKids - Digital Reading Solution for Children
+# HKids — Le Lit Qui Lit
 
-HKids is a child-friendly digital reading platform designed to provide young children with an immersive, independent reading experience.
+HKids is a production-ready kids learning and reading platform (FR / EN / AR) with immersive stories, educational worlds, premium packs, offline-first sync, and parent/admin controls.
 
-## Project Overview
+## Product highlights
 
-HKids addresses the challenge of providing consistent, age-appropriate reading experiences for young children, especially when parents have limited time. The platform offers:
+- **Kids experience** — Home, library, explore, audio, AI stories, learning quizzes/games, premium discovery
+- **Educational Worlds** — Themed learning paths, challenges, XP and badges
+- **Personalization** — Smart shelves, continue rail, favorites, achievement strip
+- **Learning Universe** — Explorer hub with mini-games, quizzes, daily rewards
+- **Premium ecosystem** — Subscription plans, themed packs, feature flags, Free vs Premium comparison
+- **Content delivery** — Catalog versioning, live updates without app releases, downloadable packs, safe rollback
+- **Offline-first** — IndexedDB downloads, mutation queue, cloud sync, parental policy cache
+- **Parent space** — Dashboard, control center, privacy, voices, subscriptions, storage & update history
+- **Admin** — CMS, learning content, moderation, subscriptions, premium packs, catalog versions
+- **Platforms** — Web (Vite) + Android (Capacitor)
 
-- **Immersive Reading Experience**: Simulates natural book navigation with page turning
-- **Age-Appropriate Content**: Controlled, validated content only
-- **Content Management**: Admin interface for book upload and organization
-- **Hardware-Agnostic**: Works on tablets and dedicated reading devices
+## Stack
 
-## Technology Stack
+| Layer | Tech |
+|-------|------|
+| Frontend | React 18, Vite, React Router, Tailwind, Framer Motion |
+| Backend | Node.js, Express, PostgreSQL, JWT |
+| Payments | Stripe (checkout, portal, webhooks) |
+| Offline | IndexedDB, service worker (web), Capacitor Network |
+| i18n | FR / EN / AR with RTL |
 
-### Frontend
-- **React 18** with **Vite**: Modern, fast development and build
-- **React Router**: Navigation
-- **Tailwind CSS**: Styling
-- **Framer Motion**: Smooth page turning animations
-
-### Backend
-- **Node.js** with **Express**: RESTful API
-- **PostgreSQL**: Database
-- **Multer**: File upload handling
-- **JWT**: Admin authentication
-
-### Architecture
-- Modular design for easy expansion
-- RESTful API architecture
-- Separation of concerns (frontend/backend)
-
-## Project Structure
+## Repository layout
 
 ```
 HKids/
-├── backend/              # Express API server
-│   ├── config/          # Configuration files
-│   ├── database/         # Database initialization
-│   ├── middleware/       # Express middleware
-│   ├── routes/           # API routes
-│   ├── scripts/          # Utility scripts
-│   ├── uploads/          # Uploaded files
-│   └── server.js         # Main server file
-├── frontend/             # React application
-│   ├── src/
-│   │   ├── api/         # API client
-│   │   ├── components/  # React components
-│   │   ├── context/     # React context
-│   │   ├── pages/       # Page components
-│   │   └── utils/       # Utility functions
-│   └── public/          # Static assets
-├── scripts/              # Project scripts
-│   └── windows/         # Windows PowerShell scripts
-├── docs/                 # Documentation
+├── frontend/          # React app (Vite + Capacitor)
+├── backend/           # Express API + content seed
+├── docs/              # Architecture, deploy, product docs
+├── scripts/windows/   # Local start helpers
+├── RELEASE_NOTES.md   # v1.0 release summary
 └── README.md
 ```
 
-## Getting Started
+## Quick start
 
 ### Prerequisites
-- Node.js 18+ and npm
-- PostgreSQL 12+ (running on port 5432)
 
-### Installation
+- Node.js 18+
+- PostgreSQL 12+ (or a hosted `DATABASE_URL`)
 
-1. Install all dependencies:
+### Install
+
 ```bash
-# Backend
+npm run install:all
+```
+
+### Configure
+
+```bash
+cp backend/env.example backend/.env
+# Set DATABASE_URL, JWT_SECRET, CORS_ORIGIN / FRONTEND_URL
+# Optional: Stripe, AI, Sentry, Redis — see backend/env.example
+
+cp frontend/.env.example frontend/.env.local
+# Optional locally (Vite proxies /api). Required for Android: VITE_API_URL
+```
+
+### Run
+
+```bash
+# Terminal 1
+npm run dev:backend
+
+# Terminal 2
+npm run dev:frontend
+```
+
+Or on Windows: `scripts/windows/start.ps1`
+
+- App: http://localhost:5173  
+- API: http://localhost:3000  
+- Admin login: `/admin/login`
+
+Seed demo catalog (optional):
+
+```bash
 cd backend
-npm install
-
-# Frontend
-cd ../frontend
-npm install
+npm run seed:catalog
 ```
 
-2. Configure the backend:
-```bash
-# Copy the example environment file
-cd backend
-cp env.example .env
+## Scripts
 
-# Edit .env with your PostgreSQL credentials:
-# DB_HOST=localhost
-# DB_PORT=5432
-# DB_USER=postgres
-# DB_PASSWORD=your_password
-# DB_NAME=hkids
-```
+| Command | Description |
+|---------|-------------|
+| `npm run install:all` | Install root + backend + frontend deps |
+| `npm run dev:backend` / `dev:frontend` | Local servers |
+| `npm run build` | Production frontend build |
+| `npm test` | Backend + frontend tests |
+| `npm run typecheck` | TypeScript check |
+| `npm run ci` | Lint + typecheck + test + build |
 
-3. Create the database:
-```sql
-CREATE DATABASE hkids;
-```
+## Environment variables
 
-4. Start the application:
+### Backend (`backend/env.example`)
 
-**Windows:**
-```powershell
-.\scripts\windows\start.ps1
-```
+Core: `PORT`, `NODE_ENV`, `JWT_SECRET`, `DATABASE_URL`, `CORS_ORIGIN`, `FRONTEND_URL`  
+Also documented: Stripe, AI providers, voice/TTS, Supabase, Sentry, Redis, rate limits, `CATALOG_VERSIONS_PATH`.
 
-**Manual start:**
-```bash
-# Terminal 1 - Backend
-cd backend
-npm run dev
+### Frontend (`frontend/.env.example`)
 
-# Terminal 2 - Frontend
-cd frontend
-npm run dev
-```
-
-### Default Access
-- Frontend: http://localhost:5173
-- Backend API: http://localhost:3000
-- Admin Panel: http://localhost:5173/admin
-
-Default admin credentials:
-- Username: admin
-- Password: admin123
-
-## Features
-
-### Reading Interface
-- Page-by-page navigation
-- Smooth page turning animations
-- Age-appropriate content filtering
-- Distraction-free reading environment
-
-### Admin Panel
-- Book upload (PDF, images)
-- Content organization by category and age group
-- Publication control
-- User management
-
-## Testing & Quality
-
-```bash
-npm run lint          # ESLint
-npm run typecheck     # TypeScript
-npm run test          # Backend + frontend unit tests
-npm run test:e2e      # Playwright E2E
-npm run ci            # lint + typecheck + test + build
-```
-
-See [docs/DEVELOPER_GUIDE.md](./docs/DEVELOPER_GUIDE.md) and [docs/PRODUCTION_READINESS.md](./docs/PRODUCTION_READINESS.md).
+- `VITE_API_URL` — required for Capacitor / production API host  
+- `VITE_ANDROID_KIOSK_IDLE_MS` — kiosk idle return  
+- `VITE_ADMIN_SIGNUP_CODE` — optional admin signup gate  
+- `VITE_APP_VERSION` — release label (Sentry)  
+- `VITE_SENTRY_*` — optional monitoring  
 
 ## Documentation
 
-### Technical Documentation
-- **[docs/DEVELOPER_GUIDE.md](./docs/DEVELOPER_GUIDE.md)** - Installation, env vars, tests, contribution
-- **[docs/PRODUCTION_READINESS.md](./docs/PRODUCTION_READINESS.md)** - Production checklist
-- **[docs/ADMIN_PANEL.md](./docs/ADMIN_PANEL.md)** - Admin guide
-
-## Project Status
-
-**MVP production-ready — Phases 1 à 6 complétées**
-
-Plateforme complète : lecture enfant, espace parent, admin, IA, voix familiales, offline/sync, abonnements Stripe, RGPD, i18n FR/EN/AR, tests et CI.
-
-**Lancement production :** [docs/PRODUCTION_LAUNCH.md](./docs/PRODUCTION_LAUNCH.md)
-
-- **[docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md)** - Architecture technique
-- **[docs/API_DOCUMENTATION.md](./docs/API_DOCUMENTATION.md)** - Documentation API
-- **[docs/DEPLOYMENT.md](./docs/DEPLOYMENT.md)** - Guide de déploiement
-
-## Features Implemented
-
-### Reading Interface
-- ✅ Page-by-page navigation with smooth animations
-- ✅ 3D page flip effects
-- ✅ Touch support (swipe gestures)
-- ✅ Keyboard navigation (arrow keys)
-- ✅ Progress indicators
-- ✅ Age and category filtering
-- ✅ Distraction-free environment
-
-### Admin Panel
-- ✅ Secure authentication (JWT)
-- ✅ Book management (CRUD)
-- ✅ Category management (CRUD)
-- ✅ File upload (cover + multiple pages)
-- ✅ Publication control (draft/published)
-- ✅ Age group organization
-- ✅ Modern, intuitive interface
-
-### Backend API
-- ✅ RESTful API architecture
-- ✅ Authentication endpoints
-- ✅ Book management endpoints
-- ✅ Category management endpoints
-- ✅ File upload handling
-- ✅ Input validation and security
-
-## Technology Stack
-
-### Frontend
-- React 18 + Vite
-- React Router
-- Tailwind CSS
-- Framer Motion
-- Axios
-
-### Backend
-- Node.js + Express
-- PostgreSQL
-- JWT authentication
-- Multer (file uploads)
-- bcryptjs (password hashing)
-
-## Project Structure
-
-```
-HKids/
-├── backend/              # Express API server
-│   ├── database/         # Database initialization
-│   ├── routes/          # API routes
-│   ├── uploads/         # Uploaded files
-│   └── server.js        # Main server file
-├── frontend/            # React application
-│   ├── src/
-│   │   ├── components/  # React components
-│   │   ├── pages/       # Page components
-│   │   ├── context/     # React context
-│   │   └── api/         # API client
-│   └── ...
-├── docs/                # Technical documentation
-└── ...
-```
+| Doc | Topic |
+|-----|--------|
+| [RELEASE_NOTES.md](./RELEASE_NOTES.md) | v1.0 release summary |
+| [docs/DEVELOPER_GUIDE.md](./docs/DEVELOPER_GUIDE.md) | Day-1 setup & contributing |
+| [docs/DEPLOYMENT.md](./docs/DEPLOYMENT.md) | Deploy (Vercel / Render / Fly) |
+| [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) | Technical architecture |
+| [docs/API_DOCUMENTATION.md](./docs/API_DOCUMENTATION.md) | REST API |
+| [docs/CLOUD_SYNC.md](./docs/CLOUD_SYNC.md) | Offline & cloud sync |
+| [docs/CONTENT_CATALOG.md](./docs/CONTENT_CATALOG.md) | Catalog seed |
+| [docs/STRIPE_PRODUCTION.md](./docs/STRIPE_PRODUCTION.md) | Subscriptions |
+| [docs/ANDROID_CAPACITOR.md](./docs/ANDROID_CAPACITOR.md) | Android builds |
+| [docs/PRODUCTION_READINESS.md](./docs/PRODUCTION_READINESS.md) | Go-live checklist |
 
 ## License
 
 MIT
-
----
-
-**Developed with care for children's digital reading experience** 📚✨
-

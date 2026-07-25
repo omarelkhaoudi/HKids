@@ -1,4 +1,4 @@
-import {useEffect, useState, useRef, useMemo} from 'react';
+import {useEffect, useState, useMemo} from 'react';
 import {Link, useNavigate, useSearchParams} from 'react-router-dom';
 import {motion, AnimatePresence} from 'framer-motion';
 import {subscriptionsAPI} from '../api/subscriptions';
@@ -706,7 +706,7 @@ function Subscriptions() {
  >
  {isFeatured && (
  <div className="absolute -top-5 left-1/2 -translate-x-1/2 bg-gradient-to-r from-primary-500 to-secondary-500 text-white font-black text-sm uppercase tracking-widest py-1.5 px-6 rounded-full shadow-lg">
- Recommandé
+ {t('subscriptionsRecommended')}
  </div>
  )}
 
@@ -717,7 +717,7 @@ function Subscriptions() {
 
  <div className="mb-8 flex items-end gap-1">
  <span className="text-5xl font-black text-foreground tracking-tighter">{formatPrice(plan, locale)}</span>
- <span className="text-foreground-muted font-bold mb-2">/mois</span>
+ <span className="text-foreground-muted font-bold mb-2">{t('subscriptionsPerMonth')}</span>
  </div>
 
  <div className="flex-1 space-y-4 mb-8">
@@ -745,7 +745,7 @@ function Subscriptions() {
  variant={isFeatured ? 'primary' : 'outline'}
  className={`w-full rounded-full py-4 text-lg font-black ${isFeatured ? 'shadow-xl shadow-primary-500/30' : 'border-border'} ${isCurrent ? `opacity-50 cursor-not-allowed ${BRAND_SEMANTIC.success.bg} ${BRAND_SEMANTIC.success.text} ${BRAND_SEMANTIC.success.border}` : ''}`}
  >
- {isCurrent ? 'Formule Actuelle' : isKidAccount ? 'Réservé aux parents' : 'Choisir cette formule'}
+ {isCurrent ? t('subscriptionsCurrentPlan') : isKidAccount ? t('subscriptionsParentsOnly') : t('subscriptionsChoosePlan')}
  </Button>
  </motion.div>
  );

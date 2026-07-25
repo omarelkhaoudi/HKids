@@ -1,7 +1,6 @@
 import {useState, useEffect} from 'react';
 import {motion, AnimatePresence} from 'framer-motion';
 import {booksAPI, categoriesAPI} from '../../api/books';
-import {API_URL} from '../../config/api';
 import {getImageUrl} from '../../utils/imageUrl';
 import {CONTENT_LANGUAGES, CONTENT_THEMES, CONTENT_TYPE_OPTIONS} from '../../constants/contentOptions';
 import {
@@ -12,15 +11,6 @@ import {Button, Badge, Avatar} from '../ui';
 import { useLanguage } from '../../context/LanguageContext';
 import {useToast} from '../ToastProvider';
 import { useConfirmDialog } from '../../hooks/useConfirmDialog';
-
-// Helper: base URL for images
-const getImageBaseUrl = () => {
- const viteApiUrl = import.meta.env.VITE_API_URL;
- if (viteApiUrl) return viteApiUrl.replace(/\/api\/?$/, '');
- if (API_URL && (API_URL.startsWith('http://') || API_URL.startsWith('https://'))) return API_URL.replace(/\/api\/?$/, '');
- if (API_URL && API_URL.startsWith('/')) return 'http://localhost:3000';
- return 'http://localhost:3000';
-};
 
 function BookManagement() {
  const [books, setBooks] = useState([]);

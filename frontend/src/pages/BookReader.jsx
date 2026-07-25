@@ -5,7 +5,6 @@ import {Button, Modal} from '../components/ui';
 
 import {booksAPI} from '../api/books';
 import {subscriptionsAPI} from '../api/subscriptions';
-import {parentalAPI} from '../api/parental';
 import {syncOrQueueKidMutation} from '../services/parental/kidActivitySyncService';
 import {voicesAPI} from '../api/voices';
 import {storage} from '../utils/storage';
@@ -15,7 +14,6 @@ import {useToast} from '../components/ToastProvider';
 import {useAuth} from '../context/AuthContext';
 import {useLanguage} from '../context/LanguageContext';
 import {ChevronLeftIcon, ChevronRightIcon, BookIcon, StarIcon, PlayIcon, PauseIcon, SettingsIcon, WarningIcon, MoonIcon, SunIcon} from '../components/Icons';
-import {getImageUrl} from '../utils/imageUrl';
 import {resolveBookCoverUrl} from '../utils/bookCover';
 import {kidsReaderPageTurn, kidsRouteExit, KIDS_MOTION_DURATION} from '../constants/kidsMotion';
 import {deriveReaderMood, getReaderAmbientStyle} from '../utils/readerAtmosphere';

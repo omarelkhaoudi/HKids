@@ -7,6 +7,7 @@ import { useAuth } from '../context/AuthContext';
 import { useToast } from '../components/ToastProvider';
 import { storage } from '../utils/storage';
 import { useLanguage } from '../context/LanguageContext';
+import { withPersonalizationLabels } from '../constants/personalizationLabels';
 import { localizeKidCategories, getKidCategory } from '../constants/kidCategories';
 import { useOfflineContent } from '../hooks/useOfflineContent';
 import { getDownloads } from '../services/offline/offlineContentService';
@@ -132,7 +133,8 @@ function KidsLibrary() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { showToast } = useToast();
-  const { language, isRtl, t } = useLanguage();
+  const { language, isRtl, t: tRaw } = useLanguage();
+  const t = useMemo(() => withPersonalizationLabels(tRaw, language), [tRaw, language]);
   const reducedMotion = useReducedMotion();
   const { speakGuide } = useKidsVoiceGuide(language);
   const personalization = useMemo(() => getKidsPersonalizationProfile(), []);
