@@ -58,7 +58,7 @@ export default function HeroSection({ t, totalBooks }) {
             initial={reducedMotion ? false : { opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, ease: 'easeOut' }}
-            className="text-center lg:text-left"
+            className="text-center lg:text-start"
           >
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-primary-100 to-primary-50 text-primary-700 rounded-full text-sm font-bold mb-6 border border-primary-200 shadow-sm">
               <span className={`w-2 h-2 rounded-full bg-primary-500 ${reducedMotion ? '' : 'animate-pulse'}`} aria-hidden="true" />
@@ -108,11 +108,11 @@ export default function HeroSection({ t, totalBooks }) {
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-5 h-5 rounded-full bg-primary-100 flex items-center justify-center text-primary-600" aria-hidden="true">✓</div>
-                {t.trustEducational}
+                {t.trustEducationalContent}
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-5 h-5 rounded-full bg-accent-100 flex items-center justify-center text-accent-600" aria-hidden="true">✓</div>
-                {t.trustNoAds}
+                {t.trustNoAdsLong}
               </div>
             </div>
           </motion.div>

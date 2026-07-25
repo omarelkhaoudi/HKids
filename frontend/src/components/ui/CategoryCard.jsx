@@ -28,7 +28,7 @@ export function CategoryCard({
       onClick={onClick}
       aria-pressed={selected}
       className={[
-        'kids-touch-target relative overflow-hidden text-left',
+        'kids-touch-target relative overflow-hidden text-start',
         'min-h-[10rem] w-full rounded-24 p-space-20',
         `bg-gradient-to-br ${gradient} text-white shadow-card`,
         'border-4 border-white/40',

@@ -16,7 +16,7 @@ export const Input = forwardRef(({
  )}
  <div className="relative">
  {Icon && (
- <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+ <div className="absolute inset-y-0 start-0 ps-4 flex items-center pointer-events-none">
  <Icon className="h-5 w-5 text-surface-400" />
  </div>
  )}
@@ -26,7 +26,7 @@ export const Input = forwardRef(({
  w-full bg-surface-secondary border border-border text-foreground text-base rounded-2xl
  focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500
  transition-all outline-none py-3 px-4
- ${Icon ? 'pl-11' : ''}
+ ${Icon ? 'ps-11' : ''}
  ${error ? 'border-danger-500 focus:ring-danger-500/20 focus:border-danger-500' : ''}
  ${className}
  `}

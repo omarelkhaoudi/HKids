@@ -257,13 +257,13 @@ function LearningManagement() {
       {activeTab === 'contents' && (
       <div className="bg-card rounded-2xl p-4 border border-border shadow-sm flex items-center gap-4">
         <div className="relative flex-1 max-w-md">
-          <SearchIcon className="w-5 h-5 text-surface-400 absolute left-3 top-1/2 -translate-y-1/2" />
+          <SearchIcon className="w-5 h-5 text-surface-400 absolute start-3 top-1/2 -translate-y-1/2" />
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder={t('adminLearningSearchPlaceholder')}
-            className="w-full bg-surface-secondary border border-border rounded-xl pl-10 pr-4 py-2 font-medium focus:outline-none focus:border-primary-400 focus:bg-card transition-colors"
+            className="w-full bg-surface-secondary border border-border rounded-xl ps-10 pe-4 py-2 font-medium focus:outline-none focus:border-primary-400 focus:bg-card transition-colors"
           />
         </div>
       </div>
@@ -276,7 +276,7 @@ function LearningManagement() {
       ) : (
         <div className="bg-card rounded-[2rem] border border-border shadow-sm overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
+            <table className="w-full text-start border-collapse">
               <thead className="bg-surface-secondary/50 border-b border-border">
                 <tr>
                   <th className="p-4 text-xs font-bold text-surface-400 uppercase">{t('adminLearningHeaderTitle')}</th>
@@ -284,7 +284,7 @@ function LearningManagement() {
                   <th className="p-4 text-xs font-bold text-surface-400 uppercase">{t('adminLearningHeaderQuiz')}</th>
                   <th className="p-4 text-xs font-bold text-surface-400 uppercase">{t('adminLearningHeaderDifficulty')}</th>
                   <th className="p-4 text-xs font-bold text-surface-400 uppercase">{t('adminLearningHeaderStatus')}</th>
-                  <th className="p-4 text-xs font-bold text-surface-400 uppercase text-right">{t('adminLearningHeaderActions')}</th>
+                  <th className="p-4 text-xs font-bold text-surface-400 uppercase text-end">{t('adminLearningHeaderActions')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
@@ -309,7 +309,7 @@ function LearningManagement() {
                         {item.status === 'published' ? t('adminPublished') : t('adminDraft')}
                       </Badge>
                     </td>
-                    <td className="p-4 text-right">
+                    <td className="p-4 text-end">
                       <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                         <button type="button" onClick={() => openEdit(item)} className="p-2 text-surface-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg">
                           <EditIcon className="w-4 h-4" />
@@ -475,7 +475,7 @@ function LearningManagement() {
                   <div className="space-y-4 border-t border-border pt-4">
                     <div className="flex items-center justify-between">
                       <h4 className="font-black">{t('adminLearningQuestions')}</h4>
-                      <Button type="button" variant="outline" onClick={addQuestion}><PlusIcon className="w-4 h-4 mr-1" /> {t('adminLearningAddQuestion')}</Button>
+                      <Button type="button" variant="outline" onClick={addQuestion}><PlusIcon className="w-4 h-4 me-1" /> {t('adminLearningAddQuestion')}</Button>
                     </div>
                     {formData.questions.map((question, index) => (
                       <div key={index} className="rounded-2xl border border-border p-4 space-y-3 bg-surface-secondary/40">

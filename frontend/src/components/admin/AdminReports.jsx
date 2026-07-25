@@ -72,8 +72,8 @@ function AdminReports() {
 
  <div className="bg-card rounded-2xl border border-border p-4 flex flex-col xl:flex-row gap-3">
  <div className="relative flex-1">
- <SearchIcon className="w-5 h-5 text-surface-400 absolute left-3 top-1/2 -translate-y-1/2" />
- <input value={filters.q} onChange={(event) => setFilters((current) => ({...current, q: event.target.value}))} placeholder={t('adminReportsSearchPlaceholder')} className="w-full bg-surface-secondary border border-border rounded-xl pl-10 pr-4 py-2 outline-none" />
+ <SearchIcon className="w-5 h-5 text-surface-400 absolute start-3 top-1/2 -translate-y-1/2" />
+ <input value={filters.q} onChange={(event) => setFilters((current) => ({...current, q: event.target.value}))} placeholder={t('adminReportsSearchPlaceholder')} className="w-full bg-surface-secondary border border-border rounded-xl ps-10 pe-4 py-2 outline-none" />
  </div>
  {[
  ['status', [['open', t('adminReportsOpen')], ['reviewing', t('adminReportsInProgress')], ['resolved', t('adminReportsResolved')], ['dismissed', t('adminReportsDismissed')], ['all', t('adminReportsAllStatuses')]]],

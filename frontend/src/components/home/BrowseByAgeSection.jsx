@@ -93,7 +93,7 @@ export default function BrowseByAgeSection({ t, selectedAge, onAgeSelect, books 
                 whileTap={reducedMotion ? undefined : { scale: 0.98 }}
                 aria-pressed={isSelected}
                 aria-label={`${label} — ${countLabel}`}
-                className={`w-full relative overflow-hidden rounded-[2rem] p-6 text-left transition-all duration-300 border-2
+                className={`w-full relative overflow-hidden rounded-[2rem] p-6 text-start transition-all duration-300 border-2
                   ${isSelected ? 'border-primary-500 shadow-lg' : 'border-transparent hover:border-border hover:shadow-md'}
                   ${softSurfaceAtIndex(i)} group h-full min-h-[160px] flex flex-col justify-between focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary-300`}
               >

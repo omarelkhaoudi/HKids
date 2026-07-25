@@ -45,7 +45,7 @@ export default function NewsletterSection({
                     value={newsletterEmail}
                     onChange={(event) => setNewsletterEmail(event.target.value)}
                     placeholder={t.homeNewsletterPlaceholder}
-                    className="w-full pl-6 pr-32 py-4 rounded-full bg-white border border-transparent focus:border-primary-300 focus:ring-4 focus:ring-primary-100 outline-none text-surface-900 shadow-[0_4px_15px_rgba(0,0,0,0.05)] transition-all font-medium"
+                    className="w-full ps-6 pe-32 py-4 rounded-full bg-white border border-transparent focus:border-primary-300 focus:ring-4 focus:ring-primary-100 outline-none text-surface-900 shadow-[0_4px_15px_rgba(0,0,0,0.05)] transition-all font-medium"
                     aria-label={t.homeNewsletterPlaceholder}
                     disabled={newsletterLoading}
                     required
@@ -53,7 +53,7 @@ export default function NewsletterSection({
                   <button
                     type="submit"
                     disabled={newsletterLoading}
-                    className="absolute right-2 top-2 bottom-2 px-6 bg-primary-600 hover:bg-primary-700 text-white font-bold rounded-full transition-colors disabled:opacity-50 flex items-center gap-2 min-h-[2.75rem] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary-300"
+                    className="absolute end-2 top-2 bottom-2 px-6 bg-primary-600 hover:bg-primary-700 text-white font-bold rounded-full transition-colors disabled:opacity-50 flex items-center gap-2 min-h-[2.75rem] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary-300"
                     aria-label={t.homeNewsletterSubscribe}
                   >
                     {newsletterLoading ? '…' : t.homeNewsletterSubscribe}

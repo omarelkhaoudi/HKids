@@ -22,7 +22,7 @@ export const StoryCard = memo(function StoryCard({
       onClick={onClick}
       {...hoverMotion}
       className={[
-        'group text-left w-full rounded-24 overflow-hidden bg-surface shadow-card border border-border',
+        'group text-start w-full rounded-24 overflow-hidden bg-surface shadow-card border border-border',
         'focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2',
         className,
       ].join(' ')}

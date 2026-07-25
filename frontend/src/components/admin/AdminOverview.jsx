@@ -190,7 +190,7 @@ function AdminOverview() {
  {data?.latest_books?.length > 0 ? data.latest_books.slice(0,4).map((item) => (
  <div key={item.id} className="p-3 rounded-2xl hover:bg-surface-secondary transition-colors border border-border">
  <div className="flex items-center justify-between mb-1">
- <p className="font-bold text-foreground text-sm truncate pr-2">{item.title}</p>
+ <p className="font-bold text-foreground text-sm truncate pe-2">{item.title}</p>
  <div className={`w-2 h-2 rounded-full shrink-0 ${item.is_published ? BRAND_SEMANTIC.success.solid : BRAND_SEMANTIC.warning.solid}`}></div>
  </div>
  <p className="text-xs text-surface-400 font-medium truncate">{item.category_name || t('adminOverviewAiGenerated')}</p>

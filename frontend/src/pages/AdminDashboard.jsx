@@ -108,7 +108,7 @@ const QuickActions = () => {
  onClick={() => setIsOpen(!isOpen)}
  aria-label={t('adminDashboardQuickActions')}
  aria-expanded={isOpen}
- className="fixed bottom-6 right-6 md:bottom-8 md:right-8 z-[9990] w-14 h-14 bg-primary-500 text-white rounded-full flex items-center justify-center shadow-glow hover:scale-105 transition-transform min-h-touch min-w-touch"
+ className="fixed bottom-6 end-6 md:bottom-8 md:end-8 z-[9990] w-14 h-14 bg-primary-500 text-white rounded-full flex items-center justify-center shadow-glow hover:scale-105 transition-transform min-h-touch min-w-touch"
  >
  <motion.div animate={{rotate: isOpen ? 45 : 0}}><PlusIcon className="w-6 h-6" /></motion.div>
  </button>
@@ -201,7 +201,7 @@ const CommandPalette = ({isOpen, onClose}) => {
  ) : results.length === 0 ? (
  <div className="p-8 text-center text-foreground-muted">{t('adminDashboardNoSearchResults')}</div>
  ) : results.map((result) => (
- <button key={`${result.type}:${result.id}`} onClick={() => openResult(result)} className="w-full text-left flex items-center gap-3 p-3 rounded-xl hover:bg-surface-secondary transition-colors">
+ <button key={`${result.type}:${result.id}`} onClick={() => openResult(result)} className="w-full text-start flex items-center gap-3 p-3 rounded-xl hover:bg-surface-secondary transition-colors">
  <div className="w-9 h-9 rounded-lg bg-primary-50 flex items-center justify-center text-foreground-600"><SearchIcon className="w-4 h-4" /></div>
  <div className="min-w-0">
  <p className="font-bold truncate">{result.title}</p>
@@ -428,14 +428,14 @@ function AdminDashboard() {
  >
  <BellIcon className="w-5 h-5" />
  {notifications.unread_count > 0 && (
- <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-rose-500 rounded-full border-2 border-white"></span>
+ <span className="absolute top-1.5 end-1.5 w-2.5 h-2.5 bg-rose-500 rounded-full border-2 border-white"></span>
  )}
  </button>
  <AnimatePresence>
  {isNotificationsOpen && (
  <motion.div 
  initial={{opacity: 0, y: 10, scale: 0.95}} animate={{opacity: 1, y: 0, scale: 1}} exit={{opacity: 0, y: 10, scale: 0.95}}
- className="absolute right-0 mt-2 w-80 bg-card rounded-2xl shadow-xl border border-border overflow-hidden z-50 origin-top-right"
+ className="absolute end-0 mt-2 w-80 bg-card rounded-2xl shadow-xl border border-border overflow-hidden z-50 origin-top-right"
  >
  <div className="p-4 border-b border-border flex justify-between items-center bg-surface-secondary">
  <h3 className="font-bold text-foreground">{t('adminDashboardNotifications')}</h3>

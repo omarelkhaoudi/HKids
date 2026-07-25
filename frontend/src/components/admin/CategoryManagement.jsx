@@ -96,13 +96,13 @@ function CategoryManagement() {
 
  <div className="bg-card rounded-2xl p-4 border border-border shadow-sm flex items-center gap-4">
  <div className="relative flex-1 max-w-md">
- <SearchIcon className="w-5 h-5 text-surface-400 absolute left-3 top-1/2 -translate-y-1/2" />
+ <SearchIcon className="w-5 h-5 text-surface-400 absolute start-3 top-1/2 -translate-y-1/2" />
  <input
  type="text"
  value={search}
  onChange={(e) => setSearch(e.target.value)}
  placeholder={t('adminCategoriesFilterPlaceholder')}
- className="w-full bg-surface-secondary border border-border rounded-xl pl-10 pr-4 py-2 font-medium focus:outline-none focus:border-primary-400 focus:bg-card transition-colors"
+ className="w-full bg-surface-secondary border border-border rounded-xl ps-10 pe-4 py-2 font-medium focus:outline-none focus:border-primary-400 focus:bg-card transition-colors"
  />
  </div>
  </div>
@@ -118,7 +118,7 @@ function CategoryManagement() {
  {filteredParentCategories.map(parent => (
  <motion.div initial={{opacity: 0, scale: 0.95}} animate={{opacity: 1, scale: 1}} key={parent.id} className="bg-card rounded-[2rem] border border-border shadow-sm overflow-hidden flex flex-col group relative">
  {/* Subtle drag handle visual indicator (UI ONLY) */}
- <div className="absolute top-4 right-4 text-surface-300 opacity-0 group-hover:opacity-100 transition-opacity cursor-grab">
+ <div className="absolute top-4 end-4 text-surface-300 opacity-0 group-hover:opacity-100 transition-opacity cursor-grab">
  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8h16M4 16h16" /></svg>
  </div>
  

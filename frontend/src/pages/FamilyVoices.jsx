@@ -488,7 +488,7 @@ function FamilyVoices() {
 
  <div className="grid grid-cols-2 gap-2 mt-auto">
  <Button variant="outline" onClick={() => playPreview(profile)} disabled={!profile.has_preview} className="rounded-full font-bold text-sm bg-surface-secondary border-border">
- <PlayIcon className="w-4 h-4 mr-1"/> {t('parentVoicePreview')}
+ <PlayIcon className="w-4 h-4 me-1"/> {t('parentVoicePreview')}
  </Button>
  <div className="flex gap-2">
  <Button variant="outline" onClick={() => editProfile(profile)} className="rounded-full w-full px-0 font-bold text-sm bg-surface-secondary border-border text-foreground-secondary hover:bg-surface-secondary">
@@ -554,11 +554,11 @@ function FamilyVoices() {
  <div className="flex gap-2">
  {!messageRecorder.recording ? (
  <Button type="button" onClick={messageRecorder.start} variant="outline" className="w-full bg-card border-border text-rose-600 hover:bg-rose-50 rounded-xl font-bold">
- <MicrophoneIcon className="w-4 h-4 mr-2"/> {t('parentVoiceRecord')}
+ <MicrophoneIcon className="w-4 h-4 me-2"/> {t('parentVoiceRecord')}
  </Button>
  ) : (
  <Button type="button" onClick={messageRecorder.stop} variant="primary" className="w-full bg-surface-900 hover:bg-surface-800 rounded-xl font-bold">
- <PauseIcon className="w-4 h-4 mr-2"/> {t('parentVoiceStop')} ({messageRecorder.durationSeconds}s)
+ <PauseIcon className="w-4 h-4 me-2"/> {t('parentVoiceStop')} ({messageRecorder.durationSeconds}s)
  </Button>
  )}
  {messageRecorder.audioBlob && (
@@ -579,7 +579,7 @@ function FamilyVoices() {
  {/* Message List */}
  <div className="lg:w-2/3 bg-surface-secondary rounded-3xl p-6 border border-border">
  <h3 className="text-lg font-black text-foreground mb-4">{t('parentVoiceSavedMessages')}</h3>
- <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2">
+ <div className="space-y-4 max-h-[600px] overflow-y-auto pe-2">
  {messages.length === 0 ? (
  <div className="text-center py-10 opacity-50">
  <AudioIcon className="w-12 h-12 mx-auto mb-2" />
@@ -594,7 +594,7 @@ function FamilyVoices() {
  {message.message_text && <p className="text-sm font-medium text-foreground-muted line-clamp-1">{message.message_text}</p>}
  <div className="flex gap-2 mt-2">
  <Badge variant="soft" className="bg-surface-secondary text-xs font-bold uppercase">{message.language}</Badge>
- {message.has_audio && <Badge variant="soft" className="bg-primary-100 text-primary-800 text-xs font-bold">Audio inclus</Badge>}
+ {message.has_audio && <Badge variant="soft" className="bg-primary-100 text-primary-800 text-xs font-bold">{t('parentVoiceAudioIncluded')}</Badge>}
  </div>
  </div>
  
@@ -631,7 +631,7 @@ function FamilyVoices() {
  >
  {/* Close Button */}
  {wizardStep < 3 && (
- <button onClick={resetProfileForm} className="absolute top-6 right-6 p-2 bg-surface-secondary hover:bg-surface-200 rounded-full text-foreground-secondary transition-colors z-10">
+ <button onClick={resetProfileForm} className="absolute top-6 end-6 p-2 bg-surface-secondary hover:bg-surface-200 rounded-full text-foreground-secondary transition-colors z-10">
  <XIcon className="w-5 h-5" />
  </button>
  )}
@@ -644,19 +644,19 @@ function FamilyVoices() {
  <div className="w-24 h-24 bg-primary-100 text-foreground-500 rounded-full flex items-center justify-center mx-auto mb-6">
  <SparklesIcon className="w-12 h-12" />
  </div>
- <h2 className="text-3xl font-black text-foreground mb-4">Créez votre Clone Vocal</h2>
+ <h2 className="text-3xl font-black text-foreground mb-4">{t('parentVoiceWizardIntroTitle')}</h2>
  <p className="text-lg text-foreground-secondary font-medium mb-8 max-w-md mx-auto">
- Votre voix peut lire des histoires à vos enfants, même quand vous êtes absent. Vous gardez le contrôle du consentement et de la suppression.
+ {t('parentVoiceWizardIntroBody')}
  </p>
  
- <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-left mb-8">
+ <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-start mb-8">
  <div className="bg-surface-secondary p-4 rounded-2xl flex gap-3 items-start">
  <MicrophoneIcon className="w-6 h-6 text-primary-500 shrink-0" />
- <div><h4 className="font-bold">30 secondes suffisent</h4><p className="text-sm text-foreground-muted">Lisez un court texte avec naturel.</p></div>
+ <div><h4 className="font-bold">{t('parentVoiceWizard30sTitle')}</h4><p className="text-sm text-foreground-muted">{t('parentVoiceWizard30sBody')}</p></div>
  </div>
  <div className="bg-surface-secondary p-4 rounded-2xl flex gap-3 items-start">
  <ShieldIcon className="w-6 h-6 text-secondary-500 shrink-0" />
- <div><h4 className="font-bold">Accès protégé</h4><p className="text-sm text-foreground-muted">Stocké avec un accès authentifié et supprimable à tout moment.</p></div>
+ <div><h4 className="font-bold">{t('parentVoiceWizardProtectedTitle')}</h4><p className="text-sm text-foreground-muted">{t('parentVoiceWizardProtectedBody')}</p></div>
  </div>
  </div>
 
@@ -692,13 +692,13 @@ function FamilyVoices() {
  
  {/* Magical Recording UI */}
  <div className="bg-gradient-to-b from-surface-50 to-surface-100 rounded-3xl p-6 md:p-8 border-2 border-border text-center relative overflow-hidden">
- <div className="absolute top-4 left-4 flex gap-2" aria-hidden="true">
+ <div className="absolute top-4 start-4 flex gap-2" aria-hidden="true">
  <div className={`h-2 w-8 rounded-full ${profileRecorder.recording ? 'bg-secondary-400' : 'bg-surface-300'}`}></div>
  <div className={`h-2 w-8 rounded-full ${profileRecorder.recording ? 'bg-secondary-400' : 'bg-surface-300'}`}></div>
  <div className={`h-2 w-8 rounded-full ${profileRecorder.recording && profileRecorder.durationSeconds > 5 ? 'bg-secondary-400' : 'bg-surface-300'}`}></div>
  </div>
  {profileRecorder.recording && (
- <span className="absolute top-3 right-4 text-xs font-black text-secondary-600 bg-secondary-100 px-2 py-1 rounded-full uppercase">
+ <span className="absolute top-3 end-4 text-xs font-black text-secondary-600 bg-secondary-100 px-2 py-1 rounded-full uppercase">
  {t('parentVoiceRecording')}
  </span>
  )}
@@ -740,10 +740,10 @@ function FamilyVoices() {
  {profileRecorder.recording ? (
  <span className="font-black text-rose-500 text-xl font-mono">{profileRecorder.durationSeconds}s</span>
  ) : (
- profileRecorder.durationSeconds > 0 && <span className="font-black text-foreground-muted text-xl font-mono">{profileRecorder.durationSeconds}s capturés</span>
+ profileRecorder.durationSeconds > 0 && <span className="font-black text-foreground-muted text-xl font-mono">{t('parentVoiceCapturedSeconds', { seconds: profileRecorder.durationSeconds })}</span>
  )}
  {profileRecorder.audioBlob && !profileRecorder.recording && (
- <Button type="button" onClick={profileRecorder.clear} variant="outline" className="rounded-full bg-card font-bold h-8 text-xs"><TrashIcon className="w-4 h-4 mr-1"/> Recommencer</Button>
+ <Button type="button" onClick={profileRecorder.clear} variant="outline" className="rounded-full bg-card font-bold h-8 text-xs"><TrashIcon className="w-4 h-4 me-1"/> {t('parentVoiceRestart')}</Button>
  )}
  </div>
  </div>
@@ -755,13 +755,13 @@ function FamilyVoices() {
  onChange={(e) => setProfileForm({...profileForm, consent_given: e.target.checked})}
  className="mt-1 w-5 h-5 accent-secondary-500"
  />
- <span className="text-sm font-bold text-foreground-secondary">Je donne mon consentement explicite pour cloner ma voix et je confirme être un adulte. J'accepte les conditions de confidentialité.</span>
+ <span className="text-sm font-bold text-foreground-secondary">{t('parentVoiceConsentText')}</span>
  </label>
 
  <div className="flex justify-end gap-3 pt-4">
- <Button type="button" onClick={resetProfileForm} variant="ghost" className="font-bold">Annuler</Button>
+ <Button type="button" onClick={resetProfileForm} variant="ghost" className="font-bold">{t('confirmCancel')}</Button>
  <Button type="submit" form="voice-form" disabled={!profileForm.consent_given || (!editingProfile && !profileRecorder.audioBlob) || profileRecorder.recording} variant="primary" className="rounded-full px-8 font-black shadow-lg">
- Générer la voix IA
+ {t('parentVoiceGenerate')}
  </Button>
  </div>
  </form>
@@ -776,20 +776,20 @@ function FamilyVoices() {
  <MicrophoneIcon className="w-12 h-12 text-surface-400 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" />
  </div>
  
- <h2 className="text-2xl font-black text-foreground mb-4">Création de la magie...</h2>
+ <h2 className="text-2xl font-black text-foreground mb-4">{t('parentVoiceMagicTitle')}</h2>
  
- <div className="max-w-xs mx-auto space-y-4 text-left">
+ <div className="max-w-xs mx-auto space-y-4 text-start">
  <div className={`flex items-center gap-3 font-bold ${aiProgress >= 10 ? 'text-foreground-600' : 'text-surface-400'}`}>
- {aiProgress >= 25 ? <CheckIcon className="w-5 h-5 text-secondary-500"/> : <div className="w-5 h-5 rounded-full border-2 border-current"></div>} Transfert sécurisé
+ {aiProgress >= 25 ? <CheckIcon className="w-5 h-5 text-secondary-500"/> : <div className="w-5 h-5 rounded-full border-2 border-current"></div>} {t('parentVoiceStepTransfer')}
  </div>
  <div className={`flex items-center gap-3 font-bold ${aiProgress >= 30 ? 'text-foreground-600' : 'text-surface-400'}`}>
- {aiProgress >= 50 ? <CheckIcon className="w-5 h-5 text-secondary-500"/> : <div className="w-5 h-5 rounded-full border-2 border-current"></div>} Nettoyage de l'audio
+ {aiProgress >= 50 ? <CheckIcon className="w-5 h-5 text-secondary-500"/> : <div className="w-5 h-5 rounded-full border-2 border-current"></div>} {t('parentVoiceStepClean')}
  </div>
  <div className={`flex items-center gap-3 font-bold ${aiProgress >= 60 ? 'text-foreground-600' : 'text-surface-400'}`}>
- {aiProgress >= 80 ? <CheckIcon className="w-5 h-5 text-secondary-500"/> : <div className="w-5 h-5 rounded-full border-2 border-current"></div>} Entraînement du modèle IA
+ {aiProgress >= 80 ? <CheckIcon className="w-5 h-5 text-secondary-500"/> : <div className="w-5 h-5 rounded-full border-2 border-current"></div>} {t('parentVoiceStepTrain')}
  </div>
  <div className={`flex items-center gap-3 font-bold ${aiProgress >= 90 ? 'text-foreground-600' : 'text-surface-400'}`}>
- {aiProgress >= 100 ? <CheckIcon className="w-5 h-5 text-secondary-500"/> : <div className="w-5 h-5 rounded-full border-2 border-current"></div>} Finalisation
+ {aiProgress >= 100 ? <CheckIcon className="w-5 h-5 text-secondary-500"/> : <div className="w-5 h-5 rounded-full border-2 border-current"></div>} {t('parentVoiceStepFinalize')}
  </div>
  </div>
  </div>
@@ -801,15 +801,15 @@ function FamilyVoices() {
  <motion.div initial={{scale: 0}} animate={{scale: 1}} transition={{type: 'spring', bounce: 0.5}} className="w-24 h-24 bg-secondary-100 text-secondary-500 rounded-full flex items-center justify-center mx-auto mb-6">
  <CheckIcon className="w-12 h-12" />
  </motion.div>
- <h2 className="text-3xl font-black text-foreground mb-4">Succès !</h2>
+ <h2 className="text-3xl font-black text-foreground mb-4">{t('parentVoiceSuccessTitle')}</h2>
  <p className="text-lg text-foreground-secondary font-medium mb-8 max-w-md mx-auto">
- Votre voix a été clonée avec succès. Elle est prête à raconter des histoires merveilleuses !
+ {t('parentVoiceSuccessBody')}
  </p>
  
  <div className="flex flex-col sm:flex-row justify-center gap-4">
- <Button onClick={resetProfileForm} variant="outline" className="rounded-full font-bold">Retour au studio</Button>
+ <Button onClick={resetProfileForm} variant="outline" className="rounded-full font-bold">{t('parentVoiceBackToStudio')}</Button>
  <Button onClick={() => {resetProfileForm(); navigate('/kids');}} variant="primary" className="rounded-full shadow-lg bg-secondary-500 hover:bg-secondary-600 border-none font-black text-white">
- Utiliser cette voix
+ {t('parentVoiceUseVoice')}
  </Button>
  </div>
  </div>

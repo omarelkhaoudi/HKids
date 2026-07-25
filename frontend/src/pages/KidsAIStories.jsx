@@ -110,8 +110,8 @@ const filtersInitialState = {
   favorite: ''
 };
 
-function getErrorMessage(error) {
-  return error.response?.data?.error || error.message || 'Action impossible pour le moment.';
+function getErrorMessage(error, fallback) {
+  return error.response?.data?.error || error.message || fallback;
 }
 
 function speechLanguage(language) {
@@ -275,7 +275,7 @@ function NarrationPlayer({ story, canGenerate = false }) {
         ) : (
           <span>▶</span>
         )}
-        {isPlaying ? (t('kids_pause') || 'Pause') : (t('kids_listen') || 'Écouter')}
+        {isPlaying ? t('kids_pause') : t('kids_listen')}
       </button>
 
       {/* Generate button (when no track available) */}
@@ -290,7 +290,7 @@ function NarrationPlayer({ story, canGenerate = false }) {
           ) : (
             <span>🎙️</span>
           )}
-          {t('kids_generate_narration') || 'Générer'}
+          {t('kids_generate_narration')}
         </button>
       )}
 
@@ -299,7 +299,7 @@ function NarrationPlayer({ story, canGenerate = false }) {
         <button
           onClick={handleDownload}
           className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 text-sm hover:bg-gray-200 transition-all"
-          title={t('kids_download_offline') || 'Télécharger'}
+          title={t('kids_download_offline')}
         >
           <DownloadIcon className="w-4 h-4" />
         </button>
@@ -383,9 +383,9 @@ function KidsAIStories() {
           .map((item) => item.payload);
         setStories(offlineStories);
         setSelectedStory(offlineStories[0] || null);
-        setError('Mode hors connexion: histoires telechargees uniquement.');
+        setError(t('kidsAiOfflineOnly'));
       } else {
-        setError(getErrorMessage(err));
+        setError(getErrorMessage(err, t('kidsAiActionFailed')));
       }
     } finally {
       setLoading(false);
@@ -401,7 +401,7 @@ function KidsAIStories() {
         setKidProfiles(profiles);
         setSelectedKidProfileId(profiles[0]?.id || '');
       })
-      .catch((err) => setError(getErrorMessage(err)))
+      .catch((err) => setError(getErrorMessage(err, t('kidsAiActionFailed'))))
       .finally(() => {
         if (active) setLoading(false);
       });
@@ -470,7 +470,7 @@ function KidsAIStories() {
         if (!story.favorite) setShowCelebration(true);
         return;
       }
-      setError(getErrorMessage(err));
+      setError(getErrorMessage(err, t('kidsAiActionFailed')));
     } finally {
       setBusyStoryId(null);
     }
@@ -491,7 +491,7 @@ function KidsAIStories() {
         setShowCelebration(true);
         return;
       }
-      setError(getErrorMessage(err));
+      setError(getErrorMessage(err, t('kidsAiActionFailed')));
     } finally {
       setBusyStoryId(null);
     }
@@ -508,7 +508,7 @@ function KidsAIStories() {
       setSelectedStory(nextStory);
       setShowCelebration(true);
     } catch (err) {
-      setError(getErrorMessage(err));
+      setError(getErrorMessage(err, t('kidsAiActionFailed')));
     } finally {
       setBusyStoryId(null);
     }
@@ -529,7 +529,7 @@ function KidsAIStories() {
       setStories(nextStories);
       setSelectedStory((current) => (current?.id === story.id ? nextStories[0] || null : current));
     } catch (err) {
-      setError(getErrorMessage(err));
+      setError(getErrorMessage(err, t('kidsAiActionFailed')));
     } finally {
       setBusyStoryId(null);
       setDeleteTarget(null);
@@ -543,7 +543,7 @@ function KidsAIStories() {
       await offlineContent.saveStoryContent(story);
       setShowCelebration(true);
     } catch (err) {
-      setError(getErrorMessage(err));
+      setError(getErrorMessage(err, t('kidsAiActionFailed')));
     } finally {
       setBusyStoryId(null);
     }
@@ -555,7 +555,7 @@ function KidsAIStories() {
     try {
       await offlineContent.deleteDownload(offlineContentIds.generatedStory(story.id));
     } catch (err) {
-      setError(getErrorMessage(err));
+      setError(getErrorMessage(err, t('kidsAiActionFailed')));
     } finally {
       setBusyStoryId(null);
     }
@@ -605,7 +605,7 @@ function KidsAIStories() {
           
           <div className="flex flex-wrap gap-2 mb-4">
             <span className="px-2.5 py-1 bg-primary-50 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 rounded-full text-xs font-bold">
-              {story.theme || 'Aventure'}
+              {story.theme || t('kidsAiDefaultTheme')}
             </span>
             <span className={`px-2.5 py-1 ${BRAND_SEMANTIC.success.bg} ${BRAND_SEMANTIC.success.text} rounded-full text-xs font-bold`}>
               {story.language?.toUpperCase() || 'FR'}
@@ -692,14 +692,14 @@ function KidsAIStories() {
             className="inline-flex items-center gap-2 rounded-2xl bg-card/80 backdrop-blur-md px-5 py-3 text-sm font-black text-foreground shadow-sm hover:shadow-md transition border border-border"
           >
             <ChevronLeftIcon className="h-5 w-5" />
-            <span>Retour</span>
+            <span>{t('back')}</span>
           </Link>
         </header>
 
         <KidsHero
           modality="create"
           emoji="✨"
-          badge="Le Lit Qui Lit Magique"
+          badge={t('kidsAiBadge')}
           title={`✨ ${t('kidsNavStories')}`}
           subtitle={canCreateStories ? t('storyStudioEmptyParentDescription') : t('storyStudioEmptyKidDescription')}
           className="mb-10"
@@ -719,11 +719,11 @@ function KidsAIStories() {
         </KidsHero>
 
         {canCreateStories && (
-          <section className="mb-10 grid grid-cols-1 sm:grid-cols-3 gap-4" aria-label="Parcours de création">
+          <section className="mb-10 grid grid-cols-1 sm:grid-cols-3 gap-4" aria-label={t('kidsAiJourneyAria')}>
             {[
-              { step: '1', title: 'Imagine', desc: 'Choisis thème et héros', emoji: '🪄', path: createPath },
-              { step: '2', title: 'Crée', desc: 'Laisse la magie écrire', emoji: '✨', path: createPath },
-              { step: '3', title: 'Lis & écoute', desc: 'Retrouve tes histoires ici', emoji: '📖', path: null },
+              { step: '1', title: t('kidsAiStep1Title'), desc: t('kidsAiStep1Desc'), emoji: '🪄', path: createPath },
+              { step: '2', title: t('kidsAiStep2Title'), desc: t('kidsAiStep2Desc'), emoji: '✨', path: createPath },
+              { step: '3', title: t('kidsAiStep3Title'), desc: t('kidsAiStep3Desc'), emoji: '📖', path: null },
             ].map((item) => (
               <motion.div
                 key={item.step}
@@ -731,7 +731,7 @@ function KidsAIStories() {
                 className="rounded-24 border-2 border-magic-100 bg-card/80 p-5 shadow-soft text-center"
               >
                 <span className="text-4xl" aria-hidden="true">{item.emoji}</span>
-                <p className="mt-2 text-caption font-bold text-magic-500">Étape {item.step}</p>
+                <p className="mt-2 text-caption font-bold text-magic-500">{t('kidsAiStepLabel', { step: item.step })}</p>
                 <h3 className="text-heading-s font-black text-foreground">{item.title}</h3>
                 <p className="text-caption text-foreground-muted mt-1">{item.desc}</p>
               </motion.div>
@@ -744,7 +744,7 @@ function KidsAIStories() {
           <section className="mb-12">
             <h2 className="text-2xl font-black mb-6 flex items-center gap-3">
               <SparklesIcon className="w-7 h-7 text-magic-500" />
-              Créations récentes
+              {t('kidsAiRecentCreations')}
             </h2>
             <div className="flex gap-6 overflow-x-auto pb-8 pt-2 px-2 -mx-2 snap-x custom-scrollbar kids-scroll-smooth">
               {recentStories.map(story => (
@@ -761,20 +761,20 @@ function KidsAIStories() {
           <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-6">
             <h2 className="text-xl font-black text-foreground flex items-center gap-2">
               <SearchIcon className="w-6 h-6 text-primary-500" />
-              Explorer ma magie
+              {t('kidsAiExploreMagic')}
             </h2>
             <button onClick={handleResetFilters} className="text-sm font-bold text-primary-500 hover:text-primary-600 transition bg-primary-50 dark:bg-primary-900/30 px-4 py-2 rounded-full">
-              Réinitialiser les filtres
+              {t('kidsAiResetFilters')}
             </button>
           </div>
 
           <form onSubmit={handleSearchSubmit} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
             <label className="relative block lg:col-span-2">
-              <SearchIcon className="absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5 text-foreground-muted" />
+              <SearchIcon className="absolute start-5 top-1/2 -translate-y-1/2 h-5 w-5 text-foreground-muted" />
               <input
                 value={filters.search}
                 onChange={(e) => updateFilter('search', e.target.value)}
-                className="h-14 w-full rounded-2xl bg-surface-secondary/50 border border-border pl-12 pr-4 font-bold outline-none transition focus:border-primary-400 focus:bg-card focus:ring-4 focus:ring-primary-500/10 placeholder:text-foreground-muted"
+                className="h-14 w-full rounded-2xl bg-surface-secondary/50 border border-border ps-12 pe-4 font-bold outline-none transition focus:border-primary-400 focus:bg-card focus:ring-4 focus:ring-primary-500/10 placeholder:text-foreground-muted"
                 placeholder={t('kidsAIStoriesSearchPlaceholder')}
               />
             </label>
@@ -783,15 +783,15 @@ function KidsAIStories() {
               onChange={(e) => updateFilter('theme', e.target.value)}
               className="h-14 w-full rounded-2xl bg-surface-secondary/50 border border-border px-4 font-bold outline-none transition focus:border-primary-400 appearance-none cursor-pointer"
             >
-              <option value="">Tous les thèmes</option>
-              {themes.map((t) => <option key={t} value={t}>{t}</option>)}
+              <option value="">{t('kidsAiAllThemes')}</option>
+              {themes.map((theme) => <option key={theme} value={theme}>{theme}</option>)}
             </select>
             <select
               value={filters.language}
               onChange={(e) => updateFilter('language', e.target.value)}
               className="h-14 w-full rounded-2xl bg-surface-secondary/50 border border-border px-4 font-bold outline-none transition focus:border-primary-400 appearance-none cursor-pointer"
             >
-              <option value="">Toutes les langues</option>
+              <option value="">{t('kidsAiAllLanguages')}</option>
               {languages.map((l) => <option key={l} value={l}>{l.toUpperCase()}</option>)}
             </select>
             <select
@@ -799,7 +799,7 @@ function KidsAIStories() {
               onChange={(e) => updateFilter('age_level', e.target.value)}
               className="h-14 w-full rounded-2xl bg-surface-secondary/50 border border-border px-4 font-bold outline-none transition focus:border-primary-400 appearance-none cursor-pointer"
             >
-              <option value="">Tous les âges</option>
+              <option value="">{t('kidsAiAllAges')}</option>
               {ageLevels.map((a) => <option key={a} value={a}>{a}</option>)}
             </select>
           </form>
@@ -813,7 +813,7 @@ function KidsAIStories() {
           <section>
             <h2 className="text-2xl font-black mb-6 flex items-center gap-3">
               <BookIcon className="w-7 h-7 text-primary-500" />
-              Toutes mes histoires
+              {t('kidsAiAllStories')}
             </h2>
             
             {loading ? (
@@ -844,7 +844,7 @@ function KidsAIStories() {
             {!selectedStory ? (
               <div className="rounded-[2.5rem] bg-surface-secondary/50 border border-border border-dashed p-10 text-center flex flex-col items-center justify-center min-h-[400px]">
                 <BookIcon className="w-16 h-16 text-foreground-muted mb-4 opacity-50" />
-                <p className="text-lg font-black text-foreground-muted">Sélectionne une histoire pour la relire</p>
+                <p className="text-lg font-black text-foreground-muted">{t('kidsAiSelectStory')}</p>
               </div>
             ) : (
               <motion.article 
@@ -867,7 +867,7 @@ function KidsAIStories() {
                 {selectedStory.illustration_plan?.status === 'processing' && (
                   <div className="flex items-center gap-2 text-sm text-primary-500 mt-2 px-8">
                     <div className="w-4 h-4 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
-                    <span>{t('kids_ai_illustrations_generating') || 'Illustrations en cours...'}</span>
+                    <span>{t('kids_ai_illustrations_generating')}</span>
                   </div>
                 )}
 
@@ -879,29 +879,29 @@ function KidsAIStories() {
                     <div className="bg-surface-secondary rounded-2xl p-4 flex items-center gap-3">
                       <ClockIcon className="w-6 h-6 text-magic-500" />
                       <div>
-                        <p className="text-xs font-bold text-foreground-muted uppercase tracking-wider">Durée</p>
+                        <p className="text-xs font-bold text-foreground-muted uppercase tracking-wider">{t('kidsAiDuration')}</p>
                         <p className="font-black text-foreground">{selectedStory.estimated_duration_minutes || 3} min</p>
                       </div>
                     </div>
                     <div className="bg-surface-secondary rounded-2xl p-4 flex items-center gap-3">
                       <BookIcon className="w-6 h-6 text-primary-500" />
                       <div>
-                        <p className="text-xs font-bold text-foreground-muted uppercase tracking-wider">Thème</p>
-                        <p className="font-black text-foreground capitalize truncate">{selectedStory.theme || 'Aventure'}</p>
+                        <p className="text-xs font-bold text-foreground-muted uppercase tracking-wider">{t('kidsAiTheme')}</p>
+                        <p className="font-black text-foreground capitalize truncate">{selectedStory.theme || t('kidsAiDefaultTheme')}</p>
                       </div>
                     </div>
                     <div className="bg-surface-secondary rounded-2xl p-4 flex items-center gap-3">
                       <LanguageIcon className="w-6 h-6 text-secondary-500" />
                       <div>
-                        <p className="text-xs font-bold text-foreground-muted uppercase tracking-wider">Langue</p>
+                        <p className="text-xs font-bold text-foreground-muted uppercase tracking-wider">{t('kidsAiLanguage')}</p>
                         <p className="font-black text-foreground uppercase">{selectedStory.language || 'FR'}</p>
                       </div>
                     </div>
                     <div className="bg-surface-secondary rounded-2xl p-4 flex items-center gap-3">
                       <ChildIcon className="w-6 h-6 text-primary-500" />
                       <div>
-                        <p className="text-xs font-bold text-foreground-muted uppercase tracking-wider">Âge</p>
-                        <p className="font-black text-foreground">{selectedStory.age_level || 'Libre'}</p>
+                        <p className="text-xs font-bold text-foreground-muted uppercase tracking-wider">{t('kidsAiAge')}</p>
+                        <p className="font-black text-foreground">{selectedStory.age_level || t('kidsAiAgeFree')}</p>
                       </div>
                     </div>
                   </div>
@@ -921,11 +921,11 @@ function KidsAIStories() {
                   <div className="mt-6 flex flex-wrap gap-3 justify-center">
                     <button onClick={() => handleSave(selectedStory)} disabled={selectedStory.saved || busyStoryId === selectedStory.id} className={`flex-1 min-w-[120px] rounded-2xl ${BRAND_SEMANTIC.success.bg} ${BRAND_SEMANTIC.success.text} px-4 py-3 text-sm font-black disabled:opacity-60 hover:opacity-80 transition flex items-center justify-center gap-2`}>
                       <DownloadIcon className="w-5 h-5" />
-                      {selectedStory.saved ? 'Sauvée' : 'Sauver'}
+                      {selectedStory.saved ? t('kidsAiSaved') : t('kidsAiSave')}
                     </button>
                     <button onClick={() => handleFavorite(selectedStory)} disabled={busyStoryId === selectedStory.id} className="flex-1 min-w-[120px] rounded-2xl bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400 px-4 py-3 text-sm font-black disabled:opacity-60 hover:opacity-80 transition flex items-center justify-center gap-2">
                       <HeartIcon className="w-5 h-5" filled={selectedStory.favorite} />
-                      {selectedStory.favorite ? 'Retirer' : 'Favori'}
+                      {selectedStory.favorite ? t('kidsAiUnfavorite') : t('kidsAiFavorite')}
                     </button>
                     {canCreateStories && (
                       <button onClick={() => handleNewVersion(selectedStory)} disabled={busyStoryId === selectedStory.id} className="flex-1 min-w-[140px] rounded-2xl bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400 px-4 py-3 text-sm font-black disabled:opacity-60 hover:opacity-80 transition flex items-center justify-center gap-2">
@@ -961,7 +961,7 @@ function KidsAIStories() {
         secondaryLabel={t('back')}
         onSecondary={() => setDeleteTarget(null)}
       >
-        Supprimer cette histoire magique ?
+        {t('kidsAiDeleteConfirm')}
       </KidsModal>
       <ContentReportModal
         isOpen={showReportModal}

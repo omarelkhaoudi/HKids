@@ -31,7 +31,7 @@ export function ContentCard({ content, playing = false, onToggleAudio }) {
             imgClassName="absolute inset-0 h-full w-full object-cover"
           />
 
-          <div className="absolute left-3 top-3 flex flex-wrap gap-2">
+          <div className="absolute start-3 top-3 flex flex-wrap gap-2">
             {content.is_premium && (
               <span className="inline-flex items-center gap-1 rounded-full bg-accent-400 px-3 py-1 text-xs font-black text-accent-950 shadow">
                 <LockIcon className="h-3.5 w-3.5" />
@@ -46,7 +46,7 @@ export function ContentCard({ content, playing = false, onToggleAudio }) {
             )}
           </div>
 
-          <span className="absolute right-3 top-3 grid h-10 w-10 place-items-center rounded-full bg-white/90 text-rose-500 shadow">
+          <span className="absolute end-3 top-3 grid h-10 w-10 place-items-center rounded-full bg-white/90 text-rose-500 shadow">
             <HeartIcon className="h-5 w-5" filled={content.is_favorite} />
           </span>
         </div>

@@ -83,7 +83,7 @@ export function AudioPlayer({
           </div>
 
           <div className="grid grid-cols-[3rem_1fr_3rem] items-center gap-3">
-            <span className="text-right text-xs font-black text-surface-500 dark:text-surface-300">
+            <span className="text-end text-xs font-black text-surface-500 dark:text-surface-300">
               {formatTime(currentTime)}
             </span>
             <input

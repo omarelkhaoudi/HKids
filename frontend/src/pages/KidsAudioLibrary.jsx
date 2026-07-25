@@ -172,7 +172,7 @@ function KidsAudioLibrary() {
                   />
                 </div>
               </div>
-              <div className="flex-1 text-center md:text-left space-y-3">
+              <div className="flex-1 text-center md:text-start space-y-3">
                 <span className="inline-flex min-h-9 items-center rounded-full bg-primary-50 text-primary-700 px-4 py-1 text-sm font-semibold">
                   {t('continueListening')}
                 </span>

@@ -24,8 +24,8 @@ import { PremiumRibbon } from '../components/premium/PremiumPackCard';
 const fallbackPlans = [
  {
  code: 'one_book_monthly',
- name: 'Formule Découverte',
- description: 'Un livre au choix chaque mois pour commencer en douceur.',
+ nameKey: 'subsPlanDiscoveryName',
+ descriptionKey: 'subsPlanDiscoveryDesc',
  monthly_price: 2.99,
  currency: 'EUR',
  book_limit: 1,
@@ -33,8 +33,8 @@ const fallbackPlans = [
 },
  {
  code: 'two_books_monthly',
- name: 'Formule Lecture',
- description: 'Deux livres par mois pour garder un rythme régulier.',
+ nameKey: 'subsPlanReadingName',
+ descriptionKey: 'subsPlanReadingDesc',
  monthly_price: 4.99,
  currency: 'EUR',
  book_limit: 2,
@@ -42,8 +42,8 @@ const fallbackPlans = [
 },
  {
  code: 'three_books_monthly',
- name: 'Formule Passion',
- description: 'Trois livres par mois pour les petits lecteurs très curieux.',
+ nameKey: 'subsPlanPassionName',
+ descriptionKey: 'subsPlanPassionDesc',
  monthly_price: 6.99,
  currency: 'EUR',
  book_limit: 3,
@@ -107,7 +107,7 @@ const FAQItem = ({question, answer}) => {
  const [isOpen, setIsOpen] = useState(false);
  return (
  <div className="border-b border-border py-4">
- <button onClick={() => setIsOpen(!isOpen)} className="flex items-center justify-between w-full text-left font-bold text-foreground focus:outline-none">
+ <button onClick={() => setIsOpen(!isOpen)} className="flex items-center justify-between w-full text-start font-bold text-foreground focus:outline-none">
  <span>{question}</span>
  <motion.div animate={{rotate: isOpen ? 180 : 0}} className="text-surface-400">
  <ChevronUpIcon className="w-5 h-5 rotate-180" />
@@ -398,6 +398,9 @@ function Subscriptions() {
  );
  const featuredPacks = useMemo(() => listFeaturedPacks().slice(0, 6), []);
 
+ const planName = (plan) => (plan.nameKey ? t(plan.nameKey) : plan.name);
+ const planDescription = (plan) => (plan.descriptionKey ? t(plan.descriptionKey) : plan.description);
+
  const formatMoney = (cents, currency = 'EUR') => new Intl.NumberFormat(locale, {
  style: 'currency',
  currency: currency || 'EUR'
@@ -428,7 +431,7 @@ function Subscriptions() {
  <h1 className="text-4xl md:text-5xl font-black text-foreground mb-4">{t('subscriptionsPaymentSuccess')}</h1>
  <p className="text-xl text-foreground-secondary font-medium mb-8">{t('subscriptionsPaymentSuccessBody')}</p>
  
- <div className="bg-surface-secondary rounded-2xl p-6 mb-8 text-left grid grid-cols-2 gap-4 border border-border">
+ <div className="bg-surface-secondary rounded-2xl p-6 mb-8 text-start grid grid-cols-2 gap-4 border border-border">
  <div>
  <p className="text-sm font-bold text-surface-400 uppercase">{t('subscriptionsCurrentPlan')}</p>
  <p className="text-lg font-black text-foreground">{currentSubscription?.plan?.name || 'HKids'}</p>
@@ -562,7 +565,7 @@ function Subscriptions() {
  </div>
  </div>
  <div className="overflow-x-auto rounded-3xl border border-border bg-card shadow-sm mb-8">
- <table className="w-full text-left min-w-[420px]">
+ <table className="w-full text-start min-w-[420px]">
  <thead>
  <tr className="bg-surface-secondary border-b border-border">
  <th className="p-4 font-bold text-foreground-muted"> </th>
@@ -648,7 +651,7 @@ function Subscriptions() {
  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
  <div>
  <h3 className="text-lg font-black mb-4 flex items-center gap-2"><HistoryIcon className="w-5 h-5"/> {t('subscriptionsHistory')}</h3>
- <div className="space-y-3 max-h-64 overflow-y-auto pr-2">
+ <div className="space-y-3 max-h-64 overflow-y-auto pe-2">
  {history.length === 0 ? (
  <p className="text-sm text-foreground-muted">{t('subscriptionsNoHistory')}</p>
  ) : history.map((item) => (
@@ -661,7 +664,7 @@ function Subscriptions() {
  </div>
  <div>
  <h3 className="text-lg font-black mb-4">{t('subscriptionsInvoices')}</h3>
- <div className="space-y-3 max-h-64 overflow-y-auto pr-2">
+ <div className="space-y-3 max-h-64 overflow-y-auto pe-2">
  {invoices.length === 0 ? (
  <p className="text-sm text-foreground-muted">{t('subscriptionsNoInvoices')}</p>
  ) : invoices.map((invoice) => (
@@ -711,8 +714,8 @@ function Subscriptions() {
  )}
 
  <div className="mb-6">
- <h3 className="text-2xl font-black text-foreground">{plan.name}</h3>
- <p className="text-foreground-muted font-medium mt-2 min-h-[48px]">{plan.description}</p>
+ <h3 className="text-2xl font-black text-foreground">{planName(plan)}</h3>
+ <p className="text-foreground-muted font-medium mt-2 min-h-[48px]">{planDescription(plan)}</p>
  </div>
 
  <div className="mb-8 flex items-end gap-1">
@@ -723,19 +726,19 @@ function Subscriptions() {
  <div className="flex-1 space-y-4 mb-8">
  <div className="flex items-center gap-3">
  <div className={`p-1 rounded-full ${BRAND_SEMANTIC.success.bg} ${BRAND_SEMANTIC.success.text}`}><CheckIcon className="w-4 h-4"/></div>
- <span className="font-bold text-foreground-secondary">{plan.book_limit} livres Premium inclus</span>
+ <span className="font-bold text-foreground-secondary">{t('subsFeatureBooksIncluded', { count: plan.book_limit })}</span>
  </div>
  <div className="flex items-center gap-3">
  <div className={`p-1 rounded-full ${BRAND_SEMANTIC.success.bg} ${BRAND_SEMANTIC.success.text}`}><CheckIcon className="w-4 h-4"/></div>
- <span className="font-bold text-foreground-secondary">Génération d'histoires IA</span>
+ <span className="font-bold text-foreground-secondary">{t('subsFeatureAiStories')}</span>
  </div>
  <div className="flex items-center gap-3">
  <div className={`p-1 rounded-full ${BRAND_SEMANTIC.success.bg} ${BRAND_SEMANTIC.success.text}`}><CheckIcon className="w-4 h-4"/></div>
- <span className="font-bold text-foreground-secondary">Studio Vocal (Clonage)</span>
+ <span className="font-bold text-foreground-secondary">{t('subsFeatureVoiceStudio')}</span>
  </div>
  <div className="flex items-center gap-3">
  <div className={`p-1 rounded-full ${BRAND_SEMANTIC.success.bg} ${BRAND_SEMANTIC.success.text}`}><CheckIcon className="w-4 h-4"/></div>
- <span className="font-bold text-foreground-secondary">Mode Hors Ligne</span>
+ <span className="font-bold text-foreground-secondary">{t('subsFeatureOffline')}</span>
  </div>
  </div>
 
@@ -756,29 +759,29 @@ function Subscriptions() {
  {/* COMPARISON TABLE */}
  <section className="max-w-5xl mx-auto px-4 mb-24">
  <div className="text-center mb-10">
- <h2 className="text-3xl font-black text-foreground">Comparez nos formules</h2>
- <p className="text-foreground-muted font-medium mt-2">Tout ce dont vous avez besoin pour des lectures magiques.</p>
+ <h2 className="text-3xl font-black text-foreground">{t('subsCompareTitle')}</h2>
+ <p className="text-foreground-muted font-medium mt-2">{t('subsCompareSubtitle')}</p>
  </div>
  <div className="overflow-x-auto rounded-3xl border border-border shadow-sm bg-card">
- <table className="w-full text-left border-collapse min-w-[600px]">
+ <table className="w-full text-start border-collapse min-w-[600px]">
  <thead>
  <tr className="bg-surface-secondary border-b border-border">
- <th className="p-6 font-bold text-foreground-muted w-1/3 sticky left-0 bg-surface-secondary z-10">Fonctionnalités</th>
+ <th className="p-6 font-bold text-foreground-muted w-1/3 sticky start-0 bg-surface-secondary z-10 text-start">{t('subsCompareFeatures')}</th>
  {plans.map(p => (
- <th key={p.code} className="p-6 font-black text-foreground text-center">{p.name}</th>
+ <th key={p.code} className="p-6 font-black text-foreground text-center">{planName(p)}</th>
  ))}
  </tr>
  </thead>
  <tbody>
  {[
- {label:"Livres générés par mois", keys: plans.map(p => p.book_limit)},
- {label:"Clonage Vocal IA", keys: [<CheckIcon className="w-5 h-5 mx-auto text-secondary-500"/>, <CheckIcon className="w-5 h-5 mx-auto text-secondary-500"/>, <CheckIcon className="w-5 h-5 mx-auto text-secondary-500"/>]},
- {label:"Mode hors ligne", keys: [<CheckIcon className="w-5 h-5 mx-auto text-secondary-500"/>, <CheckIcon className="w-5 h-5 mx-auto text-secondary-500"/>, <CheckIcon className="w-5 h-5 mx-auto text-secondary-500"/>]},
- {label:"Statistiques de lecture", keys: [<span className="text-surface-300">-</span>, <CheckIcon className="w-5 h-5 mx-auto text-secondary-500"/>, <CheckIcon className="w-5 h-5 mx-auto text-secondary-500"/>]},
- {label:"Profils enfants multiples", keys: [<span className="text-surface-300">-</span>, <span className="text-surface-300">-</span>, <CheckIcon className="w-5 h-5 mx-auto text-secondary-500"/>]},
+ {label: t('subsCompareBooksPerMonth'), keys: plans.map(p => p.book_limit)},
+ {label: t('subsCompareVoiceClone'), keys: [<CheckIcon className="w-5 h-5 mx-auto text-secondary-500"/>, <CheckIcon className="w-5 h-5 mx-auto text-secondary-500"/>, <CheckIcon className="w-5 h-5 mx-auto text-secondary-500"/>]},
+ {label: t('subsCompareOffline'), keys: [<CheckIcon className="w-5 h-5 mx-auto text-secondary-500"/>, <CheckIcon className="w-5 h-5 mx-auto text-secondary-500"/>, <CheckIcon className="w-5 h-5 mx-auto text-secondary-500"/>]},
+ {label: t('subsCompareStats'), keys: [<span className="text-surface-300">-</span>, <CheckIcon className="w-5 h-5 mx-auto text-secondary-500"/>, <CheckIcon className="w-5 h-5 mx-auto text-secondary-500"/>]},
+ {label: t('subsCompareProfiles'), keys: [<span className="text-surface-300">-</span>, <span className="text-surface-300">-</span>, <CheckIcon className="w-5 h-5 mx-auto text-secondary-500"/>]},
  ].map((row, i) => (
  <tr key={i} className="border-b border-border hover:bg-surface-secondary transition-colors">
- <td className="p-4 pl-6 font-bold text-foreground-secondary sticky left-0 bg-card/80 backdrop-blur z-10">{row.label}</td>
+ <td className="p-4 ps-6 font-bold text-foreground-secondary sticky start-0 bg-card/80 backdrop-blur z-10">{row.label}</td>
  {row.keys.map((val, j) => (
  <td key={j} className="p-4 text-center font-black text-foreground">{val}</td>
  ))}
@@ -794,35 +797,35 @@ function Subscriptions() {
  <div className="max-w-6xl mx-auto px-4 grid grid-cols-1 md:grid-cols-4 gap-8 text-center">
  <div className="flex flex-col items-center">
  <ShieldIcon className="w-10 h-10 text-secondary-400 mb-4" />
- <h4 className="font-black mb-2">Paiements Sécurisés</h4>
- <p className="text-sm text-surface-400 font-medium">Transactions chiffrées gérées par Stripe.</p>
+ <h4 className="font-black mb-2">{t('subsTrustSecureTitle')}</h4>
+ <p className="text-sm text-surface-400 font-medium">{t('subsTrustSecureBody')}</p>
  </div>
  <div className="flex flex-col items-center">
  <XIcon className="w-10 h-10 text-foreground-400 mb-4" />
- <h4 className="font-black mb-2">Annulation Flexible</h4>
- <p className="text-sm text-surface-400 font-medium">Annulez votre abonnement à tout moment en 1 clic.</p>
+ <h4 className="font-black mb-2">{t('subsTrustCancelTitle')}</h4>
+ <p className="text-sm text-surface-400 font-medium">{t('subsTrustCancelBody')}</p>
  </div>
  <div className="flex flex-col items-center">
  <LockIcon className="w-10 h-10 text-primary-400 mb-4" />
- <h4 className="font-black mb-2">Confidentialité</h4>
- <p className="text-sm text-surface-400 font-medium">Vos données et voix sont strictement privées.</p>
+ <h4 className="font-black mb-2">{t('subsTrustPrivacyTitle')}</h4>
+ <p className="text-sm text-surface-400 font-medium">{t('subsTrustPrivacyBody')}</p>
  </div>
  <div className="flex flex-col items-center">
  <SparklesIcon className="w-10 h-10 text-accent-400 mb-4" />
- <h4 className="font-black mb-2">Sans Frais Cachés</h4>
- <p className="text-sm text-surface-400 font-medium">Vous payez exactement le prix affiché.</p>
+ <h4 className="font-black mb-2">{t('subsTrustFeesTitle')}</h4>
+ <p className="text-sm text-surface-400 font-medium">{t('subsTrustFeesBody')}</p>
  </div>
  </div>
  </section>
 
  {/* FAQ SECTION */}
  <section className="max-w-3xl mx-auto px-4 mb-24">
- <h2 className="text-3xl font-black text-foreground text-center mb-10">Questions Fréquentes</h2>
+ <h2 className="text-3xl font-black text-foreground text-center mb-10">{t('subsFaqTitle')}</h2>
  <div className="bg-card rounded-3xl p-8 border border-border shadow-sm">
- <FAQItem question="Puis-je annuler à tout moment ?" answer="Oui, absolument. Vous pouvez annuler votre abonnement à tout moment depuis les paramètres de votre compte. Vous continuerez à avoir accès aux fonctionnalités premium jusqu'à la fin de votre période de facturation." />
- <FAQItem question="Comment fonctionne l'essai gratuit ?" answer="Si vous êtes éligible, vous bénéficiez de 7 jours pour tester l'application. Vous pouvez générer jusqu'à 3 livres. Aucun paiement ne vous sera demandé avant de choisir volontairement une formule." />
- <FAQItem question="Puis-je changer de formule plus tard ?" answer="Oui, vous pouvez passer à une formule supérieure ou inférieure à tout moment. Le changement sera appliqué immédiatement ou au prochain cycle de facturation." />
- <FAQItem question="Le paiement est-il sécurisé ?" answer="Tous nos paiements sont traités par Stripe, l'un des leaders mondiaux du paiement en ligne. Nous ne stockons aucune de vos informations bancaires." />
+ <FAQItem question={t('subsFaqQ1')} answer={t('subsFaqA1')} />
+ <FAQItem question={t('subsFaqQ2')} answer={t('subsFaqA2')} />
+ <FAQItem question={t('subsFaqQ3')} answer={t('subsFaqA3')} />
+ <FAQItem question={t('subsFaqQ4')} answer={t('subsFaqA4')} />
  </div>
  </section>
 
@@ -836,8 +839,8 @@ function Subscriptions() {
  
  <div className="bg-surface-secondary p-6 md:p-8 border-b border-border flex justify-between items-start">
  <div>
- <Badge variant="soft" className="bg-primary-100 text-foreground-800 font-bold mb-2">Résumé de la commande</Badge>
- <h2 className="text-2xl font-black text-foreground">{checkoutModalPlan.name}</h2>
+ <Badge variant="soft" className="bg-primary-100 text-foreground-800 font-bold mb-2">{t('subsCheckoutSummary')}</Badge>
+ <h2 className="text-2xl font-black text-foreground">{planName(checkoutModalPlan)}</h2>
  </div>
  <button onClick={() => setCheckoutModalPlan(null)} className="p-2 bg-card hover:bg-surface-secondary rounded-full text-foreground-muted shadow-sm">
  <XIcon className="w-5 h-5" />
@@ -846,17 +849,17 @@ function Subscriptions() {
 
  <div className="p-6 md:p-8 overflow-y-auto">
  <div className="flex justify-between items-center mb-6 pb-6 border-b border-border">
- <span className="font-bold text-foreground-secondary">Abonnement Mensuel</span>
+ <span className="font-bold text-foreground-secondary">{t('subsCheckoutMonthly')}</span>
  <span className="text-xl font-black text-foreground">{formatPrice(checkoutModalPlan, locale)}</span>
  </div>
 
  <div className="flex justify-between items-center mb-8">
- <span className="font-black text-lg text-foreground">Total à payer aujourd'hui</span>
+ <span className="font-black text-lg text-foreground">{t('subsCheckoutTotalToday')}</span>
  <span className="text-3xl font-black text-foreground">{formatPrice(checkoutModalPlan, locale)}</span>
  </div>
 
  <div className="mb-6">
- <label className="text-sm font-bold text-foreground-secondary mb-2 block">Code promotionnel (optionnel)</label>
+ <label className="text-sm font-bold text-foreground-secondary mb-2 block">{t('subsCheckoutPromoLabel')}</label>
  <div className="flex gap-2">
  <input 
  value={promoCode}
@@ -864,7 +867,7 @@ function Subscriptions() {
  placeholder={t('subscriptionsPromoPlaceholder')} 
  className="w-full rounded-2xl border-2 border-border px-4 py-3 font-bold outline-none focus:border-primary-400 bg-surface-secondary focus:bg-card"
  />
- <Button variant="outline" className="rounded-2xl font-bold px-6 border-border bg-card">Appliquer</Button>
+ <Button variant="outline" className="rounded-2xl font-bold px-6 border-border bg-card">{t('subsCheckoutApply')}</Button>
  </div>
  </div>
 
@@ -876,7 +879,7 @@ function Subscriptions() {
  className="mt-1 w-5 h-5 accent-secondary-500"
  />
  <span className="text-sm font-bold text-foreground-secondary leading-tight">
- J'accepte les conditions générales de vente et je consens à ce que le paiement récurrent soit débité chaque mois. Je peux annuler à tout moment.
+ {t('subsCheckoutTerms')}
  </span>
  </label>
 

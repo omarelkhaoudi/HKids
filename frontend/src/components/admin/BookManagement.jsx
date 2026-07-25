@@ -193,7 +193,7 @@ function BookManagement() {
  <p className="text-foreground-muted font-medium mt-1">{t('adminBooksSubtitle')}</p>
  </div>
  <div className="flex items-center gap-3">
- <Button variant="outline" className="bg-card"><DownloadIcon className="w-4 h-4 mr-2"/> {t('adminExport')}</Button>
+ <Button variant="outline" className="bg-card"><DownloadIcon className="w-4 h-4 me-2"/> {t('adminExport')}</Button>
  <Button variant="primary" onClick={() => {resetForm(); setShowModal(true);}}>
  {t('adminBooksCreateStory')}
  </Button>
@@ -203,13 +203,13 @@ function BookManagement() {
  {/* FILTER BAR (Notion Style) */}
  <div className="bg-card rounded-2xl p-4 border border-border shadow-sm flex flex-col md:flex-row items-center gap-4">
  <div className="relative flex-1">
- <SearchIcon className="w-5 h-5 text-surface-400 absolute left-3 top-1/2 -translate-y-1/2" />
+ <SearchIcon className="w-5 h-5 text-surface-400 absolute start-3 top-1/2 -translate-y-1/2" />
  <input
  type="text"
  value={filters.search}
  onChange={(e) => setFilters({...filters, search: e.target.value})}
  placeholder={t('adminBooksSearchPlaceholder')}
- className="w-full bg-surface-secondary border border-border rounded-xl pl-10 pr-4 py-2 font-medium focus:outline-none focus:border-primary-400 focus:bg-card transition-colors"
+ className="w-full bg-surface-secondary border border-border rounded-xl ps-10 pe-4 py-2 font-medium focus:outline-none focus:border-primary-400 focus:bg-card transition-colors"
  />
  </div>
  <div className="flex items-center gap-3">
@@ -276,7 +276,7 @@ function BookManagement() {
  ) : (
  <div className="bg-card rounded-[2rem] border border-border shadow-sm overflow-hidden">
  <div className="overflow-x-auto">
- <table className="w-full text-left border-collapse">
+ <table className="w-full text-start border-collapse">
  <thead>
  <tr className="border-b border-border bg-surface-secondary/50">
  <th className="p-4 w-12 text-center">
@@ -286,7 +286,7 @@ function BookManagement() {
  <th className="p-4 text-xs font-bold text-surface-400 uppercase tracking-wider">{t('adminBooksHeaderCategory')}</th>
  <th className="p-4 text-xs font-bold text-surface-400 uppercase tracking-wider">{t('adminBooksHeaderStatus')}</th>
  <th className="p-4 text-xs font-bold text-surface-400 uppercase tracking-wider">{t('adminBooksHeaderAudio')}</th>
- <th className="p-4 text-xs font-bold text-surface-400 uppercase tracking-wider text-right">{t('adminBooksHeaderActions')}</th>
+ <th className="p-4 text-xs font-bold text-surface-400 uppercase tracking-wider text-end">{t('adminBooksHeaderActions')}</th>
  </tr>
  </thead>
  <tbody className="divide-y divide-border">
@@ -325,15 +325,15 @@ function BookManagement() {
  <Badge variant="soft" className={`font-bold ${isPublished ? 'bg-secondary-100 text-secondary-800' : 'bg-surface-secondary text-foreground-secondary'}`}>
  {isPublished ? t('adminBooksStatusPublished') : t('adminBooksStatusDraft')}
  </Badge>
- <Badge variant="soft" className={`font-bold ml-2 ${moderationTone}`}>
+ <Badge variant="soft" className={`font-bold ms-2 ${moderationTone}`}>
  {moderationStatus === 'pending' ? t('adminBooksStatusModeration') : moderationStatus === 'rejected' ? t('adminBooksStatusRejected') : t('adminBooksStatusValidated')}
  </Badge>
- {isPremium && <Badge variant="soft" className="bg-primary-100 text-primary-800 font-bold ml-2">{t('adminBooksStatusPremium')}</Badge>}
+ {isPremium && <Badge variant="soft" className="bg-primary-100 text-primary-800 font-bold ms-2">{t('adminBooksStatusPremium')}</Badge>}
  </td>
  <td className="p-4">
  {book.audio_url ? <AudioIcon className="w-5 h-5 text-secondary-500" /> : <AudioIcon className="w-5 h-5 text-surface-300" />}
  </td>
- <td className="p-4 text-right" onClick={(e) => e.stopPropagation()}>
+ <td className="p-4 text-end" onClick={(e) => e.stopPropagation()}>
  <div className="flex items-center justify-end gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
  <button onClick={() => handleEdit(book)} className="p-2 text-surface-400 hover:text-foreground-600 hover:bg-primary-50 rounded-lg transition-colors"><EditIcon className="w-4 h-4" /></button>
  <button onClick={() => handleDelete(book.id)} className="p-2 text-surface-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"><TrashIcon className="w-4 h-4" /></button>
@@ -358,7 +358,7 @@ function BookManagement() {
  <motion.div initial={{opacity: 0}} animate={{opacity: 1}} exit={{opacity: 0}} className="absolute inset-0 bg-surface-900/20 backdrop-blur-sm" onClick={() => setSelectedBook(null)}></motion.div>
  <motion.div 
  initial={{x: '100%'}} animate={{x: 0}} exit={{x: '100%'}} transition={{type: 'spring', damping: 25, stiffness: 200}}
- className="w-full max-w-md bg-card h-full shadow-2xl relative z-10 flex flex-col border-l border-border"
+ className="w-full max-w-md bg-card h-full shadow-2xl relative z-10 flex flex-col border-s border-border"
  >
  <div className="p-4 flex items-center justify-between border-b border-border bg-surface-secondary">
  <h3 className="font-bold text-foreground">{t('adminBooksPreview')}</h3>

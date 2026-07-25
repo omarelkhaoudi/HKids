@@ -2,6 +2,7 @@ import {useState} from 'react';
 import {useNavigate, Link} from 'react-router-dom';
 import {motion, AnimatePresence} from 'framer-motion';
 import {useAuth} from '../context/AuthContext';
+import {useLanguage} from '../context/LanguageContext';
 import {UserIcon, EyeIcon, EyeOffIcon, AlertIcon, LoadingSpinnerIcon, CheckCircleIcon, StarIcon, LockIcon, ChevronLeftIcon} from '../components/Icons';
 import {Logo} from '../components/Logo';
 
@@ -45,26 +46,27 @@ function SignUp() {
  const [showPassword, setShowPassword] = useState(false);
  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
  const {signup} = useAuth();
+ const { t } = useLanguage();
  const navigate = useNavigate();
 
  const validateForm = () => {
  if (!username.trim()) {
- setError('Le nom d\'utilisateur est requis');
+ setError(t('adminSignupErrorUsernameRequired'));
  return false;
 }
 
  if (username.length < 3) {
- setError('Le nom d\'utilisateur doit contenir au moins 3 caractères');
+ setError(t('adminSignupErrorUsernameMin'));
  return false;
 }
 
  if (password.length < 8) {
- setError('Le mot de passe doit contenir au moins 8 caractères');
+ setError(t('adminSignupErrorPasswordMin'));
  return false;
 }
 
  if (password !== confirmPassword) {
- setError('Les mots de passe ne correspondent pas');
+ setError(t('adminSignupErrorPasswordMismatch'));
  return false;
 }
 
@@ -91,20 +93,20 @@ function SignUp() {
  navigate('/admin/login');
 }, 2000);
 } else {
- let errorMessage = result.error || 'Échec de l\'inscription';
+ let errorMessage = result.error || t('adminSignupErrorFailed');
  if (errorMessage.includes('already exists') || errorMessage.includes('duplicate')) {
- errorMessage = 'Ce nom d\'utilisateur est déjà utilisé. Veuillez en choisir un autre.';
+ errorMessage = t('adminSignupErrorUsernameTaken');
 } else if (errorMessage.includes('Admin signup is not available') || errorMessage.includes('inscription admin')) {
- errorMessage = 'L\'inscription admin est désactivée. Contactez l\'équipe HKids ou vérifiez la configuration serveur.';
+ errorMessage = t('adminSignupErrorDisabled');
 } else if (errorMessage.includes('at least 8 characters') || errorMessage.includes('8 caractères')) {
- errorMessage = 'Le mot de passe doit contenir au moins 8 caractères.';
+ errorMessage = t('adminSignupErrorPasswordMin');
 } else if (errorMessage.includes('Network Error') || errorMessage.includes('ECONNREFUSED')) {
- errorMessage = 'Impossible de se connecter au serveur. Vérifiez que le serveur backend est démarré.';
+ errorMessage = t('adminSignupErrorNetwork');
 }
  setError(errorMessage);
 }
 } catch (err) {
- setError('Une erreur inattendue s\'est produite. Veuillez réessayer.');
+ setError(t('adminSignupErrorUnexpected'));
 } finally {
  setLoading(false);
 }
@@ -126,36 +128,35 @@ function SignUp() {
  <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-primary-500 to-secondary-500 text-white shadow-lg mb-5">
  <span className="h-2 w-2 rounded-full bg-card animate-pulse" />
  <span className="text-xs font-semibold uppercase tracking-wide">
- • ESPACE ADMINISTRATEUR HKIDS
+ • {t('adminSignupBadge')}
  </span>
  </div>
  <h1 className="text-4xl xl:text-5xl font-extrabold tracking-tight mb-4">
- Créez un compte
+ {t('adminSignupHeroTitle')}
  <span className="block bg-gradient-to-r from-primary-600 via-secondary-600 to-accent-600 bg-clip-text text-transparent">
- pour gérer vos contenus.
+ {t('adminSignupHeroHighlight')}
  </span>
  </h1>
  <p className="text-base md:text-lg text-foreground-secondary max-w-xl leading-relaxed mb-8">
- Donnez vie à votre catalogue de livres en ligne&nbsp;: ajoutez de nouveaux albums, organisez-les par
- catégories et âges, et offrez aux enfants une expérience de lecture cohérente et sécurisée.
+ {t('adminSignupHeroBody')}
  </p>
  <div className="grid grid-cols-2 gap-4 max-w-md">
  <motion.div 
  whileHover={{scale: 1.02, y: -2}}
  className="rounded-2xl border-2 border-primary-200/50 bg-gradient-to-br from-white to-primary-50/30 px-4 py-4 shadow-md hover:shadow-lg transition-all"
  >
- <p className="font-bold mb-2 text-foreground">Compte multi-accès</p>
+ <p className="font-bold mb-2 text-foreground">{t('adminSignupCardMultiTitle')}</p>
  <p className="text-sm text-foreground-secondary">
- Plusieurs adultes peuvent gérer les contenus sans partager les identifiants principaux.
+ {t('adminSignupCardMultiBody')}
  </p>
  </motion.div>
  <motion.div 
  whileHover={{scale: 1.02, y: -2}}
  className="rounded-2xl border-2 border-secondary-200/50 bg-gradient-to-br from-white to-secondary-50/30 px-4 py-4 shadow-md hover:shadow-lg transition-all"
  >
- <p className="font-bold mb-2 text-foreground">Pensé pour durer</p>
+ <p className="font-bold mb-2 text-foreground">{t('adminSignupCardDurableTitle')}</p>
  <p className="text-sm text-foreground-secondary">
- Ajoutez, modifiez et archivez vos livres à mesure que votre bibliothèque grandit.
+ {t('adminSignupCardDurableBody')}
  </p>
  </motion.div>
  </div>
@@ -184,9 +185,9 @@ function SignUp() {
  </div>
  </div>
  </motion.div>
- <h2 className="text-3xl font-bold text-foreground mb-2 tracking-tight">Créer un compte admin</h2>
+ <h2 className="text-3xl font-bold text-foreground mb-2 tracking-tight">{t('adminSignupTitle')}</h2>
  <p className="text-sm text-foreground-secondary">
- Rejoignez HKids pour gérer les livres, catégories et paramètres.
+ {t('adminSignupSubtitle')}
  </p>
  </div>
 
@@ -211,17 +212,17 @@ function SignUp() {
  className="bg-secondary-50 border-2 border-secondary-300 text-secondary-700 px-4 py-3 rounded-3xl flex items-start gap-2 shadow-md"
  >
  <CheckCircleIcon className="w-5 h-5 flex-shrink-0 mt-0.5" />
- <span className="text-sm font-medium">Compte créé avec succès ! Redirection en cours...</span>
+ <span className="text-sm font-medium">{t('adminSignupSuccess')}</span>
  </motion.div>
  )}
  </AnimatePresence>
 
  <div>
  <label htmlFor="username" className="block text-sm font-semibold text-foreground-secondary mb-2">
- Nom d'utilisateur
+ {t('adminLoginUsername')}
  </label>
  <div className="relative">
- <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
+ <div className="absolute start-3 top-1/2 transform -translate-y-1/2">
  <UserIcon className="w-5 h-5 text-foreground-400" />
  </div>
  <input
@@ -231,19 +232,19 @@ function SignUp() {
  onChange={(e) => setUsername(e.target.value)}
  required
  minLength={3}
- className="w-full pl-10 pr-4 py-3.5 border-2 border-primary-200/50 rounded-3xl focus:ring-4 focus:ring-primary-500/20 focus:border-primary-500 transition-all text-sm bg-card/80 backdrop-blur-sm text-foreground placeholder:text-surface-400 shadow-sm hover:shadow-md"
- placeholder="Choisissez un nom d'utilisateur"
+ className="w-full ps-10 pe-4 py-3.5 border-2 border-primary-200/50 rounded-3xl focus:ring-4 focus:ring-primary-500/20 focus:border-primary-500 transition-all text-sm bg-card/80 backdrop-blur-sm text-foreground placeholder:text-surface-400 shadow-sm hover:shadow-md"
+ placeholder={t('adminSignupUsernamePlaceholder')}
  />
  </div>
- <p className="text-xs text-foreground-secondary mt-1">Minimum 3 caractères</p>
+ <p className="text-xs text-foreground-secondary mt-1">{t('adminSignupUsernameHint')}</p>
  </div>
 
  <div>
  <label htmlFor="password" className="block text-sm font-semibold text-foreground-secondary mb-2">
- Mot de passe
+ {t('adminLoginPassword')}
  </label>
  <div className="relative">
- <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
+ <div className="absolute start-3 top-1/2 transform -translate-y-1/2">
  <LockIcon className="w-5 h-5 text-foreground-400" />
  </div>
  <input
@@ -252,27 +253,27 @@ function SignUp() {
  value={password}
  onChange={(e) => setPassword(e.target.value)}
  required
- minLength={6}
- className="w-full pl-10 pr-12 py-3.5 border-2 border-primary-200/50 rounded-3xl focus:ring-4 focus:ring-primary-500/20 focus:border-primary-500 transition-all text-sm bg-card/80 backdrop-blur-sm text-foreground placeholder:text-surface-400 shadow-sm hover:shadow-md"
- placeholder="Créez un mot de passe"
+ minLength={8}
+ className="w-full ps-10 pe-12 py-3.5 border-2 border-primary-200/50 rounded-3xl focus:ring-4 focus:ring-primary-500/20 focus:border-primary-500 transition-all text-sm bg-card/80 backdrop-blur-sm text-foreground placeholder:text-surface-400 shadow-sm hover:shadow-md"
+ placeholder={t('adminSignupPasswordPlaceholder')}
  />
  <button
  type="button"
  onClick={() => setShowPassword(!showPassword)}
- className="absolute right-3 top-1/2 transform -translate-y-1/2 text-foreground-400 hover:text-foreground-600 transition-colors"
+ className="absolute end-3 top-1/2 transform -translate-y-1/2 text-foreground-400 hover:text-foreground-600 transition-colors"
  >
  {showPassword ? <EyeOffIcon className="w-5 h-5" /> : <EyeIcon className="w-5 h-5" />}
  </button>
  </div>
- <p className="text-xs text-foreground-secondary mt-1">Minimum 6 caractères</p>
+ <p className="text-xs text-foreground-secondary mt-1">{t('adminSignupPasswordHint')}</p>
  </div>
 
  <div>
  <label htmlFor="confirmPassword" className="block text-sm font-semibold text-foreground-secondary mb-2">
- Confirmer le mot de passe
+ {t('adminSignupConfirmLabel')}
  </label>
  <div className="relative">
- <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
+ <div className="absolute start-3 top-1/2 transform -translate-y-1/2">
  <LockIcon className="w-5 h-5 text-foreground-400" />
  </div>
  <input
@@ -281,13 +282,13 @@ function SignUp() {
  value={confirmPassword}
  onChange={(e) => setConfirmPassword(e.target.value)}
  required
- className="w-full pl-10 pr-12 py-3.5 border-2 border-primary-200/50 rounded-3xl focus:ring-4 focus:ring-primary-500/20 focus:border-primary-500 transition-all text-sm bg-card/80 backdrop-blur-sm text-foreground placeholder:text-surface-400 shadow-sm hover:shadow-md"
- placeholder="Confirmez votre mot de passe"
+ className="w-full ps-10 pe-12 py-3.5 border-2 border-primary-200/50 rounded-3xl focus:ring-4 focus:ring-primary-500/20 focus:border-primary-500 transition-all text-sm bg-card/80 backdrop-blur-sm text-foreground placeholder:text-surface-400 shadow-sm hover:shadow-md"
+ placeholder={t('adminSignupConfirmPlaceholder')}
  />
  <button
  type="button"
  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
- className="absolute right-3 top-1/2 transform -translate-y-1/2 text-foreground-400 hover:text-foreground-600 transition-colors"
+ className="absolute end-3 top-1/2 transform -translate-y-1/2 text-foreground-400 hover:text-foreground-600 transition-colors"
  >
  {showConfirmPassword ? <EyeOffIcon className="w-5 h-5" /> : <EyeIcon className="w-5 h-5" />}
  </button>
@@ -304,27 +305,27 @@ function SignUp() {
  {loading ? (
  <>
  <LoadingSpinnerIcon className="w-5 h-5 animate-spin" />
- <span>Création du compte...</span>
+ <span>{t('adminSignupCreating')}</span>
  </>
  ) : success ? (
  <>
  <CheckCircleIcon className="w-5 h-5" />
- <span>Compte créé !</span>
+ <span>{t('adminSignupCreated')}</span>
  </>
  ) : (
- <span>Créer un compte</span>
+ <span>{t('adminSignupSubmit')}</span>
  )}
  </motion.button>
  </form>
 
  <div className="relative z-10 mt-8 text-center">
  <p className="text-sm text-foreground-secondary">
- Vous avez déjà un compte ?{' '}
+ {t('adminSignupHaveAccount')}{' '}
  <Link 
  to="/admin/login" 
  className="text-foreground-600 font-bold hover:text-foreground-secondary-600 hover:underline transition-colors"
  >
- Se connecter
+ {t('adminSignupSignIn')}
  </Link>
  </p>
  </div>
@@ -335,4 +336,3 @@ function SignUp() {
 }
 
 export default SignUp;
-

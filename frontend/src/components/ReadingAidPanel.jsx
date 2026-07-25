@@ -98,7 +98,7 @@ function ReadingAidPanel({
                     : 'text-surface-600 hover:text-surface-900 hover:bg-surface-50'
                 }`}
               >
-                <span className="text-xl mr-2" aria-hidden="true">{tab.icon}</span>
+                <span className="text-xl me-2" aria-hidden="true">{tab.icon}</span>
                 {tab.label}
               </button>
             ))}
@@ -122,7 +122,7 @@ function ReadingAidPanel({
                       key={profile.id}
                       type="button"
                       onClick={() => onVoiceProfileChange(profile.id)}
-                      className={`p-4 rounded-2xl border-2 text-left transition-all ${
+                      className={`p-4 rounded-2xl border-2 text-start transition-all ${
                         selectedVoiceProfile === profile.id
                           ? 'border-secondary-500 bg-secondary-50 shadow-md'
                           : 'border-surface-200 hover:border-secondary-200'
@@ -168,7 +168,7 @@ function ReadingAidPanel({
                       key={font.value}
                       type="button"
                       onClick={() => onSettingsChange({ ...settings, font: font.value })}
-                      className={`p-4 rounded-3xl border-2 transition-all text-left ${
+                      className={`p-4 rounded-3xl border-2 transition-all text-start ${
                         settings.font === font.value
                           ? 'border-primary-500 bg-primary-50'
                           : 'border-surface-200 hover:border-primary-200'
@@ -210,7 +210,7 @@ function ReadingAidPanel({
                       key={option.value}
                       type="button"
                       onClick={() => onSettingsChange({ ...settings, fontSize: option.value })}
-                      className={`w-full p-4 rounded-3xl border-2 transition-all text-left ${
+                      className={`w-full p-4 rounded-3xl border-2 transition-all text-start ${
                         settings.fontSize === option.value
                           ? 'border-primary-500 bg-primary-50'
                           : 'border-surface-200 hover:border-primary-200'

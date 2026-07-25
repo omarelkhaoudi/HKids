@@ -83,7 +83,7 @@ export function KidsFamilyMessages({ className = '' }) {
   if (loading) {
     return (
       <section className={className}>
-        <h2 className="kids-shelf-title mb-4 pl-2">
+        <h2 className="kids-shelf-title mb-4 ps-2">
           <span aria-hidden="true">💌</span>
           <span>{t('familyMessagesTitle')}</span>
         </h2>
@@ -107,7 +107,7 @@ export function KidsFamilyMessages({ className = '' }) {
 
   return (
     <section className={className}>
-      <h2 className="kids-shelf-title mb-4 pl-2">
+      <h2 className="kids-shelf-title mb-4 ps-2">
         <span aria-hidden="true">💌</span>
         <span>{t('familyMessagesTitle')}</span>
       </h2>

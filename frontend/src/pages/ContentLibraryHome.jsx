@@ -50,7 +50,7 @@ const CinematicCard = ({ content, isFavorite, playing, onToggleAudio, onToggleFa
       <div className="absolute inset-0 bg-primary-900/40 opacity-0 transition-opacity duration-300 group-hover:opacity-100 pointer-events-none" />
 
       {/* Top Badges */}
-      <div className="absolute left-3 top-3 right-3 flex flex-wrap gap-2">
+      <div className="absolute start-3 top-3 end-3 flex flex-wrap gap-2">
         {content.is_premium && (
           <span className="flex items-center gap-1 rounded-full bg-gradient-to-r from-accent-400 to-accent-600 px-2 py-0.5 text-[10px] font-black text-white shadow-md">
             <SparklesIcon className="h-3 w-3" /> PRO
@@ -64,7 +64,7 @@ const CinematicCard = ({ content, isFavorite, playing, onToggleAudio, onToggleFa
       </div>
 
       {/* Favorite Icon */}
-      <div className="absolute right-3 top-3 flex flex-col gap-2">
+      <div className="absolute end-3 top-3 flex flex-col gap-2">
         {isFavorite && (
           <div className="rounded-full bg-rose-500 p-1.5 text-white shadow-md">
             <HeartIcon className="h-4 w-4" filled />
@@ -79,12 +79,12 @@ const CinematicCard = ({ content, isFavorite, playing, onToggleAudio, onToggleFa
           onClick={(e) => { e.stopPropagation(); onToggleAudio(content); }}
           className={`flex h-14 w-14 items-center justify-center rounded-full shadow-glow ${playing ? 'bg-primary-500 text-white' : 'bg-white text-primary-600'}`}
         >
-          {playing ? <PauseIcon className="h-6 w-6" filled /> : <PlayIcon className="h-6 w-6 ml-1" filled />}
+          {playing ? <PauseIcon className="h-6 w-6" filled /> : <PlayIcon className="h-6 w-6 ms-1" filled />}
         </motion.button>
       </div>
 
       {/* Bottom Info */}
-      <div className="absolute bottom-0 left-0 right-0 p-4 transition-transform duration-300 group-hover:translate-y-[-10px]">
+      <div className="absolute bottom-0 start-0 end-0 p-4 transition-transform duration-300 group-hover:translate-y-[-10px]">
         <h3 className="line-clamp-2 text-base font-black leading-tight text-white drop-shadow-md">
           {content.title}
         </h3>
@@ -161,7 +161,7 @@ const SectionCarousel = ({ title, icon: Icon, contents, audioPlayer, onToggleAud
 };
 
 function ContentLibraryHome() {
-  const { language, isRtl } = useLanguage();
+  const { language, isRtl, t } = useLanguage();
   const [contents, setContents] = useState([]);
   const [filters, setFilters] = useState(() => ({ ...defaultFilters, language }));
   const [loading, setLoading] = useState(true);
@@ -241,7 +241,7 @@ function ContentLibraryHome() {
             className="inline-flex items-center gap-2 rounded-2xl bg-card/80 backdrop-blur-md px-5 py-3 text-sm font-black text-foreground shadow-sm hover:shadow-md transition border border-border"
           >
             <HomeIcon className="h-5 w-5" />
-            <span className="hidden sm:inline">Espace enfant</span>
+            <span className="hidden sm:inline">{t('clhKidsSpace')}</span>
           </Link>
         </header>
 
@@ -256,13 +256,13 @@ function ContentLibraryHome() {
             <div className="max-w-2xl">
               <div className="inline-flex items-center gap-2 rounded-full bg-white/20 backdrop-blur-md border border-white/30 px-4 py-2 text-sm font-black mb-6 shadow-glass">
                 <SparklesIcon className="h-5 w-5 text-accent-200" />
-                <span>Bibliothèque Magique</span>
+                <span>{t('clhTitle')}</span>
               </div>
               <h1 className="text-4xl md:text-6xl font-black leading-tight mb-4 filter drop-shadow-lg">
-                Des centaines d'histoires et comptines !
+                {t('clhHeroTitle')}
               </h1>
               <p className="text-lg md:text-xl font-bold text-white/90 filter drop-shadow-md max-w-lg">
-                Pour apprendre en s'amusant et découvrir des univers fabuleux.
+                {t('clhHeroBody')}
               </p>
             </div>
             
@@ -272,7 +272,7 @@ function ContentLibraryHome() {
                 className="inline-flex w-full md:w-auto items-center justify-center gap-3 rounded-3xl bg-white px-8 py-5 text-xl font-black text-primary-700 shadow-xl hover:shadow-2xl transition"
               >
                 <SparklesIcon className="h-6 w-6" />
-                <span>Surprise-moi !</span>
+                <span>{t('clhSurpriseMe')}</span>
               </button>
             </motion.div>
           </div>
@@ -287,7 +287,7 @@ function ContentLibraryHome() {
                 key={category.id}
                 whileHover={{ y: -8, scale: 1.02 }}
                 onClick={() => setFilters(prev => ({ ...prev, category: category.id }))}
-                className={`relative overflow-hidden rounded-[2rem] bg-gradient-to-br ${category.color || 'from-primary-500 to-primary-600'} p-8 text-left text-white shadow-lg transition-all hover:shadow-2xl flex items-center justify-between group`}
+                className={`relative overflow-hidden rounded-[2rem] bg-gradient-to-br ${category.color || 'from-primary-500 to-primary-600'} p-8 text-start text-white shadow-lg transition-all hover:shadow-2xl flex items-center justify-between group`}
               >
                 <div className="absolute -right-6 -top-6 h-32 w-32 rounded-full bg-white/10 blur-2xl group-hover:bg-white/20 transition-colors" />
                 <div>
@@ -310,23 +310,23 @@ function ContentLibraryHome() {
         {/* QUICK STATS */}
         <section className="mb-12 grid grid-cols-2 md:grid-cols-4 gap-4 px-4 md:px-0">
           <motion.div whileHover={{ y: -5 }} className={`bg-gradient-to-br ${hubGradientAtIndex(0)} rounded-3xl p-6 text-white shadow-floating relative overflow-hidden`}>
-            <BookIcon className="w-12 h-12 text-white/30 absolute right-4 bottom-4" />
-            <p className="text-sm font-bold text-white/80 uppercase tracking-wider mb-1">Total contenus</p>
+            <BookIcon className="w-12 h-12 text-white/30 absolute end-4 bottom-4" />
+            <p className="text-sm font-bold text-white/80 uppercase tracking-wider mb-1">{t('clhTotalContents')}</p>
             <p className="text-4xl font-black">{contents.length}</p>
           </motion.div>
           <motion.div whileHover={{ y: -5 }} className={`bg-gradient-to-br ${hubGradientAtIndex(1)} rounded-3xl p-6 text-white shadow-floating relative overflow-hidden`}>
-            <HeartIcon className="w-12 h-12 text-white/30 absolute right-4 bottom-4" filled />
-            <p className="text-sm font-bold text-white/80 uppercase tracking-wider mb-1">Favoris</p>
+            <HeartIcon className="w-12 h-12 text-white/30 absolute end-4 bottom-4" filled />
+            <p className="text-sm font-bold text-white/80 uppercase tracking-wider mb-1">{t('clhFavorites')}</p>
             <p className="text-4xl font-black">{favoriteBooks.length}</p>
           </motion.div>
           <motion.div whileHover={{ y: -5 }} className={`bg-gradient-to-br ${hubGradientAtIndex(2)} rounded-3xl p-6 text-white shadow-floating relative overflow-hidden`}>
-            <StarIcon className="w-12 h-12 text-white/30 absolute right-4 bottom-4" />
-            <p className="text-sm font-bold text-white/80 uppercase tracking-wider mb-1">Nouveautés</p>
+            <StarIcon className="w-12 h-12 text-white/30 absolute end-4 bottom-4" />
+            <p className="text-sm font-bold text-white/80 uppercase tracking-wider mb-1">{t('clhNew')}</p>
             <p className="text-4xl font-black">{newBooks.length}</p>
           </motion.div>
           <motion.div whileHover={{ y: -5 }} className={`bg-gradient-to-br ${storyGradientAtIndex(3)} rounded-3xl p-6 text-white shadow-floating relative overflow-hidden`}>
-            <ClockIcon className="w-12 h-12 text-white/30 absolute right-4 bottom-4" />
-            <p className="text-sm font-bold text-white/80 uppercase tracking-wider mb-1">Minutes écoutées</p>
+            <ClockIcon className="w-12 h-12 text-white/30 absolute end-4 bottom-4" />
+            <p className="text-sm font-bold text-white/80 uppercase tracking-wider mb-1">{t('clhMinutesListened')}</p>
             <p className="text-4xl font-black">{totalMinutes}</p>
           </motion.div>
         </section>
@@ -336,12 +336,12 @@ function ContentLibraryHome() {
           <div className="rounded-[2.5rem] bg-card/60 backdrop-blur-xl border border-border p-6 shadow-glass">
             <div className="flex flex-col md:flex-row items-center gap-4">
               <label className="relative block w-full md:flex-1">
-                <SearchIcon className="absolute left-5 top-1/2 -translate-y-1/2 h-6 w-6 text-foreground-muted" />
+                <SearchIcon className="absolute start-5 top-1/2 -translate-y-1/2 h-6 w-6 text-foreground-muted" />
                 <input
                   value={filters.search}
                   onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
-                  className="h-16 w-full rounded-[2rem] bg-surface-secondary/80 border border-border pl-14 pr-4 text-lg font-bold outline-none transition focus:border-primary-400 focus:bg-card focus:ring-4 focus:ring-primary-500/10 placeholder:text-foreground-muted"
-                  placeholder="Chercher une histoire..."
+                  className="h-16 w-full rounded-[2rem] bg-surface-secondary/80 border border-border ps-14 pe-4 text-lg font-bold outline-none transition focus:border-primary-400 focus:bg-card focus:ring-4 focus:ring-primary-500/10 placeholder:text-foreground-muted"
+                  placeholder={t('clhSearchPlaceholder')}
                 />
               </label>
               <div className="flex w-full md:w-auto gap-4">
@@ -350,20 +350,20 @@ function ContentLibraryHome() {
                   onChange={(e) => setFilters(prev => ({ ...prev, age: e.target.value }))}
                   className="h-16 flex-1 md:w-40 rounded-[2rem] bg-surface-secondary/80 border border-border px-5 font-bold outline-none transition focus:border-primary-400 appearance-none cursor-pointer"
                 >
-                  <option value="">Tous les âges</option>
-                  <option value="0-3">0-3 ans</option>
-                  <option value="4-6">4-6 ans</option>
-                  <option value="7+">7+ ans</option>
+                  <option value="">{t('clhAllAges')}</option>
+                  <option value="0-3">{t('clhAge03')}</option>
+                  <option value="4-6">{t('clhAge46')}</option>
+                  <option value="7+">{t('clhAge7Plus')}</option>
                 </select>
                 <select
                   value={filters.language}
                   onChange={(e) => setFilters(prev => ({ ...prev, language: e.target.value }))}
                   className="h-16 flex-1 md:w-40 rounded-[2rem] bg-surface-secondary/80 border border-border px-5 font-bold outline-none transition focus:border-primary-400 appearance-none cursor-pointer"
                 >
-                  <option value="">Toutes langues</option>
-                  <option value="fr">Français</option>
-                  <option value="en">Anglais</option>
-                  <option value="es">Espagnol</option>
+                  <option value="">{t('clhAllLanguages')}</option>
+                  <option value="fr">{t('clhLangFr')}</option>
+                  <option value="en">{t('clhLangEn')}</option>
+                  <option value="es">{t('clhLangEs')}</option>
                 </select>
               </div>
             </div>
@@ -375,7 +375,7 @@ function ContentLibraryHome() {
           <section className="mb-12 px-4 md:px-0">
             <h2 className="text-2xl font-black mb-6 flex items-center gap-3">
               <SparklesIcon className="w-7 h-7 text-primary-500" />
-              Sélection du jour
+              {t('clhSelectionOfDay')}
             </h2>
             <motion.div 
               whileHover={{ scale: 1.01 }}
@@ -400,7 +400,7 @@ function ContentLibraryHome() {
                 <div className="flex items-center gap-4 mt-auto">
                   <button className="flex items-center gap-2 rounded-full bg-primary-500 px-8 py-4 text-white font-black hover:bg-primary-600 transition shadow-lg hover:shadow-xl">
                     <PlayIcon className="w-6 h-6" filled />
-                    Écouter
+                    {t('clhListen')}
                   </button>
                 </div>
               </div>
@@ -420,7 +420,7 @@ function ContentLibraryHome() {
           /* FULL GRID FOR SEARCH RESULTS */
           <section className="mb-12 px-4 md:px-0">
             <div className="mb-6 flex items-center justify-between gap-3">
-              <h2 className="text-2xl font-black text-foreground">Résultats</h2>
+              <h2 className="text-2xl font-black text-foreground">{t('clhResults')}</h2>
               <span className="rounded-full bg-card px-4 py-2 text-sm font-bold text-foreground-secondary shadow-sm">
                 {visibleContents.length}
               </span>
@@ -428,14 +428,14 @@ function ContentLibraryHome() {
             {visibleContents.length === 0 ? (
               <div className="rounded-[2.5rem] bg-card border border-border p-12 text-center shadow-sm">
                 <div className="text-8xl mb-6">🦉</div>
-                <h3 className="text-2xl font-black mb-2">Aucun contenu trouvé.</h3>
-                <p className="text-foreground-muted font-bold mb-8">Essaie de changer tes filtres de recherche.</p>
+                <h3 className="text-2xl font-black mb-2">{t('clhNoResults')}</h3>
+                <p className="text-foreground-muted font-bold mb-8">{t('clhNoResultsHint')}</p>
                 <button
                   onClick={() => setFilters(defaultFilters)}
                   className="inline-flex items-center gap-2 rounded-2xl bg-primary-500 px-8 py-4 text-lg font-black text-white shadow-lg hover:bg-primary-600 transition"
                 >
                   <SparklesIcon className="h-6 w-6" />
-                  Effacer les filtres
+                  {t('clhClearFilters')}
                 </button>
               </div>
             ) : (
@@ -459,7 +459,7 @@ function ContentLibraryHome() {
           /* HORIZONTAL CAROUSELS */
           <div className="space-y-12">
             <SectionCarousel 
-              title="Recommandé pour toi" 
+              title={t('clhRecommended')} 
               icon={SparklesIcon} 
               contents={recommendedBooks} 
               audioPlayer={audioPlayer}
@@ -467,7 +467,7 @@ function ContentLibraryHome() {
             />
             
             <SectionCarousel 
-              title="Nouveautés" 
+              title={t('clhNew')} 
               icon={BookIcon} 
               contents={newBooks} 
               audioPlayer={audioPlayer}
@@ -476,7 +476,7 @@ function ContentLibraryHome() {
             
             {favoriteBooks.length > 0 && (
               <SectionCarousel 
-                title="Mes Favoris" 
+                title={t('clhMyFavorites')} 
                 icon={HeartIcon} 
                 contents={favoriteBooks} 
                 audioPlayer={audioPlayer}

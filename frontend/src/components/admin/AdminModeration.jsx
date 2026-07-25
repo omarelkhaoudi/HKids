@@ -72,12 +72,12 @@ function AdminModeration() {
 
  <div className="bg-card rounded-2xl border border-border p-4 flex flex-col lg:flex-row gap-3">
  <div className="relative flex-1">
- <SearchIcon className="w-5 h-5 text-surface-400 absolute left-3 top-1/2 -translate-y-1/2" />
+ <SearchIcon className="w-5 h-5 text-surface-400 absolute start-3 top-1/2 -translate-y-1/2" />
  <input
  value={filters.q}
  onChange={(event) => setFilters((current) => ({...current, q: event.target.value}))}
  placeholder={t('adminModerationSearchPlaceholder')}
- className="w-full bg-surface-secondary border border-border rounded-xl pl-10 pr-4 py-2 font-medium outline-none focus:border-primary-400"
+ className="w-full bg-surface-secondary border border-border rounded-xl ps-10 pe-4 py-2 font-medium outline-none focus:border-primary-400"
  />
  </div>
  <select value={filters.type} onChange={(event) => setFilters((current) => ({...current, type: event.target.value}))} className="bg-surface-secondary border border-border rounded-xl px-4 py-2 font-bold">
@@ -128,14 +128,14 @@ function AdminModeration() {
  onClick={() => openModerate(item, 'rejected')}
  className="text-rose-600 border-rose-200"
  >
- <XIcon className="w-4 h-4 mr-2" /> {t('adminModerationReject')}
+ <XIcon className="w-4 h-4 me-2" /> {t('adminModerationReject')}
  </Button>
  <Button
  variant="primary"
  disabled={busyId === key}
  onClick={() => openModerate(item, 'approved')}
  >
- <CheckIcon className="w-4 h-4 mr-2" /> {item.type === 'book' ? t('adminModerationValidatePublish') : t('adminModerationApprove')}
+ <CheckIcon className="w-4 h-4 me-2" /> {item.type === 'book' ? t('adminModerationValidatePublish') : t('adminModerationApprove')}
  </Button>
  </div>
  </div>

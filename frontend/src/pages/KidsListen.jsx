@@ -229,7 +229,7 @@ function KidsListen() {
                   key={item.bookId}
                   type="button"
                   onClick={() => navigate(`/kids/listen/${item.bookId}`)}
-                  className="snap-start shrink-0 w-44 rounded-24 bg-card border-4 border-border shadow-card p-space-16 text-left hover:shadow-floating transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-300"
+                  className="snap-start shrink-0 w-44 rounded-24 bg-card border-4 border-border shadow-card p-space-16 text-start hover:shadow-floating transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-300"
                 >
                   <div className="relative aspect-[3/4] rounded-16 overflow-hidden mb-space-12 bg-surface-secondary">
                     <KidsBookCover

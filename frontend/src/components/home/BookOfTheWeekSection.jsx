@@ -27,7 +27,7 @@ export default function BookOfTheWeekSection({ book, t }) {
             <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-secondary-200/25 rounded-full blur-3xl pointer-events-none" aria-hidden="true" />
 
             <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
-              <div className="lg:col-span-5 flex flex-col items-start text-left">
+              <div className="lg:col-span-5 flex flex-col items-start text-start">
                 <div className="inline-flex items-center gap-2 px-4 py-2 bg-accent-100 text-accent-700 rounded-full text-sm font-bold mb-6">
                   <span aria-hidden="true">✨</span>
                   {t.homeStoryHighlight}
@@ -72,7 +72,7 @@ export default function BookOfTheWeekSection({ book, t }) {
                 </motion.div>
               </div>
 
-              <div className="lg:col-span-3 flex flex-col gap-6 pl-0 lg:pl-6">
+              <div className="lg:col-span-3 flex flex-col gap-6 ps-0 lg:ps-6">
                 <div className="flex items-start gap-4">
                   <div className="mt-1 flex-shrink-0 text-surface-400" aria-hidden="true">🎂</div>
                   <div>

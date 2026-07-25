@@ -75,7 +75,7 @@ export default function FooterSection({ t }) {
           <div className="w-full md:w-auto flex justify-center md:justify-start">
             <LanguageSelector />
           </div>
-          <div className="text-center md:text-right text-xs text-surface-500 font-medium">
+          <div className="text-center md:text-end text-xs text-surface-500 font-medium">
             <p>© {new Date().getFullYear()} HKids.</p>
             <p>{t.footerNote}</p>
           </div>

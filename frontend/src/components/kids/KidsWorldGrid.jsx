@@ -27,7 +27,7 @@ export function KidsWorldGrid({
             transition={{ delay: reducedMotion ? 0 : Math.min(index * 0.03, 0.4) }}
             {...getHoverMotion(reducedMotion)}
             onClick={() => onSelectWorld?.(world.id)}
-            className={`group relative overflow-hidden min-h-[10.5rem] rounded-24 bg-gradient-to-br ${world.gradient} p-space-16 text-left text-white shadow-card focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-success-300`}
+            className={`group relative overflow-hidden min-h-[10.5rem] rounded-24 bg-gradient-to-br ${world.gradient} p-space-16 text-start text-white shadow-card focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-success-300`}
           >
             <div className="absolute -right-8 -top-8 h-24 w-24 rounded-full bg-white/15 blur-xl" />
             <span className="text-4xl drop-shadow-md block mb-space-8" aria-hidden="true">{world.emoji}</span>

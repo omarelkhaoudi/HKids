@@ -161,7 +161,7 @@ function AdminStatistics() {
  <p className="font-bold text-foreground text-sm">{user.name}</p>
  <p className="text-xs text-foreground-muted">{t('adminStatsParent')} {user.parent_name}</p>
  </div>
- <div className="text-right">
+ <div className="text-end">
  <p className="text-sm font-black text-foreground">{user.sessions_count || 0} {t('adminStatsSessions')}</p>
  <p className="text-xs text-surface-400">{formatAdminDate(user.last_activity_at)}</p>
  </div>

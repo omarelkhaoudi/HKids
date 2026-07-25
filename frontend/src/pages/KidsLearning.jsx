@@ -492,11 +492,11 @@ function KidsLearning() {
                     {eduLabel('eduActivities', language)}
                   </h2>
                   <label className="relative block w-full sm:w-72">
-                    <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-foreground-muted" />
+                    <SearchIcon className="absolute start-4 top-1/2 -translate-y-1/2 h-5 w-5 text-foreground-muted" />
                     <input
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="h-12 min-h-touch w-full rounded-2xl bg-surface-secondary border border-border pl-12 pr-4 outline-none focus:ring-4 focus:ring-success-500/10"
+                      className="h-12 min-h-touch w-full rounded-2xl bg-surface-secondary border border-border ps-12 pe-4 outline-none focus:ring-4 focus:ring-success-500/10"
                       placeholder={t('kidsLearningSearchPlaceholder')}
                     />
                   </label>
@@ -521,7 +521,7 @@ function KidsLearning() {
                         type="button"
                         whileHover={reducedMotion ? undefined : { y: -6, scale: 1.02 }}
                         onClick={() => openContent(content)}
-                        className={`group relative overflow-hidden min-h-[12rem] rounded-24 bg-gradient-to-br ${content.category_color || activeWorld.gradient} p-space-16 text-left text-white shadow-card`}
+                        className={`group relative overflow-hidden min-h-[12rem] rounded-24 bg-gradient-to-br ${content.category_color || activeWorld.gradient} p-space-16 text-start text-white shadow-card`}
                       >
                         <span className="text-4xl">{content.category_pictogram || activeWorld.emoji}</span>
                         <span className="block mt-auto pt-space-12 text-heading-m font-black leading-tight">{content.title}</span>
@@ -576,7 +576,7 @@ function KidsLearning() {
                                   key={kid.id}
                                   type="button"
                                   onClick={() => { setSelectedKidProfileId(String(kid.id)); setIsProfileMenuOpen(false); }}
-                                  className="w-full min-h-touch-kids flex items-center gap-space-16 p-space-16 hover:bg-surface-secondary text-left border-b border-border last:border-0"
+                                  className="w-full min-h-touch-kids flex items-center gap-space-16 p-space-16 hover:bg-surface-secondary text-start border-b border-border last:border-0"
                                 >
                                   <span className="text-xl">{kid.pictogram || '👧'}</span>
                                   <span className="font-black">{kid.name}</span>

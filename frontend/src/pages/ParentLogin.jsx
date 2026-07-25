@@ -59,7 +59,7 @@ export default function ParentLogin() {
  <MagicalBackground preset="platform" />
  
  {/* Back Button - Fixed positioning for both mobile and desktop */}
- <div className="absolute top-6 left-6 z-50">
+ <div className="absolute top-6 start-6 z-50">
  <Link to="/">
  <motion.button 
  whileHover={{scale: 1.05}}
@@ -73,7 +73,7 @@ export default function ParentLogin() {
  </div>
 
  {/* LEFT PANEL: Visuals (Hidden on small screens) */}
- <div className="hidden lg:flex lg:w-1/2 relative bg-gradient-to-br from-primary-50 via-primary-100/50 to-secondary-50 items-center justify-center p-12 overflow-hidden border-r border-primary-100">
+ <div className="hidden lg:flex lg:w-1/2 relative bg-gradient-to-br from-primary-50 via-primary-100/50 to-secondary-50 items-center justify-center p-12 overflow-hidden border-e border-primary-100">
  {/* Background decorative elements */}
  <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
  <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-primary-300/20 blur-[100px]"></div>
@@ -125,10 +125,10 @@ export default function ParentLogin() {
  <motion.div 
  animate={{y: [-5, 5, -5]}}
  transition={{duration: 4, repeat: Infinity, ease:"easeInOut"}}
- className="absolute -top-4 -right-4 bg-card/90 backdrop-blur-md px-4 py-3 rounded-2xl shadow-xl border border-white/50 flex items-center gap-2"
+ className="absolute -top-4 -end-4 bg-card/90 backdrop-blur-md px-4 py-3 rounded-2xl shadow-xl border border-white/50 flex items-center gap-2"
  >
  <span className="text-xl">✨</span>
- <div className="text-left">
+ <div className="text-start">
  <div className="text-xs font-bold text-foreground-muted">HKids</div>
                 <div className="text-sm font-extrabold text-foreground-600">{t('parentLoginParentSpace')}</div>
  </div>
@@ -185,18 +185,18 @@ export default function ParentLogin() {
  <form onSubmit={handleSubmit} className="space-y-6">
  {/* Username Input */}
  <div className="space-y-2">
- <label className="block text-sm font-bold text-foreground-secondary ml-1">
+ <label className="block text-sm font-bold text-foreground-secondary ms-1">
             {t('parentLoginUsername')}
  </label>
  <div className="relative group">
- <div className="absolute left-4 top-1/2 -translate-y-1/2 text-surface-400 group-focus-within:text-foreground-500 transition-colors">
+ <div className="absolute start-4 top-1/2 -translate-y-1/2 text-surface-400 group-focus-within:text-foreground-500 transition-colors">
  <UserIcon className="w-5 h-5" />
  </div>
  <input
  type="text"
  value={username}
  onChange={(e) => setUsername(e.target.value)}
- className="w-full pl-12 pr-4 py-4 bg-surface-secondary border-2 border-border rounded-[1.5rem] focus:bg-card focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 transition-all font-medium text-foreground placeholder:text-surface-400 outline-none"
+ className="w-full ps-12 pe-4 py-4 bg-surface-secondary border-2 border-border rounded-[1.5rem] focus:bg-card focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 transition-all font-medium text-foreground placeholder:text-surface-400 outline-none"
  placeholder={t('parentLoginUsernamePlaceholder')}
  required
  />
@@ -205,25 +205,25 @@ export default function ParentLogin() {
 
         {/* Password Input */}
         <div className="space-y-2">
-        <label className="block text-sm font-bold text-foreground-secondary ml-1">
+        <label className="block text-sm font-bold text-foreground-secondary ms-1">
         {t('parentLoginPassword')}
         </label>
  <div className="relative group">
- <div className="absolute left-4 top-1/2 -translate-y-1/2 text-surface-400 group-focus-within:text-foreground-500 transition-colors">
+ <div className="absolute start-4 top-1/2 -translate-y-1/2 text-surface-400 group-focus-within:text-foreground-500 transition-colors">
  <LockIcon className="w-5 h-5" />
  </div>
  <input
  type={showPassword ? 'text' : 'password'}
  value={password}
  onChange={(e) => setPassword(e.target.value)}
- className="w-full pl-12 pr-14 py-4 bg-surface-secondary border-2 border-border rounded-[1.5rem] focus:bg-card focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 transition-all font-medium text-foreground placeholder:text-surface-400 outline-none"
+ className="w-full ps-12 pe-14 py-4 bg-surface-secondary border-2 border-border rounded-[1.5rem] focus:bg-card focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 transition-all font-medium text-foreground placeholder:text-surface-400 outline-none"
  placeholder="••••••••"
  required
  />
  <button
  type="button"
  onClick={() => setShowPassword(!showPassword)}
- className="absolute right-4 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center rounded-full hover:bg-surface-200 text-surface-400 hover:text-foreground-secondary transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500"
+ className="absolute end-4 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center rounded-full hover:bg-surface-200 text-surface-400 hover:text-foreground-secondary transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500"
             aria-label={showPassword ? t('parentLoginHidePassword') : t('parentLoginShowPassword')}
  >
  {showPassword ? <EyeOffIcon className="w-5 h-5" /> : <EyeIcon className="w-5 h-5" />}

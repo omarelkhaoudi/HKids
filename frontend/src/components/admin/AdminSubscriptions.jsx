@@ -79,7 +79,7 @@ function AdminSubscriptions() {
  <h1 className="text-3xl font-black text-foreground tracking-tight">{t('adminSubscriptionsTitle')}</h1>
  <p className="text-foreground-muted font-medium mt-1">{t('adminSubscriptionsSubtitle')}</p>
  </div>
- <Button variant="outline" className="bg-card text-foreground-secondary shadow-sm"><DownloadIcon className="w-4 h-4 mr-2" /> {t('adminSubscriptionsExportCsv')}</Button>
+ <Button variant="outline" className="bg-card text-foreground-secondary shadow-sm"><DownloadIcon className="w-4 h-4 me-2" /> {t('adminSubscriptionsExportCsv')}</Button>
  </div>
 
  <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
@@ -123,13 +123,13 @@ function AdminSubscriptions() {
  <div className="bg-card rounded-[2rem] border border-border shadow-sm overflow-hidden flex flex-col">
  <div className="p-4 border-b border-border flex flex-col sm:flex-row items-center justify-between bg-surface-secondary gap-4">
  <div className="relative w-full max-w-sm">
- <SearchIcon className="w-5 h-5 text-surface-400 absolute left-3 top-1/2 -translate-y-1/2" />
+ <SearchIcon className="w-5 h-5 text-surface-400 absolute start-3 top-1/2 -translate-y-1/2" />
  <input
  type="text"
  value={search}
  onChange={(e) => setSearch(e.target.value)}
  placeholder={t('adminSubscriptionsSearchPlaceholder')}
- className="w-full bg-card border border-border rounded-xl pl-10 pr-4 py-2 font-medium focus:outline-none focus:border-primary-400 focus:ring-2 focus:ring-primary-100 transition-all text-sm"
+ className="w-full bg-card border border-border rounded-xl ps-10 pe-4 py-2 font-medium focus:outline-none focus:border-primary-400 focus:ring-2 focus:ring-primary-100 transition-all text-sm"
  />
  </div>
  <select 
@@ -148,14 +148,14 @@ function AdminSubscriptions() {
  </div>
 
  <div className="overflow-x-auto">
- <table className="w-full text-left border-collapse">
+ <table className="w-full text-start border-collapse">
  <thead className="bg-card border-b border-border">
  <tr>
  <th className="px-6 py-4 text-xs font-bold text-surface-400 uppercase tracking-wider">{t('adminSubscriptionsHeaderParent')}</th>
  <th className="px-6 py-4 text-xs font-bold text-surface-400 uppercase tracking-wider">{t('adminSubscriptionsHeaderPlan')}</th>
  <th className="px-6 py-4 text-xs font-bold text-surface-400 uppercase tracking-wider">{t('adminSubscriptionsHeaderStatus')}</th>
- <th className="px-6 py-4 text-xs font-bold text-surface-400 uppercase tracking-wider text-right">{t('adminSubscriptionsHeaderRenewal')}</th>
- <th className="px-6 py-4 text-xs font-bold text-surface-400 uppercase tracking-wider text-right">{t('adminSubscriptionsHeaderActions')}</th>
+ <th className="px-6 py-4 text-xs font-bold text-surface-400 uppercase tracking-wider text-end">{t('adminSubscriptionsHeaderRenewal')}</th>
+ <th className="px-6 py-4 text-xs font-bold text-surface-400 uppercase tracking-wider text-end">{t('adminSubscriptionsHeaderActions')}</th>
  </tr>
  </thead>
  <tbody className="divide-y divide-border">
@@ -197,10 +197,10 @@ function AdminSubscriptions() {
  <td className="px-6 py-4">
  <Badge variant={badgeVariant} className="font-bold">{statusText}</Badge>
  </td>
- <td className="px-6 py-4 text-right">
+ <td className="px-6 py-4 text-end">
  <div className="text-sm font-medium text-foreground-secondary">{formatAdminDate(sub.current_period_end, t, getAdminDateLocale(language))}</div>
  </td>
- <td className="px-6 py-4 text-right">
+ <td className="px-6 py-4 text-end">
  <div className="flex justify-end gap-2">
  {sub.provider === 'stripe' ? (
  sub.cancel_at_period_end ? (

@@ -118,7 +118,7 @@ function AdminLogin({audience = 'admin'}) {
  initial={{opacity: 0, x: -20}}
  animate={{opacity: 1, x: 0}}
  transition={{duration: 0.4}}
- className="absolute top-6 left-6 z-10"
+ className="absolute top-6 start-6 z-10"
  >
  <Link to="/">
  <motion.button
@@ -226,7 +226,7 @@ function AdminLogin({audience = 'admin'}) {
  {t('adminLoginUsername')}
  </label>
  <div className="relative">
- <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
+ <div className="absolute start-3 top-1/2 transform -translate-y-1/2">
  <UserIcon className="w-5 h-5 text-foreground-400" />
  </div>
  <input
@@ -235,7 +235,7 @@ function AdminLogin({audience = 'admin'}) {
  value={username}
  onChange={(e) => setUsername(e.target.value)}
  required
- className="w-full pl-10 pr-4 py-3.5 border-2 border-primary-200/50 rounded-3xl focus:ring-4 focus:ring-primary-500/20 focus:border-primary-500 transition-all text-sm bg-card/80 backdrop-blur-sm text-foreground placeholder:text-surface-400 shadow-sm hover:shadow-md"
+ className="w-full ps-10 pe-4 py-3.5 border-2 border-primary-200/50 rounded-3xl focus:ring-4 focus:ring-primary-500/20 focus:border-primary-500 transition-all text-sm bg-card/80 backdrop-blur-sm text-foreground placeholder:text-surface-400 shadow-sm hover:shadow-md"
  placeholder={t('adminLoginUsernamePlaceholder')}
  />
  </div>
@@ -246,7 +246,7 @@ function AdminLogin({audience = 'admin'}) {
  {t('adminLoginPassword')}
  </label>
  <div className="relative">
- <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
+ <div className="absolute start-3 top-1/2 transform -translate-y-1/2">
  <LockIcon className="w-5 h-5 text-foreground-400" />
  </div>
  <input
@@ -255,13 +255,13 @@ function AdminLogin({audience = 'admin'}) {
  value={password}
  onChange={(e) => setPassword(e.target.value)}
  required
- className="w-full pl-10 pr-12 py-3.5 border-2 border-primary-200/50 rounded-3xl focus:ring-4 focus:ring-primary-500/20 focus:border-primary-500 transition-all text-sm bg-card/80 backdrop-blur-sm text-foreground placeholder:text-surface-400 shadow-sm hover:shadow-md"
+ className="w-full ps-10 pe-12 py-3.5 border-2 border-primary-200/50 rounded-3xl focus:ring-4 focus:ring-primary-500/20 focus:border-primary-500 transition-all text-sm bg-card/80 backdrop-blur-sm text-foreground placeholder:text-surface-400 shadow-sm hover:shadow-md"
  placeholder={t('adminLoginPasswordPlaceholder')}
  />
  <button
  type="button"
  onClick={() => setShowPassword(!showPassword)}
- className="absolute right-3 top-1/2 transform -translate-y-1/2 text-foreground-400 hover:text-foreground-600 transition-colors"
+ className="absolute end-3 top-1/2 transform -translate-y-1/2 text-foreground-400 hover:text-foreground-600 transition-colors"
  >
  {showPassword ? <EyeOffIcon className="w-5 h-5" /> : <EyeIcon className="w-5 h-5" />}
  </button>

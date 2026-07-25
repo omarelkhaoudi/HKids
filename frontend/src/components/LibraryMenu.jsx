@@ -82,7 +82,7 @@ function LibraryMenu({ categories, onCategorySelect, onAgeSelect, selectedCatego
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.2 }}
-              className="absolute top-full left-0 sm:left-1/2 sm:transform sm:-translate-x-1/2 mt-2 w-[calc(100vw-2rem)] sm:w-[420px] bg-white rounded-2xl shadow-2xl z-50 overflow-hidden border border-surface-200 mx-2 sm:mx-0"
+              className="absolute top-full start-0 sm:left-1/2 sm:transform sm:-translate-x-1/2 mt-2 w-[calc(100vw-2rem)] sm:w-[420px] bg-white rounded-2xl shadow-2xl z-50 overflow-hidden border border-surface-200 mx-2 sm:mx-0"
             >
               <div className="bg-gradient-to-r from-primary-50 via-secondary-50 to-accent-50 p-4 sm:p-6 border-b border-surface-200">
                 <div className="mb-5 space-y-4">
@@ -135,7 +135,7 @@ function LibraryMenu({ categories, onCategorySelect, onAgeSelect, selectedCatego
                         setIsOpen(false);
                         scrollToBooksSection();
                       }}
-                      className={`w-full text-left px-3 py-2 rounded-xl text-sm font-semibold transition ${
+                      className={`w-full text-start px-3 py-2 rounded-xl text-sm font-semibold transition ${
                         selectedCategory === category.id ? 'bg-primary-50 text-primary-700' : 'hover:bg-surface-50'
                       }`}
                     >

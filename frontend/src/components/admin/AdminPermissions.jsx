@@ -140,7 +140,7 @@ function AdminPermissions() {
  {!isSelf && (
  <div className="flex justify-end mt-5">
  <Button variant="primary" onClick={() => save(admin.id)} disabled={savingId === admin.id}>
- <ShieldIcon className="w-4 h-4 mr-2" /> {savingId === admin.id ? t('adminPermissionsSaving') : t('adminSave')}
+ <ShieldIcon className="w-4 h-4 me-2" /> {savingId === admin.id ? t('adminPermissionsSaving') : t('adminSave')}
  </Button>
  </div>
  )}

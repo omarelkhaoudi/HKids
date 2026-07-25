@@ -40,8 +40,8 @@ function AdminAuditLog() {
 
  <div className="bg-card rounded-2xl border border-border p-4 flex flex-col md:flex-row gap-3">
  <div className="relative flex-1">
- <SearchIcon className="w-5 h-5 text-surface-400 absolute left-3 top-1/2 -translate-y-1/2" />
- <input value={filters.action} onChange={(event) => setFilters((current) => ({...current, action: event.target.value}))} placeholder={t('adminAuditSearchPlaceholder')} className="w-full bg-surface-secondary border border-border rounded-xl pl-10 pr-4 py-2 outline-none" />
+ <SearchIcon className="w-5 h-5 text-surface-400 absolute start-3 top-1/2 -translate-y-1/2" />
+ <input value={filters.action} onChange={(event) => setFilters((current) => ({...current, action: event.target.value}))} placeholder={t('adminAuditSearchPlaceholder')} className="w-full bg-surface-secondary border border-border rounded-xl ps-10 pe-4 py-2 outline-none" />
  </div>
  <select value={filters.resource_type} onChange={(event) => setFilters((current) => ({...current, resource_type: event.target.value}))} className="bg-surface-secondary border border-border rounded-xl px-4 py-2 font-bold">
  <option value="">{t('adminAuditAllResources')}</option>
@@ -63,7 +63,7 @@ function AdminAuditLog() {
  <div className="p-12 text-center"><HistoryIcon className="w-10 h-10 mx-auto text-surface-300 mb-3" /><p className="font-black">{t('adminAuditNoEntries')}</p></div>
  ) : (
  <div className="overflow-x-auto">
- <table className="w-full text-left">
+ <table className="w-full text-start">
  <thead className="bg-surface-secondary border-b border-border">
  <tr>
  <th className="p-4 text-xs uppercase text-surface-400">{t('adminAuditHeaderDate')}</th>

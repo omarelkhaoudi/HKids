@@ -17,7 +17,7 @@ export function KidsErrorBanner({ message, onDismiss, className = '' }) {
       role="alert"
     >
       <span className="text-3xl shrink-0" aria-hidden="true">⚠️</span>
-      <p className="flex-1 kids-type-body text-rose-800 dark:text-rose-200 text-left">{message}</p>
+      <p className="flex-1 kids-type-body text-rose-800 dark:text-rose-200 text-start">{message}</p>
       {onDismiss && (
         <button
           type="button"

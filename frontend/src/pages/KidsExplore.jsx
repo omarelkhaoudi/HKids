@@ -210,7 +210,7 @@ function KidsExplore() {
                     }
                     navigate(tile.path);
                   }}
-                  className={`relative overflow-hidden min-h-[9.5rem] rounded-24 bg-gradient-to-br ${tile.gradient} p-space-16 text-left text-white shadow-card focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-success-300`}
+                  className={`relative overflow-hidden min-h-[9.5rem] rounded-24 bg-gradient-to-br ${tile.gradient} p-space-16 text-start text-white shadow-card focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-success-300`}
                 >
                   <span className="text-4xl block mb-2" aria-hidden="true">{tile.emoji}</span>
                   <span className="block text-heading-m font-black leading-tight">

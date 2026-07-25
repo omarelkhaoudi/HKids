@@ -97,13 +97,13 @@ function AdminUsers() {
  <motion.div initial={{opacity: 0, y: 20}} animate={{opacity: 1, y: 0}} className="flex-1 min-w-0 bg-card rounded-[2rem] border border-border shadow-sm overflow-hidden flex flex-col">
  <div className="p-4 border-b border-border flex items-center justify-between bg-surface-secondary">
  <div className="relative w-full max-w-sm">
- <SearchIcon className="w-5 h-5 text-surface-400 absolute left-3 top-1/2 -translate-y-1/2" />
+ <SearchIcon className="w-5 h-5 text-surface-400 absolute start-3 top-1/2 -translate-y-1/2" />
  <input
  type="text"
  value={search}
  onChange={(e) => setSearch(e.target.value)}
  placeholder={t('adminUsersSearchPlaceholder')}
- className="w-full bg-card border border-border rounded-xl pl-10 pr-4 py-2 font-medium focus:outline-none focus:border-primary-400 focus:ring-2 focus:ring-primary-100 transition-all text-sm"
+ className="w-full bg-card border border-border rounded-xl ps-10 pe-4 py-2 font-medium focus:outline-none focus:border-primary-400 focus:ring-2 focus:ring-primary-100 transition-all text-sm"
  />
  </div>
  </div>
@@ -119,13 +119,13 @@ function AdminUsers() {
  <h3 className="text-lg font-bold text-foreground">{t('adminUsersNoResults')}</h3>
  </div>
  ) : (
- <table className="w-full text-left border-collapse">
+ <table className="w-full text-start border-collapse">
  <thead className="bg-card sticky top-0 z-10 shadow-sm">
  <tr>
  <th className="p-4 text-xs font-bold text-surface-400 uppercase tracking-wider">{t('adminUsersHeaderParent')}</th>
  <th className="p-4 text-xs font-bold text-surface-400 uppercase tracking-wider">{t('adminUsersHeaderSubscription')}</th>
  <th className="p-4 text-xs font-bold text-surface-400 uppercase tracking-wider text-center">{t('adminUsersHeaderKids')}</th>
- <th className="p-4 text-xs font-bold text-surface-400 uppercase tracking-wider text-right">{t('adminUsersHeaderSignup')}</th>
+ <th className="p-4 text-xs font-bold text-surface-400 uppercase tracking-wider text-end">{t('adminUsersHeaderSignup')}</th>
  </tr>
  </thead>
  <tbody className="divide-y divide-border">
@@ -154,7 +154,7 @@ function AdminUsers() {
  {parent.children_count || 0}
  </span>
  </td>
- <td className="p-4 text-right">
+ <td className="p-4 text-end">
  <div className="text-sm font-medium text-foreground-secondary">{formatAdminDate(parent.created_at)}</div>
  </td>
  </tr>
@@ -181,13 +181,13 @@ function AdminUsers() {
  {selectedParent && (
  <motion.div 
  initial={{opacity: 0, x: 50}} animate={{opacity: 1, x: 0}} exit={{opacity: 0, x: 50}} transition={{type: 'spring', damping: 25, stiffness: 200}}
- className="fixed inset-y-0 right-0 z-50 w-full sm:w-[400px] bg-[#fafafa] shadow-2xl xl:relative xl:inset-auto xl:z-auto xl:w-[380px] xl:bg-transparent xl:shadow-none shrink-0 flex flex-col h-full xl:h-auto overflow-hidden"
+ className="fixed inset-y-0 end-0 z-50 w-full sm:w-[400px] bg-[#fafafa] shadow-2xl xl:relative xl:inset-auto xl:z-auto xl:w-[380px] xl:bg-transparent xl:shadow-none shrink-0 flex flex-col h-full xl:h-auto overflow-hidden"
  >
  <div className="flex-1 overflow-y-auto p-4 xl:p-0 space-y-6 pb-24 xl:pb-0">
  {/* Parent Summary Card */}
  <div className="bg-card rounded-[2rem] border border-border shadow-sm relative overflow-hidden">
- <div className="absolute top-0 left-0 right-0 h-24 bg-gradient-to-r from-primary-500 to-primary-500"></div>
- <button onClick={() => setSelectedParent(null)} className="absolute top-4 right-4 z-10 p-2 bg-black/20 text-white rounded-full hover:bg-black/40 backdrop-blur-md transition-colors"><XIcon className="w-5 h-5"/></button>
+ <div className="absolute top-0 start-0 end-0 h-24 bg-gradient-to-r from-primary-500 to-primary-500"></div>
+ <button onClick={() => setSelectedParent(null)} className="absolute top-4 end-4 z-10 p-2 bg-black/20 text-white rounded-full hover:bg-black/40 backdrop-blur-md transition-colors"><XIcon className="w-5 h-5"/></button>
  
  <div className="relative pt-12 px-6 pb-6">
  <div className="w-24 h-24 bg-card p-1.5 rounded-[1.5rem] shadow-lg mb-4">
@@ -231,7 +231,7 @@ function AdminUsers() {
  onClick={openDeleteParent}
  className="mt-5 border-rose-200 text-rose-600 hover:bg-rose-50"
  >
- <TrashIcon className="w-4 h-4 mr-2" /> {deleting ? t('adminUsersDeleting') : t('adminUsersDeleteBtn')}
+ <TrashIcon className="w-4 h-4 me-2" /> {deleting ? t('adminUsersDeleting') : t('adminUsersDeleteBtn')}
  </Button>
  </div>
  </div>
@@ -251,7 +251,7 @@ function AdminUsers() {
  {detail.kids.map(kid => (
  <div key={kid.id} className="p-4 bg-surface-secondary border border-border rounded-2xl hover:border-primary-100 hover:shadow-sm transition-all group">
  <div className="flex justify-between items-start mb-3">
- <div className="min-w-0 flex-1 pr-2">
+ <div className="min-w-0 flex-1 pe-2">
  <h5 className="font-black text-foreground text-lg flex items-center gap-2 truncate">
  {kid.name}
  {kid.is_premium_voice && <StarIcon className="w-5 h-5 text-accent-500 shrink-0" title="Premium Voice" />}

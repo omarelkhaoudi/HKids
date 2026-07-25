@@ -10,46 +10,46 @@ import {useLanguage} from '../context/LanguageContext';
 const features = {
  'versions-audio': {
  icon: AudioIcon,
- title: 'Des versions audio',
- subtitle: 'Écoutez et lisez en même temps',
- description: 'Les histoires ont des versions audio enregistrées par des conteurs professionnels. La fonction karaoké permet d\'afficher les mots en surbrillance en synchronisation avec la narration.',
+ title: 'featureAudioTitle',
+ subtitle: 'featureAudioSubtitle',
+ description: 'featureAudioDesc',
  benefits: [
- 'Narration professionnelle par des conteurs expérimentés',
- 'Synchronisation parfaite entre l\'audio et le texte',
- 'Fonction karaoké avec surbrillance des mots',
- 'Aide à la compréhension et à la prononciation',
- 'Accessible pour les enfants ayant des difficultés de lecture'
+ 'featureAudioB1',
+ 'featureAudioB2',
+ 'featureAudioB3',
+ 'featureAudioB4',
+ 'featureAudioB5'
  ],
  color: 'from-primary-500 to-secondary-500',
  bgColor: 'from-primary-50 to-secondary-50'
 },
  'aide-lecture': {
  icon: BookIcon,
- title: 'Aide à la lecture',
- subtitle: 'Personnalisez votre expérience de lecture',
- description: 'Les textes peuvent s\'afficher dans des polices, tailles, et couleurs personnalisables. Syllabisation et aide à la prononciation par synthèse vocale pour accompagner tous les enfants dans leur apprentissage.',
+ title: 'featureReadingTitle',
+ subtitle: 'featureReadingSubtitle',
+ description: 'featureReadingDesc',
  benefits: [
- 'Polices adaptées (Arial, Times, Comic Sans, Open Dyslexic)',
- 'Taille de texte ajustable selon les besoins',
- 'Schémas de couleurs personnalisables (standard, sépia, sombre, contraste élevé)',
- 'Syllabisation automatique pour faciliter la lecture',
- 'Espacement des lignes et des mots ajustable',
- 'Synthèse vocale pour l\'aide à la prononciation'
+ 'featureReadingB1',
+ 'featureReadingB2',
+ 'featureReadingB3',
+ 'featureReadingB4',
+ 'featureReadingB5',
+ 'featureReadingB6'
  ],
  color: 'from-primary-500 to-secondary-500',
  bgColor: 'from-primary-50 to-secondary-50'
 },
  'enregistrer-voix': {
  icon: MicrophoneIcon,
- title: 'Enregistrer sa voix',
- subtitle: 'Devenez le narrateur de vos histoires',
- description: 'Adulte ou enfant, enregistrez votre voix et devenez le narrateur de nos histoires. Partagez vos moments de lecture en famille et créez des souvenirs inoubliables.',
+ title: 'featureVoiceTitle',
+ subtitle: 'featureVoiceSubtitle',
+ description: 'featureVoiceDesc',
  benefits: [
- 'Enregistrement vocal simple et intuitif',
- 'Narration personnalisée pour chaque histoire',
- 'Partage avec la famille et les amis',
- 'Création de souvenirs audio précieux',
- 'Encouragement de la participation active des enfants'
+ 'featureVoiceB1',
+ 'featureVoiceB2',
+ 'featureVoiceB3',
+ 'featureVoiceB4',
+ 'featureVoiceB5'
  ],
  color: 'from-primary-500 to-secondary-500',
  bgColor: 'from-primary-50 to-secondary-50',
@@ -96,7 +96,7 @@ function FeatureDetails() {
  </Link>
  <Link to="/" className="text-surface-100 hover:text-white font-medium flex items-center gap-2 transition-colors">
  <ChevronLeftIcon className="w-4 h-4" />
- <span className="hidden sm:inline">Retour</span>
+ <span className="hidden sm:inline">{t('back')}</span>
  </Link>
  </div>
  </motion.header>
@@ -140,10 +140,10 @@ function FeatureDetails() {
  <IconComponent className="w-12 h-12 text-white" />
  </div>
  <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold mb-4 leading-tight">
- <span className="text-foreground-600 drop-shadow-lg">{feature.title}</span>
+ <span className="text-foreground-600 drop-shadow-lg">{t(feature.title)}</span>
  </h1>
  <p className="text-xl sm:text-2xl text-foreground-secondary font-medium">
- {feature.subtitle}
+ {t(feature.subtitle)}
  </p>
  {feature.comingSoon && (
  <motion.span
@@ -174,7 +174,7 @@ function FeatureDetails() {
  {t('featureAbout')}
  </h2>
  <p className="text-lg text-foreground-secondary leading-relaxed">
- {feature.description}
+ {t(feature.description)}
  </p>
  </motion.div>
 
@@ -202,7 +202,7 @@ function FeatureDetails() {
  <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-r from-primary-500 to-secondary-500 flex items-center justify-center">
  <span className="text-white font-bold text-sm">{index + 1}</span>
  </div>
- <p className="text-foreground-secondary font-medium leading-relaxed">{benefit}</p>
+ <p className="text-foreground-secondary font-medium leading-relaxed">{t(benefit)}</p>
  </motion.div>
  ))}
  </div>
@@ -221,7 +221,7 @@ function FeatureDetails() {
  whileTap={{scale: 0.95}}
  className="px-8 py-4 bg-gradient-to-r from-primary-500 to-secondary-500 text-white rounded-full font-semibold text-lg shadow-lg hover:shadow-xl transition-all"
  >
- Retour à l'accueil
+ {t('featureBackHome')}
  </motion.button>
  </Link>
  </motion.div>
@@ -232,4 +232,3 @@ function FeatureDetails() {
 }
 
 export default FeatureDetails;
-

@@ -85,7 +85,7 @@ export default function ParentSignUp() {
  return (
  <div className="min-h-screen bg-card flex flex-col lg:flex-row overflow-hidden font-sans" dir={isRtl ? 'rtl' : 'ltr'}>
  
- <div className="absolute top-6 left-6 z-50">
+ <div className="absolute top-6 start-6 z-50">
  <Link to="/">
  <motion.button 
  whileHover={{scale: 1.05}}
@@ -98,7 +98,7 @@ export default function ParentSignUp() {
  </Link>
  </div>
 
- <div className="hidden lg:flex lg:w-1/2 relative bg-gradient-to-br from-secondary-50 via-secondary-100/40 to-primary-50 items-center justify-center p-12 overflow-hidden border-r border-secondary-100">
+ <div className="hidden lg:flex lg:w-1/2 relative bg-gradient-to-br from-secondary-50 via-secondary-100/40 to-primary-50 items-center justify-center p-12 overflow-hidden border-e border-secondary-100">
  <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
  <div className="absolute top-[10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-accent-300/20 blur-[100px]"></div>
  <div className="absolute bottom-[-10%] left-[-10%] w-[60%] h-[60%] rounded-full bg-primary-300/20 blur-[120px]"></div>
@@ -146,10 +146,10 @@ export default function ParentSignUp() {
  <motion.div 
  animate={{y: [-5, 5, -5]}}
  transition={{duration: 4, repeat: Infinity, ease:"easeInOut"}}
- className="absolute bottom-4 left-4 bg-card/90 backdrop-blur-md px-4 py-3 rounded-2xl shadow-xl border border-white/50 flex items-center gap-3"
+ className="absolute bottom-4 start-4 bg-card/90 backdrop-blur-md px-4 py-3 rounded-2xl shadow-xl border border-white/50 flex items-center gap-3"
  >
  <div className="w-10 h-10 rounded-full bg-accent-100 flex items-center justify-center text-xl">🎓</div>
- <div className="text-left">
+ <div className="text-start">
  <div className="text-sm font-extrabold text-foreground">{t('parentSignUpBadgeTitle')}</div>
  <div className="text-xs font-bold text-foreground-muted">{t('parentSignUpBadgeDesc')}</div>
  </div>
@@ -228,11 +228,11 @@ export default function ParentSignUp() {
 
  <form onSubmit={handleSubmit} className="space-y-5">
  <div className="space-y-1.5">
- <label className="block text-sm font-bold text-foreground-secondary ml-1" htmlFor="parent-signup-username">
+ <label className="block text-sm font-bold text-foreground-secondary ms-1" htmlFor="parent-signup-username">
  {t('parentSignUpUsername')}
  </label>
  <div className="relative group">
- <div className="absolute left-4 top-1/2 -translate-y-1/2 text-surface-400 group-focus-within:text-foreground-secondary-500 transition-colors">
+ <div className="absolute start-4 top-1/2 -translate-y-1/2 text-surface-400 group-focus-within:text-foreground-secondary-500 transition-colors">
  <UserIcon className="w-5 h-5" />
  </div>
  <input
@@ -240,7 +240,7 @@ export default function ParentSignUp() {
  type="text"
  value={username}
  onChange={(e) => setUsername(e.target.value)}
- className="w-full pl-12 pr-4 py-4 bg-surface-secondary border-2 border-border rounded-[1.5rem] focus:bg-card focus:border-secondary-500 focus:ring-4 focus:ring-secondary-500/10 transition-all font-medium text-foreground placeholder:text-surface-400 outline-none"
+ className="w-full ps-12 pe-4 py-4 bg-surface-secondary border-2 border-border rounded-[1.5rem] focus:bg-card focus:border-secondary-500 focus:ring-4 focus:ring-secondary-500/10 transition-all font-medium text-foreground placeholder:text-surface-400 outline-none"
  placeholder={t('parentSignUpUsernamePlaceholder')}
  required
  minLength={3}
@@ -250,11 +250,11 @@ export default function ParentSignUp() {
  </div>
 
  <div className="space-y-1.5">
- <label className="block text-sm font-bold text-foreground-secondary ml-1" htmlFor="parent-signup-password">
+ <label className="block text-sm font-bold text-foreground-secondary ms-1" htmlFor="parent-signup-password">
  {t('parentSignUpPassword')}
  </label>
  <div className="relative group">
- <div className="absolute left-4 top-1/2 -translate-y-1/2 text-surface-400 group-focus-within:text-foreground-secondary-500 transition-colors">
+ <div className="absolute start-4 top-1/2 -translate-y-1/2 text-surface-400 group-focus-within:text-foreground-secondary-500 transition-colors">
  <LockIcon className="w-5 h-5" />
  </div>
  <input
@@ -262,7 +262,7 @@ export default function ParentSignUp() {
  type={showPassword ? 'text' : 'password'}
  value={password}
  onChange={(e) => setPassword(e.target.value)}
- className="w-full pl-12 pr-14 py-4 bg-surface-secondary border-2 border-border rounded-[1.5rem] focus:bg-card focus:border-secondary-500 focus:ring-4 focus:ring-secondary-500/10 transition-all font-medium text-foreground placeholder:text-surface-400 outline-none"
+ className="w-full ps-12 pe-14 py-4 bg-surface-secondary border-2 border-border rounded-[1.5rem] focus:bg-card focus:border-secondary-500 focus:ring-4 focus:ring-secondary-500/10 transition-all font-medium text-foreground placeholder:text-surface-400 outline-none"
  placeholder={t('parentSignUpPasswordPlaceholder')}
  required
  minLength={6}
@@ -271,7 +271,7 @@ export default function ParentSignUp() {
  <button
  type="button"
  onClick={() => setShowPassword(!showPassword)}
- className="absolute right-4 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center rounded-full hover:bg-surface-200 text-surface-400 hover:text-foreground-secondary transition-colors focus:outline-none"
+ className="absolute end-4 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center rounded-full hover:bg-surface-200 text-surface-400 hover:text-foreground-secondary transition-colors focus:outline-none"
  aria-label={showPassword ? t('parentLoginHidePassword') : t('parentLoginShowPassword')}
  >
  {showPassword ? <EyeOffIcon className="w-5 h-5" /> : <EyeIcon className="w-5 h-5" />}
@@ -295,11 +295,11 @@ export default function ParentSignUp() {
  </div>
 
  <div className="space-y-1.5">
- <label className="block text-sm font-bold text-foreground-secondary ml-1" htmlFor="parent-signup-confirm">
+ <label className="block text-sm font-bold text-foreground-secondary ms-1" htmlFor="parent-signup-confirm">
  {t('parentSignUpConfirmPassword')}
  </label>
  <div className="relative group">
- <div className="absolute left-4 top-1/2 -translate-y-1/2 text-surface-400 group-focus-within:text-foreground-secondary-500 transition-colors">
+ <div className="absolute start-4 top-1/2 -translate-y-1/2 text-surface-400 group-focus-within:text-foreground-secondary-500 transition-colors">
  <LockIcon className="w-5 h-5" />
  </div>
  <input
@@ -307,7 +307,7 @@ export default function ParentSignUp() {
  type={showConfirmPassword ? 'text' : 'password'}
  value={confirmPassword}
  onChange={(e) => setConfirmPassword(e.target.value)}
- className={`w-full pl-12 pr-14 py-4 bg-surface-secondary border-2 rounded-[1.5rem] focus:bg-card focus:ring-4 outline-none transition-all font-medium text-foreground placeholder:text-surface-400 ${
+ className={`w-full ps-12 pe-14 py-4 bg-surface-secondary border-2 rounded-[1.5rem] focus:bg-card focus:ring-4 outline-none transition-all font-medium text-foreground placeholder:text-surface-400 ${
  confirmPassword && password !== confirmPassword 
  ? 'border-red-300 focus:border-red-500 focus:ring-red-500/10' 
  : 'border-border focus:border-secondary-500 focus:ring-secondary-500/10'
@@ -319,7 +319,7 @@ export default function ParentSignUp() {
  <button
  type="button"
  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
- className="absolute right-4 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center rounded-full hover:bg-surface-200 text-surface-400 hover:text-foreground-secondary transition-colors focus:outline-none"
+ className="absolute end-4 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center rounded-full hover:bg-surface-200 text-surface-400 hover:text-foreground-secondary transition-colors focus:outline-none"
  aria-label={showConfirmPassword ? t('parentLoginHidePassword') : t('parentLoginShowPassword')}
  >
  {showConfirmPassword ? <EyeOffIcon className="w-5 h-5" /> : <EyeIcon className="w-5 h-5" />}

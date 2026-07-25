@@ -163,7 +163,7 @@ export function KidProfileFormModal({
  type="file"
  accept="image/*"
  onChange={handlePhotoFileChange}
- className="mb-3 w-full rounded-2xl border border-surface-300 px-4 py-2 text-sm file:mr-3 file:rounded-2xl file:border-0 file:bg-primary-50 file:px-3 file:py-1 file:font-bold file:text-foreground-600 dark:file:bg-surface-800"
+ className="mb-3 w-full rounded-2xl border border-surface-300 px-4 py-2 text-sm file:me-3 file:rounded-2xl file:border-0 file:bg-primary-50 file:px-3 file:py-1 file:font-bold file:text-foreground-600 dark:file:bg-surface-800"
  />
  <input
  type="url"

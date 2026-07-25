@@ -221,13 +221,13 @@ export function SettingsCenterModal({isOpen, onClose}) {
  </div>
 
  <div className="relative">
- <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-surface-400" />
+ <SearchIcon className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-surface-400" />
  <input
  type="search"
  placeholder={t('parentSettingsSearch')}
  value={searchQuery}
  onChange={(e) => setSearchQuery(e.target.value)}
- className="w-full pl-9 pr-4 py-2.5 bg-surface-secondary/60 border border-border rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all placeholder:text-surface-400"
+ className="w-full ps-9 pe-4 py-2.5 bg-surface-secondary/60 border border-border rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all placeholder:text-surface-400"
  />
  </div>
  </div>
@@ -249,7 +249,7 @@ export function SettingsCenterModal({isOpen, onClose}) {
  <Icon className={`w-5 h-5 ${activeSection === section.id ? 'text-foreground-500' : 'text-surface-400'}`} />
  {section.label}
  {activeSection === section.id && (
- <motion.div layoutId="active-indicator" className="absolute left-0 w-1 h-6 bg-primary-500 rounded-r-full" />
+ <motion.div layoutId="active-indicator" className="absolute start-0 w-1 h-6 bg-primary-500 rounded-r-full" />
  )}
  </button>
  );
@@ -443,7 +443,7 @@ export function SettingsCenterModal({isOpen, onClose}) {
  type="button"
  key={option.id}
  onClick={() => changeLanguage(option.id)}
- className={`p-4 rounded-2xl border-2 cursor-pointer transition-all text-left ${
+ className={`p-4 rounded-2xl border-2 cursor-pointer transition-all text-start ${
  language === option.id ? 'border-primary-500 bg-primary-50/80' : 'border-border bg-card hover:border-primary-300'
 }`}
  >
