@@ -7898,4 +7898,107 @@ html {
     width: 1.5rem;
     background: var(--color-primary-500);
   }
+
+  /* —— Final demo polish (visual only) —— */
+  .demo-focus-ring:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary-400) 45%, transparent);
+  }
+
+  .kids-emoji {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    font-size: 1.75rem;
+  }
+
+  .kids-emoji-lg {
+    font-size: 2.75rem;
+  }
+
+  .kids-emoji-xl {
+    font-size: clamp(3rem, 8vw, 4.5rem);
+  }
+
+  .kids-icon-svg {
+    width: 1.5rem;
+    height: 1.5rem;
+    flex-shrink: 0;
+  }
+
+  /* Softer card elevation ramp */
+  .kids-story-card,
+  .kids-book-collectible,
+  .kids-premium-panel {
+    transition: box-shadow 0.22s ease, transform 0.22s ease, border-color 0.22s ease;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .kids-story-card:hover {
+      transform: translateY(-3px);
+    }
+  }
+
+  /* Prevent cover layout shift — reserve space only when not absolutely filled */
+  .kids-book-collectible-cover:not(:has(img.absolute)) {
+    aspect-ratio: 3 / 4;
+  }
+
+  img[loading="lazy"] {
+    content-visibility: auto;
+  }
+
+  /* Tablet: calmer section rhythm + safer touch */
+  @media (min-width: 768px) {
+    .kids-main {
+      scroll-padding-top: 1rem;
+    }
+    .kids-library-filter-chip,
+    .kids-chip {
+      min-height: 3.25rem;
+    }
+  }
+
+  /* Parent / admin shared panel polish */
+  .parent-empty-state,
+  .admin-panel-card {
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
+  }
+
+  /* Global keyboard focus visibility for interactive surfaces missing rings */
+  .kids-page a:focus-visible,
+  .kids-page button:focus-visible,
+  .parent-home-shell a:focus-visible,
+  .parent-home-shell button:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--color-primary-500) 80%, transparent);
+    outline-offset: 2px;
+  }
+
+  /* Smooth route shell fade helper */
+  .hkids-route-fade {
+    animation: hkids-route-fade-in 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  @keyframes hkids-route-fade-in {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .hkids-route-fade {
+      animation: none;
+    }
+    .kids-story-card,
+    .kids-book-collectible,
+    .kids-premium-panel {
+      transition: none;
+    }
+  }
+
+  /* Contrast: muted text on cream surfaces */
+  .kids-type-body,
+  .kids-shelf-subtitle {
+    color: color-mix(in srgb, var(--kids-type-meta) 92%, var(--kids-type-ink));
+  }
 }

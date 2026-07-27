@@ -56,14 +56,30 @@ function RouteFallback() {
 
   return (
     <div
-      className="min-h-screen flex items-center justify-center bg-background-kids"
+      className="min-h-screen flex flex-col items-center justify-center gap-space-24 bg-background-kids px-space-20"
       role="status"
       aria-live="polite"
       aria-busy="true"
     >
-      <div className="kids-premium-panel relative w-72 overflow-hidden p-8">
-        <div className="kids-shimmer absolute inset-0 opacity-25" aria-hidden="true" />
-        <p className="kids-type-body relative text-center text-foreground-secondary">{t('loading')}</p>
+      <div className="kids-premium-panel relative w-full max-w-md overflow-hidden p-space-24">
+        <div className="kids-shimmer absolute inset-0 opacity-30" aria-hidden="true" />
+        <div className="relative space-y-space-16">
+          <div className="mx-auto h-12 w-12 rounded-full bg-primary-100 border-4 border-primary-200/60" />
+          <div className="mx-auto h-4 w-2/3 rounded-full bg-surface-200" />
+          <div className="mx-auto h-3 w-1/2 rounded-full bg-surface-200" />
+          <p className="kids-type-body text-center text-foreground-secondary">{t('loading')}</p>
+        </div>
+      </div>
+      <div className="flex gap-space-16 overflow-hidden max-w-lg w-full justify-center" aria-hidden="true">
+        {[0, 1, 2].map((i) => (
+          <div
+            key={i}
+            className="kids-story-card relative w-28 h-40 shrink-0 overflow-hidden"
+          >
+            <div className="absolute inset-0 bg-gradient-to-br from-primary-100 via-secondary-50 to-magic-100" />
+            <div className="absolute inset-0 kids-shimmer" />
+          </div>
+        ))}
       </div>
     </div>
   );

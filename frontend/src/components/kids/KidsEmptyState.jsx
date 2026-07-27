@@ -49,7 +49,7 @@ export function KidsEmptyState({
         </h3>
       )}
       {description && (
-        <p className={`relative kids-shelf-subtitle !mx-auto mb-6 line-clamp-2 ${compact ? '!text-sm' : ''}`}>
+        <p className={`relative kids-shelf-subtitle !mx-auto mb-6 ${compact ? '!text-sm line-clamp-3' : 'line-clamp-3'}`}>
           {description}
         </p>
       )}

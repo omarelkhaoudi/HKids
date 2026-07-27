@@ -141,20 +141,29 @@ function KidsExplore() {
           reducedMotion={reducedMotion}
         />
 
-        <div className="flex gap-2 overflow-x-auto pb-1 custom-scrollbar">
+        <div
+          className="flex gap-2 overflow-x-auto pb-1 custom-scrollbar"
+          role="tablist"
+          aria-label={luLabel('luExplore', language)}
+        >
           {TABS.map((item) => (
             <button
               key={item.id}
               type="button"
+              role="tab"
+              id={`explore-tab-${item.id}`}
+              aria-selected={tab === item.id}
+              aria-controls={`explore-panel-${item.id}`}
+              tabIndex={tab === item.id ? 0 : -1}
               onClick={() => {
                 playKidsUiSound('tap');
                 setTab(item.id);
                 setActiveGame(null);
               }}
-              className={`shrink-0 min-h-touch px-space-20 rounded-full font-black text-caption border ${
+              className={`shrink-0 min-h-touch px-space-20 rounded-full font-black text-caption border transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-success-400 focus-visible:ring-offset-2 ${
                 tab === item.id
                   ? 'bg-success-600 text-white border-success-600 shadow-card'
-                  : 'bg-card text-foreground border-border'
+                  : 'bg-card text-foreground border-border hover:border-success-300 hover:shadow-soft'
               }`}
             >
               {luLabel(item.labelKey, language)}
@@ -166,9 +175,11 @@ function KidsExplore() {
           {activeGame ? (
             <motion.section
               key="game"
-              initial={{ opacity: 0, y: 12 }}
+              role="tabpanel"
+              initial={reducedMotion ? false : { opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+              transition={{ duration: 0.25 }}
               className="rounded-32 bg-card border border-border p-space-24 shadow-floating"
             >
               <button
@@ -189,9 +200,13 @@ function KidsExplore() {
           ) : tab === 'universes' ? (
             <motion.div
               key="universes"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
+              id="explore-panel-universes"
+              role="tabpanel"
+              aria-labelledby="explore-tab-universes"
+              initial={reducedMotion ? false : { opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+              transition={{ duration: 0.25 }}
               className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-space-16"
             >
               {EXPLORER_HUB_TILES.map((tile, index) => (
@@ -223,9 +238,13 @@ function KidsExplore() {
           ) : tab === 'games' || tab === 'quiz' ? (
             <motion.div
               key={tab}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
+              id={`explore-panel-${tab}`}
+              role="tabpanel"
+              aria-labelledby={`explore-tab-${tab}`}
+              initial={reducedMotion ? false : { opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+              transition={{ duration: 0.25 }}
               className="grid grid-cols-2 sm:grid-cols-3 gap-3"
             >
               {UNIVERSE_MINI_GAMES
@@ -238,16 +257,25 @@ function KidsExplore() {
                       playKidsUiSound('tap');
                       setActiveGame(game);
                     }}
-                    className="rounded-24 border border-border bg-card p-space-20 text-start min-h-touch-kids shadow-soft"
+                    className="rounded-24 border border-border bg-card p-space-20 text-start min-h-touch-kids shadow-soft transition-all duration-200 hover:shadow-card hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-success-400"
                   >
-                    <span className="text-4xl block mb-2">{game.emoji}</span>
+                    <span className="text-4xl block mb-2 leading-none" aria-hidden="true">{game.emoji}</span>
                     <span className="font-black text-foreground block">{luLabel(game.labelKey, language)}</span>
                     <span className="text-caption text-foreground-muted">{luLabel('luPlay', language)}</span>
                   </button>
                 ))}
             </motion.div>
           ) : (
-            <motion.div key="me" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+            <motion.div
+              key="me"
+              id="explore-panel-me"
+              role="tabpanel"
+              aria-labelledby="explore-tab-me"
+              initial={reducedMotion ? false : { opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+              transition={{ duration: 0.25 }}
+            >
               <LearningUniverseDashboard
                 dashboard={dashboard}
                 language={language}

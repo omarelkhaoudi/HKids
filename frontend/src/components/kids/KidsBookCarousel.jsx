@@ -135,7 +135,7 @@ export function KidsBookCarousel({
       />
       <div
         ref={carouselRef}
-        className="kids-discovery-rail !gap-space-28 md:!gap-space-32"
+        className="kids-discovery-rail !gap-space-28 md:!gap-space-32 scroll-smooth"
       >
         {books.map((book) => (
           <div key={book.id} className="snap-start shrink-0">

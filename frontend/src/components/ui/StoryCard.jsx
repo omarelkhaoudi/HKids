@@ -13,7 +13,13 @@ export const StoryCard = memo(function StoryCard({
   className = '',
 }) {
   const reducedMotion = useReducedMotion();
-  const hoverMotion = reducedMotion ? {} : { whileHover: { y: -6, scale: 1.02 } };
+  const hoverMotion = reducedMotion
+    ? {}
+    : {
+        whileHover: { y: -5, scale: 1.015 },
+        whileTap: { scale: 0.985 },
+        transition: { duration: 0.2 },
+      };
   const src = coverUrl || `${LOCAL_BOOK_COVERS_BASE}/default.webp`;
 
   return (
@@ -23,6 +29,7 @@ export const StoryCard = memo(function StoryCard({
       {...hoverMotion}
       className={[
         'group text-start w-full rounded-24 overflow-hidden bg-surface shadow-card border border-border',
+        'transition-shadow duration-200 hover:shadow-floating',
         'focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2',
         className,
       ].join(' ')}

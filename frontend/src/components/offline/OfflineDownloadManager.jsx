@@ -35,10 +35,10 @@ export function OfflineDownloadManager({ compact = false, className = '' }) {
 
   return (
     <section
-      className={`rounded-2xl border border-border bg-card/95 backdrop-blur-md shadow-sm ${compact ? 'p-3' : 'p-4'} ${className}`}
+      className={`rounded-24 border border-border bg-card/95 backdrop-blur-md shadow-card ${compact ? 'p-space-12' : 'p-space-16'} ${className}`}
       aria-label={cdLabel('cdDownloadManager', language)}
     >
-      <div className="flex items-center justify-between gap-2 mb-3">
+      <div className="flex items-center justify-between gap-2 mb-space-12">
         <div className="flex items-center gap-2">
           <h3 className="text-sm font-black">{cdLabel('cdDownloadManager', language)}</h3>
           {!online && (
@@ -56,7 +56,7 @@ export function OfflineDownloadManager({ compact = false, className = '' }) {
 
       <ul className="space-y-2 max-h-56 overflow-y-auto pe-1">
         {visibleJobs.slice(0, compact ? 4 : 12).map((job) => (
-          <li key={job.id} className="rounded-xl bg-surface-secondary/70 px-3 py-2">
+          <li key={job.id} className="rounded-16 bg-surface-secondary/70 px-space-12 py-space-8 transition-colors">
             <div className="flex items-center justify-between gap-2 mb-1">
               <p className="text-caption font-black truncate">{job.label || job.id}</p>
               <Badge variant="soft" className="shrink-0 font-bold text-[10px] uppercase">
@@ -72,7 +72,7 @@ export function OfflineDownloadManager({ compact = false, className = '' }) {
                 aria-valuemax={100}
               >
                 <div
-                  className="h-full bg-primary-500 transition-all"
+                  className="h-full bg-primary-500 transition-all duration-300 ease-out"
                   style={{ width: `${Math.max(2, job.progress || 0)}%` }}
                 />
               </div>
@@ -87,7 +87,7 @@ export function OfflineDownloadManager({ compact = false, className = '' }) {
               </span>
               <div className="flex gap-1">
                 {job.status === 'downloading' && (
-                  <Button size="sm" variant="ghost" className="h-7 px-2 text-[10px] font-bold" onClick={() => pauseJob(job.id)}>
+                  <Button size="sm" variant="ghost" className="h-8 min-h-[32px] px-2 text-[10px] font-bold" onClick={() => pauseJob(job.id)}>
                     {cdLabel('cdPause', language)}
                   </Button>
                 )}
@@ -95,7 +95,7 @@ export function OfflineDownloadManager({ compact = false, className = '' }) {
                   <Button
                     size="sm"
                     variant="ghost"
-                    className="h-7 px-2 text-[10px] font-bold"
+                    className="h-8 min-h-[32px] px-2 text-[10px] font-bold"
                     onClick={() => {
                       resumeBookJob(job.id).catch(() => drainQueue().catch(() => {}));
                     }}
@@ -106,7 +106,7 @@ export function OfflineDownloadManager({ compact = false, className = '' }) {
                 <Button
                   size="sm"
                   variant="ghost"
-                  className="h-7 px-2 text-[10px] font-bold text-rose-600"
+                  className="h-8 min-h-[32px] px-2 text-[10px] font-bold text-rose-600"
                   onClick={() => cancelJob(job.id)}
                 >
                   {cdLabel('cdCancel', language)}

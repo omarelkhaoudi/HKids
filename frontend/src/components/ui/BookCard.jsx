@@ -1,7 +1,7 @@
 import React, { memo } from 'react';
 import { motion } from 'framer-motion';
 import { useReducedMotion } from '../../hooks/useReducedMotion';
-import { getHoverMotion, kidsTouchFeedback } from '../../constants/kidsMotion';
+import { getHoverMotion, kidsHoverLift } from '../../constants/kidsMotion';
 import { KidsBookCover } from '../kids/KidsBookCover';
 
 export const BookCard = memo(function BookCard({
@@ -20,9 +20,13 @@ export const BookCard = memo(function BookCard({
     <motion.button
       type="button"
       onClick={onClick}
-      {...getHoverMotion(reducedMotion, kidsTouchFeedback)}
+      {...getHoverMotion(reducedMotion, {
+        ...kidsHoverLift,
+        whileHover: { y: -5, scale: 1.015 },
+        whileTap: { scale: 0.98 },
+      })}
       className={[
-        'kids-book-collectible group relative text-start',
+        'kids-book-collectible group relative text-start transition-shadow duration-200',
         'focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2',
         className,
       ].join(' ')}
