@@ -76,6 +76,11 @@ function bookMatchesInterest(book, interest) {
     book.subcategory_name,
     book.theme,
     ...(Array.isArray(book.tags) ? book.tags : []),
+    ...(Array.isArray(book.metadata?.subjects) ? book.metadata.subjects : []),
+    ...(Array.isArray(book.metadata?.skills) ? book.metadata.skills : []),
+    ...(Array.isArray(book.metadata?.search_terms) ? book.metadata.search_terms : []),
+    book.metadata?.catalog_area,
+    book.metadata?.character,
   ].some((value) => normalizeText(value).includes(query));
 }
 
@@ -89,7 +94,9 @@ function scoreContent(book, { kid, context, favoriteIds, historyIds, listeningId
     reasons.push('age_match');
   }
 
-  if (kid?.preferred_language && book.language === kid.preferred_language) {
+  const preferredLanguage = normalizeText(kid?.preferred_language || context.language).slice(0, 2);
+  const hasPreferredLocalization = Boolean(book.metadata?.localization_status?.[preferredLanguage]);
+  if (preferredLanguage && (book.language === preferredLanguage || hasPreferredLocalization)) {
     score += 22;
     reasons.push('language_match');
   }
@@ -117,7 +124,7 @@ function scoreContent(book, { kid, context, favoriteIds, historyIds, listeningId
   }
 
   if (historyIds.has(Number(book.id))) {
-    score += 6;
+    score -= 4;
     reasons.push('reading_history');
   }
 
@@ -125,6 +132,10 @@ function scoreContent(book, { kid, context, favoriteIds, historyIds, listeningId
   if (progressPercent > 0 && progressPercent < 100) {
     score += 34;
     reasons.push('continue_reading');
+  }
+  if (book.kid_completed === true || progressPercent >= 100) {
+    score -= 30;
+    reasons.push('already_completed');
   }
 
   if (book.is_recommended === true) {
@@ -140,6 +151,12 @@ function scoreContent(book, { kid, context, favoriteIds, historyIds, listeningId
   if (book.is_new === true) {
     score += 14;
     reasons.push('new');
+  }
+
+  const editorialRank = Math.max(0, Math.min(100, Number(book.metadata?.editorial_rank || 0)));
+  if (editorialRank > 0) {
+    score += Math.round(editorialRank / 10);
+    reasons.push('editorial_quality');
   }
 
   if (book.audio_url) {
@@ -167,13 +184,29 @@ function sortByScore(items) {
 
 function uniqueItems(items, limit = SECTION_LIMIT) {
   const seen = new Set();
+  const areaCounts = new Map();
   const nextItems = [];
+  const deferred = [];
 
   for (const item of items) {
     if (seen.has(item.id)) continue;
+    const area = item.metadata?.catalog_area || item.theme || item.category_name || 'other';
+    const areaCount = areaCounts.get(area) || 0;
+    if (areaCount >= 2) {
+      deferred.push(item);
+      continue;
+    }
     seen.add(item.id);
+    areaCounts.set(area, areaCount + 1);
     nextItems.push(item);
     if (nextItems.length >= limit) break;
+  }
+
+  for (const item of deferred) {
+    if (nextItems.length >= limit) break;
+    if (seen.has(item.id)) continue;
+    seen.add(item.id);
+    nextItems.push(item);
   }
 
   return nextItems;

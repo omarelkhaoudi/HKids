@@ -60,6 +60,41 @@ export const BOOK_CATEGORIES = [
     en: { name: 'Tales', description: 'Gentle and adapted classic tales' },
     ar: { name: 'حكايات', description: 'حكايات كلاسيكية لطيفة ومعدّلة' },
   },
+  {
+    name: 'Livres audio', description: 'Livres racontes et aventures sonores',
+    en: { name: 'Audiobooks', description: 'Narrated books and audio adventures' },
+    ar: { name: 'كتب صوتية', description: 'كتب مسموعة ومغامرات صوتية' },
+  },
+  {
+    name: 'Langues', description: 'Premiers mots, vocabulaire et prononciation',
+    en: { name: 'Languages', description: 'First words, vocabulary, and pronunciation' },
+    ar: { name: 'لغات', description: 'الكلمات الأولى والمفردات والنطق' },
+  },
+  {
+    name: 'Sciences', description: 'Sciences, nature et experiences adaptees',
+    en: { name: 'Science', description: 'Science, nature, and age-appropriate experiments' },
+    ar: { name: 'علوم', description: 'العلوم والطبيعة وتجارب مناسبة للعمر' },
+  },
+  {
+    name: 'Géographie', description: 'Cartes, pays, paysages et cultures',
+    en: { name: 'Geography', description: 'Maps, countries, landscapes, and cultures' },
+    ar: { name: 'جغرافيا', description: 'الخرائط والبلدان والتضاريس والثقافات' },
+  },
+  {
+    name: 'Créativité', description: 'Arts, musique, imagination et expression',
+    en: { name: 'Creativity', description: 'Arts, music, imagination, and expression' },
+    ar: { name: 'إبداع', description: 'الفنون والموسيقى والخيال والتعبير' },
+  },
+  {
+    name: 'Religion et valeurs', description: 'Foi, valeurs, paix et respect des traditions',
+    en: { name: 'Religion and values', description: 'Faith, values, peace, and respect for traditions' },
+    ar: { name: 'الدين والقيم', description: 'الإيمان والقيم والسلام واحترام التقاليد' },
+  },
+  {
+    name: 'Personnages premium', description: 'Aventures exclusives des heros HKids',
+    en: { name: 'Premium characters', description: 'Exclusive adventures with HKids heroes' },
+    ar: { name: 'شخصيات مميزة', description: 'مغامرات حصرية مع أبطال HKids' },
+  },
 ];
 
 export function pickGradient(index) {

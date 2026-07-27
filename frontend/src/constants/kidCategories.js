@@ -17,6 +17,10 @@ const categoryLabels = {
     alphabet: ['Alphabet', 'Lettres'],
     numbers: ['Chiffres', 'Compter'],
     colors: ['Créativité', 'Couleurs'],
+    languages: ['Langues', 'Langues'],
+    science: ['Sciences', 'Sciences'],
+    geography: ['Géographie', 'Monde'],
+    characters: ['Héros premium', 'Héros'],
   },
   en: {
     dinosaurs: ['Dinosaurs', 'Dino'],
@@ -33,6 +37,10 @@ const categoryLabels = {
     alphabet: ['Alphabet', 'Letters'],
     numbers: ['Numbers', 'Counting'],
     colors: ['Creativity', 'Colors'],
+    languages: ['Languages', 'Languages'],
+    science: ['Science', 'Science'],
+    geography: ['Geography', 'World'],
+    characters: ['Premium heroes', 'Heroes'],
   },
   ar: {
     dinosaurs: ['ديناصورات', 'دينو'],
@@ -49,6 +57,10 @@ const categoryLabels = {
     alphabet: ['الحروف', 'حروف'],
     numbers: ['الأرقام', 'العد'],
     colors: ['إبداع', 'ألوان'],
+    languages: ['لغات', 'لغات'],
+    science: ['علوم', 'علوم'],
+    geography: ['جغرافيا', 'العالم'],
+    characters: ['أبطال مميزون', 'أبطال'],
   },
 };
 
@@ -67,6 +79,10 @@ const CATEGORY_DEFS = [
   { id: 'alphabet', pictogram: '🔤', cue: 'ABC', match: ['alphabet', 'lettre', 'abc', 'letter'] },
   { id: 'numbers', pictogram: '🔢', cue: '123', match: ['number', 'chiffre', 'nombre', 'compter', 'math'] },
   { id: 'jobs', pictogram: '🚒', cue: 'Action', match: ['job', 'metier', 'doctor', 'pompier', 'teacher'] },
+  { id: 'languages', pictogram: '🗣️', cue: 'Parle', match: ['language', 'langue', 'english', 'arabic', 'french', 'لغات'] },
+  { id: 'science', pictogram: '🔬', cue: 'Wow', match: ['science', 'expérience', 'experiment', 'nature', 'علوم'] },
+  { id: 'geography', pictogram: '🗺️', cue: 'Map', match: ['geography', 'geographie', 'carte', 'map', 'continent', 'جغرافيا'] },
+  { id: 'characters', pictogram: '✨', cue: 'Hero', match: ['character', 'personnage', 'hero', 'héros', 'premium', 'شخصية'] },
 ];
 
 export const KID_CATEGORIES = CATEGORY_DEFS.map((category, index) => ({

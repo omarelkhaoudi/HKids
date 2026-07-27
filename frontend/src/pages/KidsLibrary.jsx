@@ -37,6 +37,7 @@ import { SearchBar } from '../components/ui';
 import { useReducedMotion } from '../hooks/useReducedMotion';
 import { getMotionProps, kidsPageEnter } from '../constants/kidsMotion';
 import { getKidsContentPath } from '../utils/contentRouting';
+import { contentMatchesSearch } from '../utils/contentSearch';
 import {
   annotateBooksWithReasons,
   filterAudioBooks,
@@ -80,6 +81,10 @@ const SHELF_THEME_IDS = [
   'ocean',
   'world',
   'spirituality',
+  'science',
+  'geography',
+  'languages',
+  'characters',
   'colors',
   'vehicles',
 ];
@@ -277,16 +282,10 @@ function KidsLibrary() {
   const taggedBooks = useMemo(() => withThemeEmoji(books, childThemes), [books, childThemes]);
 
   const visibleBooks = useMemo(() => {
-    const q = searchQuery.trim().toLowerCase();
+    const q = searchQuery.trim();
     const ageGroup = getAgeGroupById(ageFilter);
     return taggedBooks.filter((book) => {
-      if (q) {
-        const hay = [book.title, book.description, book.author, book.category_name, book.theme]
-          .filter(Boolean)
-          .join(' ')
-          .toLowerCase();
-        if (!hay.includes(q)) return false;
-      }
+      if (!contentMatchesSearch(book, q)) return false;
       if (filterFavorites && !favoritesIds.includes(book.id)) return false;
       if (filterAudio && !(book.audio_url || book.content_type === 'song' || book.content_type === 'audio_story')) {
         return false;

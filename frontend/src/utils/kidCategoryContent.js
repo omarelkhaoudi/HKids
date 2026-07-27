@@ -19,10 +19,21 @@ export function getCategoryContentStrategy(categoryId) {
 
 export function bookMatchesKidCategory(book, strategy) {
   if (!book || strategy.type !== 'books') return false;
-  const searchable = [book.title, book.description, book.category_name, book.author, book.theme]
+  const searchable = [
+    book.title,
+    book.description,
+    book.category_name,
+    book.author,
+    book.theme,
+    book.catalog_area,
+    ...(Array.isArray(book.tags) ? book.tags : []),
+    ...(Array.isArray(book.search_terms) ? book.search_terms : []),
+    ...(Array.isArray(book.metadata?.search_terms) ? book.metadata.search_terms : []),
+  ]
     .filter(Boolean)
     .join(' ')
     .toLowerCase();
   if (book.theme === strategy.themeId) return true;
-  return (strategy.match || []).some((keyword) => searchable.includes(keyword));
+  if (book.metadata?.catalog_area === strategy.themeId) return true;
+  return (strategy.match || []).some((keyword) => searchable.includes(String(keyword).toLowerCase()));
 }

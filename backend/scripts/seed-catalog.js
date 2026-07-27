@@ -81,7 +81,7 @@ async function upsertBook(client, item, coverPath, audioPath, pageCount, duratio
         age_group_min = $11, age_group_max = $12, audio_url = $13, duration_seconds = $14,
         page_count = $15, is_published = $16, moderation_status = $17,
         is_premium = $18, is_recommended = $19, is_popular = $20, is_new = $21,
-        tags = $22, updated_at = NOW()
+        tags = $22, metadata = $23::jsonb, updated_at = NOW()
        WHERE id = $1`,
       [
         bookId, item.title, item.author, item.description, coverPath,
@@ -90,7 +90,7 @@ async function upsertBook(client, item, coverPath, audioPath, pageCount, duratio
         item.age_group_min, item.age_group_max, audioPath, durationSeconds,
         pageCount, flags.is_published, flags.moderation_status,
         flags.is_premium, flags.is_recommended, flags.is_popular, flags.is_new,
-        tags,
+        tags, JSON.stringify(item.metadata || {}),
       ]
     );
     return bookId;
@@ -100,9 +100,9 @@ async function upsertBook(client, item, coverPath, audioPath, pageCount, duratio
     `INSERT INTO books (
       title, slug, author, description, cover_image, file_path, content_type, language, theme,
       category_id, age_group_min, age_group_max, audio_url, duration_seconds, page_count,
-      is_published, moderation_status, is_premium, is_recommended, is_popular, is_new, tags
+      is_published, moderation_status, is_premium, is_recommended, is_popular, is_new, tags, metadata
     ) VALUES (
-      $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22
+      $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23::jsonb
     ) RETURNING id`,
     [
       item.title, item.slug, item.author, item.description, coverPath,
@@ -111,7 +111,7 @@ async function upsertBook(client, item, coverPath, audioPath, pageCount, duratio
       item.age_group_min, item.age_group_max, audioPath, durationSeconds,
       pageCount, flags.is_published, flags.moderation_status,
       flags.is_premium, flags.is_recommended, flags.is_popular, flags.is_new,
-      tags,
+      tags, JSON.stringify(item.metadata || {}),
     ]
   );
   return inserted.rows[0].id;
@@ -149,13 +149,14 @@ async function upsertCategoryLocalization(client, categoryId, locale, name, desc
   );
 }
 
-async function upsertLearningLocalization(client, contentId, locale, title, description) {
+async function upsertLearningLocalization(client, contentId, locale, title, description, metadata = {}) {
   await client.query(
-    `INSERT INTO content_localizations (content_type, content_id, locale, title, description)
-     VALUES ('learning_content', $1, $2, $3, $4)
+    `INSERT INTO content_localizations (content_type, content_id, locale, title, description, metadata)
+     VALUES ('learning_content', $1, $2, $3, $4, $5::jsonb)
      ON CONFLICT (content_type, content_id, locale)
-     DO UPDATE SET title = EXCLUDED.title, description = EXCLUDED.description, updated_at = NOW()`,
-    [contentId, locale, title, description]
+     DO UPDATE SET title = EXCLUDED.title, description = EXCLUDED.description,
+       metadata = EXCLUDED.metadata, updated_at = NOW()`,
+    [contentId, locale, title, description, JSON.stringify(metadata)]
   );
 }
 
@@ -320,7 +321,9 @@ async function upsertLearningContent(client, item) {
   await upsertLearningLocalization(client, contentId, item.language || 'fr', item.title, item.description);
   if (item.localizations) {
     for (const [locale, loc] of Object.entries(item.localizations)) {
-      await upsertLearningLocalization(client, contentId, locale, loc.title, loc.description);
+      await upsertLearningLocalization(client, contentId, locale, loc.title, loc.description, {
+        question: loc.question || null,
+      });
     }
   }
 

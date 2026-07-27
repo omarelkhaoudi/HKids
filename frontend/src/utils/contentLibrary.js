@@ -1,6 +1,7 @@
 import { CONTENT_LANGUAGES } from '../constants/contentOptions';
 import { getCategoryForContent } from '../constants/contentLibrary';
 import { resolveBookCoverUrl } from './bookCover';
+import { contentMatchesSearch } from './contentSearch';
 import { storage } from './storage';
 
 export function formatContentDuration(seconds = 0) {
@@ -45,7 +46,7 @@ export function contentMatchesCategory(content, category) {
 }
 
 export function filterContentItems(contents, filters, category = null) {
-  const query = filters.search.trim().toLowerCase();
+  const query = filters.search.trim();
 
   return contents.filter((content) => {
     const matchesCategory = contentMatchesCategory(content, category);
@@ -54,15 +55,7 @@ export function filterContentItems(contents, filters, category = null) {
       Number(content.age_group_min ?? 0) <= Number(filters.age)
       && Number(content.age_group_max ?? 12) >= Number(filters.age)
     );
-    const matchesSearch = !query || [
-      content.title,
-      content.description,
-      content.author,
-      content.category_name,
-      content.library_category_label,
-    ]
-      .filter(Boolean)
-      .some((value) => String(value).toLowerCase().includes(query));
+    const matchesSearch = contentMatchesSearch(content, query);
 
     return matchesCategory && matchesLanguage && matchesAge && matchesSearch;
   });

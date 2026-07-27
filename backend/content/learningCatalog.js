@@ -9,6 +9,10 @@ const CATEGORY_TRANSLATIONS = {
   shapes: { en: 'Shapes', ar: 'الأشكال' },
   languages: { en: 'Languages', ar: 'اللغات' },
   animals: { en: 'Animals', ar: 'الحيوانات' },
+  science: { en: 'Science', ar: 'العلوم' },
+  geography: { en: 'Geography', ar: 'الجغرافيا' },
+  creativity: { en: 'Creativity', ar: 'الإبداع' },
+  values: { en: 'Values', ar: 'القيم' },
 };
 
 const QUIZ_TEMPLATES = [
@@ -311,7 +315,75 @@ export function buildLearningGames() {
   });
 }
 
+const FINAL_ACTIVITY_TEMPLATES = [
+  ['science-water-cycle', 'Le cycle de l’eau', 'Water cycle', 'دورة الماء', 'science', 'Où va l’eau chauffée par le soleil ?', 'Dans l’air', 'Into the air', 'إلى الهواء', '☁️', ['Dans le sol', 'Dans l’air', 'Dans un livre']],
+  ['science-plant-needs', 'Ce dont une plante a besoin', 'What a plant needs', 'ما يحتاجه النبات', 'science', 'De quoi une graine a-t-elle besoin pour pousser ?', 'Eau et lumière', 'Water and light', 'الماء والضوء', '🌱', ['Eau et lumière', 'Jouets', 'Peinture']],
+  ['science-body-heart', 'Le travail du cœur', 'The heart’s job', 'عمل القلب', 'science', 'Que fait le cœur ?', 'Il fait circuler le sang', 'It pumps blood', 'يضخ الدم', '❤️', ['Il fait circuler le sang', 'Il entend', 'Il digère']],
+  ['science-safe-experiment', 'Le petit laboratoire sûr', 'The safe little lab', 'المختبر الصغير الآمن', 'science', 'Que fait-on avant une expérience ?', 'On demande à un adulte', 'Ask an adult', 'نطلب مساعدة شخص بالغ', '🥼', ['On demande à un adulte', 'On goûte tout', 'On court']],
+  ['geo-map-symbol', 'Les symboles de la carte', 'Map symbols', 'رموز الخريطة', 'geography', 'À quoi sert la légende ?', 'À expliquer les symboles', 'To explain symbols', 'لشرح الرموز', '🗺️', ['À expliquer les symboles', 'À chanter', 'À compter les pages']],
+  ['geo-cardinal-north', 'Trouve le nord', 'Find north', 'اعثر على الشمال', 'geography', 'Quel outil indique le nord ?', 'La boussole', 'A compass', 'البوصلة', '🧭', ['La boussole', 'Le pinceau', 'Le tambour']],
+  ['geo-seven-continents', 'Les continents', 'The continents', 'القارات', 'geography', 'Sur quoi trouve-t-on les continents ?', 'Un globe', 'A globe', 'الكرة الأرضية', '🌍', ['Un globe', 'Une horloge', 'Une assiette']],
+  ['creative-primary-colors', 'Mélange les couleurs', 'Mix colors', 'امزج الألوان', 'creativity', 'Rouge et jaune donnent quelle couleur ?', 'Orange', 'Orange', 'البرتقالي', '🎨', ['Orange', 'Bleu', 'Vert']],
+  ['creative-story-order', 'Construis une histoire', 'Build a story', 'ابنِ حكاية', 'creativity', 'Que vient après le début ?', 'Le milieu', 'The middle', 'الوسط', '📖', ['Le milieu', 'Le titre suivant', 'La couverture']],
+  ['creative-rhythm', 'Reproduis le rythme', 'Copy the rhythm', 'كرر الإيقاع', 'creativity', 'Quel motif répète clap-clap-pause ?', 'Deux sons puis un silence', 'Two sounds then silence', 'صوتان ثم صمت', '🥁', ['Deux sons puis un silence', 'Trois silences', 'Un son long']],
+  ['values-sharing', 'Partager équitablement', 'Share fairly', 'المشاركة بعدل', 'values', 'Deux enfants ont quatre pommes. Combien chacun ?', 'Deux', 'Two', 'اثنتان', '🤝', ['Deux', 'Une', 'Quatre']],
+  ['values-kind-choice', 'Le choix bienveillant', 'The kind choice', 'الاختيار اللطيف', 'values', 'Un camarade est seul. Que peux-tu faire ?', 'L’inviter à jouer', 'Invite them to play', 'أدعوه للعب', '🕊️', ['L’inviter à jouer', 'Se moquer', 'Cacher son jeu']],
+];
+
+export function buildFinalLearningActivities() {
+  return FINAL_ACTIVITY_TEMPLATES.map((template, index) => {
+    const [slug, title, titleEn, titleAr, category, prompt, answer, answerEn, answerAr, pictogram, labels] = template;
+    const age = ageForIndex(index + 1);
+    const optionIds = ['a', 'b', 'c'];
+    const options = labels.map((label, optionIndex) => ({
+      id: optionIds[optionIndex],
+      label,
+      pictogram: optionIndex === 0 ? pictogram : ['❔', '💭'][optionIndex - 1],
+    }));
+    return {
+      slug: `activity-${slug}`,
+      title,
+      description: `Activité guidée de ${category} pour ${age.level} ans.`,
+      content_type: category,
+      quiz_type: 'multiple_choice',
+      category_code: category,
+      age_group_min: age.min,
+      age_group_max: age.max,
+      language: 'fr',
+      difficulty: index % 4 === 3 ? 'medium' : 'easy',
+      reward_code: index % 3 === 0 ? 'star_big' : 'star_small',
+      metadata: {
+        pictogram,
+        level: age.level,
+        catalog_area: 'educational-activities',
+        skills: [category, 'problem-solving'],
+        tags: ['activity', category, `level:${age.level}`, 'catalog-final'],
+      },
+      question: {
+        question_type: 'multiple_choice',
+        prompt,
+        options,
+        correct_answer: { value: 'a' },
+        explanation: `${answer} — bravo !`,
+      },
+      localizations: {
+        en: {
+          title: titleEn,
+          description: `${CATEGORY_TRANSLATIONS[category].en} activity for ages ${age.level}.`,
+          question: { prompt, explanation: `${answerEn} — well done!`, options: [answerEn, labels[1], labels[2]] },
+        },
+        ar: {
+          title: titleAr,
+          description: `نشاط ${CATEGORY_TRANSLATIONS[category].ar} لعمر ${age.level} سنوات.`,
+          question: { prompt: titleAr, explanation: `${answerAr} — أحسنت!`, options: [answerAr, labels[1], labels[2]] },
+        },
+      },
+    };
+  });
+}
+
 export const LEARNING_CATALOG = [
   ...buildLearningQuizzes(),
   ...buildLearningGames(),
+  ...buildFinalLearningActivities(),
 ];

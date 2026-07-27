@@ -26,6 +26,7 @@ export const booksAPI = {
     if (filters.theme) params.append('theme', filters.theme);
     if (filters.language) params.append('language', filters.language);
     if (filters.content_type) params.append('content_type', filters.content_type);
+    if (filters.q) params.append('q', filters.q);
     
     return axios.get(`${buildApiUrl('/books/published')}?${params}`, noCacheAuthConfig());
   },

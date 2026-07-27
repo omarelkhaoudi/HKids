@@ -37,7 +37,7 @@ export const CONTENT_LIBRARY_CATEGORIES = [
     description: categoryLabels.fr.education[1],
     pictogram: '🎓',
     gradient: 'from-primary-500 via-primary-500 to-secondary-400',
-    contentTypes: ['educational', 'quiz'],
+    contentTypes: ['educational', 'quiz', 'story', 'audio_story'],
   },
   {
     id: 'entertainment',
@@ -45,7 +45,7 @@ export const CONTENT_LIBRARY_CATEGORIES = [
     description: categoryLabels.fr.entertainment[1],
     pictogram: '🎵',
     gradient: 'from-primary-500 via-primary-500 to-rose-400',
-    contentTypes: ['song'],
+    contentTypes: ['song', 'audio_story'],
   },
 ];
 

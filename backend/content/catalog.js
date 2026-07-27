@@ -4,6 +4,8 @@
  */
 
 import { buildExtendedCatalog } from './catalogExtended.js';
+import { buildFinalExpansionCatalog } from './catalogFinalExpansion.js';
+import { finalizeCatalogMetadata } from './catalogMetadata.js';
 import { buildPremiumExpansionCatalog } from './catalogPremiumExpansion.js';
 import { buildPlus100ExpansionCatalog } from './catalogPlus100Expansion.js';
 import { enrichCatalogWithPages } from './storyPages.js';
@@ -303,12 +305,13 @@ export const BASE_CATALOG = [
   },
 ];
 
-export const CATALOG = enrichCatalogWithPages([
+export const CATALOG = finalizeCatalogMetadata(enrichCatalogWithPages([
   ...BASE_CATALOG,
   ...buildExtendedCatalog(),
   ...buildPremiumExpansionCatalog(),
   ...buildPlus100ExpansionCatalog(),
-]);
+  ...buildFinalExpansionCatalog(),
+]));
 
 export const CATALOG_STATS = {
   total: CATALOG.length,
@@ -318,5 +321,12 @@ export const CATALOG_STATS = {
   religious: CATALOG.filter((item) => item.theme === 'spiritual' || item.theme === 'spirituality').length,
   premium_expansion: CATALOG.filter((item) => String(item.slug || '').startsWith('prem-')).length,
   plus_100_expansion: CATALOG.filter((item) => String(item.slug || '').startsWith('plus-')).length,
+  final_expansion: CATALOG.filter((item) => String(item.slug || '').startsWith('final-')).length,
   premium_flagged: CATALOG.filter((item) => item.is_premium).length,
+  localized_en_ar: CATALOG.filter((item) => item.localizations?.en?.title && item.localizations?.ar?.title).length,
+  catalog_areas: Object.fromEntries(
+    [...new Set(CATALOG.map((item) => item.catalog_area))]
+      .sort()
+      .map((area) => [area, CATALOG.filter((item) => item.catalog_area === area).length])
+  ),
 };

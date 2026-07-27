@@ -3,6 +3,7 @@ import crypto from 'crypto';
 import { getDatabase } from '../database/init.js';
 import { verifyToken } from './auth.js';
 import { RecommendationService } from '../services/ai/RecommendationService.js';
+import { applyBooksLocalizations } from '../services/content/contentLocalizationService.js';
 import {
   filterAllowedContent,
   getGlobalAccessViolation,
@@ -197,8 +198,14 @@ router.post('/', verifyToken, async (req, res) => {
       [kid.id, kid.age || null]
     );
 
-    const allowedContents = filterAllowedContent(policy, result.rows)
-      .filter((book) => !context.language || !book.language || book.language === context.language);
+    // Catalog books use FR as their source locale and expose EN/AR through
+    // content_localizations. Filtering on books.language here used to remove
+    // every localized result for EN/AR children.
+    const allowedContents = await applyBooksLocalizations(
+      pool,
+      filterAllowedContent(policy, result.rows),
+      context.language || kid.preferred_language || 'fr'
+    );
     const recommendations = await recommendationService.recommendContent({
       kid,
       contents: allowedContents,

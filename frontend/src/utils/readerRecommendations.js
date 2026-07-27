@@ -55,6 +55,18 @@ export function scoreRelatedBook(source, candidate) {
     score += 3;
   }
 
+  const sourceArea = source.metadata?.catalog_area || source.catalog_area;
+  const candidateArea = candidate.metadata?.catalog_area || candidate.catalog_area;
+  if (sourceArea && candidateArea && sourceArea === candidateArea) {
+    score += 3;
+  }
+
+  const sourceSubjects = new Set([...(source.subjects || []), ...(source.metadata?.subjects || [])].map(String));
+  const candidateSubjects = [...(candidate.subjects || []), ...(candidate.metadata?.subjects || [])].map(String);
+  if (candidateSubjects.some((subject) => sourceSubjects.has(subject))) {
+    score += 2;
+  }
+
   score += ageOverlapScore(source, candidate);
   return score;
 }

@@ -99,6 +99,7 @@ export async function initDatabase() {
         is_recommended BOOLEAN DEFAULT FALSE,
         is_popular BOOLEAN DEFAULT FALSE,
         is_new BOOLEAN DEFAULT FALSE,
+        metadata JSONB NOT NULL DEFAULT '{}',
         publish_at TIMESTAMPTZ,
         created_at TIMESTAMPTZ DEFAULT NOW(),
         updated_at TIMESTAMPTZ DEFAULT NOW()
@@ -675,6 +676,7 @@ export async function initDatabase() {
     await client.query(`ALTER TABLE user_subscriptions ADD COLUMN IF NOT EXISTS trial_end TIMESTAMPTZ`);
     await client.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS admin_permissions JSONB`);
     await client.query(`ALTER TABLE books ADD COLUMN IF NOT EXISTS moderation_status TEXT NOT NULL DEFAULT 'approved'`);
+    await client.query(`ALTER TABLE books ADD COLUMN IF NOT EXISTS metadata JSONB NOT NULL DEFAULT '{}'`);
     await client.query(`ALTER TABLE books ADD COLUMN IF NOT EXISTS moderation_note TEXT`);
     await client.query(`ALTER TABLE books ADD COLUMN IF NOT EXISTS moderated_by INTEGER REFERENCES users(id) ON DELETE SET NULL`);
     await client.query(`ALTER TABLE books ADD COLUMN IF NOT EXISTS moderated_at TIMESTAMPTZ`);
@@ -818,7 +820,11 @@ export async function initDatabase() {
         ('colors', 'Couleurs', 'Reconnaitre les couleurs.', '🎨', 'from-pink-500 to-rose-400'),
         ('shapes', 'Formes', 'Reconnaitre les formes simples.', '🔵', 'from-indigo-500 to-violet-500'),
         ('languages', 'Langues', 'Decouvrir des mots simples.', '🌍', 'from-amber-400 to-orange-500'),
-        ('animals', 'Animaux', 'Apprendre avec les animaux.', '🐻', 'from-orange-400 to-yellow-300')
+        ('animals', 'Animaux', 'Apprendre avec les animaux.', '🐻', 'from-orange-400 to-yellow-300'),
+        ('science', 'Sciences', 'Observer, experimenter et comprendre le vivant.', '🔬', 'from-cyan-500 to-blue-500'),
+        ('geography', 'Geographie', 'Lire des cartes et decouvrir le monde.', '🗺️', 'from-teal-500 to-emerald-400'),
+        ('creativity', 'Creativite', 'Imaginer, creer, dessiner et composer.', '🎭', 'from-fuchsia-500 to-pink-400'),
+        ('values', 'Valeurs', 'Developper empathie, respect et cooperation.', '🕊️', 'from-violet-500 to-purple-400')
       ON CONFLICT (code) DO UPDATE SET
         name = EXCLUDED.name,
         description = EXCLUDED.description,

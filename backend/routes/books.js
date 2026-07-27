@@ -210,7 +210,7 @@ const handleMulterUpload = (uploadMiddleware) => {
 };
 
 router.get('/published', async (req, res) => {
-  const { age_group, category_id, theme, language, content_type } = req.query;
+  const { age_group, category_id, theme, language, content_type, q } = req.query;
   const locale = normalizeLocale(language || req.query.locale);
 
   const token = req.headers.authorization?.split(' ')[1];
@@ -279,6 +279,30 @@ router.get('/published', async (req, res) => {
   if (content_type) {
     query += ` AND b.content_type = $${index}`;
     params.push(content_type);
+    index += 1;
+  }
+
+  const searchQuery = String(q || '').trim().slice(0, 100);
+  if (searchQuery) {
+    query += ` AND (
+      b.title ILIKE $${index}
+      OR COALESCE(b.description, '') ILIKE $${index}
+      OR COALESCE(b.author, '') ILIKE $${index}
+      OR COALESCE(b.theme, '') ILIKE $${index}
+      OR array_to_string(COALESCE(b.tags, ARRAY[]::text[]), ' ') ILIKE $${index}
+      OR COALESCE(b.metadata->>'catalog_area', '') ILIKE $${index}
+      OR COALESCE(b.metadata->>'search_terms', '') ILIKE $${index}
+      OR EXISTS (
+        SELECT 1 FROM content_localizations search_loc
+        WHERE search_loc.content_type = 'book'
+          AND search_loc.content_id = b.id
+          AND (
+            COALESCE(search_loc.title, '') ILIKE $${index}
+            OR COALESCE(search_loc.description, '') ILIKE $${index}
+          )
+      )
+    )`;
+    params.push(`%${searchQuery}%`);
     index += 1;
   }
 

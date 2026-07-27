@@ -43,6 +43,11 @@ const THEME_ALIASES = {
   song: 'rhymes',
   comptine: 'rhymes',
   vehicles: 'jobs',
+  science: 'science',
+  geography: 'geography',
+  languages: 'languages',
+  creativity: 'colors',
+  characters: 'characters',
 };
 
 /** Titles mapped to theme packs (category immersion / soft slug hints only). */

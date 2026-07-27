@@ -5,13 +5,14 @@ import { LEARNING_CATALOG } from '../content/learningCatalog.js';
 import { STORY_TEMPLATES } from '../content/storyTemplatesCatalog.js';
 
 test('demo catalog meets minimum content targets', () => {
-  assert.ok(CATALOG_STATS.total >= 270, `total books: ${CATALOG_STATS.total}`);
-  assert.ok(CATALOG_STATS.audio_stories >= 30, `audio stories: ${CATALOG_STATS.audio_stories}`);
+  assert.ok(CATALOG_STATS.total >= 290, `total books: ${CATALOG_STATS.total}`);
+  assert.ok(CATALOG_STATS.audio_stories >= 40, `audio stories: ${CATALOG_STATS.audio_stories}`);
   assert.ok(CATALOG_STATS.songs >= 20, `comptines: ${CATALOG_STATS.songs}`);
-  assert.ok(CATALOG_STATS.religious >= 10, `religious: ${CATALOG_STATS.religious}`);
-  assert.ok(CATALOG_STATS.illustrated_stories >= 90, `illustrated: ${CATALOG_STATS.illustrated_stories}`);
+  assert.ok(CATALOG_STATS.religious >= 12, `religious: ${CATALOG_STATS.religious}`);
+  assert.ok(CATALOG_STATS.illustrated_stories >= 100, `illustrated: ${CATALOG_STATS.illustrated_stories}`);
   assert.ok(CATALOG_STATS.premium_expansion >= 100, `premium expansion: ${CATALOG_STATS.premium_expansion}`);
   assert.equal(CATALOG_STATS.plus_100_expansion, 100, `plus-100: ${CATALOG_STATS.plus_100_expansion}`);
+  assert.ok(CATALOG_STATS.final_expansion >= 20, `final expansion: ${CATALOG_STATS.final_expansion}`);
 });
 
 test('catalog items expose required metadata fields', () => {
@@ -57,10 +58,10 @@ test('plus-100 expansion is complete and unique', () => {
   }
 });
 
-test('learning catalog contains 20 quizzes and 20 games', () => {
+test('learning catalog contains quizzes, games and final activities', () => {
   const quizzes = LEARNING_CATALOG.filter((item) => item.content_type !== 'game');
   const games = LEARNING_CATALOG.filter((item) => item.content_type === 'game');
-  assert.equal(quizzes.length, 20);
+  assert.ok(quizzes.length >= 32, `quizzes: ${quizzes.length}`);
   assert.equal(games.length, 20);
   for (const item of LEARNING_CATALOG) {
     assert.ok(item.slug);
