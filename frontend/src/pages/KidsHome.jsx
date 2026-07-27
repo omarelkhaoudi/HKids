@@ -15,13 +15,12 @@ import { KidsHeroStoryCard } from '../components/kids/KidsHeroStoryCard';
 import { KidsContinueRail } from '../components/kids/KidsContinueRail';
 import { Logo } from '../components/Logo';
 import { parentalAPI } from '../api/parental';
-import { recommendationsAPI } from '../api/recommendations';
 import { booksAPI } from '../api/books';
+import { loadRecommendations } from '../services/recommendations/recommendationEngine';
 import { getImageUrl } from '../utils/imageUrl';
 import { storage } from '../utils/storage';
 import { getKidsContentPath } from '../utils/contentRouting';
 import { useToast } from '../components/ToastProvider';
-import { getRestrictionMessage } from '../services/parental/parentalAccessService';
 import { Avatar } from '../components/ui';
 import { KidsTrustBadges } from '../components/kids/KidsTrustBadges';
 import { KidsProfilePanel } from '../components/kids/KidsProfilePanel';
@@ -74,7 +73,7 @@ function KidsHome() {
   const [guideMessage, setGuideMessage] = useState(null);
   const personalization = getKidsPersonalizationProfile();
   const [homeData, setHomeData] = useState(null);
-  const [recommendationSections, setRecommendationSections] = useState([]);
+  const [recommendations, setRecommendations] = useState(null);
   const [publishedBooks, setPublishedBooks] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -100,40 +99,41 @@ function KidsHome() {
     const loadKidsHome = async () => {
       try {
         setLoading(true);
-        const [overviewResult, recommendationsResult, booksResult] = await Promise.allSettled([
+        const [overviewResult, booksResult] = await Promise.allSettled([
           parentalAPI.getConnectedKidOverview(),
-          recommendationsAPI.getForKid({ language }),
           booksAPI.getPublishedBooks({ language }),
         ]);
 
         if (!active) return;
 
+        let overviewData = null;
         if (overviewResult.status === 'fulfilled') {
-          setHomeData(overviewResult.value.data);
+          overviewData = overviewResult.value.data;
+          setHomeData(overviewData);
         } else {
           console.warn('Connected kid overview unavailable:', overviewResult.reason);
           if (user?.kid_profile_id) {
             const cachedProfile = await getCachedKidProfile(user.kid_profile_id);
             if (cachedProfile && active) {
-              setHomeData((current) => ({
-                ...(current || {}),
+              overviewData = {
                 kid: cachedProfile,
-                progress: current?.progress || [],
-              }));
+                progress: [],
+              };
+              setHomeData(overviewData);
             }
           }
         }
 
-        if (recommendationsResult.status === 'fulfilled') {
-          setRecommendationSections(recommendationsResult.value.data?.sections || []);
-        } else {
-          console.warn('Kid recommendations unavailable:', recommendationsResult.reason);
-          const message = getRestrictionMessage(recommendationsResult.reason);
-          if (message) showToast(message, 'info');
-        }
-
         if (booksResult.status === 'fulfilled') {
-          setPublishedBooks(booksResult.value.data || []);
+          const books = booksResult.value.data || [];
+          setPublishedBooks(books);
+          const recommendationPayload = await loadRecommendations({
+            surface: 'home',
+            language,
+            books,
+            kid: overviewData?.kid || null,
+          });
+          if (active) setRecommendations(recommendationPayload);
         }
       } finally {
         if (active) setLoading(false);
@@ -161,7 +161,7 @@ function KidsHome() {
   const continueReading = progressRows.find((item) => (
     !item.completed && Number(item.progress_percent || 0) > 0
   )) || null;
-  const recommendedBooks = getRecommendedBooks(recommendationSections);
+  const recommendedBooks = getRecommendedBooks(recommendations?.sections || []);
   const favoriteIdsKey = storage.getFavorites().join(',');
   const favoriteIds = useMemo(
     () => (favoriteIdsKey ? storage.getFavorites() : []),
@@ -184,10 +184,11 @@ function KidsHome() {
       recommendedBooks,
       progressRows,
       favoriteBooks,
+      recommendations,
       t,
       language,
     }),
-    [publishedBooks, recommendedBooks, progressRows, favoriteBooks, t, language],
+    [publishedBooks, recommendedBooks, progressRows, favoriteBooks, recommendations, t, language],
   );
 
   useEffect(() => {

@@ -89,8 +89,109 @@ function normalizeClientContext(body = {}) {
     readingHistory: limitArray(body.readingHistory),
     listeningHistory: limitArray(body.listeningHistory),
     readingStats: body.readingStats && typeof body.readingStats === 'object' ? body.readingStats : {},
+    learningGoals: limitArray(body.learningGoals, 12),
+    premiumUnlockedBookIds: limitArray(body.premiumUnlockedBookIds, 200).map(Number).filter(Number.isFinite),
+    hasPremiumAccess: body.hasPremiumAccess === true,
     language: ['fr', 'en', 'ar'].includes(language) ? language : null,
   };
+}
+
+function normalizeSurface(value) {
+  const surface = String(value || 'home').trim().toLowerCase();
+  return ['home', 'library', 'explorer', 'search', 'premium', 'favorites', 'audio', 'continue'].includes(surface)
+    ? surface
+    : 'home';
+}
+
+async function loadRecommendationBooks(pool, kid, context, policy) {
+  const result = await pool.query(
+    `SELECT
+       b.*,
+       c.name AS category_name,
+       sc.name AS subcategory_name,
+       COALESCE(global_stats.global_listens, 0)::int AS global_listens,
+       COALESCE(global_stats.global_listening_seconds, 0)::int AS global_listening_seconds,
+       COALESCE(kid_stats.kid_listens, 0)::int AS kid_listens,
+       COALESCE(kid_stats.kid_total_listening_seconds, 0)::int AS kid_total_listening_seconds,
+       COALESCE(progress.progress_percent, 0)::int AS kid_progress_percent,
+       COALESCE(progress.current_page, 0)::int AS kid_current_page,
+       COALESCE(progress.completed, FALSE) AS kid_completed,
+       progress.last_read_at AS kid_last_read_at
+     FROM books b
+     LEFT JOIN categories c ON b.category_id = c.id
+     LEFT JOIN categories sc ON b.subcategory_id = sc.id
+     LEFT JOIN (
+       SELECT book_id, COUNT(*) AS global_listens, SUM(duration_seconds) AS global_listening_seconds
+       FROM kid_reading_sessions
+       GROUP BY book_id
+     ) global_stats ON global_stats.book_id = b.id
+     LEFT JOIN (
+       SELECT book_id, COUNT(*) AS kid_listens, SUM(duration_seconds) AS kid_total_listening_seconds
+       FROM kid_reading_sessions
+       WHERE kid_profile_id = $1
+       GROUP BY book_id
+     ) kid_stats ON kid_stats.book_id = b.id
+     LEFT JOIN kid_reading_progress progress
+       ON progress.book_id = b.id AND progress.kid_profile_id = $1
+     WHERE b.is_published = TRUE
+       AND (b.publish_at IS NULL OR b.publish_at <= NOW())
+       AND b.age_group_min <= COALESCE($2, b.age_group_min)
+       AND b.age_group_max >= COALESCE($2, b.age_group_max)
+       AND (
+         NOT EXISTS (
+           SELECT 1 FROM parent_approvals pa
+           WHERE pa.kid_profile_id = $1
+         )
+         OR b.category_id IN (
+           SELECT pa.category_id FROM parent_approvals pa
+           WHERE pa.kid_profile_id = $1 AND pa.approved = TRUE
+         )
+       )
+       AND (
+         NOT EXISTS (
+           SELECT 1 FROM parental_rules pr
+           WHERE pr.kid_profile_id = $1
+             AND cardinality(pr.allowed_languages) > 0
+         )
+         OR b.language = ANY(COALESCE((
+           SELECT pr.allowed_languages FROM parental_rules pr
+           WHERE pr.kid_profile_id = $1
+           LIMIT 1
+         ), ARRAY[]::text[]))
+       )
+       AND (
+         NOT EXISTS (
+           SELECT 1 FROM parental_rules pr
+           WHERE pr.kid_profile_id = $1
+             AND cardinality(pr.allowed_themes) > 0
+         )
+         OR b.theme = ANY(COALESCE((
+           SELECT pr.allowed_themes FROM parental_rules pr
+           WHERE pr.kid_profile_id = $1
+           LIMIT 1
+         ), ARRAY[]::text[]))
+       )
+     ORDER BY b.created_at DESC
+     LIMIT 120`,
+    [kid.id, kid.age || null]
+  );
+
+  const enrichedContext = {
+    ...context,
+    premiumUnlockedBookIds: context.premiumUnlockedBookIds?.length
+      ? context.premiumUnlockedBookIds
+      : policy.premiumUnlockedBookIds || [],
+    hasPremiumAccess: context.hasPremiumAccess || policy.subscription?.status === 'active',
+    learningGoals: context.learningGoals?.length
+      ? context.learningGoals
+      : (Array.isArray(kid.interests) ? kid.interests : []),
+  };
+
+  return applyBooksLocalizations(
+    pool,
+    filterAllowedContent(policy, result.rows),
+    context.language || kid.preferred_language || 'fr'
+  ).then((books) => ({ books, enrichedContext }));
 }
 
 router.post('/', verifyToken, async (req, res) => {
@@ -112,9 +213,10 @@ router.post('/', verifyToken, async (req, res) => {
     if (globalViolation) return sendParentalAccessError(res, globalViolation);
 
     const context = normalizeClientContext(req.body);
+    const surface = normalizeSurface(req.body?.surface);
     const cacheKey = getCacheKey({
       kidProfileId: kid.id,
-      context,
+      context: { ...context, surface },
       policy: serializePolicyForClient(policy)
     });
     const cached = getCachedRecommendations(cacheKey);
@@ -126,96 +228,19 @@ router.post('/', verifyToken, async (req, res) => {
       });
     }
 
-    const result = await pool.query(
-      `SELECT
-         b.*,
-         c.name AS category_name,
-         sc.name AS subcategory_name,
-         COALESCE(global_stats.global_listens, 0)::int AS global_listens,
-         COALESCE(global_stats.global_listening_seconds, 0)::int AS global_listening_seconds,
-         COALESCE(kid_stats.kid_listens, 0)::int AS kid_listens,
-         COALESCE(kid_stats.kid_total_listening_seconds, 0)::int AS kid_total_listening_seconds,
-         COALESCE(progress.progress_percent, 0)::int AS kid_progress_percent,
-         COALESCE(progress.current_page, 0)::int AS kid_current_page,
-         COALESCE(progress.completed, FALSE) AS kid_completed,
-         progress.last_read_at AS kid_last_read_at
-       FROM books b
-       LEFT JOIN categories c ON b.category_id = c.id
-       LEFT JOIN categories sc ON b.subcategory_id = sc.id
-       LEFT JOIN (
-         SELECT book_id, COUNT(*) AS global_listens, SUM(duration_seconds) AS global_listening_seconds
-         FROM kid_reading_sessions
-         GROUP BY book_id
-       ) global_stats ON global_stats.book_id = b.id
-       LEFT JOIN (
-         SELECT book_id, COUNT(*) AS kid_listens, SUM(duration_seconds) AS kid_total_listening_seconds
-         FROM kid_reading_sessions
-         WHERE kid_profile_id = $1
-         GROUP BY book_id
-       ) kid_stats ON kid_stats.book_id = b.id
-       LEFT JOIN kid_reading_progress progress
-         ON progress.book_id = b.id AND progress.kid_profile_id = $1
-       WHERE b.is_published = TRUE
-         AND (b.publish_at IS NULL OR b.publish_at <= NOW())
-         AND b.age_group_min <= COALESCE($2, b.age_group_min)
-         AND b.age_group_max >= COALESCE($2, b.age_group_max)
-         AND (
-           NOT EXISTS (
-             SELECT 1 FROM parent_approvals pa
-             WHERE pa.kid_profile_id = $1
-           )
-           OR b.category_id IN (
-             SELECT pa.category_id FROM parent_approvals pa
-             WHERE pa.kid_profile_id = $1 AND pa.approved = TRUE
-           )
-         )
-         AND (
-           NOT EXISTS (
-             SELECT 1 FROM parental_rules pr
-             WHERE pr.kid_profile_id = $1
-               AND cardinality(pr.allowed_languages) > 0
-           )
-           OR b.language = ANY(COALESCE((
-             SELECT pr.allowed_languages FROM parental_rules pr
-             WHERE pr.kid_profile_id = $1
-             LIMIT 1
-           ), ARRAY[]::text[]))
-         )
-         AND (
-           NOT EXISTS (
-             SELECT 1 FROM parental_rules pr
-             WHERE pr.kid_profile_id = $1
-               AND cardinality(pr.allowed_themes) > 0
-           )
-           OR b.theme = ANY(COALESCE((
-             SELECT pr.allowed_themes FROM parental_rules pr
-             WHERE pr.kid_profile_id = $1
-             LIMIT 1
-           ), ARRAY[]::text[]))
-         )
-       ORDER BY b.created_at DESC
-       LIMIT 120`,
-      [kid.id, kid.age || null]
-    );
-
-    // Catalog books use FR as their source locale and expose EN/AR through
-    // content_localizations. Filtering on books.language here used to remove
-    // every localized result for EN/AR children.
-    const allowedContents = await applyBooksLocalizations(
-      pool,
-      filterAllowedContent(policy, result.rows),
-      context.language || kid.preferred_language || 'fr'
-    );
+    const { books, enrichedContext } = await loadRecommendationBooks(pool, kid, context, policy);
     const recommendations = await recommendationService.recommendContent({
       kid,
-      contents: allowedContents,
-      context,
+      contents: books,
+      context: enrichedContext,
+      surface,
     });
 
     const response = {
       kid_profile_id: kid.id,
       generated_at: new Date().toISOString(),
       cached: false,
+      surface,
       ...recommendations,
     };
 
@@ -224,6 +249,93 @@ router.post('/', verifyToken, async (req, res) => {
   } catch (err) {
     console.error('Error creating recommendations:', err);
     res.status(500).json({ error: 'Could not load recommendations' });
+  }
+});
+
+router.post('/rank', verifyToken, async (req, res) => {
+  try {
+    const pool = getPool();
+    const requestedKidProfileId = req.body?.kid_profile_id || req.query?.kid_profile_id;
+    const kid = await getAuthorizedKid(pool, req, requestedKidProfileId);
+    if (!kid) {
+      return res.status(403).json({ error: 'Kid profile required or not authorized' });
+    }
+
+    const policy = await loadChildAccessPolicy({
+      user: req.user,
+      requestedKidProfileId,
+      pool,
+    });
+    const globalViolation = getGlobalAccessViolation(policy);
+    if (globalViolation) return sendParentalAccessError(res, globalViolation);
+
+    const context = normalizeClientContext(req.body);
+    const query = String(req.body?.query || '').trim().slice(0, 100);
+    const { books, enrichedContext } = await loadRecommendationBooks(pool, kid, context, policy);
+    const ranked = recommendationService.rankSearchResults({
+      kid,
+      contents: books,
+      context: enrichedContext,
+      query,
+    });
+
+    res.json({
+      kid_profile_id: kid.id,
+      query,
+      items: ranked,
+      generated_at: new Date().toISOString(),
+    });
+  } catch (err) {
+    console.error('Error ranking search recommendations:', err);
+    res.status(500).json({ error: 'Could not rank search results' });
+  }
+});
+
+router.post('/related', verifyToken, async (req, res) => {
+  try {
+    const pool = getPool();
+    const requestedKidProfileId = req.body?.kid_profile_id || req.query?.kid_profile_id;
+    const kid = await getAuthorizedKid(pool, req, requestedKidProfileId);
+    if (!kid) {
+      return res.status(403).json({ error: 'Kid profile required or not authorized' });
+    }
+
+    const policy = await loadChildAccessPolicy({
+      user: req.user,
+      requestedKidProfileId,
+      pool,
+    });
+    const globalViolation = getGlobalAccessViolation(policy);
+    if (globalViolation) return sendParentalAccessError(res, globalViolation);
+
+    const context = normalizeClientContext(req.body);
+    const sourceId = Number(req.body?.source_book_id);
+    const limit = Math.min(12, Math.max(1, Number(req.body?.limit || 8)));
+    const excludeIds = Array.isArray(req.body?.exclude_ids) ? req.body.exclude_ids : [];
+    const { books, enrichedContext } = await loadRecommendationBooks(pool, kid, context, policy);
+    const source = books.find((book) => Number(book.id) === sourceId);
+    if (!source) {
+      return res.status(404).json({ error: 'Source book not found' });
+    }
+
+    const items = recommendationService.getRelatedBooks({
+      source,
+      contents: books,
+      kid,
+      context: enrichedContext,
+      limit,
+      excludeIds,
+    });
+
+    res.json({
+      kid_profile_id: kid.id,
+      source_book_id: sourceId,
+      items,
+      generated_at: new Date().toISOString(),
+    });
+  } catch (err) {
+    console.error('Error loading related recommendations:', err);
+    res.status(500).json({ error: 'Could not load related recommendations' });
   }
 });
 

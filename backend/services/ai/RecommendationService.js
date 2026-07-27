@@ -1,5 +1,14 @@
-import { AIProviderFactory } from './AIProviderFactory.js';
-import { normalizeAIError } from './errors.js';
+import { AIProviderFactory } from '../ai/AIProviderFactory.js';
+import { normalizeAIError } from '../ai/errors.js';
+import {
+  buildSignals,
+  normalizeContext,
+  rankContents,
+  scoreRelatedBook,
+  scoreSearchResult,
+  sortByScore,
+  uniqueItems,
+} from '../recommendations/scoringModel.js';
 
 const SECTION_LIMIT = 8;
 const DEFAULT_CONTEXT = {
@@ -8,6 +17,9 @@ const DEFAULT_CONTEXT = {
   listeningHistory: [],
   readingStats: {},
   language: 'fr',
+  learningGoals: [],
+  premiumUnlockedBookIds: [],
+  hasPremiumAccess: false,
 };
 
 const SECTION_LABELS = {
@@ -18,6 +30,9 @@ const SECTION_LABELS = {
     new: ['Nouveautés', 'Les dernières histoires ajoutées.'],
     because_you_liked: ['Parce que tu as aimé...', 'Des histoires proches de tes favoris et habitudes.'],
     discovery: ['Découverte', 'Pour explorer de nouveaux univers.'],
+    recently_played: ['Récemment écouté', 'Reprends tes histoires favorites.'],
+    premium: ['Contenus premium', 'Des histoires exclusives pour toi.'],
+    favorites: ['Tes favoris', 'Les histoires que tu aimes le plus.'],
   },
   en: {
     recommended_for_you: ['Recommended for you', 'Based on your age, language and interests.'],
@@ -26,6 +41,9 @@ const SECTION_LABELS = {
     new: ['New releases', 'The latest stories added.'],
     because_you_liked: ['Because you liked...', 'Stories close to your favorites.'],
     discovery: ['Discovery', 'Explore new worlds.'],
+    recently_played: ['Recently played', 'Pick up your favorite stories.'],
+    premium: ['Premium content', 'Exclusive stories for you.'],
+    favorites: ['Your favorites', 'Stories you love most.'],
   },
   ar: {
     recommended_for_you: ['مقترح لك', 'حسب عمرك ولغتك واهتماماتك.'],
@@ -34,182 +52,26 @@ const SECTION_LABELS = {
     new: ['جديد', 'أحدث القصص المضافة.'],
     because_you_liked: ['لأنك أحببت...', 'قصص قريبة من مفضلاتك.'],
     discovery: ['اكتشاف', 'استكشف عوالم جديدة.'],
+    recently_played: ['استمعت مؤخراً', 'عد إلى قصصك المفضلة.'],
+    premium: ['محتوى مميز', 'قصص حصرية لك.'],
+    favorites: ['مفضلاتك', 'القصص التي تحبها أكثر.'],
   },
+};
+
+const SURFACE_SECTIONS = {
+  home: ['continue_reading', 'recommended_for_you', 'because_you_liked', 'popular', 'new', 'discovery'],
+  library: ['continue_reading', 'recommended_for_you', 'because_you_liked', 'popular', 'new', 'discovery'],
+  explorer: ['recommended_for_you', 'discovery', 'new'],
+  search: ['recommended_for_you'],
+  premium: ['premium', 'recommended_for_you'],
+  favorites: ['favorites', 'recommended_for_you'],
+  audio: ['continue_reading', 'recommended_for_you', 'recently_played', 'popular'],
+  continue: ['continue_reading'],
 };
 
 function sectionLabels(language = 'fr') {
   const lang = ['fr', 'en', 'ar'].includes(language) ? language : 'fr';
   return SECTION_LABELS[lang];
-}
-
-function toIdSet(values = []) {
-  return new Set(
-    values
-      .map((value) => Number(value?.bookId ?? value?.id ?? value))
-      .filter((value) => Number.isFinite(value))
-  );
-}
-
-function normalizeText(value) {
-  return String(value || '').trim().toLowerCase();
-}
-
-function normalizeContext(context = {}) {
-  const language = String(context.language || 'fr').trim().toLowerCase().slice(0, 2);
-  return {
-    favorites: Array.isArray(context.favorites) ? context.favorites : [],
-    readingHistory: Array.isArray(context.readingHistory) ? context.readingHistory : [],
-    listeningHistory: Array.isArray(context.listeningHistory) ? context.listeningHistory : [],
-    readingStats: context.readingStats && typeof context.readingStats === 'object' ? context.readingStats : {},
-    language: ['fr', 'en', 'ar'].includes(language) ? language : 'fr',
-  };
-}
-
-function bookMatchesInterest(book, interest) {
-  const query = normalizeText(interest);
-  if (!query) return false;
-
-  return [
-    book.title,
-    book.description,
-    book.category_name,
-    book.subcategory_name,
-    book.theme,
-    ...(Array.isArray(book.tags) ? book.tags : []),
-    ...(Array.isArray(book.metadata?.subjects) ? book.metadata.subjects : []),
-    ...(Array.isArray(book.metadata?.skills) ? book.metadata.skills : []),
-    ...(Array.isArray(book.metadata?.search_terms) ? book.metadata.search_terms : []),
-    book.metadata?.catalog_area,
-    book.metadata?.character,
-  ].some((value) => normalizeText(value).includes(query));
-}
-
-function scoreContent(book, { kid, context, favoriteIds, historyIds, listeningIds, preferredCategories }) {
-  let score = 0;
-  const reasons = [];
-
-  const kidAge = Number(kid?.age || 0);
-  if (kidAge && Number(book.age_group_min) <= kidAge && Number(book.age_group_max) >= kidAge) {
-    score += 28;
-    reasons.push('age_match');
-  }
-
-  const preferredLanguage = normalizeText(kid?.preferred_language || context.language).slice(0, 2);
-  const hasPreferredLocalization = Boolean(book.metadata?.localization_status?.[preferredLanguage]);
-  if (preferredLanguage && (book.language === preferredLanguage || hasPreferredLocalization)) {
-    score += 22;
-    reasons.push('language_match');
-  }
-
-  const interests = Array.isArray(kid?.interests) ? kid.interests : [];
-  const interestMatches = interests.filter((interest) => bookMatchesInterest(book, interest));
-  if (interestMatches.length > 0) {
-    score += 18 + Math.min(12, interestMatches.length * 4);
-    reasons.push('interest_match');
-  }
-
-  if (preferredCategories.has(Number(book.category_id))) {
-    score += 16;
-    reasons.push('preferred_category');
-  }
-
-  if (favoriteIds.has(Number(book.id))) {
-    score += 12;
-    reasons.push('favorite');
-  }
-
-  if (listeningIds.has(Number(book.id))) {
-    score += 8;
-    reasons.push('listening_history');
-  }
-
-  if (historyIds.has(Number(book.id))) {
-    score -= 4;
-    reasons.push('reading_history');
-  }
-
-  const progressPercent = Number(book.kid_progress_percent || 0);
-  if (progressPercent > 0 && progressPercent < 100) {
-    score += 34;
-    reasons.push('continue_reading');
-  }
-  if (book.kid_completed === true || progressPercent >= 100) {
-    score -= 30;
-    reasons.push('already_completed');
-  }
-
-  if (book.is_recommended === true) {
-    score += 12;
-    reasons.push('editorial_recommended');
-  }
-
-  if (book.is_popular === true || Number(book.global_listens || 0) > 0) {
-    score += Math.min(18, 8 + Number(book.global_listens || 0) * 2);
-    reasons.push('popular');
-  }
-
-  if (book.is_new === true) {
-    score += 14;
-    reasons.push('new');
-  }
-
-  const editorialRank = Math.max(0, Math.min(100, Number(book.metadata?.editorial_rank || 0)));
-  if (editorialRank > 0) {
-    score += Math.round(editorialRank / 10);
-    reasons.push('editorial_quality');
-  }
-
-  if (book.audio_url) {
-    score += 6;
-    reasons.push('has_audio');
-  }
-
-  const totalTimeSeconds = Number(context.readingStats?.totalTimeSeconds || 0);
-  if (totalTimeSeconds > 0 && Number(book.duration_seconds || 0) > 0) {
-    score += Math.max(0, 8 - Math.floor(Number(book.duration_seconds || 0) / 900));
-    reasons.push('duration_fit');
-  }
-
-  return { score, reasons };
-}
-
-function sortByScore(items) {
-  return [...items].sort((a, b) => {
-    if (b.recommendation_score !== a.recommendation_score) {
-      return b.recommendation_score - a.recommendation_score;
-    }
-    return new Date(b.created_at || 0) - new Date(a.created_at || 0);
-  });
-}
-
-function uniqueItems(items, limit = SECTION_LIMIT) {
-  const seen = new Set();
-  const areaCounts = new Map();
-  const nextItems = [];
-  const deferred = [];
-
-  for (const item of items) {
-    if (seen.has(item.id)) continue;
-    const area = item.metadata?.catalog_area || item.theme || item.category_name || 'other';
-    const areaCount = areaCounts.get(area) || 0;
-    if (areaCount >= 2) {
-      deferred.push(item);
-      continue;
-    }
-    seen.add(item.id);
-    areaCounts.set(area, areaCount + 1);
-    nextItems.push(item);
-    if (nextItems.length >= limit) break;
-  }
-
-  for (const item of deferred) {
-    if (nextItems.length >= limit) break;
-    if (seen.has(item.id)) continue;
-    seen.add(item.id);
-    nextItems.push(item);
-  }
-
-  return nextItems;
 }
 
 function createSection(id, title, subtitle, items) {
@@ -219,6 +81,25 @@ function createSection(id, title, subtitle, items) {
     subtitle,
     items: uniqueItems(items),
   };
+}
+
+function isAudioBook(book) {
+  return Boolean(book?.audio_url)
+    || book?.content_type === 'song'
+    || book?.content_type === 'audio_story';
+}
+
+function filterSurfaceItems(items, surface) {
+  if (surface === 'audio') {
+    return items.filter(isAudioBook);
+  }
+  if (surface === 'premium') {
+    return items.filter((book) => book.is_premium === true || book.is_premium === 1);
+  }
+  if (surface === 'favorites') {
+    return items;
+  }
+  return items;
 }
 
 export class RecommendationService {
@@ -253,36 +134,76 @@ export class RecommendationService {
     });
   }
 
-  async recommendContent({ kid, contents = [], context = DEFAULT_CONTEXT }) {
+  rankBooks({ kid, contents = [], context = DEFAULT_CONTEXT }) {
+    const signals = buildSignals({ kid, contents, context });
+    return rankContents(contents, signals);
+  }
+
+  rankSearchResults({ kid, contents = [], context = DEFAULT_CONTEXT, query = '' }) {
+    const signals = buildSignals({ kid, contents, context });
+    return sortByScore(
+      contents.map((book) => {
+        const { score, reasons } = scoreSearchResult(book, query, signals);
+        return {
+          ...book,
+          recommendation_score: score,
+          recommendation_reasons: reasons,
+        };
+      })
+    );
+  }
+
+  getRelatedBooks({
+    source,
+    contents = [],
+    kid,
+    context = DEFAULT_CONTEXT,
+    limit = 8,
+    excludeIds = [],
+  }) {
+    const signals = buildSignals({ kid, contents, context });
+    const excluded = new Set((excludeIds || []).map((id) => String(id)));
+
+    return sortByScore(
+      contents
+        .filter((book) => book && book.id != null && String(book.id) !== String(source?.id))
+        .filter((book) => !excluded.has(String(book.id)))
+        .map((book) => ({
+          ...book,
+          recommendation_score: scoreRelatedBook(source, book, signals),
+          recommendation_reasons: ['related_content'],
+        }))
+    ).slice(0, limit);
+  }
+
+  resolveContinueReading(contents = []) {
+    return sortByScore(
+      contents
+        .filter((book) => {
+          const progress = Number(book.kid_progress_percent || 0);
+          return progress > 0 && progress < 100 && book.kid_completed !== true;
+        })
+        .map((book) => ({
+          ...book,
+          recommendation_score: Number(book.recommendation_score || 0) + 50,
+          recommendation_reasons: [...(book.recommendation_reasons || []), 'continue_reading'],
+        }))
+    );
+  }
+
+  async recommendContent({
+    kid,
+    contents = [],
+    context = DEFAULT_CONTEXT,
+    surface = 'home',
+  }) {
     const aiProvider = this.aiProvider || AIProviderFactory.getProvider();
     const normalizedContext = normalizeContext(context);
-    const favoriteIds = toIdSet(normalizedContext.favorites);
-    const historyIds = toIdSet(normalizedContext.readingHistory);
-    const listeningIds = toIdSet(normalizedContext.listeningHistory);
-    const preferredCategories = this.getPreferredCategories(contents, {
-      favoriteIds,
-      historyIds,
-      listeningIds,
-    });
+    const signals = buildSignals({ kid, contents, context: normalizedContext });
+    const { favoriteIds, historyIds, listeningIds, preferredCategories } = signals;
 
-    const scoredContents = contents.map((book) => {
-      const { score, reasons } = scoreContent(book, {
-        kid,
-        context: normalizedContext,
-        favoriteIds,
-        historyIds,
-        listeningIds,
-        preferredCategories,
-      });
-
-      return {
-        ...book,
-        recommendation_score: score,
-        recommendation_reasons: reasons,
-      };
-    });
-
-    let strategy = 'deterministic-score-v1';
+    let scoredContents = rankContents(contents, signals);
+    let strategy = 'deterministic-score-v2';
     let aiMetadata = null;
 
     if (this.isProviderConfigured(aiProvider) && contents.length > 0) {
@@ -294,12 +215,9 @@ export class RecommendationService {
         });
         const aiRecommendations = Array.isArray(aiResult.recommendations) ? aiResult.recommendations : [];
         if (aiRecommendations.length > 0) {
-          scoredContents.splice(
-            0,
-            scoredContents.length,
-            ...this.applyAiRanking(scoredContents, aiRecommendations)
-          );
-          strategy = 'ai-ranked-with-deterministic-fallback-v1';
+          scoredContents = this.applyAiRanking(scoredContents, aiRecommendations);
+          scoredContents = sortByScore(scoredContents);
+          strategy = 'ai-ranked-with-deterministic-fallback-v2';
           aiMetadata = aiResult.provider_metadata || null;
         }
       } catch {
@@ -307,18 +225,13 @@ export class RecommendationService {
       }
     }
 
-    const sorted = sortByScore(scoredContents);
-    const continueReading = sortByScore(
-      scoredContents.filter((book) => {
-        const progress = Number(book.kid_progress_percent || 0);
-        return progress > 0 && progress < 100;
-      })
-    );
+    const sorted = scoredContents;
+    const continueReading = this.resolveContinueReading(scoredContents);
     const popular = sortByScore(
       scoredContents.filter((book) => book.is_popular === true || Number(book.global_listens || 0) > 0)
     );
     const newest = sortByScore(
-      scoredContents.filter((book) => book.is_new === true || book.created_at)
+      scoredContents.filter((book) => book.is_new === true)
     );
     const becauseLiked = sortByScore(
       scoredContents.filter((book) => (
@@ -334,31 +247,63 @@ export class RecommendationService {
         && !listeningIds.has(Number(book.id))
       ))
     );
+    const recentlyPlayed = sortByScore(
+      scoredContents.filter((book) => historyIds.has(Number(book.id)) || listeningIds.has(Number(book.id)))
+    );
+    const premium = sortByScore(
+      scoredContents.filter((book) => book.is_premium === true || book.is_premium === 1)
+    );
+    const favorites = sortByScore(
+      scoredContents.filter((book) => favoriteIds.has(Number(book.id)))
+    );
 
     const labels = sectionLabels(normalizedContext.language);
+    const allSections = {
+      recommended_for_you: createSection('recommended_for_you', ...labels.recommended_for_you, sorted),
+      continue_reading: createSection('continue_reading', ...labels.continue_reading, continueReading),
+      popular: createSection('popular', ...labels.popular, popular),
+      new: createSection('new', ...labels.new, newest),
+      because_you_liked: createSection('because_you_liked', ...labels.because_you_liked, becauseLiked),
+      discovery: createSection('discovery', ...labels.discovery, discovery),
+      recently_played: createSection('recently_played', ...labels.recently_played, recentlyPlayed),
+      premium: createSection('premium', ...labels.premium, premium),
+      favorites: createSection('favorites', ...labels.favorites, favorites),
+    };
+
+    const sectionOrder = SURFACE_SECTIONS[surface] || SURFACE_SECTIONS.home;
+    const sections = sectionOrder
+      .map((sectionId) => {
+        const section = allSections[sectionId];
+        if (!section) return null;
+        return {
+          ...section,
+          items: filterSurfaceItems(section.items, surface),
+        };
+      })
+      .filter((section) => section && section.items.length > 0);
 
     return {
-      sections: [
-        createSection('recommended_for_you', ...labels.recommended_for_you, sorted),
-        createSection('continue_reading', ...labels.continue_reading, continueReading),
-        createSection('popular', ...labels.popular, popular),
-        createSection('new', ...labels.new, newest),
-        createSection('because_you_liked', ...labels.because_you_liked, becauseLiked),
-        createSection('discovery', ...labels.discovery, discovery),
-      ].filter((section) => section.items.length > 0),
+      sections,
+      ranked_books: sorted,
+      continue_reading: continueReading,
       metadata: {
         provider: aiProvider.name,
         strategy,
+        surface,
         ai_metadata: aiMetadata,
         factors: [
           'age',
           'language',
           'interests',
+          'learning_goals',
           'listening_history',
           'favorites',
-          'listening_time',
+          'reading_stats',
           'preferred_categories',
+          'editorial_rank',
           'editorial_flags',
+          'premium_eligibility',
+          'seasonal_relevance',
         ],
       },
     };
@@ -371,35 +316,23 @@ export class RecommendationService {
     } catch (error) {
       throw normalizeAIError(error, {
         provider: aiProvider.name,
-        fallbackMessage: 'Recommendation service failed'
+        fallbackMessage: 'Recommendation service failed',
       });
     }
   }
 
   getPreferredCategories(contents, { favoriteIds, historyIds, listeningIds }) {
-    const categoryCounts = new Map();
-
-    contents.forEach((book) => {
-      const bookId = Number(book.id);
-      const categoryId = Number(book.category_id);
-      if (!Number.isFinite(categoryId)) return;
-
-      let weight = 0;
-      if (favoriteIds.has(bookId)) weight += 4;
-      if (listeningIds.has(bookId)) weight += 3;
-      if (historyIds.has(bookId)) weight += 2;
-      if (Number(book.kid_total_listening_seconds || 0) > 0) weight += 2;
-
-      if (weight > 0) {
-        categoryCounts.set(categoryId, (categoryCounts.get(categoryId) || 0) + weight);
-      }
-    });
-
-    return new Set(
-      [...categoryCounts.entries()]
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 4)
-        .map(([categoryId]) => categoryId)
-    );
+    return buildSignals({
+      kid: null,
+      contents,
+      context: {
+        favorites: [...favoriteIds].map((id) => ({ id })),
+        readingHistory: [...historyIds].map((id) => ({ id })),
+        listeningHistory: [...listeningIds].map((id) => ({ id })),
+      },
+    }).preferredCategories;
   }
 }
+
+// Backward-compatible exports for tests and direct scoring access.
+export { scoreContent, sortByScore, uniqueItems } from '../recommendations/scoringModel.js';

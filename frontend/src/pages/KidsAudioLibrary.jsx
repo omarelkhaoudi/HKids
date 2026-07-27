@@ -2,7 +2,11 @@ import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { booksAPI } from '../api/books';
-import { recommendationsAPI } from '../api/recommendations';
+import {
+  getContinueReading,
+  getSectionItems,
+  loadRecommendations,
+} from '../services/recommendations/recommendationEngine';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../components/ToastProvider';
 import { useLanguage } from '../context/LanguageContext';
@@ -49,7 +53,7 @@ function KidsAudioLibrary() {
   const { showToast } = useToast();
   const { language, isRtl, t } = useLanguage();
   const [books, setBooks] = useState([]);
-  const [recommendationSections, setRecommendationSections] = useState([]);
+  const [recommendations, setRecommendations] = useState(null);
   const [loading, setLoading] = useState(true);
 
   const activeTab = searchParams.get('type') || 'all';
@@ -65,18 +69,20 @@ function KidsAudioLibrary() {
   const loadBooks = async () => {
     try {
       setLoading(true);
-      const [booksRes, recRes] = await Promise.all([
-        booksAPI.getPublishedBooks({ language }),
-        recommendationsAPI.getForKid({
-          favorites: storage.getFavorites(),
-          readingHistory: storage.getReadingHistory(),
-          listeningHistory: storage.getListeningHistory(),
-          readingStats: storage.getReadingStats(),
-          language,
-        }).catch(() => ({ data: { sections: [] } })),
-      ]);
-      setBooks(booksRes.data || []);
-      setRecommendationSections(recRes.data?.sections || []);
+      const booksRes = await booksAPI.getPublishedBooks({ language });
+      const nextBooks = booksRes.data || [];
+      setBooks(nextBooks);
+      const recommendationPayload = await loadRecommendations({
+        surface: 'audio',
+        language,
+        books: nextBooks,
+      }).catch(() => loadRecommendations({
+        surface: 'audio',
+        language,
+        books: nextBooks,
+        forceRefresh: true,
+      }));
+      setRecommendations(recommendationPayload);
     } catch (error) {
       showToast(getRestrictionMessage(error, t('loadError')), 'error');
     } finally {
@@ -89,29 +95,33 @@ function KidsAudioLibrary() {
   const audioStories = useMemo(() => books.filter((b) => b.content_type === 'audio_story'), [books]);
   const listeningHistory = storage.getListeningHistory();
 
-  const continueBooks = useMemo(() => {
-    const inProgress = listeningHistory.filter((h) => !h.completed && h.currentTime > 0);
-    return inProgress
-      .map((h) => audioBooks.find((b) => b.id === h.bookId))
-      .filter(Boolean);
-  }, [listeningHistory, audioBooks]);
+  const continueBooks = useMemo(
+    () => getContinueReading({
+      books: audioBooks,
+      readingHistory: listeningHistory,
+      recommendations,
+    }),
+    [audioBooks, listeningHistory, recommendations],
+  );
 
   const recentlyListened = useMemo(
     () => getListeningHistoryBooks(audioBooks, listeningHistory),
     [audioBooks, listeningHistory],
   );
 
-  const recommendedSection = recommendationSections.find((s) => s.id === 'recommended_for_you');
   const recommendedBooks = useMemo(() => {
-    const items = recommendedSection?.items || [];
-    const ids = new Set(items.map((i) => Number(i.id ?? i.book_id)));
-    const fromRec = audioBooks.filter((b) => ids.has(Number(b.id)));
-    return fromRec.length > 0 ? fromRec : audioBooks.slice(0, 12);
-  }, [recommendationSections, audioBooks]);
+    const items = getSectionItems(recommendations, 'recommended_for_you');
+    const fromRec = audioBooks.filter((book) => items.some((item) => item.id === book.id));
+    return fromRec.length > 0 ? fromRec : items.filter((book) => (
+      book.audio_url || book.content_type === 'song' || book.content_type === 'audio_story'
+    )).slice(0, 12);
+  }, [recommendations, audioBooks]);
 
   const popularBooks = useMemo(
-    () => getListeningHistoryBooks(audioBooks, listeningHistory).slice(0, 12),
-    [audioBooks, listeningHistory],
+    () => getSectionItems(recommendations, 'popular')
+      .filter((book) => audioBooks.some((item) => item.id === book.id))
+      .slice(0, 12),
+    [recommendations, audioBooks],
   );
 
   const bedtimeBooks = useMemo(

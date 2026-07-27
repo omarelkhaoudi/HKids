@@ -28,6 +28,8 @@ import { bookMatchesKidCategory, getCategoryContentStrategy } from './kidCategor
 import { onboardingBandToRange } from '../constants/ageGroups';
 import { storage } from './storage';
 import { ONBOARDING_WORLDS } from './onboarding';
+import { buildSignals, rankContents, scoreContent } from '../services/recommendations/scoringModel';
+import { getContinueReading } from '../services/recommendations/recommendationEngine';
 
 const PROFILE_KEY = 'hkids_learning_profile_v1';
 const SHOWN_KEY = 'hkids_shown_books_v1';
@@ -315,37 +317,49 @@ export function scoreBookForChild(book, profile, {
   continueIds = new Set(),
 } = {}) {
   if (!book?.id) return -999;
-  let score = 0;
-  const theme = deriveBookTheme(book) || book.theme;
 
-  if (theme && profile.favoriteThemes?.includes(theme)) score += SCORE.favoriteCategory;
-  if (book.category_id && profile.favoriteCategories?.includes(String(book.category_id))) {
-    score += SCORE.favoriteCategory;
-  }
-  if (profile.favoriteNarrator && (book.narrator === profile.favoriteNarrator || book.author === profile.favoriteNarrator)) {
-    score += SCORE.sameNarrator;
-  }
-  if (ageOverlap(book, profile.favoriteAgeBand)) score += SCORE.sameAge;
-  if (tagsOverlap(book, profile)) score += SCORE.similarTags;
-  if (book.is_popular || book.is_recommended) score += SCORE.trending;
-  if (profile.favoriteDurationBand && durationBand(book) === profile.favoriteDurationBand) {
-    score += SCORE.similarDuration;
-  }
-  if (continueIds.has(String(book.id))) score += SCORE.unfinishedSeries;
-  if (profile.audioTextRatio > 0.55 && isAudioBook(book)) score += SCORE.audioAffinity;
-  if (isPremiumBook(book)) score += SCORE.premiumMix;
-  if (book.content_type === 'learning' || book.is_learning) score += SCORE.learningMix;
-  if (recentlyShown.includes(String(book.id))) score += SCORE.recentlyShown;
-  if (completedIds.has(String(book.id))) score += SCORE.alreadyCompleted;
+  const onboarding = getKidsPersonalizationProfile();
+  const context = {
+    favorites: storage.getFavorites().map((id) => ({ id })),
+    readingHistory: storage.getReadingHistory(),
+    listeningHistory: storage.getListeningHistory(),
+    readingStats: storage.getReadingStats(),
+    learningGoals: onboarding.favoriteWorlds || [],
+    language: profile.favoriteLanguage || 'fr',
+  };
+  const kid = {
+    preferred_language: profile.favoriteLanguage,
+    interests: onboarding.favoriteWorlds || [],
+  };
+  const signals = buildSignals({ kid, contents: [book], context });
+  let score = scoreContent(book, signals).score;
+
+  if (continueIds.has(String(book.id))) score += 3;
+  if (recentlyShown.includes(String(book.id))) score -= 6;
+  if (completedIds.has(String(book.id))) score -= 5;
 
   return score;
 }
 
 export function rankBooksForChild(books = [], profile, options = {}) {
-  return [...books]
-    .map((book) => ({ book, score: scoreBookForChild(book, profile, options) }))
-    .sort((a, b) => b.score - a.score || String(a.book.title || '').localeCompare(String(b.book.title || '')))
-    .map((entry) => ({ ...entry.book, _recommendationScore: entry.score }));
+  const onboarding = getKidsPersonalizationProfile();
+  const context = {
+    favorites: storage.getFavorites().map((id) => ({ id })),
+    readingHistory: storage.getReadingHistory(),
+    listeningHistory: storage.getListeningHistory(),
+    readingStats: storage.getReadingStats(),
+    learningGoals: onboarding.favoriteWorlds || [],
+    language: profile.favoriteLanguage || 'fr',
+  };
+  const kid = {
+    preferred_language: profile.favoriteLanguage,
+    interests: onboarding.favoriteWorlds || [],
+  };
+  const signals = buildSignals({ kid, contents: books, context });
+  return rankContents(books, signals).map((book) => ({
+    ...book,
+    _recommendationScore: book.recommendation_score,
+  }));
 }
 
 function mixDiscoverPool(books, profile, { completedIds, recentlyShown, limit = 12 } = {}) {
@@ -525,6 +539,59 @@ export function evaluatePersonalizationAchievements({
   }));
 }
 
+function buildHomeSectionsFromRecommendations({
+  recommendations,
+  publishedBooks = [],
+  progressRows = [],
+  t,
+}) {
+  const continueBooks = getContinueReading({
+    books: publishedBooks,
+    progressRows,
+    recommendations,
+  });
+
+  const sectionMeta = {
+    continue_reading: { type: 'continue', emoji: '▶️', title: t('kidsHomeContinueAdventures'), priority: 100 },
+    recommended_for_you: {
+      type: 'recommended',
+      emoji: '⭐',
+      title: t('forYou'),
+      subtitle: t('kidsHomeRecommendedSubtitle'),
+      priority: 80,
+    },
+    new: { type: 'rail', emoji: '✨', title: t('persNewForYou'), priority: 70 },
+    recently_played: { type: 'rail', emoji: '🕘', title: t('persRecentlyPlayed'), priority: 65 },
+    popular: { type: 'rail', emoji: '👧', title: t('persPopularWithAge'), priority: 60 },
+    because_you_liked: { type: 'because', emoji: '❤️', title: t('kidsRecentlyLoved'), priority: 55 },
+    discovery: { type: 'rail', emoji: '🧭', title: t('persExploreNew'), priority: 45 },
+  };
+
+  const sections = (recommendations?.sections || [])
+    .map((section) => {
+      const meta = sectionMeta[section.id];
+      if (!meta || !section.items?.length) return null;
+      return {
+        id: section.id,
+        ...meta,
+        title: section.title || meta.title,
+        subtitle: section.subtitle || meta.subtitle,
+        books: section.items,
+      };
+    })
+    .filter(Boolean)
+    .sort((a, b) => b.priority - a.priority);
+
+  const impressionIds = sections.flatMap((section) => (section.books || []).map((book) => book.id));
+
+  return {
+    sections,
+    continueBooks,
+    impressionIds,
+    achievements: [],
+  };
+}
+
 /**
  * Build ordered dynamic Smart Home sections for a child.
  */
@@ -533,9 +600,20 @@ export function buildSmartHomeSections({
   recommendedBooks = [],
   progressRows = [],
   favoriteBooks = [],
+  recommendations = null,
   t,
   language = 'fr',
 } = {}) {
+  if (recommendations?.sections?.length) {
+    const unified = buildHomeSectionsFromRecommendations({
+      recommendations,
+      publishedBooks,
+      progressRows,
+      t,
+    });
+    unified.achievements = evaluatePersonalizationAchievements({ progressRows });
+    return unified;
+  }
   const onboarding = getKidsPersonalizationProfile();
   const completedIds = collectCompletedBookIds(progressRows);
   const recentlyShown = getRecentlyShownBookIds();

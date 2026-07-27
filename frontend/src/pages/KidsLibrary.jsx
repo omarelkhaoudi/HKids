@@ -2,7 +2,12 @@
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { booksAPI } from '../api/books';
-import { recommendationsAPI } from '../api/recommendations';
+import {
+  getContinueReading,
+  getSectionItems,
+  loadRecommendations,
+  rankSearchResults,
+} from '../services/recommendations/recommendationEngine';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../components/ToastProvider';
 import { storage } from '../utils/storage';
@@ -47,19 +52,16 @@ import {
   isShortStory,
   pickDailyFeatured,
   pickEditorsChoice,
-  pickPopularThisWeek,
   pickRandomExplore,
   withDiscoveryReason,
 } from '../utils/discoveryRails';
 import {
-  buildPersonalizedRecommended,
   buildSoftProgressSummary,
   collectCompletedBookIds,
   excludeBookIds,
   getKidsPersonalizationProfile,
   reorderThemesByWorlds,
 } from '../utils/kidsPersonalization';
-import { getCategoryContentStrategy, bookMatchesKidCategory } from '../utils/kidCategoryContent';
 import {
   AGE_GROUPS,
   ALL_AGES_ID,
@@ -116,15 +118,6 @@ function withThemeEmoji(books, childThemes) {
   });
 }
 
-function getRecommendationContext() {
-  return {
-    favorites: storage.getFavorites(),
-    readingHistory: storage.getReadingHistory(),
-    listeningHistory: storage.getListeningHistory(),
-    readingStats: storage.getReadingStats(),
-  };
-}
-
 function reorderShelfThemeIds(themeIds, favoriteWorlds) {
   if (!favoriteWorlds?.length) return themeIds;
   return reorderThemesByWorlds(
@@ -177,7 +170,7 @@ function KidsLibrary() {
   const ageFilter = parseAgeGroupId(searchParams.get('age'));
   const selectedTheme = urlTheme;
   const [loading, setLoading] = useState(true);
-  const [recommendationSections, setRecommendationSections] = useState([]);
+  const [recommendations, setRecommendations] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterAudio, setFilterAudio] = useState(false);
   const [filterPremium, setFilterPremium] = useState(false);
@@ -201,14 +194,7 @@ function KidsLibrary() {
     const run = async () => {
       try {
         setLoading(true);
-        const [booksRes, recommendationsRes] = await Promise.all([
-          booksAPI.getPublishedBooks({ language }),
-          recommendationsAPI.getForKid({ ...getRecommendationContext(), language }).catch((error) => {
-            const message = getRestrictionMessage(error);
-            if (message && active) showToast(message, 'info');
-            return { data: { sections: [] } };
-          }),
-        ]);
+        const booksRes = await booksAPI.getPublishedBooks({ language });
         if (!active) return;
         const policy = await getCurrentParentalPolicy().catch(() => null);
         if (!active) return;
@@ -217,7 +203,23 @@ function KidsLibrary() {
         const filtered = filterBooksByParentalPolicy(rawBooks, policy);
         const ordered = applyLibraryControlOrdering(filtered, getLibraryControlsFromPolicy(policy));
         setBooks(ordered);
-        setRecommendationSections(recommendationsRes.data?.sections || []);
+        const recommendationPayload = await loadRecommendations({
+          surface: 'library',
+          language,
+          books: ordered,
+          parentalPolicy: policy,
+        }).catch((error) => {
+          const message = getRestrictionMessage(error);
+          if (message && active) showToast(message, 'info');
+          return loadRecommendations({
+            surface: 'library',
+            language,
+            books: ordered,
+            parentalPolicy: policy,
+            forceRefresh: true,
+          });
+        });
+        if (active) setRecommendations(recommendationPayload);
       } catch (error) {
         if (!active) return;
         if (!navigator.onLine) {
@@ -231,7 +233,12 @@ function KidsLibrary() {
             .map((item) => item.payload);
           const filtered = filterBooksByParentalPolicy(offlineBooks, policy);
           setBooks(applyLibraryControlOrdering(filtered, getLibraryControlsFromPolicy(policy)));
-          setRecommendationSections([]);
+          setRecommendations(await loadRecommendations({
+            surface: 'library',
+            language,
+            books: filtered,
+            parentalPolicy: policy,
+          }));
           showToast(t('offlineMode'), 'info');
         } else {
           showToast(getRestrictionMessage(error, t('loadError')), 'error');
@@ -278,10 +285,11 @@ function KidsLibrary() {
     () => (favoritesIdsKey ? storage.getFavorites() : []),
     [favoritesIdsKey],
   );
+  const [searchRankedBooks, setSearchRankedBooks] = useState([]);
   const readingHistory = storage.getReadingHistory();
   const taggedBooks = useMemo(() => withThemeEmoji(books, childThemes), [books, childThemes]);
 
-  const visibleBooks = useMemo(() => {
+  const filteredBooks = useMemo(() => {
     const q = searchQuery.trim();
     const ageGroup = getAgeGroupById(ageFilter);
     return taggedBooks.filter((book) => {
@@ -296,31 +304,46 @@ function KidsLibrary() {
     });
   }, [taggedBooks, searchQuery, filterFavorites, filterAudio, filterPremium, ageFilter, favoritesIds]);
 
+  useEffect(() => {
+    let active = true;
+    const q = searchQuery.trim();
+    if (!q) {
+      setSearchRankedBooks([]);
+      return undefined;
+    }
+
+    rankSearchResults({
+      query: q,
+      books: filteredBooks,
+      language,
+      parentalPolicy,
+    }).then((ranked) => {
+      if (active) setSearchRankedBooks(ranked);
+    });
+
+    return () => {
+      active = false;
+    };
+  }, [filteredBooks, searchQuery, language, parentalPolicy]);
+
+  const visibleBooks = useMemo(() => {
+    if (searchQuery.trim() && searchRankedBooks.length) return searchRankedBooks;
+    return filteredBooks;
+  }, [filteredBooks, searchQuery, searchRankedBooks]);
+
   const discoveryPool = useMemo(
     () => excludeBookIds(visibleBooks, completedBookIds),
     [visibleBooks, completedBookIds],
   );
 
-  const continueBooks = useMemo(() => {
-    const byId = new Map(visibleBooks.map((book) => [book.id, book]));
-    return readingHistory
-      .map((entry) => {
-        const book = byId.get(entry.bookId);
-        if (!book) return null;
-        const lastPage = Number(entry.page ?? storage.getLastPage(book.id) ?? 0);
-        const total = Number(book.page_count || 0);
-        const progress = total > 0 ? Math.min(100, Math.round((lastPage / total) * 100)) : 0;
-        return {
-          ...book,
-          kid_progress_percent: progress,
-          progress,
-          current_page: lastPage,
-        };
-      })
-      .filter(Boolean)
-      .filter((book) => Number(book.kid_progress_percent || 0) > 0 && Number(book.kid_progress_percent || 0) < 100)
-      .slice(0, 12);
-  }, [visibleBooks, readingHistory]);
+  const continueBooks = useMemo(
+    () => getContinueReading({
+      books: visibleBooks,
+      readingHistory,
+      recommendations,
+    }),
+    [visibleBooks, readingHistory, recommendations],
+  );
 
   const favoriteBooks = useMemo(
     () => visibleBooks.filter((b) => favoritesIds.includes(b.id)),
@@ -333,39 +356,21 @@ function KidsLibrary() {
     [discoveryPool],
   );
 
-  const recommendedSection = recommendationSections.find((section) => section.id === 'recommended_for_you');
-  const apiRecommendedBooks = useMemo(() => {
-    const recommendedIds = new Set(
-      (recommendedSection?.items || []).map((item) => Number(item.id ?? item.book_id)).filter(Number.isFinite),
-    );
-    if (!recommendedIds.size) return [];
-    return discoveryPool.filter((book) => recommendedIds.has(Number(book.id)));
-  }, [recommendedSection, discoveryPool]);
+  const apiRecommendedBooks = useMemo(
+    () => getSectionItems(recommendations, 'recommended_for_you').filter((book) => discoveryPool.some((item) => item.id === book.id)),
+    [recommendations, discoveryPool],
+  );
 
   const todayBooks = useMemo(
-    () => buildPersonalizedRecommended({
-      publishedBooks: discoveryPool,
-      recommendedBooks: apiRecommendedBooks,
-      favoriteWorlds: personalization.favoriteWorlds,
-      ageBand: personalization.ageBand,
-      readingGoal: personalization.readingGoal,
-      t,
-      excludeIds: completedBookIds,
-    }),
-    [
-      discoveryPool,
-      apiRecommendedBooks,
-      personalization.favoriteWorlds,
-      personalization.ageBand,
-      personalization.readingGoal,
-      t,
-      completedBookIds,
-    ],
+    () => apiRecommendedBooks.length
+      ? apiRecommendedBooks
+      : getSectionItems(recommendations, 'recommended_for_you'),
+    [apiRecommendedBooks, recommendations],
   );
 
   const popularBooks = useMemo(
-    () => pickPopularThisWeek(discoveryPool, 15),
-    [discoveryPool],
+    () => getSectionItems(recommendations, 'popular').filter((book) => discoveryPool.some((item) => item.id === book.id)),
+    [recommendations, discoveryPool],
   );
 
   const dailyFeatured = useMemo(
@@ -417,18 +422,16 @@ function KidsLibrary() {
   const likedTheme = likedThemeId ? getKidCategory(likedThemeId, language) : null;
 
   const becauseYouLikedBooks = useMemo(() => {
-    if (!likedThemeId) return [];
-    const strategy = getCategoryContentStrategy(likedThemeId);
-    const themed = discoveryPool
-      .filter((book) => bookMatchesKidCategory(book, strategy))
-      .filter((book) => !favoritesIds.includes(book.id))
-      .slice(0, 12);
+    const themed = getSectionItems(recommendations, 'because_you_liked')
+      .filter((book) => discoveryPool.some((item) => item.id === book.id));
     if (!themed.length) return [];
-    const reason = t('discoverBecauseYouLiked', {
-      theme: likedTheme?.shortLabel || likedTheme?.label || likedThemeId,
-    });
+    const reason = likedTheme
+      ? t('discoverBecauseYouLiked', {
+        theme: likedTheme?.shortLabel || likedTheme?.label || likedThemeId,
+      })
+      : t('discoverBecauseYouLiked', { theme: t('forYou') });
     return annotateBooksWithReasons(themed, reason);
-  }, [likedThemeId, likedTheme, discoveryPool, favoritesIds, t]);
+  }, [recommendations, discoveryPool, likedTheme, likedThemeId, t]);
 
   const themeBooks = useMemo(
     () => visibleBooks.filter((b) => b._themeId === selectedTheme),
@@ -542,8 +545,10 @@ function KidsLibrary() {
     [continueBooks, selectedTheme],
   );
   const themePopularBooks = useMemo(
-    () => pickPopularThisWeek(themeBooks, 12),
-    [themeBooks],
+    () => getSectionItems(recommendations, 'popular')
+      .filter((book) => themeBooks.some((item) => item.id === book.id))
+      .slice(0, 12),
+    [recommendations, themeBooks],
   );
   const themeNewBooks = useMemo(
     () => [...themeBooks]

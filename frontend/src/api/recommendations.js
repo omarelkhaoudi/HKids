@@ -15,4 +15,22 @@ export const recommendationsAPI = {
       timeout: 12000,
     }
   ),
+
+  rankSearch: (context = {}) => axios.post(
+    buildApiUrl('/recommendations/rank'),
+    context,
+    {
+      headers: authHeaders(),
+      timeout: 12000,
+    }
+  ),
+
+  getRelated: (context = {}) => axios.post(
+    buildApiUrl('/recommendations/related'),
+    context,
+    {
+      headers: authHeaders(),
+      timeout: 12000,
+    }
+  ),
 };
