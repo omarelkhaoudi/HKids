@@ -5,10 +5,11 @@ import { useReducedMotion } from '../../hooks/useReducedMotion';
 import { getHoverMotion, kidsBadgePop, kidsTouchFeedback } from '../../constants/kidsMotion';
 import { KidsFeedbackBurst } from './KidsFeedbackBurst';
 import { KidsBookCover } from './KidsBookCover';
-import { PlayIcon, HeartIcon, DownloadIcon, AudioIcon } from '../Icons';
+import { PlayIcon, HeartIcon, DownloadIcon, AudioIcon, LockIcon } from '../Icons';
 import { playKidsUiSound } from '../../utils/kidsUiSound';
 import { KIDS_PICTOGRAMS } from '../../utils/kidsGuidePhrases';
 import { PremiumRibbon } from '../premium/PremiumPackCard';
+import { getBookAccessState } from '../../utils/premiumAccess';
 
 function formatDuration(seconds = 0) {
   const safeSeconds = Math.max(0, Number(seconds || 0));
@@ -58,6 +59,7 @@ export const KidsMediaCard = memo(function KidsMediaCard({
   onFavorite,
   onDownload,
   className = '',
+  premiumContext = null,
 }) {
   const { t, language } = useLanguage();
   const reducedMotion = useReducedMotion();
@@ -74,6 +76,7 @@ export const KidsMediaCard = memo(function KidsMediaCard({
   const showContinue = progress > 0 && progress < 100;
   const isComplete = progress >= 100;
   const reason = discoveryReason || book._discoveryReason;
+  const premiumState = book._premiumState || getBookAccessState(book, premiumContext || {});
   const playLabel = audioReady && !book.pages?.length
     ? `${t('listen')} — ${book.title}`
     : `${t('read') || t('galleryRead')} — ${book.title}`;
@@ -153,10 +156,11 @@ export const KidsMediaCard = memo(function KidsMediaCard({
               <span className="sr-only">{t('yourFavorites')}</span>
             </span>
           )}
-          {book.is_premium && (
+        {premiumState.showBadge && (
             <span className="kids-book-meta-chip kids-book-meta-chip--accent" title="Premium">
               <PremiumRibbon language={language} className="!shadow-none scale-90 origin-start" />
-              <span className="sr-only">Premium</span>
+              {premiumState.showLock ? <LockIcon className="h-3.5 w-3.5" aria-hidden="true" /> : null}
+              <span className="sr-only">{premiumState.showLock ? t('premiumLocked') || 'Premium locked' : 'Premium'}</span>
             </span>
           )}
         </div>

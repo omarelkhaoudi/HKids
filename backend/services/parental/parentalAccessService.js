@@ -4,6 +4,7 @@ import {
   normalizeLibraryControls,
   normalizeRecommendationRails,
 } from '../../constants/parentControlCenter.js';
+import { canAccessPremiumBook, isPremiumContent } from '../premium/premiumContract.js';
 
 const THEME_KEYWORDS = {
   dinosaurs: ['dinosaure', 'dinosaur', 'dino'],
@@ -360,10 +361,17 @@ export function getContentAccessViolation(policy, content = {}, { includeGlobal 
     }
   }
 
-  if (content.is_premium === true && !policy.premiumUnlockedBookIds.includes(Number(content.id))) {
+  if (
+    isPremiumContent(content)
+    && !canAccessPremiumBook(content, {
+      hasActiveSubscription: policy.hasActiveSubscription,
+      unlockedBookIds: policy.premiumUnlockedBookIds,
+    })
+  ) {
     return new ParentalAccessError('PREMIUM_NOT_ALLOWED', {
       content_id: content.id,
-      active_subscription: policy.hasActiveSubscription
+      active_subscription: policy.hasActiveSubscription,
+      premium_access: content.metadata?.premium_access || null,
     });
   }
 
@@ -431,6 +439,7 @@ export function serializePolicyForClient(policy) {
     forbidden_category_names: policy.forbiddenCategoryNames,
     explicit_category_approvals: policy.explicitCategoryApprovals === true,
     premium_unlocked_book_ids: policy.premiumUnlockedBookIds,
+    has_active_subscription: policy.hasActiveSubscription === true,
     generated_at: new Date().toISOString()
   };
 }

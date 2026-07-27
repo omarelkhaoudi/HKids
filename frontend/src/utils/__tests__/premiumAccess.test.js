@@ -1,8 +1,10 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import {
   buildPremiumDiscoverySections,
+  canAccessBook,
   canAccessFeature,
   canAccessPack,
+  getBookAccessState,
   getPackAccessState,
   getSubscriptionComparisonRows,
   hasActiveSubscription,
@@ -33,6 +35,14 @@ describe('premiumAccess', () => {
     expect(hasActiveSubscription({ status: 'trialing' })).toBe(true);
     expect(hasActiveSubscription({ status: 'canceled' })).toBe(false);
     expect(hasActiveSubscription({ status: 'active', current_period_end: '2020-01-01' })).toBe(false);
+  });
+
+  it('gates premium books behind subscription or unlock list', () => {
+    const book = { id: 12, is_premium: true };
+    expect(canAccessBook(book, { subscription: null, parentalPolicy: { premium_unlocked_book_ids: [] } })).toBe(false);
+    expect(canAccessBook(book, { subscription: { status: 'active' }, parentalPolicy: { has_active_subscription: true } })).toBe(true);
+    expect(canAccessBook(book, { parentalPolicy: { premium_unlocked_book_ids: [12] } })).toBe(true);
+    expect(getBookAccessState(book, { parentalPolicy: { premium_unlocked_book_ids: [] } }).showLock).toBe(true);
   });
 
   it('gates premium features behind subscription + flags', () => {

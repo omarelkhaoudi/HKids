@@ -181,7 +181,7 @@ async function loadRecommendationBooks(pool, kid, context, policy) {
     premiumUnlockedBookIds: context.premiumUnlockedBookIds?.length
       ? context.premiumUnlockedBookIds
       : policy.premiumUnlockedBookIds || [],
-    hasPremiumAccess: context.hasPremiumAccess || policy.subscription?.status === 'active',
+    hasPremiumAccess: context.hasPremiumAccess || policy.hasActiveSubscription === true,
     learningGoals: context.learningGoals?.length
       ? context.learningGoals
       : (Array.isArray(kid.interests) ? kid.interests : []),

@@ -60,6 +60,7 @@ function book(index, d) {
     is_recommended: flags.includes('rec'),
     is_popular: flags.includes('pop'),
     is_new: flags.includes('new'),
+    is_premium: true,
     localizations: buildLocalizations({
       titleEn: d.titleEn,
       descEn: d.descEn,

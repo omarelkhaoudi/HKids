@@ -1,3 +1,5 @@
+import { PREMIUM_ACCESS } from '../services/premium/premiumContract.js';
+
 const AREA_BY_THEME = {
   alphabet: 'languages',
   languages: 'languages',
@@ -26,6 +28,25 @@ const SEARCH_ALIASES = {
   creativity: ['créativité', 'art', 'dessin', 'peinture', 'musique', 'creativity', 'إبداع', 'رسم'],
   characters: ['personnage', 'héros', 'premium', 'character', 'hero', 'شخصية', 'بطل'],
 };
+
+function inferPremiumFlags(item) {
+  const slug = String(item.slug || '');
+  let isPremium = item.is_premium === true || item.is_premium === 1;
+  if (!isPremium && slug.startsWith('prem-')) isPremium = true;
+
+  let premiumAccess = PREMIUM_ACCESS.FREE;
+  if (isPremium) {
+    if (item.premium_pack_id || item.metadata?.premium_pack_id) {
+      premiumAccess = PREMIUM_ACCESS.PACK;
+    } else if (item.premium_access === PREMIUM_ACCESS.UNLOCK) {
+      premiumAccess = PREMIUM_ACCESS.UNLOCK;
+    } else {
+      premiumAccess = PREMIUM_ACCESS.SUBSCRIPTION;
+    }
+  }
+
+  return { is_premium: isPremium, premium_access: premiumAccess };
+}
 
 // Editorial corrections for legacy machine-generated Arabic metadata.
 // Keeping them here makes the catalog source deterministic without rewriting
@@ -117,6 +138,7 @@ export function finalizeCatalogMetadata(items) {
       };
     }
     const catalogArea = inferCatalogArea(item);
+    const premiumFlags = inferPremiumFlags({ ...item, catalog_area: catalogArea });
     const subjects = cleanTerms(item.subjects || [item.theme]);
     const skills = cleanTerms(item.skills || []);
     const localizedTerms = Object.values(localizations || {}).flatMap((localization) => [
@@ -146,6 +168,7 @@ export function finalizeCatalogMetadata(items) {
 
     return {
       ...item,
+      is_premium: premiumFlags.is_premium,
       localizations,
       tags,
       catalog_area: catalogArea,
@@ -156,6 +179,9 @@ export function finalizeCatalogMetadata(items) {
       metadata: {
         schema_version: 2,
         catalog_area: catalogArea,
+        premium_access: premiumFlags.premium_access,
+        premium_pack_id: item.premium_pack_id || item.metadata?.premium_pack_id || null,
+        seasonal: Boolean(item.seasonal || item.is_seasonal),
         subjects,
         skills,
         search_terms: searchTerms,

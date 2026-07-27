@@ -1,6 +1,7 @@
 import { parentalAPI } from '../../api/parental';
 import { storage } from '../../utils/storage';
 import { offlineDb } from '../offline/offlineDb';
+import { canAccessPremiumBook, isPremiumContent } from '../premium/premiumContract';
 
 const POLICY_KEY = 'connected-kid-parental-policy';
 
@@ -178,7 +179,13 @@ export function getParentalViolation(policy, content = null) {
     }
   }
 
-  if (content.is_premium === true && !(policy.premium_unlocked_book_ids || []).includes(Number(content.id))) {
+  if (
+    isPremiumContent(content)
+    && !canAccessPremiumBook(content, {
+      hasActiveSubscription: policy.has_active_subscription || policy.hasActiveSubscription,
+      unlockedBookIds: policy.premium_unlocked_book_ids || [],
+    })
+  ) {
     return restriction('PREMIUM_NOT_ALLOWED');
   }
   return null;

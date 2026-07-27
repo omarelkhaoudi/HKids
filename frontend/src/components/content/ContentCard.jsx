@@ -13,10 +13,12 @@ import {
 } from '../Icons';
 import { KidsBookCover } from '../kids/KidsBookCover';
 import { useLanguage } from '../../context/LanguageContext';
+import { getBookAccessState } from '../../utils/premiumAccess';
 
-export function ContentCard({ content, playing = false, onToggleAudio }) {
+export function ContentCard({ content, playing = false, onToggleAudio, premiumContext = null }) {
   const { t } = useLanguage();
   const hasAudio = Boolean(content.audio_url);
+  const premiumState = content._premiumState || getBookAccessState(content, premiumContext || {});
 
   return (
     <motion.article
@@ -32,9 +34,9 @@ export function ContentCard({ content, playing = false, onToggleAudio }) {
           />
 
           <div className="absolute start-3 top-3 flex flex-wrap gap-2">
-            {content.is_premium && (
+            {premiumState.showBadge && (
               <span className="inline-flex items-center gap-1 rounded-full bg-accent-400 px-3 py-1 text-xs font-black text-accent-950 shadow">
-                <LockIcon className="h-3.5 w-3.5" />
+                {premiumState.showLock ? <LockIcon className="h-3.5 w-3.5" /> : null}
                 Premium
               </span>
             )}

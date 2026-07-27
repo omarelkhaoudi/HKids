@@ -5,6 +5,16 @@
 import { getFeatureFlags, listPremiumPacks } from './premiumPackStore';
 import { bookMatchesPack } from '../constants/premiumPacks';
 import { isPremiumBook } from './discoveryRails';
+import {
+  buildPremiumContext,
+  canAccessPremiumBook,
+  getBookPremiumState,
+  inferPremiumAccess,
+  isPremiumContent,
+  PREMIUM_ACCESS,
+} from '../services/premium/premiumContract';
+
+export { PREMIUM_ACCESS, inferPremiumAccess, isPremiumContent, getBookPremiumState };
 
 /** Normalize `/subscriptions/me` and nested API shapes. */
 export function normalizeSubscription(payload) {
@@ -52,6 +62,20 @@ export function canAccessPack(pack, { subscription = null, flags = getFeatureFla
   const required = pack.features || [];
   if (required.some((flag) => !isFeatureEnabled(flag, flags))) return false;
   return hasActiveSubscription(subscription);
+}
+
+export function canAccessBook(book, {
+  subscription = null,
+  parentalPolicy = null,
+  unlockedBookIds = [],
+} = {}) {
+  const context = buildPremiumContext({ subscription, parentalPolicy, unlockedBookIds });
+  return canAccessPremiumBook(book, context);
+}
+
+export function getBookAccessState(book, context = {}) {
+  const premiumContext = buildPremiumContext(context);
+  return getBookPremiumState(book, premiumContext);
 }
 
 export function getPackAccessState(pack, context = {}) {

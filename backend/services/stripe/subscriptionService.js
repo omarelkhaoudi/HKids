@@ -360,10 +360,13 @@ export async function unlockBook(user, bookId) {
     if (!subscription) throw httpError(402, 'No active subscription', 'NO_SUBSCRIPTION');
 
     const bookResult = await client.query(
-      'SELECT id FROM books WHERE id = $1 AND is_published = TRUE LIMIT 1',
+      'SELECT id, is_premium FROM books WHERE id = $1 AND is_published = TRUE LIMIT 1',
       [bookId]
     );
     if (!bookResult.rows[0]) throw httpError(404, 'Book not found', 'BOOK_NOT_FOUND');
+    if (!bookResult.rows[0].is_premium) {
+      throw httpError(400, 'Only premium books can be individually unlocked', 'NOT_PREMIUM_BOOK');
+    }
 
     const existingUnlock = await client.query(
       `SELECT * FROM subscription_book_unlocks

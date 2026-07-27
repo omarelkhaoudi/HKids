@@ -110,10 +110,16 @@ function isSeasonalMatch(book, season) {
   return keywords.some((keyword) => text.includes(keyword));
 }
 
+import { buildPremiumContext, canAccessPremiumBook, isPremiumContent } from '../premium/premiumContract';
+
 function isPremiumEligible(book, context) {
-  if (book?.is_premium !== true && book?.is_premium !== 1) return true;
-  if (context.hasPremiumAccess) return true;
-  return context.premiumUnlockedBookIds.includes(Number(book.id));
+  if (!isPremiumContent(book)) return true;
+  return canAccessPremiumBook(book, buildPremiumContext({
+    parentalPolicy: {
+      has_active_subscription: context.hasPremiumAccess,
+      premium_unlocked_book_ids: context.premiumUnlockedBookIds,
+    },
+  }));
 }
 
 function ageOverlapScore(source = {}, candidate = {}) {

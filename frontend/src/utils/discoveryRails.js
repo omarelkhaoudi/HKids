@@ -7,6 +7,7 @@ import {
   bookOverlapsAgeRange,
   getBookAgeRange,
 } from '../constants/ageGroups';
+import { isPremiumContent } from '../services/premium/premiumContract';
 
 const SEASONAL_KEYWORDS = {
   winter: ['winter', 'hiver', 'snow', 'neige', 'noel', 'christmas', 'froid', 'ice'],
@@ -93,7 +94,7 @@ export function isAudioBook(book) {
 }
 
 export function isPremiumBook(book) {
-  return book?.is_premium === true || book?.is_premium === 1;
+  return isPremiumContent(book);
 }
 
 export function estimateRemainingMinutes(book, progressPercent = 0) {

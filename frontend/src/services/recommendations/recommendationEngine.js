@@ -36,7 +36,8 @@ export function getRecommendationContext({
     readingStats: storage.getReadingStats(),
     learningGoals: onboarding.favoriteWorlds || [],
     premiumUnlockedBookIds: parentalPolicy?.premium_unlocked_book_ids || [],
-    hasPremiumAccess: parentalPolicy?.subscription?.status === 'active',
+    hasPremiumAccess: parentalPolicy?.has_active_subscription === true
+      || parentalPolicy?.hasActiveSubscription === true,
     language,
   };
 }
