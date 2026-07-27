@@ -57,7 +57,15 @@ async function fetchAsBlob(url, { signal, onProgress } = {}) {
 function serializeBook(book) {
   const coverUrl = ensureAbsoluteUrl(resolveBookCoverUrl(book));
   const audioUrl = ensureAbsoluteUrl(getFileUrl(book.audio_url));
-  const fileUrl = ensureAbsoluteUrl(getFileUrl(book.file_url || book.pdf_url));
+  const fileUrl = ensureAbsoluteUrl(getFileUrl(book.file_path || book.pdf_url));
+  const pageAssets = (book.pages || [])
+    .map((page, index) => {
+      const pageUrl = ensureAbsoluteUrl(getFileUrl(page.image_path));
+      if (!pageUrl) return null;
+      const pageNumber = page.page_number ?? index + 1;
+      return { key: `page-${pageNumber}`, url: pageUrl };
+    })
+    .filter(Boolean);
 
   return {
     id: downloadId('book', book.id),
@@ -70,7 +78,8 @@ function serializeBook(book) {
     assets: [
       coverUrl && { key: 'cover', url: coverUrl },
       audioUrl && { key: 'audio', url: audioUrl },
-      fileUrl && { key: 'file', url: fileUrl }
+      fileUrl && { key: 'file', url: fileUrl },
+      ...pageAssets,
     ].filter(Boolean)
   };
 }
@@ -315,6 +324,53 @@ export async function getOfflineBlobUrl(blobId) {
   const entry = await offlineDb.get(offlineDb.stores.blobs, blobId);
   if (!entry?.blob) return null;
   return URL.createObjectURL(entry.blob);
+}
+
+export async function revokeOfflineBlobUrl(url) {
+  if (url && String(url).startsWith('blob:')) {
+    URL.revokeObjectURL(url);
+  }
+}
+
+/**
+ * Hydrate a downloaded book payload with local blob URLs for offline reading.
+ */
+export async function resolveOfflineBook(bookId) {
+  const download = await getBookDownload(bookId);
+  if (!download || download.status !== 'downloaded') return null;
+
+  const book = {
+    ...download.payload,
+    pages: Array.isArray(download.payload?.pages)
+      ? download.payload.pages.map((page) => ({ ...page }))
+      : [],
+  };
+  const blobUrls = [];
+
+  for (const assetKey of download.assetKeys || []) {
+    const blobUrl = await getOfflineBlobUrl(assetKey);
+    if (!blobUrl) continue;
+    blobUrls.push(blobUrl);
+    const assetType = assetKey.split(':').pop();
+
+    if (assetType === 'cover') {
+      book.cover_image = blobUrl;
+    } else if (assetType === 'audio') {
+      book.audio_url = blobUrl;
+    } else if (assetType === 'file') {
+      book.file_path = blobUrl;
+    } else if (assetType?.startsWith('page-')) {
+      const pageNumber = Number(assetType.replace('page-', ''));
+      book.pages = book.pages.map((page, index) => {
+        const matches = Number(page.page_number ?? index + 1) === pageNumber;
+        return matches ? { ...page, image_path: blobUrl } : page;
+      });
+    }
+  }
+
+  book._offlineBlobUrls = blobUrls;
+  book._offlineReady = true;
+  return book;
 }
 
 export async function notifyServiceWorker(urls) {

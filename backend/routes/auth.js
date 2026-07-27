@@ -7,6 +7,31 @@ import { signupRateLimiter } from '../middleware/rateLimiter.js';
 import { canRegisterAdmin } from '../utils/adminSignupPolicy.js';
 import config from '../config/env.js';
 
+const LOGIN_LOCKOUT_MAX = 5;
+const LOGIN_LOCKOUT_WINDOW_MS = 15 * 60 * 1000;
+const failedLoginAttempts = new Map();
+
+function getLoginLockout(username) {
+  const entry = failedLoginAttempts.get(username);
+  if (!entry) return null;
+  if (Date.now() > entry.resetTime) {
+    failedLoginAttempts.delete(username);
+    return null;
+  }
+  return entry;
+}
+
+function recordFailedLogin(username) {
+  const existing = getLoginLockout(username) || { count: 0, resetTime: Date.now() + LOGIN_LOCKOUT_WINDOW_MS };
+  existing.count += 1;
+  existing.resetTime = Date.now() + LOGIN_LOCKOUT_WINDOW_MS;
+  failedLoginAttempts.set(username, existing);
+}
+
+function clearFailedLogin(username) {
+  failedLoginAttempts.delete(username);
+}
+
 const router = express.Router();
 const JWT_SECRET = config.jwtSecret;
 const JWT_EXPIRES_IN = config.jwtExpiresIn;
@@ -108,6 +133,11 @@ router.post('/login', async (req, res) => {
   try {
     const pool = getPool();
     const normalizedUsername = String(username).trim();
+    const lockout = getLoginLockout(normalizedUsername);
+    if (lockout && lockout.count >= LOGIN_LOCKOUT_MAX) {
+      return res.status(429).json({ error: 'Too many failed login attempts. Try again later.' });
+    }
+
     const result = await pool.query(
       'SELECT * FROM users WHERE username = $1',
       [normalizedUsername]
@@ -116,6 +146,7 @@ router.post('/login', async (req, res) => {
     const user = result.rows[0];
     if (!user) {
       console.log(`Login attempt failed: User '${username}' not found`);
+      recordFailedLogin(normalizedUsername);
       await logSecurityEvent(pool, {
         action: 'login_failed',
         req,
@@ -126,6 +157,7 @@ router.post('/login', async (req, res) => {
 
     const isValid = bcrypt.compareSync(password, user.password);
     if (!isValid) {
+      recordFailedLogin(normalizedUsername);
       console.log(`Login attempt failed: Invalid password for user '${username}'`);
       await logSecurityEvent(pool, {
         userId: user.id,
@@ -151,6 +183,7 @@ router.post('/login', async (req, res) => {
     );
 
     console.log(`✅ Successful login for user: ${user.username}`);
+    clearFailedLogin(normalizedUsername);
     await logSecurityEvent(pool, {
       userId: user.id,
       actorRole: user.role,

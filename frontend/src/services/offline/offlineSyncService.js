@@ -57,13 +57,7 @@ export async function getPendingMutations() {
 }
 
 export async function markMutationSynced(id) {
-  const entry = await offlineDb.get(offlineDb.stores.syncQueue, id);
-  if (!entry) return;
-  await offlineDb.put(offlineDb.stores.syncQueue, {
-    ...entry,
-    status: SYNC_STATUS.synced,
-    updatedAt: nowIso()
-  });
+  await offlineDb.delete(offlineDb.stores.syncQueue, id);
 }
 
 export async function markMutationFailed(id, error) {

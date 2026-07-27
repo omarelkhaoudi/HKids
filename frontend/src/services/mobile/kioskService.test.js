@@ -103,11 +103,11 @@ describe('kiosk exit code', () => {
     kiosk = await import('./kioskService');
   });
 
-  it('falls back to the build-time code when nothing is stored', () => {
-    expect(kiosk.getKioskExitCode()).toBe(import.meta.env.VITE_KIOSK_EXIT_CODE || '1379');
+  it('returns null when no exit code is configured', () => {
+    expect(kiosk.getKioskExitCode()).toBe(import.meta.env.VITE_KIOSK_EXIT_CODE || null);
   });
 
-  it('stores and verifies a numeric code of 4 to 8 digits', () => {
+  it('stores and verifies a numeric code of 6 to 8 digits', () => {
     expect(kiosk.setKioskExitCode('482913')).toBe(true);
     expect(kiosk.getKioskExitCode()).toBe('482913');
     expect(kiosk.verifyKioskExitCode('482913')).toBe(true);
@@ -115,22 +115,22 @@ describe('kiosk exit code', () => {
   });
 
   it('rejects codes that are too short, too long or not numeric', () => {
-    expect(kiosk.setKioskExitCode('123')).toBe(false);
+    expect(kiosk.setKioskExitCode('12345')).toBe(false);
     expect(kiosk.setKioskExitCode('123456789')).toBe(false);
     expect(kiosk.setKioskExitCode('12a4')).toBe(false);
     expect(kiosk.setKioskExitCode('')).toBe(false);
   });
 
   it('never exits kiosk mode with a wrong code', async () => {
-    kiosk.setKioskExitCode('9182');
-    const result = await kiosk.requestKioskExit('0000');
+    kiosk.setKioskExitCode('918200');
+    const result = await kiosk.requestKioskExit('000000');
     expect(result.exited).toBe(false);
     expect(result.reason).toBe('invalid_code');
   });
 
   it('reports not_android once the code is correct but no bridge exists', async () => {
-    kiosk.setKioskExitCode('9182');
-    const result = await kiosk.requestKioskExit('9182');
+    kiosk.setKioskExitCode('918200');
+    const result = await kiosk.requestKioskExit('918200');
     expect(result.exited).toBe(false);
     expect(result.reason).toBe('not_android');
   });

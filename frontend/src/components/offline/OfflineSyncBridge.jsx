@@ -19,7 +19,7 @@ import { checkCatalogUpdate } from '../../services/contentDelivery/catalogDelive
 import { syncFavoriteDownloads, bindFavoriteAutoDownload } from '../../services/contentDelivery/favoritesAutoDownloadService';
 import { runPredictiveDownloads } from '../../services/contentDelivery/predictiveDownloadService';
 import { getStorageStats, optimizeStorage } from '../../services/contentDelivery/storageStatsService';
-import { drainQueue } from '../../services/contentDelivery/smartDownloadService';
+import { drainQueue, resumePausedDownloads } from '../../services/contentDelivery/smartDownloadService';
 
 const syncHandlers = {
   reading_progress: (payload) => parentalAPI.recordReadingProgress(payload),
@@ -85,6 +85,7 @@ export function OfflineSyncBridge() {
         try {
           await syncFavoriteDownloads({ limit: 12 });
           await runPredictiveDownloads({ limit: 3 });
+          await resumePausedDownloads();
           await drainQueue();
           const stats = await getStorageStats();
           if (stats.quotaBytes && stats.usageBytes / stats.quotaBytes > 0.9) {

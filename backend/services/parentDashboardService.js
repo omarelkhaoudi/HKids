@@ -729,6 +729,18 @@ export async function recordKidScreenTime({ user, clientSessionId, durationSecon
 export async function setKidBookFavorite({ user, bookId, favorite, favoritedAt = null }) {
   const pool = getDatabase();
   const kid = await requireConnectedKid(pool, user);
+  const bookCheck = await pool.query(
+    `SELECT b.*, c.name AS category_name
+     FROM books b
+     LEFT JOIN categories c ON c.id = b.category_id
+     WHERE b.id = $1 AND b.is_published = TRUE`,
+    [bookId]
+  );
+  if (!bookCheck.rows[0]) throw httpError(404, 'Book not found', 'BOOK_NOT_FOUND');
+  const policy = await loadChildAccessPolicy({ user, pool });
+  const violation = getContentAccessViolation(policy, bookCheck.rows[0]);
+  if (violation) throw violation;
+
   if (favorite) {
     const result = await pool.query(
       `INSERT INTO kid_book_favorites (kid_profile_id, book_id, favorited_at)
@@ -761,6 +773,18 @@ export async function recordKidBookHistory({
 }) {
   const pool = getDatabase();
   const kid = await requireConnectedKid(pool, user);
+  const bookCheck = await pool.query(
+    `SELECT b.*, c.name AS category_name
+     FROM books b
+     LEFT JOIN categories c ON c.id = b.category_id
+     WHERE b.id = $1 AND b.is_published = TRUE`,
+    [bookId]
+  );
+  if (!bookCheck.rows[0]) throw httpError(404, 'Book not found', 'BOOK_NOT_FOUND');
+  const policy = await loadChildAccessPolicy({ user, pool });
+  const violation = getContentAccessViolation(policy, bookCheck.rows[0]);
+  if (violation) throw violation;
+
   const result = await pool.query(
     `INSERT INTO kid_book_history (
        kid_profile_id, book_id, last_page, listened_seconds,

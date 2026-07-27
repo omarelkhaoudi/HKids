@@ -23,6 +23,12 @@ import {
   applySingleBookLocalization,
   normalizeLocale,
 } from '../services/content/contentLocalizationService.js';
+import {
+  isBookPremiumLocked,
+  redactLockedBookContent,
+  resolvePremiumContextForUser,
+  resolveUserFromToken,
+} from '../services/premium/bookAccessService.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -215,35 +221,16 @@ router.get('/published', async (req, res) => {
 
   const token = req.headers.authorization?.split(' ')[1];
   let authenticatedUser = null;
+  let premiumContext = { hasActiveSubscription: false, unlockedBookIds: [], isAdmin: false, policy: null };
 
-  if (token) {
-    try {
-      const decoded = jwt.verify(token, config.jwtSecret, { algorithms: ['HS256'] });
-      const pool = getPool();
-      const userResult = await pool.query(
-        'SELECT id, username, role, kid_profile_id FROM users WHERE id = $1 LIMIT 1',
-        [decoded.id]
-      );
-      const dbUser = userResult.rows[0] || null;
-      if (!dbUser) {
-        return res.status(401).json({ error: 'Invalid or expired token' });
-      }
-      if (dbUser.role === 'kid') {
-        if (!dbUser.kid_profile_id) {
-          return res.status(401).json({ error: 'Invalid or expired token' });
-        }
-        const profileResult = await pool.query(
-          'SELECT id FROM kids_profiles WHERE id = $1 LIMIT 1',
-          [dbUser.kid_profile_id]
-        );
-        if (!profileResult.rows[0]) {
-          return res.status(401).json({ error: 'Invalid or expired token' });
-        }
-        authenticatedUser = dbUser;
-      }
-    } catch (err) {
-      // Invalid token, continue as public user.
+  try {
+    const pool = getPool();
+    authenticatedUser = await resolveUserFromToken(pool, token);
+    if (authenticatedUser) {
+      premiumContext = await resolvePremiumContextForUser(pool, authenticatedUser);
     }
+  } catch {
+    // Continue as anonymous catalog visitor.
   }
 
   let query = `
@@ -315,12 +302,14 @@ router.get('/published', async (req, res) => {
     const result = await pool.query(query, params);
     let books = result.rows;
 
-    if (authenticatedUser) {
-      const policy = await loadChildAccessPolicy({ user: authenticatedUser, pool });
+    if (authenticatedUser?.role === 'kid') {
+      const policy = premiumContext.policy;
       const globalViolation = getGlobalAccessViolation(policy);
       if (globalViolation) return sendParentalAccessError(res, globalViolation);
       books = filterAllowedContent(policy, books);
     }
+
+    books = books.map((book) => redactLockedBookContent(book, premiumContext));
 
     books = await applyBooksLocalizations(pool, books, locale);
 
@@ -334,7 +323,6 @@ router.get('/published', async (req, res) => {
 
 router.get('/:id', async (req, res) => {
   try {
-    console.log('Book ID:', req.params.id);
     const pool = getPool();
     const isNumericId = /^\d+$/.test(req.params.id);
     const bookResult = await pool.query(
@@ -347,32 +335,22 @@ router.get('/:id', async (req, res) => {
     );
 
     const book = bookResult.rows[0];
-    console.log('Book loaded:', book);
     if (!book) {
       return res.status(404).json({ error: 'Book not found' });
     }
 
     const token = req.headers.authorization?.split(' ')[1];
-    let authenticatedUser = null;
-    if (token) {
-      try {
-        const decoded = jwt.verify(token, config.jwtSecret, { algorithms: ['HS256'] });
-        const userResult = await pool.query(
-          'SELECT id, username, role, kid_profile_id FROM users WHERE id = $1 LIMIT 1',
-          [decoded.id]
-        );
-        authenticatedUser = userResult.rows[0] || null;
-        if (!authenticatedUser) {
-          return res.status(401).json({ error: 'Invalid or expired token' });
-        }
-        if (authenticatedUser.role === 'kid' && authenticatedUser.kid_profile_id) {
-          const policy = await loadChildAccessPolicy({ user: authenticatedUser, pool });
-          const violation = getContentAccessViolation(policy, book);
-          if (violation) return sendParentalAccessError(res, violation);
-        }
-      } catch (err) {
-        return res.status(401).json({ error: 'Invalid or expired token' });
-      }
+    const authenticatedUser = await resolveUserFromToken(pool, token);
+    const premiumContext = await resolvePremiumContextForUser(pool, authenticatedUser);
+
+    if (token && !authenticatedUser) {
+      return res.status(401).json({ error: 'Invalid or expired token' });
+    }
+
+    if (authenticatedUser?.role === 'kid' && authenticatedUser.kid_profile_id) {
+      const policy = premiumContext.policy;
+      const violation = getContentAccessViolation(policy, book);
+      if (violation) return sendParentalAccessError(res, violation);
     }
 
     const publiclyAvailable = (
@@ -384,6 +362,14 @@ router.get('/:id', async (req, res) => {
       return res.status(404).json({ error: 'Book not found' });
     }
 
+    if (isBookPremiumLocked(book, premiumContext)) {
+      return res.status(402).json({
+        error: 'Premium subscription required',
+        code: 'PREMIUM_REQUIRED',
+        book_id: book.id,
+      });
+    }
+
     const pagesResult = await pool.query(
       'SELECT * FROM book_pages WHERE book_id = $1 ORDER BY page_number',
       [book.id]
@@ -392,14 +378,6 @@ router.get('/:id', async (req, res) => {
     const locale = normalizeLocale(req.query.locale || req.query.language);
     let story = { ...book, pages: pagesResult.rows };
     story = await applySingleBookLocalization(pool, story, locale);
-    console.log('Story loaded:', story);
-    console.log('API response:', {
-      route: 'GET /books/:id',
-      id: book.id,
-      slug: book.slug,
-      page_count: book.page_count,
-      pages_loaded: pagesResult.rowCount,
-    });
 
     res.json(story);
   } catch (err) {

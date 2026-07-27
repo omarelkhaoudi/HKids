@@ -26,6 +26,7 @@ export function KidsPageShell({
     >
       <KidsAmbientBackground world={ambientWorld} />
       <motion.div
+        id="main-content"
         className={`kids-page relative z-10 flex min-h-0 flex-1 flex-col ${wide ? 'kids-main-tablet-wide' : ''}`}
         {...getMotionProps(reducedMotion, kidsPageEnter)}
       >

@@ -4,6 +4,9 @@
  */
 
 import { offlineAPI } from '../../api/offline';
+import { downloadContentPack } from './contentPackDownloadService';
+import { DOWNLOAD_PRIORITY, enqueueBookDownload } from './smartDownloadService';
+import { booksAPI } from '../../api/books';
 import { offlineDb } from '../offline/offlineDb';
 
 const META_ACTIVE = 'catalog:active';
@@ -158,6 +161,29 @@ function buildHistoryEntries(pending, appliedAt) {
   return entries;
 }
 
+async function enqueuePendingPackDownloads(packs = []) {
+  const tasks = (Array.isArray(packs) ? packs : []).map(async (pack) => {
+    if (!pack) return;
+    if (pack.id || pack.pack_id) {
+      await downloadContentPack(pack, { language: 'fr' }).catch(() => {});
+      return;
+    }
+    const bookId = pack.book_id ?? pack.bookId;
+    if (!bookId) return;
+    try {
+      const response = await booksAPI.getBook(bookId);
+      await enqueueBookDownload(response.data, {
+        priority: DOWNLOAD_PRIORITY.PACK,
+        reason: 'catalog_update',
+        label: response.data?.title,
+      });
+    } catch {
+      /* best effort */
+    }
+  });
+  await Promise.allSettled(tasks);
+}
+
 /**
  * Apply pending catalog metadata safely. Keeps previous snapshot for rollback.
  * Does not delete existing offline blobs — incremental reuse.
@@ -202,6 +228,7 @@ export async function applyCatalogUpdate(pendingOverride = null) {
     await setMeta(META_LAST_SYNC, appliedAt);
 
     emitCatalogEvent({ type: 'applied', catalog: nextActive });
+    enqueuePendingPackDownloads(pending.packs || []).catch(() => {});
     return { active: nextActive, previous: snapshot };
   } catch (error) {
     // Restore previous pointer if write failed mid-flight

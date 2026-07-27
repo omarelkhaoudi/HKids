@@ -49,21 +49,6 @@ function AdminLogin({audience = 'admin'}) {
  const {t} = useLanguage();
  const navigate = useNavigate();
 
- const resetRateLimit = async () => {
- try {
- const response = await fetch(buildApiUrl('/reset-rate-limit'), {
- method: 'POST',
- headers: {'Content-Type': 'application/json'},
-});
- if (response.ok) {
- return true;
-}
-} catch (err) {
- console.error('Error resetting rate limit:', err);
-}
- return false;
-};
-
  const handleSubmit = async (e) => {
  e.preventDefault();
  setError('');
@@ -91,12 +76,8 @@ function AdminLogin({audience = 'admin'}) {
  errorMessage = t('adminLoginErrorNetwork');
 } else if (errorMessage.includes('timeout')) {
  errorMessage = t('adminLoginErrorTimeout');
-} else if (errorMessage.includes('Too many requests') || errorMessage.includes('429') || errorMessage.includes('Erreur 429')) {
- // Auto-reset rate limit
- const reset = await resetRateLimit();
- errorMessage = reset 
- ? t('adminLoginErrorRateReset')
- : t('adminLoginErrorRateWait');
+ } else if (errorMessage.includes('Too many requests') || errorMessage.includes('429') || errorMessage.includes('Erreur 429')) {
+ errorMessage = t('adminLoginErrorRateWait');
 }
  setError(errorMessage);
 }

@@ -11,7 +11,6 @@ const Kiosk = Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'andro
   : null;
 
 const EXIT_CODE_KEY = 'hkids_kiosk_exit_code';
-const DEFAULT_EXIT_CODE = '1379';
 
 const WEB_STATUS = {
   platform: 'web',
@@ -41,6 +40,7 @@ async function invoke(method, options, fallback) {
 export async function enableKiosk({ persistent = true } = {}) {
   if (!isAndroid() || !Kiosk) return { enabled: false, reason: 'not_android' };
   try {
+    ensureKioskExitCode();
     return await Kiosk.enableKiosk({ persistent });
   } catch (error) {
     console.warn('Kiosk enableKiosk failed:', error);
@@ -159,14 +159,15 @@ export function getKioskExitCode() {
     const stored = localStorage.getItem(EXIT_CODE_KEY);
     if (stored) return stored;
   } catch {
-    // Private browsing or a locked-down WebView: fall back to the build-time code.
+    // Private browsing or a locked-down WebView.
   }
-  return import.meta.env?.VITE_KIOSK_EXIT_CODE || DEFAULT_EXIT_CODE;
+  const envCode = import.meta.env?.VITE_KIOSK_EXIT_CODE;
+  return envCode ? String(envCode).trim() : null;
 }
 
 export function setKioskExitCode(code) {
   const normalized = String(code || '').trim();
-  if (!/^\d{4,8}$/.test(normalized)) return false;
+  if (!/^\d{6,8}$/.test(normalized)) return false;
   try {
     localStorage.setItem(EXIT_CODE_KEY, normalized);
     return true;
@@ -176,7 +177,18 @@ export function setKioskExitCode(code) {
 }
 
 export function verifyKioskExitCode(code) {
-  return String(code || '').trim() === getKioskExitCode();
+  const expected = getKioskExitCode();
+  if (!expected) return false;
+  return String(code || '').trim() === expected;
+}
+
+/** Generate and persist a random exit code when kiosk is first enabled. */
+export function ensureKioskExitCode() {
+  const existing = getKioskExitCode();
+  if (existing) return existing;
+  const generated = String(Math.floor(100000 + Math.random() * 900000));
+  setKioskExitCode(generated);
+  return generated;
 }
 
 /**

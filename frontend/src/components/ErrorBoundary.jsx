@@ -2,6 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { HomeIcon, RefreshIcon, AlertIcon } from './Icons';
 import { captureException } from '../lib/sentry';
+import { i18nT } from '../utils/i18n';
 
 class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -39,11 +40,11 @@ class ErrorBoundary extends React.Component {
             </div>
             
             <h1 className="text-2xl font-semibold text-surface-900 mb-3">
-              Une erreur s'est produite
+              {i18nT('errorBoundaryTitle')}
             </h1>
             
             <p className="text-surface-600 mb-6 text-sm">
-              Désolé, quelque chose d'inattendu s'est produit. Vos données sont en sécurité.
+              {i18nT('errorBoundaryMessage')}
             </p>
 
             {import.meta.env.DEV && this.state.error && (
@@ -64,7 +65,7 @@ class ErrorBoundary extends React.Component {
                 className="btn-primary flex items-center gap-2"
               >
                 <HomeIcon className="w-4 h-4" />
-                <span>Retour à l'accueil</span>
+                <span>{i18nT('errorBoundaryHome')}</span>
               </button>
               
               <button
@@ -72,7 +73,7 @@ class ErrorBoundary extends React.Component {
                 className="btn-secondary flex items-center gap-2"
               >
                 <RefreshIcon className="w-4 h-4" />
-                <span>Recharger</span>
+                <span>{i18nT('errorBoundaryReload')}</span>
               </button>
             </div>
           </div>

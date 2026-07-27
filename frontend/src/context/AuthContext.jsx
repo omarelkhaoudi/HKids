@@ -26,9 +26,8 @@ export function AuthProvider({ children }) {
     const token = localStorage.getItem('token');
     if (token) {
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-      // Verify token is still valid
       const userData = localStorage.getItem('user');
-      if (userData) {
+      if (userData && !navigator.onLine) {
         setUser(JSON.parse(userData));
       }
     }
@@ -55,20 +54,23 @@ export function AuthProvider({ children }) {
       }
     );
 
-    if (token && navigator.onLine) {
-      axios.get(buildApiUrl('/auth/me'))
-        .then((response) => {
+    const verifySession = async () => {
+      if (token && navigator.onLine) {
+        try {
+          const response = await axios.get(buildApiUrl('/auth/me'));
           const verifiedUser = response.data?.user;
-          if (!verifiedUser) return;
-          localStorage.setItem('user', JSON.stringify(verifiedUser));
-          setUser(verifiedUser);
-        })
-        .catch(() => {
+          if (verifiedUser) {
+            localStorage.setItem('user', JSON.stringify(verifiedUser));
+            setUser(verifiedUser);
+          }
+        } catch {
           // The interceptor clears invalid sessions. Network failures keep offline access.
-        });
-    }
+        }
+      }
+      setLoading(false);
+    };
 
-    setLoading(false);
+    verifySession();
 
     return () => {
       axios.interceptors.response.eject(interceptorId);

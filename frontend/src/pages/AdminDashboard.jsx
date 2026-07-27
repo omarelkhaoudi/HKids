@@ -228,13 +228,21 @@ const CommandPalette = ({isOpen, onClose}) => {
 
 function RequireAdminPermission({permission, permissions, children}) {
  const { t } = useLanguage();
- if (permissions == null) return children;
- if (permissions.includes(permission)) return children;
- return (
- <div className="rounded-2xl bg-accent-50 border border-accent-200 p-6 font-bold text-accent-800">
- {t('adminDashboardAccessDenied').replace('{permission}', permission)}
- </div>
- );
+ if (permissions === 'loading') {
+  return (
+   <div className="rounded-2xl bg-surface-50 border border-surface-200 p-6 text-center text-surface-600">
+    {t('adminLoading')}
+   </div>
+  );
+ }
+ if (!Array.isArray(permissions) || !permissions.includes(permission)) {
+  return (
+   <div className="rounded-2xl bg-accent-50 border border-accent-200 p-6 font-bold text-accent-800">
+    {t('adminDashboardAccessDenied').replace('{permission}', permission)}
+   </div>
+  );
+ }
+ return children;
 }
 
 function AdminDashboard() {
@@ -246,14 +254,14 @@ function AdminDashboard() {
  const [isMobileNavOpen, setMobileNavOpen] = useState(false);
  const [isSearchOpen, setIsSearchOpen] = useState(false);
  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
- const [permissions, setPermissions] = useState(null);
+ const [permissions, setPermissions] = useState('loading');
  const [notifications, setNotifications] = useState({items: [], unread_count: 0});
 
  useEffect(() => {
  if (!user?.id) return;
  adminAPI.getMyPermissions()
  .then((response) => setPermissions(response.data?.permissions || []))
- .catch((error) => console.error('Could not load admin permissions:', error));
+ .catch(() => setPermissions([]));
 }, [user?.id]);
 
  useEffect(() => {
@@ -475,7 +483,7 @@ function AdminDashboard() {
  </header>
 
  {/* MAIN SCROLLABLE AREA */}
- <main className="flex-1 overflow-y-auto bg-background">
+ <main id="main-content" className="flex-1 overflow-y-auto bg-background">
  <div className="p-6 md:p-8 w-full max-w-[1600px] mx-auto">
  <Routes>
  <Route index element={<RequireAdminPermission permission="overview.read" permissions={permissions}><AdminOverview /></RequireAdminPermission>} />

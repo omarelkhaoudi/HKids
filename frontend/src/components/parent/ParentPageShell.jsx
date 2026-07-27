@@ -192,6 +192,7 @@ export function ParentPageShell({
           </header>
 
           <motion.div
+            id="main-content"
             className="parent-main-scroll"
             {...getMotionProps(reducedMotion, kidsPageEnter)}
           >

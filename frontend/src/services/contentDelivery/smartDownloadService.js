@@ -12,7 +12,8 @@ import {
   markJobFailed,
   upsertJob,
 } from './downloadQueueService';
-import { downloadBook, getDownload, offlineContentIds } from '../offline/offlineContentService';
+import { downloadBook, getDownload, getDownloads, offlineContentIds } from '../offline/offlineContentService';
+import { booksAPI } from '../../api/books';
 import { getOfflinePrefs, shouldDeferForNetwork } from './offlinePrefs';
 import { recordOfflineEvent } from './offlineAnalyticsService';
 
@@ -129,6 +130,16 @@ export function getOrderedJobs() {
     });
 }
 
+async function resolveFullBook(book) {
+  if (Array.isArray(book?.pages) && book.pages.length > 0) return book;
+  try {
+    const response = await booksAPI.getBook(book.id);
+    return response.data || book;
+  } catch {
+    return book;
+  }
+}
+
 async function runBookJob(jobId, entry) {
   const controller = createAbortController(jobId);
   upsertJob(jobId, {
@@ -143,7 +154,8 @@ async function runBookJob(jobId, entry) {
   });
 
   try {
-    const result = await downloadBook(entry.book, {
+    const fullBook = await resolveFullBook(entry.book);
+    const result = await downloadBook(fullBook, {
       signal: controller.signal,
       onProgress: (progress) => {
         upsertJob(jobId, { progress, status: 'downloading' });
@@ -195,6 +207,20 @@ export async function drainQueue() {
     }
   } finally {
     draining = false;
+  }
+}
+
+export async function resumePausedDownloads() {
+  const downloads = await getDownloads({ includeRestricted: true });
+  for (const record of downloads) {
+    if (!['paused', 'downloading'].includes(record.status)) continue;
+    if (!record.payload?.id) continue;
+    await enqueueBookDownload(record.payload, {
+      priority: DOWNLOAD_PRIORITY.MANUAL,
+      label: record.title,
+      reason: 'resume',
+      force: true,
+    });
   }
 }
 

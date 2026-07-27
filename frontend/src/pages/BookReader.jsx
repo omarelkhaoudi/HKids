@@ -47,8 +47,10 @@ import {
 } from '../components/kids/KidsReaderAudioExperience';
 import {useReducedMotion} from '../hooks/useReducedMotion';
 import {recordBookCompleted} from '../utils/learningUniverseProgress';
+import {getBookDownload, resolveOfflineBook} from '../services/offline/offlineContentService';
+import pdfWorkerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 
-const PDFJS_WORKER_SRC = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@5.4.624/build/pdf.worker.min.mjs';
+const PDFJS_WORKER_SRC = pdfWorkerUrl;
 
 let pdfjsLibPromise = null;
 
@@ -783,19 +785,43 @@ function BookReader() {
  try {
  setLoading(true);
  setBook(null);
- await subscriptionsAPI.unlockBook(id);
- const response = await booksAPI.getBook(id);
- setBook(response.data);
- 
+
+ const applyLoadedBook = (data) => {
+ setBook(data);
  const pageParam = searchParams.get('page');
  const requestedPage = pageParam !== null ? Number.parseInt(pageParam, 10) : storage.getLastPage(id);
- const maxPage = Math.max(0, (response.data.pages?.length || response.data.page_count || 1) - 1);
+ const maxPage = Math.max(0, (data.pages?.length || data.page_count || 1) - 1);
  const savedPage = Number.isInteger(requestedPage)
  ? Math.min(Math.max(0, requestedPage), maxPage)
  : 0;
  setCurrentPage(savedPage);
- 
- storage.addToHistory(id, response.data.title, savedPage);
+ storage.addToHistory(id, data.title, savedPage);
+ };
+
+ if (!navigator.onLine) {
+ const offlineBook = await resolveOfflineBook(id);
+ if (offlineBook) {
+ applyLoadedBook(offlineBook);
+ return;
+ }
+ throw new Error('offline-unavailable');
+ }
+
+ try {
+ await subscriptionsAPI.unlockBook(id);
+ } catch (unlockError) {
+ const status = unlockError.response?.status;
+ if (status === 402 || status === 403) throw unlockError;
+ const offlineBook = await resolveOfflineBook(id);
+ if (offlineBook) {
+ applyLoadedBook(offlineBook);
+ return;
+ }
+ throw unlockError;
+ }
+
+ const response = await booksAPI.getBook(id);
+ applyLoadedBook(response.data);
 } catch (error) {
  console.error('Error loading book:', error);
  const status = error.response?.status;
@@ -812,7 +838,12 @@ function BookReader() {
  3000
  );
  navigate(user?.role === 'kid' ? '/kids/library' : '/abonnements');
-}
+ } else if (!navigator.onLine || error.message === 'offline-unavailable') {
+ const cached = await getBookDownload(id);
+ if (!cached || cached.status !== 'downloaded') {
+ showToast(t('downloadError') || 'Offline content unavailable', 'error', 3000);
+ }
+ }
 } finally {
  setLoading(false);
 }

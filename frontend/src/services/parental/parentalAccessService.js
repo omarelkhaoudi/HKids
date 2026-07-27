@@ -2,19 +2,20 @@ import { parentalAPI } from '../../api/parental';
 import { storage } from '../../utils/storage';
 import { offlineDb } from '../offline/offlineDb';
 import { canAccessPremiumBook, isPremiumContent } from '../premium/premiumContract';
+import { i18nT } from '../../utils/i18n';
 
 const POLICY_KEY = 'connected-kid-parental-policy';
 
-const MESSAGES = {
-  SCREEN_TIME_LIMIT: "Le temps d'écran autorisé est terminé pour aujourd'hui.",
-  BLOCKED_HOURS: "Cette fonctionnalité n'est pas disponible pendant l'horaire de pause défini par le parent.",
-  CATEGORY_NOT_ALLOWED: "Ce contenu n'appartient pas à une catégorie autorisée.",
-  LANGUAGE_NOT_ALLOWED: "Cette langue n'est pas autorisée par le contrôle parental.",
-  THEME_NOT_ALLOWED: "Ce thème n'est pas autorisé par le contrôle parental.",
-  CONTENT_TYPE_NOT_ALLOWED: "Ce type de contenu n'est pas autorisé par le contrôle parental.",
-  AGE_NOT_ALLOWED: "Ce contenu n'est pas adapté à ton âge.",
-  PREMIUM_NOT_ALLOWED: "Ce contenu premium doit être débloqué par ton parent.",
-  POLICY_UNAVAILABLE: "Le contrôle parental doit être vérifié avant d'utiliser ce contenu hors connexion."
+const MESSAGE_KEYS = {
+  SCREEN_TIME_LIMIT: 'parentalRestrictionScreenTime',
+  BLOCKED_HOURS: 'parentalRestrictionBlockedHours',
+  CATEGORY_NOT_ALLOWED: 'parentalRestrictionCategory',
+  LANGUAGE_NOT_ALLOWED: 'parentalRestrictionLanguage',
+  THEME_NOT_ALLOWED: 'parentalRestrictionTheme',
+  CONTENT_TYPE_NOT_ALLOWED: 'parentalRestrictionContentType',
+  AGE_NOT_ALLOWED: 'parentalRestrictionAge',
+  PREMIUM_NOT_ALLOWED: 'parentalRestrictionPremium',
+  POLICY_UNAVAILABLE: 'parentalRestrictionUnavailable',
 };
 
 function currentKidUser() {
@@ -60,7 +61,7 @@ function todayOfflineSeconds() {
 }
 
 function restriction(code, details = {}) {
-  const error = new Error(MESSAGES[code] || MESSAGES.POLICY_UNAVAILABLE);
+  const error = new Error(i18nT(MESSAGE_KEYS[code] || MESSAGE_KEYS.POLICY_UNAVAILABLE));
   error.code = code;
   error.parentalRestriction = true;
   error.details = details;

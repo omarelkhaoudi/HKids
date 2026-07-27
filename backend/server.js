@@ -40,6 +40,11 @@ import { authRateLimiter, getClientIp, resetRateLimit, skipAuthPathsRateLimiter 
 import { securityHeaders } from './middleware/securityHeaders.js';
 import { sanitizeBody } from './middleware/validator.js';
 import { isDevOnlyEndpointEnabled } from './utils/productionGuards.js';
+import {
+  isBookPremiumLocked,
+  resolvePremiumContextForUser,
+  resolveUserFromToken,
+} from './services/premium/bookAccessService.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -101,7 +106,16 @@ app.use('/api', skipAuthPathsRateLimiter);
 // required so the reader never displays unrelated old content.
 app.get('/uploads/books/:filename', async (req, res) => {
   try {
-    const filename = req.params.filename;
+    const rawFilename = req.params.filename;
+    if (
+      !rawFilename
+      || rawFilename !== path.basename(rawFilename)
+      || rawFilename.includes('..')
+    ) {
+      return res.status(400).json({ error: 'Invalid filename' });
+    }
+
+    const filename = path.basename(rawFilename);
     const fullPath = path.join(__dirname, 'uploads', 'books', filename);
     const storedPath = `/uploads/books/${filename}`;
     const pool = getDatabase();
@@ -122,7 +136,15 @@ app.get('/uploads/books/:filename', async (req, res) => {
              AND b.is_published = TRUE
              AND (b.publish_at IS NULL OR b.publish_at <= NOW())
              AND COALESCE(b.moderation_status, 'approved') = 'approved'
-         ) AS public_asset`,
+         ) AS public_asset,
+         (
+           SELECT b.is_premium
+           FROM books b
+           LEFT JOIN book_pages bp ON bp.book_id = b.id
+           WHERE $1 IN (b.file_path, b.cover_image, b.audio_url)
+              OR bp.image_path = $1
+           LIMIT 1
+         ) AS is_premium`,
       [storedPath]
     );
     const access = accessResult.rows[0] || {};
@@ -130,21 +152,19 @@ app.get('/uploads/books/:filename', async (req, res) => {
       return res.status(404).json({ error: 'Book file not found' });
     }
 
+    const token = req.headers.authorization?.split(' ')[1];
+    const authenticatedUser = await resolveUserFromToken(pool, token);
+    const premiumContext = await resolvePremiumContextForUser(pool, authenticatedUser);
+
     if (!access.public_asset) {
-      const token = req.headers.authorization?.split(' ')[1];
-      if (!token) return res.status(404).json({ error: 'Book file not found' });
-      try {
-        const decoded = jwt.verify(token, config.jwtSecret, { algorithms: ['HS256'] });
-        const admin = await pool.query(
-          `SELECT id FROM users
-           WHERE id = $1 AND role = 'admin'
-           LIMIT 1`,
-          [decoded.id]
-        );
-        if (!admin.rows[0]) return res.status(404).json({ error: 'Book file not found' });
-      } catch {
+      if (!authenticatedUser || authenticatedUser.role !== 'admin') {
         return res.status(404).json({ error: 'Book file not found' });
       }
+    } else if (
+      access.is_premium === true
+      && isBookPremiumLocked({ is_premium: true }, premiumContext)
+    ) {
+      return res.status(404).json({ error: 'Book file not found' });
     }
 
     if (fs.existsSync(fullPath)) {

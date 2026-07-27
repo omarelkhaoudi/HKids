@@ -64,7 +64,7 @@ export async function initDatabase() {
         id SERIAL PRIMARY KEY,
         username TEXT UNIQUE NOT NULL,
         password TEXT NOT NULL,
-        role TEXT DEFAULT 'admin',
+        role TEXT DEFAULT 'parent',
         admin_permissions JSONB,
         created_at TIMESTAMPTZ DEFAULT NOW()
       );`,
@@ -675,6 +675,7 @@ export async function initDatabase() {
     await client.query(`ALTER TABLE user_subscriptions ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW()`);
     await client.query(`ALTER TABLE user_subscriptions ADD COLUMN IF NOT EXISTS trial_end TIMESTAMPTZ`);
     await client.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS admin_permissions JSONB`);
+    await client.query(`ALTER TABLE users ALTER COLUMN role SET DEFAULT 'parent'`);
     await client.query(`ALTER TABLE books ADD COLUMN IF NOT EXISTS moderation_status TEXT NOT NULL DEFAULT 'approved'`);
     await client.query(`ALTER TABLE books ADD COLUMN IF NOT EXISTS metadata JSONB NOT NULL DEFAULT '{}'`);
     await client.query(`ALTER TABLE books ADD COLUMN IF NOT EXISTS moderation_note TEXT`);
