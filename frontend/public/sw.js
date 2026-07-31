@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'hkids-covers-v4';
+const CACHE_VERSION = 'hkids-covers-v5';
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 const API_CACHE = `${CACHE_VERSION}-api`;
@@ -9,7 +9,8 @@ const APP_SHELL = [
   '/index.html',
   '/offline.html',
   '/manifest.webmanifest',
-  '/HKidsimg.webp'
+  '/hkids-logo.svg',
+  '/hkids-logo.png'
 ];
 
 const STATIC_DESTINATIONS = new Set(['script', 'style', 'worker', 'font']);

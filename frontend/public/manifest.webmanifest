@@ -11,9 +11,15 @@
   "categories": ["education", "kids", "books"],
   "icons": [
     {
-      "src": "/HKidsimg.webp",
-      "sizes": "570x570",
-      "type": "image/webp",
+      "src": "/hkids-logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/hkids-logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
       "purpose": "any"
     }
   ]

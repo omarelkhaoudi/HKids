@@ -81,7 +81,7 @@ async function sendConfirmationEmail(email, token) {
   const confirmationUrl = backendUrl
     ? `${backendUrl}/api/newsletter/confirm?token=${encodeURIComponent(token)}`
     : `${frontendUrl}/api/newsletter/confirm?token=${encodeURIComponent(token)}`;
-  const logoUrl = `${frontendUrl}/HKidsimg.webp`;
+  const logoUrl = `${frontendUrl}/hkids-logo.png`;
 
   const response = await fetch('https://api.resend.com/emails', {
     method: 'POST',
@@ -98,7 +98,7 @@ async function sendConfirmationEmail(email, token) {
         <div style="margin:0; padding:0; background:#fff7f4; font-family:Arial, Helvetica, sans-serif; color:#171717;">
           <div style="max-width:680px; margin:0 auto; padding:28px 16px;">
             <div style="background:#1f1f1f; border-radius:24px 24px 0 0; padding:22px 26px;">
-              <img src="${logoUrl}" alt="HKids" width="64" height="64" style="display:inline-block; width:64px; height:64px; border-radius:18px; border:3px solid #ff5f8f; vertical-align:middle; object-fit:cover;">
+              <img src="${logoUrl}" alt="HKids" width="64" height="64" style="display:inline-block; width:64px; height:64px; border-radius:16px; vertical-align:middle; object-fit:contain;">
               <span style="display:inline-block; margin-left:14px; color:#ffffff; font-size:28px; font-weight:800; vertical-align:middle;">HKids</span>
             </div>
             <div style="background:#ffffff; border-radius:0 0 24px 24px; padding:38px 30px 34px; border:1px solid #ffe1db; border-top:0; box-shadow:0 18px 45px rgba(31,31,31,0.10);">
