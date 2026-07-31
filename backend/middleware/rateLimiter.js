@@ -95,8 +95,8 @@ export const signupRateLimiter = rateLimiter(
 
 /** Standard rate limiter for non-auth API routes */
 export const apiRateLimiter = rateLimiter(
-  config.rateLimitMax,
-  config.rateLimitWindow,
+  isDevelopment ? 10_000 : config.rateLimitMax,
+  isDevelopment ? 1 * 60 * 1000 : config.rateLimitWindow,
   { keyPrefix: 'api' },
 );
 

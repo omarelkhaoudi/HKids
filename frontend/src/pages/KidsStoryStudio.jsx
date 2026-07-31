@@ -88,6 +88,8 @@ const JOURNEY_STEPS = [
   { id: 5, labelKey: 'studioStep_length' },
 ];
 
+const DEV_KID_PROFILE = { id: 'dev-kid-profile', name: 'Enfant' };
+
 function getErrorMessage(error) {
   if (error.response?.status === 504) return 'La création a pris trop de temps. Réessaie avec une histoire plus courte.';
   if (error.response?.data?.error) return error.response.data.error;
@@ -202,10 +204,10 @@ function KidsStoryStudio() {
 
   const [story, setStory] = useState(null);
   const [history, setHistory] = useState([]);
-  const [kidProfiles, setKidProfiles] = useState([]);
-  const [selectedKidProfileId, setSelectedKidProfileId] = useState('');
+  const [kidProfiles, setKidProfiles] = useState(import.meta.env.DEV ? [DEV_KID_PROFILE] : []);
+  const [selectedKidProfileId, setSelectedKidProfileId] = useState(import.meta.env.DEV ? DEV_KID_PROFILE.id : '');
 
-  const [profilesLoading, setProfilesLoading] = useState(true);
+  const [profilesLoading, setProfilesLoading] = useState(!import.meta.env.DEV);
   const [loading, setLoading] = useState(false);
   const [loadingStepIndex, setLoadingStepIndex] = useState(0);
   const [saving, setSaving] = useState(false);
@@ -215,7 +217,7 @@ function KidsStoryStudio() {
   const [subscription, setSubscription] = useState(null);
   const [subscriptionChecked, setSubscriptionChecked] = useState(false);
 
-  const canAccessAi = canAccessFeature('ai_stories', { subscription });
+  const canAccessAi = import.meta.env.DEV || canAccessFeature('ai_stories', { subscription });
   const canUseStoryStudio = isStoryAuthor && canAccessAi;
   const selectedKidProfile = kidProfiles.find((kid) => String(kid.id) === String(selectedKidProfileId));
   const showBookPreview = Boolean(story) && !loading;
@@ -240,7 +242,7 @@ function KidsStoryStudio() {
   useEffect(() => {
     if (!canUseStoryStudio) return undefined;
     let active = true;
-    setProfilesLoading(true);
+    setProfilesLoading(!import.meta.env.DEV);
     generatedStoriesAPI.getKidProfiles()
       .then((response) => {
         if (!active) return;
@@ -250,7 +252,13 @@ function KidsStoryStudio() {
       })
       .catch((err) => {
         console.warn('Could not load kid profiles for story studio:', err);
-        if (active) setError(getErrorMessage(err));
+        if (active && import.meta.env.DEV) {
+          setKidProfiles([DEV_KID_PROFILE]);
+          setSelectedKidProfileId(DEV_KID_PROFILE.id);
+          setError('');
+        } else if (active) {
+          setError(getErrorMessage(err));
+        }
       })
       .finally(() => {
         if (active) setProfilesLoading(false);
@@ -739,7 +747,7 @@ function KidsStoryStudio() {
                     type="button"
                     {...getHoverMotion(reducedMotion, { whileHover: { scale: 1.02 }, whileTap: { scale: 0.98 } })}
                     onClick={handleGenerate}
-                    disabled={loading || profilesLoading || !selectedKidProfileId}
+                    disabled={loading || (!import.meta.env.DEV && (profilesLoading || !selectedKidProfileId))}
                     className="kids-studio-generate-cta"
                   >
                     <span className="kids-studio-generate-cta-bg" aria-hidden="true" />

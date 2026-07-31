@@ -152,7 +152,7 @@ export default function ParentLogin() {
  {/* Mobile Header (Only visible on small screens) */}
  <div className="lg:hidden flex flex-col items-center text-center mb-10 pt-16">
  <div className="w-16 h-16 rounded-3xl bg-primary-50 flex items-center justify-center mb-6">
- <Logo size="small" showText={false} />
+ <Logo size="small" showText={true} />
  </div>
             <h1 className="text-3xl font-extrabold text-foreground tracking-tight mb-2">{t('parentLoginMobileTitle')}</h1>
             <p className="text-foreground-secondary font-medium">{t('parentLoginMobileSubtitle')}</p>
@@ -161,7 +161,7 @@ export default function ParentLogin() {
  {/* Desktop Header */}
  <div className="hidden lg:block mb-10">
  <div className="w-14 h-14 rounded-[1.2rem] bg-gradient-to-br from-primary-500 to-primary-600 shadow-lg flex items-center justify-center mb-8">
- <Logo size="small" showText={false} className="text-white" />
+ <Logo size="small" showText={true} className="text-white" />
  </div>
             <h1 className="text-3xl font-extrabold text-foreground tracking-tight mb-2">{t('parentLoginTitle')}</h1>
             <p className="text-foreground-secondary font-medium">{t('parentLoginSubtitle')}</p>

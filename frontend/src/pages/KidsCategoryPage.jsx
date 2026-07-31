@@ -162,7 +162,7 @@ function KidsCategoryPage() {
 
       <header className="relative z-10 px-6 py-4 flex items-center justify-between">
         <Link to="/kids" className="shrink-0 transition-transform hover:scale-105" aria-label={t('back')}>
-          <Logo size="default" showText={false} />
+          <Logo size="default" showText={true} />
         </Link>
         <span className="text-5xl drop-shadow" aria-hidden="true">{category.pictogram}</span>
       </header>

@@ -177,7 +177,7 @@ function AdminLogin({audience = 'admin'}) {
  <div className="relative">
  <div className="absolute inset-0 bg-gradient-to-tr from-primary-500/30 via-secondary-500/20 to-accent-500/30 blur-2xl rounded-full" />
  <div className="relative inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-primary-500 to-secondary-500 shadow-lg">
- <Logo size="large" showText={false} className="pointer-events-none" />
+ <Logo size="large" showText={true} className="pointer-events-none" />
  </div>
  </div>
  </motion.div>

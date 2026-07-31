@@ -38,7 +38,7 @@ export function KidsPageHeader({
               onClick={() => playKidsUiSound('tap')}
               aria-label="HKids"
             >
-              <Logo size="default" showText={false} />
+              <Logo size="default" showText={true} />
             </Link>
           ) : null
         }

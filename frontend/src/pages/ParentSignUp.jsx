@@ -171,7 +171,7 @@ export default function ParentSignUp() {
  <div className="w-full max-w-[420px] mx-auto">
  <div className="lg:hidden flex flex-col items-center text-center mb-10 pt-16">
  <div className="w-16 h-16 rounded-3xl bg-secondary-50 flex items-center justify-center mb-6">
- <Logo size="small" showText={false} />
+ <Logo size="small" showText={true} />
  </div>
  <h1 className="text-3xl font-extrabold text-foreground tracking-tight mb-2">{t('parentSignUpMobileTitle')}</h1>
  <p className="text-foreground-secondary font-medium">{t('parentSignUpMobileSubtitle')}</p>
@@ -179,7 +179,7 @@ export default function ParentSignUp() {
 
  <div className="hidden lg:block mb-8">
  <div className="w-14 h-14 rounded-[1.2rem] bg-gradient-to-br from-secondary-500 to-secondary-600 shadow-lg flex items-center justify-center mb-8">
- <Logo size="small" showText={false} className="text-white" />
+ <Logo size="small" showText={true} className="text-white" />
  </div>
  <h1 className="text-3xl font-extrabold text-foreground tracking-tight mb-2">{t('parentSignUpTitle')}</h1>
  <p className="text-foreground-secondary font-medium">{t('parentSignUpSubtitle')}</p>

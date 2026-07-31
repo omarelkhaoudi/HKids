@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 220" role="img" aria-labelledby="title desc">
+  <title id="title">HKids</title>
+  <desc id="desc">Logo HKids avec un H vert stylise et le mot kids en beige.</desc>
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M75 42V178" stroke="#87ad9d" stroke-width="26"/>
+    <path d="M75 134H278" stroke="#87ad9d" stroke-width="26"/>
+    <path d="M278 96V178" stroke="#87ad9d" stroke-width="26"/>
+
+    <path d="M348 96V178" stroke="#c9b4a6" stroke-width="24"/>
+    <path d="M350 140L402 100" stroke="#c9b4a6" stroke-width="24"/>
+    <path d="M365 140L414 178" stroke="#c9b4a6" stroke-width="24"/>
+
+    <path d="M458 123V178" stroke="#c9b4a6" stroke-width="24"/>
+    <circle cx="458" cy="92" r="13" fill="#c9b4a6"/>
+
+    <path d="M598 68V178" stroke="#c9b4a6" stroke-width="24"/>
+    <path d="M594 138C578 113 530 113 520 142C509 175 556 194 591 164" stroke="#c9b4a6" stroke-width="24"/>
+
+    <path d="M706 120C687 109 649 111 649 135C649 156 705 145 705 170C705 194 660 193 642 179" stroke="#c9b4a6" stroke-width="24"/>
+  </g>
+</svg>

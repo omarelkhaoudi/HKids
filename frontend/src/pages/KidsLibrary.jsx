@@ -650,7 +650,7 @@ function KidsLibrary() {
           className="shrink-0 rounded-full opacity-90 transition-opacity hover:opacity-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-300"
           aria-label="HKids"
         >
-          <Logo size="default" showText={false} />
+          <Logo size="default" showText={true} />
         </Link>
       </header>
 

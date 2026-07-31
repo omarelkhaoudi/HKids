@@ -3,19 +3,13 @@ import { Link } from 'react-router-dom';
 
 /**
  * Logo component for HKids.
- * Uses the compact HKids mark shared by the app shell and PWA assets.
+ * Uses the HKids wordmark for visible app branding.
  */
 export function Logo({ className = "", showText = true, size = "default", isLink = true }) {
   const sizeClasses = {
-    small: "w-10 h-10",
-    default: "w-14 h-14",
-    large: "w-20 h-20"
-  };
-
-  const textSizes = {
-    small: "text-lg",
-    default: "text-2xl",
-    large: "text-3xl"
+    small: "w-40 h-auto",
+    default: "w-56 h-auto",
+    large: "w-80 h-auto"
   };
 
   const logoContent = (
@@ -25,39 +19,27 @@ export function Logo({ className = "", showText = true, size = "default", isLink
       whileTap={{ scale: 0.95 }}
     >
       <img
-        src="/hkids-logo.svg"
-        alt={showText ? "" : "HKids"}
-        aria-hidden={showText ? true : undefined}
+        src="/hkids-wordmark.svg?v=2"
+        alt="HKids"
         className="block h-full w-full object-contain"
       />
     </motion.div>
-  );
-
-  const textContent = showText && (
-    <motion.h1
-      className={`font-bold tracking-tight text-foreground-700 drop-shadow-sm ${textSizes[size]}`}
-      whileHover={{ x: 2 }}
-    >
-      HKids
-    </motion.h1>
   );
 
   if (isLink) {
     return (
       <Link
         to="/"
-        className={`flex items-center gap-3 group ${className}`}
+        className={`inline-flex items-center group ${className}`}
       >
         {logoContent}
-        {textContent}
       </Link>
     );
   }
 
   return (
-    <div className={`flex items-center gap-3 ${className}`}>
+    <div className={`inline-flex items-center ${className}`}>
       {logoContent}
-      {textContent}
     </div>
   );
 }

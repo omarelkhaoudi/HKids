@@ -16,6 +16,8 @@ import {
 } from '../services/parental/parentalAccessService.js';
 
 const router = express.Router();
+const DEV_KID_PROFILE_ID = 'dev-kid-profile';
+const isDevelopment = process.env.NODE_ENV !== 'production';
 
 function getPool() {
   try {
@@ -106,19 +108,33 @@ router.post('/generate', verifyToken, async (req, res) => {
   try {
     if (!requireStoryAuthorRole(req, res)) return;
     const pool = getPool();
-    const kid = await getAuthorizedKidProfile(pool, req.user, req.body.kid_profile_id);
+    const useDevKidProfile = isDevelopment && req.body.kid_profile_id === DEV_KID_PROFILE_ID;
+    const kid = useDevKidProfile
+      ? {
+          id: DEV_KID_PROFILE_ID,
+          parent_id: req.user.id,
+          name: 'Enfant',
+          avatar: null,
+          age: 7,
+          preferred_language: req.body.language || 'fr',
+          interests: ['lecture', 'imagination']
+        }
+      : await getAuthorizedKidProfile(pool, req.user, req.body.kid_profile_id);
 
     if (!kid) {
       return res.status(403).json({ error: 'Kid profile required or not authorized' });
     }
 
-    const policy = await loadChildAccessPolicy({
-      user: req.user,
-      requestedKidProfileId: kid.id,
-      pool
-    });
-    const globalViolation = getGlobalAccessViolation(policy);
-    if (globalViolation) return sendParentalAccessError(res, globalViolation);
+    let policy = null;
+    if (!useDevKidProfile) {
+      policy = await loadChildAccessPolicy({
+        user: req.user,
+        requestedKidProfileId: kid.id,
+        pool
+      });
+      const globalViolation = getGlobalAccessViolation(policy);
+      if (globalViolation) return sendParentalAccessError(res, globalViolation);
+    }
 
     const validation = validateStoryRequest(req.body);
     if (!validation.valid) {
@@ -130,16 +146,46 @@ router.post('/generate', verifyToken, async (req, res) => {
     }
 
     const preferences = normalizeStoryRequest(req.body, kid);
-    const contentViolation = getContentAccessViolation(policy, {
-      language: preferences.language,
-      theme: preferences.theme
-    }, { includeGlobal: false });
-    if (contentViolation) return sendParentalAccessError(res, contentViolation);
+    if (!useDevKidProfile) {
+      const contentViolation = getContentAccessViolation(policy, {
+        language: preferences.language,
+        theme: preferences.theme
+      }, { includeGlobal: false });
+      if (contentViolation) return sendParentalAccessError(res, contentViolation);
+    }
 
     const generated = await generatePersonalizedStory({ kid, preferences });
 
     if (!generated.story_text) {
       return res.status(502).json({ error: 'Story provider returned an empty story' });
+    }
+
+    if (useDevKidProfile) {
+      const now = new Date().toISOString();
+      return res.status(201).json({
+        id: `dev-${Date.now()}`,
+        title: generated.title,
+        story_text: generated.story_text,
+        summary: generated.summary,
+        language: generated.preferences.language,
+        theme: generated.theme,
+        age_level: generated.age_level,
+        characters: generated.preferences.characters,
+        estimated_duration_minutes: generated.estimated_duration_minutes,
+        educational_value: generated.preferences.educational_value,
+        age_at_generation: kid.age,
+        prompt_metadata: generated.prompt_metadata || {},
+        generation_metadata: generated.generation_metadata || {},
+        chapters: generated.chapters || [],
+        interactive_choices: generated.interactive_choices || [],
+        illustration_plan: generated.illustration_plan || {},
+        narration_metadata: generated.narration_metadata || {},
+        provider: generated.provider,
+        saved: false,
+        favorite: false,
+        created_at: now,
+        updated_at: now
+      });
     }
 
     const result = await pool.query(

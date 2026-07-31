@@ -1,7 +1,7 @@
 import { AIProviderFactory } from './AIProviderFactory.js';
 import { normalizeAIError } from './errors.js';
 
-const allowedDurations = [2, 5, 8, 12, 15];
+const allowedDurations = [2, 5, 8, 10, 12, 15, 20];
 const allowedLanguages = ['fr', 'en', 'ar'];
 const allowedValues = ['friendship', 'courage', 'respect', 'curiosity'];
 const maxThemeLength = 80;
