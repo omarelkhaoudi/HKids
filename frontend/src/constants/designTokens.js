@@ -5,11 +5,11 @@
  */
 
 export const DS_PALETTE = [
-  { id: 'primary', label: 'Primary Blue', swatch: 'bg-primary-500', role: 'CTA, books, nav active' },
-  { id: 'secondary', label: 'Secondary Yellow', swatch: 'bg-secondary-500', role: 'Warmth, highlights' },
-  { id: 'orange', label: 'Orange', swatch: 'bg-orange-500', role: 'Audio, soft urgency' },
+  { id: 'primary', label: 'HKids Sage', swatch: 'bg-primary-500', role: 'CTA, books, nav active' },
+  { id: 'secondary', label: 'HKids Beige', swatch: 'bg-secondary-500', role: 'Warmth, highlights' },
+  { id: 'orange', label: 'HKids Brown', swatch: 'bg-orange-500', role: 'Audio, soft urgency' },
   { id: 'success', label: 'Success Green', swatch: 'bg-success-500', role: 'Learn, validation' },
-  { id: 'magic', label: 'Magic Purple', swatch: 'bg-magic-500', role: 'Create, studio' },
+  { id: 'magic', label: 'Warm Magic', swatch: 'bg-magic-500', role: 'Create, studio' },
   { id: 'background', label: 'Background', swatch: 'bg-background', role: 'App canvas' },
   { id: 'surface', label: 'Surface', swatch: 'bg-surface', role: 'Panels, cards' },
   { id: 'text', label: 'Text', swatch: 'bg-foreground', role: 'Primary copy' },

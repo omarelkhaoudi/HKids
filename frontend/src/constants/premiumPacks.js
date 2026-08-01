@@ -147,7 +147,7 @@ export const DEFAULT_PREMIUM_PACKS = [
   {
     id: 'brain',
     emoji: '🧠',
-    gradient: 'from-cyan-400 to-blue-600',
+    gradient: 'from-primary-400 to-primary-600',
     labelKey: 'premPackBrain',
     descKey: 'premPackBrainDesc',
     themes: ['logic', 'math', 'shapes', 'numbers'],

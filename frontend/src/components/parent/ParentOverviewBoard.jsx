@@ -8,7 +8,7 @@ import {
 } from '../../utils/parentInsights';
 import { formatParentDuration } from './parentFormatters';
 
-const THEME_COLORS = ['#6d5ae6', '#1f9d67', '#d97745', '#d4537e', '#3b82f6', '#0d9488'];
+const THEME_COLORS = ['#92B3A5', '#C8B09D', '#7fa493', '#9b7b66', '#668779', '#b99d88'];
 
 function relativeTime(value, locale, t) {
   if (!value) return t('parentNever');

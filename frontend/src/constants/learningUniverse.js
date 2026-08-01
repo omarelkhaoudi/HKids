@@ -7,14 +7,14 @@ export const EXPLORER_HUB_TILES = [
   { id: 'stories', emoji: '📚', gradient: 'from-amber-400 to-orange-500', path: '/kids/library', ambiance: 'warm', mascot: '📖' },
   { id: 'colors', emoji: '🎨', gradient: 'from-fuchsia-400 to-pink-500', path: '/kids/learning/colors', worldId: 'colors', ambiance: 'bright', mascot: '🌈' },
   { id: 'alphabet', emoji: '🔠', gradient: 'from-rose-400 to-orange-400', path: '/kids/learning/alphabet', worldId: 'alphabet', ambiance: 'playful', mascot: '✏️' },
-  { id: 'numbers', emoji: '🔢', gradient: 'from-sky-400 to-blue-500', path: '/kids/learning/numbers', worldId: 'numbers', ambiance: 'focus', mascot: '⭐' },
+  { id: 'numbers', emoji: '🔢', gradient: 'from-primary-400 to-primary-500', path: '/kids/learning/numbers', worldId: 'numbers', ambiance: 'focus', mascot: '⭐' },
   { id: 'animals', emoji: '🐶', gradient: 'from-orange-400 to-amber-600', path: '/kids/learning/animals', worldId: 'animals', ambiance: 'wild', mascot: '🦁' },
   { id: 'space', emoji: '🚀', gradient: 'from-indigo-500 to-purple-700', path: '/kids/learning/space', worldId: 'space', ambiance: 'cosmic', mascot: '🛸' },
   { id: 'dinosaurs', emoji: '🦖', gradient: 'from-green-500 to-emerald-700', path: '/kids/learning/dinosaurs', worldId: 'dinosaurs', ambiance: 'jungle', mascot: '🦕' },
   { id: 'geography', emoji: '🌎', gradient: 'from-lime-400 to-green-600', path: '/kids/learning/geography', worldId: 'geography', ambiance: 'travel', mascot: '🧭' },
   { id: 'music', emoji: '🎵', gradient: 'from-pink-400 to-rose-600', path: '/kids/learning/music', worldId: 'music', ambiance: 'melody', mascot: '🎧' },
   { id: 'games', emoji: '🧩', gradient: 'from-violet-400 to-indigo-500', path: '/kids/explore?tab=games', tab: 'games', ambiance: 'fun', mascot: '🎮' },
-  { id: 'quiz', emoji: '🧠', gradient: 'from-cyan-400 to-sky-600', path: '/kids/explore?tab=quiz', tab: 'quiz', ambiance: 'smart', mascot: '💡' },
+  { id: 'quiz', emoji: '🧠', gradient: 'from-primary-400 to-primary-600', path: '/kids/explore?tab=quiz', tab: 'quiz', ambiance: 'smart', mascot: '💡' },
   { id: 'discover', emoji: '✨', gradient: 'from-yellow-400 to-amber-500', path: '/kids/library', ambiance: 'magic', mascot: '🌟' },
 ];
 

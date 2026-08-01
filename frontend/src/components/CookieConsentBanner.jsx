@@ -14,7 +14,7 @@ function Toggle({ checked, onChange, label, description }) {
   return (
     <label className="flex items-start gap-3 cursor-pointer group">
       <span className="relative mt-0.5 inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors"
-        style={{ background: checked ? '#3b82f6' : '#d1d5db' }}>
+        style={{ background: checked ? 'var(--color-primary-500)' : '#d1d5db' }}>
         <span className={`inline-block h-4 w-4 rounded-full bg-white shadow transition-transform ${checked ? 'translate-x-4' : 'translate-x-0.5'}`} />
         <input type="checkbox" checked={checked} onChange={onChange} className="sr-only" />
       </span>
@@ -83,7 +83,7 @@ export function CookieConsentBanner() {
               >
                 <div className="space-y-3 mb-4 p-4 rounded-xl bg-surface-secondary/60">
                   <div className="flex items-start gap-3 opacity-60">
-                    <span className="relative mt-0.5 inline-flex h-5 w-9 shrink-0 items-center rounded-full bg-blue-500">
+                    <span className="relative mt-0.5 inline-flex h-5 w-9 shrink-0 items-center rounded-full bg-primary-500">
                       <span className="inline-block h-4 w-4 rounded-full bg-white shadow translate-x-4" />
                     </span>
                     <span>

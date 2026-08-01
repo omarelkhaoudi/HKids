@@ -1,6 +1,6 @@
 /**
  * Kids modality worlds — calm single-hue atmospheres.
- * Blue = books · Soft peach/orange = audio · Soft green = learn · Soft lavender = create
+ * HKids sage = books/learn · HKids beige-brown = audio/create
  */
 
 export const KIDS_MODALITY = {

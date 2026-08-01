@@ -37,7 +37,7 @@ function ReadingAidPanel({
     { name: t('readingAidColorBlackWhite'), bg: '#FFFFFF', text: '#000000' },
     { name: t('readingAidColorWhiteBlack'), bg: '#000000', text: '#FFFFFF' },
     { name: t('readingAidColorBeigeBrown'), bg: '#8B4513', text: '#F5DEB3' },
-    { name: t('readingAidColorYellowBlue'), bg: '#0000FF', text: '#FFFF00' },
+    { name: t('readingAidColorYellowBlue'), bg: '#F4EDE7', text: '#3D5148' },
     { name: t('readingAidColorGreenBlack'), bg: '#000000', text: '#00FF00' },
     { name: t('readingAidColorPinkWhite'), bg: '#FFFFFF', text: '#FF69B4' }
   ], [t]);

@@ -24,8 +24,8 @@ export const EDUCATIONAL_WORLDS = [
   {
     id: 'numbers',
     emoji: '🔢',
-    gradient: 'from-sky-400 to-blue-500',
-    soft: 'bg-sky-50',
+    gradient: 'from-primary-400 to-primary-500',
+    soft: 'bg-primary-50',
     labelKey: 'eduWorldNumbers',
     descKey: 'eduWorldNumbersDesc',
     catalogKeys: ['numbers'],
@@ -99,8 +99,8 @@ export const EDUCATIONAL_WORLDS = [
   {
     id: 'science',
     emoji: '🔬',
-    gradient: 'from-cyan-400 to-sky-600',
-    soft: 'bg-cyan-50',
+    gradient: 'from-primary-400 to-primary-600',
+    soft: 'bg-primary-50',
     labelKey: 'eduWorldScience',
     descKey: 'eduWorldScienceDesc',
     catalogKeys: ['animals', 'colors'],

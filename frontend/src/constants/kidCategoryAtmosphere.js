@@ -12,7 +12,7 @@ export const CATEGORY_ATMOSPHERE = {
   space: {
     className: 'kids-cat-space',
     motifs: ['⭐', '🪐', '✨', '🚀'],
-    tint: 'from-indigo-900/35 via-blue-800/20 to-transparent',
+    tint: 'from-primary-900/35 via-primary-800/20 to-transparent',
   },
   animals: {
     className: 'kids-cat-animals',
@@ -32,7 +32,7 @@ export const CATEGORY_ATMOSPHERE = {
   ocean: {
     className: 'kids-cat-ocean',
     motifs: ['🫧', '🐟', '🌊', '🐚'],
-    tint: 'from-cyan-500/25 via-blue-400/15 to-transparent',
+    tint: 'from-primary-500/25 via-primary-400/15 to-transparent',
   },
   vehicles: {
     className: 'kids-cat-vehicles',
