@@ -84,11 +84,7 @@ export function AuthProvider({ children }) {
       });
       const { token, user } = response.data;
       
-      localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify(user));
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-      setUser(user);
-      setSentryUser(user);
+      persistSession(token, user);
       
       return { success: true };
     } catch (error) {
@@ -114,6 +110,55 @@ export function AuthProvider({ children }) {
       return { 
         success: false, 
         error: errorMessage
+      };
+    }
+  };
+
+  const persistSession = (token, nextUser) => {
+    localStorage.setItem('token', token);
+    localStorage.setItem('user', JSON.stringify(nextUser));
+    axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    setUser(nextUser);
+    setSentryUser(nextUser);
+  };
+
+  const clearSession = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    delete axios.defaults.headers.common['Authorization'];
+    setUser(null);
+    setSentryUser(null);
+  };
+
+  const completeOAuthLogin = async (token) => {
+    if (!token) {
+      return {
+        success: false,
+        error: i18nT('authOAuthMissingToken')
+      };
+    }
+
+    try {
+      localStorage.setItem('token', token);
+      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+
+      const response = await axios.get(buildApiUrl('/auth/me'), {
+        timeout: 10000
+      });
+      const verifiedUser = response.data?.user;
+
+      if (!verifiedUser) {
+        throw new Error(i18nT('authOAuthFailed'));
+      }
+
+      persistSession(token, verifiedUser);
+      return { success: true, user: verifiedUser };
+    } catch (error) {
+      console.error('OAuth session error:', error);
+      clearSession();
+      return {
+        success: false,
+        error: error.response?.data?.error || error.message || i18nT('authOAuthFailed')
       };
     }
   };
@@ -173,17 +218,14 @@ export function AuthProvider({ children }) {
         console.warn('Could not fully clear local session data:', error);
       });
     }
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    delete axios.defaults.headers.common['Authorization'];
-    setUser(null);
-    setSentryUser(null);
+    clearSession();
   };
 
   const value = {
     user,
     login,
     signup,
+    completeOAuthLogin,
     logout,
     loading
   };

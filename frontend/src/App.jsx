@@ -21,6 +21,7 @@ const AdminLogin = lazy(() => import('./pages/AdminLogin'));
 const SignUp = lazy(() => import('./pages/SignUp'));
 const ParentLogin = lazy(() => import('./pages/ParentLogin'));
 const ParentSignUp = lazy(() => import('./pages/ParentSignUp'));
+const OAuthCallback = lazy(() => import('./pages/OAuthCallback'));
 const ParentKidsProfiles = lazy(() => import('./pages/ParentKidsProfiles'));
 const KidsHome = lazy(() => import('./pages/KidsHome'));
 const KidsLibrary = lazy(() => import('./pages/KidsLibrary'));
@@ -216,6 +217,7 @@ function App() {
                 <Route path="/admin/signup" element={<LazyRoute><SignUp /></LazyRoute>} />
                 <Route path="/parent/login" element={<LazyRoute><ParentLogin /></LazyRoute>} />
                 <Route path="/parent/signup" element={<LazyRoute><ParentSignUp /></LazyRoute>} />
+                <Route path="/auth/oauth/callback" element={<LazyRoute><OAuthCallback /></LazyRoute>} />
                 <Route path="/admin/*" element={<RequireRole roles={['admin']}><LazyRoute><AdminDashboard /></LazyRoute></RequireRole>} />
                 <Route path="/parent/profiles" element={<RequireRole roles={['parent', 'admin']}><LazyRoute><ParentKidsProfiles /></LazyRoute></RequireRole>} />
                 <Route path="/parent/voices" element={<RequireRole roles={['parent', 'admin']}><LazyRoute><FamilyVoices /></LazyRoute></RequireRole>} />

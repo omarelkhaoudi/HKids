@@ -5,6 +5,7 @@ import {useAuth} from '../context/AuthContext';
 import {useLanguage} from '../context/LanguageContext';
 import {ChevronLeftIcon, LockIcon, UserIcon, AlertIcon, LoadingSpinnerIcon, CheckCircleIcon, StarIcon, EyeIcon, EyeOffIcon} from '../components/Icons';
 import {Logo} from '../components/Logo';
+import {OAuthButtons} from '../components/auth/OAuthButtons';
 
 const getPasswordStrength = (pass, t) => {
  if (!pass) return {score: 0, label: '', color: 'bg-surface-200'};
@@ -369,6 +370,8 @@ export default function ParentSignUp() {
  )}
  </motion.button>
  </form>
+
+ <OAuthButtons mode="signup" className="mt-8" />
 
  <div className="mt-8 text-center">
  <p className="text-foreground-secondary font-medium">

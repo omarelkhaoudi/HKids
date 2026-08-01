@@ -567,6 +567,11 @@ export async function initDatabase() {
     for (const tableQuery of tables) await client.query(tableQuery);
 
     await client.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS kid_profile_id INTEGER REFERENCES kids_profiles(id) ON DELETE SET NULL`);
+    await client.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS oauth_provider TEXT`);
+    await client.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS oauth_subject TEXT`);
+    await client.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS oauth_email TEXT`);
+    await client.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS oauth_name TEXT`);
+    await client.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS last_login_at TIMESTAMPTZ`);
     await client.query(`ALTER TABLE books ADD COLUMN IF NOT EXISTS slug TEXT`);
     await client.query(`ALTER TABLE books ADD COLUMN IF NOT EXISTS content_type TEXT NOT NULL DEFAULT 'story'`);
     await client.query(`ALTER TABLE books ADD COLUMN IF NOT EXISTS language TEXT NOT NULL DEFAULT 'fr'`);
@@ -691,6 +696,8 @@ export async function initDatabase() {
     await client.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS stripe_customer_id TEXT`);
     await client.query(`ALTER TABLE subscription_plans ADD COLUMN IF NOT EXISTS stripe_price_id TEXT`);
     await client.query(`ALTER TABLE subscription_plans ADD COLUMN IF NOT EXISTS trial_days INTEGER NOT NULL DEFAULT 0`);
+    await client.query(`CREATE UNIQUE INDEX IF NOT EXISTS users_oauth_provider_subject_unique_idx ON users(oauth_provider, oauth_subject) WHERE oauth_provider IS NOT NULL AND oauth_subject IS NOT NULL`);
+    await client.query(`CREATE INDEX IF NOT EXISTS users_oauth_email_lower_idx ON users(LOWER(oauth_email)) WHERE oauth_email IS NOT NULL`);
     await client.query(`CREATE UNIQUE INDEX IF NOT EXISTS users_stripe_customer_id_unique_idx ON users(stripe_customer_id) WHERE stripe_customer_id IS NOT NULL`);
     await client.query(`CREATE INDEX IF NOT EXISTS subscription_invoices_user_paid_idx ON subscription_invoices(user_id, paid_at DESC)`);
     await client.query(`CREATE INDEX IF NOT EXISTS subscription_events_user_created_idx ON subscription_events(user_id, created_at DESC)`);

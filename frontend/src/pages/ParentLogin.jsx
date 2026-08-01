@@ -1,5 +1,5 @@
 import {useState, useEffect} from 'react';
-import {Link, useNavigate} from 'react-router-dom';
+import {Link, useLocation, useNavigate} from 'react-router-dom';
 import {motion, AnimatePresence} from 'framer-motion';
 import {useAuth} from '../context/AuthContext';
 import {useLanguage} from '../context/LanguageContext';
@@ -7,6 +7,14 @@ import {EyeIcon, EyeOffIcon, LockIcon, UserIcon, ChevronLeftIcon, AlertIcon, Loa
 import {Logo} from '../components/Logo';
 import {MagicalBackground} from '../components/layout/PlatformShell';
 import {useToast} from '../components/ToastProvider';
+import {OAuthButtons} from '../components/auth/OAuthButtons';
+
+const OAUTH_ERROR_MESSAGES = {
+ oauth_not_configured: 'authOAuthNotConfigured',
+ oauth_cancelled: 'authOAuthCancelled',
+ oauth_provider_not_supported: 'authOAuthProviderNotSupported',
+ oauth_failed: 'authOAuthFailed',
+};
 
 export default function ParentLogin() {
  const [username, setUsername] = useState('');
@@ -18,12 +26,21 @@ export default function ParentLogin() {
  
  const {login} = useAuth();
  const navigate = useNavigate();
+ const location = useLocation();
  const { t } = useLanguage();
  const {showToast} = useToast();
 
  useEffect(() => {
  setMounted(true);
 }, []);
+
+ useEffect(() => {
+ const params = new URLSearchParams(location.search);
+ const oauthError = params.get('oauth_error');
+ if (oauthError) {
+    setError(t(OAUTH_ERROR_MESSAGES[oauthError] || 'authOAuthFailed'));
+}
+}, [location.search, t]);
 
  const handleSubmit = async (event) => {
  event.preventDefault();
@@ -270,6 +287,8 @@ export default function ParentLogin() {
  )}
  </motion.button>
  </form>
+
+ <OAuthButtons mode="login" className="mt-8" />
 
  {/* Sign up link */}
  <div className="mt-10 text-center">

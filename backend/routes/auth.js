@@ -6,6 +6,15 @@ import { logSecurityEvent } from '../services/security/auditLog.js';
 import { signupRateLimiter } from '../middleware/rateLimiter.js';
 import { canRegisterAdmin } from '../utils/adminSignupPolicy.js';
 import config from '../config/env.js';
+import {
+  OAuthConfigurationError,
+  buildOAuthAuthorizationUrl,
+  buildOAuthErrorRedirect,
+  buildOAuthSuccessRedirect,
+  findOrCreateOAuthUser,
+  resolveOAuthCallbackProfile,
+  signUserToken,
+} from '../services/auth/oauthService.js';
 
 const LOGIN_LOCKOUT_MAX = 5;
 const LOGIN_LOCKOUT_WINDOW_MS = 15 * 60 * 1000;
@@ -34,7 +43,6 @@ function clearFailedLogin(username) {
 
 const router = express.Router();
 const JWT_SECRET = config.jwtSecret;
-const JWT_EXPIRES_IN = config.jwtExpiresIn;
 const USERNAME_PATTERN = /^[a-zA-Z0-9_.-]{3,40}$/;
 
 // Helper function to get database pool safely
@@ -46,6 +54,104 @@ function getPool() {
     throw new Error('Database connection not available');
   }
 }
+
+function normalizeOAuthProvider(value) {
+  const provider = String(value || '').trim().toLowerCase();
+  return ['google', 'apple'].includes(provider) ? provider : null;
+}
+
+function getRequestValue(req, key) {
+  return req.body?.[key] || req.query?.[key];
+}
+
+function getOAuthErrorCode(error) {
+  if (error instanceof OAuthConfigurationError) return 'oauth_not_configured';
+  return 'oauth_failed';
+}
+
+router.get('/oauth/:provider', async (req, res) => {
+  const provider = normalizeOAuthProvider(req.params.provider);
+
+  if (!provider) {
+    return res.redirect(buildOAuthErrorRedirect('oauth_provider_not_supported'));
+  }
+
+  try {
+    const authorizationUrl = buildOAuthAuthorizationUrl({
+      provider,
+      req,
+      role: req.query.role,
+      mode: req.query.mode,
+      returnTo: req.query.return_to,
+    });
+
+    return res.redirect(authorizationUrl);
+  } catch (error) {
+    console.warn(`${provider} OAuth start failed:`, error.message);
+    return res.redirect(buildOAuthErrorRedirect(getOAuthErrorCode(error)));
+  }
+});
+
+async function handleOAuthCallback(req, res) {
+  const provider = normalizeOAuthProvider(req.params.provider);
+
+  if (!provider) {
+    return res.redirect(buildOAuthErrorRedirect('oauth_provider_not_supported'));
+  }
+
+  const providerError = getRequestValue(req, 'error');
+  if (providerError) {
+    return res.redirect(buildOAuthErrorRedirect('oauth_cancelled'));
+  }
+
+  let pool;
+
+  try {
+    pool = getPool();
+    const { profile, statePayload } = await resolveOAuthCallbackProfile({
+      provider,
+      req,
+      code: getRequestValue(req, 'code'),
+      state: getRequestValue(req, 'state'),
+      rawUser: getRequestValue(req, 'user'),
+    });
+
+    const { user, created } = await findOrCreateOAuthUser(pool, profile, statePayload.role);
+    const token = signUserToken(user);
+
+    await logSecurityEvent(pool, {
+      userId: user.id,
+      actorRole: user.role,
+      action: created ? 'oauth_user_created' : 'oauth_login_success',
+      resourceType: 'user',
+      resourceId: user.id,
+      req,
+      metadata: {
+        provider,
+        mode: statePayload.mode,
+        email_available: Boolean(profile.email),
+      },
+    });
+
+    return res.redirect(buildOAuthSuccessRedirect({ token, statePayload }));
+  } catch (error) {
+    console.error(`${provider} OAuth callback failed:`, error.message);
+    if (pool) {
+      await logSecurityEvent(pool, {
+        action: 'oauth_login_failed',
+        req,
+        metadata: {
+          provider,
+          reason: String(error.message || 'oauth_failed').slice(0, 120),
+        },
+      });
+    }
+    return res.redirect(buildOAuthErrorRedirect(getOAuthErrorCode(error)));
+  }
+}
+
+router.get('/oauth/:provider/callback', handleOAuthCallback);
+router.post('/oauth/:provider/callback', handleOAuthCallback);
 
 // Signup
 router.post('/signup', signupRateLimiter, async (req, res) => {
@@ -171,16 +277,7 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
-    const token = jwt.sign(
-      { 
-        id: user.id, 
-        username: user.username, 
-        role: user.role,
-        kid_profile_id: user.kid_profile_id || null
-      },
-      JWT_SECRET,
-      { expiresIn: JWT_EXPIRES_IN, algorithm: 'HS256' }
-    );
+    const token = signUserToken(user);
 
     console.log(`✅ Successful login for user: ${user.username}`);
     clearFailedLogin(normalizedUsername);
