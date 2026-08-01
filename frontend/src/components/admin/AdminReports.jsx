@@ -66,7 +66,7 @@ function AdminReports() {
  return (
  <div className="space-y-6 pb-12">
  <div>
- <h1 className="text-3xl font-black tracking-tight">{t('adminReportsTitle')}</h1>
+ <h1 className="text-3xl font-black tracking-normal">{t('adminReportsTitle')}</h1>
  <p className="text-foreground-muted font-medium mt-1">{t('adminReportsSubtitle')}</p>
  </div>
 
@@ -86,7 +86,7 @@ function AdminReports() {
  ))}
  </div>
 
- {error && <div className="p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 font-bold">{error}</div>}
+ {error && <div className="p-4 rounded-xl bg-hkids-brown-soft border border-hkids-brown-light text-hkids-brown-dark font-bold">{error}</div>}
 
  <div className="grid gap-4">
  {loading ? (

@@ -25,7 +25,7 @@ export function DailySurpriseChest({
   };
 
   return (
-    <section className="rounded-32 bg-gradient-to-br from-amber-300 to-orange-500 p-space-24 text-white shadow-card relative overflow-hidden">
+    <section className="rounded-32 bg-gradient-to-br from-hkids-brown-light to-hkids-brown p-space-24 text-white shadow-card relative overflow-hidden">
       {!reducedMotion && opening && (
         <div className="absolute inset-0 pointer-events-none">
           {Array.from({ length: 24 }).map((_, i) => (

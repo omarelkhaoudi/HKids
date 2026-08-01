@@ -5,7 +5,7 @@ import {getImageUrl} from '../../utils/imageUrl';
 import {CONTENT_LANGUAGES, CONTENT_THEMES, CONTENT_TYPE_OPTIONS} from '../../constants/contentOptions';
 import {
  AudioIcon, BookIcon, PublishIcon, UnpublishIcon, XIcon, TrashIcon, EditIcon,
- SearchIcon, FilterIcon, DownloadIcon, MoreVerticalIcon, ChevronRightIcon, ChevronLeftIcon 
+ SearchIcon, FilterIcon, DownloadIcon, MoreVerticalIcon, ChevronRightIcon, ChevronLeftIcon
 } from '../Icons';
 import {Button, Badge, Avatar} from '../ui';
 import { useLanguage } from '../../context/LanguageContext';
@@ -22,7 +22,7 @@ function BookManagement() {
  const { t } = useLanguage();
  const { showToast } = useToast();
  const { requestConfirm, confirmDialog } = useConfirmDialog();
- 
+
  const [formData, setFormData] = useState({
  title: '', author: '', description: '', category_id: '',
  age_group_min: 0, age_group_max: 12, content_type: 'story',
@@ -31,11 +31,11 @@ function BookManagement() {
  is_recommended: false, is_popular: false, is_new: false,
  publish_at: '', is_published: false
 });
- 
+
  const [filters, setFilters] = useState({
  search: '', status: 'all', access: 'all', language: 'all', category_id: 'all', flag: 'all', moderation: 'all'
 });
- 
+
  const [selectedBook, setSelectedBook] = useState(null); // Used for Side Drawer Preview
  const [selectedItems, setSelectedItems] = useState([]); // Bulk selection
 
@@ -185,11 +185,11 @@ function BookManagement() {
 
  return (
  <div className="space-y-6 pb-12">
- 
+
  {/* HEADER */}
  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
  <div>
- <h1 className="text-3xl font-black text-foreground tracking-tight">{t('adminBooksTitle')}</h1>
+ <h1 className="text-3xl font-black text-foreground tracking-normal">{t('adminBooksTitle')}</h1>
  <p className="text-foreground-muted font-medium mt-1">{t('adminBooksSubtitle')}</p>
  </div>
  <div className="flex items-center gap-3">
@@ -252,7 +252,7 @@ function BookManagement() {
  <span className="text-sm font-bold text-foreground-700">{t('adminBooksSelectedCount').replace('{n}', selectedItems.length)}</span>
  <div className="flex gap-2">
  <Button variant="outline" className="text-xs py-1 border-primary-200 bg-card">{t('adminBooksPublish')}</Button>
- <Button variant="outline" className="text-xs py-1 border-rose-200 bg-card text-rose-600">{t('adminDelete')}</Button>
+ <Button variant="outline" className="text-xs py-1 border-hkids-brown-light bg-card text-hkids-brown-dark">{t('adminDelete')}</Button>
  </div>
  </motion.div>
  )}
@@ -282,11 +282,11 @@ function BookManagement() {
  <th className="p-4 w-12 text-center">
  <input type="checkbox" checked={selectedItems.length === filteredBooks.length && filteredBooks.length > 0} onChange={toggleAll} className="w-4 h-4 rounded border-surface-300 text-foreground-600 focus:ring-primary-500"/>
  </th>
- <th className="p-4 text-xs font-bold text-surface-400 uppercase tracking-wider min-w-[300px]">{t('adminBooksHeaderStory')}</th>
- <th className="p-4 text-xs font-bold text-surface-400 uppercase tracking-wider">{t('adminBooksHeaderCategory')}</th>
- <th className="p-4 text-xs font-bold text-surface-400 uppercase tracking-wider">{t('adminBooksHeaderStatus')}</th>
- <th className="p-4 text-xs font-bold text-surface-400 uppercase tracking-wider">{t('adminBooksHeaderAudio')}</th>
- <th className="p-4 text-xs font-bold text-surface-400 uppercase tracking-wider text-end">{t('adminBooksHeaderActions')}</th>
+ <th className="p-4 text-xs font-bold text-surface-400 uppercase tracking-normal min-w-[300px]">{t('adminBooksHeaderStory')}</th>
+ <th className="p-4 text-xs font-bold text-surface-400 uppercase tracking-normal">{t('adminBooksHeaderCategory')}</th>
+ <th className="p-4 text-xs font-bold text-surface-400 uppercase tracking-normal">{t('adminBooksHeaderStatus')}</th>
+ <th className="p-4 text-xs font-bold text-surface-400 uppercase tracking-normal">{t('adminBooksHeaderAudio')}</th>
+ <th className="p-4 text-xs font-bold text-surface-400 uppercase tracking-normal text-end">{t('adminBooksHeaderActions')}</th>
  </tr>
  </thead>
  <tbody className="divide-y divide-border">
@@ -295,13 +295,13 @@ function BookManagement() {
  const isPremium = book.is_premium === true || book.is_premium === 1;
  const moderationStatus = book.moderation_status || 'approved';
  const moderationTone = moderationStatus === 'pending'
- ? 'bg-accent-100 text-accent-800'
+ ? 'bg-hkids-brown-light text-hkids-brown-darker'
  : moderationStatus === 'rejected'
- ? 'bg-rose-100 text-rose-800'
+ ? 'bg-hkids-brown-soft text-hkids-brown-darker'
  : 'bg-secondary-100 text-secondary-800';
  const isSelected = selectedItems.includes(book.id);
  const imageUrl = book.cover_image ? getImageUrl(book.cover_image) : null;
- 
+
  return (
  <tr key={book.id} className={`hover:bg-surface-secondary transition-colors group cursor-pointer ${isSelected ? 'bg-primary-50/50' : ''}`} onClick={() => setSelectedBook(book)}>
  <td className="p-4 text-center" onClick={(e) => e.stopPropagation()}>
@@ -336,7 +336,7 @@ function BookManagement() {
  <td className="p-4 text-end" onClick={(e) => e.stopPropagation()}>
  <div className="flex items-center justify-end gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
  <button onClick={() => handleEdit(book)} className="p-2 text-surface-400 hover:text-foreground-600 hover:bg-primary-50 rounded-lg transition-colors"><EditIcon className="w-4 h-4" /></button>
- <button onClick={() => handleDelete(book.id)} className="p-2 text-surface-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"><TrashIcon className="w-4 h-4" /></button>
+ <button onClick={() => handleDelete(book.id)} className="p-2 text-surface-400 hover:text-hkids-brown-dark hover:bg-hkids-brown-soft rounded-lg transition-colors"><TrashIcon className="w-4 h-4" /></button>
  <button onClick={() => handleTogglePublish(book)} className="p-2 text-surface-400 hover:text-foreground hover:bg-surface-secondary rounded-lg transition-colors">
  {isPublished ? <UnpublishIcon className="w-4 h-4" /> : <PublishIcon className="w-4 h-4" />}
  </button>
@@ -356,7 +356,7 @@ function BookManagement() {
  {selectedBook && (
  <div className="fixed inset-0 z-50 overflow-hidden flex justify-end">
  <motion.div initial={{opacity: 0}} animate={{opacity: 1}} exit={{opacity: 0}} className="absolute inset-0 bg-surface-900/20 backdrop-blur-sm" onClick={() => setSelectedBook(null)}></motion.div>
- <motion.div 
+ <motion.div
  initial={{x: '100%'}} animate={{x: 0}} exit={{x: '100%'}} transition={{type: 'spring', damping: 25, stiffness: 200}}
  className="w-full max-w-md bg-card h-full shadow-2xl relative z-10 flex flex-col border-s border-border"
  >
@@ -364,7 +364,7 @@ function BookManagement() {
  <h3 className="font-bold text-foreground">{t('adminBooksPreview')}</h3>
  <button onClick={() => setSelectedBook(null)} className="p-2 text-foreground-muted hover:bg-surface-200 rounded-full"><XIcon className="w-5 h-5"/></button>
  </div>
- 
+
  <div className="flex-1 overflow-y-auto p-6">
  <div className="aspect-[3/4] w-48 mx-auto bg-surface-secondary rounded-2xl overflow-hidden mb-6 shadow-lg">
  {selectedBook.cover_image ? <img src={getImageUrl(selectedBook.cover_image)} alt="Cover" className="w-full h-full object-cover" /> : <BookIcon className="w-12 h-12 text-surface-300 m-auto mt-20" />}
@@ -373,24 +373,24 @@ function BookManagement() {
  <h2 className="text-2xl font-black text-foreground mb-2">{selectedBook.title}</h2>
  <p className="text-sm font-medium text-foreground-muted">{selectedBook.author || t('adminBooksUnknownAuthor')}</p>
  </div>
- 
+
  <div className="space-y-4">
  <div className="bg-surface-secondary p-4 rounded-2xl border border-border">
- <p className="text-xs font-bold text-surface-400 uppercase tracking-wider mb-2">{t('adminBooksDetails')}</p>
+ <p className="text-xs font-bold text-surface-400 uppercase tracking-normal mb-2">{t('adminBooksDetails')}</p>
  <div className="space-y-2 text-sm font-medium text-foreground-secondary">
  <div className="flex justify-between"><span>{t('adminBooksCategory')}</span><span className="font-bold">{selectedBook.category_name || '-'}</span></div>
  <div className="flex justify-between"><span>{t('adminBooksAgeRange')}</span><span className="font-bold">{selectedBook.age_group_min}-{selectedBook.age_group_max} {t('adminYears')}</span></div>
  <div className="flex justify-between"><span>{t('adminBooksLanguage')}</span><span className="font-bold uppercase">{selectedBook.language}</span></div>
  </div>
  </div>
- 
+
  <div className="bg-surface-secondary p-4 rounded-2xl border border-border">
- <p className="text-xs font-bold text-surface-400 uppercase tracking-wider mb-2">{t('adminBooksDescription')}</p>
+ <p className="text-xs font-bold text-surface-400 uppercase tracking-normal mb-2">{t('adminBooksDescription')}</p>
  <p className="text-sm font-medium text-foreground-secondary leading-relaxed">{selectedBook.description || t('adminBooksNoDescription')}</p>
  </div>
  </div>
  </div>
- 
+
  <div className="p-4 border-t border-border bg-card flex gap-3">
  <Button variant="outline" className="flex-1" onClick={() => {setSelectedBook(null); handleEdit(selectedBook);}}>{t('adminEdit')}</Button>
  <Button variant="primary" className="flex-1" onClick={() => {handleTogglePublish(selectedBook); setSelectedBook(null);}}>

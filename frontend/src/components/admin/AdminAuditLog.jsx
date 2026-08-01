@@ -34,7 +34,7 @@ function AdminAuditLog() {
  return (
  <div className="space-y-6 pb-12">
  <div>
- <h1 className="text-3xl font-black tracking-tight">{t('adminAuditTitle')}</h1>
+ <h1 className="text-3xl font-black tracking-normal">{t('adminAuditTitle')}</h1>
  <p className="text-foreground-muted font-medium mt-1">{t('adminAuditSubtitle')}</p>
  </div>
 
@@ -54,7 +54,7 @@ function AdminAuditLog() {
  </select>
  </div>
 
- {error && <div className="p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 font-bold">{error}</div>}
+ {error && <div className="p-4 rounded-xl bg-hkids-brown-soft border border-hkids-brown-light text-hkids-brown-dark font-bold">{error}</div>}
 
  <div className="bg-card rounded-[2rem] border border-border overflow-hidden">
  {loading ? (

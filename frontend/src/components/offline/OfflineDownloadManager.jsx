@@ -106,7 +106,7 @@ export function OfflineDownloadManager({ compact = false, className = '' }) {
                 <Button
                   size="sm"
                   variant="ghost"
-                  className="h-8 min-h-[32px] px-2 text-[10px] font-bold text-rose-600"
+                  className="h-8 min-h-[32px] px-2 text-[10px] font-bold text-hkids-brown-dark"
                   onClick={() => cancelJob(job.id)}
                 >
                   {cdLabel('cdCancel', language)}

@@ -66,7 +66,7 @@ function AdminModeration() {
  return (
  <div className="space-y-6 pb-12">
  <div>
- <h1 className="text-3xl font-black text-foreground tracking-tight">{t('adminModerationTitle')}</h1>
+ <h1 className="text-3xl font-black text-foreground tracking-normal">{t('adminModerationTitle')}</h1>
  <p className="text-foreground-muted font-medium mt-1">{t('adminModerationSubtitle')}</p>
  </div>
 
@@ -93,7 +93,7 @@ function AdminModeration() {
  </select>
  </div>
 
- {error && <div className="rounded-xl border border-rose-200 bg-rose-50 p-4 text-rose-700 font-bold">{error}</div>}
+ {error && <div className="rounded-xl border border-hkids-brown-light bg-hkids-brown-soft p-4 text-hkids-brown-dark font-bold">{error}</div>}
 
  <div className="bg-card rounded-[2rem] border border-border shadow-sm overflow-hidden">
  {loading ? (
@@ -126,7 +126,7 @@ function AdminModeration() {
  variant="outline"
  disabled={busyId === key}
  onClick={() => openModerate(item, 'rejected')}
- className="text-rose-600 border-rose-200"
+ className="text-hkids-brown-dark border-hkids-brown-light"
  >
  <XIcon className="w-4 h-4 me-2" /> {t('adminModerationReject')}
  </Button>

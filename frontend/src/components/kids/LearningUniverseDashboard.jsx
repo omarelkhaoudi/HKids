@@ -81,7 +81,7 @@ export function LearningUniverseDashboard({
             return (
               <div
                 key={badge.id}
-                className={`rounded-2xl border p-3 text-center ${earned ? 'border-amber-300 bg-amber-50' : 'border-border opacity-40 grayscale'}`}
+                className={`rounded-2xl border p-3 text-center ${earned ? 'border-hkids-brown-light bg-hkids-brown-soft' : 'border-border opacity-40 grayscale'}`}
               >
                 <div className="text-2xl">{badge.emoji}</div>
                 <p className="text-caption font-black leading-tight mt-1">{luLabel(badge.labelKey, language)}</p>

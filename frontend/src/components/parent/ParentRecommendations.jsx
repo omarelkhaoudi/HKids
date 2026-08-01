@@ -149,7 +149,7 @@ export const ParentRecommendations = memo(function ParentRecommendations({
                   imgClassName="absolute inset-0 h-full w-full object-cover"
                 />
               </div>
-              <p className="text-caption font-bold text-foreground-muted uppercase tracking-wide mb-1">
+              <p className="text-caption font-bold text-foreground-muted uppercase tracking-normal mb-1">
                 {book.theme ? getThemeLabel(book.theme) : (kid?.age ? t('parentKidAgeYears', { age: kid.age }) : t('featured'))}
               </p>
               <p className="kids-book-title text-sm line-clamp-2 leading-snug">{book.title}</p>

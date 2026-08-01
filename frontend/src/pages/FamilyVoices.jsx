@@ -8,7 +8,7 @@ import {useToast} from '../components/ToastProvider';
 import {useOfflineContent} from '../hooks/useOfflineContent';
 import {getDownloads, getOfflineBlobUrl, offlineContentIds, saveVoiceMessageOffline} from '../services/offline/offlineContentService';
 import {
- AudioIcon, CheckIcon, DownloadIcon, EditIcon, 
+ AudioIcon, CheckIcon, DownloadIcon, EditIcon,
  MicrophoneIcon, PlusIcon, TrashIcon, XIcon, ShieldIcon, SparklesIcon,
  PlayIcon, PauseIcon, StarIcon, SettingsIcon
 } from '../components/Icons';
@@ -49,7 +49,7 @@ function statusLabel(status, t) {
 function qualityTone(status) {
  if (status === 'good') return `${BRAND_SEMANTIC.success.bg} ${BRAND_SEMANTIC.success.text}`;
  if (status === 'medium') return `${BRAND_SEMANTIC.warning.bg} ${BRAND_SEMANTIC.warning.text}`;
- return 'bg-rose-100 text-rose-800';
+ return 'bg-hkids-brown-soft text-hkids-brown-darker';
 }
 
 // Custom hook from original code
@@ -216,10 +216,10 @@ function FamilyVoices() {
 } else {
  await voicesAPI.createProfile(formData);
 }
- 
+
  clearInterval(progressInterval);
  setAiProgress(100);
- 
+
  setTimeout(() => {
  setWizardStep(5); // Success celebration
  loadData();
@@ -400,7 +400,7 @@ function FamilyVoices() {
  </header>
 
  <main className="space-y-12">
- 
+
  {/* SAFETY CARDS */}
  <section className="grid grid-cols-1 md:grid-cols-3 gap-4">
  <div className="bg-secondary-50 rounded-2xl p-5 border border-secondary-100 flex gap-4">
@@ -417,11 +417,11 @@ function FamilyVoices() {
  <p className="text-sm text-primary-700 mt-1">{t('parentVoiceSafetyConsentDesc')}</p>
  </div>
  </div>
- <div className="bg-rose-50 rounded-2xl p-5 border border-rose-100 flex gap-4">
- <div className="bg-rose-500 text-white p-3 rounded-full h-fit"><TrashIcon className="w-6 h-6"/></div>
+ <div className="bg-hkids-brown-soft rounded-2xl p-5 border border-hkids-brown-soft flex gap-4">
+ <div className="bg-hkids-brown text-white p-3 rounded-full h-fit"><TrashIcon className="w-6 h-6"/></div>
  <div>
- <h3 className="font-bold text-rose-900">{t('parentVoiceSafetyControlTitle')}</h3>
- <p className="text-sm text-rose-700 mt-1">{t('parentVoiceSafetyControlDesc')}</p>
+ <h3 className="font-bold text-hkids-brown-darker">{t('parentVoiceSafetyControlTitle')}</h3>
+ <p className="text-sm text-hkids-brown-dark mt-1">{t('parentVoiceSafetyControlDesc')}</p>
  </div>
  </div>
  </section>
@@ -456,7 +456,7 @@ function FamilyVoices() {
  {activeProfiles.map((profile) => (
  <motion.div key={profile.id} whileHover={{y: -5}} className="bg-card rounded-3xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-border relative group overflow-hidden">
  <div className="absolute top-0 inset-x-0 h-2 bg-gradient-to-r from-primary-400 to-secondary-500"></div>
- 
+
  <div className="flex items-start justify-between mb-4 mt-2">
  <div className="flex items-center gap-3">
  <Avatar src={null} fallback={profile.name.charAt(0).toUpperCase()} className="w-14 h-14 bg-gradient-to-br from-primary-400 to-secondary-500 text-white font-bold text-xl" />
@@ -467,14 +467,14 @@ function FamilyVoices() {
  </div>
  {/* Prefer favorite when API marks it */}
  {profile.is_default ? (
- <div className="bg-accent-100 text-accent-700 p-1.5 rounded-full" title={t('parentVoicePreview')}>
+ <div className="bg-hkids-brown-light text-hkids-brown-dark p-1.5 rounded-full" title={t('parentVoicePreview')}>
  <StarIcon className="w-4 h-4"/>
  </div>
  ) : null}
  </div>
 
  <div className="flex flex-wrap gap-2 mb-6">
- <Badge variant="soft" className="bg-surface-secondary text-foreground-secondary font-bold uppercase tracking-wider text-xs">{profile.language}</Badge>
+ <Badge variant="soft" className="bg-surface-secondary text-foreground-secondary font-bold uppercase tracking-normal text-xs">{profile.language}</Badge>
  <Badge variant="soft" className="bg-primary-50 text-foreground-secondary font-bold text-xs">{statusLabel(profile.status, t)}</Badge>
  {profile.quality_score != null && profile.quality_score !== '' ? (
  <Badge variant="soft" className={`${qualityTone(profile.quality_status)} font-bold text-xs`}>
@@ -482,7 +482,7 @@ function FamilyVoices() {
  </Badge>
  ) : null}
 {!profile.consent_given && (
-<Badge variant="soft" className="bg-rose-50 text-rose-700 font-bold text-xs">{t('parentVoiceConsentRevokedBadge')}</Badge>
+<Badge variant="soft" className="bg-hkids-brown-soft text-hkids-brown-dark font-bold text-xs">{t('parentVoiceConsentRevokedBadge')}</Badge>
 )}
  </div>
 
@@ -495,11 +495,11 @@ function FamilyVoices() {
  <EditIcon className="w-4 h-4" />
  </Button>
 {(profile.consent_given || profile.status === 'provider_deletion_pending') && (
-<Button variant="outline" title={profile.consent_given ? t('parentVoiceRevokeConsent') : t('parentVoiceRetryDeletion')} onClick={() => revokeConsent(profile)} className="rounded-full w-full px-0 font-bold text-sm bg-accent-50 border-accent-100 text-accent-700 hover:bg-accent-100">
+<Button variant="outline" title={profile.consent_given ? t('parentVoiceRevokeConsent') : t('parentVoiceRetryDeletion')} onClick={() => revokeConsent(profile)} className="rounded-full w-full px-0 font-bold text-sm bg-hkids-brown-soft border-hkids-brown-light text-hkids-brown-dark hover:bg-hkids-brown-light">
 <ShieldIcon className="w-4 h-4" />
 </Button>
 )}
- <Button variant="outline" onClick={() => deleteProfile(profile)} className="rounded-full w-full px-0 font-bold text-sm bg-rose-50 border-rose-100 text-rose-600 hover:bg-rose-100">
+ <Button variant="outline" onClick={() => deleteProfile(profile)} className="rounded-full w-full px-0 font-bold text-sm bg-hkids-brown-soft border-hkids-brown-soft text-hkids-brown-dark hover:bg-hkids-brown-soft">
  <TrashIcon className="w-4 h-4" />
  </Button>
  </div>
@@ -513,12 +513,12 @@ function FamilyVoices() {
  {/* CUSTOM MESSAGES */}
  <section className="bg-card rounded-[2.5rem] p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-border">
  <div className="flex flex-col lg:flex-row gap-12">
- 
+
  {/* Create Message Form */}
  <div className="lg:w-1/3">
  <h2 className="text-2xl font-black text-foreground mb-2">{t('parentVoiceMessagesTitle')}</h2>
  <p className="text-foreground-muted mb-6 font-medium">{t('parentVoiceMessagesDesc')}</p>
- 
+
  <form onSubmit={submitMessage} className="space-y-4">
  <input
  value={messageForm.title}
@@ -543,17 +543,17 @@ function FamilyVoices() {
  <option key={profile.id} value={profile.id}>{t('parentVoiceMessageVoiceOption', { name: profile.name })}</option>
  ))}
  </select>
- 
+
  {/* Compact Recorder */}
  <div className="bg-surface-secondary border-2 border-border rounded-2xl p-4">
  <div className="flex items-center justify-between mb-3">
  <span className="font-bold text-sm text-foreground-secondary">{t('parentVoiceMessageDirectAudio')}</span>
- {messageRecorder.recording && <span className="flex h-3 w-3 relative"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span><span className="relative inline-flex rounded-full h-3 w-3 bg-rose-500"></span></span>}
+ {messageRecorder.recording && <span className="flex h-3 w-3 relative"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-hkids-brown opacity-75"></span><span className="relative inline-flex rounded-full h-3 w-3 bg-hkids-brown"></span></span>}
  </div>
- 
+
  <div className="flex gap-2">
  {!messageRecorder.recording ? (
- <Button type="button" onClick={messageRecorder.start} variant="outline" className="w-full bg-card border-border text-rose-600 hover:bg-rose-50 rounded-xl font-bold">
+ <Button type="button" onClick={messageRecorder.start} variant="outline" className="w-full bg-card border-border text-hkids-brown-dark hover:bg-hkids-brown-soft rounded-xl font-bold">
  <MicrophoneIcon className="w-4 h-4 me-2"/> {t('parentVoiceRecord')}
  </Button>
  ) : (
@@ -597,7 +597,7 @@ function FamilyVoices() {
  {message.has_audio && <Badge variant="soft" className="bg-primary-100 text-primary-800 text-xs font-bold">{t('parentVoiceAudioIncluded')}</Badge>}
  </div>
  </div>
- 
+
  <div className="flex gap-2 self-start md:self-auto">
  <Button variant="outline" onClick={() => playMessage(message)} disabled={!message.has_audio} className="rounded-full bg-surface-secondary border-border">
  <PlayIcon className="w-4 h-4"/>
@@ -605,7 +605,7 @@ function FamilyVoices() {
  <Button variant="outline" onClick={() => offlineReady ? removeMessageDownload(message) : downloadMessage(message)} className={`rounded-full border-border ${offlineReady ? 'bg-secondary-50 text-secondary-700 border-secondary-200' : 'bg-surface-secondary'}`}>
  <DownloadIcon className="w-4 h-4"/>
  </Button>
- <Button variant="outline" onClick={() => deleteMessage(message)} className="rounded-full bg-surface-secondary border-border text-rose-600 hover:bg-rose-50 hover:border-rose-200">
+ <Button variant="outline" onClick={() => deleteMessage(message)} className="rounded-full bg-surface-secondary border-border text-hkids-brown-dark hover:bg-hkids-brown-soft hover:border-hkids-brown-light">
  <TrashIcon className="w-4 h-4"/>
  </Button>
  </div>
@@ -623,9 +623,9 @@ function FamilyVoices() {
  <AnimatePresence>
  {wizardStep > 0 && (
  <motion.div initial={{opacity: 0}} animate={{opacity: 1}} exit={{opacity: 0}} className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-surface-900/40 backdrop-blur-sm">
- <motion.div 
- initial={{scale: 0.9, y: 20, opacity: 0}} 
- animate={{scale: 1, y: 0, opacity: 1}} 
+ <motion.div
+ initial={{scale: 0.9, y: 20, opacity: 0}}
+ animate={{scale: 1, y: 0, opacity: 1}}
  exit={{scale: 0.9, y: 20, opacity: 0}}
  className="bg-card rounded-[2.5rem] shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto overflow-x-hidden relative"
  >
@@ -637,7 +637,7 @@ function FamilyVoices() {
  )}
 
  <div className="p-8 md:p-12">
- 
+
  {/* STEP 1: INTRO */}
  {wizardStep === 1 && (
  <div className="text-center">
@@ -648,7 +648,7 @@ function FamilyVoices() {
  <p className="text-lg text-foreground-secondary font-medium mb-8 max-w-md mx-auto">
  {t('parentVoiceWizardIntroBody')}
  </p>
- 
+
  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-start mb-8">
  <div className="bg-surface-secondary p-4 rounded-2xl flex gap-3 items-start">
  <MicrophoneIcon className="w-6 h-6 text-primary-500 shrink-0" />
@@ -671,7 +671,7 @@ function FamilyVoices() {
  <div>
  <h2 className="text-2xl font-black text-foreground mb-2">{t('parentVoiceWizardStep2Title')}</h2>
  <p className="text-foreground-muted mb-6 font-medium">{t('parentVoiceWizardStep2Desc')}</p>
- 
+
  <form id="voice-form" onSubmit={submitProfile} className="space-y-6">
  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
  <input
@@ -689,7 +689,7 @@ function FamilyVoices() {
  required
  />
  </div>
- 
+
  {/* Magical Recording UI */}
  <div className="bg-gradient-to-b from-surface-50 to-surface-100 rounded-3xl p-6 md:p-8 border-2 border-border text-center relative overflow-hidden">
  <div className="absolute top-4 start-4 flex gap-2" aria-hidden="true">
@@ -713,32 +713,32 @@ function FamilyVoices() {
  {profileRecorder.recording && (
  <div className="absolute inset-0 flex items-center justify-center gap-1">
  {[...Array(12)].map((_, i) => (
- <motion.div 
- key={i} 
- animate={{height: [10, Math.random() * 80 + 20, 10]}} 
+ <motion.div
+ key={i}
+ animate={{height: [10, Math.random() * 80 + 20, 10]}}
  transition={{duration: 0.5, repeat: Infinity, delay: i * 0.1}}
- className="w-2 bg-rose-400 rounded-full" 
+ className="w-2 bg-hkids-brown rounded-full"
  />
  ))}
  </div>
  )}
 
  {/* Massive Mic Button */}
- <motion.button 
+ <motion.button
  type="button"
  whileHover={{scale: 1.05}}
  whileTap={{scale: 0.95}}
  onClick={profileRecorder.recording ? profileRecorder.stop : profileRecorder.start}
- className={`relative z-10 w-24 h-24 rounded-full flex items-center justify-center shadow-2xl transition-colors ${profileRecorder.recording ? 'bg-rose-500 text-white' : 'bg-primary-500 text-white'}`}
+ className={`relative z-10 w-24 h-24 rounded-full flex items-center justify-center shadow-2xl transition-colors ${profileRecorder.recording ? 'bg-hkids-brown text-white' : 'bg-primary-500 text-white'}`}
  >
  {profileRecorder.recording ? <PauseIcon className="w-10 h-10" /> : <MicrophoneIcon className="w-10 h-10" />}
- {profileRecorder.recording && <span className="absolute -inset-4 rounded-full border-4 border-rose-300 animate-ping opacity-75"></span>}
+ {profileRecorder.recording && <span className="absolute -inset-4 rounded-full border-4 border-hkids-brown-light animate-ping opacity-75"></span>}
  </motion.button>
  </div>
 
  <div className="flex items-center justify-center gap-4">
  {profileRecorder.recording ? (
- <span className="font-black text-rose-500 text-xl font-mono">{profileRecorder.durationSeconds}s</span>
+ <span className="font-black text-hkids-brown text-xl font-mono">{profileRecorder.durationSeconds}s</span>
  ) : (
  profileRecorder.durationSeconds > 0 && <span className="font-black text-foreground-muted text-xl font-mono">{t('parentVoiceCapturedSeconds', { seconds: profileRecorder.durationSeconds })}</span>
  )}
@@ -775,9 +775,9 @@ function FamilyVoices() {
  <motion.div animate={{rotate: 360}} transition={{duration: 4, repeat: Infinity, ease: 'linear'}} className="absolute inset-0 rounded-full border-4 border-border border-t-primary-500 border-r-secondary-500"></motion.div>
  <MicrophoneIcon className="w-12 h-12 text-surface-400 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" />
  </div>
- 
+
  <h2 className="text-2xl font-black text-foreground mb-4">{t('parentVoiceMagicTitle')}</h2>
- 
+
  <div className="max-w-xs mx-auto space-y-4 text-start">
  <div className={`flex items-center gap-3 font-bold ${aiProgress >= 10 ? 'text-foreground-600' : 'text-surface-400'}`}>
  {aiProgress >= 25 ? <CheckIcon className="w-5 h-5 text-secondary-500"/> : <div className="w-5 h-5 rounded-full border-2 border-current"></div>} {t('parentVoiceStepTransfer')}
@@ -805,7 +805,7 @@ function FamilyVoices() {
  <p className="text-lg text-foreground-secondary font-medium mb-8 max-w-md mx-auto">
  {t('parentVoiceSuccessBody')}
  </p>
- 
+
  <div className="flex flex-col sm:flex-row justify-center gap-4">
  <Button onClick={resetProfileForm} variant="outline" className="rounded-full font-bold">{t('parentVoiceBackToStudio')}</Button>
  <Button onClick={() => {resetProfileForm(); navigate('/kids');}} variant="primary" className="rounded-full shadow-lg bg-secondary-500 hover:bg-secondary-600 border-none font-black text-white">

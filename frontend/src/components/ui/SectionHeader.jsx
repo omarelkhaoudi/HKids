@@ -5,7 +5,7 @@ export function SectionHeader({ title, subtitle, action, className = '' }) {
  return (
  <div className={`flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-6 ${className}`}>
  <div>
- <h2 className="text-2xl font-black text-foreground tracking-tight">
+ <h2 className="text-2xl font-black text-foreground tracking-normal">
  {title}
  </h2>
  {subtitle && (

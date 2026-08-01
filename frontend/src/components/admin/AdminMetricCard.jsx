@@ -3,7 +3,7 @@ export function AdminMetricCard({label, value, detail, icon: Icon, tone = 'bg-pr
  <div className="rounded-2xl border border-primary-100 bg-card/90 p-5 shadow-lg backdrop-blur">
  <div className="flex items-start justify-between gap-4">
  <div>
- <p className="text-xs font-bold uppercase tracking-wide text-foreground-muted">{label}</p>
+ <p className="text-xs font-bold uppercase tracking-normal text-foreground-muted">{label}</p>
  <p className="mt-2 text-3xl font-black text-foreground">{value}</p>
  {detail && <p className="mt-1 text-sm font-medium text-foreground-muted">{detail}</p>}
  </div>

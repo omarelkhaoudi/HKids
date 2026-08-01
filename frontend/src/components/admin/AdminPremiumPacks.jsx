@@ -32,7 +32,7 @@ export function AdminPremiumPacks() {
   return (
     <div className="space-y-6 pb-12">
       <div>
-        <h1 className="text-3xl font-black text-foreground tracking-tight">{premLabel('premAdminTitle', language)}</h1>
+        <h1 className="text-3xl font-black text-foreground tracking-normal">{premLabel('premAdminTitle', language)}</h1>
         <p className="text-foreground-muted font-medium mt-1">{premLabel('premAdminSubtitle', language)}</p>
       </div>
 
@@ -92,7 +92,7 @@ export function AdminPremiumPacks() {
                 <h3 className="font-black">{packDisplayTitle(pack, language)}</h3>
                 {pack.published && <Badge variant="soft">{premLabel('premPublish', language)}</Badge>}
                 {pack.archived && <Badge variant="secondary">{premLabel('premArchive', language)}</Badge>}
-                {pack.featured && <Badge variant="soft" className="bg-amber-100 text-amber-800">{premLabel('premFeature', language)}</Badge>}
+                {pack.featured && <Badge variant="soft" className="bg-hkids-brown-soft text-hkids-brown-darker">{premLabel('premFeature', language)}</Badge>}
                 {pack.seasonal && <Badge variant="soft">{premLabel('premSeasonalMark', language)}</Badge>}
               </div>
               <p className="text-caption text-foreground-muted truncate">{pack.id} · {(pack.themes || []).join(', ')}</p>

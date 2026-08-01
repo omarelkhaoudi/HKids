@@ -7,8 +7,8 @@ import {useLanguage} from '../context/LanguageContext';
 import {useToast} from '../components/ToastProvider';
 import {Logo} from '../components/Logo';
 import {
- BookIcon, CheckIcon, ChevronLeftIcon, LockIcon, StarIcon, 
- SparklesIcon, ShieldIcon, XIcon, InfoIcon, BrainIcon, AudioIcon, HistoryIcon, ChevronUpIcon 
+ BookIcon, CheckIcon, ChevronLeftIcon, LockIcon, StarIcon,
+ SparklesIcon, ShieldIcon, XIcon, InfoIcon, BrainIcon, AudioIcon, HistoryIcon, ChevronUpIcon
 } from '../components/Icons';
 import {Button, Card, Badge, Skeleton} from '../components/ui';
 import { MagicalBackground } from '../components/layout/PlatformShell';
@@ -73,7 +73,7 @@ function formatPrice(plan, locale = 'fr-FR') {
 // Confetti Component for Success State
 const Confetti = () => {
  const [particles, setParticles] = useState([]);
- 
+
  useEffect(() => {
  const newParticles = Array.from({length: 50}).map((_, i) => ({
  id: i,
@@ -140,7 +140,7 @@ function Subscriptions() {
  const isAuthenticated = Boolean(user || localStorage.getItem('token'));
  const isKidAccount = user?.role === 'kid';
  const isParentSurface = isAuthenticated && (user?.role === 'parent' || user?.role === 'admin');
- 
+
  const subscriptionEndsAt = currentSubscription?.current_period_end ? new Date(currentSubscription.current_period_end) : null;
  const hasUsableSubscription = Boolean(
  currentSubscription &&
@@ -153,7 +153,7 @@ function Subscriptions() {
  const [checkoutModalPlan, setCheckoutModalPlan] = useState(null);
  const [termsAccepted, setTermsAccepted] = useState(false);
  const [promoCode, setPromoCode] = useState('');
- 
+
  // Custom Status states to replace simple toasts
  const [viewState, setViewState] = useState('plans'); // 'plans', 'success', 'cancelled', 'error'
  const [errorMessage, setErrorMessage] = useState('');
@@ -430,7 +430,7 @@ function Subscriptions() {
  </div>
  <h1 className="text-4xl md:text-5xl font-black text-foreground mb-4">{t('subscriptionsPaymentSuccess')}</h1>
  <p className="text-xl text-foreground-secondary font-medium mb-8">{t('subscriptionsPaymentSuccessBody')}</p>
- 
+
  <div className="bg-surface-secondary rounded-2xl p-6 mb-8 text-start grid grid-cols-2 gap-4 border border-border">
  <div>
  <p className="text-sm font-bold text-surface-400 uppercase">{t('subscriptionsCurrentPlan')}</p>
@@ -454,7 +454,7 @@ function Subscriptions() {
  return (
  <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
  <motion.div initial={{y: 20, opacity: 0}} animate={{y: 0, opacity: 1}} className="bg-card rounded-[3rem] p-10 max-w-lg w-full text-center shadow-xl border border-border">
- <div className={`w-20 h-20 ${BRAND_SEMANTIC.warning.bg} text-accent-500 rounded-full flex items-center justify-center mx-auto mb-6`}>
+ <div className={`w-20 h-20 ${BRAND_SEMANTIC.warning.bg} text-hkids-brown rounded-full flex items-center justify-center mx-auto mb-6`}>
  <InfoIcon className="w-10 h-10" />
  </div>
  <h1 className="text-3xl font-black text-foreground mb-4">{t('subscriptionsPaymentCancelled')}</h1>
@@ -468,8 +468,8 @@ function Subscriptions() {
  if (viewState === 'error') {
  return (
  <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
- <motion.div initial={{y: 20, opacity: 0}} animate={{y: 0, opacity: 1}} className="bg-card rounded-[3rem] p-10 max-w-lg w-full text-center shadow-xl border border-rose-200">
- <div className="w-20 h-20 bg-rose-100 text-rose-500 rounded-full flex items-center justify-center mx-auto mb-6">
+ <motion.div initial={{y: 20, opacity: 0}} animate={{y: 0, opacity: 1}} className="bg-card rounded-[3rem] p-10 max-w-lg w-full text-center shadow-xl border border-hkids-brown-light">
+ <div className="w-20 h-20 bg-hkids-brown-soft text-hkids-brown rounded-full flex items-center justify-center mx-auto mb-6">
  <XIcon className="w-10 h-10" />
  </div>
  <h1 className="text-3xl font-black text-foreground mb-4">{t('subscriptionsErrorTitle')}</h1>
@@ -484,7 +484,7 @@ function Subscriptions() {
  const plansBody = (
  <>
  {!isParentSurface && <MagicalBackground preset="platform" />}
- 
+
  {/* HEADER */}
  {!isParentSurface && (
  <header className="sticky top-0 z-40 bg-card/80 backdrop-blur-xl border-b border-border shadow-sm">
@@ -514,7 +514,7 @@ function Subscriptions() {
  ) : (
  <section className="pt-16 pb-12 px-4 text-center max-w-4xl mx-auto">
  <motion.div initial={{opacity: 0, y: 20}} animate={{opacity: 1, y: 0}}>
- <Badge variant="soft" className="bg-primary-100 text-foreground-700 font-bold uppercase tracking-widest mb-6">{t('subscriptionsHeroBadge')}</Badge>
+ <Badge variant="soft" className="bg-primary-100 text-foreground-700 font-bold uppercase tracking-normal mb-6">{t('subscriptionsHeroBadge')}</Badge>
  <h1 className="text-4xl md:text-6xl font-black text-foreground leading-tight mb-6">
  {t('subscriptionsHeroTitle')}
  </h1>
@@ -636,7 +636,7 @@ function Subscriptions() {
  </Button>
  )}
  {currentSubscription?.provider === 'stripe' && !currentSubscription?.cancel_at_period_end && (
- <Button onClick={handleCancelSubscription} disabled={Boolean(billingAction)} variant="ghost" className="rounded-full font-bold text-rose-600">
+ <Button onClick={handleCancelSubscription} disabled={Boolean(billingAction)} variant="ghost" className="rounded-full font-bold text-hkids-brown-dark">
  {t('subscriptionsCancel')}
  </Button>
  )}
@@ -702,13 +702,13 @@ function Subscriptions() {
  transition={{delay: index * 0.1}}
  whileHover={{y: -8}}
  className={`relative rounded-[2.5rem] bg-card p-8 md:p-10 flex flex-col ${
- isFeatured 
- ? 'shadow-[0_20px_60px_-15px_rgba(139,92,246,0.3)] border-2 border-primary-400 z-10' 
+ isFeatured
+ ? 'shadow-[0_20px_60px_-15px_rgba(var(--hkids-brown-rgb),0.28)] border-2 border-primary-400 z-10'
  : 'shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-border mt-0 md:mt-6'
 }`}
  >
  {isFeatured && (
- <div className="absolute -top-5 left-1/2 -translate-x-1/2 bg-gradient-to-r from-primary-500 to-secondary-500 text-white font-black text-sm uppercase tracking-widest py-1.5 px-6 rounded-full shadow-lg">
+ <div className="absolute -top-5 left-1/2 -translate-x-1/2 bg-gradient-to-r from-primary-500 to-secondary-500 text-white font-black text-sm uppercase tracking-normal py-1.5 px-6 rounded-full shadow-lg">
  {t('subscriptionsRecommended')}
  </div>
  )}
@@ -719,7 +719,7 @@ function Subscriptions() {
  </div>
 
  <div className="mb-8 flex items-end gap-1">
- <span className="text-5xl font-black text-foreground tracking-tighter">{formatPrice(plan, locale)}</span>
+ <span className="text-5xl font-black text-foreground tracking-normal">{formatPrice(plan, locale)}</span>
  <span className="text-foreground-muted font-bold mb-2">{t('subscriptionsPerMonth')}</span>
  </div>
 
@@ -742,7 +742,7 @@ function Subscriptions() {
  </div>
  </div>
 
- <Button 
+ <Button
  onClick={() => openCheckoutModal(plan)}
  disabled={isKidAccount || isCurrent}
  variant={isFeatured ? 'primary' : 'outline'}
@@ -811,7 +811,7 @@ function Subscriptions() {
  <p className="text-sm text-surface-400 font-medium">{t('subsTrustPrivacyBody')}</p>
  </div>
  <div className="flex flex-col items-center">
- <SparklesIcon className="w-10 h-10 text-accent-400 mb-4" />
+ <SparklesIcon className="w-10 h-10 text-hkids-brown mb-4" />
  <h4 className="font-black mb-2">{t('subsTrustFeesTitle')}</h4>
  <p className="text-sm text-surface-400 font-medium">{t('subsTrustFeesBody')}</p>
  </div>
@@ -836,7 +836,7 @@ function Subscriptions() {
  {checkoutModalPlan && (
  <motion.div initial={{opacity: 0}} animate={{opacity: 1}} exit={{opacity: 0}} className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-surface-900/60 backdrop-blur-sm">
  <motion.div initial={{scale: 0.95, y: 20, opacity: 0}} animate={{scale: 1, y: 0, opacity: 1}} exit={{scale: 0.95, y: 20, opacity: 0}} className="bg-card rounded-[2.5rem] shadow-2xl w-full max-w-xl overflow-hidden relative flex flex-col max-h-[90vh]">
- 
+
  <div className="bg-surface-secondary p-6 md:p-8 border-b border-border flex justify-between items-start">
  <div>
  <Badge variant="soft" className="bg-primary-100 text-foreground-800 font-bold mb-2">{t('subsCheckoutSummary')}</Badge>
@@ -861,10 +861,10 @@ function Subscriptions() {
  <div className="mb-6">
  <label className="text-sm font-bold text-foreground-secondary mb-2 block">{t('subsCheckoutPromoLabel')}</label>
  <div className="flex gap-2">
- <input 
+ <input
  value={promoCode}
  onChange={(e) => setPromoCode(e.target.value)}
- placeholder={t('subscriptionsPromoPlaceholder')} 
+ placeholder={t('subscriptionsPromoPlaceholder')}
  className="w-full rounded-2xl border-2 border-border px-4 py-3 font-bold outline-none focus:border-primary-400 bg-surface-secondary focus:bg-card"
  />
  <Button variant="outline" className="rounded-2xl font-bold px-6 border-border bg-card">{t('subsCheckoutApply')}</Button>
@@ -883,10 +883,10 @@ function Subscriptions() {
  </span>
  </label>
 
- <Button 
- onClick={handleSubscribe} 
- disabled={!termsAccepted || subscribingPlan === checkoutModalPlan.code} 
- variant="primary" 
+ <Button
+ onClick={handleSubscribe}
+ disabled={!termsAccepted || subscribingPlan === checkoutModalPlan.code}
+ variant="primary"
  className="w-full rounded-full py-4 text-lg font-black shadow-xl shadow-primary-500/20 bg-gradient-to-r from-primary-500 to-secondary-500 border-none"
  >
  {subscribingPlan === checkoutModalPlan.code ? t('subscriptionsRedirecting') : t('subscriptionsProceedPayment')}

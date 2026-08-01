@@ -17,10 +17,10 @@ export const BRAND_HUB_GRADIENTS = [
 export const BRAND_QUICK_GRADIENTS = [
   'from-primary-400 to-primary-600',
   'from-primary-500 to-primary-700',
-  'from-orange-300 to-orange-500',
-  'from-magic-300 to-magic-500',
+  'from-hkids-brown-light to-hkids-brown',
+  'from-hkids-brown to-hkids-brown',
   'from-primary-400 to-primary-600',
-  'from-orange-400 to-orange-500',
+  'from-hkids-brown to-hkids-brown',
 ];
 
 export const BRAND_TONES = {
@@ -35,14 +35,14 @@ export const BRAND_TONES = {
     borderColor: 'border-secondary-200 dark:border-secondary-800',
   },
   accent: {
-    color: 'text-orange-700 dark:text-orange-300',
-    bgColor: 'bg-orange-50 dark:bg-orange-900/40',
-    borderColor: 'border-orange-200 dark:border-orange-800',
+    color: 'text-hkids-brown-dark dark:text-hkids-brown-light',
+    bgColor: 'bg-hkids-brown-soft dark:bg-hkids-brown-darker/40',
+    borderColor: 'border-hkids-brown-light dark:border-hkids-brown-darker',
   },
   orange: {
-    color: 'text-orange-700 dark:text-orange-300',
-    bgColor: 'bg-orange-50 dark:bg-orange-900/40',
-    borderColor: 'border-orange-200 dark:border-orange-800',
+    color: 'text-hkids-brown-dark dark:text-hkids-brown-light',
+    bgColor: 'bg-hkids-brown-soft dark:bg-hkids-brown-darker/40',
+    borderColor: 'border-hkids-brown-light dark:border-hkids-brown-darker',
   },
   success: {
     color: 'text-success-700 dark:text-success-300',
@@ -50,9 +50,9 @@ export const BRAND_TONES = {
     borderColor: 'border-success-200 dark:border-success-800',
   },
   magic: {
-    color: 'text-magic-700 dark:text-magic-300',
-    bgColor: 'bg-magic-50 dark:bg-magic-900/40',
-    borderColor: 'border-magic-200 dark:border-magic-800',
+    color: 'text-hkids-brown-dark dark:text-hkids-brown',
+    bgColor: 'bg-hkids-brown-soft dark:bg-hkids-brown-darker/40',
+    borderColor: 'border-hkids-brown-light dark:border-hkids-brown-darker',
   },
 };
 
@@ -122,17 +122,17 @@ export function localizeFeatureTiles(language = 'fr') {
 export const BRAND_SOFT_SURFACES = [
   'bg-primary-50',
   'bg-surface-100',
-  'bg-orange-50',
+  'bg-hkids-brown-soft',
   'bg-primary-50',
-  'bg-magic-50',
+  'bg-hkids-brown-soft',
 ];
 
 export const BRAND_METRIC_TONES = [
   { bg: 'bg-primary-50', text: 'text-primary-600' },
   { bg: 'bg-surface-100', text: 'text-foreground-secondary' },
-  { bg: 'bg-orange-50', text: 'text-orange-600' },
+  { bg: 'bg-hkids-brown-soft', text: 'text-hkids-brown-dark' },
   { bg: 'bg-success-50', text: 'text-success-600' },
-  { bg: 'bg-magic-50', text: 'text-magic-600' },
+  { bg: 'bg-hkids-brown-soft', text: 'text-hkids-brown-dark' },
 ];
 
 export const BRAND_SEMANTIC = {
@@ -145,8 +145,8 @@ export const BRAND_SEMANTIC = {
 export const BRAND_CONFETTI = [
   'bg-primary-400',
   'bg-primary-500',
-  'bg-orange-400',
-  'bg-magic-400',
+  'bg-hkids-brown',
+  'bg-hkids-brown',
   'bg-primary-300',
 ];
 
@@ -164,8 +164,8 @@ export const BRAND_STORY_GRADIENTS = [
   'from-primary-500 to-primary-700',
   'from-primary-300 to-primary-500',
   'from-primary-400 to-primary-700',
-  'from-magic-300 to-magic-500',
-  'from-orange-300 to-orange-500',
+  'from-hkids-brown to-hkids-brown',
+  'from-hkids-brown-light to-hkids-brown',
   'from-primary-500 to-primary-600',
   'from-primary-400 to-primary-500',
 ];

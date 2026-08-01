@@ -5,21 +5,21 @@ import { getHoverMotion } from '../../constants/kidsMotion';
 
 const VARIANTS = {
   primary:
-    'bg-primary-500 text-white hover:bg-primary-600 focus-visible:ring-primary-500 shadow-soft',
+    'hkids-button-primary focus-visible:ring-hkids-green',
   secondary:
-    'bg-secondary-500 text-foreground hover:bg-secondary-600 focus-visible:ring-secondary-500 shadow-soft',
+    'hkids-button-secondary focus-visible:ring-hkids-green',
   ghost:
-    'bg-transparent text-foreground-secondary hover:bg-surface-secondary focus-visible:ring-primary-400',
+    'bg-transparent text-foreground-secondary hover:bg-hkids-green-soft hover:text-hkids-green-darker focus-visible:ring-hkids-green',
   outline:
-    'bg-surface text-primary-600 border-2 border-primary-200 hover:bg-primary-50 focus-visible:ring-primary-500',
+    'hkids-button-outline focus-visible:ring-hkids-brown',
   orange:
-    'bg-orange-500 text-white hover:bg-orange-600 focus-visible:ring-orange-500 shadow-soft',
+    'hkids-button-outline focus-visible:ring-hkids-brown',
   magic:
-    'bg-magic-500 text-white hover:bg-magic-600 focus-visible:ring-magic-500 shadow-soft',
+    'hkids-button-outline focus-visible:ring-hkids-brown',
   success:
-    'bg-success-500 text-white hover:bg-success-600 focus-visible:ring-success-500 shadow-soft',
+    'hkids-button-primary focus-visible:ring-hkids-green',
   danger:
-    'bg-danger-500 text-white hover:bg-danger-600 focus-visible:ring-danger-500 shadow-soft',
+    'bg-hkids-brown-dark text-white hover:bg-hkids-brown-darker focus-visible:ring-hkids-brown shadow-soft',
 };
 
 const SIZES = {

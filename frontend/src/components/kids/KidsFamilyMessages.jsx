@@ -120,7 +120,7 @@ export function KidsFamilyMessages({ className = '' }) {
               whileTap: { scale: 0.97 },
               ...kidsTouchFeedback,
             })}
-            className="snap-start shrink-0 w-56 rounded-[2rem] bg-gradient-to-br from-rose-100 via-primary-50 to-secondary-50 border-4 border-white shadow-lg p-5 flex flex-col items-center text-center gap-4"
+            className="snap-start shrink-0 w-56 rounded-[2rem] bg-gradient-to-br from-hkids-brown-soft via-primary-50 to-secondary-50 border-4 border-white shadow-lg p-5 flex flex-col items-center text-center gap-4"
           >
             <div className="text-5xl" aria-hidden="true">🎙️</div>
             <p className="kids-book-title text-center">

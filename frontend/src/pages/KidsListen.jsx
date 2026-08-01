@@ -131,7 +131,7 @@ function KidsListen() {
         >
           <KidsFeedbackBurst type={feedback} active={Boolean(feedback)} />
 
-          <span className="mb-space-16 inline-flex min-h-touch items-center gap-space-8 rounded-full bg-orange-100 text-orange-700 px-space-16 py-space-8 text-caption font-black border border-orange-200">
+          <span className="mb-space-16 inline-flex min-h-touch items-center gap-space-8 rounded-full bg-hkids-brown-soft text-hkids-brown-dark px-space-16 py-space-8 text-caption font-black border border-hkids-brown-light">
             <AudioIcon className="h-5 w-5" />
             {typeLabel}
           </span>
@@ -170,7 +170,7 @@ function KidsListen() {
               max={progressMax || 1}
               value={progressValue}
               onChange={(e) => player.seekTo(e.target.value)}
-              className="kids-audio-scrubber w-full mb-space-8 accent-orange-500"
+              className="kids-audio-scrubber w-full mb-space-8 accent-hkids-brown"
               aria-label="Progression"
             />
             <div className="flex justify-between text-caption font-bold text-foreground-muted">
@@ -192,7 +192,7 @@ function KidsListen() {
               type="button"
               onClick={() => (player.playing ? player.pause() : player.play(book))}
               disabled={!book.audio_url}
-              className={`kids-touch-target grid h-28 w-28 min-h-touch-kids min-w-touch-kids place-items-center rounded-full bg-gradient-to-br from-orange-400 to-orange-600 text-white shadow-glow disabled:opacity-40 border-4 border-white focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-300 ${!reducedMotion && player.playing ? 'kids-audio-pulse' : ''}`}
+              className={`kids-touch-target grid h-28 w-28 min-h-touch-kids min-w-touch-kids place-items-center rounded-full bg-gradient-to-br from-hkids-brown to-hkids-brown-dark text-white shadow-glow disabled:opacity-40 border-4 border-white focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-hkids-brown-light ${!reducedMotion && player.playing ? 'kids-audio-pulse' : ''}`}
               aria-label={player.playing ? t('pause') : t('listenAction')}
             >
               {player.playing ? <PauseIcon className="h-14 w-14" /> : <PlayIcon className={`h-14 w-14 ${isRtl ? 'rotate-180' : ''}`} filled />}
@@ -210,7 +210,7 @@ function KidsListen() {
           <button
             type="button"
             onClick={toggleFavorite}
-            className="kids-touch-target inline-flex min-h-touch-kids items-center gap-space-12 rounded-full bg-orange-100 text-orange-800 px-space-24 py-space-12 font-black border-2 border-orange-200 hover:bg-orange-200 transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-300"
+            className="kids-touch-target inline-flex min-h-touch-kids items-center gap-space-12 rounded-full bg-hkids-brown-soft text-hkids-brown-darker px-space-24 py-space-12 font-black border-2 border-hkids-brown-light hover:bg-hkids-brown-light transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-hkids-brown-light"
           >
             <HeartIcon className="h-7 w-7" filled={favorite} />
             {favorite ? t('yourFavorites') : t('addToFavorites')}
@@ -229,7 +229,7 @@ function KidsListen() {
                   key={item.bookId}
                   type="button"
                   onClick={() => navigate(`/kids/listen/${item.bookId}`)}
-                  className="snap-start shrink-0 w-44 rounded-24 bg-card border-4 border-border shadow-card p-space-16 text-start hover:shadow-floating transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-300"
+                  className="snap-start shrink-0 w-44 rounded-24 bg-card border-4 border-border shadow-card p-space-16 text-start hover:shadow-floating transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-hkids-brown-light"
                 >
                   <div className="relative aspect-[3/4] rounded-16 overflow-hidden mb-space-12 bg-surface-secondary">
                     <KidsBookCover

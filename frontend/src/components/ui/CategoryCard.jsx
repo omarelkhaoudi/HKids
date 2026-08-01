@@ -4,9 +4,9 @@ import { motion } from 'framer-motion';
 const TONE_GRADIENT = {
   primary: 'from-primary-400 to-primary-600',
   secondary: 'from-secondary-400 to-secondary-600',
-  orange: 'from-orange-400 to-orange-600',
+  orange: 'from-hkids-brown to-hkids-brown-dark',
   success: 'from-success-400 to-success-600',
-  magic: 'from-magic-400 to-magic-600',
+  magic: 'from-hkids-brown to-hkids-brown-dark',
 };
 
 export function CategoryCard({

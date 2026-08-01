@@ -4,8 +4,8 @@ import { motion } from 'framer-motion';
 const TONES = {
   primary: 'bg-primary-500 hover:bg-primary-600 text-white shadow-floating',
   secondary: 'bg-secondary-500 hover:bg-secondary-600 text-foreground shadow-floating',
-  orange: 'bg-orange-500 hover:bg-orange-600 text-white shadow-floating',
-  magic: 'bg-magic-500 hover:bg-magic-600 text-white shadow-floating',
+  orange: 'bg-hkids-brown hover:bg-hkids-brown-dark text-white shadow-floating',
+  magic: 'bg-hkids-brown hover:bg-hkids-brown-dark text-white shadow-floating',
   success: 'bg-success-500 hover:bg-success-600 text-white shadow-floating',
 };
 

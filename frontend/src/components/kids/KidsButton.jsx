@@ -6,11 +6,11 @@ import { getHoverMotion, kidsTouchFeedback } from '../../constants/kidsMotion';
 const TONE_VARIANTS = {
   primary: 'bg-primary-500 text-white hover:bg-primary-600 shadow-[0_18px_34px_-20px_rgba(36,50,74,0.28),0_8px_18px_-12px_rgba(196,122,58,0.26)]',
   secondary: 'bg-secondary-400 text-foreground hover:bg-secondary-500 shadow-[0_16px_28px_-20px_rgba(36,50,74,0.22)]',
-  accent: 'bg-orange-400 text-white hover:bg-orange-500 shadow-[0_16px_28px_-20px_rgba(36,50,74,0.22)]',
-  orange: 'bg-orange-400 text-white hover:bg-orange-500 shadow-[0_16px_28px_-20px_rgba(36,50,74,0.22)]',
+  accent: 'bg-hkids-brown text-white hover:bg-hkids-brown shadow-[0_16px_28px_-20px_rgba(36,50,74,0.22)]',
+  orange: 'bg-hkids-brown text-white hover:bg-hkids-brown shadow-[0_16px_28px_-20px_rgba(36,50,74,0.22)]',
   success: 'bg-success-500 text-white hover:bg-success-600 shadow-[0_16px_28px_-20px_rgba(36,50,74,0.22)]',
-  magic: 'bg-magic-500 text-white hover:bg-magic-600 shadow-[0_16px_28px_-20px_rgba(36,50,74,0.22)]',
-  violet: 'bg-magic-500 text-white hover:bg-magic-600 shadow-[0_16px_28px_-20px_rgba(36,50,74,0.22)]',
+  magic: 'bg-hkids-brown text-white hover:bg-hkids-brown-dark shadow-[0_16px_28px_-20px_rgba(36,50,74,0.22)]',
+  violet: 'bg-hkids-brown text-white hover:bg-hkids-brown-dark shadow-[0_16px_28px_-20px_rgba(36,50,74,0.22)]',
 };
 
 export default function KidsButton({

@@ -233,7 +233,7 @@ function LearningManagement() {
     <div className="space-y-6 pb-12">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-black text-foreground tracking-tight">{t('adminLearningTitle')}</h1>
+          <h1 className="text-3xl font-black text-foreground tracking-normal">{t('adminLearningTitle')}</h1>
           <p className="text-foreground-muted font-medium mt-1">{t('adminLearningSubtitle')}</p>
         </div>
         <Button variant="primary" onClick={openCreate} disabled={activeTab !== 'contents'}>{t('adminLearningCreateContent')}</Button>
@@ -314,7 +314,7 @@ function LearningManagement() {
                         <button type="button" onClick={() => openEdit(item)} className="p-2 text-surface-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg">
                           <EditIcon className="w-4 h-4" />
                         </button>
-                        <button type="button" onClick={() => handleDelete(item.id)} className="p-2 text-surface-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg">
+                        <button type="button" onClick={() => handleDelete(item.id)} className="p-2 text-surface-400 hover:text-hkids-brown-dark hover:bg-hkids-brown-soft rounded-lg">
                           <TrashIcon className="w-4 h-4" />
                         </button>
                       </div>
@@ -482,7 +482,7 @@ function LearningManagement() {
                         <div className="flex justify-between items-center">
                           <span className="font-bold text-sm">{t('adminLearningQuestionNumber').replace('{n}', index + 1)}</span>
                           {formData.questions.length > 1 && (
-                            <button type="button" onClick={() => removeQuestion(index)} className="text-rose-500 text-sm font-bold">{t('adminLearningRemoveQuestion')}</button>
+                            <button type="button" onClick={() => removeQuestion(index)} className="text-hkids-brown text-sm font-bold">{t('adminLearningRemoveQuestion')}</button>
                           )}
                         </div>
                         <input

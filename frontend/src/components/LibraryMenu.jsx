@@ -84,7 +84,7 @@ function LibraryMenu({ categories, onCategorySelect, onAgeSelect, selectedCatego
               transition={{ duration: 0.2 }}
               className="absolute top-full start-0 sm:left-1/2 sm:transform sm:-translate-x-1/2 mt-2 w-[calc(100vw-2rem)] sm:w-[420px] bg-white rounded-2xl shadow-2xl z-50 overflow-hidden border border-surface-200 mx-2 sm:mx-0"
             >
-              <div className="bg-gradient-to-r from-primary-50 via-secondary-50 to-accent-50 p-4 sm:p-6 border-b border-surface-200">
+              <div className="bg-gradient-to-r from-primary-50 via-secondary-50 to-hkids-brown-soft p-4 sm:p-6 border-b border-surface-200">
                 <div className="mb-5 space-y-4">
                   <h2 className="text-2xl font-bold text-surface-900">Bibliothèque</h2>
                   <div className="grid grid-cols-2 gap-3">

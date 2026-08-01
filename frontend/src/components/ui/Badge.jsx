@@ -1,15 +1,15 @@
 import React from 'react';
 
 const VARIANTS = {
-  primary: 'bg-primary-100 text-primary-700',
-  secondary: 'bg-secondary-100 text-secondary-800',
-  orange: 'bg-orange-100 text-orange-700',
-  success: 'bg-success-100 text-success-700',
-  magic: 'bg-magic-100 text-magic-700',
-  warning: 'bg-warning-100 text-warning-700',
-  danger: 'bg-danger-100 text-danger-700',
+  primary: 'hkids-badge',
+  secondary: 'hkids-badge-secondary',
+  orange: 'hkids-badge-secondary',
+  success: 'hkids-badge',
+  magic: 'hkids-badge-secondary',
+  warning: 'hkids-badge-secondary',
+  danger: 'hkids-badge-secondary',
   neutral: 'bg-surface-secondary text-foreground-secondary',
-  premium: 'bg-gradient-to-r from-secondary-400 to-orange-500 text-white shadow-soft',
+  premium: 'hkids-badge-premium shadow-soft',
 };
 
 const SIZES = {

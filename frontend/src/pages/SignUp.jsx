@@ -13,7 +13,7 @@ function StarParticles({count = 20}) {
  {Array.from({length: count}).map((_, i) => (
  <motion.div
  key={i}
- className="absolute text-accent-400"
+ className="absolute text-hkids-brown"
  style={{
  left: `${Math.random() * 100}%`,
  top: `${Math.random() * 100}%`,
@@ -77,7 +77,7 @@ function SignUp() {
  e.preventDefault();
  setError('');
  setSuccess(false);
- 
+
  if (!validateForm()) {
  return;
 }
@@ -86,7 +86,7 @@ function SignUp() {
 
  try {
  const result = await signup(username.trim(), password);
- 
+
  if (result.success) {
  setSuccess(true);
  setTimeout(() => {
@@ -127,13 +127,13 @@ function SignUp() {
  >
  <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-primary-500 to-secondary-500 text-white shadow-lg mb-5">
  <span className="h-2 w-2 rounded-full bg-card animate-pulse" />
- <span className="text-xs font-semibold uppercase tracking-wide">
+ <span className="text-xs font-semibold uppercase tracking-normal">
  • {t('adminSignupBadge')}
  </span>
  </div>
- <h1 className="text-4xl xl:text-5xl font-extrabold tracking-tight mb-4">
+ <h1 className="text-4xl xl:text-5xl font-extrabold tracking-normal mb-4">
  {t('adminSignupHeroTitle')}
- <span className="block bg-gradient-to-r from-primary-600 via-secondary-600 to-accent-600 bg-clip-text text-transparent">
+ <span className="block bg-gradient-to-r from-primary-600 via-secondary-600 to-hkids-brown-dark bg-clip-text text-transparent">
  {t('adminSignupHeroHighlight')}
  </span>
  </h1>
@@ -141,7 +141,7 @@ function SignUp() {
  {t('adminSignupHeroBody')}
  </p>
  <div className="grid grid-cols-2 gap-4 max-w-md">
- <motion.div 
+ <motion.div
  whileHover={{scale: 1.02, y: -2}}
  className="rounded-2xl border-2 border-primary-200/50 bg-gradient-to-br from-white to-primary-50/30 px-4 py-4 shadow-md hover:shadow-lg transition-all"
  >
@@ -150,7 +150,7 @@ function SignUp() {
  {t('adminSignupCardMultiBody')}
  </p>
  </motion.div>
- <motion.div 
+ <motion.div
  whileHover={{scale: 1.02, y: -2}}
  className="rounded-2xl border-2 border-secondary-200/50 bg-gradient-to-br from-white to-secondary-50/30 px-4 py-4 shadow-md hover:shadow-lg transition-all"
  >
@@ -170,22 +170,22 @@ function SignUp() {
  className="bg-card/95 backdrop-blur-sm rounded-3xl border-2 border-primary-200/50 shadow-2xl p-6 sm:p-8 md:p-10 w-full max-w-md mx-auto relative overflow-hidden"
  >
  {/* Effet de gradient en arrière-plan */}
- <div className="absolute inset-0 bg-gradient-to-tr from-primary-500/10 via-secondary-500/5 to-accent-500/10 blur-2xl rounded-3xl" />
- 
+ <div className="absolute inset-0 bg-gradient-to-tr from-primary-500/10 via-secondary-500/5 to-hkids-brown/10 blur-2xl rounded-3xl" />
+
  <div className="relative z-10 text-center mb-8">
- <motion.div 
+ <motion.div
  className="mb-5 flex justify-center"
  whileHover={{scale: 1.1, rotate: 5}}
  transition={{type:"spring", stiffness: 300}}
  >
  <div className="relative">
- <div className="absolute inset-0 bg-gradient-to-tr from-primary-500/30 via-secondary-500/20 to-accent-500/30 blur-2xl rounded-full" />
+ <div className="absolute inset-0 bg-gradient-to-tr from-primary-500/30 via-secondary-500/20 to-hkids-brown/30 blur-2xl rounded-full" />
  <div className="relative inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-primary-500 to-secondary-500 shadow-lg">
  <Logo size="large" showText={true} className="pointer-events-none" />
  </div>
  </div>
  </motion.div>
- <h2 className="text-3xl font-bold text-foreground mb-2 tracking-tight">{t('adminSignupTitle')}</h2>
+ <h2 className="text-3xl font-bold text-foreground mb-2 tracking-normal">{t('adminSignupTitle')}</h2>
  <p className="text-sm text-foreground-secondary">
  {t('adminSignupSubtitle')}
  </p>
@@ -321,9 +321,9 @@ function SignUp() {
  <div className="relative z-10 mt-8 text-center">
  <p className="text-sm text-foreground-secondary">
  {t('adminSignupHaveAccount')}{' '}
- <Link 
- to="/admin/login" 
- className="text-foreground-600 font-bold hover:text-foreground-secondary-600 hover:underline transition-colors"
+ <Link
+ to="/admin/login"
+ className="text-foreground-600 font-bold hover:text-foreground-secondary hover:underline transition-colors"
  >
  {t('adminSignupSignIn')}
  </Link>

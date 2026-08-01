@@ -7,7 +7,7 @@ import {storage} from '../utils/storage';
 import {useToast} from '../components/ToastProvider';
 import {BookGridSkeleton} from '../components/SkeletonLoader';
 import {
- BookIcon, SearchIcon, HeartIcon, HistoryIcon, 
+ BookIcon, SearchIcon, HeartIcon, HistoryIcon,
  MoonIcon, SunIcon, LockIcon, GridIcon, ListIcon, XIcon,
  CategoryIcon, StarIcon, ChildIcon, PaletteIcon, SparklesIcon,
  AudioIcon, MicrophoneIcon, TheaterIcon, FontIcon, RulerIcon, VolumeIcon,
@@ -105,30 +105,30 @@ function Home({darkMode, setDarkMode}) {
  // Fonction pour obtenir une couleur basée sur la catégorie
  const getCategoryColor = (categoryName, index) => {
  const colorMap = {
- 'Nature': '#4CAF50',
- 'Aventure': '#FF6B9D',
- 'Animaux': '#FFA500',
- 'Espace': '#1a1a2e',
- 'Fiction': '#9C27B0',
- 'Educational': '#2196F3',
+ 'Nature': 'var(--hkids-green)',
+ 'Aventure': 'var(--hkids-brown)',
+ 'Animaux': 'var(--hkids-brown-dark)',
+ 'Espace': 'var(--hkids-green-darker)',
+ 'Fiction': 'var(--hkids-brown)',
+ 'Educational': 'var(--hkids-green)',
 };
- 
+
  if (categoryName && colorMap[categoryName]) {
  return colorMap[categoryName];
 }
- 
+
  // Couleurs par défaut basées sur l'index si pas de catégorie
  const defaultColors = [
- '#FF6B9D', // Rose
- '#4CAF50', // Vert
- '#1a1a2e', // Bleu foncé
- '#FFA500', // Orange
- '#9C27B0', // Violet
- '#2196F3', // Bleu
- '#E91E63', // Rose foncé
- '#00BCD4', // Cyan
+ 'var(--hkids-brown)', // Rose
+ 'var(--hkids-green)', // Vert
+ 'var(--hkids-green-darker)', // Bleu foncé
+ 'var(--hkids-brown-dark)', // Orange
+ 'var(--hkids-brown)', // Violet
+ 'var(--hkids-green)', // Bleu
+ 'var(--hkids-brown-darker)', // Rose foncé
+ 'var(--hkids-green-dark)', // Cyan
  ];
- 
+
  return defaultColors[index % defaultColors.length];
 };
 
@@ -251,7 +251,7 @@ function Home({darkMode, setDarkMode}) {
  const itemVariants = {
  hidden: {opacity: 0, y: 20},
  visible: {
- opacity: 1, 
+ opacity: 1,
  y: 0,
  transition: {
  duration: 0.3
@@ -267,7 +267,7 @@ function Home({darkMode, setDarkMode}) {
  return (
  <div className="min-h-screen bg-gradient-home">
  {/* Header */}
- <motion.header 
+ <motion.header
  initial={{y: -100, opacity: 0}}
  animate={{y: 0, opacity: 1}}
  transition={{duration: 0.5}}
@@ -275,7 +275,7 @@ function Home({darkMode, setDarkMode}) {
  >
  <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4 flex justify-between items-center gap-3">
  <Logo size="default" />
- 
+
  {/* Desktop Navigation */}
  <nav className="hidden md:flex items-center gap-2 text-foreground">
  <LibraryMenu
@@ -285,24 +285,24 @@ function Home({darkMode, setDarkMode}) {
  selectedCategory={selectedCategory}
  selectedAge={selectedAge}
  />
- <Link 
- to="/favorites" 
+ <Link
+ to="/favorites"
  className="btn-nav flex items-center gap-2 text-foreground hover:text-foreground-700 hover:bg-primary-50"
  title={t.favorites}
  >
  <HeartIcon className="w-4 h-4" filled={false} />
  <span>{t.favorites}</span>
  </Link>
- <Link 
- to="/history" 
+ <Link
+ to="/history"
  className="btn-nav flex items-center gap-2 text-foreground hover:text-foreground-700 hover:bg-primary-50"
  title={t.history}
  >
  <HistoryIcon className="w-4 h-4" />
  <span>{t.history}</span>
  </Link>
- <Link 
- to="/parent/login" 
+ <Link
+ to="/parent/login"
  className="btn-nav flex items-center gap-2 text-foreground hover:text-foreground-700 hover:bg-primary-50"
  title={t.parentSignIn}
  >
@@ -355,24 +355,24 @@ function Home({darkMode, setDarkMode}) {
  id="home-mobile-menu"
  >
  <nav className="px-4 py-4 space-y-2">
- <Link 
- to="/favorites" 
+ <Link
+ to="/favorites"
  onClick={() => setMobileMenuOpen(false)}
  className="flex items-center gap-3 px-4 py-3 text-foreground hover:text-primary-700 hover:bg-primary-50 rounded-2xl transition-colors min-h-touch"
  >
  <HeartIcon className="w-5 h-5" filled={false} />
  <span>{t.favorites}</span>
  </Link>
- <Link 
- to="/history" 
+ <Link
+ to="/history"
  onClick={() => setMobileMenuOpen(false)}
  className="flex items-center gap-3 px-4 py-3 text-foreground hover:text-primary-700 hover:bg-primary-50 rounded-2xl transition-colors min-h-touch"
  >
  <HistoryIcon className="w-5 h-5" />
  <span>{t.history}</span>
  </Link>
- <Link 
- to="/parent/login" 
+ <Link
+ to="/parent/login"
  onClick={() => setMobileMenuOpen(false)}
  className="flex items-center gap-3 px-4 py-3 text-foreground hover:text-primary-700 hover:bg-primary-50 rounded-2xl transition-colors min-h-touch"
  >
@@ -394,7 +394,7 @@ function Home({darkMode, setDarkMode}) {
  </div>
  {/* Boutons d'âge pour mobile */}
  <div className="px-4 pb-3 space-y-2">
- <p className="text-xs text-foreground-muted uppercase tracking-wide px-4 py-2">{t.homeFilterByAge}</p>
+ <p className="text-xs text-foreground-muted uppercase tracking-normal px-4 py-2">{t.homeFilterByAge}</p>
  {[
  ...AGE_GROUPS.map((group) => ({
  age: group.id,
@@ -436,13 +436,13 @@ function Home({darkMode, setDarkMode}) {
  <StoryPreviewSection books={books} t={t} selectedAge={selectedAge} />
  <FeaturesSection />
  <TestimonialsSection />
- <NewsletterSection 
+ <NewsletterSection
  t={t}
- newsletterEmail={newsletterEmail} 
- setNewsletterEmail={setNewsletterEmail} 
- handleNewsletterSubmit={handleNewsletterSubmit} 
- newsletterStatus={newsletterStatus} 
- newsletterLoading={newsletterLoading} 
+ newsletterEmail={newsletterEmail}
+ setNewsletterEmail={setNewsletterEmail}
+ handleNewsletterSubmit={handleNewsletterSubmit}
+ newsletterStatus={newsletterStatus}
+ newsletterLoading={newsletterLoading}
  />
  <FooterSection t={t} />
  </main>
@@ -451,4 +451,3 @@ function Home({darkMode, setDarkMode}) {
 }
 
 export default Home;
-

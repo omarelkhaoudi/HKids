@@ -1,8 +1,8 @@
 import {useParams, Link} from 'react-router-dom';
 import {motion} from 'framer-motion';
 import {
- AudioIcon, BookIcon, MicrophoneIcon, ChevronLeftIcon, 
- StarIcon, VolumeIcon, FontIcon, RulerIcon, SparklesIcon 
+ AudioIcon, BookIcon, MicrophoneIcon, ChevronLeftIcon,
+ StarIcon, VolumeIcon, FontIcon, RulerIcon, SparklesIcon
 } from '../components/Icons';
 import {Logo} from '../components/Logo';
 import {useLanguage} from '../context/LanguageContext';
@@ -64,7 +64,7 @@ function FeatureDetails() {
 
  if (!feature) {
  return (
- <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 via-secondary-50 to-accent-50">
+ <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 via-secondary-50 to-hkids-brown-soft">
  <motion.div
  initial={{opacity: 0, y: 20}}
  animate={{opacity: 1, y: 0}}
@@ -84,7 +84,7 @@ function FeatureDetails() {
  return (
  <div className="min-h-screen bg-card">
  {/* Header */}
- <motion.header 
+ <motion.header
  initial={{y: -100, opacity: 0}}
  animate={{y: 0, opacity: 1}}
  transition={{duration: 0.5}}
@@ -108,7 +108,7 @@ function FeatureDetails() {
  {Array.from({length: 20}).map((_, i) => (
  <motion.div
  key={i}
- className="absolute text-accent-400"
+ className="absolute text-hkids-brown"
  style={{
  left: `${Math.random() * 100}%`,
  top: `${Math.random() * 100}%`,
@@ -170,7 +170,7 @@ function FeatureDetails() {
  className="bg-gradient-to-br from-primary-50 to-secondary-50 rounded-3xl p-8 md:p-12 shadow-xl border-2 border-primary-100 mb-12"
  >
  <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-4 flex items-center gap-3">
- <StarIcon className="w-8 h-8 text-accent-500" />
+ <StarIcon className="w-8 h-8 text-hkids-brown" />
  {t('featureAbout')}
  </h2>
  <p className="text-lg text-foreground-secondary leading-relaxed">

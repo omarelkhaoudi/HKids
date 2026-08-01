@@ -72,7 +72,7 @@ export default function NewsletterSection({
                   </p>
                 )}
                 {newsletterStatus === 'error' && (
-                  <p className="mt-3 text-sm text-red-500 font-medium px-4" role="alert">
+                  <p className="mt-3 text-sm text-hkids-brown font-medium px-4" role="alert">
                     {t.homeNewsletterError}
                   </p>
                 )}

@@ -86,7 +86,7 @@ function CategoryManagement() {
  <div className="space-y-6 pb-12">
  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
  <div>
- <h1 className="text-3xl font-black text-foreground tracking-tight">{t('adminCategoriesTitle')}</h1>
+ <h1 className="text-3xl font-black text-foreground tracking-normal">{t('adminCategoriesTitle')}</h1>
  <p className="text-foreground-muted font-medium mt-1">{t('adminCategoriesSubtitle')}</p>
  </div>
  <Button variant="primary" onClick={() => {resetForm(); setShowModal(true);}}>
@@ -121,7 +121,7 @@ function CategoryManagement() {
  <div className="absolute top-4 end-4 text-surface-300 opacity-0 group-hover:opacity-100 transition-opacity cursor-grab">
  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8h16M4 16h16" /></svg>
  </div>
- 
+
  <div className="p-6 border-b border-border flex-1">
  <div className="flex items-center gap-4 mb-3">
  <div className="w-12 h-12 rounded-2xl bg-surface-secondary flex items-center justify-center text-foreground-muted shadow-sm" style={{backgroundColor: parent.color ? `${parent.color}20` : '', color: parent.color || ''}}>
@@ -134,7 +134,7 @@ function CategoryManagement() {
  </div>
  {parent.description && <p className="text-sm text-foreground-secondary line-clamp-2 leading-relaxed">{parent.description}</p>}
  </div>
- 
+
  {/* Subcategories preview */}
  <div className="p-4 bg-surface-secondary flex flex-wrap gap-2">
  {subcategories.filter(s => s.parent_id === parent.id).slice(0,3).map(sub => (
@@ -150,7 +150,7 @@ function CategoryManagement() {
 
  <div className="p-2 bg-surface-secondary flex justify-end gap-2 border-t border-border opacity-0 group-hover:opacity-100 transition-opacity">
  <Button variant="outline" className="text-xs py-1 px-3 border-none bg-card text-foreground-secondary hover:bg-surface-200" onClick={() => handleEdit(parent)}>{t('adminEdit')}</Button>
- <Button variant="outline" className="text-xs py-1 px-3 border-none bg-card text-rose-600 hover:bg-rose-50" onClick={() => handleDelete(parent.id)}>{t('adminDelete')}</Button>
+ <Button variant="outline" className="text-xs py-1 px-3 border-none bg-card text-hkids-brown-dark hover:bg-hkids-brown-soft" onClick={() => handleDelete(parent.id)}>{t('adminDelete')}</Button>
  </div>
  </motion.div>
  ))}
@@ -192,7 +192,7 @@ function CategoryManagement() {
  <div className="flex-1">
  <label className="block text-sm font-bold text-foreground-secondary mb-1">{t('adminCategoriesFormColor')}</label>
  <div className="relative">
- <input type="color" value={formData.color || '#6366f1'} onChange={e => setFormData({...formData, color: e.target.value})} className="w-full h-12 p-1 rounded-xl bg-surface-secondary border border-border cursor-pointer" />
+ <input type="color" value={formData.color || '#92B3A5'} onChange={e => setFormData({...formData, color: e.target.value})} className="w-full h-12 p-1 rounded-xl bg-surface-secondary border border-border cursor-pointer" />
  </div>
  </div>
  </div>

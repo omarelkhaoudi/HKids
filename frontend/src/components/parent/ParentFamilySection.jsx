@@ -23,7 +23,7 @@ const FAMILY_LINKS = [
     descKey: 'parentFamilyStoriesDesc',
     icon: SparklesIcon,
     emoji: '✨',
-    accent: 'from-magic-100 to-orange-50',
+    accent: 'from-hkids-brown-light to-hkids-brown-soft',
   },
   {
     id: 'together',
@@ -32,7 +32,7 @@ const FAMILY_LINKS = [
     descKey: 'parentFamilyTogetherDesc',
     icon: HeartIcon,
     emoji: '👨‍👩‍👧',
-    accent: 'from-orange-100 to-secondary-50',
+    accent: 'from-hkids-brown-soft to-secondary-50',
   },
   {
     id: 'goals',

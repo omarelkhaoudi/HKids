@@ -134,7 +134,7 @@ export function AudioPlayer({
           <button
             onClick={onToggleFavorite}
             className={`grid h-14 w-14 place-items-center rounded-full transition ${
-              favorite ? 'bg-rose-100 text-rose-600' : 'bg-surface-100 text-surface-600 dark:bg-surface-800 dark:text-surface-100'
+              favorite ? 'bg-hkids-brown-soft text-hkids-brown-dark' : 'bg-surface-100 text-surface-600 dark:bg-surface-800 dark:text-surface-100'
             }`}
             aria-label="Favori"
           >

@@ -15,7 +15,7 @@ function StarParticles({count = 20}) {
  {Array.from({length: count}).map((_, i) => (
  <motion.div
  key={i}
- className="absolute text-accent-400"
+ className="absolute text-hkids-brown"
  style={{
  left: `${Math.random() * 100}%`,
  top: `${Math.random() * 100}%`,
@@ -56,7 +56,7 @@ function AdminLogin({audience = 'admin'}) {
 
  try {
  const result = await login(username.trim(), password);
- 
+
  if (result.success) {
  const userData = localStorage.getItem('user');
  const loggedUser = userData ? JSON.parse(userData) : null;
@@ -123,13 +123,13 @@ function AdminLogin({audience = 'admin'}) {
  >
  <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-primary-500 to-secondary-500 text-white mb-5 shadow-lg">
  <span className="h-2 w-2 rounded-full bg-card animate-pulse" />
- <span className="text-xs font-semibold uppercase tracking-wide">
+ <span className="text-xs font-semibold uppercase tracking-normal">
  {t('adminLoginSecureSpace')}
  </span>
  </div>
- <h1 className="text-4xl xl:text-5xl font-extrabold tracking-tight mb-4">
+ <h1 className="text-4xl xl:text-5xl font-extrabold tracking-normal mb-4">
  {t('adminLoginTitle')}
- <span className="block bg-gradient-to-r from-primary-600 via-secondary-600 to-accent-600 bg-clip-text text-transparent">
+ <span className="block bg-gradient-to-r from-primary-600 via-secondary-600 to-hkids-brown-dark bg-clip-text text-transparent">
  {t('adminLoginTitleHighlight')}
  </span>
  </h1>
@@ -137,7 +137,7 @@ function AdminLogin({audience = 'admin'}) {
  {t('adminLoginDescription')}
  </p>
  <div className="grid grid-cols-2 gap-4 max-w-md">
- <motion.div 
+ <motion.div
  whileHover={{scale: 1.02, y: -2}}
  className="rounded-2xl border-2 border-primary-200/50 bg-gradient-to-br from-white to-primary-50/30 px-4 py-4 shadow-md hover:shadow-lg transition-all"
  >
@@ -146,7 +146,7 @@ function AdminLogin({audience = 'admin'}) {
  {t('adminLoginSchoolsDesc')}
  </p>
  </motion.div>
- <motion.div 
+ <motion.div
  whileHover={{scale: 1.02, y: -2}}
  className="rounded-2xl border-2 border-secondary-200/50 bg-gradient-to-br from-white to-secondary-50/30 px-4 py-4 shadow-md hover:shadow-lg transition-all"
  >
@@ -166,22 +166,22 @@ function AdminLogin({audience = 'admin'}) {
  className="bg-card/95 backdrop-blur-sm rounded-3xl border-2 border-primary-200/50 shadow-2xl p-6 sm:p-8 md:p-10 w-full max-w-md mx-auto relative overflow-hidden"
  >
  {/* Effet de gradient en arrière-plan */}
- <div className="absolute inset-0 bg-gradient-to-tr from-primary-500/10 via-secondary-500/5 to-accent-500/10 blur-2xl rounded-3xl" />
- 
+ <div className="absolute inset-0 bg-gradient-to-tr from-primary-500/10 via-secondary-500/5 to-hkids-brown/10 blur-2xl rounded-3xl" />
+
  <div className="relative z-10 text-center mb-8">
- <motion.div 
+ <motion.div
  className="mb-5 flex justify-center"
  whileHover={{scale: 1.1, rotate: 5}}
  transition={{type:"spring", stiffness: 300}}
  >
  <div className="relative">
- <div className="absolute inset-0 bg-gradient-to-tr from-primary-500/30 via-secondary-500/20 to-accent-500/30 blur-2xl rounded-full" />
+ <div className="absolute inset-0 bg-gradient-to-tr from-primary-500/30 via-secondary-500/20 to-hkids-brown/30 blur-2xl rounded-full" />
  <div className="relative inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-primary-500 to-secondary-500 shadow-lg">
  <Logo size="large" showText={true} className="pointer-events-none" />
  </div>
  </div>
  </motion.div>
- <h2 className="text-3xl font-bold text-foreground mb-2 tracking-tight">HKids Admin</h2>
+ <h2 className="text-3xl font-bold text-foreground mb-2 tracking-normal">HKids Admin</h2>
  <p className="text-sm text-foreground-secondary">
  {t('adminLoginSubtitle')}
  </p>
@@ -271,9 +271,9 @@ function AdminLogin({audience = 'admin'}) {
  <div className="text-center">
  <p className="text-sm text-foreground-secondary">
  {t('adminLoginNoAccount')}{' '}
- <Link 
- to="/admin/signup" 
- className="text-foreground-600 font-bold hover:text-foreground-secondary-600 hover:underline transition-colors"
+ <Link
+ to="/admin/signup"
+ className="text-foreground-600 font-bold hover:text-foreground-secondary hover:underline transition-colors"
  >
  {t('adminLoginCreateAccount')}
  </Link>
@@ -287,4 +287,3 @@ function AdminLogin({audience = 'admin'}) {
 }
 
 export default AdminLogin;
-

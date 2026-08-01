@@ -6,7 +6,7 @@ import { speakText, stopSpeaking } from '../services/ai/browserTextToSpeech';
 import { useOfflineContent } from '../hooks/useOfflineContent';
 import { getDownloads, offlineContentIds } from '../services/offline/offlineContentService';
 import { queueOfflineMutation } from '../services/offline/offlineSyncService';
-import { 
+import {
   AudioIcon, BookIcon, ChevronLeftIcon, ChildIcon, ClockIcon, DownloadIcon, LanguageIcon,
   HeartIcon, HistoryIcon, RefreshIcon, SearchIcon, SparklesIcon, TrashIcon, WarningIcon
 } from '../components/Icons';
@@ -55,7 +55,7 @@ function MagicCelebration({ active, onComplete }) {
         const distance = 100 + Math.random() * 200;
         const x = Math.cos((angle * Math.PI) / 180) * distance;
         const y = Math.sin((angle * Math.PI) / 180) * distance;
-        const colorClasses = ['text-magic-500', 'text-primary-500', 'text-orange-500', 'text-magic-400', 'text-primary-400'];
+        const colorClasses = ['text-hkids-brown', 'text-primary-500', 'text-hkids-brown', 'text-hkids-brown', 'text-primary-400'];
         const color = colorClasses[Math.floor(Math.random() * colorClasses.length)];
         const size = 10 + Math.random() * 20;
 
@@ -63,12 +63,12 @@ function MagicCelebration({ active, onComplete }) {
           <motion.div
             key={i}
             initial={{ opacity: 1, scale: 0, x: 0, y: 0 }}
-            animate={{ 
-              opacity: 0, 
-              scale: Math.random() * 1.5 + 0.5, 
-              x: x, 
+            animate={{
+              opacity: 0,
+              scale: Math.random() * 1.5 + 0.5,
+              x: x,
               y: y,
-              rotate: Math.random() * 360 
+              rotate: Math.random() * 360
             }}
             transition={{ duration: 1.5 + Math.random(), ease: "easeOut" }}
             className={`absolute ${color}`}
@@ -123,7 +123,7 @@ function speechLanguage(language) {
 function StoryTextWithIllustrations({ story }) {
   const scenes = story.illustration_plan?.scenes || [];
   const sceneMap = new Map(scenes.filter(s => s.url).map(s => [s.index, s.url]));
-  
+
   if (sceneMap.size === 0) {
     return (
       <p className="text-lg font-bold leading-relaxed text-foreground whitespace-pre-line">
@@ -198,9 +198,9 @@ function NarrationPlayer({ story, canGenerate = false }) {
     setIsLoading(true);
     try {
       const langMap = { fr: 'fr-FR', en: 'en-US', ar: 'ar-MA' };
-      await speakText(`${story.title}. ${story.story_text}`, { 
+      await speakText(`${story.title}. ${story.story_text}`, {
         language: langMap[narrationLocale] || 'fr-FR',
-        preferServer: true 
+        preferServer: true
       });
     } catch (e) {
       console.warn('TTS fallback failed:', e);
@@ -343,7 +343,7 @@ function KidsAIStories() {
   const languages = useMemo(() => Array.from(new Set(stories.map((s) => s.language).filter(Boolean))).sort(), [stories]);
   const ageLevels = useMemo(() => Array.from(new Set(stories.map((s) => s.age_level).filter(Boolean))).sort(), [stories]);
   const educationalValues = useMemo(() => Array.from(new Set(stories.map((s) => s.educational_value).filter(Boolean))).sort(), [stories]);
-  
+
   const favoriteStories = stories.filter(s => s.favorite);
   const savedStories = stories.filter(s => s.saved);
   const recentStories = [...stories].sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0)).slice(0, 10);
@@ -436,7 +436,7 @@ function KidsAIStories() {
     setFilters(nextFilters);
     loadStories(selectedKidProfileId, nextFilters, activeCollection);
   };
-  
+
   const patchStory = (nextStory) => {
     setStories((current) => current.map((story) => (story.id === nextStory.id ? nextStory : story)));
     setSelectedStory((current) => (current?.id === nextStory.id ? nextStory : current));
@@ -574,10 +574,10 @@ function KidsAIStories() {
       >
         <div className="relative h-48 w-full cursor-pointer" onClick={() => setSelectedStory(story)}>
           <DynamicCover story={story} className="absolute inset-0" />
-          
+
           <div className="absolute top-3 right-3 flex gap-2">
             {story.favorite && (
-              <span className="bg-white/20 backdrop-blur-md p-1.5 rounded-full text-rose-300">
+              <span className="bg-white/20 backdrop-blur-md p-1.5 rounded-full text-hkids-brown-light">
                 <HeartIcon className="w-5 h-5" filled />
               </span>
             )}
@@ -587,7 +587,7 @@ function KidsAIStories() {
               </span>
             )}
           </div>
-          
+
           {/* Always-visible play affordance — never hover-only on touch */}
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none bg-gradient-to-t from-black/25 via-transparent to-transparent">
             <div className="w-16 h-16 min-h-[64px] min-w-[64px] rounded-full bg-white/25 backdrop-blur-md flex items-center justify-center text-white border border-white/40 shadow-soft">
@@ -602,7 +602,7 @@ function KidsAIStories() {
               {story.title}
             </h3>
           </div>
-          
+
           <div className="flex flex-wrap gap-2 mb-4">
             <span className="px-2.5 py-1 bg-primary-50 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 rounded-full text-xs font-bold">
               {story.theme || t('kidsAiDefaultTheme')}
@@ -615,23 +615,23 @@ function KidsAIStories() {
               {story.estimated_duration_minutes || 3} min
             </span>
           </div>
-          
+
           <div className="mt-auto pt-4 border-t border-border flex flex-wrap justify-between items-center gap-2">
-            <button 
+            <button
               type="button"
-              onClick={() => handleFavorite(story)} 
+              onClick={() => handleFavorite(story)}
               disabled={busyStoryId === story.id}
               aria-label={story.favorite ? t('removeFromFavorites') : t('addToFavorites')}
               aria-pressed={Boolean(story.favorite)}
-              className={`kids-touch-target touch-manipulation inline-grid place-items-center rounded-xl transition ${story.favorite ? 'bg-rose-100 text-rose-600 dark:bg-rose-900/30 dark:text-rose-400' : 'bg-surface-secondary text-foreground-muted'}`}
+              className={`kids-touch-target touch-manipulation inline-grid place-items-center rounded-xl transition ${story.favorite ? 'bg-hkids-brown-soft text-hkids-brown-dark dark:bg-hkids-brown-darker/30 dark:text-hkids-brown' : 'bg-surface-secondary text-foreground-muted'}`}
             >
               <HeartIcon className="w-6 h-6" filled={story.favorite} />
             </button>
-            
+
             {canCreateStories && (
-              <button 
+              <button
                 type="button"
-                onClick={() => handleNewVersion(story)} 
+                onClick={() => handleNewVersion(story)}
                 disabled={busyStoryId === story.id}
                 className="kids-touch-target touch-manipulation inline-grid place-items-center rounded-xl bg-surface-secondary text-foreground-muted"
                 aria-label={t('storyStudioVariantAction')}
@@ -640,11 +640,11 @@ function KidsAIStories() {
                 <RefreshIcon className="w-6 h-6" />
               </button>
             )}
-            
+
             {offlineReady ? (
-              <button 
+              <button
                 type="button"
-                onClick={() => handleRemoveStoryDownload(story)} 
+                onClick={() => handleRemoveStoryDownload(story)}
                 disabled={busyStoryId === story.id}
                 aria-label={t('downloaded')}
                 className={`kids-touch-target touch-manipulation inline-grid place-items-center rounded-xl ${BRAND_SEMANTIC.success.bg} ${BRAND_SEMANTIC.success.text}`}
@@ -652,9 +652,9 @@ function KidsAIStories() {
                 <TrashIcon className="w-6 h-6" />
               </button>
             ) : (
-              <button 
+              <button
                 type="button"
-                onClick={() => handleDownloadStory(story)} 
+                onClick={() => handleDownloadStory(story)}
                 disabled={busyStoryId === story.id}
                 aria-label={t('offlineMode')}
                 className="kids-touch-target touch-manipulation inline-grid place-items-center rounded-xl bg-surface-secondary text-foreground-muted"
@@ -662,10 +662,10 @@ function KidsAIStories() {
                 <DownloadIcon className="w-6 h-6" />
               </button>
             )}
-            
-            <button 
+
+            <button
               type="button"
-              onClick={() => handleDelete(story)} 
+              onClick={() => handleDelete(story)}
               disabled={busyStoryId === story.id}
               aria-label={t('parentDeleteKid')}
               className="kids-touch-target touch-manipulation inline-grid place-items-center rounded-xl bg-surface-secondary text-foreground-muted ml-auto"
@@ -709,7 +709,7 @@ function KidsAIStories() {
               {!canAccessAi && <PremiumRibbon language={language} />}
               <Link
                 to={createPath || '/abonnements'}
-                className="kids-touch-target inline-flex min-h-touch-kids items-center justify-center gap-3 rounded-32 bg-white px-8 py-4 text-xl font-black text-magic-700 shadow-floating focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-magic-300"
+                className="kids-touch-target inline-flex min-h-touch-kids items-center justify-center gap-3 rounded-32 bg-white px-8 py-4 text-xl font-black text-hkids-brown-dark shadow-floating focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-hkids-brown"
               >
                 <SparklesIcon className="h-6 w-6" />
                 <span>{createLabel}</span>
@@ -728,10 +728,10 @@ function KidsAIStories() {
               <motion.div
                 key={item.step}
                 {...getHoverMotion(reducedMotion, { whileHover: { y: -4 } })}
-                className="rounded-24 border-2 border-magic-100 bg-card/80 p-5 shadow-soft text-center"
+                className="rounded-24 border-2 border-hkids-brown-light bg-card/80 p-5 shadow-soft text-center"
               >
                 <span className="text-4xl" aria-hidden="true">{item.emoji}</span>
-                <p className="mt-2 text-caption font-bold text-magic-500">{t('kidsAiStepLabel', { step: item.step })}</p>
+                <p className="mt-2 text-caption font-bold text-hkids-brown">{t('kidsAiStepLabel', { step: item.step })}</p>
                 <h3 className="text-heading-s font-black text-foreground">{item.title}</h3>
                 <p className="text-caption text-foreground-muted mt-1">{item.desc}</p>
               </motion.div>
@@ -743,7 +743,7 @@ function KidsAIStories() {
         {recentStories.length > 0 && (
           <section className="mb-12">
             <h2 className="text-2xl font-black mb-6 flex items-center gap-3">
-              <SparklesIcon className="w-7 h-7 text-magic-500" />
+              <SparklesIcon className="w-7 h-7 text-hkids-brown" />
               {t('kidsAiRecentCreations')}
             </h2>
             <div className="flex gap-6 overflow-x-auto pb-8 pt-2 px-2 -mx-2 snap-x custom-scrollbar kids-scroll-smooth">
@@ -815,7 +815,7 @@ function KidsAIStories() {
               <BookIcon className="w-7 h-7 text-primary-500" />
               {t('kidsAiAllStories')}
             </h2>
-            
+
             {loading ? (
               <BookGridSkeleton count={4} />
             ) : stories.length === 0 ? (
@@ -847,7 +847,7 @@ function KidsAIStories() {
                 <p className="text-lg font-black text-foreground-muted">{t('kidsAiSelectStory')}</p>
               </div>
             ) : (
-              <motion.article 
+              <motion.article
                 layoutId={`story-detail-${selectedStory.id}`}
                 className="rounded-[2.5rem] bg-card shadow-floating border border-border overflow-hidden"
               >
@@ -855,8 +855,8 @@ function KidsAIStories() {
                 <div className="relative h-56">
                   <DynamicCover story={selectedStory} className="absolute inset-0" />
                   <div className="absolute inset-0 bg-gradient-to-t from-card to-transparent pointer-events-none" />
-                  <button 
-                    onClick={() => handleRelire(selectedStory)} 
+                  <button
+                    onClick={() => handleRelire(selectedStory)}
                     disabled={speaking}
                     className="absolute bottom-6 right-6 w-16 h-16 bg-primary-500 hover:bg-primary-600 rounded-full flex items-center justify-center shadow-glow text-white transition-transform hover:scale-110 disabled:opacity-50"
                   >
@@ -873,34 +873,34 @@ function KidsAIStories() {
 
                 <div className="p-8 pt-0">
                   <h2 className="text-3xl font-black mb-4 leading-tight">{selectedStory.title}</h2>
-                  
+
                   {/* Detailed Information Grid */}
                   <div className="grid grid-cols-2 gap-4 mb-6">
                     <div className="bg-surface-secondary rounded-2xl p-4 flex items-center gap-3">
-                      <ClockIcon className="w-6 h-6 text-magic-500" />
+                      <ClockIcon className="w-6 h-6 text-hkids-brown" />
                       <div>
-                        <p className="text-xs font-bold text-foreground-muted uppercase tracking-wider">{t('kidsAiDuration')}</p>
+                        <p className="text-xs font-bold text-foreground-muted uppercase tracking-normal">{t('kidsAiDuration')}</p>
                         <p className="font-black text-foreground">{selectedStory.estimated_duration_minutes || 3} min</p>
                       </div>
                     </div>
                     <div className="bg-surface-secondary rounded-2xl p-4 flex items-center gap-3">
                       <BookIcon className="w-6 h-6 text-primary-500" />
                       <div>
-                        <p className="text-xs font-bold text-foreground-muted uppercase tracking-wider">{t('kidsAiTheme')}</p>
+                        <p className="text-xs font-bold text-foreground-muted uppercase tracking-normal">{t('kidsAiTheme')}</p>
                         <p className="font-black text-foreground capitalize truncate">{selectedStory.theme || t('kidsAiDefaultTheme')}</p>
                       </div>
                     </div>
                     <div className="bg-surface-secondary rounded-2xl p-4 flex items-center gap-3">
                       <LanguageIcon className="w-6 h-6 text-secondary-500" />
                       <div>
-                        <p className="text-xs font-bold text-foreground-muted uppercase tracking-wider">{t('kidsAiLanguage')}</p>
+                        <p className="text-xs font-bold text-foreground-muted uppercase tracking-normal">{t('kidsAiLanguage')}</p>
                         <p className="font-black text-foreground uppercase">{selectedStory.language || 'FR'}</p>
                       </div>
                     </div>
                     <div className="bg-surface-secondary rounded-2xl p-4 flex items-center gap-3">
                       <ChildIcon className="w-6 h-6 text-primary-500" />
                       <div>
-                        <p className="text-xs font-bold text-foreground-muted uppercase tracking-wider">{t('kidsAiAge')}</p>
+                        <p className="text-xs font-bold text-foreground-muted uppercase tracking-normal">{t('kidsAiAge')}</p>
                         <p className="font-black text-foreground">{selectedStory.age_level || t('kidsAiAgeFree')}</p>
                       </div>
                     </div>
@@ -916,14 +916,14 @@ function KidsAIStories() {
                   <div className="rounded-2xl bg-primary-50/50 dark:bg-primary-900/10 border border-primary-100 dark:border-primary-900/30 p-6 max-h-96 overflow-y-auto custom-scrollbar">
                     <StoryTextWithIllustrations story={selectedStory} />
                   </div>
-                  
+
                   {/* Actions Bar */}
                   <div className="mt-6 flex flex-wrap gap-3 justify-center">
                     <button onClick={() => handleSave(selectedStory)} disabled={selectedStory.saved || busyStoryId === selectedStory.id} className={`flex-1 min-w-[120px] rounded-2xl ${BRAND_SEMANTIC.success.bg} ${BRAND_SEMANTIC.success.text} px-4 py-3 text-sm font-black disabled:opacity-60 hover:opacity-80 transition flex items-center justify-center gap-2`}>
                       <DownloadIcon className="w-5 h-5" />
                       {selectedStory.saved ? t('kidsAiSaved') : t('kidsAiSave')}
                     </button>
-                    <button onClick={() => handleFavorite(selectedStory)} disabled={busyStoryId === selectedStory.id} className="flex-1 min-w-[120px] rounded-2xl bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400 px-4 py-3 text-sm font-black disabled:opacity-60 hover:opacity-80 transition flex items-center justify-center gap-2">
+                    <button onClick={() => handleFavorite(selectedStory)} disabled={busyStoryId === selectedStory.id} className="flex-1 min-w-[120px] rounded-2xl bg-hkids-brown-soft text-hkids-brown-dark dark:bg-hkids-brown-darker/30 dark:text-hkids-brown px-4 py-3 text-sm font-black disabled:opacity-60 hover:opacity-80 transition flex items-center justify-center gap-2">
                       <HeartIcon className="w-5 h-5" filled={selectedStory.favorite} />
                       {selectedStory.favorite ? t('kidsAiUnfavorite') : t('kidsAiFavorite')}
                     </button>
@@ -937,7 +937,7 @@ function KidsAIStories() {
                       <button
                         type="button"
                         onClick={() => setShowReportModal(true)}
-                        className="flex-1 min-w-[140px] rounded-2xl bg-magic-50 text-magic-700 dark:bg-magic-900/30 dark:text-magic-300 px-4 py-3 text-sm font-black hover:opacity-80 transition flex items-center justify-center gap-2"
+                        className="flex-1 min-w-[140px] rounded-2xl bg-hkids-brown-soft text-hkids-brown-dark dark:bg-hkids-brown-darker/30 dark:text-hkids-brown px-4 py-3 text-sm font-black hover:opacity-80 transition flex items-center justify-center gap-2"
                       >
                         <WarningIcon className="w-5 h-5" />
                         {t('reportContentAction')}

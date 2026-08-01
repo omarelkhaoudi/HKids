@@ -49,7 +49,7 @@ function History() {
  const bookIds = historyData.map(h => h.bookId);
  const response = await booksAPI.getPublishedBooks({language});
  const historyBooks = response.data.filter(book => bookIds.includes(book.id));
- 
+
  // Pour les livres manquants (non publiés), charger individuellement
  const missingBookIds = bookIds.filter(id => !historyBooks.find(b => b.id === id));
  const missingBooks = await Promise.all(
@@ -63,15 +63,15 @@ function History() {
 }
 })
  );
- 
+
  // Combiner les livres trouvés
  const allBooks = [...historyBooks, ...missingBooks.filter(Boolean)];
- 
+
  // Trier selon l'ordre de l'historique
- const sorted = historyData.map(h => 
+ const sorted = historyData.map(h =>
  allBooks.find(b => b.id === h.bookId)
  ).filter(Boolean);
- 
+
  setBooks(sorted);
 }
 } catch (error) {
@@ -130,7 +130,7 @@ function History() {
       <button
        type="button"
        onClick={() => setShowClearModal(true)}
-       className="kids-touch-target rounded-full bg-rose-100 text-rose-700 px-4 py-2 font-black text-sm"
+       className="kids-touch-target rounded-full bg-hkids-brown-soft text-hkids-brown-dark px-4 py-2 font-black text-sm"
        aria-label={t('clearHistory')}
       >
         🗑️
@@ -196,7 +196,7 @@ function History() {
    <button
     type="button"
     onClick={() => setShowClearModal(true)}
-    className="min-h-[56px] min-w-[56px] px-4 py-3 rounded-3xl bg-rose-100 text-rose-700 hover:bg-rose-200 transition-colors font-semibold flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-300 touch-manipulation"
+    className="min-h-[56px] min-w-[56px] px-4 py-3 rounded-3xl bg-hkids-brown-soft text-hkids-brown-dark hover:bg-hkids-brown-light transition-colors font-semibold flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hkids-brown-light touch-manipulation"
     aria-label={t('clearHistory')}
    >
     <TrashIcon className="w-5 h-5" />
@@ -322,4 +322,3 @@ function History() {
 }
 
 export default History;
-

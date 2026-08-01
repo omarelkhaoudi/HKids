@@ -21,7 +21,7 @@ export function KidsAchievementBadges({
             animate={{ scale: 1, opacity: 1 }}
             className={`rounded-2xl border p-3 text-center ${
               isOn
-                ? 'border-amber-300 bg-gradient-to-br from-amber-50 to-orange-50 shadow-soft'
+                ? 'border-hkids-brown-light bg-gradient-to-br from-hkids-brown-soft to-hkids-brown-soft shadow-soft'
                 : 'border-border/60 bg-surface-secondary/50 opacity-50 grayscale'
             }`}
             aria-label={eduLabel(badge.labelKey, language)}

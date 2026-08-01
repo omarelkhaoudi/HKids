@@ -52,7 +52,7 @@ export function AdminCatalogVersions() {
   return (
     <div className="space-y-6 pb-12">
       <div>
-        <h1 className="text-3xl font-black text-foreground tracking-tight">{cdLabel('cdAdminTitle', language)}</h1>
+        <h1 className="text-3xl font-black text-foreground tracking-normal">{cdLabel('cdAdminTitle', language)}</h1>
         <p className="text-foreground-muted font-medium mt-1">{cdLabel('cdAdminSubtitle', language)}</p>
       </div>
 
@@ -116,7 +116,7 @@ export function AdminCatalogVersions() {
                   <h3 className="font-black text-lg">v{version.version}</h3>
                   <Badge variant="soft">{statusLabel(version.status, language)}</Badge>
                   {isCurrent && <Badge variant="secondary">{cdLabel('cdCurrent', language)}</Badge>}
-                  {version.featured && <Badge variant="soft" className="bg-amber-100 text-amber-800">{cdLabel('cdFeature', language)}</Badge>}
+                  {version.featured && <Badge variant="soft" className="bg-hkids-brown-soft text-hkids-brown-darker">{cdLabel('cdFeature', language)}</Badge>}
                 </div>
                 <p className="text-caption text-foreground-muted">
                   {cdLabel('cdPackageSize', language)}: {formatBytes(version.packageBytes || 0)}

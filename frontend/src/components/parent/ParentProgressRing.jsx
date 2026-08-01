@@ -16,7 +16,7 @@ export function ParentProgressRing({
   const strokeColor = tone === 'success'
     ? 'var(--color-success-500, #22c55e)'
     : tone === 'orange'
-      ? 'var(--color-orange-500, #b99d88)'
+      ? 'var(--hkids-brown)'
       : 'var(--color-primary-500, #92B3A5)';
 
   return (

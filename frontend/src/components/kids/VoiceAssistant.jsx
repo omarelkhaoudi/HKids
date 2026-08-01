@@ -247,7 +247,7 @@ export function VoiceAssistant({ language: requestedSpeechLanguage, onNavigate }
         }}
         className={`fixed bottom-40 z-50 grid h-20 w-20 place-items-center rounded-full text-white shadow-2xl ${isRtl ? 'left-6' : 'right-6'} ${
           listening
-            ? 'bg-gradient-to-br from-accent-400 to-accent-500'
+            ? 'bg-gradient-to-br from-hkids-brown to-hkids-brown'
             : `bg-gradient-to-br ${BRAND_HERO_GRADIENT}`
         }`}
         aria-label={t('assistantVoice')}
@@ -318,7 +318,7 @@ export function VoiceAssistant({ language: requestedSpeechLanguage, onNavigate }
               )}
 
               {error && (
-                <div className="rounded-2xl bg-accent-50 px-4 py-3 text-sm font-bold text-accent-800">
+                <div className="rounded-2xl bg-hkids-brown-soft px-4 py-3 text-sm font-bold text-hkids-brown-darker">
                   {error}
                 </div>
               )}

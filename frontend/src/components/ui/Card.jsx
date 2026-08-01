@@ -4,11 +4,11 @@ import { useReducedMotion } from '../../hooks/useReducedMotion';
 import { getHoverMotion } from '../../constants/kidsMotion';
 
 const VARIANTS = {
-  default: 'bg-surface shadow-card border border-border',
-  elevated: 'bg-surface shadow-floating border border-border',
-  soft: 'bg-surface-secondary shadow-soft border border-border',
-  premium: 'bg-gradient-to-br from-primary-500 to-magic-500 text-white shadow-floating border-0',
-  glass: 'bg-surface/70 backdrop-blur-md border border-border shadow-soft',
+  default: 'hkids-card',
+  elevated: 'hkids-card shadow-floating',
+  soft: 'bg-hkids-green-soft shadow-soft border border-hkids-green-light',
+  premium: 'bg-hkids-brown-soft text-foreground shadow-floating border border-hkids-brown-light',
+  glass: 'bg-surface/80 backdrop-blur-md border border-border shadow-soft',
 };
 
 export function Card({

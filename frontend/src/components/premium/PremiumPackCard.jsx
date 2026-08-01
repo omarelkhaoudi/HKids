@@ -4,7 +4,7 @@ import { getHoverMotion } from '../../constants/kidsMotion';
 
 export function PremiumRibbon({ language = 'fr', className = '' }) {
   return (
-    <span className={`inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-amber-400 to-orange-500 px-2.5 py-1 text-[0.65rem] font-black uppercase tracking-wide text-white shadow-soft ${className}`}>
+    <span className={`inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-hkids-brown to-hkids-brown px-2.5 py-1 text-[0.65rem] font-black uppercase tracking-normal text-white shadow-soft ${className}`}>
       ✨ {premLabel('premRibbon', language)}
     </span>
   );

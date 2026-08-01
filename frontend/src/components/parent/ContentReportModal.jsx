@@ -79,7 +79,7 @@ export function ContentReportModal({
           >
             <div className="flex items-start justify-between gap-4 mb-4">
               <div className="flex items-center gap-3">
-                <div className="rounded-full bg-accent-50 p-2 text-accent-600">
+                <div className="rounded-full bg-hkids-brown-soft p-2 text-hkids-brown-dark">
                   <WarningIcon className="w-5 h-5" />
                 </div>
                 <div>

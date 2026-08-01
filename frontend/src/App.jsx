@@ -77,7 +77,7 @@ function RouteFallback() {
             key={i}
             className="kids-story-card relative w-28 h-40 shrink-0 overflow-hidden"
           >
-            <div className="absolute inset-0 bg-gradient-to-br from-primary-100 via-secondary-50 to-magic-100" />
+            <div className="absolute inset-0 bg-gradient-to-br from-primary-100 via-secondary-50 to-hkids-brown-light" />
             <div className="absolute inset-0 kids-shimmer" />
           </div>
         ))}
@@ -262,4 +262,3 @@ function App() {
 }
 
 export default App;
-

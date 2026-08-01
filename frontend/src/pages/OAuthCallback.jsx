@@ -64,7 +64,7 @@ export default function OAuthCallback() {
 
         {error ? (
           <div className="space-y-5">
-            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-red-50 text-red-500">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-hkids-brown-soft text-hkids-brown">
               <AlertIcon className="h-6 w-6" />
             </div>
             <div>

@@ -19,7 +19,7 @@ export default function HeroSection({ t, totalBooks }) {
           reducedMotion ? (
             <div
               key={i}
-              className="absolute text-accent-300 opacity-40"
+              className="absolute text-hkids-brown opacity-40"
               style={{
                 left: `${(i * 17 + 7) % 100}%`,
                 top: `${(i * 23 + 11) % 100}%`,
@@ -30,7 +30,7 @@ export default function HeroSection({ t, totalBooks }) {
           ) : (
             <motion.div
               key={i}
-              className="absolute text-accent-300 opacity-60"
+              className="absolute text-hkids-brown opacity-60"
               style={{
                 left: `${(i * 17 + 7) % 100}%`,
                 top: `${(i * 23 + 11) % 100}%`,
@@ -65,7 +65,7 @@ export default function HeroSection({ t, totalBooks }) {
               {t.heroBadge}
             </div>
 
-            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold text-foreground mb-6 leading-[1.1] tracking-tight">
+            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold text-foreground mb-6 leading-[1.1] tracking-normal">
               {t.heroTitle1}
               <br />
               <span className="text-primary-600">{t.heroTitle2}</span>
@@ -111,7 +111,7 @@ export default function HeroSection({ t, totalBooks }) {
                 {t.trustEducationalContent}
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-5 h-5 rounded-full bg-accent-100 flex items-center justify-center text-accent-600" aria-hidden="true">✓</div>
+                <div className="w-5 h-5 rounded-full bg-hkids-brown-light flex items-center justify-center text-hkids-brown-dark" aria-hidden="true">✓</div>
                 {t.trustNoAdsLong}
               </div>
             </div>
@@ -135,7 +135,7 @@ export default function HeroSection({ t, totalBooks }) {
                       <div className="absolute top-10 left-10 w-16 h-16 bg-gradient-to-br from-secondary-300 to-secondary-500 rounded-2xl shadow-lg rotate-12 flex items-center justify-center" aria-hidden="true">
                         <span className="text-white text-3xl">🪐</span>
                       </div>
-                      <div className="absolute bottom-20 right-10 w-14 h-14 bg-gradient-to-br from-accent-300 to-accent-500 rounded-full shadow-lg flex items-center justify-center" aria-hidden="true">
+                      <div className="absolute bottom-20 right-10 w-14 h-14 bg-gradient-to-br from-hkids-brown to-hkids-brown rounded-full shadow-lg flex items-center justify-center" aria-hidden="true">
                         <span className="text-white text-2xl">🚀</span>
                       </div>
                     </>
@@ -152,7 +152,7 @@ export default function HeroSection({ t, totalBooks }) {
                       <motion.div
                         animate={{ y: [10, -10, 10] }}
                         transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
-                        className="absolute bottom-20 right-10 w-14 h-14 bg-gradient-to-br from-accent-300 to-accent-500 rounded-full shadow-lg flex items-center justify-center"
+                        className="absolute bottom-20 right-10 w-14 h-14 bg-gradient-to-br from-hkids-brown to-hkids-brown rounded-full shadow-lg flex items-center justify-center"
                         aria-hidden="true"
                       >
                         <span className="text-white text-2xl">🚀</span>
@@ -177,7 +177,7 @@ export default function HeroSection({ t, totalBooks }) {
                   <div className="flex -space-x-2" aria-hidden="true">
                     <div className="w-8 h-8 rounded-full bg-primary-100 border-2 border-white flex items-center justify-center text-sm shadow-sm z-30">👨‍👩‍👧</div>
                     <div className="w-8 h-8 rounded-full bg-secondary-100 border-2 border-white flex items-center justify-center text-sm shadow-sm z-20">📚</div>
-                    <div className="w-8 h-8 rounded-full bg-accent-100 border-2 border-white flex items-center justify-center text-sm shadow-sm z-10">🌙</div>
+                    <div className="w-8 h-8 rounded-full bg-hkids-brown-light border-2 border-white flex items-center justify-center text-sm shadow-sm z-10">🌙</div>
                   </div>
                   <div className="text-xs font-semibold text-foreground-secondary leading-snug">
                     {t.landingTrustCommunity}

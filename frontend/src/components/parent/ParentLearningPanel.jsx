@@ -76,7 +76,7 @@ export function ParentLearningPanel({ kidId, language = 'fr', t = (k) => k }) {
       </div>
 
       <div>
-        <h4 className="text-caption font-black uppercase tracking-wide text-foreground-muted mb-2">
+        <h4 className="text-caption font-black uppercase tracking-normal text-foreground-muted mb-2">
           {eduLabel('eduParentFavoriteWorlds', language)}
         </h4>
         <div className="flex flex-wrap gap-2">
@@ -97,7 +97,7 @@ export function ParentLearningPanel({ kidId, language = 'fr', t = (k) => k }) {
       </div>
 
       <div>
-        <h4 className="text-caption font-black uppercase tracking-wide text-foreground-muted mb-2">
+        <h4 className="text-caption font-black uppercase tracking-normal text-foreground-muted mb-2">
           {eduLabel('eduParentBySubject', language)}
         </h4>
         <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -114,12 +114,12 @@ export function ParentLearningPanel({ kidId, language = 'fr', t = (k) => k }) {
       </div>
 
       <div>
-        <h4 className="text-caption font-black uppercase tracking-wide text-foreground-muted mb-2">
+        <h4 className="text-caption font-black uppercase tracking-normal text-foreground-muted mb-2">
           {eduLabel('eduParentAchievements', language)}
         </h4>
         <div className="flex flex-wrap gap-2">
           {LEARNING_ACHIEVEMENTS.filter((b) => (local.badges || []).includes(b.id)).map((badge) => (
-            <span key={badge.id} className="inline-flex items-center gap-1 rounded-2xl border border-amber-200 bg-amber-50 px-3 py-1.5 text-caption font-bold">
+            <span key={badge.id} className="inline-flex items-center gap-1 rounded-2xl border border-hkids-brown-light bg-hkids-brown-soft px-3 py-1.5 text-caption font-bold">
               {badge.emoji} {eduLabel(badge.labelKey, language)}
             </span>
           ))}

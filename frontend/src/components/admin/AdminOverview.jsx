@@ -21,23 +21,23 @@ const SkeletonCard = () => (
 );
 
 const MetricCard = ({title, value, subtitle, icon: Icon, trend, colorClass, index}) => (
- <motion.div 
+ <motion.div
  initial={{opacity: 0, y: 20}} animate={{opacity: 1, y: 0}} transition={{delay: index * 0.1}}
  whileHover={{y: -4, boxShadow: '0 10px 40px -10px rgba(0,0,0,0.08)'}}
  className="bg-card rounded-[1.5rem] p-6 border border-border shadow-sm relative overflow-hidden group"
  >
  {/* Subtle gradient background on hover */}
  <div className={`absolute inset-0 opacity-0 group-hover:opacity-5 transition-opacity ${colorClass.bg}`}></div>
- 
+
  <div className="flex justify-between items-start mb-4 relative z-10">
- <h3 className="text-sm font-bold text-foreground-muted uppercase tracking-wider">{title}</h3>
+ <h3 className="text-sm font-bold text-foreground-muted uppercase tracking-normal">{title}</h3>
  <div className={`p-2 rounded-xl ${colorClass.bg} ${colorClass.text}`}>
  <Icon className="w-5 h-5" />
  </div>
  </div>
  <div className="relative z-10">
  <div className="flex items-baseline gap-3">
- <span className="text-3xl font-black text-foreground tracking-tight">{value}</span>
+ <span className="text-3xl font-black text-foreground tracking-normal">{value}</span>
  {trend && (
  <span className={`text-xs font-bold px-2 py-1 rounded-full flex items-center gap-1 ${trend > 0 ? `${BRAND_SEMANTIC.success.bg} ${BRAND_SEMANTIC.success.text}` : `${BRAND_SEMANTIC.danger.bg} ${BRAND_SEMANTIC.danger.text}`}`}>
  <TrendingUpIcon className={`w-3 h-3 ${trend < 0 && 'rotate-180'}`} /> {Math.abs(trend)}%
@@ -84,18 +84,18 @@ function AdminOverview() {
 }
 
  if (error) {
- return <div className="rounded-2xl bg-rose-50 border border-rose-200 p-6 font-bold text-rose-700">{error}</div>;
+ return <div className="rounded-2xl bg-hkids-brown-soft border border-hkids-brown-light p-6 font-bold text-hkids-brown-dark">{error}</div>;
 }
 
  const summary = data?.summary || {};
- 
+
  return (
  <div className="space-y-8 pb-12">
- 
+
  {/* HEADER */}
  <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
  <div>
- <h1 className="text-3xl font-black text-foreground tracking-tight">{t('adminOverviewGreeting')}</h1>
+ <h1 className="text-3xl font-black text-foreground tracking-normal">{t('adminOverviewGreeting')}</h1>
  <p className="text-foreground-muted font-medium mt-1">{t('adminOverviewSubtitle')}</p>
  </div>
  <div className="flex items-center gap-2 text-sm font-bold bg-card px-4 py-2 rounded-xl border border-border shadow-sm text-foreground-secondary">
@@ -106,27 +106,27 @@ function AdminOverview() {
 
  {/* KPI METRICS */}
  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
- <MetricCard 
+ <MetricCard
  index={0} title={t('adminOverviewUsers')} value={summary.total_parents || 0} subtitle={t('adminOverviewUsersDesc')} icon={UserIcon}
- colorClass={metricToneAtIndex(0)} 
+ colorClass={metricToneAtIndex(0)}
  />
- <MetricCard 
+ <MetricCard
  index={1} title={t('adminOverviewKids')} value={summary.total_children || 0} subtitle={t('adminOverviewKidsDesc')} icon={ChildIcon}
- colorClass={metricToneAtIndex(1)} 
+ colorClass={metricToneAtIndex(1)}
  />
- <MetricCard 
+ <MetricCard
  index={2} title={t('adminOverviewSubscriptions')} value={summary.active_subscriptions || 0} subtitle={t('adminOverviewSubscriptionsDesc')} icon={CheckIcon}
- colorClass={metricToneAtIndex(2)} 
+ colorClass={metricToneAtIndex(2)}
  />
- <MetricCard 
+ <MetricCard
  index={3} title={t('adminOverviewAiStories')} value={summary.total_ai_stories || 0} subtitle={t('adminOverviewAiStoriesDesc')} icon={SparklesIcon}
- colorClass={metricToneAtIndex(3)} 
+ colorClass={metricToneAtIndex(3)}
  />
  </div>
 
  {/* MODULAR WIDGETS */}
  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
- 
+
  {/* RECENT ACTIVITY */}
  <motion.div initial={{opacity: 0, y: 20}} animate={{opacity: 1, y: 0}} transition={{delay: 0.4}} className="lg:col-span-2 bg-card rounded-[2rem] p-8 border border-border shadow-sm">
  <div className="flex items-center justify-between mb-6">
@@ -159,7 +159,7 @@ function AdminOverview() {
 
  {/* SIDE COLUMN */}
  <div className="space-y-6">
- 
+
  {/* LATEST USERS */}
  <motion.div initial={{opacity: 0, y: 20}} animate={{opacity: 1, y: 0}} transition={{delay: 0.5}} className="bg-card rounded-[2rem] p-6 border border-border shadow-sm">
  <h2 className="text-lg font-black text-foreground mb-4">{t('adminOverviewNewUsers')}</h2>

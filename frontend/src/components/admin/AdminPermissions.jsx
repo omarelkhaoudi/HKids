@@ -78,11 +78,11 @@ function AdminPermissions() {
  return (
  <div className="space-y-6 pb-12">
  <div>
- <h1 className="text-3xl font-black tracking-tight">{t('adminPermissionsTitle')}</h1>
+ <h1 className="text-3xl font-black tracking-normal">{t('adminPermissionsTitle')}</h1>
  <p className="text-foreground-muted font-medium mt-1">{t('adminPermissionsSubtitle')}</p>
  </div>
 
- {error && <div className="p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 font-bold">{error}</div>}
+ {error && <div className="p-4 rounded-xl bg-hkids-brown-soft border border-hkids-brown-light text-hkids-brown-dark font-bold">{error}</div>}
 
  {loading ? (
  <AdminListSkeleton rows={3} />

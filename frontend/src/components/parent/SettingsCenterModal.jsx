@@ -219,7 +219,7 @@ export function SettingsCenterModal({isOpen, onClose}) {
  <div className="w-full md:w-72 bg-card/50 backdrop-blur-xl border-r border-border/70 flex flex-col z-10 shrink-0">
  <div className="p-6 pb-4">
  <div className="flex items-center justify-between mb-6">
- <h2 id={titleId} className="text-xl font-black tracking-tight">{t('parentSettingsTitle')}</h2>
+ <h2 id={titleId} className="text-xl font-black tracking-normal">{t('parentSettingsTitle')}</h2>
  <button type="button" onClick={onClose} aria-label={t('parentCancel')} className="md:hidden p-2 bg-surface-secondary hover:bg-surface-200 rounded-full transition-colors">
  <XIcon className="w-5 h-5 text-foreground-secondary" />
  </button>
@@ -281,7 +281,7 @@ export function SettingsCenterModal({isOpen, onClose}) {
  {/* ACCOUNT */}
  <section id="account" ref={el => sectionRefs.current['account'] = el} className="scroll-mt-24 space-y-6">
  <div>
- <h2 className="text-2xl font-black tracking-tight mb-2">{t('parentSettingsSectionAccount')}</h2>
+ <h2 className="text-2xl font-black tracking-normal mb-2">{t('parentSettingsSectionAccount')}</h2>
  <p className="text-foreground-muted">{sectionDescriptions.account}</p>
  </div>
 
@@ -290,18 +290,18 @@ export function SettingsCenterModal({isOpen, onClose}) {
  <div className="relative group">
  <Avatar src={null} fallback={user?.username?.[0] || 'P'} size="2xl" className="border-4 border-surface-50 shadow-md w-32 h-32 text-4xl" />
  <div className="absolute inset-0 bg-black/40 rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm pointer-events-none">
- <span className="text-white text-xs font-bold uppercase tracking-wider">{t('parentSettingsEditPhoto')}</span>
+ <span className="text-white text-xs font-bold uppercase tracking-normal">{t('parentSettingsEditPhoto')}</span>
  </div>
  </div>
  <div className="flex-1 w-full space-y-4">
  <p className="text-sm text-foreground-muted">{t('parentSettingsAccountManagedHint')}</p>
  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
  <div>
- <label className="block text-xs font-bold text-foreground-muted uppercase tracking-wider mb-2">{t('parentSettingsFullName')}</label>
+ <label className="block text-xs font-bold text-foreground-muted uppercase tracking-normal mb-2">{t('parentSettingsFullName')}</label>
  <Input defaultValue={user?.username || 'Parent'} readOnly className="w-full bg-surface-secondary font-medium" />
  </div>
  <div>
- <label className="block text-xs font-bold text-foreground-muted uppercase tracking-wider mb-2">{t('parentSettingsEmail')}</label>
+ <label className="block text-xs font-bold text-foreground-muted uppercase tracking-normal mb-2">{t('parentSettingsEmail')}</label>
  <Input defaultValue={user?.email || ''} readOnly className="w-full bg-surface-secondary font-medium" />
  </div>
  </div>
@@ -343,7 +343,7 @@ export function SettingsCenterModal({isOpen, onClose}) {
  {/* APPARENCE */}
  <section id="appearance" ref={el => sectionRefs.current['appearance'] = el} className="scroll-mt-24 space-y-6">
  <div>
- <h2 className="text-2xl font-black tracking-tight mb-2">{t('parentSettingsSectionAppearance')}</h2>
+ <h2 className="text-2xl font-black tracking-normal mb-2">{t('parentSettingsSectionAppearance')}</h2>
  <p className="text-foreground-muted">{sectionDescriptions.appearance}</p>
  </div>
 
@@ -375,7 +375,7 @@ export function SettingsCenterModal({isOpen, onClose}) {
  {/* PROFILE */}
  <section id="profile" ref={el => sectionRefs.current['profile'] = el} className="scroll-mt-24 space-y-6">
  <div>
- <h2 className="text-2xl font-black tracking-tight mb-2">{t('parentSettingsSectionProfile')}</h2>
+ <h2 className="text-2xl font-black tracking-normal mb-2">{t('parentSettingsSectionProfile')}</h2>
  <p className="text-foreground-muted">{sectionDescriptions.profile}</p>
  </div>
 
@@ -392,7 +392,7 @@ export function SettingsCenterModal({isOpen, onClose}) {
  {/* PRIVACY */}
  <section id="privacy" ref={el => sectionRefs.current['privacy'] = el} className="scroll-mt-24 space-y-6">
  <div>
- <h2 className="text-2xl font-black tracking-tight mb-2">{t('parentSettingsSectionPrivacy')}</h2>
+ <h2 className="text-2xl font-black tracking-normal mb-2">{t('parentSettingsSectionPrivacy')}</h2>
  <p className="text-foreground-muted">{sectionDescriptions.privacy}</p>
  </div>
 
@@ -404,7 +404,7 @@ export function SettingsCenterModal({isOpen, onClose}) {
  {/* SECURITY */}
  <section id="security" ref={el => sectionRefs.current['security'] = el} className="scroll-mt-24 space-y-6">
  <div>
- <h2 className="text-2xl font-black tracking-tight mb-2">{t('parentSettingsSectionSecurity')}</h2>
+ <h2 className="text-2xl font-black tracking-normal mb-2">{t('parentSettingsSectionSecurity')}</h2>
  <p className="text-foreground-muted">{sectionDescriptions.security}</p>
  </div>
 
@@ -438,7 +438,7 @@ export function SettingsCenterModal({isOpen, onClose}) {
  {/* LANGUAGE */}
  <section id="language" ref={el => sectionRefs.current['language'] = el} className="scroll-mt-24 space-y-6">
  <div>
- <h2 className="text-2xl font-black tracking-tight mb-2">{t('parentSettingsSectionLanguage')}</h2>
+ <h2 className="text-2xl font-black tracking-normal mb-2">{t('parentSettingsSectionLanguage')}</h2>
  <p className="text-foreground-muted">{sectionDescriptions.language}</p>
  </div>
 
@@ -472,7 +472,7 @@ export function SettingsCenterModal({isOpen, onClose}) {
  {/* READING PREFERENCES */}
  <section id="reading" ref={el => sectionRefs.current['reading'] = el} className="scroll-mt-24 space-y-6">
  <div>
- <h2 className="text-2xl font-black tracking-tight mb-2">{t('parentSettingsSectionReading')}</h2>
+ <h2 className="text-2xl font-black tracking-normal mb-2">{t('parentSettingsSectionReading')}</h2>
  <p className="text-foreground-muted">{sectionDescriptions.reading}</p>
  </div>
 
@@ -514,7 +514,7 @@ export function SettingsCenterModal({isOpen, onClose}) {
  {/* OFFLINE PREFERENCES */}
  <section id="offline" ref={el => sectionRefs.current['offline'] = el} className="scroll-mt-24 space-y-6">
  <div>
- <h2 className="text-2xl font-black tracking-tight mb-2">{cdLabel('cdPrefsTitle', language)}</h2>
+ <h2 className="text-2xl font-black tracking-normal mb-2">{cdLabel('cdPrefsTitle', language)}</h2>
  <p className="text-foreground-muted">{sectionDescriptions.offline}</p>
  </div>
  <div className="bg-card rounded-3xl p-6 shadow-sm border border-border space-y-6">
@@ -549,12 +549,12 @@ export function SettingsCenterModal({isOpen, onClose}) {
  {/* SUBSCRIPTION */}
  <section id="subscription" ref={el => sectionRefs.current['subscription'] = el} className="scroll-mt-24 space-y-6">
  <div>
- <h2 className="text-2xl font-black tracking-tight mb-2">{t('parentSettingsSectionSubscription')}</h2>
+ <h2 className="text-2xl font-black tracking-normal mb-2">{t('parentSettingsSectionSubscription')}</h2>
  <p className="text-foreground-muted">{sectionDescriptions.subscription}</p>
  </div>
 
  <div className="bg-gradient-to-br from-gray-900 to-black rounded-3xl p-8 text-white relative overflow-hidden shadow-2xl">
- <div className="absolute top-0 right-0 w-64 h-64 bg-accent-500/20 rounded-full blur-3xl pointer-events-none"></div>
+ <div className="absolute top-0 right-0 w-64 h-64 bg-hkids-brown/20 rounded-full blur-3xl pointer-events-none"></div>
  <div className="relative z-10">
  <div className="flex items-center justify-between mb-8">
  <div>
@@ -576,7 +576,7 @@ export function SettingsCenterModal({isOpen, onClose}) {
  </p>
  </div>
  <div className="p-4 bg-card/10 backdrop-blur-md rounded-2xl">
- <StarIcon className="w-8 h-8 text-accent-400" />
+ <StarIcon className="w-8 h-8 text-hkids-brown" />
  </div>
  </div>
 
@@ -603,7 +603,7 @@ export function SettingsCenterModal({isOpen, onClose}) {
  {/* SUPPORT */}
  <section id="support" ref={el => sectionRefs.current['support'] = el} className="scroll-mt-24 space-y-6">
  <div>
- <h2 className="text-2xl font-black tracking-tight mb-2">{t('parentSettingsSectionSupport')}</h2>
+ <h2 className="text-2xl font-black tracking-normal mb-2">{t('parentSettingsSectionSupport')}</h2>
  <p className="text-foreground-muted">{sectionDescriptions.support}</p>
  </div>
 
@@ -670,7 +670,7 @@ export function SettingsCenterModal({isOpen, onClose}) {
  </div>
 
  <div className="flex justify-center pt-8">
- <p className="text-xs text-surface-400 font-bold uppercase tracking-widest">HKids Version 2.4.0</p>
+ <p className="text-xs text-surface-400 font-bold uppercase tracking-normal">HKids Version 2.4.0</p>
  </div>
  </section>
 

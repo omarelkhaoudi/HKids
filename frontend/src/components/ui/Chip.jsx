@@ -10,16 +10,16 @@ const TONES = {
     active: 'bg-secondary-50 text-secondary-800 border-secondary-300 shadow-soft',
   },
   orange: {
-    idle: 'bg-card text-foreground border-border/70 hover:border-orange-300',
-    active: 'bg-orange-50 text-orange-800 border-orange-300 shadow-soft',
+    idle: 'bg-card text-foreground border-border/70 hover:border-hkids-brown-light',
+    active: 'bg-hkids-brown-soft text-hkids-brown-darker border-hkids-brown-light shadow-soft',
   },
   success: {
     idle: 'bg-card text-foreground border-border/70 hover:border-success-300',
     active: 'bg-success-50 text-success-800 border-success-300 shadow-soft',
   },
   magic: {
-    idle: 'bg-card text-foreground border-border/70 hover:border-magic-300',
-    active: 'bg-magic-50 text-magic-800 border-magic-300 shadow-soft',
+    idle: 'bg-card text-foreground border-border/70 hover:border-hkids-brown',
+    active: 'bg-hkids-brown-soft text-hkids-brown-darker border-hkids-brown shadow-soft',
   },
 };
 

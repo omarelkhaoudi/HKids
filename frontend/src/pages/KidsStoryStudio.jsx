@@ -436,11 +436,11 @@ function KidsStoryStudio() {
           <span className="kids-studio-back-icon">
             <ChevronLeftIcon className="w-6 h-6" />
           </span>
-          <span className="font-black text-xl tracking-wide hidden sm:block">{t('studioBrand')}</span>
+          <span className="font-black text-xl tracking-normal hidden sm:block">{t('studioBrand')}</span>
         </Link>
         <div className="flex items-center gap-3">
           <div className="hidden md:flex items-center gap-2 kids-studio-profile-chip">
-            <Avatar src={null} fallback={selectedKidProfile?.name?.charAt(0) || 'K'} className="w-8 h-8 bg-gradient-to-br from-amber-400 to-orange-500 text-white font-bold" />
+            <Avatar src={null} fallback={selectedKidProfile?.name?.charAt(0) || 'K'} className="w-8 h-8 bg-gradient-to-br from-hkids-brown to-hkids-brown text-white font-bold" />
             <span className="font-bold text-sm">{selectedKidProfile?.name || t('parentChild')}</span>
           </div>
           <Link to={storiesPath}>
@@ -832,7 +832,7 @@ function KidsStoryStudio() {
                     if (!readingOpen) setReadingOpen(true);
                     handleSpeak(story);
                   }}
-                  className={`flex-1 rounded-2xl py-4 font-black shadow-lg min-h-touch ${speaking ? 'bg-rose-500 text-white hover:bg-rose-600' : 'bg-primary-500 text-white hover:bg-primary-600'}`}
+                  className={`flex-1 rounded-2xl py-4 font-black shadow-lg min-h-touch ${speaking ? 'bg-hkids-brown text-white hover:bg-hkids-brown-dark' : 'bg-primary-500 text-white hover:bg-primary-600'}`}
                 >
                   {speaking ? <PauseIcon className="w-5 h-5 me-2" /> : <PlayIcon className="w-5 h-5 me-2" />}
                   {speaking ? t('pause') : t('studioStartReading')}

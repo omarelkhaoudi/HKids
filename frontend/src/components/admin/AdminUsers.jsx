@@ -77,8 +77,8 @@ function AdminUsers() {
  const totalTime = detail?.kids?.reduce((sum, kid) => sum + Number(kid.total_time_seconds || 0), 0) || 0;
  const lastActivity = detail?.kids?.map((kid) => kid.last_activity_at).filter(Boolean).sort().reverse()[0] || null;
 
- const filteredParents = parents.filter(p => 
- p.name?.toLowerCase().includes(search.toLowerCase()) || 
+ const filteredParents = parents.filter(p =>
+ p.name?.toLowerCase().includes(search.toLowerCase()) ||
  p.email?.toLowerCase().includes(search.toLowerCase())
  );
 
@@ -86,13 +86,13 @@ function AdminUsers() {
  <div className="space-y-6 pb-12">
  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
  <div>
- <h1 className="text-3xl font-black text-foreground tracking-tight">{t('adminUsersTitle')}</h1>
+ <h1 className="text-3xl font-black text-foreground tracking-normal">{t('adminUsersTitle')}</h1>
  <p className="text-foreground-muted font-medium mt-1">{t('adminUsersSubtitle')}</p>
  </div>
  </div>
 
  <div className="flex flex-col xl:flex-row gap-6">
- 
+
  {/* USERS TABLE */}
  <motion.div initial={{opacity: 0, y: 20}} animate={{opacity: 1, y: 0}} className="flex-1 min-w-0 bg-card rounded-[2rem] border border-border shadow-sm overflow-hidden flex flex-col">
  <div className="p-4 border-b border-border flex items-center justify-between bg-surface-secondary">
@@ -107,7 +107,7 @@ function AdminUsers() {
  />
  </div>
  </div>
- 
+
  <div className="overflow-x-auto flex-1">
  {loading ? (
  <div className="space-y-4 p-4">
@@ -122,16 +122,16 @@ function AdminUsers() {
  <table className="w-full text-start border-collapse">
  <thead className="bg-card sticky top-0 z-10 shadow-sm">
  <tr>
- <th className="p-4 text-xs font-bold text-surface-400 uppercase tracking-wider">{t('adminUsersHeaderParent')}</th>
- <th className="p-4 text-xs font-bold text-surface-400 uppercase tracking-wider">{t('adminUsersHeaderSubscription')}</th>
- <th className="p-4 text-xs font-bold text-surface-400 uppercase tracking-wider text-center">{t('adminUsersHeaderKids')}</th>
- <th className="p-4 text-xs font-bold text-surface-400 uppercase tracking-wider text-end">{t('adminUsersHeaderSignup')}</th>
+ <th className="p-4 text-xs font-bold text-surface-400 uppercase tracking-normal">{t('adminUsersHeaderParent')}</th>
+ <th className="p-4 text-xs font-bold text-surface-400 uppercase tracking-normal">{t('adminUsersHeaderSubscription')}</th>
+ <th className="p-4 text-xs font-bold text-surface-400 uppercase tracking-normal text-center">{t('adminUsersHeaderKids')}</th>
+ <th className="p-4 text-xs font-bold text-surface-400 uppercase tracking-normal text-end">{t('adminUsersHeaderSignup')}</th>
  </tr>
  </thead>
  <tbody className="divide-y divide-border">
  {filteredParents.map((parent) => (
- <tr 
- key={parent.id} 
+ <tr
+ key={parent.id}
  onClick={() => openParent(parent)}
  className={`hover:bg-surface-secondary cursor-pointer transition-colors ${selectedParent?.id === parent.id ? 'bg-primary-50/50' : ''}`}
  >
@@ -168,9 +168,9 @@ function AdminUsers() {
  {/* SIDE DRAWER OVERLAY (Mobile/Tablet Only) */}
  <AnimatePresence>
  {selectedParent && (
- <motion.div 
+ <motion.div
  initial={{opacity: 0}} animate={{opacity: 1}} exit={{opacity: 0}}
- className="fixed inset-0 z-40 bg-surface-900/30 backdrop-blur-sm xl:hidden" 
+ className="fixed inset-0 z-40 bg-surface-900/30 backdrop-blur-sm xl:hidden"
  onClick={() => setSelectedParent(null)}
  />
  )}
@@ -179,7 +179,7 @@ function AdminUsers() {
  {/* SIDE DRAWER FOR USER DETAILS */}
  <AnimatePresence>
  {selectedParent && (
- <motion.div 
+ <motion.div
  initial={{opacity: 0, x: 50}} animate={{opacity: 1, x: 0}} exit={{opacity: 0, x: 50}} transition={{type: 'spring', damping: 25, stiffness: 200}}
  className="fixed inset-y-0 end-0 z-50 w-full sm:w-[400px] bg-[#fafafa] shadow-2xl xl:relative xl:inset-auto xl:z-auto xl:w-[380px] xl:bg-transparent xl:shadow-none shrink-0 flex flex-col h-full xl:h-auto overflow-hidden"
  >
@@ -188,14 +188,14 @@ function AdminUsers() {
  <div className="bg-card rounded-[2rem] border border-border shadow-sm relative overflow-hidden">
  <div className="absolute top-0 start-0 end-0 h-24 bg-gradient-to-r from-primary-500 to-primary-500"></div>
  <button onClick={() => setSelectedParent(null)} className="absolute top-4 end-4 z-10 p-2 bg-black/20 text-white rounded-full hover:bg-black/40 backdrop-blur-md transition-colors"><XIcon className="w-5 h-5"/></button>
- 
+
  <div className="relative pt-12 px-6 pb-6">
  <div className="w-24 h-24 bg-card p-1.5 rounded-[1.5rem] shadow-lg mb-4">
  <div className="w-full h-full bg-gradient-to-br from-primary-400 to-primary-500 rounded-2xl flex items-center justify-center text-white text-4xl font-black uppercase">
  {selectedParent.name.charAt(0)}
  </div>
  </div>
- 
+
  <h3 className="text-2xl font-black text-foreground mb-1 leading-tight break-words">{detail?.parent?.name || selectedParent.name}</h3>
  <div className="flex items-center gap-2 text-foreground-muted font-medium text-sm mb-6">
  <MailIcon className="w-4 h-4 shrink-0" />
@@ -204,13 +204,13 @@ function AdminUsers() {
 
  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
  <div className="bg-surface-secondary rounded-2xl p-4 border border-border flex flex-col justify-center items-center">
- <div className="text-xs font-bold text-surface-400 uppercase tracking-wider mb-1">{t('adminUsersSubscription')}</div>
+ <div className="text-xs font-bold text-surface-400 uppercase tracking-normal mb-1">{t('adminUsersSubscription')}</div>
  <div className={`text-base font-black ${selectedParent.subscription_status === 'free' ? 'text-foreground-secondary' : 'text-secondary-600'}`}>
  {selectedParent.subscription_status === 'free' ? t('adminUsersFree') : t('adminUsersPremium')}
  </div>
  </div>
  <div className="bg-surface-secondary rounded-2xl p-4 border border-border flex flex-col justify-center items-center">
- <div className="text-xs font-bold text-surface-400 uppercase tracking-wider mb-1">{t('adminUsersSignup')}</div>
+ <div className="text-xs font-bold text-surface-400 uppercase tracking-normal mb-1">{t('adminUsersSignup')}</div>
  <div className="text-base font-black text-foreground-secondary">{formatAdminDate(selectedParent.created_at).split(' ')[0]}</div>
  </div>
  </div>
@@ -229,7 +229,7 @@ function AdminUsers() {
  fullWidth
  disabled={deleting}
  onClick={openDeleteParent}
- className="mt-5 border-rose-200 text-rose-600 hover:bg-rose-50"
+ className="mt-5 border-hkids-brown-light text-hkids-brown-dark hover:bg-hkids-brown-soft"
  >
  <TrashIcon className="w-4 h-4 me-2" /> {deleting ? t('adminUsersDeleting') : t('adminUsersDeleteBtn')}
  </Button>
@@ -240,7 +240,7 @@ function AdminUsers() {
  {/* Children Profiles List */}
  <div className="bg-card rounded-[2rem] border border-border shadow-sm p-6">
  <h4 className="font-black text-foreground mb-5 flex items-center gap-2 text-lg"><ChildIcon className="w-6 h-6 text-foreground-500"/> {t('adminUsersKidProfiles')}</h4>
- 
+
  {detailLoading ? (
  <div className="space-y-4">
  <div className="h-24 bg-surface-secondary rounded-2xl animate-pulse"></div>
@@ -254,7 +254,7 @@ function AdminUsers() {
  <div className="min-w-0 flex-1 pe-2">
  <h5 className="font-black text-foreground text-lg flex items-center gap-2 truncate">
  {kid.name}
- {kid.is_premium_voice && <StarIcon className="w-5 h-5 text-accent-500 shrink-0" title="Premium Voice" />}
+ {kid.is_premium_voice && <StarIcon className="w-5 h-5 text-hkids-brown shrink-0" title="Premium Voice" />}
  </h5>
  <p className="text-sm font-bold text-foreground-muted mt-1 truncate">
  {kid.age ? t('adminUsersAge').replace('{age}', kid.age) : t('adminUsersAgeNA')} • <span className="uppercase text-surface-400">{kid.preferred_language || 'fr'}</span>
@@ -264,15 +264,15 @@ function AdminUsers() {
  <span className="text-xl font-black text-foreground-500">{kid.name.charAt(0)}</span>
  </div>
  </div>
- 
+
  <div className="grid grid-cols-2 gap-2 mt-4 pt-4 border-t border-border/60">
  <div className="bg-card p-2 rounded-xl border border-border text-center">
  <span className="text-foreground-600 font-black text-lg block leading-none mb-1">{kid.total_sessions || 0}</span>
- <span className="text-[10px] font-bold text-surface-400 uppercase tracking-wider">{t('adminUsersSessions')}</span>
+ <span className="text-[10px] font-bold text-surface-400 uppercase tracking-normal">{t('adminUsersSessions')}</span>
  </div>
  <div className="bg-card p-2 rounded-xl border border-border text-center">
  <span className="text-secondary-600 font-black text-lg block leading-none mb-1">{Math.round((kid.total_time_seconds || 0)/60)}</span>
- <span className="text-[10px] font-bold text-surface-400 uppercase tracking-wider">{t('adminUsersMinutes')}</span>
+ <span className="text-[10px] font-bold text-surface-400 uppercase tracking-normal">{t('adminUsersMinutes')}</span>
  </div>
  </div>
  </div>

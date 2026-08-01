@@ -35,7 +35,7 @@ export function ContentCard({ content, playing = false, onToggleAudio, premiumCo
 
           <div className="absolute start-3 top-3 flex flex-wrap gap-2">
             {premiumState.showBadge && (
-              <span className="inline-flex items-center gap-1 rounded-full bg-accent-400 px-3 py-1 text-xs font-black text-accent-950 shadow">
+              <span className="inline-flex items-center gap-1 rounded-full bg-hkids-brown px-3 py-1 text-xs font-black text-hkids-brown-darker shadow">
                 {premiumState.showLock ? <LockIcon className="h-3.5 w-3.5" /> : null}
                 Premium
               </span>
@@ -48,7 +48,7 @@ export function ContentCard({ content, playing = false, onToggleAudio, premiumCo
             )}
           </div>
 
-          <span className="absolute end-3 top-3 grid h-10 w-10 place-items-center rounded-full bg-white/90 text-rose-500 shadow">
+          <span className="absolute end-3 top-3 grid h-10 w-10 place-items-center rounded-full bg-white/90 text-hkids-brown shadow">
             <HeartIcon className="h-5 w-5" filled={content.is_favorite} />
           </span>
         </div>
@@ -90,7 +90,7 @@ export function ContentCard({ content, playing = false, onToggleAudio, premiumCo
             className={`inline-flex h-12 w-full items-center justify-center gap-2 rounded-3xl text-sm font-black transition ${
               hasAudio
                 ? playing
-                  ? 'bg-accent-500 text-white hover:bg-accent-600'
+                  ? 'bg-hkids-brown text-white hover:bg-hkids-brown-dark'
                   : 'bg-secondary-500 text-white hover:bg-secondary-600'
                 : 'bg-surface-100 text-surface-400 dark:bg-surface-700'
             }`}

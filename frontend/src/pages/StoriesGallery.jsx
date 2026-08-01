@@ -90,12 +90,12 @@ function StoryBookCard({
               className="absolute top-space-12 right-space-12 z-20 grid h-12 w-12 min-h-touch min-w-touch place-items-center rounded-full bg-card/90 shadow-card backdrop-blur-sm transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary-300"
               aria-label={isFavorite ? t('bookRemovedFromFavorites') : t('addToFavorites')}
             >
-              <HeartIcon className={`h-6 w-6 ${isFavorite ? 'text-orange-500' : 'text-foreground-muted'}`} filled={isFavorite} />
+              <HeartIcon className={`h-6 w-6 ${isFavorite ? 'text-hkids-brown' : 'text-foreground-muted'}`} filled={isFavorite} />
             </motion.button>
 
             {!isAuthenticated && (
               <div className="absolute top-space-12 left-space-12 z-20 inline-flex items-center gap-space-8 rounded-full bg-card/90 px-space-12 py-space-8 text-caption font-bold text-foreground shadow-card backdrop-blur-sm">
-                <LockIcon className="h-4 w-4 text-magic-500" aria-hidden="true" />
+                <LockIcon className="h-4 w-4 text-hkids-brown" aria-hidden="true" />
                 {t('galleryPrivate')}
               </div>
             )}
@@ -275,7 +275,7 @@ function StoriesGallery() {
           </Link>
           <Link
             to="/abonnements"
-            className="hidden sm:inline-flex items-center gap-space-8 px-space-20 py-space-10 rounded-full bg-gradient-to-r from-magic-500 to-primary-500 text-white font-bold hover:shadow-floating transition-all focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-magic-300 min-h-touch"
+            className="hidden sm:inline-flex items-center gap-space-8 px-space-20 py-space-10 rounded-full bg-gradient-to-r from-hkids-brown to-primary-500 text-white font-bold hover:shadow-floating transition-all focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-hkids-brown min-h-touch"
           >
             <BookIcon className="w-4 h-4" aria-hidden="true" />
             {t('gallerySubscriptions')}
@@ -287,7 +287,7 @@ function StoriesGallery() {
         {!reducedMotion && decorativeStars.map(({ size, opacity, ...position }, index) => (
           <StarIcon
             key={index}
-            className={`pointer-events-none absolute z-0 text-magic-300 ${size} ${opacity}`}
+            className={`pointer-events-none absolute z-0 text-hkids-brown ${size} ${opacity}`}
             style={position}
             aria-hidden="true"
           />
@@ -295,8 +295,8 @@ function StoriesGallery() {
 
         <section className="relative z-10 py-space-40 md:py-space-56" aria-labelledby="gallery-hero-title">
           <div className="max-w-7xl mx-auto px-space-16 sm:px-space-24">
-            <div className="rounded-32 bg-gradient-to-br from-primary-50 via-magic-50 to-secondary-50 border-4 border-white shadow-floating px-space-20 py-space-40 md:px-space-40 md:py-space-48 text-center">
-              <div className="inline-flex items-center gap-space-8 px-space-16 py-space-8 bg-card/80 text-magic-600 rounded-full text-body font-bold mb-space-16 border border-magic-100 shadow-soft">
+            <div className="rounded-32 bg-gradient-to-br from-primary-50 via-hkids-brown-soft to-secondary-50 border-4 border-white shadow-floating px-space-20 py-space-40 md:px-space-40 md:py-space-48 text-center">
+              <div className="inline-flex items-center gap-space-8 px-space-16 py-space-8 bg-card/80 text-hkids-brown-dark rounded-full text-body font-bold mb-space-16 border border-hkids-brown-light shadow-soft">
                 <StarIcon className="w-4 h-4" aria-hidden="true" />
                 {t('galleryCollectionBadge')}
               </div>
@@ -313,14 +313,14 @@ function StoriesGallery() {
               )}
               <Link
                 to="/abonnements"
-                className="mt-space-24 inline-flex items-center justify-center gap-space-8 rounded-full bg-gradient-to-r from-magic-500 to-primary-500 px-space-24 py-space-12 text-white font-bold shadow-floating hover:shadow-glow transition-all focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-magic-300 min-h-touch"
+                className="mt-space-24 inline-flex items-center justify-center gap-space-8 rounded-full bg-gradient-to-r from-hkids-brown to-primary-500 px-space-24 py-space-12 text-white font-bold shadow-floating hover:shadow-glow transition-all focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-hkids-brown min-h-touch"
               >
                 {t('gallerySubscriptionsCta')}
               </Link>
               {!isAuthenticated && (
                 <div className="mt-space-16 flex flex-col sm:flex-row items-center justify-center gap-space-12">
-                  <div className="inline-flex items-center gap-space-8 rounded-full bg-card/90 px-space-16 py-space-8 text-body font-bold text-foreground shadow-soft border border-magic-100">
-                    <LockIcon className="w-4 h-4 text-magic-500" aria-hidden="true" />
+                  <div className="inline-flex items-center gap-space-8 rounded-full bg-card/90 px-space-16 py-space-8 text-body font-bold text-foreground shadow-soft border border-hkids-brown-light">
+                    <LockIcon className="w-4 h-4 text-hkids-brown" aria-hidden="true" />
                     {t('galleryLoginPrompt')}
                   </div>
                   <Link
@@ -344,8 +344,8 @@ function StoriesGallery() {
                 ))}
               </div>
             ) : books.length === 0 ? (
-              <div className="text-center py-space-40 rounded-32 bg-card/80 border border-magic-100 shadow-soft">
-                <BookIcon className="w-16 h-16 text-magic-300 mx-auto mb-space-16" />
+              <div className="text-center py-space-40 rounded-32 bg-card/80 border border-hkids-brown-light shadow-soft">
+                <BookIcon className="w-16 h-16 text-hkids-brown mx-auto mb-space-16" />
                 <p className="text-heading-s font-bold text-foreground-secondary">{t('galleryEmpty')}</p>
               </div>
             ) : (

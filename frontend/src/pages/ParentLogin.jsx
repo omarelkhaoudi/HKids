@@ -23,7 +23,7 @@ export default function ParentLogin() {
  const [error, setError] = useState('');
  const [loading, setLoading] = useState(false);
  const [mounted, setMounted] = useState(false);
- 
+
  const {login} = useAuth();
  const navigate = useNavigate();
  const location = useLocation();
@@ -74,11 +74,11 @@ export default function ParentLogin() {
  return (
  <div className="min-h-screen bg-card flex flex-col lg:flex-row overflow-hidden font-sans relative">
  <MagicalBackground preset="platform" />
- 
+
  {/* Back Button - Fixed positioning for both mobile and desktop */}
  <div className="absolute top-6 start-6 z-50">
  <Link to="/">
- <motion.button 
+ <motion.button
  whileHover={{scale: 1.05}}
  whileTap={{scale: 0.95}}
  className="flex items-center gap-2 px-5 py-2.5 bg-card/80 backdrop-blur-md border border-border rounded-[1.5rem] shadow-sm text-foreground-secondary font-bold text-sm hover:text-foreground hover:shadow-md transition-all"
@@ -95,12 +95,12 @@ export default function ParentLogin() {
  <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
  <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-primary-300/20 blur-[100px]"></div>
  <div className="absolute bottom-[-10%] right-[-10%] w-[60%] h-[60%] rounded-full bg-secondary-300/20 blur-[120px]"></div>
- 
+
  {/* Animated stars */}
  {mounted && Array.from({length: 8}).map((_, i) => (
  <motion.div
  key={i}
- className="absolute text-accent-400 opacity-60"
+ className="absolute text-hkids-brown opacity-60"
  style={{
  left: `${15 + Math.random() * 70}%`,
  top: `${15 + Math.random() * 70}%`,
@@ -123,7 +123,7 @@ export default function ParentLogin() {
  </div>
 
  {/* Central Illustration Composition */}
- <motion.div 
+ <motion.div
  initial={{opacity: 0, y: 40}}
  animate={{opacity: 1, y: 0}}
  transition={{duration: 0.8, delay: 0.2}}
@@ -131,15 +131,15 @@ export default function ParentLogin() {
  >
  {/* Glassmorphic Image Container */}
  <div className="relative w-full aspect-square mb-12">
- <div className="absolute inset-4 bg-card/40 backdrop-blur-3xl rounded-[3rem] border border-white shadow-[0_30px_60px_-15px_rgba(123,62,184,0.15)] overflow-hidden flex items-center justify-center p-8">
- <img 
- src="/enfant3ans.webp" 
- alt="Enfant qui lit" 
+ <div className="absolute inset-4 bg-card/40 backdrop-blur-3xl rounded-[3rem] border border-white shadow-[0_30px_60px_-15px_rgba(var(--hkids-green-rgb),0.16)] overflow-hidden flex items-center justify-center p-8">
+ <img
+ src="/enfant3ans.webp"
+ alt="Enfant qui lit"
  className="w-full h-full object-contain filter drop-shadow-2xl"
  />
- 
+
  {/* Floating Badge */}
- <motion.div 
+ <motion.div
  animate={{y: [-5, 5, -5]}}
  transition={{duration: 4, repeat: Infinity, ease:"easeInOut"}}
  className="absolute -top-4 -end-4 bg-card/90 backdrop-blur-md px-4 py-3 rounded-2xl shadow-xl border border-white/50 flex items-center gap-2"
@@ -153,7 +153,7 @@ export default function ParentLogin() {
  </div>
  </div>
 
- <h2 className="text-4xl lg:text-5xl font-extrabold text-foreground tracking-tight leading-[1.1] mb-4">
+ <h2 className="text-4xl lg:text-5xl font-extrabold text-foreground tracking-normal leading-[1.1] mb-4">
             {t('parentLoginWelcomeTitle').split('\n').map((line, i) => i === 0 ? <span key={i}>{line}<br/></span> : line)}
  </h2>
  <p className="text-lg text-foreground-secondary font-medium max-w-sm">
@@ -164,14 +164,14 @@ export default function ParentLogin() {
 
  {/* RIGHT PANEL: Form */}
  <div className="w-full lg:w-1/2 flex items-center justify-center p-6 sm:p-12 lg:p-20 relative bg-card">
- 
+
  <div className="w-full max-w-[420px] mx-auto">
  {/* Mobile Header (Only visible on small screens) */}
  <div className="lg:hidden flex flex-col items-center text-center mb-10 pt-16">
  <div className="w-16 h-16 rounded-3xl bg-primary-50 flex items-center justify-center mb-6">
  <Logo size="small" showText={true} />
  </div>
-            <h1 className="text-3xl font-extrabold text-foreground tracking-tight mb-2">{t('parentLoginMobileTitle')}</h1>
+            <h1 className="text-3xl font-extrabold text-foreground tracking-normal mb-2">{t('parentLoginMobileTitle')}</h1>
             <p className="text-foreground-secondary font-medium">{t('parentLoginMobileSubtitle')}</p>
  </div>
 
@@ -180,7 +180,7 @@ export default function ParentLogin() {
  <div className="w-14 h-14 rounded-[1.2rem] bg-gradient-to-br from-primary-500 to-primary-600 shadow-lg flex items-center justify-center mb-8">
  <Logo size="small" showText={true} className="text-white" />
  </div>
-            <h1 className="text-3xl font-extrabold text-foreground tracking-tight mb-2">{t('parentLoginTitle')}</h1>
+            <h1 className="text-3xl font-extrabold text-foreground tracking-normal mb-2">{t('parentLoginTitle')}</h1>
             <p className="text-foreground-secondary font-medium">{t('parentLoginSubtitle')}</p>
  </div>
 
@@ -191,10 +191,10 @@ export default function ParentLogin() {
  initial={{opacity: 0, y: -10, scale: 0.98}}
  animate={{opacity: 1, y: 0, scale: 1}}
  exit={{opacity: 0, scale: 0.98}}
- className="mb-8 p-4 bg-red-50/80 backdrop-blur-sm border border-red-100 rounded-2xl flex items-start gap-3 shadow-sm"
+ className="mb-8 p-4 bg-hkids-brown-soft/80 backdrop-blur-sm border border-hkids-brown-soft rounded-2xl flex items-start gap-3 shadow-sm"
  >
- <AlertIcon className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
- <p className="text-sm font-semibold text-red-700 leading-relaxed">{error}</p>
+ <AlertIcon className="w-5 h-5 text-hkids-brown flex-shrink-0 mt-0.5" />
+ <p className="text-sm font-semibold text-hkids-brown-dark leading-relaxed">{error}</p>
  </motion.div>
  )}
  </AnimatePresence>
@@ -272,7 +272,7 @@ export default function ParentLogin() {
  disabled={loading}
  whileHover={{scale: loading ? 1 : 1.01}}
  whileTap={{scale: loading ? 1 : 0.99}}
- className="w-full mt-8 py-4 bg-primary-600 hover:bg-primary-700 text-white rounded-[1.5rem] font-bold text-lg shadow-[0_8px_20px_-6px_rgba(123,62,184,0.4)] hover:shadow-[0_12px_25px_-6px_rgba(123,62,184,0.5)] transition-all disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2 group relative overflow-hidden"
+ className="w-full mt-8 py-4 bg-primary-600 hover:bg-primary-700 text-white rounded-[1.5rem] font-bold text-lg shadow-[0_8px_20px_-6px_rgba(var(--hkids-green-rgb),0.32)] hover:shadow-[0_12px_25px_-6px_rgba(var(--hkids-green-rgb),0.4)] transition-all disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2 group relative overflow-hidden"
  >
  {loading ? (
  <>

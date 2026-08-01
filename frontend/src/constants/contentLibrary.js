@@ -28,7 +28,7 @@ export const CONTENT_LIBRARY_CATEGORIES = [
     label: categoryLabels.fr.stories[0],
     description: categoryLabels.fr.stories[1],
     pictogram: '📚',
-    gradient: 'from-primary-500 via-secondary-500 to-accent-400',
+    gradient: 'from-primary-500 via-secondary-500 to-hkids-brown',
     contentTypes: ['story', 'audio_story'],
   },
   {
@@ -44,7 +44,7 @@ export const CONTENT_LIBRARY_CATEGORIES = [
     label: categoryLabels.fr.entertainment[0],
     description: categoryLabels.fr.entertainment[1],
     pictogram: '🎵',
-    gradient: 'from-primary-500 via-primary-500 to-rose-400',
+    gradient: 'from-primary-500 via-primary-500 to-hkids-brown',
     contentTypes: ['song', 'audio_story'],
   },
 ];

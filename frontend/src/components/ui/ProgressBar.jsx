@@ -6,9 +6,9 @@ import { kidsProgressFill } from '../../constants/kidsMotion';
 const TONE_FILL = {
   primary: 'bg-primary-500',
   secondary: 'bg-secondary-500',
-  orange: 'bg-orange-500',
+  orange: 'bg-hkids-brown',
   success: 'bg-success-500',
-  magic: 'bg-magic-500',
+  magic: 'bg-hkids-brown',
 };
 
 export function ProgressBar({

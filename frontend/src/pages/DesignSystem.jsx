@@ -58,7 +58,7 @@ export default function DesignSystem() {
       <div className="max-w-7xl mx-auto px-space-24 py-space-40 space-y-space-64">
         <div className="flex flex-wrap justify-between items-center gap-space-16">
           <div>
-            <p className="text-caption uppercase tracking-widest text-primary-600 mb-space-8">HKids Design System</p>
+            <p className="text-caption uppercase tracking-normal text-primary-600 mb-space-8">HKids Design System</p>
             <h1 className="text-hero mb-space-8">Bibliothèque magique</h1>
             <p className="text-body-lg max-w-xl">
               Tokens CSS + Tailwind. Identité premium pour enfants — chaleureuse, lisible, accessible.
@@ -116,7 +116,7 @@ export default function DesignSystem() {
           <div className="flex flex-wrap items-end gap-space-8">
             {DS_SPACING.map((s) => (
               <div key={s} className="flex flex-col items-center gap-space-8">
-                <div className="bg-magic-400 rounded-8" style={{ width: s, height: 48 }} />
+                <div className="bg-hkids-brown rounded-8" style={{ width: s, height: 48 }} />
                 <span className="text-caption">{s}</span>
               </div>
             ))}
@@ -140,8 +140,8 @@ export default function DesignSystem() {
             <Button variant="primary">Primary</Button>
             <Button variant="secondary">Secondary</Button>
             <Button variant="ghost">Ghost</Button>
-            <Button variant="orange">Orange</Button>
-            <Button variant="magic">Magic</Button>
+            <Button variant="outline">Brown outline</Button>
+            <Button variant="secondary">Premium</Button>
             <Button variant="success">Success</Button>
             <Button loading>Loading</Button>
           </Card>
@@ -153,12 +153,12 @@ export default function DesignSystem() {
             <Chip selected={chipOn} onClick={() => setChipOn((v) => !v)} emoji="📚">Livres</Chip>
             <Chip tone="orange" emoji="🎧">Audio</Chip>
             <Chip tone="success" emoji="🎮">Apprendre</Chip>
-            <Chip tone="magic" selected emoji="✨">Créer</Chip>
+            <Chip tone="secondary" selected emoji="✨">Créer</Chip>
             <Badge variant="primary">Primary</Badge>
-            <Badge variant="secondary">Yellow</Badge>
-            <Badge variant="orange">Orange</Badge>
+            <Badge variant="secondary">Brown</Badge>
+            <Badge variant="secondary">Audio</Badge>
             <Badge variant="success">Success</Badge>
-            <Badge variant="magic">Magic</Badge>
+            <Badge variant="premium">Premium</Badge>
             <Avatar initials="HK" size="md" />
             <Avatar initials="A" size="lg" />
           </Card>
@@ -230,7 +230,7 @@ export default function DesignSystem() {
           </Dialog>
           <FloatingButton
             label="Ajouter"
-            tone="magic"
+            tone="secondary"
             className="!relative !inset-auto mt-space-24"
             icon={<span aria-hidden="true">＋</span>}
             onClick={() => {}}

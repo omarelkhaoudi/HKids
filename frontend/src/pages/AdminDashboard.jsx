@@ -21,7 +21,7 @@ import AdminPermissions from '../components/admin/AdminPermissions';
 import AdminSupport from '../components/admin/AdminSupport';
 import {adminAPI} from '../api/admin';
 import {
- BookIcon, TagIcon, UserIcon, LogOutIcon, HomeIcon, HistoryIcon, 
+ BookIcon, TagIcon, UserIcon, LogOutIcon, HomeIcon, HistoryIcon,
  CheckIcon, BrainIcon, SearchIcon, BellIcon, ChevronLeftIcon, PlusIcon,
  XIcon, ShieldIcon, WarningIcon, MailIcon
 } from '../components/Icons';
@@ -41,25 +41,25 @@ const QuickActions = () => {
  const margin = 16;
  const menuWidth = 256; // w-64
  const menuHeight = 200; // approximate
- 
+
  let top = rect.top - menuHeight - 16;
  let left = rect.right - menuWidth;
- 
+
  // Prevent top clipping
  if (top < margin) {
  top = rect.bottom + 16;
 }
- 
+
  // Prevent left clipping
  if (left < margin) {
  left = margin;
 }
- 
+
  // Prevent right clipping
  if (left + menuWidth > window.innerWidth - margin) {
  left = window.innerWidth - menuWidth - margin;
 }
- 
+
  // Prevent bottom clipping
  if (top + menuHeight > window.innerHeight - margin) {
  top = window.innerHeight - menuHeight - margin;
@@ -74,7 +74,7 @@ const QuickActions = () => {
 });
 }
 }, [isOpen]);
- 
+
  const content = (
  <AnimatePresence>
  {isOpen && (
@@ -85,7 +85,7 @@ const QuickActions = () => {
  style={menuStyle}
  className="bg-card rounded-2xl shadow-2xl border border-border p-2 origin-bottom-right"
  >
- <div className="p-2 text-xs font-bold text-surface-400 uppercase tracking-wider">{t('adminDashboardQuickActions')}</div>
+ <div className="p-2 text-xs font-bold text-surface-400 uppercase tracking-normal">{t('adminDashboardQuickActions')}</div>
  <Link to="/admin/contents" onClick={() => setIsOpen(false)} className="flex items-center gap-3 w-full p-3 rounded-xl hover:bg-surface-secondary text-foreground-secondary font-medium transition-colors whitespace-nowrap">
  <div className="bg-primary-50 p-2 rounded-lg text-foreground-600 shrink-0"><BookIcon className="w-4 h-4"/></div> {t('adminDashboardCreateStory')}
  </Link>
@@ -93,7 +93,7 @@ const QuickActions = () => {
  <div className="bg-secondary-50 p-2 rounded-lg text-secondary-600 shrink-0"><TagIcon className="w-4 h-4"/></div> {t('adminDashboardAddCategory')}
  </Link>
  <Link to="/admin/subscriptions" onClick={() => setIsOpen(false)} className="flex items-center gap-3 w-full p-3 rounded-xl hover:bg-surface-secondary text-foreground-secondary font-medium transition-colors whitespace-nowrap">
- <div className="bg-accent-50 p-2 rounded-lg text-accent-600 shrink-0"><CheckIcon className="w-4 h-4"/></div> {t('adminDashboardManageSubscriptions')}
+ <div className="bg-hkids-brown-soft p-2 rounded-lg text-hkids-brown-dark shrink-0"><CheckIcon className="w-4 h-4"/></div> {t('adminDashboardManageSubscriptions')}
  </Link>
  </motion.div>
  )}
@@ -102,7 +102,7 @@ const QuickActions = () => {
 
  return (
  <>
- <button 
+ <button
  ref={buttonRef}
  type="button"
  onClick={() => setIsOpen(!isOpen)}
@@ -169,7 +169,7 @@ const CommandPalette = ({isOpen, onClose}) => {
  return (
  <div className="fixed inset-0 z-[100] flex items-start justify-center pt-32 px-4">
  <div className="fixed inset-0 bg-surface-900/40 backdrop-blur-sm" onClick={onClose} aria-hidden="true"></div>
- <motion.div 
+ <motion.div
  ref={panelRef}
  role="dialog"
  aria-modal="true"
@@ -181,7 +181,7 @@ const CommandPalette = ({isOpen, onClose}) => {
  >
  <div className="flex items-center p-4 border-b border-border gap-3">
  <SearchIcon className="w-6 h-6 text-surface-400" />
- <input 
+ <input
  autoFocus
  value={query}
  onChange={(e) => setQuery(e.target.value)}
@@ -211,7 +211,7 @@ const CommandPalette = ({isOpen, onClose}) => {
  ))
  ) : (
  <>
- <div className="p-2 text-xs font-bold text-surface-400 uppercase tracking-wider">{t('adminDashboardShortcuts')}</div>
+ <div className="p-2 text-xs font-bold text-surface-400 uppercase tracking-normal">{t('adminDashboardShortcuts')}</div>
  <Link to="/admin/moderation" onClick={onClose} className="flex items-center gap-3 p-3 rounded-xl hover:bg-surface-secondary text-foreground-secondary transition-colors">
  <BookIcon className="w-5 h-5 text-surface-400" /> {t('adminDashboardModerationQueue')}
  </Link>
@@ -237,7 +237,7 @@ function RequireAdminPermission({permission, permissions, children}) {
  }
  if (!Array.isArray(permissions) || !permissions.includes(permission)) {
   return (
-   <div className="rounded-2xl bg-accent-50 border border-accent-200 p-6 font-bold text-accent-800">
+   <div className="rounded-2xl bg-hkids-brown-soft border border-hkids-brown-light p-6 font-bold text-hkids-brown-darker">
     {t('adminDashboardAccessDenied').replace('{permission}', permission)}
    </div>
   );
@@ -313,7 +313,7 @@ function AdminDashboard() {
  return (
  <div className="min-h-screen bg-gradient-home text-foreground flex overflow-hidden font-sans relative">
  <MagicalBackground preset="platform" />
- 
+
  {/* SIDEBAR */}
  <motion.aside
  initial={false}
@@ -321,12 +321,12 @@ function AdminDashboard() {
  className="bg-card border-r border-border z-40 hidden md:flex flex-col h-screen shrink-0 transition-all duration-300 relative"
  >
  <div className="h-16 flex items-center justify-between px-4 border-b border-border">
- {isSidebarOpen && <span className="font-black text-xl tracking-tight">{t('adminDashboardBrand')}</span>}
- {!isSidebarOpen && <span className="font-black text-xl tracking-tight mx-auto text-foreground-500">H</span>}
+ {isSidebarOpen && <span className="font-black text-xl tracking-normal">{t('adminDashboardBrand')}</span>}
+ {!isSidebarOpen && <span className="font-black text-xl tracking-normal mx-auto text-foreground-500">H</span>}
  </div>
 
  <nav className="flex-1 overflow-y-auto p-3 space-y-1 mt-2">
- <div className={`text-xs font-bold text-surface-400 uppercase tracking-wider mb-2 px-2 ${!isSidebarOpen && 'text-center'}`}>
+ <div className={`text-xs font-bold text-surface-400 uppercase tracking-normal mb-2 px-2 ${!isSidebarOpen && 'text-center'}`}>
  {isSidebarOpen ? t('adminDashboardGeneral') : t('adminDashboardGeneralShort')}
  </div>
  {navItems.map((item) => {
@@ -374,7 +374,7 @@ function AdminDashboard() {
 
  {/* MAIN LAYOUT */}
  <div className="flex-1 flex flex-col h-screen overflow-hidden relative z-10">
- 
+
  {/* TOP BAR */}
  <header className="h-16 bg-card/80 backdrop-blur-md border-b border-border flex items-center justify-between px-6 z-30 shrink-0">
  <div className="flex items-center gap-4">
@@ -402,7 +402,7 @@ function AdminDashboard() {
  </div>
 
  <div className="flex items-center gap-4">
- <button 
+ <button
  type="button"
  onClick={() => setIsSearchOpen(true)}
  aria-label={t('adminDashboardSearchOpen')}
@@ -420,7 +420,7 @@ function AdminDashboard() {
  </button>
 
  <div className="relative">
- <button 
+ <button
  type="button"
  onClick={() => {
  setIsNotificationsOpen(!isNotificationsOpen);
@@ -436,12 +436,12 @@ function AdminDashboard() {
  >
  <BellIcon className="w-5 h-5" />
  {notifications.unread_count > 0 && (
- <span className="absolute top-1.5 end-1.5 w-2.5 h-2.5 bg-rose-500 rounded-full border-2 border-white"></span>
+ <span className="absolute top-1.5 end-1.5 w-2.5 h-2.5 bg-hkids-brown rounded-full border-2 border-white"></span>
  )}
  </button>
  <AnimatePresence>
  {isNotificationsOpen && (
- <motion.div 
+ <motion.div
  initial={{opacity: 0, y: 10, scale: 0.95}} animate={{opacity: 1, y: 0, scale: 1}} exit={{opacity: 0, y: 10, scale: 0.95}}
  className="absolute end-0 mt-2 w-80 bg-card rounded-2xl shadow-xl border border-border overflow-hidden z-50 origin-top-right"
  >
@@ -469,12 +469,12 @@ function AdminDashboard() {
  )}
  </AnimatePresence>
  </div>
- 
+
  <button
  type="button"
  onClick={handleLogout}
  aria-label={t('adminDashboardLogout')}
- className="p-2 text-foreground-muted hover:bg-rose-50 hover:text-rose-600 rounded-full transition-colors min-h-touch min-w-touch"
+ className="p-2 text-foreground-muted hover:bg-hkids-brown-soft hover:text-hkids-brown-dark rounded-full transition-colors min-h-touch min-w-touch"
  title={t('adminDashboardLogout')}
  >
  <LogOutIcon className="w-5 h-5" />
@@ -504,7 +504,7 @@ function AdminDashboard() {
  </Routes>
  </div>
  </main>
- 
+
  <QuickActions />
  <CommandPalette isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
 

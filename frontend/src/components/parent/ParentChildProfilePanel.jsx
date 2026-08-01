@@ -58,7 +58,7 @@ export function ParentChildProfilePanel({
             <KidAvatar kid={kid} size="xl" className="!w-32 !h-32 md:!w-40 md:!h-40 ring-4 ring-white shadow-floating" />
           </motion.div>
           <div className="flex-1 text-center md:text-start min-w-0">
-            <h2 id="parent-profile-heading" className="text-hero font-black text-foreground tracking-tight">
+            <h2 id="parent-profile-heading" className="text-hero font-black text-foreground tracking-normal">
               {kid.name}
             </h2>
             <div className="flex flex-wrap justify-center md:justify-start gap-2 mt-space-8">
@@ -72,7 +72,7 @@ export function ParentChildProfilePanel({
             </div>
             {interests.length > 0 && (
               <div className="mt-space-16">
-                <p className="text-caption font-bold text-foreground-muted uppercase tracking-wide mb-2">{t('parentProfileInterests')}</p>
+                <p className="text-caption font-bold text-foreground-muted uppercase tracking-normal mb-2">{t('parentProfileInterests')}</p>
                 <div className="flex flex-wrap justify-center md:justify-start gap-2">
                   {interests.slice(0, 6).map((interest) => (
                     <span key={interest} className="rounded-full bg-card px-3 py-1.5 text-body font-bold text-foreground-secondary shadow-soft border border-border/50">
@@ -97,7 +97,7 @@ export function ParentChildProfilePanel({
               />
             </div>
             <div className="min-w-0">
-              <p className="text-caption font-bold text-foreground-muted uppercase tracking-wide mb-1">
+              <p className="text-caption font-bold text-foreground-muted uppercase tracking-normal mb-1">
                 {t('parentProfileCurrentAdventure')}
               </p>
               <p className="text-heading-m font-black text-foreground truncate">{continueBook.title}</p>

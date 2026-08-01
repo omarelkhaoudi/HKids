@@ -72,7 +72,7 @@ function ReadingAidPanel({
           aria-modal="true"
           aria-labelledby="reading-aid-title"
         >
-          <div className="bg-gradient-to-r from-primary-500 via-secondary-500 to-accent-500 text-white p-6 flex justify-between items-center">
+          <div className="bg-gradient-to-r from-primary-500 via-secondary-500 to-hkids-brown text-white p-6 flex justify-between items-center">
             <h2 id="reading-aid-title" className="text-2xl font-bold">{t('readingAidTitle')}</h2>
             <button
               type="button"
@@ -129,7 +129,7 @@ function ReadingAidPanel({
                       }`}
                     >
                       <div className="flex items-start gap-3">
-                        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-3xl bg-gradient-to-br from-accent-100 to-secondary-100 text-sm font-black text-foreground-secondary-600">
+                        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-3xl bg-gradient-to-br from-hkids-brown-light to-secondary-100 text-sm font-black text-foreground-secondary">
                           {profile.icon}
                         </span>
                         <span className="min-w-0">
@@ -142,7 +142,7 @@ function ReadingAidPanel({
                             )}
                           </span>
                           <span className="mt-1 block text-sm text-surface-600">{profile.description}</span>
-                          <span className="mt-2 block text-xs font-semibold text-foreground-secondary-600">{t('readingAidVoiceClickPreview')}</span>
+                          <span className="mt-2 block text-xs font-semibold text-foreground-secondary">{t('readingAidVoiceClickPreview')}</span>
                         </span>
                       </div>
                     </button>
@@ -176,7 +176,7 @@ function ReadingAidPanel({
                     >
                       <div className="flex items-center justify-between">
                         <span className={`font-semibold ${font.class}`} style={{
-                          fontFamily: font.value === 'dyslexic' ? 'OpenDyslexic, sans-serif' : 
+                          fontFamily: font.value === 'dyslexic' ? 'OpenDyslexic, sans-serif' :
                                       font.value === 'times' ? 'Times New Roman, serif' :
                                       font.value === 'comic' ? 'Comic Sans MS, cursive' : 'Arial, sans-serif'
                         }}>
@@ -187,7 +187,7 @@ function ReadingAidPanel({
                         )}
                       </div>
                       <p className={`text-sm mt-2 text-surface-600 ${font.class}`} style={{
-                        fontFamily: font.value === 'dyslexic' ? 'OpenDyslexic, sans-serif' : 
+                        fontFamily: font.value === 'dyslexic' ? 'OpenDyslexic, sans-serif' :
                                     font.value === 'times' ? 'Times New Roman, serif' :
                                     font.value === 'comic' ? 'Comic Sans MS, cursive' : 'Arial, sans-serif'
                       }}>

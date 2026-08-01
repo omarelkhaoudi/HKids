@@ -16,11 +16,11 @@ export const KIDS_MODALITY = {
   audio: {
     id: 'audio',
     tone: 'orange',
-    gradient: 'from-orange-300 to-orange-500',
-    activeBg: 'bg-orange-400',
+    gradient: 'from-hkids-brown-light to-hkids-brown',
+    activeBg: 'bg-hkids-brown',
     glow: 'kids-glow-audio',
     shelfTint: 'text-foreground',
-    borderHover: 'hover:bg-orange-50',
+    borderHover: 'hover:bg-hkids-brown-soft',
   },
   learn: {
     id: 'learn',
@@ -34,11 +34,11 @@ export const KIDS_MODALITY = {
   create: {
     id: 'create',
     tone: 'magic',
-    gradient: 'from-magic-300 to-magic-500',
-    activeBg: 'bg-magic-500',
+    gradient: 'from-hkids-brown to-hkids-brown',
+    activeBg: 'bg-hkids-brown',
     glow: 'kids-glow-create',
     shelfTint: 'text-foreground',
-    borderHover: 'hover:bg-magic-50',
+    borderHover: 'hover:bg-hkids-brown-soft',
   },
   home: {
     id: 'home',
@@ -52,11 +52,11 @@ export const KIDS_MODALITY = {
   favorites: {
     id: 'favorites',
     tone: 'orange',
-    gradient: 'from-orange-300 to-orange-500',
-    activeBg: 'bg-orange-400',
+    gradient: 'from-hkids-brown-light to-hkids-brown',
+    activeBg: 'bg-hkids-brown',
     glow: 'kids-glow-audio',
     shelfTint: 'text-foreground',
-    borderHover: 'hover:bg-orange-50',
+    borderHover: 'hover:bg-hkids-brown-soft',
   },
 };
 

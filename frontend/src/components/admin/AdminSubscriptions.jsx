@@ -76,7 +76,7 @@ function AdminSubscriptions() {
  <div className="space-y-6 pb-12">
  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
  <div>
- <h1 className="text-3xl font-black text-foreground tracking-tight">{t('adminSubscriptionsTitle')}</h1>
+ <h1 className="text-3xl font-black text-foreground tracking-normal">{t('adminSubscriptionsTitle')}</h1>
  <p className="text-foreground-muted font-medium mt-1">{t('adminSubscriptionsSubtitle')}</p>
  </div>
  <Button variant="outline" className="bg-card text-foreground-secondary shadow-sm"><DownloadIcon className="w-4 h-4 me-2" /> {t('adminSubscriptionsExportCsv')}</Button>
@@ -86,36 +86,36 @@ function AdminSubscriptions() {
  <div className="bg-card rounded-[1.5rem] p-6 border border-border shadow-sm relative overflow-hidden group">
  <div className="absolute inset-0 bg-secondary-50 opacity-0 group-hover:opacity-100 transition-opacity"></div>
  <div className="relative z-10 flex justify-between items-start mb-2">
- <h3 className="text-sm font-bold text-foreground-muted uppercase tracking-wider">{t('adminSubscriptionsMrr')}</h3>
+ <h3 className="text-sm font-bold text-foreground-muted uppercase tracking-normal">{t('adminSubscriptionsMrr')}</h3>
  <div className="p-2 rounded-xl bg-secondary-100 text-secondary-600"><TrendingUpIcon className="w-5 h-5"/></div>
  </div>
  <div className="relative z-10">
- <span className="text-3xl font-black text-foreground tracking-tight">{totalRevenue.toFixed(2)} €</span>
+ <span className="text-3xl font-black text-foreground tracking-normal">{totalRevenue.toFixed(2)} €</span>
  <p className="text-xs text-secondary-600 font-bold mt-1 flex items-center gap-1"><TrendingUpIcon className="w-3 h-3"/> {t('adminSubscriptionsMrrDesc')}</p>
  </div>
  </div>
- 
+
  <div className="bg-card rounded-[1.5rem] p-6 border border-border shadow-sm relative overflow-hidden group">
  <div className="absolute inset-0 bg-primary-50 opacity-0 group-hover:opacity-100 transition-opacity"></div>
  <div className="relative z-10 flex justify-between items-start mb-2">
- <h3 className="text-sm font-bold text-foreground-muted uppercase tracking-wider">{t('adminSubscriptionsActive')}</h3>
+ <h3 className="text-sm font-bold text-foreground-muted uppercase tracking-normal">{t('adminSubscriptionsActive')}</h3>
  <div className="p-2 rounded-xl bg-primary-100 text-foreground-600"><CheckIcon className="w-5 h-5"/></div>
  </div>
  <div className="relative z-10">
- <span className="text-3xl font-black text-foreground tracking-tight">{activeCount}</span>
+ <span className="text-3xl font-black text-foreground tracking-normal">{activeCount}</span>
  <p className="text-xs text-foreground-muted font-medium mt-1">{t('adminSubscriptionsActiveDesc')}</p>
  </div>
  </div>
- 
+
  <div className="bg-card rounded-[1.5rem] p-6 border border-border shadow-sm relative overflow-hidden group">
- <div className="absolute inset-0 bg-rose-50 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+ <div className="absolute inset-0 bg-hkids-brown-soft opacity-0 group-hover:opacity-100 transition-opacity"></div>
  <div className="relative z-10 flex justify-between items-start mb-2">
- <h3 className="text-sm font-bold text-foreground-muted uppercase tracking-wider">{t('adminSubscriptionsChurned')}</h3>
- <div className="p-2 rounded-xl bg-rose-100 text-rose-600"><WarningIcon className="w-5 h-5"/></div>
+ <h3 className="text-sm font-bold text-foreground-muted uppercase tracking-normal">{t('adminSubscriptionsChurned')}</h3>
+ <div className="p-2 rounded-xl bg-hkids-brown-soft text-hkids-brown-dark"><WarningIcon className="w-5 h-5"/></div>
  </div>
  <div className="relative z-10">
- <span className="text-3xl font-black text-foreground tracking-tight">{canceledCount}</span>
- <p className="text-xs text-rose-500 font-bold mt-1">{t('adminSubscriptionsChurnedDesc')}</p>
+ <span className="text-3xl font-black text-foreground tracking-normal">{canceledCount}</span>
+ <p className="text-xs text-hkids-brown font-bold mt-1">{t('adminSubscriptionsChurnedDesc')}</p>
  </div>
  </div>
  </div>
@@ -132,8 +132,8 @@ function AdminSubscriptions() {
  className="w-full bg-card border border-border rounded-xl ps-10 pe-4 py-2 font-medium focus:outline-none focus:border-primary-400 focus:ring-2 focus:ring-primary-100 transition-all text-sm"
  />
  </div>
- <select 
- value={statusFilter} 
+ <select
+ value={statusFilter}
  onChange={(e) => setStatusFilter(e.target.value)}
  className="w-full sm:w-auto bg-card border border-border rounded-xl px-4 py-2 font-bold text-sm focus:outline-none focus:border-primary-400"
  >
@@ -151,11 +151,11 @@ function AdminSubscriptions() {
  <table className="w-full text-start border-collapse">
  <thead className="bg-card border-b border-border">
  <tr>
- <th className="px-6 py-4 text-xs font-bold text-surface-400 uppercase tracking-wider">{t('adminSubscriptionsHeaderParent')}</th>
- <th className="px-6 py-4 text-xs font-bold text-surface-400 uppercase tracking-wider">{t('adminSubscriptionsHeaderPlan')}</th>
- <th className="px-6 py-4 text-xs font-bold text-surface-400 uppercase tracking-wider">{t('adminSubscriptionsHeaderStatus')}</th>
- <th className="px-6 py-4 text-xs font-bold text-surface-400 uppercase tracking-wider text-end">{t('adminSubscriptionsHeaderRenewal')}</th>
- <th className="px-6 py-4 text-xs font-bold text-surface-400 uppercase tracking-wider text-end">{t('adminSubscriptionsHeaderActions')}</th>
+ <th className="px-6 py-4 text-xs font-bold text-surface-400 uppercase tracking-normal">{t('adminSubscriptionsHeaderParent')}</th>
+ <th className="px-6 py-4 text-xs font-bold text-surface-400 uppercase tracking-normal">{t('adminSubscriptionsHeaderPlan')}</th>
+ <th className="px-6 py-4 text-xs font-bold text-surface-400 uppercase tracking-normal">{t('adminSubscriptionsHeaderStatus')}</th>
+ <th className="px-6 py-4 text-xs font-bold text-surface-400 uppercase tracking-normal text-end">{t('adminSubscriptionsHeaderRenewal')}</th>
+ <th className="px-6 py-4 text-xs font-bold text-surface-400 uppercase tracking-normal text-end">{t('adminSubscriptionsHeaderActions')}</th>
  </tr>
  </thead>
  <tbody className="divide-y divide-border">
@@ -171,14 +171,14 @@ function AdminSubscriptions() {
  filteredSubscriptions.map((sub) => {
  let badgeVariant = 'secondary';
  let statusText = sub.status;
- 
+
  if (sub.status === 'active') {badgeVariant = 'success'; statusText = t('adminSubscriptionsDisplayActive');}
  else if (sub.status === 'trialing') {badgeVariant = 'primary'; statusText = t('adminSubscriptionsDisplayTrial');}
  else if (sub.status === 'past_due') {badgeVariant = 'danger'; statusText = t('adminSubscriptionsDisplayPastDue');}
  else if (sub.status === 'unpaid') {badgeVariant = 'danger'; statusText = t('adminSubscriptionsDisplayUnpaid');}
  else if (sub.status === 'paused') {badgeVariant = 'secondary'; statusText = t('adminSubscriptionsDisplaySuspended');}
  else if (sub.status === 'canceled') {badgeVariant = 'danger'; statusText = t('adminSubscriptionsDisplayCancelled');}
- 
+
  return (
  <tr key={sub.id} className="hover:bg-surface-secondary transition-colors">
  <td className="px-6 py-4">
@@ -206,7 +206,7 @@ function AdminSubscriptions() {
  sub.cancel_at_period_end ? (
  <Button size="sm" variant="primary" disabled={busyId === sub.id} onClick={() => manage(sub, 'resume')}>{t('adminSubscriptionsReactivate')}</Button>
  ) : (
- <Button size="sm" variant="outline" disabled={busyId === sub.id} onClick={() => manage(sub, 'cancel_at_period_end')} className="text-rose-600">{t('adminCancel')}</Button>
+ <Button size="sm" variant="outline" disabled={busyId === sub.id} onClick={() => manage(sub, 'cancel_at_period_end')} className="text-hkids-brown-dark">{t('adminCancel')}</Button>
  )
  ) : (
  <Button

@@ -52,7 +52,7 @@ const CinematicCard = ({ content, isFavorite, playing, onToggleAudio, onToggleFa
       {/* Top Badges */}
       <div className="absolute start-3 top-3 end-3 flex flex-wrap gap-2">
         {content.is_premium && (
-          <span className="flex items-center gap-1 rounded-full bg-gradient-to-r from-accent-400 to-accent-600 px-2 py-0.5 text-[10px] font-black text-white shadow-md">
+          <span className="flex items-center gap-1 rounded-full bg-gradient-to-r from-hkids-brown to-hkids-brown-dark px-2 py-0.5 text-[10px] font-black text-white shadow-md">
             <SparklesIcon className="h-3 w-3" /> PRO
           </span>
         )}
@@ -66,7 +66,7 @@ const CinematicCard = ({ content, isFavorite, playing, onToggleAudio, onToggleFa
       {/* Favorite Icon */}
       <div className="absolute end-3 top-3 flex flex-col gap-2">
         {isFavorite && (
-          <div className="rounded-full bg-rose-500 p-1.5 text-white shadow-md">
+          <div className="rounded-full bg-hkids-brown p-1.5 text-white shadow-md">
             <HeartIcon className="h-4 w-4" filled />
           </div>
         )}
@@ -74,7 +74,7 @@ const CinematicCard = ({ content, isFavorite, playing, onToggleAudio, onToggleFa
 
       {/* Hover Action Buttons */}
       <div className="absolute inset-0 flex items-center justify-center gap-4 opacity-0 transition-all duration-300 group-hover:opacity-100 bg-black/20 backdrop-blur-[2px]">
-        <motion.button 
+        <motion.button
           whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}
           onClick={(e) => { e.stopPropagation(); onToggleAudio(content); }}
           className={`flex h-14 w-14 items-center justify-center rounded-full shadow-glow ${playing ? 'bg-primary-500 text-white' : 'bg-white text-primary-600'}`}
@@ -135,8 +135,8 @@ const SectionCarousel = ({ title, icon: Icon, contents, audioPlayer, onToggleAud
           </button>
         </div>
       </div>
-      
-      <div 
+
+      <div
         ref={carouselRef}
         className="flex gap-4 overflow-x-auto px-4 md:px-8 pb-8 pt-2 snap-x snap-mandatory custom-scrollbar"
       >
@@ -145,9 +145,9 @@ const SectionCarousel = ({ title, icon: Icon, contents, audioPlayer, onToggleAud
           const playing = audioPlayer.activeBook?.id === content.id && audioPlayer.playing;
           return (
             <div key={content.id} className="snap-start shrink-0">
-              <CinematicCard 
-                content={content} 
-                isFavorite={isFavorite} 
+              <CinematicCard
+                content={content}
+                isFavorite={isFavorite}
                 playing={playing}
                 onToggleAudio={onToggleAudio}
                 onToggleFavorite={() => {}}
@@ -195,7 +195,7 @@ function ContentLibraryHome() {
   }, [contents]);
 
   const selectedCategory = CONTENT_LIBRARY_CATEGORIES.find((category) => category.id === filters.category) || null;
-  
+
   const visibleContents = useMemo(
     () => filterContentItems(contents, filters, selectedCategory),
     [contents, filters, selectedCategory]
@@ -230,7 +230,7 @@ function ContentLibraryHome() {
   return (
     <PlatformShell variant="library" className="pb-36">
       <div className="relative z-10 mx-auto max-w-7xl px-0 md:px-6 lg:px-8 pt-4">
-        
+
         {/* HEADER */}
         <header className="mb-6 flex items-center justify-between px-4 md:px-0 gap-4">
           <Link to="/" className="shrink-0">
@@ -246,16 +246,16 @@ function ContentLibraryHome() {
         </header>
 
         {/* PREMIUM HERO SECTION */}
-        <motion.section 
+        <motion.section
           initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
           className={`relative mb-12 overflow-hidden rounded-[2.5rem] bg-gradient-to-br ${BRAND_HERO_GRADIENT} p-8 md:p-14 text-white shadow-2xl mx-4 md:mx-0`}
         >
           <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4IiBoZWlnaHQ9IjgiPgo8cmVjdCB3aWR0aD0iOCIgaGVpZ2h0PSI4IiBmaWxsPSIjZmZmIiBmaWxsLW9wYWNpdHk9IjAuMDUiLz4KPC9zdmc+')] opacity-30 mix-blend-overlay"></div>
-          
+
           <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-8">
             <div className="max-w-2xl">
               <div className="inline-flex items-center gap-2 rounded-full bg-white/20 backdrop-blur-md border border-white/30 px-4 py-2 text-sm font-black mb-6 shadow-glass">
-                <SparklesIcon className="h-5 w-5 text-accent-200" />
+                <SparklesIcon className="h-5 w-5 text-hkids-brown-light" />
                 <span>{t('clhTitle')}</span>
               </div>
               <h1 className="text-4xl md:text-6xl font-black leading-tight mb-4 filter drop-shadow-lg">
@@ -265,7 +265,7 @@ function ContentLibraryHome() {
                 {t('clhHeroBody')}
               </p>
             </div>
-            
+
             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="shrink-0">
               <button
                 onClick={handleSurpriseMe}
@@ -311,22 +311,22 @@ function ContentLibraryHome() {
         <section className="mb-12 grid grid-cols-2 md:grid-cols-4 gap-4 px-4 md:px-0">
           <motion.div whileHover={{ y: -5 }} className={`bg-gradient-to-br ${hubGradientAtIndex(0)} rounded-3xl p-6 text-white shadow-floating relative overflow-hidden`}>
             <BookIcon className="w-12 h-12 text-white/30 absolute end-4 bottom-4" />
-            <p className="text-sm font-bold text-white/80 uppercase tracking-wider mb-1">{t('clhTotalContents')}</p>
+            <p className="text-sm font-bold text-white/80 uppercase tracking-normal mb-1">{t('clhTotalContents')}</p>
             <p className="text-4xl font-black">{contents.length}</p>
           </motion.div>
           <motion.div whileHover={{ y: -5 }} className={`bg-gradient-to-br ${hubGradientAtIndex(1)} rounded-3xl p-6 text-white shadow-floating relative overflow-hidden`}>
             <HeartIcon className="w-12 h-12 text-white/30 absolute end-4 bottom-4" filled />
-            <p className="text-sm font-bold text-white/80 uppercase tracking-wider mb-1">{t('clhFavorites')}</p>
+            <p className="text-sm font-bold text-white/80 uppercase tracking-normal mb-1">{t('clhFavorites')}</p>
             <p className="text-4xl font-black">{favoriteBooks.length}</p>
           </motion.div>
           <motion.div whileHover={{ y: -5 }} className={`bg-gradient-to-br ${hubGradientAtIndex(2)} rounded-3xl p-6 text-white shadow-floating relative overflow-hidden`}>
             <StarIcon className="w-12 h-12 text-white/30 absolute end-4 bottom-4" />
-            <p className="text-sm font-bold text-white/80 uppercase tracking-wider mb-1">{t('clhNew')}</p>
+            <p className="text-sm font-bold text-white/80 uppercase tracking-normal mb-1">{t('clhNew')}</p>
             <p className="text-4xl font-black">{newBooks.length}</p>
           </motion.div>
           <motion.div whileHover={{ y: -5 }} className={`bg-gradient-to-br ${storyGradientAtIndex(3)} rounded-3xl p-6 text-white shadow-floating relative overflow-hidden`}>
             <ClockIcon className="w-12 h-12 text-white/30 absolute end-4 bottom-4" />
-            <p className="text-sm font-bold text-white/80 uppercase tracking-wider mb-1">{t('clhMinutesListened')}</p>
+            <p className="text-sm font-bold text-white/80 uppercase tracking-normal mb-1">{t('clhMinutesListened')}</p>
             <p className="text-4xl font-black">{totalMinutes}</p>
           </motion.div>
         </section>
@@ -377,7 +377,7 @@ function ContentLibraryHome() {
               <SparklesIcon className="w-7 h-7 text-primary-500" />
               {t('clhSelectionOfDay')}
             </h2>
-            <motion.div 
+            <motion.div
               whileHover={{ scale: 1.01 }}
               className="group relative overflow-hidden rounded-[2.5rem] bg-surface-secondary shadow-lg cursor-pointer flex flex-col md:flex-row min-h-[300px]"
               onClick={() => toggleAudio(featuredBook)}
@@ -442,10 +442,10 @@ function ContentLibraryHome() {
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
                 <AnimatePresence>
                   {visibleContents.map(content => (
-                    <CinematicCard 
-                      key={content.id} 
-                      content={content} 
-                      isFavorite={storage.isFavorite(content.id)} 
+                    <CinematicCard
+                      key={content.id}
+                      content={content}
+                      isFavorite={storage.isFavorite(content.id)}
                       playing={audioPlayer.activeBook?.id === content.id && audioPlayer.playing}
                       onToggleAudio={toggleAudio}
                       onToggleFavorite={() => {}}
@@ -458,27 +458,27 @@ function ContentLibraryHome() {
         ) : (
           /* HORIZONTAL CAROUSELS */
           <div className="space-y-12">
-            <SectionCarousel 
-              title={t('clhRecommended')} 
-              icon={SparklesIcon} 
-              contents={recommendedBooks} 
+            <SectionCarousel
+              title={t('clhRecommended')}
+              icon={SparklesIcon}
+              contents={recommendedBooks}
               audioPlayer={audioPlayer}
               onToggleAudio={toggleAudio}
             />
-            
-            <SectionCarousel 
-              title={t('clhNew')} 
-              icon={BookIcon} 
-              contents={newBooks} 
+
+            <SectionCarousel
+              title={t('clhNew')}
+              icon={BookIcon}
+              contents={newBooks}
               audioPlayer={audioPlayer}
               onToggleAudio={toggleAudio}
             />
-            
+
             {favoriteBooks.length > 0 && (
-              <SectionCarousel 
-                title={t('clhMyFavorites')} 
-                icon={HeartIcon} 
-                contents={favoriteBooks} 
+              <SectionCarousel
+                title={t('clhMyFavorites')}
+                icon={HeartIcon}
+                contents={favoriteBooks}
                 audioPlayer={audioPlayer}
                 onToggleAudio={toggleAudio}
               />
@@ -487,7 +487,7 @@ function ContentLibraryHome() {
         )}
 
       </div>
-      
+
       {/* Audio Player */}
       <AudioPlayer
         book={audioPlayer.activeBook}

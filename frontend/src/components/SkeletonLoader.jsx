@@ -9,7 +9,7 @@ export function KidsBookCardSkeleton() {
       {...getMotionProps(reducedMotion, kidsCardAppear)}
       className="kids-story-card relative w-52 h-[17rem] md:w-60 md:h-80 shrink-0 overflow-hidden"
     >
-      <div className="absolute inset-0 bg-gradient-to-br from-primary-100 via-secondary-50 to-magic-100 dark:from-primary-900/40 dark:via-surface-800 dark:to-magic-900/30" />
+      <div className="absolute inset-0 bg-gradient-to-br from-primary-100 via-secondary-50 to-hkids-brown-light dark:from-primary-900/40 dark:via-surface-800 dark:to-hkids-brown-darker/30" />
       {!reducedMotion && <div className="absolute inset-0 kids-shimmer" aria-hidden="true" />}
       <div className="absolute bottom-4 left-4 right-4 h-4 rounded-full bg-card/55" />
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-14 w-14 rounded-full bg-card/65 border-4 border-card/40" />
@@ -52,7 +52,7 @@ export function BookCardSkeleton({ viewMode = 'grid' }) {
       transition={{ duration: 0.25 }}
       className="kids-story-card overflow-hidden"
     >
-      <div className="h-48 bg-gradient-to-br from-primary-100 via-secondary-50 to-magic-100 dark:from-primary-900/40 dark:via-surface-800 dark:to-magic-900/30 relative overflow-hidden">
+      <div className="h-48 bg-gradient-to-br from-primary-100 via-secondary-50 to-hkids-brown-light dark:from-primary-900/40 dark:via-surface-800 dark:to-hkids-brown-darker/30 relative overflow-hidden">
         <div className="absolute inset-0 kids-shimmer" aria-hidden="true" />
       </div>
       <div className="p-space-20 space-y-space-12">

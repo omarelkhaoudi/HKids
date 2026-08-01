@@ -107,7 +107,7 @@ export function LearningInteractiveChallenge({
     return (
       <div className="space-y-4 text-center">
         <h3 className="text-heading-m font-black">{eduLabel('eduCountTitle', language)}</h3>
-        <p className="text-5xl tracking-widest" aria-hidden="true">{challenge.items.join(' ')}</p>
+        <p className="text-5xl tracking-normal" aria-hidden="true">{challenge.items.join(' ')}</p>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {challenge.options.map((n) => (
             <button
@@ -137,7 +137,7 @@ export function LearningInteractiveChallenge({
     return (
       <div className="space-y-4 text-center">
         <h3 className="text-heading-m font-black">{eduLabel('eduSequenceTitle', language)}</h3>
-        <p className="text-4xl font-black tracking-wider">{challenge.sequence.join('  ')}</p>
+        <p className="text-4xl font-black tracking-normal">{challenge.sequence.join('  ')}</p>
         <div className="flex flex-wrap justify-center gap-3">
           {challenge.options.map((opt) => (
             <button

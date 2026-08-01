@@ -106,7 +106,7 @@ export const KidsAmbientSound = memo(function KidsAmbientSound({
             onClick={() => handleSelect(item.id)}
             className={`kids-touch-target !min-h-[48px] !min-w-[48px] rounded-full border-2 px-3 py-2 text-xl transition ${
               activePreset === item.id
-                ? 'bg-accent-400/90 border-white text-white shadow-md'
+                ? 'bg-hkids-brown/90 border-white text-white shadow-md'
                 : 'bg-white/20 border-white/40 text-white/90 hover:bg-white/30'
             }`}
             aria-pressed={activePreset === item.id}

@@ -197,7 +197,7 @@ function PDFPageViewer({pdfUrl, pageNumber, onLoad, onPdfLoaded, imageClassName 
 
  useEffect(() => {
  let cancelled = false;
- 
+
  const loadPage = async () => {
  if (!pdfUrl) {
  setError(i18nT('kidReaderErrorPdfUrlMissing'));
@@ -220,37 +220,37 @@ function PDFPageViewer({pdfUrl, pageNumber, onLoad, onPdfLoaded, imageClassName 
  httpHeaders: {},
  verbosity: 0 // Réduire les logs
 });
- 
+
  const pdf = await loadingTask.promise;
- 
+
  if (cancelled) return;
- 
+
  // Notifier le composant parent du nombre de pages
  if (onPdfLoaded) {
  onPdfLoaded(pdf.numPages);
 }
- 
+
  // Vérifier que le numéro de page est valide
  const validPageNumber = Math.min(Math.max(1, pageNumber), pdf.numPages);
  const page = await pdf.getPage(validPageNumber);
- 
+
  if (cancelled) return;
- 
+
  // Calculer la taille du viewport pour s'adapter au conteneur
  const viewport = page.getViewport({scale: 2.0});
- 
+
  const canvas = document.createElement('canvas');
  const context = canvas.getContext('2d');
  canvas.height = viewport.height;
  canvas.width = viewport.width;
- 
+
  await page.render({
  canvasContext: context,
  viewport: viewport
 }).promise;
- 
+
  if (cancelled) return;
- 
+
  const dataUrl = canvas.toDataURL('image/png');
  setImageUrl(dataUrl);
  if (onLoad) onLoad(dataUrl);
@@ -258,7 +258,7 @@ function PDFPageViewer({pdfUrl, pageNumber, onLoad, onPdfLoaded, imageClassName 
  if (cancelled) return;
  console.error('Erreur chargement PDF:', error);
  console.error('URL du PDF:', pdfUrl);
- 
+
  // Messages d'erreur plus détaillés
  let errorMessage = i18nT('kidReaderErrorPdfLoad');
  if (error.message) {
@@ -279,9 +279,9 @@ function PDFPageViewer({pdfUrl, pageNumber, onLoad, onPdfLoaded, imageClassName 
 }
 }
 };
- 
+
  loadPage();
- 
+
  return () => {
  cancelled = true;
 };
@@ -394,17 +394,17 @@ function PremiumReaderState({ title, description, actionLabel, onAction, reduced
 // Composant pour les confettis de célébration
 function Confetti({show}) {
  if (!show) return null;
- 
+
  const colors = [
  'var(--color-secondary-400)',
  'var(--color-danger-500)',
  'var(--color-success-400)',
  'var(--color-primary-400)',
- 'var(--color-orange-400)',
- 'var(--color-magic-400)',
+ 'var(--hkids-brown)',
+ 'var(--hkids-brown)',
  'var(--color-secondary-300)'
  ];
- 
+
  return (
  <div className="fixed inset-0 pointer-events-none z-50 overflow-hidden">
  {Array.from({length: 50}).map((_, i) => (
@@ -865,7 +865,7 @@ function BookReader() {
  const distance = touchStart - touchEnd;
  const isLeftSwipe = distance > minSwipeDistance;
  const isRightSwipe = distance < -minSwipeDistance;
- 
+
  if (isLeftSwipe) nextPage();
  if (isRightSwipe) prevPage();
 };
@@ -875,10 +875,10 @@ function BookReader() {
  const firstPageData = book?.pages?.[0];
  const isPDF = firstPageData?.image_path?.toLowerCase().endsWith('.pdf');
  const firstPageUrl = firstPageData?.image_path ? getFileUrl(firstPageData.image_path) : null;
- const effectiveTotalPages = (isPDF && pdfTotalPages && currentPdfUrl === firstPageUrl) 
- ? pdfTotalPages 
+ const effectiveTotalPages = (isPDF && pdfTotalPages && currentPdfUrl === firstPageUrl)
+ ? pdfTotalPages
  : (book?.pages?.length || 0);
- 
+
  if (book && currentPage < effectiveTotalPages - 1 && !isTurning) {
  setPageDirection('next');
  setIsTurning(true);
@@ -893,7 +893,7 @@ function BookReader() {
  setIsPlaying(false);
  setSpeechUtterance(null);
 }
- 
+
  setTimeout(() => {
  setCurrentPage(prev => {
  const newPage = prev + 1;
@@ -928,7 +928,7 @@ function BookReader() {
  setIsPlaying(false);
  setSpeechUtterance(null);
 }
- 
+
  setTimeout(() => {
  setCurrentPage(prev => prev - 1);
  setTimeout(() => setIsTurning(false), Math.round(KIDS_MOTION_DURATION.slow * 1000));
@@ -967,7 +967,7 @@ function BookReader() {
  const firstPageData = book.pages[0];
  const isPDF = firstPageData?.image_path?.toLowerCase().endsWith('.pdf');
  const pageData = isPDF ? firstPageData : book.pages[currentPage];
- 
+
  if (!pageData) {
  showToast(t('kidReaderToastPageNotFound'), 'error', 3000);
  return;
@@ -980,11 +980,11 @@ function BookReader() {
  try {
  const fileUrl = getFileUrl(pageData.image_path);
  const fileExtension = pageData.image_path.toLowerCase().split('.').pop();
- 
+
  // Vérifier si c'est un PDF
  if (fileExtension === 'pdf') {
  const cacheKey = `${fileUrl}-${currentPage + 1}`;
- 
+
  // Vérifier si on a déjà extrait le texte de cette page du PDF
  if (extractedTexts[cacheKey]) {
  textToRead = extractedTexts[cacheKey];
@@ -1020,7 +1020,7 @@ function BookReader() {
 }
 
  const voices = await waitForSpeechVoices();
- 
+
  if (voices.length === 0) {
  showToast(t('kidReaderToastNoVoice'), 'error', 3000);
  return;
@@ -1030,7 +1030,7 @@ function BookReader() {
  const narrationSentences = splitTextIntoSentences(textToRead);
  const selectedProfile = voiceProfiles.find((profile) => profile.id === selectedVoiceProfile) || voiceProfiles[0];
  const narrationVoice = pickNarrationVoice(voices, selectedProfile);
- 
+
  const speechLocale = getLocaleFromLanguage(language);
  if (narrationVoice) {
  utterance.voice = narrationVoice;
@@ -1070,7 +1070,7 @@ function BookReader() {
  setIsPlaying(false);
  setSpeechUtterance(null);
  setCurrentSentenceIndex(-1);
- 
+
  // Messages d'erreur plus spécifiques
  let errorMessage = t('kidReaderToastAudioPlayError');
  if (event.error === 'not-allowed') {
@@ -1082,7 +1082,7 @@ function BookReader() {
 } else if (event.error === 'synthesis-unavailable') {
  errorMessage = t('kidReaderSpeechNotAvailable');
 }
- 
+
  showToast(errorMessage, 'error', 3000);
 };
 
@@ -1093,7 +1093,7 @@ function BookReader() {
  };
 
  setSpeechUtterance(utterance);
- 
+
  // Vérifier que speechSynthesis est toujours disponible et qu'il n'est pas déjà en train de parler
  if (!window.speechSynthesis) {
  showToast(t('kidReaderToastSpeechUnavailable'), 'error', 3000);
@@ -1185,10 +1185,10 @@ function BookReader() {
  const voices = window.speechSynthesis.getVoices();
  setAvailableVoices(voices);
 };
- 
+
  loadVoices();
  window.speechSynthesis.onvoiceschanged = loadVoices;
- 
+
  return () => {
  window.speechSynthesis.onvoiceschanged = null;
 };
@@ -1205,21 +1205,21 @@ function BookReader() {
  // Charger le document PDF
  const loadingTask = pdfjsLib.getDocument(pdfUrl);
  const pdf = await loadingTask.promise;
- 
+
  // Mettre en cache le document PDF
  setPdfDocuments(prev => ({
  ...prev,
  [pdfUrl]: pdf
 }));
- 
+
  // Obtenir la page spécifique (pageNumber est 1-indexed dans PDF)
  const page = await pdf.getPage(pageNumber);
- 
+
  // Extraire le texte de la page
  const textContent = await page.getTextContent();
  const textItems = textContent.items.map(item => item.str);
  const fullText = textItems.join(' ').trim();
- 
+
  if (fullText) {
  // Mettre en cache le texte extrait avec la clé pdfUrl-pageNumber
  const cacheKey = `${pdfUrl}-${pageNumber}`;
@@ -1235,7 +1235,7 @@ function BookReader() {
 } catch (error) {
  console.error('Erreur extraction PDF:', error);
  console.error('URL du PDF:', pdfUrl);
- 
+
  let errorMessage = t('kidReaderPdfExtractError');
  if (error.message) {
  if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
@@ -1264,10 +1264,10 @@ function BookReader() {
  try {
  setIsExtracting(true);
  showToast(t('kidReaderToastImageExtracting'), 'info', 2000);
- 
+
  const {data: {text}} = await worker.recognize(imageUrl);
  const cleanedText = text.trim();
- 
+
  if (cleanedText) {
  // Mettre en cache le texte extrait
  setExtractedTexts(prev => ({
@@ -1567,13 +1567,13 @@ function BookReader() {
  const firstPageData = book.pages[0];
  const isPDF = firstPageData?.image_path?.toLowerCase().endsWith('.pdf');
  const currentPageData = isPDF ? firstPageData : book.pages[currentPage];
- 
+
  // Si c'est un PDF, utiliser le nombre de pages du PDF, sinon utiliser le nombre de pages dans la base
  const firstPageUrl = firstPageData?.image_path ? getFileUrl(firstPageData.image_path) : null;
- const effectiveTotalPages = (isPDF && pdfTotalPages && currentPdfUrl === firstPageUrl) 
- ? pdfTotalPages 
+ const effectiveTotalPages = (isPDF && pdfTotalPages && currentPdfUrl === firstPageUrl)
+ ? pdfTotalPages
  : book.pages.length;
- 
+
  const totalPages = effectiveTotalPages;
  const isFirstPage = currentPage === 0;
  const isLastPage = currentPage === totalPages - 1;
@@ -1614,7 +1614,7 @@ function BookReader() {
    : t(`readerVoiceStyle_${activeVoiceProfile.id}`);
 
  return (
- <motion.div 
+ <motion.div
  ref={readerRef}
  data-reader-theme={readerTheme}
  data-reader-mood={isKidReader ? storyMood : undefined}
@@ -1750,8 +1750,8 @@ function BookReader() {
  if (isPagePDF) {
  return (
  <div className="w-full max-h-[85vh] overflow-hidden kids-reader-page-card">
- <PDFPageViewer 
- pdfUrl={fileUrl} 
+ <PDFPageViewer
+ pdfUrl={fileUrl}
  pageNumber={currentPage + 1}
  imageClassName="w-full h-full object-contain"
  isKidMinimal={isKidReader}
@@ -1815,7 +1815,7 @@ function BookReader() {
  <div className="w-full kids-reader-page-card">
  <div className="kids-reader-text-page">
  {pageText && (
- <div 
+ <div
  className="kids-reader-text-body"
  style={{
  fontSize: isKidReader ? undefined : `${readingSettings.fontSize}px`,

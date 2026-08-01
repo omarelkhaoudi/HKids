@@ -49,7 +49,7 @@ export const DEFAULT_PREMIUM_PACKS = [
   {
     id: 'dinosaurs',
     emoji: '🦖',
-    gradient: 'from-green-500 to-emerald-700',
+    gradient: 'from-hkids-green to-hkids-green-dark',
     labelKey: 'premPackDinos',
     descKey: 'premPackDinosDesc',
     themes: ['dinosaurs', 'dino'],
@@ -62,7 +62,7 @@ export const DEFAULT_PREMIUM_PACKS = [
   {
     id: 'space',
     emoji: '🚀',
-    gradient: 'from-indigo-500 to-purple-700',
+    gradient: 'from-hkids-green to-hkids-brown-dark',
     labelKey: 'premPackSpace',
     descKey: 'premPackSpaceDesc',
     themes: ['space', 'planet', 'rocket'],
@@ -74,7 +74,7 @@ export const DEFAULT_PREMIUM_PACKS = [
   {
     id: 'princesses',
     emoji: '👸',
-    gradient: 'from-pink-400 to-rose-500',
+    gradient: 'from-hkids-brown to-hkids-brown',
     labelKey: 'premPackPrincess',
     descKey: 'premPackPrincessDesc',
     themes: ['princess', 'fairy', 'magic'],
@@ -86,7 +86,7 @@ export const DEFAULT_PREMIUM_PACKS = [
   {
     id: 'bedtime',
     emoji: '🌙',
-    gradient: 'from-indigo-400 to-slate-700',
+    gradient: 'from-hkids-green to-hkids-brown-dark',
     labelKey: 'premPackBedtime',
     descKey: 'premPackBedtimeDesc',
     themes: ['bedtime', 'sleep', 'night'],
@@ -98,7 +98,7 @@ export const DEFAULT_PREMIUM_PACKS = [
   {
     id: 'music',
     emoji: '🎵',
-    gradient: 'from-fuchsia-400 to-violet-500',
+    gradient: 'from-hkids-brown to-hkids-brown',
     labelKey: 'premPackMusic',
     descKey: 'premPackMusicDesc',
     themes: ['music', 'rhyme', 'song'],
@@ -110,7 +110,7 @@ export const DEFAULT_PREMIUM_PACKS = [
   {
     id: 'values',
     emoji: '🕌',
-    gradient: 'from-amber-500 to-orange-700',
+    gradient: 'from-hkids-brown to-hkids-brown-dark',
     labelKey: 'premPackValues',
     descKey: 'premPackValuesDesc',
     themes: ['values', 'spiritual', 'kindness', 'culture'],
@@ -122,7 +122,7 @@ export const DEFAULT_PREMIUM_PACKS = [
   {
     id: 'world',
     emoji: '🌍',
-    gradient: 'from-lime-400 to-teal-600',
+    gradient: 'from-hkids-green to-hkids-green-dark',
     labelKey: 'premPackWorld',
     descKey: 'premPackWorldDesc',
     themes: ['world', 'geography', 'travel'],
@@ -134,7 +134,7 @@ export const DEFAULT_PREMIUM_PACKS = [
   {
     id: 'creativity',
     emoji: '🎨',
-    gradient: 'from-yellow-400 to-orange-500',
+    gradient: 'from-hkids-brown to-hkids-brown',
     labelKey: 'premPackCreativity',
     descKey: 'premPackCreativityDesc',
     themes: ['creativity', 'art', 'colors'],
@@ -160,7 +160,7 @@ export const DEFAULT_PREMIUM_PACKS = [
   {
     id: 'ai_stories',
     emoji: '✨',
-    gradient: 'from-violet-400 to-fuchsia-600',
+    gradient: 'from-hkids-brown to-hkids-brown-dark',
     labelKey: 'premPackAi',
     descKey: 'premPackAiDesc',
     themes: ['ai', 'create'],
@@ -174,7 +174,7 @@ export const DEFAULT_PREMIUM_PACKS = [
   {
     id: 'seasonal_ramadan',
     emoji: '🌙',
-    gradient: 'from-emerald-600 to-teal-800',
+    gradient: 'from-hkids-green-dark to-hkids-green-darker',
     labelKey: 'premPackRamadan',
     descKey: 'premPackRamadanDesc',
     themes: ['ramadan', 'values'],
@@ -188,7 +188,7 @@ export const DEFAULT_PREMIUM_PACKS = [
   {
     id: 'seasonal_eid',
     emoji: '🎁',
-    gradient: 'from-amber-400 to-rose-500',
+    gradient: 'from-hkids-brown to-hkids-brown',
     labelKey: 'premPackEid',
     descKey: 'premPackEidDesc',
     themes: ['eid', 'celebration'],
@@ -201,7 +201,7 @@ export const DEFAULT_PREMIUM_PACKS = [
   {
     id: 'seasonal_summer',
     emoji: '🏖️',
-    gradient: 'from-sky-400 to-cyan-500',
+    gradient: 'from-hkids-green to-hkids-green',
     labelKey: 'premPackSummer',
     descKey: 'premPackSummerDesc',
     themes: ['summer', 'beach', 'ocean'],
@@ -214,7 +214,7 @@ export const DEFAULT_PREMIUM_PACKS = [
   {
     id: 'seasonal_school',
     emoji: '📚',
-    gradient: 'from-orange-400 to-red-500',
+    gradient: 'from-hkids-brown to-hkids-brown',
     labelKey: 'premPackSchool',
     descKey: 'premPackSchoolDesc',
     themes: ['school', 'alphabet', 'numbers'],
@@ -227,7 +227,7 @@ export const DEFAULT_PREMIUM_PACKS = [
   {
     id: 'seasonal_halloween',
     emoji: '🎃',
-    gradient: 'from-orange-600 to-purple-800',
+    gradient: 'from-hkids-brown-dark to-hkids-brown-darker',
     labelKey: 'premPackHalloween',
     descKey: 'premPackHalloweenDesc',
     themes: ['halloween', 'spooky'],
@@ -240,7 +240,7 @@ export const DEFAULT_PREMIUM_PACKS = [
   {
     id: 'seasonal_christmas',
     emoji: '🎄',
-    gradient: 'from-red-500 to-green-600',
+    gradient: 'from-hkids-brown to-hkids-green-dark',
     labelKey: 'premPackChristmas',
     descKey: 'premPackChristmasDesc',
     themes: ['christmas', 'winter', 'snow'],
@@ -254,7 +254,7 @@ export const DEFAULT_PREMIUM_PACKS = [
   {
     id: 'seasonal_new_year',
     emoji: '✨',
-    gradient: 'from-yellow-300 to-violet-600',
+    gradient: 'from-hkids-brown-light to-hkids-brown-dark',
     labelKey: 'premPackNewYear',
     descKey: 'premPackNewYearDesc',
     themes: ['new year', 'celebration'],
@@ -267,7 +267,7 @@ export const DEFAULT_PREMIUM_PACKS = [
   {
     id: 'seasonal_spring',
     emoji: '🌷',
-    gradient: 'from-pink-300 to-lime-400',
+    gradient: 'from-hkids-brown-light to-hkids-green',
     labelKey: 'premPackSpring',
     descKey: 'premPackSpringDesc',
     themes: ['spring', 'nature', 'flower'],
@@ -280,7 +280,7 @@ export const DEFAULT_PREMIUM_PACKS = [
   {
     id: 'seasonal_winter',
     emoji: '⛄',
-    gradient: 'from-sky-200 to-indigo-400',
+    gradient: 'from-hkids-green-light to-hkids-green',
     labelKey: 'premPackWinter',
     descKey: 'premPackWinterDesc',
     themes: ['winter', 'snow', 'ice'],

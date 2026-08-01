@@ -14,9 +14,9 @@ const getPasswordStrength = (pass, t) => {
  if (pass.length > 8) score += 1;
  if (/[A-Z]/.test(pass)) score += 1;
  if (/[0-9]/.test(pass)) score += 1;
- 
- if (score <= 1) return {score, label: t('parentSignUpPasswordWeak'), color: 'bg-red-400'};
- if (score === 2) return {score, label: t('parentSignUpPasswordMedium'), color: 'bg-accent-400'};
+
+ if (score <= 1) return {score, label: t('parentSignUpPasswordWeak'), color: 'bg-hkids-brown'};
+ if (score === 2) return {score, label: t('parentSignUpPasswordMedium'), color: 'bg-hkids-brown'};
  if (score === 3) return {score, label: t('parentSignUpPasswordGood'), color: 'bg-primary-400'};
  return {score, label: t('parentSignUpPasswordStrong'), color: 'bg-secondary-500'};
 };
@@ -28,7 +28,7 @@ export default function ParentSignUp() {
  const [showPassword, setShowPassword] = useState(false);
  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
  const [termsAccepted, setTermsAccepted] = useState(false);
- 
+
  const [error, setError] = useState('');
  const [loading, setLoading] = useState(false);
  const [success, setSuccess] = useState(false);
@@ -85,10 +85,10 @@ export default function ParentSignUp() {
 
  return (
  <div className="min-h-screen bg-card flex flex-col lg:flex-row overflow-hidden font-sans" dir={isRtl ? 'rtl' : 'ltr'}>
- 
+
  <div className="absolute top-6 start-6 z-50">
  <Link to="/">
- <motion.button 
+ <motion.button
  whileHover={{scale: 1.05}}
  whileTap={{scale: 0.95}}
  className="flex items-center gap-2 px-5 py-2.5 bg-card/80 backdrop-blur-md border border-border rounded-[1.5rem] shadow-sm text-foreground-secondary font-bold text-sm hover:text-foreground hover:shadow-md transition-all"
@@ -101,13 +101,13 @@ export default function ParentSignUp() {
 
  <div className="hidden lg:flex lg:w-1/2 relative bg-gradient-to-br from-secondary-50 via-secondary-100/40 to-primary-50 items-center justify-center p-12 overflow-hidden border-e border-secondary-100">
  <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
- <div className="absolute top-[10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-accent-300/20 blur-[100px]"></div>
+ <div className="absolute top-[10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-hkids-brown/20 blur-[100px]"></div>
  <div className="absolute bottom-[-10%] left-[-10%] w-[60%] h-[60%] rounded-full bg-primary-300/20 blur-[120px]"></div>
- 
+
  {mounted && Array.from({length: 8}).map((_, i) => (
  <motion.div
  key={i}
- className="absolute text-accent-400 opacity-60"
+ className="absolute text-hkids-brown opacity-60"
  style={{
  left: `${15 + Math.random() * 70}%`,
  top: `${15 + Math.random() * 70}%`,
@@ -129,27 +129,27 @@ export default function ParentSignUp() {
  ))}
  </div>
 
- <motion.div 
+ <motion.div
  initial={{opacity: 0, y: 40}}
  animate={{opacity: 1, y: 0}}
  transition={{duration: 0.8, delay: 0.2}}
  className="relative z-10 w-full max-w-lg flex flex-col items-center text-center"
  >
  <div className="relative w-full aspect-square mb-12">
- <div className="absolute inset-4 bg-card/40 backdrop-blur-3xl rounded-[3rem] border border-white shadow-[0_30px_60px_-15px_rgba(72,175,202,0.15)] overflow-hidden flex items-center justify-center p-6">
- <img 
- src="/enfant 5 8ans.webp" 
- alt={t('parentSignUpHeroAlt')} 
+ <div className="absolute inset-4 bg-card/40 backdrop-blur-3xl rounded-[3rem] border border-white shadow-[0_30px_60px_-15px_rgba(var(--hkids-green-rgb),0.16)] overflow-hidden flex items-center justify-center p-6">
+ <img
+ src="/enfant 5 8ans.webp"
+ alt={t('parentSignUpHeroAlt')}
  className="w-full h-full object-contain filter drop-shadow-2xl"
  onError={(e) => {e.currentTarget.src = '/enfant3ans.webp'}}
  />
- 
- <motion.div 
+
+ <motion.div
  animate={{y: [-5, 5, -5]}}
  transition={{duration: 4, repeat: Infinity, ease:"easeInOut"}}
  className="absolute bottom-4 start-4 bg-card/90 backdrop-blur-md px-4 py-3 rounded-2xl shadow-xl border border-white/50 flex items-center gap-3"
  >
- <div className="w-10 h-10 rounded-full bg-accent-100 flex items-center justify-center text-xl">🎓</div>
+ <div className="w-10 h-10 rounded-full bg-hkids-brown-light flex items-center justify-center text-xl">🎓</div>
  <div className="text-start">
  <div className="text-sm font-extrabold text-foreground">{t('parentSignUpBadgeTitle')}</div>
  <div className="text-xs font-bold text-foreground-muted">{t('parentSignUpBadgeDesc')}</div>
@@ -158,7 +158,7 @@ export default function ParentSignUp() {
  </div>
  </div>
 
- <h2 className="text-4xl lg:text-5xl font-extrabold text-foreground tracking-tight leading-[1.1] mb-4 whitespace-pre-line">
+ <h2 className="text-4xl lg:text-5xl font-extrabold text-foreground tracking-normal leading-[1.1] mb-4 whitespace-pre-line">
  {t('parentSignUpHeroTitle')}
  </h2>
  <p className="text-lg text-foreground-secondary font-medium max-w-sm">
@@ -168,13 +168,13 @@ export default function ParentSignUp() {
  </div>
 
  <div className="w-full lg:w-1/2 flex items-center justify-center p-6 sm:p-12 lg:p-20 relative bg-card">
- 
+
  <div className="w-full max-w-[420px] mx-auto">
  <div className="lg:hidden flex flex-col items-center text-center mb-10 pt-16">
  <div className="w-16 h-16 rounded-3xl bg-secondary-50 flex items-center justify-center mb-6">
  <Logo size="small" showText={true} />
  </div>
- <h1 className="text-3xl font-extrabold text-foreground tracking-tight mb-2">{t('parentSignUpMobileTitle')}</h1>
+ <h1 className="text-3xl font-extrabold text-foreground tracking-normal mb-2">{t('parentSignUpMobileTitle')}</h1>
  <p className="text-foreground-secondary font-medium">{t('parentSignUpMobileSubtitle')}</p>
  </div>
 
@@ -182,7 +182,7 @@ export default function ParentSignUp() {
  <div className="w-14 h-14 rounded-[1.2rem] bg-gradient-to-br from-secondary-500 to-secondary-600 shadow-lg flex items-center justify-center mb-8">
  <Logo size="small" showText={true} className="text-white" />
  </div>
- <h1 className="text-3xl font-extrabold text-foreground tracking-tight mb-2">{t('parentSignUpTitle')}</h1>
+ <h1 className="text-3xl font-extrabold text-foreground tracking-normal mb-2">{t('parentSignUpTitle')}</h1>
  <p className="text-foreground-secondary font-medium">{t('parentSignUpSubtitle')}</p>
  </div>
 
@@ -194,7 +194,7 @@ export default function ParentSignUp() {
  animate={{opacity: 1, scale: 1}}
  className="flex flex-col items-center justify-center py-12 text-center"
  >
- <motion.div 
+ <motion.div
  initial={{scale: 0}}
  animate={{scale: 1}}
  transition={{type:"spring", bounce: 0.5}}
@@ -218,11 +218,11 @@ export default function ParentSignUp() {
  initial={{opacity: 0, y: -10, scale: 0.98}}
  animate={{opacity: 1, y: 0, scale: 1}}
  exit={{opacity: 0, scale: 0.98}}
- className="mb-8 p-4 bg-red-50/80 backdrop-blur-sm border border-red-100 rounded-2xl flex items-start gap-3 shadow-sm"
+ className="mb-8 p-4 bg-hkids-brown-soft/80 backdrop-blur-sm border border-hkids-brown-soft rounded-2xl flex items-start gap-3 shadow-sm"
  role="alert"
  >
- <AlertIcon className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
- <p className="text-sm font-semibold text-red-700 leading-relaxed">{error}</p>
+ <AlertIcon className="w-5 h-5 text-hkids-brown flex-shrink-0 mt-0.5" />
+ <p className="text-sm font-semibold text-hkids-brown-dark leading-relaxed">{error}</p>
  </motion.div>
  )}
  </AnimatePresence>
@@ -233,7 +233,7 @@ export default function ParentSignUp() {
  {t('parentSignUpUsername')}
  </label>
  <div className="relative group">
- <div className="absolute start-4 top-1/2 -translate-y-1/2 text-surface-400 group-focus-within:text-foreground-secondary-500 transition-colors">
+ <div className="absolute start-4 top-1/2 -translate-y-1/2 text-surface-400 group-focus-within:text-foreground-secondary transition-colors">
  <UserIcon className="w-5 h-5" />
  </div>
  <input
@@ -255,7 +255,7 @@ export default function ParentSignUp() {
  {t('parentSignUpPassword')}
  </label>
  <div className="relative group">
- <div className="absolute start-4 top-1/2 -translate-y-1/2 text-surface-400 group-focus-within:text-foreground-secondary-500 transition-colors">
+ <div className="absolute start-4 top-1/2 -translate-y-1/2 text-surface-400 group-focus-within:text-foreground-secondary transition-colors">
  <LockIcon className="w-5 h-5" />
  </div>
  <input
@@ -282,13 +282,13 @@ export default function ParentSignUp() {
  <div className="px-2 pt-1 flex items-center gap-2">
  <div className="flex-1 flex gap-1 h-1.5 rounded-full overflow-hidden bg-surface-secondary">
  {[1, 2, 3, 4].map((level) => (
- <div 
- key={level} 
+ <div
+ key={level}
  className={`flex-1 transition-all duration-300 ${level <= strength.score ? strength.color : 'bg-transparent'}`}
  />
  ))}
  </div>
- <span className={`text-[10px] font-bold uppercase tracking-wider ${password.length >= 6 ? 'text-foreground-muted' : 'text-red-400'}`}>
+ <span className={`text-[10px] font-bold uppercase tracking-normal ${password.length >= 6 ? 'text-foreground-muted' : 'text-hkids-brown'}`}>
  {password.length < 6 ? t('parentSignUpPasswordTooShort') : strength.label}
  </span>
  </div>
@@ -300,7 +300,7 @@ export default function ParentSignUp() {
  {t('parentSignUpConfirmPassword')}
  </label>
  <div className="relative group">
- <div className="absolute start-4 top-1/2 -translate-y-1/2 text-surface-400 group-focus-within:text-foreground-secondary-500 transition-colors">
+ <div className="absolute start-4 top-1/2 -translate-y-1/2 text-surface-400 group-focus-within:text-foreground-secondary transition-colors">
  <LockIcon className="w-5 h-5" />
  </div>
  <input
@@ -309,8 +309,8 @@ export default function ParentSignUp() {
  value={confirmPassword}
  onChange={(e) => setConfirmPassword(e.target.value)}
  className={`w-full ps-12 pe-14 py-4 bg-surface-secondary border-2 rounded-[1.5rem] focus:bg-card focus:ring-4 outline-none transition-all font-medium text-foreground placeholder:text-surface-400 ${
- confirmPassword && password !== confirmPassword 
- ? 'border-red-300 focus:border-red-500 focus:ring-red-500/10' 
+ confirmPassword && password !== confirmPassword
+ ? 'border-hkids-brown-light focus:border-hkids-brown focus:ring-hkids-brown/10'
  : 'border-border focus:border-secondary-500 focus:ring-secondary-500/10'
 }`}
  placeholder={t('parentSignUpConfirmPlaceholder')}
@@ -331,11 +331,11 @@ export default function ParentSignUp() {
  <div className="pt-2 pb-2">
  <label className="flex items-start gap-3 cursor-pointer group">
  <div className="relative w-6 h-6 shrink-0 mt-0.5 rounded-lg border-2 border-surface-300 group-hover:border-secondary-500 flex items-center justify-center transition-colors">
- <input 
- type="checkbox" 
+ <input
+ type="checkbox"
  checked={termsAccepted}
  onChange={(e) => setTermsAccepted(e.target.checked)}
- className="peer absolute opacity-0 w-full h-full cursor-pointer" 
+ className="peer absolute opacity-0 w-full h-full cursor-pointer"
  />
  <div className="w-full h-full bg-secondary-500 rounded-[6px] opacity-0 peer-checked:opacity-100 flex items-center justify-center transition-opacity">
  <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3} aria-hidden="true"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
@@ -352,7 +352,7 @@ export default function ParentSignUp() {
  disabled={loading || !termsAccepted}
  whileHover={{scale: (loading || !termsAccepted) ? 1 : 1.01}}
  whileTap={{scale: (loading || !termsAccepted) ? 1 : 0.99}}
- className="w-full mt-6 py-4 bg-secondary-500 hover:bg-secondary-600 text-white rounded-[1.5rem] font-bold text-lg shadow-[0_8px_20px_-6px_rgba(72,175,202,0.4)] hover:shadow-[0_12px_25px_-6px_rgba(72,175,202,0.5)] transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-none flex items-center justify-center gap-2 group relative overflow-hidden"
+ className="w-full mt-6 py-4 bg-secondary-500 hover:bg-secondary-600 text-white rounded-[1.5rem] font-bold text-lg shadow-[0_8px_20px_-6px_rgba(var(--hkids-brown-rgb),0.32)] hover:shadow-[0_12px_25px_-6px_rgba(var(--hkids-brown-rgb),0.4)] transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-none flex items-center justify-center gap-2 group relative overflow-hidden"
  aria-busy={loading}
  >
  {loading ? (
@@ -376,7 +376,7 @@ export default function ParentSignUp() {
  <div className="mt-8 text-center">
  <p className="text-foreground-secondary font-medium">
  {t('parentSignUpHasAccount')}{' '}
- <Link to="/parent/login" className="text-foreground-secondary-600 font-bold hover:text-foreground-secondary-700 hover:underline inline-flex items-center gap-1 transition-colors">
+ <Link to="/parent/login" className="text-foreground-secondary font-bold hover:text-foreground-secondary hover:underline inline-flex items-center gap-1 transition-colors">
  {t('parentSignUpLogin')} <ChevronLeftIcon className="w-3 h-3 rotate-180" />
  </Link>
  </p>

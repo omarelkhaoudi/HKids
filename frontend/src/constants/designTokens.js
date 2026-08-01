@@ -7,9 +7,9 @@
 export const DS_PALETTE = [
   { id: 'primary', label: 'HKids Sage', swatch: 'bg-primary-500', role: 'CTA, books, nav active' },
   { id: 'secondary', label: 'HKids Beige', swatch: 'bg-secondary-500', role: 'Warmth, highlights' },
-  { id: 'orange', label: 'HKids Brown', swatch: 'bg-orange-500', role: 'Audio, soft urgency' },
-  { id: 'success', label: 'Success Green', swatch: 'bg-success-500', role: 'Learn, validation' },
-  { id: 'magic', label: 'Warm Magic', swatch: 'bg-magic-500', role: 'Create, studio' },
+  { id: 'brown', label: 'HKids Brown', swatch: 'bg-hkids-brown', role: 'Audio, premium, soft emphasis' },
+  { id: 'success', label: 'HKids Green Success', swatch: 'bg-success-500', role: 'Learn, validation' },
+  { id: 'premium', label: 'HKids Premium', swatch: 'bg-hkids-brown', role: 'Create, studio, premium' },
   { id: 'background', label: 'Background', swatch: 'bg-background', role: 'App canvas' },
   { id: 'surface', label: 'Surface', swatch: 'bg-surface', role: 'Panels, cards' },
   { id: 'text', label: 'Text', swatch: 'bg-foreground', role: 'Primary copy' },
@@ -41,7 +41,7 @@ export const DS_SHADOWS = [
 
 export const DS_MODALITY = {
   books: 'primary',
-  audio: 'orange',
+  audio: 'secondary',
   learn: 'success',
-  create: 'magic',
+  create: 'secondary',
 };

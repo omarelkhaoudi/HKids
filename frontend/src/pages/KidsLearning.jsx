@@ -614,7 +614,7 @@ function KidsLearning() {
                 <button
                   type="button"
                   onClick={handleClaimDaily}
-                  className="rounded-24 bg-gradient-to-br from-amber-400 to-orange-500 text-white p-space-16 text-start shadow-card min-h-touch-kids"
+                  className="rounded-24 bg-gradient-to-br from-hkids-brown to-hkids-brown text-white p-space-16 text-start shadow-card min-h-touch-kids"
                 >
                   <p className="text-caption font-bold opacity-90">{eduLabel('eduDailyReward', language)}</p>
                   <p className="text-heading-m font-black mt-1">{eduLabel('eduClaimReward', language, { xp: 15 })}</p>
