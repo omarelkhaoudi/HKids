@@ -10,31 +10,30 @@ export const Input = forwardRef(({
  return (
  <div className="w-full">
  {label && (
- <label className="block text-sm font-bold text-foreground-secondary mb-2">
+ <label className="mb-2 block text-sm font-black text-foreground-secondary">
  {label}
  </label>
  )}
  <div className="relative">
  {Icon && (
- <div className="absolute inset-y-0 start-0 ps-4 flex items-center pointer-events-none">
- <Icon className="h-5 w-5 text-surface-400" />
+ <div className="pointer-events-none absolute inset-y-0 start-0 flex items-center ps-4">
+ <Icon className="h-5 w-5 text-primary-600" />
  </div>
  )}
  <input
  ref={ref}
  className={`
- w-full bg-surface-secondary border border-border text-foreground text-base rounded-2xl
- focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500
- transition-all outline-none py-3 px-4
+ hkids-input w-full bg-white text-base font-bold
+ transition-all py-3.5 px-4 shadow-soft
  ${Icon ? 'ps-11' : ''}
- ${error ? 'border-danger-500 focus:ring-danger-500/20 focus:border-danger-500' : ''}
+ ${error ? 'border-hkids-brown focus:ring-hkids-brown/20 focus:border-hkids-brown' : ''}
  ${className}
  `}
  {...props}
  />
  </div>
  {error && (
- <p className="mt-2 text-sm font-medium text-danger-500">{error}</p>
+ <p className="mt-2 text-sm font-bold text-hkids-brown-dark">{error}</p>
  )}
  </div>
  );

@@ -44,7 +44,7 @@ export function Modal({ isOpen, onClose, title, children, maxWidth = 'max-w-xl' 
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="absolute inset-0 bg-surface-900/60 backdrop-blur-sm"
+            className="absolute inset-0 bg-surface-900/56 backdrop-blur-md"
             aria-hidden="true"
           />
           <motion.div
@@ -53,15 +53,15 @@ export function Modal({ isOpen, onClose, title, children, maxWidth = 'max-w-xl' 
             aria-modal="true"
             aria-labelledby={title ? titleId : undefined}
             {...motionProps}
-            className={`relative w-full ${maxWidth} bg-card rounded-3xl shadow-floating overflow-hidden flex flex-col max-h-[90vh]`}
+            className={`hkids-modal relative w-full ${maxWidth} overflow-hidden flex flex-col max-h-[90vh]`}
           >
             {title && (
-              <div className="flex items-center justify-between px-6 py-5 border-b border-border shrink-0">
-                <h3 id={titleId} className="text-xl font-bold text-foreground">{title}</h3>
+              <div className="flex shrink-0 items-center justify-between border-b border-border bg-primary-50/40 px-6 py-5">
+                <h3 id={titleId} className="text-xl font-black text-foreground">{title}</h3>
                 <button
                   type="button"
                   onClick={onClose}
-                  className="p-2 rounded-full hover:bg-surface-secondary dark:hover:bg-surface-700 transition-colors text-foreground-muted"
+                  className="rounded-full p-2 text-foreground-muted transition-colors hover:bg-white hover:text-primary-700"
                   aria-label={t('close')}
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">

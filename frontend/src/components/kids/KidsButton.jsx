@@ -36,7 +36,7 @@ export default function KidsButton({
 
   const variants = {
     primary: TONE_VARIANTS.primary,
-    secondary: 'bg-white/72 text-primary-700 border border-primary-200/80 backdrop-blur-md shadow-[0_14px_26px_-20px_rgba(36,50,74,0.2)] hover:bg-white/88',
+    secondary: 'bg-white/75 text-primary-700 border border-primary-200/80 backdrop-blur-md shadow-[0_14px_26px_-20px_rgba(36,50,74,0.2)] hover:bg-white/90',
     accent: TONE_VARIANTS.accent,
     orange: TONE_VARIANTS.orange,
     success: TONE_VARIANTS.success,

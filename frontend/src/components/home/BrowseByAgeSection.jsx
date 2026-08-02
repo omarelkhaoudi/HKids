@@ -34,8 +34,8 @@ export default function BrowseByAgeSection({ t, selectedAge, onAgeSelect, books 
   };
 
   return (
-    <section id="books-section" className="bg-background py-12 md:py-16 relative z-10" aria-labelledby="browse-by-age-title">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6">
+    <section id="books-section" className="hkids-section bg-gradient-to-b from-white via-secondary-50/40 to-background" aria-labelledby="browse-by-age-title">
+      <div className="hkids-section-inner">
         <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-4 gap-4">
           <motion.div
             initial={reducedMotion ? false : { opacity: 0, x: -20 }}
@@ -43,8 +43,9 @@ export default function BrowseByAgeSection({ t, selectedAge, onAgeSelect, books 
             viewport={{ once: true }}
             transition={{ duration: 0.5 }}
           >
+            <span className="hkids-section-eyebrow mb-4">{t.homeLibrary}</span>
             <h2 id="browse-by-age-title" className="brand-section-title">{t.browseByAge}</h2>
-            <p className="text-sm text-foreground-secondary mt-2 max-w-xl">{t.homeBrowseHint}</p>
+            <p className="hkids-section-copy">{t.homeBrowseHint}</p>
           </motion.div>
 
           <motion.div
@@ -64,7 +65,7 @@ export default function BrowseByAgeSection({ t, selectedAge, onAgeSelect, books 
           </motion.div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
+        <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
           {HOME_AGE_CARDS.map((item, i) => {
             const isSelected = activeAge === item.id
               || (item.id === ALL_AGES_ID && (!selectedAge || selectedAge === ALL_AGES_ID || selectedAge === ''));
@@ -93,9 +94,9 @@ export default function BrowseByAgeSection({ t, selectedAge, onAgeSelect, books 
                 whileTap={reducedMotion ? undefined : { scale: 0.98 }}
                 aria-pressed={isSelected}
                 aria-label={`${label} — ${countLabel}`}
-                className={`w-full relative overflow-hidden rounded-[2rem] p-6 text-start transition-all duration-300 border-2
-                  ${isSelected ? 'border-primary-500 shadow-lg' : 'border-transparent hover:border-border hover:shadow-md'}
-                  ${softSurfaceAtIndex(i)} group h-full min-h-[160px] flex flex-col justify-between focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary-300`}
+                className={`w-full relative overflow-hidden rounded-[2rem] p-6 text-start transition-all duration-300 border
+                  ${isSelected ? 'border-primary-500 shadow-floating bg-white' : 'border-border hover:border-primary-200 hover:shadow-card'}
+                  ${softSurfaceAtIndex(i)} group h-full min-h-[180px] flex flex-col justify-between focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary-300`}
               >
                 <div className="flex justify-between items-start z-10 relative">
                   <div className={`px-3 py-1 rounded-full text-xs font-bold ${tone.bgColor} ${tone.color}`}>

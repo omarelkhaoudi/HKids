@@ -22,15 +22,16 @@ export default function FeaturesSection() {
   };
 
   return (
-    <section className="bg-background py-12 md:py-20 relative z-10" aria-labelledby="home-features-title">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6">
+    <section className="hkids-section bg-gradient-to-b from-white via-background to-secondary-50/40" aria-labelledby="home-features-title">
+      <div className="hkids-section-inner">
         <motion.div
           initial={reducedMotion ? false : { opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.5 }}
-          className="mb-10"
+          className="mb-10 max-w-3xl"
         >
+          <span className="hkids-section-eyebrow mb-4">HKids</span>
           <h2 id="home-features-title" className="brand-section-title">
             {t('homeFeaturesTitle')}
           </h2>
@@ -41,7 +42,7 @@ export default function FeaturesSection() {
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, margin: '-50px' }}
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5"
         >
           {features.map((feature) => {
             const tone = BRAND_TONES[feature.tone] || BRAND_TONES.primary;
@@ -50,14 +51,14 @@ export default function FeaturesSection() {
                 key={feature.title}
                 variants={itemVariants}
                 whileHover={reducedMotion ? undefined : { scale: 1.02 }}
-                className="brand-surface-card flex items-start gap-4 p-5 hover:shadow-medium transition-all duration-300"
+                className="brand-surface-card flex h-full items-start gap-4 p-6 hover:-translate-y-1"
               >
                 <div className={`w-14 h-14 rounded-2xl ${tone.bgColor} ${tone.color} flex items-center justify-center flex-shrink-0 text-2xl shadow-sm border ${tone.borderColor}`} aria-hidden="true">
                   {feature.icon}
                 </div>
                 <div>
-                  <h3 className="font-bold text-foreground mb-1">{feature.title}</h3>
-                  <p className="text-sm text-foreground-secondary leading-relaxed">{feature.desc}</p>
+                  <h3 className="text-lg font-black text-foreground mb-2">{feature.title}</h3>
+                  <p className="text-sm font-semibold text-foreground-secondary leading-relaxed">{feature.desc}</p>
                 </div>
               </motion.div>
             );

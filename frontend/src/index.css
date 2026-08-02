@@ -394,6 +394,16 @@
     border-radius: var(--radius-24);
     box-shadow: var(--shadow-card);
     color: var(--hkids-text);
+    transition:
+      transform 220ms cubic-bezier(0.16, 1, 0.3, 1),
+      box-shadow 220ms cubic-bezier(0.16, 1, 0.3, 1),
+      border-color 220ms ease,
+      background-color 220ms ease;
+  }
+
+  .hkids-card:hover {
+    border-color: color-mix(in srgb, var(--hkids-green) 32%, var(--hkids-border));
+    box-shadow: var(--shadow-floating);
   }
 
   .hkids-card-accent {
@@ -652,7 +662,16 @@
 
   /* Platform identity utilities */
   .brand-surface-card {
-    @apply bg-card rounded-3xl border border-border shadow-soft;
+    @apply bg-card rounded-[2rem] border border-border shadow-soft;
+    transition:
+      transform 220ms cubic-bezier(0.16, 1, 0.3, 1),
+      box-shadow 220ms cubic-bezier(0.16, 1, 0.3, 1),
+      border-color 220ms ease;
+  }
+
+  .brand-surface-card:hover {
+    border-color: color-mix(in srgb, var(--hkids-green) 28%, var(--hkids-border));
+    box-shadow: var(--shadow-card);
   }
 
   .brand-nav-active {
@@ -660,7 +679,94 @@
   }
 
   .brand-section-title {
-    @apply text-2xl sm:text-3xl font-semibold text-foreground tracking-normal;
+    @apply text-3xl sm:text-4xl lg:text-5xl font-black text-foreground tracking-normal leading-[1.05];
+  }
+
+  .hkids-section {
+    @apply relative overflow-hidden py-16 md:py-24 lg:py-28;
+  }
+
+  .hkids-section-inner {
+    @apply relative z-10 max-w-7xl mx-auto px-4 sm:px-6;
+  }
+
+  .hkids-section-eyebrow {
+    @apply inline-flex items-center gap-2 rounded-full border border-primary-200 bg-primary-50 px-4 py-2 text-sm font-extrabold text-primary-700 shadow-soft;
+  }
+
+  .hkids-section-copy {
+    @apply mt-4 max-w-2xl text-lg md:text-xl font-semibold leading-relaxed text-foreground-secondary;
+  }
+
+  .hkids-premium-surface {
+    @apply relative overflow-hidden rounded-[2rem] border border-border bg-card shadow-card;
+  }
+
+  .hkids-premium-surface::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+      radial-gradient(ellipse 45% 35% at 14% 8%, rgba(var(--hkids-green-rgb), 0.12), transparent 68%),
+      radial-gradient(ellipse 40% 32% at 88% 16%, rgba(var(--hkids-brown-rgb), 0.16), transparent 70%);
+  }
+
+  .hkids-ambient-field {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+  }
+
+  .hkids-ambient-field::before,
+  .hkids-ambient-field::after {
+    content: '';
+    position: absolute;
+    border-radius: 9999px;
+    filter: blur(2px);
+    opacity: 0.72;
+  }
+
+  .hkids-ambient-field::before {
+    width: clamp(16rem, 28vw, 30rem);
+    height: clamp(16rem, 28vw, 30rem);
+    top: -8rem;
+    right: -7rem;
+    background: rgba(var(--hkids-green-rgb), 0.12);
+  }
+
+  .hkids-ambient-field::after {
+    width: clamp(14rem, 24vw, 26rem);
+    height: clamp(14rem, 24vw, 26rem);
+    bottom: -9rem;
+    left: -6rem;
+    background: rgba(var(--hkids-brown-rgb), 0.14);
+  }
+
+  .hkids-soft-grid {
+    background-image:
+      linear-gradient(rgba(var(--hkids-green-rgb), 0.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(var(--hkids-brown-rgb), 0.05) 1px, transparent 1px);
+    background-size: 44px 44px;
+    mask-image: radial-gradient(ellipse at center, black 0%, transparent 72%);
+  }
+
+  .hkids-floating {
+    animation: hkids-float 7s ease-in-out infinite;
+  }
+
+  .hkids-floating-slow {
+    animation: hkids-float 10s ease-in-out infinite;
+  }
+
+  .hkids-reveal-card {
+    @apply rounded-[2rem] border border-border bg-white/90 p-6 shadow-soft backdrop-blur-md;
+  }
+
+  @keyframes hkids-float {
+    0%, 100% { transform: translate3d(0, 0, 0) rotate(var(--float-rotate, 0deg)); }
+    50% { transform: translate3d(0, -12px, 0) rotate(var(--float-rotate, 0deg)); }
   }
 
   /* Cards */

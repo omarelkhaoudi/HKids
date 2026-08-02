@@ -10,7 +10,7 @@ export default function StoryPreviewSection({ books, t, selectedAge = '' }) {
   const ageId = parseAgeGroupId(selectedAge);
   const ageGroup = getAgeGroupById(ageId);
   const selectedAgeLabel = ageGroup && ageId !== ALL_AGES_ID
-    ? (t[ageGroup.labelKey] || `${ageGroup.min}–${ageGroup.max}`)
+    ? (t[ageGroup.labelKey] || `${ageGroup.min}-${ageGroup.max}`)
     : '';
   const displayBooks = (books || []).slice(0, 4);
 
@@ -25,25 +25,27 @@ export default function StoryPreviewSection({ books, t, selectedAge = '' }) {
   };
 
   const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.5 } },
+    hidden: { opacity: 0, y: 24 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: 'easeOut' } },
   };
 
   return (
-    <section id="popular-stories" className="bg-background py-12 md:py-16 relative z-10" aria-labelledby="popular-stories-title">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6">
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 gap-4">
+    <section id="popular-stories" className="hkids-section bg-gradient-to-b from-white via-background to-primary-50/40" aria-labelledby="popular-stories-title">
+      <div className="absolute inset-0 hkids-soft-grid opacity-35" aria-hidden="true" />
+      <div className="hkids-section-inner">
+        <div className="mb-10 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
           <motion.div
             key={`title-${ageId}`}
             initial={reducedMotion ? false : { opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.35 }}
           >
+            <span className="hkids-section-eyebrow mb-4">{t.homeStoryHighlight}</span>
             <h2 id="popular-stories-title" className="brand-section-title">
               {selectedAge ? selectedAgeLabel : t.homePopularStories}
             </h2>
             {selectedAge && (
-              <p className="text-sm text-foreground-secondary mt-2">
+              <p className="mt-3 text-sm font-bold text-foreground-secondary">
                 {books.length} {books.length === 1 ? t.booksFound : t.booksFoundPlural}
               </p>
             )}
@@ -56,54 +58,62 @@ export default function StoryPreviewSection({ books, t, selectedAge = '' }) {
           >
             <Link
               to="/stories"
-              className="text-primary-600 font-bold hover:text-primary-700 flex items-center gap-1 text-sm sm:text-base transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-400 rounded-full px-2 py-1"
+              className="inline-flex items-center gap-2 rounded-full border border-primary-200 bg-white/80 px-5 py-3 text-sm font-black text-primary-700 shadow-soft transition hover:bg-primary-50 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary-300"
             >
               {t.homeSeeFullLibrary}
-              <ChevronRightIcon className="w-4 h-4" aria-hidden="true" />
+              <ChevronRightIcon className="h-4 w-4" aria-hidden="true" />
             </Link>
           </motion.div>
         </div>
 
-        {/* Remount on age change so filtered books are never stuck at opacity:0 after whileInView once */}
         <motion.div
           key={`stories-${ageId}-${displayBooks.map((book) => book.id).join(',')}`}
           variants={containerVariants}
           initial={reducedMotion ? false : 'hidden'}
           animate="visible"
-          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
+          className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 lg:gap-6"
         >
           {displayBooks.map((book) => (
             <motion.div
               key={book.id}
               variants={itemVariants}
-              whileHover={reducedMotion ? undefined : { y: -8, scale: 1.02 }}
+              whileHover={reducedMotion ? undefined : { y: -8, scale: 1.015 }}
               className="h-full"
             >
               <Link
                 to="/stories"
-                className="block h-full focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary-300 rounded-3xl"
-                aria-label={`${book.title} — ${t.homePreviewInLibrary}`}
+                className="block h-full rounded-[2rem] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary-300"
+                aria-label={`${book.title} - ${t.homePreviewInLibrary}`}
               >
-                <div className="bg-white rounded-3xl overflow-hidden shadow-[0_8px_24px_rgba(0,0,0,0.06)] hover:shadow-[0_16px_32px_rgba(0,0,0,0.1)] border border-surface-100 transition-all duration-300 h-full flex flex-col group">
-                  <div className="relative aspect-[3/4] overflow-hidden bg-surface-100">
+                <div className="group flex h-full flex-col overflow-hidden rounded-[2rem] border border-border bg-white p-3 shadow-card transition-all duration-300 hover:border-primary-200 hover:shadow-floating">
+                  <div className="relative aspect-[3/4] overflow-hidden rounded-[1.5rem] bg-primary-50">
                     <KidsBookCover
                       book={book}
                       alt=""
                       imgClassName="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 motion-reduce:transform-none"
                     />
+                    <div className="absolute inset-0 bg-gradient-to-t from-foreground/42 via-transparent to-white/5" aria-hidden="true" />
+                    <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between gap-2">
+                      <span className="rounded-full bg-white/90 px-3 py-1 text-xs font-black text-primary-700 shadow-soft backdrop-blur">
+                        {book.page_count ? `${Math.ceil(book.page_count * 0.5)} min` : '5 min'}
+                      </span>
+                      <span className="grid h-9 w-9 place-items-center rounded-full bg-primary-500 text-white shadow-soft">
+                        <ChevronRightIcon className="h-4 w-4" aria-hidden="true" />
+                      </span>
+                    </div>
                   </div>
 
-                  <div className="p-5 flex flex-col flex-1">
-                    <h3 className="font-bold text-lg text-surface-900 mb-1 line-clamp-2 group-hover:text-foreground-600 transition-colors">
+                  <div className="flex flex-1 flex-col p-3 pt-5">
+                    <h3 className="line-clamp-2 text-xl font-black leading-tight text-foreground transition-colors group-hover:text-primary-700">
                       {book.title}
                     </h3>
 
-                    <div className="mt-auto flex items-center justify-between pt-2 gap-2">
-                      <span className="text-sm font-medium text-surface-500 truncate">
+                    <div className="mt-auto flex items-center justify-between gap-2 pt-4">
+                      <span className="truncate rounded-full bg-secondary-50 px-3 py-1 text-xs font-black text-secondary-800">
                         {book.category_name || t.homeForAllAges}
                       </span>
-                      <span className="text-xs font-bold text-primary-600 whitespace-nowrap">
-                        {t.homePreviewInLibrary} →
+                      <span className="whitespace-nowrap text-xs font-black text-primary-700">
+                        {t.homePreviewInLibrary}
                       </span>
                     </div>
                   </div>

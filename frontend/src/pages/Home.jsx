@@ -35,6 +35,7 @@ import FeaturesSection from '../components/home/FeaturesSection';
 import TestimonialsSection from '../components/home/TestimonialsSection';
 import NewsletterSection from '../components/home/NewsletterSection';
 import FooterSection from '../components/home/FooterSection';
+import PremiumStorytellingSections from '../components/home/PremiumStorytellingSections';
 const HOME_DATA_CACHE_KEY = 'hkids_home_data_cache_v2';
 const HOME_DATA_CACHE_TTL_MS = 10 * 60 * 1000;
 const FALLBACK_BOOK_COUNT = 12;
@@ -89,6 +90,7 @@ function Home({darkMode, setDarkMode}) {
  const [newsletterEmail, setNewsletterEmail] = useState('');
  const [newsletterStatus, setNewsletterStatus] = useState('');
  const [newsletterLoading, setNewsletterLoading] = useState(false);
+ const [navScrolled, setNavScrolled] = useState(false);
  const {showToast} = useToast();
 
  const applyAgeFilter = useCallback((ageId) => {
@@ -119,14 +121,14 @@ function Home({darkMode, setDarkMode}) {
 
  // Couleurs par défaut basées sur l'index si pas de catégorie
  const defaultColors = [
- 'var(--hkids-brown)', // Rose
- 'var(--hkids-green)', // Vert
- 'var(--hkids-green-darker)', // Bleu foncé
- 'var(--hkids-brown-dark)', // Orange
- 'var(--hkids-brown)', // Violet
- 'var(--hkids-green)', // Bleu
- 'var(--hkids-brown-darker)', // Rose foncé
- 'var(--hkids-green-dark)', // Cyan
+ 'var(--hkids-brown)',
+ 'var(--hkids-green)',
+ 'var(--hkids-green-darker)',
+ 'var(--hkids-brown-dark)',
+ 'var(--hkids-brown)',
+ 'var(--hkids-green)',
+ 'var(--hkids-brown-darker)',
+ 'var(--hkids-green-dark)',
  ];
 
  return defaultColors[index % defaultColors.length];
@@ -135,6 +137,13 @@ function Home({darkMode, setDarkMode}) {
  useEffect(() => {
  loadData();
 }, [language]);
+
+ useEffect(() => {
+ const handleScroll = () => setNavScrolled(window.scrollY > 18);
+ handleScroll();
+ window.addEventListener('scroll', handleScroll, {passive: true});
+ return () => window.removeEventListener('scroll', handleScroll);
+}, []);
 
  const books = useMemo(() => {
    let filtered = filterBooksByAgeGroupId(allBooks, selectedAgeId);
@@ -271,9 +280,13 @@ function Home({darkMode, setDarkMode}) {
  initial={{y: -100, opacity: 0}}
  animate={{y: 0, opacity: 1}}
  transition={{duration: 0.5}}
- className="sticky top-0 z-50 border-b border-border bg-card/95 shadow-sm backdrop-blur-md"
+ className={`sticky top-0 z-50 transition-all duration-300 ${
+ navScrolled
+ ? 'border-b border-border bg-card/95 shadow-soft backdrop-blur-xl'
+                  : 'border-b border-transparent bg-white/70 backdrop-blur-md'
+ }`}
  >
- <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4 flex justify-between items-center gap-3">
+ <div className={`max-w-7xl mx-auto px-4 sm:px-6 flex justify-between items-center gap-3 transition-all duration-300 ${navScrolled ? 'py-3' : 'py-4 sm:py-5'}`}>
  <Logo size="default" />
 
  {/* Desktop Navigation */}
@@ -434,6 +447,7 @@ function Home({darkMode, setDarkMode}) {
  <BookOfTheWeekSection book={allBooks[0]} t={t} />
  <BrowseByAgeSection t={t} selectedAge={selectedAge} onAgeSelect={applyAgeFilter} books={allBooks} />
  <StoryPreviewSection books={books} t={t} selectedAge={selectedAge} />
+ <PremiumStorytellingSections />
  <FeaturesSection />
  <TestimonialsSection />
  <NewsletterSection

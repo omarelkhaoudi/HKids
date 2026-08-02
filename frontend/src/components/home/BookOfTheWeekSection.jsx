@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { ClockIcon, BrainIcon } from '../../components/Icons';
+import { BrainIcon, ChevronRightIcon, ClockIcon, SparklesIcon, StarIcon } from '../../components/Icons';
 import { KidsBookCover } from '../kids/KidsBookCover';
 import { useReducedMotion } from '../../hooks/useReducedMotion';
 
@@ -15,96 +15,92 @@ export default function BookOfTheWeekSection({ book, t }) {
         initial: { opacity: 0, y: 30 },
         whileInView: { opacity: 1, y: 0 },
         viewport: { once: true, margin: '-100px' },
-        transition: { duration: 0.6 },
+        transition: { duration: 0.6, ease: 'easeOut' },
       };
 
+  const description = book.description?.length > 170
+    ? `${book.description.substring(0, 170)}...`
+    : book.description;
+
+  const meta = [
+    {
+      icon: StarIcon,
+      label: t.homeRecommendedAge,
+      value: book.age_group_min !== undefined && book.age_group_max !== undefined
+        ? `${book.age_group_min}-${book.age_group_max}`
+        : t.homeForAllAges,
+    },
+    {
+      icon: ClockIcon,
+      label: t.homeReadingTime,
+      value: book.page_count ? `${Math.ceil(book.page_count * 0.5)} min` : '5 min',
+    },
+    {
+      icon: BrainIcon,
+      label: t.homeEducationalValue,
+      value: book.category_name || t.homeForAllAges,
+    },
+  ];
+
   return (
-    <section className="bg-background py-12 md:py-20 relative z-20" aria-labelledby="home-book-highlight-title">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6">
-        <motion.div {...motionProps}>
-          <div className="bg-gradient-to-br from-primary-50 via-secondary-50/60 to-hkids-brown-soft/40 rounded-[2.5rem] p-8 md:p-12 lg:p-16 shadow-soft border border-primary-100 relative overflow-hidden">
-            <div className="absolute -top-40 -left-40 w-96 h-96 bg-primary-200/30 rounded-full blur-3xl pointer-events-none" aria-hidden="true" />
-            <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-secondary-200/25 rounded-full blur-3xl pointer-events-none" aria-hidden="true" />
+    <section className="hkids-section bg-gradient-to-b from-primary-50/40 via-background to-white" aria-labelledby="home-book-highlight-title">
+      <div className="hkids-section-inner">
+        <motion.div {...motionProps} className="hkids-premium-surface p-5 md:p-8 lg:p-10">
+          <div className="relative z-10 grid gap-10 lg:grid-cols-[0.88fr_0.72fr_0.7fr] lg:items-center">
+            <div>
+              <span className="hkids-section-eyebrow border-hkids-brown-light bg-hkids-brown-soft text-hkids-brown-darker">
+                <SparklesIcon className="h-4 w-4" />
+                {t.homeStoryHighlight}
+              </span>
 
-            <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
-              <div className="lg:col-span-5 flex flex-col items-start text-start">
-                <div className="inline-flex items-center gap-2 px-4 py-2 bg-hkids-brown-light text-hkids-brown-dark rounded-full text-sm font-bold mb-6">
-                  <span aria-hidden="true">✨</span>
-                  {t.homeStoryHighlight}
-                </div>
+              <h2 id="home-book-highlight-title" className="mt-5 text-4xl font-black leading-[1.05] text-foreground md:text-5xl">
+                {book.title}
+              </h2>
 
-                <h2 id="home-book-highlight-title" className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-foreground mb-6 leading-tight">
-                  {book.title}
-                </h2>
+              {description && (
+                <p className="mt-5 max-w-xl text-lg font-semibold leading-relaxed text-foreground-secondary">
+                  {description}
+                </p>
+              )}
 
-                {book.description && (
-                  <p className="text-lg text-surface-600 mb-8 leading-relaxed">
-                    {book.description.length > 150
-                      ? `${book.description.substring(0, 150)}...`
-                      : book.description}
-                  </p>
-                )}
+              <Link to="/stories" className="mt-8 inline-flex">
+                <span className="inline-flex min-h-touch items-center justify-center gap-2 rounded-full bg-primary-500 px-8 py-4 text-base font-black text-white shadow-floating transition hover:bg-primary-600 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary-300">
+                  {t.homePreviewInLibrary}
+                  <ChevronRightIcon className="h-5 w-5" aria-hidden="true" />
+                </span>
+              </Link>
+            </div>
 
-                <Link to="/stories" className="w-full sm:w-auto">
-                  <motion.button
-                    type="button"
-                    whileHover={reducedMotion ? undefined : { scale: 1.03, y: -2 }}
-                    whileTap={reducedMotion ? undefined : { scale: 0.97 }}
-                    className="w-full sm:w-auto px-8 py-4 bg-primary-500 text-white rounded-full font-bold text-lg shadow-[0_8px_20px_-6px_rgba(var(--hkids-green-rgb),0.4)] hover:shadow-[0_12px_25px_-6px_rgba(var(--hkids-green-rgb),0.45)] transition-all flex items-center justify-center gap-2 min-h-[3.25rem] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary-300"
-                  >
-                    {t.homePreviewInLibrary}
-                    <span aria-hidden="true">→</span>
-                  </motion.button>
-                </Link>
+            <motion.div
+              whileHover={reducedMotion ? undefined : { y: -6, rotateZ: 1.5 }}
+              transition={{ duration: 0.25 }}
+              className="relative mx-auto w-full max-w-[18rem]"
+            >
+              <div className="absolute -inset-5 rounded-[2.25rem] bg-primary-100/70 blur-2xl" aria-hidden="true" />
+              <div className="relative aspect-[3/4] overflow-hidden rounded-[2rem] border-[10px] border-white bg-primary-50 shadow-floating">
+                <KidsBookCover
+                  book={book}
+                  alt={book.title}
+                  imgClassName="absolute inset-0 w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-foreground/35 via-transparent to-transparent" aria-hidden="true" />
               </div>
+            </motion.div>
 
-              <div className="lg:col-span-4 flex justify-center">
-                <motion.div
-                  whileHover={reducedMotion ? undefined : { scale: 1.02, rotateZ: 1 }}
-                  className="relative w-full max-w-[16rem] sm:max-w-[18rem] aspect-[3/4] rounded-3xl overflow-hidden shadow-2xl border-4 border-white z-20 kids-hero-cover !transform-none"
-                >
-                  <KidsBookCover
-                    book={book}
-                    alt={book.title}
-                    imgClassName="absolute inset-0 w-full h-full object-cover"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-tr from-black/15 to-transparent pointer-events-none" aria-hidden="true" />
-                </motion.div>
-              </div>
-
-              <div className="lg:col-span-3 flex flex-col gap-6 ps-0 lg:ps-6">
-                <div className="flex items-start gap-4">
-                  <div className="mt-1 flex-shrink-0 text-surface-400" aria-hidden="true">🎂</div>
-                  <div>
-                    <div className="text-xs font-semibold text-surface-500 uppercase tracking-normal mb-1">{t.homeRecommendedAge}</div>
-                    <div className="text-surface-900 font-bold text-lg">
-                      {book.age_group_min !== undefined && book.age_group_max !== undefined
-                        ? `${book.age_group_min}-${book.age_group_max}`
-                        : t.homeForAllAges}
+            <div className="grid gap-4">
+              {meta.map(({ icon: Icon, label, value }) => (
+                <div key={label} className="rounded-[1.5rem] border border-border bg-white/80 p-5 shadow-soft backdrop-blur">
+                  <div className="flex items-start gap-4">
+                    <div className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-primary-50 text-primary-700">
+                      <Icon className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <div className="text-xs font-black uppercase tracking-normal text-foreground-muted">{label}</div>
+                      <div className="mt-1 text-lg font-black text-foreground">{value}</div>
                     </div>
                   </div>
                 </div>
-
-                <div className="flex items-start gap-4">
-                  <ClockIcon className="w-6 h-6 text-surface-400 mt-1 flex-shrink-0" aria-hidden="true" />
-                  <div>
-                    <div className="text-xs font-semibold text-surface-500 uppercase tracking-normal mb-1">{t.homeReadingTime}</div>
-                    <div className="text-surface-900 font-bold text-lg">
-                      {book.page_count ? `${Math.ceil(book.page_count * 0.5)} min` : '5 min'}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-4">
-                  <BrainIcon className="w-6 h-6 text-surface-400 mt-1 flex-shrink-0" aria-hidden="true" />
-                  <div>
-                    <div className="text-xs font-semibold text-surface-500 uppercase tracking-normal mb-1">{t.homeEducationalValue}</div>
-                    <div className="text-surface-900 font-bold text-lg">
-                      {book.category_name || t.homeForAllAges}
-                    </div>
-                  </div>
-                </div>
-              </div>
+              ))}
             </div>
           </div>
         </motion.div>
