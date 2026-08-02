@@ -286,17 +286,9 @@ function Subscriptions() {
  setErrorMessage(t('subscriptionsParentPaymentOnly'));
  setViewState('error');
 } else if (error.response?.data?.setup_required) {
- try {
- const fallbackResponse = await subscriptionsAPI.subscribe(checkoutModalPlan.code);
- setCurrentSubscription(fallbackResponse.data.subscription);
- setCheckoutModalPlan(null);
- setViewState('success');
- } catch (fallbackError) {
- console.error('Error activating local subscription fallback:', fallbackError);
  setCheckoutModalPlan(null);
  setErrorMessage(t('subscriptionsStripeRequired'));
  setViewState('error');
- }
 } else {
  setCheckoutModalPlan(null);
  setErrorMessage(getSubscriptionErrorMessage(error.response?.data, t, 'subscriptionsPaymentFailed'));
