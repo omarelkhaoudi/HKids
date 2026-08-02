@@ -278,16 +278,27 @@ function Subscriptions() {
  throw new Error('Stripe checkout URL missing');
 } catch (error) {
  console.error('Error subscribing:', error);
- setCheckoutModalPlan(null);
  if (error.response?.status === 401) {
+ setCheckoutModalPlan(null);
  handleExpiredSession();
 } else if (error.response?.data?.parent_required) {
+ setCheckoutModalPlan(null);
  setErrorMessage(t('subscriptionsParentPaymentOnly'));
  setViewState('error');
 } else if (error.response?.data?.setup_required) {
+ try {
+ const fallbackResponse = await subscriptionsAPI.subscribe(checkoutModalPlan.code);
+ setCurrentSubscription(fallbackResponse.data.subscription);
+ setCheckoutModalPlan(null);
+ setViewState('success');
+ } catch (fallbackError) {
+ console.error('Error activating local subscription fallback:', fallbackError);
+ setCheckoutModalPlan(null);
  setErrorMessage(t('subscriptionsStripeRequired'));
  setViewState('error');
+ }
 } else {
+ setCheckoutModalPlan(null);
  setErrorMessage(getSubscriptionErrorMessage(error.response?.data, t, 'subscriptionsPaymentFailed'));
  setViewState('error');
 }
