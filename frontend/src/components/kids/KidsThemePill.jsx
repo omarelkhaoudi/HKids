@@ -11,6 +11,7 @@ export function KidsThemePill({ theme, isActive, onClick }) {
       onClick={onClick}
       aria-pressed={isActive}
       aria-label={label}
+      title={label}
       className={`kids-library-filter-pill kids-touch-target touch-manipulation ${isActive ? 'is-active' : ''}`}
     >
       {theme.pictogram ? (
@@ -18,7 +19,7 @@ export function KidsThemePill({ theme, isActive, onClick }) {
           {theme.pictogram}
         </span>
       ) : null}
-      <span>{label}</span>
+      <span className="sr-only">{label}</span>
     </button>
   );
 }

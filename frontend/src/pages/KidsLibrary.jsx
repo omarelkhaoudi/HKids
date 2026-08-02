@@ -28,6 +28,7 @@ import { VoiceAssistant } from '../components/kids/VoiceAssistant';
 import { KidsPageShell } from '../components/kids/KidsPageShell';
 import { KidsBookCarousel } from '../components/kids/KidsBookCarousel';
 import { KidsThemePill } from '../components/kids/KidsThemePill';
+import { KidCategoryCard } from '../components/kids/KidCategoryCard';
 import { KidsCategoryAtmosphere } from '../components/kids/KidsCategoryAtmosphere';
 import { KidsHeroStoryCard } from '../components/kids/KidsHeroStoryCard';
 import { KidsContinueRail } from '../components/kids/KidsContinueRail';
@@ -70,7 +71,7 @@ import {
   parseAgeGroupId,
 } from '../constants/ageGroups';
 import { KidsGuideCompanion } from '../components/kids/KidsGuideCompanion';
-import { getGuideVoicePhrase, KIDS_PICTOGRAMS } from '../utils/kidsGuidePhrases';
+import { getCategoryVoicePhrase, getGuideVoicePhrase, KIDS_PICTOGRAMS } from '../utils/kidsGuidePhrases';
 import { playKidsUiSound } from '../utils/kidsUiSound';
 import { useKidsVoiceGuide } from '../hooks/useKidsVoiceGuide';
 
@@ -441,6 +442,10 @@ function KidsLibrary() {
     ? (continueBooks[0] || todayBooks[0])
     : (themeBooks[0] || null);
   const activeThemeData = childThemes.find((theme) => theme.id === selectedTheme);
+  const visualThemes = useMemo(
+    () => childThemes.filter((theme) => theme.id !== 'all').slice(0, 10),
+    [childThemes],
+  );
 
   const continueSubtitle = softProgress.readingDays > 1
     ? `${t('discoverContinueSubtitle')} · ${t('kidsHomeProgressDays', { count: softProgress.readingDays })}`
@@ -655,7 +660,23 @@ function KidsLibrary() {
       </header>
 
       <main className="kids-main kids-main-tablet-wide kids-home-main kids-library-main relative z-20">
-        <section className="kids-library-toolbar px-space-4 md:px-space-8 space-y-space-16" aria-label={t('library')}>
+        <section className="kids-visual-worlds" aria-label={t('allCategories')}>
+          <div className="kids-visual-worlds-grid">
+            {visualThemes.map((theme) => (
+              <KidCategoryCard
+                key={theme.id}
+                category={theme}
+                to={`/kids/library?theme=${theme.id}${ageFilter !== ALL_AGES_ID ? `&age=${ageFilter}` : ''}`}
+                onSelect={(selected) => {
+                  saveRecentSearch(selected.label);
+                  speakGuide(getCategoryVoicePhrase(selected.id, language));
+                }}
+              />
+            ))}
+          </div>
+        </section>
+
+        <section className="kids-library-toolbar kids-library-toolbar--secondary px-space-4 md:px-space-8 space-y-space-16" aria-label={t('library')}>
           <SearchBar
             variant="premium"
             value={searchQuery}
@@ -703,7 +724,7 @@ function KidsLibrary() {
           <div className="kids-library-search-discovery kids-premium-panel">
             {recentSearches.length > 0 && (
               <div className="kids-library-search-group">
-                <p className="kids-library-search-label">{t('recentSearches')}</p>
+                <p className="sr-only">{t('recentSearches')}</p>
                 <div className="kids-library-search-chips">
                   {recentSearches.map((item) => (
                     <button
@@ -722,7 +743,7 @@ function KidsLibrary() {
               </div>
             )}
             <div className="kids-library-search-group">
-              <p className="kids-library-search-label">{t('popularCategories')}</p>
+              <p className="sr-only">{t('popularCategories')}</p>
               <div className="kids-library-search-chips">
                 {childThemes.filter((theme) => theme.id !== 'all').slice(0, 6).map((theme) => (
                   <button

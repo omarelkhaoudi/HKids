@@ -7,6 +7,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { getKidCategory } from '../constants/kidCategories';
 import { getCategoryContentStrategy, bookMatchesKidCategory } from '../utils/kidCategoryContent';
 import { getKidsContentPath } from '../utils/contentRouting';
+import { resolveCategoryThemeArt } from '../utils/bookCover';
 import { storage } from '../utils/storage';
 import { Logo } from '../components/Logo';
 import { VoiceAssistant } from '../components/kids/VoiceAssistant';
@@ -41,6 +42,7 @@ function KidsCategoryPage() {
   const favoritesIds = storage.getFavorites();
   const voicePhrase = getCategoryVoicePhrase(categoryId, language);
   const readingHistory = storage.getReadingHistory();
+  const categoryArtSrc = resolveCategoryThemeArt(categoryId);
 
   const [books, setBooks] = useState([]);
   const [learningItems, setLearningItems] = useState([]);
@@ -179,8 +181,17 @@ function KidsCategoryPage() {
 
         <motion.main
           {...getMotionProps(reducedMotion, kidsCategoryEnter)}
-          className={`kids-category-hero relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br ${category.gradient} p-8 md:p-12 text-center text-white shadow-kids-soft ring-4 ${category.ring}`}
+          className={`kids-category-hero kids-category-hero--visual relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br ${category.gradient} p-8 md:p-12 text-center text-white shadow-kids-soft ring-4 ${category.ring}`}
         >
+          <img
+            src={categoryArtSrc}
+            alt=""
+            aria-hidden="true"
+            loading="eager"
+            decoding="async"
+            className="kids-category-hero-art"
+          />
+          <div className="kids-category-hero-veil" aria-hidden="true" />
           <div className="absolute -right-10 -top-10 text-[12rem] opacity-20 pointer-events-none" aria-hidden="true">
             {category.pictogram}
           </div>

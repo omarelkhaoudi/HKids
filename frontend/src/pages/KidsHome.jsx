@@ -408,6 +408,37 @@ function KidsHome() {
           />
         )}
 
+        <motion.section aria-label={t('allCategories')} className="kids-home-primary-shelf kids-home-primary-shelf--visual" {...getMotionProps(reducedMotion, kidsCarouselReveal)}>
+          <div className="mb-space-20 px-space-8 md:px-space-16 flex items-center justify-between gap-space-12">
+            <h2 className="kids-shelf-title kids-shelf-title--pictogram !mb-0">
+              <span className="kids-shelf-emoji" aria-hidden="true">🗺️</span>
+              <span className="sr-only">{t('kidsWorldsExplore')}</span>
+            </h2>
+            <button
+              type="button"
+              onClick={() => {
+                playKidsUiSound('tap');
+                speakGuide(getGuideVoicePhrase('library', language));
+                navigate('/kids/library');
+              }}
+              className="kids-touch-target kids-see-all-pictogram inline-flex min-h-[64px] min-w-[64px] items-center justify-center rounded-full border border-border/40 bg-card/80 text-2xl shadow-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-300"
+              aria-label={t('seeAll')}
+            >
+              <span aria-hidden="true">➡️</span>
+            </button>
+          </div>
+          <div className="kids-visual-worlds-grid kids-visual-worlds-grid--home">
+            {kidCategories.map((category) => (
+              <KidCategoryCard
+                key={category.id}
+                category={category}
+                to={`/kids/category/${category.id}`}
+                onSelect={handleCategorySelect}
+              />
+            ))}
+          </div>
+        </motion.section>
+
         {!hasPersonalizedContent && (
           <KidsEmptyState
             emoji="📚"
@@ -464,38 +495,6 @@ function KidsHome() {
             {...carouselProps}
           />
         )}
-
-        <motion.section aria-label={t('allCategories')} className="kids-home-primary-shelf" {...getMotionProps(reducedMotion, kidsCarouselReveal)}>
-          <div className="mb-space-24 px-space-8 md:px-space-16 flex items-end justify-between gap-space-12">
-            <h2 className="kids-shelf-title kids-shelf-title--pictogram !mb-0">
-              <span className="kids-shelf-emoji" aria-hidden="true">🗺️</span>
-              <span className="sr-only">{t('kidsWorldsExplore')}</span>
-            </h2>
-            <button
-              type="button"
-              onClick={() => {
-                playKidsUiSound('tap');
-                speakGuide(getGuideVoicePhrase('library', language));
-                navigate('/kids/library');
-              }}
-              className="kids-touch-target kids-see-all-pictogram inline-flex min-h-[56px] min-w-[56px] items-center justify-center rounded-full border border-border/40 bg-card/80 text-2xl shadow-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-300"
-              aria-label={t('seeAll')}
-            >
-              <span aria-hidden="true">➡️</span>
-            </button>
-          </div>
-          <div className="kids-discovery-rail pb-space-8 !gap-space-20 md:!gap-space-24">
-            {kidCategories.map((category) => (
-              <KidCategoryCard
-                key={category.id}
-                category={category}
-                compact
-                to={`/kids/category/${category.id}`}
-                onSelect={handleCategorySelect}
-              />
-            ))}
-          </div>
-        </motion.section>
 
         <motion.section
           aria-label={t('kidsAutonomyWorlds')}
