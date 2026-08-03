@@ -345,7 +345,9 @@ export async function initDatabase() {
         provider TEXT NOT NULL DEFAULT 'elevenlabs',
         provider_voice_id TEXT,
         sample_audio_path TEXT,
+        sample_audio_hash TEXT,
         preview_audio_path TEXT,
+        preview_audio_hash TEXT,
         consent_given BOOLEAN NOT NULL DEFAULT FALSE,
         consent_at TIMESTAMPTZ,
         quality_score INTEGER NOT NULL DEFAULT 0,
@@ -634,6 +636,8 @@ export async function initDatabase() {
     await client.query(`ALTER TABLE voice_profiles ALTER COLUMN provider SET DEFAULT 'elevenlabs'`);
     await client.query(`ALTER TABLE voice_profiles ADD COLUMN IF NOT EXISTS provider_voice_id TEXT`);
     await client.query(`ALTER TABLE voice_profiles ADD COLUMN IF NOT EXISTS preview_audio_path TEXT`);
+    await client.query(`ALTER TABLE voice_profiles ADD COLUMN IF NOT EXISTS sample_audio_hash TEXT`);
+    await client.query(`ALTER TABLE voice_profiles ADD COLUMN IF NOT EXISTS preview_audio_hash TEXT`);
     await client.query(`ALTER TABLE voice_profiles ADD COLUMN IF NOT EXISTS consent_given BOOLEAN NOT NULL DEFAULT FALSE`);
     await client.query(`ALTER TABLE voice_profiles ADD COLUMN IF NOT EXISTS consent_at TIMESTAMPTZ`);
     await client.query(`ALTER TABLE voice_profiles ADD COLUMN IF NOT EXISTS quality_score INTEGER NOT NULL DEFAULT 0`);
@@ -770,6 +774,7 @@ export async function initDatabase() {
     await client.query(`CREATE INDEX IF NOT EXISTS generated_stories_kid_saved_idx ON generated_stories(kid_profile_id, saved, created_at DESC)`);
     await client.query(`CREATE INDEX IF NOT EXISTS generated_stories_kid_favorite_idx ON generated_stories(kid_profile_id, favorite, created_at DESC)`);
     await client.query(`CREATE INDEX IF NOT EXISTS voice_profiles_user_idx ON voice_profiles(user_id, deleted_at, created_at DESC)`);
+    await client.query(`CREATE INDEX IF NOT EXISTS voice_profiles_sample_hash_idx ON voice_profiles(user_id, sample_audio_hash) WHERE deleted_at IS NULL AND sample_audio_hash IS NOT NULL`);
     await client.query(`CREATE INDEX IF NOT EXISTS voice_messages_user_idx ON voice_messages(user_id, deleted_at, created_at DESC)`);
     await client.query(`CREATE INDEX IF NOT EXISTS voice_audit_logs_profile_idx ON voice_audit_logs(voice_profile_id, created_at DESC)`);
     await client.query(`CREATE INDEX IF NOT EXISTS security_audit_logs_user_idx ON security_audit_logs(user_id, created_at DESC)`);

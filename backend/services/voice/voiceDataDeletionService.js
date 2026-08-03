@@ -1,5 +1,24 @@
 import { VoiceProviderFactory } from './VoiceProviderFactory.js';
 import { deleteStoredVoiceFiles } from './voiceStorage.js';
+import { logAIEvent } from '../ai/aiLogger.js';
+
+function safeDeletionReason(error) {
+  return String(error?.code || error?.status || 'VOICE_PROVIDER_DELETION_FAILED').slice(0, 80);
+}
+
+async function enqueueProviderDeletion(client, { userId, providerVoiceId, error }) {
+  await client.query(
+    `INSERT INTO voice_provider_deletion_queue (
+       user_id, provider, provider_voice_id, retry_count, last_error
+     )
+     VALUES ($1, 'elevenlabs', $2, 1, $3)
+     ON CONFLICT (provider_voice_id)
+     DO UPDATE SET retry_count = voice_provider_deletion_queue.retry_count + 1,
+                   last_error = EXCLUDED.last_error,
+                   updated_at = NOW()`,
+    [userId, providerVoiceId, safeDeletionReason(error)]
+  );
+}
 
 export async function purgeUserVoiceData({ client, userId }) {
   const profiles = await client.query(
@@ -21,7 +40,20 @@ export async function purgeUserVoiceData({ client, userId }) {
   if (providerProfiles.length > 0) {
     const provider = VoiceProviderFactory.getProvider();
     for (const profile of providerProfiles) {
-      await provider.deleteVoiceProfile({ providerVoiceId: profile.provider_voice_id });
+      try {
+        await provider.deleteVoiceProfile({ providerVoiceId: profile.provider_voice_id });
+      } catch (error) {
+        await enqueueProviderDeletion(client, {
+          userId,
+          providerVoiceId: profile.provider_voice_id,
+          error
+        });
+        logAIEvent('warn', 'voice_provider_deletion_queued', {
+          provider: 'elevenlabs',
+          operation: 'voice_delete',
+          code: safeDeletionReason(error)
+        });
+      }
     }
   }
 
@@ -34,7 +66,8 @@ export async function purgeUserVoiceData({ client, userId }) {
   await client.query(
     `UPDATE voice_profiles
      SET deleted_at = NOW(), status = 'deleted', consent_given = FALSE,
-         sample_audio_path = NULL, preview_audio_path = NULL, provider_voice_id = NULL,
+         sample_audio_path = NULL, sample_audio_hash = NULL,
+         preview_audio_path = NULL, preview_audio_hash = NULL, provider_voice_id = NULL,
          updated_at = NOW()
      WHERE user_id = $1`,
     [userId]

@@ -32,6 +32,9 @@ const emptyMessageForm = {
  voice_profile_id: '',
 };
 
+const MIN_PROFILE_RECORDING_SECONDS = 8;
+const MIN_PROFILE_AUDIO_BYTES = 40000;
+
 function statusLabel(status, t) {
  const labels = {
  draft: t('parentVoiceStatusDraft'),
@@ -57,6 +60,7 @@ function useAudioRecorder(t) {
  const recorderRef = useRef(null);
  const chunksRef = useRef([]);
  const startedAtRef = useRef(null);
+ const timerRef = useRef(null);
  const [recording, setRecording] = useState(false);
  const [audioBlob, setAudioBlob] = useState(null);
  const [durationSeconds, setDurationSeconds] = useState(0);
@@ -74,10 +78,22 @@ function useAudioRecorder(t) {
 }
 
  try {
- const stream = await navigator.mediaDevices.getUserMedia({audio: true});
+ const stream = await navigator.mediaDevices.getUserMedia({
+ audio: {
+ echoCancellation: true,
+ noiseSuppression: true,
+ autoGainControl: true,
+ }
+});
  chunksRef.current = [];
  startedAtRef.current = Date.now();
- const recorder = new MediaRecorder(stream);
+ const preferredMimeType = [
+ 'audio/webm;codecs=opus',
+ 'audio/webm',
+ 'audio/mp4',
+ 'audio/ogg;codecs=opus'
+].find((type) => MediaRecorder.isTypeSupported?.(type));
+ const recorder = new MediaRecorder(stream, preferredMimeType ? {mimeType: preferredMimeType} : undefined);
  recorderRef.current = recorder;
 
  recorder.ondataavailable = (event) => {
@@ -85,6 +101,8 @@ function useAudioRecorder(t) {
 };
 
  recorder.onstop = () => {
+ if (timerRef.current) globalThis.clearInterval(timerRef.current);
+ timerRef.current = null;
  const blob = new Blob(chunksRef.current, {type: recorder.mimeType || 'audio/webm'});
  setAudioBlob(blob);
  setDurationSeconds(Math.max(1, Math.round((Date.now() - startedAtRef.current) / 1000)));
@@ -92,6 +110,9 @@ function useAudioRecorder(t) {
 };
 
  recorder.start();
+ timerRef.current = globalThis.setInterval(() => {
+ setDurationSeconds(Math.max(1, Math.round((Date.now() - startedAtRef.current) / 1000)));
+}, 500);
  setRecording(true);
 } catch (err) {
  setError(t('parentVoiceMicError'));
@@ -100,10 +121,14 @@ function useAudioRecorder(t) {
 
  const stop = () => {
  recorderRef.current?.stop();
+ if (timerRef.current) globalThis.clearInterval(timerRef.current);
+ timerRef.current = null;
  setRecording(false);
 };
 
  const clear = () => {
+ if (timerRef.current) globalThis.clearInterval(timerRef.current);
+ timerRef.current = null;
  setAudioBlob(null);
  setDurationSeconds(0);
  setError('');
@@ -193,6 +218,19 @@ function FamilyVoices() {
 
  const submitProfile = async (event) => {
  if(event) event.preventDefault();
+ const sampleFile = blobToFile(profileRecorder.audioBlob, 'voice-sample.webm');
+ if (!editingProfile && !sampleFile) {
+ showToast(t('parentVoiceSaveError'), 'error');
+ return;
+}
+ if (sampleFile && sampleFile.size < MIN_PROFILE_AUDIO_BYTES) {
+ showToast(t('parentVoiceSampleTooSmall'), 'error');
+ return;
+}
+ if (sampleFile && profileRecorder.durationSeconds < MIN_PROFILE_RECORDING_SECONDS) {
+ showToast(t('parentVoiceSampleTooShort'), 'error');
+ return;
+}
  setSavingProfile(true);
  setWizardStep(3); // Start AI Analysis Loading State
 
@@ -208,7 +246,6 @@ function FamilyVoices() {
  formData.append('language', profileForm.language);
  formData.append('consent_given', profileForm.consent_given ? 'true' : 'false');
 
- const sampleFile = blobToFile(profileRecorder.audioBlob, 'voice-sample.webm');
  if (sampleFile) formData.append('sample', sampleFile);
 
  if (editingProfile) {

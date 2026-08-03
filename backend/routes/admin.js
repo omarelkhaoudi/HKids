@@ -52,6 +52,18 @@ function getSummary(row = {}) {
   };
 }
 
+function getVoiceSummary(row = {}) {
+  return {
+    total_voice_profiles: Number(row.total_voice_profiles || 0),
+    consented_voice_profiles: Number(row.consented_voice_profiles || 0),
+    provider_deletion_pending: Number(row.provider_deletion_pending || 0),
+    voice_messages_with_audio: Number(row.voice_messages_with_audio || 0),
+    cached_voice_narrations: Number(row.cached_voice_narrations || 0),
+    pending_provider_deletions: Number(row.pending_provider_deletions || 0),
+    monthly_voice_units: Number(row.monthly_voice_units || 0)
+  };
+}
+
 function sendAdminError(res, error) {
   return res.status(error?.status || 500).json({
     error: error?.status ? error.message : 'Admin service unavailable',
@@ -63,7 +75,7 @@ function sendAdminError(res, error) {
 router.get('/overview', requireAdminPermission('overview.read'), async (req, res) => {
   try {
     const pool = getPool();
-    const [summary, recentActivity, latestUsers, latestBooks] = await Promise.all([
+    const [summary, recentActivity, latestUsers, latestBooks, voiceSummary] = await Promise.all([
       pool.query(`
         SELECT
           (SELECT COUNT(*) FROM users WHERE role = 'parent')::int AS total_parents,
@@ -112,6 +124,18 @@ router.get('/overview', requireAdminPermission('overview.read'), async (req, res
         ORDER BY b.created_at DESC
         LIMIT 8
       `),
+      pool.query(`
+        SELECT
+          (SELECT COUNT(*) FROM voice_profiles WHERE deleted_at IS NULL)::int AS total_voice_profiles,
+          (SELECT COUNT(*) FROM voice_profiles WHERE deleted_at IS NULL AND consent_given = TRUE)::int AS consented_voice_profiles,
+          (SELECT COUNT(*) FROM voice_profiles WHERE status = 'provider_deletion_pending')::int AS provider_deletion_pending,
+          (SELECT COUNT(*) FROM voice_messages WHERE deleted_at IS NULL AND audio_path IS NOT NULL)::int AS voice_messages_with_audio,
+          (SELECT COUNT(*) FROM voice_narrations)::int AS cached_voice_narrations,
+          (SELECT COUNT(*) FROM voice_provider_deletion_queue)::int AS pending_provider_deletions,
+          (SELECT COALESCE(SUM(character_count), 0)::bigint
+             FROM voice_usage_records
+            WHERE created_at >= date_trunc('month', NOW())) AS monthly_voice_units
+      `),
     ]);
 
     res.json({
@@ -122,6 +146,7 @@ router.get('/overview', requireAdminPermission('overview.read'), async (req, res
       ai_observability: {
         metrics: getAIStats()
       },
+      voice_observability: getVoiceSummary(voiceSummary.rows[0]),
     });
   } catch (err) {
     console.error('Error fetching admin overview:', err);

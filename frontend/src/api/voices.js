@@ -11,6 +11,29 @@ const multipartHeaders = () => ({
   'Content-Type': 'multipart/form-data',
 });
 
+function streamNarration({ book_id, voice_profile_id, signal }) {
+  const timeoutController = signal ? null : new AbortController();
+  const timeoutId = timeoutController
+    ? globalThis.setTimeout(() => timeoutController.abort(), 90000)
+    : null;
+
+  return fetch(
+    buildApiUrl('/voices/narrations/stream'),
+    {
+      method: 'POST',
+      headers: {
+        ...authHeaders(),
+        'Content-Type': 'application/json',
+        Accept: 'audio/mpeg,audio/*'
+      },
+      body: JSON.stringify({ book_id, voice_profile_id }),
+      signal: signal || timeoutController.signal,
+    }
+  ).finally(() => {
+    if (timeoutId) globalThis.clearTimeout(timeoutId);
+  });
+}
+
 export const voicesAPI = {
   getProfiles: () => axios.get(buildApiUrl('/voices/profiles'), { headers: authHeaders(), timeout: 12000 }),
   getAvailableVoices: () => axios.get(buildApiUrl('/voices/available'), { headers: authHeaders(), timeout: 12000 }),
@@ -36,23 +59,12 @@ export const voicesAPI = {
   generateNarration: ({ book_id, voice_profile_id }) => axios.post(
     buildApiUrl('/voices/narrations'),
     { book_id, voice_profile_id },
-    { headers: authHeaders(), timeout: 45000 }
+    { headers: authHeaders(), timeout: 90000 }
   ),
   getAudioBlob: (audioUrl) => axios.get(buildApiUrl(audioUrl), {
     headers: authHeaders(),
     responseType: 'blob',
-    timeout: 30000,
+    timeout: 45000,
   }),
-  streamNarration: ({ book_id, voice_profile_id, signal }) => fetch(
-    buildApiUrl('/voices/narrations/stream'),
-    {
-      method: 'POST',
-      headers: {
-        ...authHeaders(),
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ book_id, voice_profile_id }),
-      signal,
-    }
-  ),
+  streamNarration,
 };

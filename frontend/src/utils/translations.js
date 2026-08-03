@@ -2340,6 +2340,8 @@ export const translations = {
 
     // --- FAMILY VOICES (remaining) ---
     parentVoiceSaveError: 'Could not save the voice',
+    parentVoiceSampleTooShort: 'Please record at least 8 seconds before creating the voice.',
+    parentVoiceSampleTooSmall: 'The recording is too quiet or too short. Please try again closer to the microphone.',
     parentVoiceRevokePending: 'Consent revoked. ElevenLabs deletion must be retried.',
     parentVoiceRevokeSuccess: 'Consent revoked and voice data deleted',
     parentVoiceRevokeError: 'Could not revoke consent',
@@ -4732,6 +4734,8 @@ export const translations = {
 
     // --- FAMILY VOICES (remaining) ---
     parentVoiceSaveError: 'Impossible de sauvegarder la voix',
+    parentVoiceSampleTooShort: 'Veuillez enregistrer au moins 8 secondes avant de créer la voix.',
+    parentVoiceSampleTooSmall: 'L enregistrement est trop faible ou trop court. Reessayez plus pres du micro.',
     parentVoiceRevokePending: 'Consentement révoqué. La suppression ElevenLabs doit être réessayée.',
     parentVoiceRevokeSuccess: 'Consentement révoqué et données vocales supprimées',
     parentVoiceRevokeError: 'Impossible de révoquer le consentement',
@@ -7124,6 +7128,8 @@ export const translations = {
 
     // --- FAMILY VOICES (remaining) ---
     parentVoiceSaveError: 'تعذر حفظ الصوت',
+    parentVoiceSampleTooShort: 'يرجى تسجيل 8 ثوانٍ على الأقل قبل إنشاء الصوت.',
+    parentVoiceSampleTooSmall: 'التسجيل منخفض جداً أو قصير جداً. يرجى المحاولة مرة أخرى بالقرب من الميكروفون.',
     parentVoiceRevokePending: 'تم إلغاء الموافقة. يجب إعادة محاولة حذف ElevenLabs.',
     parentVoiceRevokeSuccess: 'تم إلغاء الموافقة وحذف البيانات الصوتية',
     parentVoiceRevokeError: 'تعذر إلغاء الموافقة',

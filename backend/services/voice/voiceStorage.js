@@ -31,6 +31,12 @@ export async function deleteStoredVoiceFiles(paths = []) {
   await Promise.all([...new Set(paths.filter(Boolean))].map(deleteStoredVoiceFile));
 }
 
+export async function storedVoiceFileExists(audioPath) {
+  if (!audioPath || !audioPath.startsWith('/uploads/voices/')) return false;
+  const absolutePath = path.join(voiceStorageDir, path.basename(audioPath));
+  return fs.pathExists(absolutePath);
+}
+
 export function voiceFileUrl(audioPath) {
   if (!audioPath) return null;
   return `/api/voices/files/${encodeURIComponent(path.basename(audioPath))}`;

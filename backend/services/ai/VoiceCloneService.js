@@ -1,5 +1,21 @@
 import { VoiceProviderFactory } from '../voice/VoiceProviderFactory.js';
+import { inspectAudioBuffer } from '../voice/audioValidation.js';
 import { normalizeAIError } from './errors.js';
+
+export function buildVoicePreviewText({ name, language = 'fr' } = {}) {
+  const safeName = String(name || 'Parent').trim().slice(0, 80) || 'Parent';
+  const normalizedLanguage = String(language || 'fr').toLowerCase();
+
+  if (normalizedLanguage.startsWith('en')) {
+    return `Hello, I am ${safeName}. I am ready to tell you a wonderful story.`;
+  }
+
+  if (normalizedLanguage.startsWith('ar')) {
+    return `\u0645\u0631\u062d\u0628\u0627\u060c \u0623\u0646\u0627 ${safeName}. \u0623\u0646\u0627 \u0645\u0633\u062a\u0639\u062f \u0644\u0623\u062d\u0643\u064a \u0644\u0643 \u0642\u0635\u0629 \u0631\u0627\u0626\u0639\u0629.`;
+  }
+
+  return `Bonjour, je suis ${safeName}. Je suis pret a te raconter une merveilleuse histoire.`;
+}
 
 export class VoiceCloneService {
   constructor({ voiceProvider = null } = {}) {
@@ -86,30 +102,64 @@ export class VoiceCloneService {
   evaluateAudioQuality({ audioBuffer, mimeType }) {
     const size = audioBuffer?.length || 0;
     const supportedMimeType = /audio\/(webm|mpeg|mp3|wav|ogg|m4a|mp4)/i.test(String(mimeType || ''));
+    const inspection = inspectAudioBuffer(audioBuffer);
     let score = 0;
     const notes = [];
 
-    if (supportedMimeType) {
+    if (size === 0) {
+      notes.push('Aucun fichier audio recu.');
+    } else if (supportedMimeType) {
       score += 35;
     } else {
       notes.push('Format audio non reconnu.');
     }
 
-    if (size >= 120000) {
-      score += 45;
-    } else if (size >= 40000) {
+    if (size >= 320000) {
+      score += 38;
+    } else if (size >= 120000) {
       score += 30;
-      notes.push('Echantillon court, mais utilisable pour une premiere version.');
+    } else if (size >= 40000) {
+      score += 20;
+      notes.push('Echantillon court, utilisable mais a ameliorer.');
     } else if (size > 0) {
-      score += 12;
+      score += 8;
       notes.push('Echantillon trop court pour un clonage fiable.');
-    } else {
-      notes.push('Aucun fichier audio recu.');
     }
 
-    score += 20;
+    if (size === 0) {
+      score = 0;
+    } else if (inspection.likelySilent) {
+      score = Math.min(score, 25);
+      notes.push('Le signal audio semble silencieux ou corrompu.');
+    }
 
-    const qualityScore = Math.min(100, score);
+    if (size === 0) {
+      score += 0;
+    } else if (inspection.wav?.durationSeconds) {
+      if (inspection.wav.durationSeconds >= 20) {
+        score += 22;
+      } else if (inspection.wav.durationSeconds >= 8) {
+        score += 14;
+        notes.push('La duree est acceptable; 20 a 30 secondes ameliorent la stabilite.');
+      } else {
+        score += 4;
+        notes.push('La duree detectee est courte pour une voix stable.');
+      }
+
+      if (inspection.wav.sampleRate && inspection.wav.sampleRate < 16000) {
+        score -= 10;
+        notes.push('Frequence d echantillonnage faible.');
+      }
+
+      if (inspection.wav.clippingRatio > 0.08) {
+        score -= 15;
+        notes.push('Le signal semble sature; eloignez-vous legerement du micro.');
+      }
+    } else {
+      score += 16;
+    }
+
+    const qualityScore = Math.max(0, Math.min(100, score));
     return {
       quality_score: qualityScore,
       quality_status: qualityScore >= 70 ? 'good' : qualityScore >= 45 ? 'medium' : 'low',

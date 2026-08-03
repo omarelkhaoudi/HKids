@@ -6,6 +6,7 @@ import {
 } from '../../ai/errors.js';
 import { logAIEvent } from '../../ai/aiLogger.js';
 import { VoiceProvider } from '../VoiceProvider.js';
+import { isLikelyAudioPayload } from '../audioValidation.js';
 
 function fileNameFromMimeType(mimeType = '') {
   if (mimeType.includes('wav')) return 'voice-sample.wav';
@@ -25,6 +26,12 @@ function assertAudioPayload({ buffer, contentType }, provider) {
   }
   if (normalizedType && !normalizedType.startsWith('audio/')) {
     throw new AIProviderUnavailableError('Voice provider returned a non-audio response', {
+      provider,
+      retryable: true
+    });
+  }
+  if (!isLikelyAudioPayload(buffer, normalizedType || 'audio/mpeg')) {
+    throw new AIProviderUnavailableError('Voice provider returned invalid audio bytes', {
       provider,
       retryable: true
     });
@@ -155,6 +162,11 @@ export class ElevenLabsProvider extends VoiceProvider {
       body: formData,
       // Voice creation is not safely idempotent; retrying can orphan a paid clone.
       maxRetries: 0
+    });
+    logAIEvent('info', 'voice_clone_created', {
+      provider: this.name,
+      operation: 'voice_clone',
+      audio_bytes: audioSample.length
     });
 
     return {
@@ -311,6 +323,12 @@ export class ElevenLabsProvider extends VoiceProvider {
       method: 'POST',
       body: formData
     });
+    logAIEvent('info', 'voice_usage_recorded', {
+      provider: this.name,
+      operation: 'speech_to_text',
+      model: this.speechToTextModel,
+      audio_bytes: audioBuffer.length
+    });
 
     return {
       transcript: String(data?.text || '').trim(),
@@ -336,6 +354,10 @@ export class ElevenLabsProvider extends VoiceProvider {
 
     await this.request(`/voices/${encodeURIComponent(providerVoiceId)}`, {
       method: 'DELETE'
+    });
+    logAIEvent('info', 'voice_deleted', {
+      provider: this.name,
+      operation: 'voice_delete'
     });
 
     return {
