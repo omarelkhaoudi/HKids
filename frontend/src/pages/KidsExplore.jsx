@@ -31,10 +31,10 @@ import { useToast } from '../components/ToastProvider';
 import { BRAND_CONFETTI } from '../constants/brandTheme';
 
 const TABS = [
-  { id: 'universes', labelKey: 'luTabUniverses' },
-  { id: 'games', labelKey: 'luTabGames' },
-  { id: 'quiz', labelKey: 'luTabQuiz' },
-  { id: 'me', labelKey: 'luTabMe' },
+  { id: 'universes', labelKey: 'luTabUniverses', pictogram: '🌌' },
+  { id: 'games', labelKey: 'luTabGames', pictogram: '🎮' },
+  { id: 'quiz', labelKey: 'luTabQuiz', pictogram: '🧩' },
+  { id: 'me', labelKey: 'luTabMe', pictogram: '🧒' },
 ];
 
 function ConfettiBurst() {
@@ -132,6 +132,7 @@ function KidsExplore() {
           badge={luLabel('luExplore', language)}
           title={luLabel('luExploreTitle', language)}
           subtitle={luLabel('luExploreSubtitle', language)}
+          nonReader
         />
 
         <DailySurpriseChest
@@ -160,13 +161,14 @@ function KidsExplore() {
                 setTab(item.id);
                 setActiveGame(null);
               }}
-              className={`shrink-0 min-h-touch px-space-20 rounded-full font-black text-caption border transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-success-400 focus-visible:ring-offset-2 ${
+              className={`shrink-0 grid h-16 w-16 min-h-touch-kids min-w-touch-kids place-items-center rounded-full text-3xl font-black border transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-success-400 focus-visible:ring-offset-2 ${
                 tab === item.id
                   ? 'bg-success-600 text-white border-success-600 shadow-card'
                   : 'bg-card text-foreground border-border hover:border-success-300 hover:shadow-soft'
               }`}
             >
-              {luLabel(item.labelKey, language)}
+              <span aria-hidden="true">{item.pictogram}</span>
+              <span className="sr-only">{luLabel(item.labelKey, language)}</span>
             </button>
           ))}
         </div>
@@ -184,10 +186,11 @@ function KidsExplore() {
             >
               <button
                 type="button"
-                className="mb-space-16 min-h-touch font-black"
+                className="mb-space-16 grid h-16 w-16 min-h-touch-kids min-w-touch-kids place-items-center rounded-full bg-surface-secondary text-2xl font-black"
                 onClick={() => setActiveGame(null)}
+                aria-label={luLabel('luTabGames', language)}
               >
-                ← {luLabel('luTabGames', language)}
+                <span aria-hidden="true">←</span>
               </button>
               <div className="text-5xl text-center mb-space-16">{activeGame.emoji}</div>
               <LearningInteractiveChallenge
@@ -228,7 +231,7 @@ function KidsExplore() {
                   className={`relative overflow-hidden min-h-[9.5rem] rounded-24 bg-gradient-to-br ${tile.gradient} p-space-16 text-start text-white shadow-card focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-success-300`}
                 >
                   <span className="text-4xl block mb-2" aria-hidden="true">{tile.emoji}</span>
-                  <span className="block text-heading-m font-black leading-tight">
+                  <span className="sr-only">
                     {luTileLabel(tile.id, language)}
                   </span>
                   <span className="absolute bottom-3 end-3 text-2xl opacity-80" aria-hidden="true">{tile.mascot}</span>
@@ -260,8 +263,7 @@ function KidsExplore() {
                     className="rounded-24 border border-border bg-card p-space-20 text-start min-h-touch-kids shadow-soft transition-all duration-200 hover:shadow-card hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-success-400"
                   >
                     <span className="text-4xl block mb-2 leading-none" aria-hidden="true">{game.emoji}</span>
-                    <span className="font-black text-foreground block">{luLabel(game.labelKey, language)}</span>
-                    <span className="text-caption text-foreground-muted">{luLabel('luPlay', language)}</span>
+                    <span className="sr-only">{luLabel(game.labelKey, language)} {luLabel('luPlay', language)}</span>
                   </button>
                 ))}
             </motion.div>

@@ -12,6 +12,7 @@ export function KidsHero({
   children,
   modality,
   gradient,
+  nonReader = false,
   className = '',
 }) {
   const reducedMotion = useReducedMotion();
@@ -21,22 +22,34 @@ export function KidsHero({
   return (
     <motion.section
       {...getMotionProps(reducedMotion, kidsPageEnter)}
-      className={`relative overflow-hidden rounded-32 bg-gradient-to-br ${resolvedGradient} p-space-24 md:p-space-32 text-white shadow-card border border-white/20 ${className}`}
+      className={`relative overflow-hidden rounded-32 bg-gradient-to-br ${resolvedGradient} p-space-24 md:p-space-32 text-white shadow-card border border-white/20 ${nonReader ? 'kids-visual-hero' : ''} ${className}`}
     >
       <div className="absolute -right-20 -top-20 w-64 h-64 bg-white/10 rounded-full pointer-events-none" aria-hidden="true" />
       {emoji && (
-        <div className="absolute right-6 top-1/2 -translate-y-1/2 text-[6rem] md:text-[8rem] opacity-10 pointer-events-none" aria-hidden="true">
+        <div className={`${nonReader ? 'kids-visual-hero-emoji' : 'absolute right-6 top-1/2 -translate-y-1/2 text-[6rem] md:text-[8rem] opacity-10 pointer-events-none'}`} aria-hidden="true">
           {emoji}
         </div>
       )}
       <div className="relative z-10 max-w-2xl">
-        {badge && (
+        {badge && !nonReader && (
           <div className="inline-flex items-center gap-2 rounded-full bg-white/20 border border-white/25 px-4 py-2 kids-type-caption text-white mb-space-16">
             {badge}
           </div>
         )}
-        {title && <h1 className="kids-type-display text-white mb-space-12">{title}</h1>}
-        {subtitle && <p className="kids-shelf-subtitle !text-white/90 !mt-0">{subtitle}</p>}
+        {title && (
+          nonReader ? (
+            <h1 className="sr-only">{title}</h1>
+          ) : (
+            <h1 className="kids-type-display text-white mb-space-12">{title}</h1>
+          )
+        )}
+        {subtitle && (
+          nonReader ? (
+            <p className="sr-only">{subtitle}</p>
+          ) : (
+            <p className="kids-shelf-subtitle !text-white/90 !mt-0">{subtitle}</p>
+          )
+        )}
         {children}
       </div>
     </motion.section>

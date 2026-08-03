@@ -18,9 +18,11 @@ import { KidsErrorBanner } from '../components/kids/KidsErrorBanner';
 import { KidsFeedbackBurst } from '../components/kids/KidsFeedbackBurst';
 import { VoiceAssistant } from '../components/kids/VoiceAssistant';
 import { BookGridSkeleton } from '../components/SkeletonLoader';
+import { KidsIconAction } from '../components/kids/KidsIconAction';
 import {
-  AudioIcon, ChevronLeftIcon, HeartIcon,
+  AudioIcon, ChevronLeftIcon,
   PauseIcon, PlayIcon, ChevronRightIcon,
+  MoonIcon, SunIcon,
 } from '../components/Icons';
 
 function formatTime(seconds = 0) {
@@ -41,6 +43,7 @@ function KidsListen() {
   const [loading, setLoading] = useState(true);
   const [favorite, setFavorite] = useState(false);
   const [feedback, setFeedback] = useState(null);
+  const [sleepMode, setSleepMode] = useState(false);
   const playFeedbackShown = useRef(false);
 
   const player = useAudioPlayer();
@@ -121,7 +124,7 @@ function KidsListen() {
   if (!book) return null;
 
   return (
-    <KidsPageShell isRtl={isRtl} variant="library" world="audio" className="pb-space-32 kids-listen-atmosphere kids-glow-audio" footer={<KidsBottomNav />}>
+    <KidsPageShell isRtl={isRtl} variant="library" world="audio" className={`pb-space-32 kids-listen-atmosphere kids-glow-audio ${sleepMode ? 'kids-listen-sleep-mode kids-night-calm' : ''}`} footer={<KidsBottomNav />}>
       <KidsPageHeader backTo="/kids/audio" onBack={() => navigate('/kids/audio')} emoji="🎧" />
 
       <div className="relative z-10 mx-auto max-w-4xl px-space-16 py-space-16 md:px-space-32">
@@ -131,9 +134,9 @@ function KidsListen() {
         >
           <KidsFeedbackBurst type={feedback} active={Boolean(feedback)} />
 
-          <span className="mb-space-16 inline-flex min-h-touch items-center gap-space-8 rounded-full bg-hkids-brown-soft text-hkids-brown-dark px-space-16 py-space-8 text-caption font-black border border-hkids-brown-light">
+          <span className="mb-space-16 inline-flex min-h-touch-kids items-center justify-center gap-space-8 rounded-full bg-hkids-brown-soft text-hkids-brown-dark px-space-16 py-space-8 text-caption font-black border border-hkids-brown-light">
             <AudioIcon className="h-5 w-5" />
-            {typeLabel}
+            <span className="sr-only">{typeLabel}</span>
           </span>
 
           <motion.div
@@ -147,7 +150,7 @@ function KidsListen() {
             <div className="absolute inset-0 bg-gradient-to-t from-surface-900/35 via-transparent to-transparent pointer-events-none" />
           </motion.div>
 
-          <h1 className="text-heading-l md:text-heading-xl mb-space-16 text-foreground max-w-2xl">{book.title}</h1>
+          <h1 className="sr-only">{book.title}</h1>
 
           {player.playing && !reducedMotion && (
             <div className="kids-listen-wave mb-space-16" aria-hidden="true">
@@ -207,21 +210,31 @@ function KidsListen() {
             </button>
           </div>
 
-          <button
-            type="button"
-            onClick={toggleFavorite}
-            className="kids-touch-target inline-flex min-h-touch-kids items-center gap-space-12 rounded-full bg-hkids-brown-soft text-hkids-brown-darker px-space-24 py-space-12 font-black border-2 border-hkids-brown-light hover:bg-hkids-brown-light transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-hkids-brown-light"
-          >
-            <HeartIcon className="h-7 w-7" filled={favorite} />
-            {favorite ? t('yourFavorites') : t('addToFavorites')}
-          </button>
+          <div className="kids-visual-action-row">
+            <KidsIconAction
+              action="favorite"
+              size="lg"
+              active={favorite}
+              pictogram={favorite ? '❤️' : '♡'}
+              label={favorite ? t('yourFavorites') : t('addToFavorites')}
+              onClick={toggleFavorite}
+            />
+            <KidsIconAction
+              action="sleep"
+              size="lg"
+              active={sleepMode}
+              icon={sleepMode ? SunIcon : MoonIcon}
+              label={t('readerAmbienceNight')}
+              onClick={() => setSleepMode((value) => !value)}
+            />
+          </div>
         </motion.main>
 
         {listeningHistory.length > 0 && (
           <section className="mt-space-32" aria-label={t('continueReading')}>
             <h2 className="kids-shelf-title mb-space-16 px-space-8">
               <span aria-hidden="true">🎧</span>
-              <span>{t('continueReading')}</span>
+              <span className="sr-only">{t('continueReading')}</span>
             </h2>
             <div className="kids-gallery-rail">
               {listeningHistory.slice(0, 8).map((item) => (
@@ -238,7 +251,7 @@ function KidsListen() {
                       imgClassName="absolute inset-0 w-full h-full object-cover"
                     />
                   </div>
-                  <p className="kids-book-title text-sm line-clamp-2">{item.bookTitle}</p>
+                  <p className="sr-only">{item.bookTitle}</p>
                   {item.duration > 0 && (
                     <p className="text-caption text-foreground-muted mt-space-4">
                       {Math.round((item.currentTime / item.duration) * 100)}%

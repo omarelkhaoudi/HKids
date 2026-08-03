@@ -24,6 +24,7 @@ import { KidsEmptyState } from '../components/kids/KidsEmptyState';
 import { VoiceAssistant } from '../components/kids/VoiceAssistant';
 import { BookGridSkeleton } from '../components/SkeletonLoader';
 import { KidsBookCover } from '../components/kids/KidsBookCover';
+import { KidsIconAction } from '../components/kids/KidsIconAction';
 
 const TABS = [
   { id: 'all', labelKey: 'audioTabAll', emoji: '🎧' },
@@ -149,7 +150,7 @@ function KidsAudioLibrary() {
     isRtl,
     onPlay: handlePlay,
     showActions: false,
-    hideTitle: false,
+    hideTitle: true,
     modality: 'audio',
   };
 
@@ -164,6 +165,7 @@ function KidsAudioLibrary() {
           badge={t('audioLibrary')}
           title={t('audioLibraryTitle')}
           subtitle={t('audioLibrarySubtitle')}
+          nonReader
         />
 
         {featuredBook && (
@@ -171,7 +173,8 @@ function KidsAudioLibrary() {
             whileHover={{ scale: 1.01 }}
             whileTap={{ scale: 0.99 }}
             onClick={() => handlePlay(featuredBook)}
-            className="kids-premium-panel w-full p-4 md:p-6 cursor-pointer"
+            className="kids-premium-panel w-full cursor-pointer p-4 md:p-6"
+            aria-label={`${t('continueListening')} — ${featuredBook.title}`}
           >
             <div className="flex flex-col md:flex-row items-center gap-6">
               <div className="kids-hero-cover w-40 md:w-48 shrink-0 relative">
@@ -182,11 +185,18 @@ function KidsAudioLibrary() {
                   />
                 </div>
               </div>
-              <div className="flex-1 text-center md:text-start space-y-3">
-                <span className="inline-flex min-h-9 items-center rounded-full bg-primary-50 text-primary-700 px-4 py-1 text-sm font-semibold">
-                  {t('continueListening')}
-                </span>
-                <p className="text-2xl md:text-3xl font-semibold text-foreground leading-snug">{featuredBook.title}</p>
+              <div className="flex flex-1 flex-col items-center justify-center gap-4 text-center md:items-start">
+                <span className="text-5xl" aria-hidden="true">▶️</span>
+                <h2 className="sr-only">{featuredBook.title}</h2>
+                <KidsIconAction
+                  action="listen"
+                  size="xl"
+                  label={t('continueListening')}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    handlePlay(featuredBook);
+                  }}
+                />
               </div>
             </div>
           </motion.div>
@@ -255,7 +265,7 @@ function KidsAudioLibrary() {
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 justify-items-center">
             <AnimatePresence>
               {visibleBooks.map((book) => (
-                <KidsMediaCard key={book.id} book={book} variant="carousel" hideTitle={false} onPlay={handlePlay} isRtl={isRtl} />
+                <KidsMediaCard key={book.id} book={book} variant="carousel" hideTitle onPlay={handlePlay} isRtl={isRtl} />
               ))}
             </AnimatePresence>
           </div>

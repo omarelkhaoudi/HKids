@@ -26,8 +26,8 @@ export function LearningUniverseDashboard({
       <section className="rounded-32 bg-card border border-border p-space-24 shadow-soft">
         <div className="flex items-end justify-between gap-3 mb-space-16">
           <div>
-            <h2 className="text-heading-l font-black">{luLabel('luDashboard', language)}</h2>
-            <p className="text-caption text-foreground-muted">
+            <h2 className="sr-only">{luLabel('luDashboard', language)}</h2>
+            <p className="sr-only">
               {luLabel('luLevel', language, { level: dashboard.level?.level || 1 })} · {dashboard.todayXp || 0} XP
             </p>
           </div>
@@ -44,28 +44,29 @@ export function LearningUniverseDashboard({
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           {metrics.map((m) => (
-            <article key={m.label} className="rounded-24 bg-surface-secondary/80 p-space-16 border border-border">
-              <span className="text-2xl" aria-hidden="true">{m.emoji}</span>
-              <p className="text-heading-m font-black mt-1">{m.value}</p>
-              <p className="text-caption text-foreground-muted">{m.label}</p>
+            <article key={m.label} className="kids-visual-stat-card !min-h-[6.5rem]">
+              <span className="kids-visual-stat-emoji !text-3xl" aria-hidden="true">{m.emoji}</span>
+              <p className="kids-visual-stat-value !text-lg">{m.value}</p>
+              <p className="sr-only">{m.label}</p>
             </article>
           ))}
         </div>
-        <p className="text-caption font-bold mt-space-16 text-foreground-muted">
+        <p className="sr-only">
           {luLabel('luThisWeek', language)}: {dashboard.weekBooks} · {luLabel('luDashboard', language)}: {dashboard.todayBooks}
         </p>
       </section>
 
       {dashboard.favoriteWorlds?.length > 0 && (
         <section>
-          <h3 className="text-heading-m font-black mb-3">{luLabel('luFavoriteWorlds', language)}</h3>
+          <h3 className="sr-only">{luLabel('luFavoriteWorlds', language)}</h3>
           <div className="flex flex-wrap gap-2">
             {dashboard.favoriteWorlds.map((id) => {
               const world = getEducationalWorld(id);
               if (!world) return null;
               return (
                 <span key={id} className={`inline-flex items-center gap-2 rounded-full bg-gradient-to-r ${world.gradient} text-white px-3 py-1.5 text-caption font-bold`}>
-                  {world.emoji} {eduLabel(world.labelKey, language)}
+                  <span aria-hidden="true">{world.emoji}</span>
+                  <span className="sr-only">{eduLabel(world.labelKey, language)}</span>
                 </span>
               );
             })}
@@ -74,7 +75,7 @@ export function LearningUniverseDashboard({
       )}
 
       <section>
-        <h3 className="text-heading-m font-black mb-3">{luLabel('luBadges', language)}</h3>
+        <h3 className="sr-only">{luLabel('luBadges', language)}</h3>
         <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
           {UNIVERSE_BADGES.map((badge) => {
             const earned = (dashboard.badges || []).includes(badge.id);
@@ -83,8 +84,8 @@ export function LearningUniverseDashboard({
                 key={badge.id}
                 className={`rounded-2xl border p-3 text-center ${earned ? 'border-hkids-brown-light bg-hkids-brown-soft' : 'border-border opacity-40 grayscale'}`}
               >
-                <div className="text-2xl">{badge.emoji}</div>
-                <p className="text-caption font-black leading-tight mt-1">{luLabel(badge.labelKey, language)}</p>
+                <div className="text-4xl leading-none" aria-hidden="true">{badge.emoji}</div>
+                <p className="sr-only">{luLabel(badge.labelKey, language)}</p>
               </div>
             );
           })}
@@ -92,7 +93,7 @@ export function LearningUniverseDashboard({
       </section>
 
       <section>
-        <h3 className="text-heading-m font-black mb-3">{luLabel('luAvatars', language)}</h3>
+        <h3 className="sr-only">{luLabel('luAvatars', language)}</h3>
         <div className="grid grid-cols-5 gap-2">
           {UNIVERSE_AVATARS.map((avatar) => {
             const unlocked = (dashboard.unlockedAvatars || []).includes(avatar.id);

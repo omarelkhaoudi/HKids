@@ -19,15 +19,15 @@ export function KidsAchievementBadges({
             key={badge.id}
             initial={reducedMotion ? false : { scale: 0.92, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className={`rounded-2xl border p-3 text-center ${
+            className={`min-h-[5.5rem] rounded-2xl border p-3 text-center ${
               isOn
                 ? 'border-hkids-brown-light bg-gradient-to-br from-hkids-brown-soft to-hkids-brown-soft shadow-soft'
                 : 'border-border/60 bg-surface-secondary/50 opacity-50 grayscale'
             }`}
             aria-label={eduLabel(badge.labelKey, language)}
           >
-            <div className={`${compact ? 'text-2xl' : 'text-3xl'} mb-1`}>{badge.emoji}</div>
-            <p className="text-caption font-black leading-tight text-foreground">
+            <div className={`${compact ? 'text-3xl' : 'text-5xl'} leading-none`}>{badge.emoji}</div>
+            <p className="sr-only">
               {eduLabel(badge.labelKey, language)}
             </p>
           </motion.div>

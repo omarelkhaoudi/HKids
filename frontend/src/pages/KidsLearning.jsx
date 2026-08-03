@@ -24,6 +24,7 @@ import { useReducedMotion } from '../hooks/useReducedMotion';
 import { KidsHero } from '../components/kids/KidsHero';
 import { KidsEmptyState } from '../components/kids/KidsEmptyState';
 import { BookGridSkeleton } from '../components/SkeletonLoader';
+import { KidsIconAction } from '../components/kids/KidsIconAction';
 import {
   EDUCATIONAL_WORLDS,
   filterContentsForWorld,
@@ -317,17 +318,17 @@ function KidsLearning() {
                 <button
                   type="button"
                   onClick={() => setSelectedContent(null)}
-                  className="inline-flex min-h-touch-kids items-center gap-space-8 rounded-16 bg-surface-secondary px-space-24 font-black hover:bg-surface-100 transition shadow-soft border border-border"
+                  className="grid h-16 w-16 min-h-touch-kids min-w-touch-kids place-items-center rounded-full bg-surface-secondary font-black hover:bg-surface-100 transition shadow-soft border border-border"
+                  aria-label={eduLabel('eduBackWorlds', language)}
                 >
                   <ChevronLeftIcon className="h-6 w-6" />
-                  {eduLabel('eduBackWorlds', language)}
                 </button>
               </div>
 
               <div className={`mb-space-32 rounded-32 bg-gradient-to-br ${selectedContent.category_color || activeWorld?.gradient || 'from-success-400 to-success-600'} p-space-32 text-white shadow-card relative overflow-hidden`}>
                 <div className="relative z-10 flex flex-col items-center text-center">
                   <div className="text-8xl drop-shadow-lg mb-space-16">{selectedContent.category_pictogram || '⭐'}</div>
-                  <h2 className="text-heading-xl drop-shadow-md">{selectedContent.title}</h2>
+                  <h2 className="sr-only">{selectedContent.title}</h2>
                   {selectedContent.audio_url && <AudioIcon className="mt-space-4 h-8 w-8 opacity-80" />}
                 </div>
               </div>
@@ -362,10 +363,11 @@ function KidsLearning() {
                   whileHover={reducedMotion ? undefined : { scale: 1.02 }}
                   whileTap={reducedMotion ? undefined : { scale: 0.95 }}
                   onClick={submit}
+                  aria-label={t('kidsLearningBravo')}
                   className="mt-space-32 inline-flex h-20 min-h-touch-kids w-full items-center justify-center gap-space-12 rounded-24 bg-gradient-to-r from-success-500 to-success-600 text-heading-m text-white shadow-card"
                 >
                   <CheckIcon className="h-8 w-8" />
-                  Valider mes réponses !
+                  <span className="sr-only">{t('kidsLearningBravo')}</span>
                 </motion.button>
               ) : (
                 <motion.div
@@ -374,8 +376,8 @@ function KidsLearning() {
                   className={`mt-space-32 rounded-24 p-space-32 text-center shadow-card border ${result.attempt?.success ? `${BRAND_SEMANTIC.success.bg} ${BRAND_SEMANTIC.success.border}` : `${BRAND_SEMANTIC.warning.bg} ${BRAND_SEMANTIC.warning.border}`}`}
                 >
                   <div className="text-8xl mb-space-16">{result.attempt?.success ? '🎉' : '⭐'}</div>
-                  <p className="text-heading-xl text-foreground mb-space-16">
-                    Score : <span className={result.attempt?.success ? BRAND_SEMANTIC.success.text : BRAND_SEMANTIC.warning.text}>{result.attempt?.score} / {result.attempt?.max_score}</span>
+                  <p className="sr-only">
+                    {result.attempt?.score} / {result.attempt?.max_score}
                   </p>
                   {result.reward?.icon && (
                     <div className="inline-flex items-center gap-space-12 rounded-full bg-white/80 px-space-24 py-space-12 shadow-soft border border-border font-black text-heading-m">
@@ -387,9 +389,10 @@ function KidsLearning() {
                     <button
                       type="button"
                       onClick={() => setSelectedContent(null)}
-                      className="inline-flex h-16 min-h-touch-kids items-center gap-space-12 rounded-16 bg-success-600 px-space-32 text-body-lg font-black text-white shadow-soft"
+                      className="inline-grid h-20 w-20 min-h-touch-kids min-w-touch-kids place-items-center rounded-full bg-success-600 text-4xl font-black text-white shadow-soft"
+                      aria-label={eduLabel('eduContinueLearning', language)}
                     >
-                      Continuer à jouer
+                      <span aria-hidden="true">▶️</span>
                     </button>
                   </div>
                 </motion.div>
@@ -406,10 +409,10 @@ function KidsLearning() {
               <button
                 type="button"
                 onClick={() => setActiveChallenge(null)}
-                className="mb-space-24 inline-flex min-h-touch-kids items-center gap-space-8 rounded-16 bg-surface-secondary px-space-24 font-black border border-border"
+                className="mb-space-24 grid h-16 w-16 min-h-touch-kids min-w-touch-kids place-items-center rounded-full bg-surface-secondary font-black border border-border"
+                aria-label={eduLabel('eduChallenges', language)}
               >
                 <ChevronLeftIcon className="h-6 w-6" />
-                {eduLabel('eduChallenges', language)}
               </button>
               <div className="text-5xl mb-space-16 text-center">{activeChallenge.pictogram || '⭐'}</div>
               <LearningInteractiveChallenge
@@ -423,8 +426,8 @@ function KidsLearning() {
             <motion.div key={`world-${activeWorld.id}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
               <div className={`mb-space-32 rounded-32 bg-gradient-to-br ${activeWorld.gradient} p-space-28 text-white shadow-card`}>
                 <p className="text-5xl mb-space-8">{activeWorld.emoji}</p>
-                <h1 className="text-heading-xl font-black">{eduLabel(activeWorld.labelKey, language)}</h1>
-                <p className="text-body mt-space-8 opacity-95">{eduLabel(activeWorld.descKey, language)}</p>
+                <h1 className="sr-only">{eduLabel(activeWorld.labelKey, language)}</h1>
+                <p className="sr-only">{eduLabel(activeWorld.descKey, language)}</p>
                 {pathProgress && (
                   <div className="mt-space-20">
                     <div className="h-3 rounded-full bg-white/25 overflow-hidden">
@@ -437,7 +440,7 @@ function KidsLearning() {
 
               {pathProgress && (
                 <section className="mb-space-32">
-                  <h2 className="text-heading-l font-black mb-space-16">{eduLabel('eduLearningPath', language)}</h2>
+                  <h2 className="sr-only">{eduLabel('eduLearningPath', language)}</h2>
                   <ol className="space-y-3">
                     {pathProgress.steps.map((step, index) => (
                       <li
@@ -453,7 +456,7 @@ function KidsLearning() {
                         <span className="grid h-10 w-10 place-items-center rounded-full bg-surface-secondary font-black">
                           {step.done ? '✓' : index + 1}
                         </span>
-                        <span className="font-black text-foreground">{eduLabel(step.labelKey, language)}</span>
+                        <span className="sr-only">{eduLabel(step.labelKey, language)}</span>
                         {step.master && step.done && <span className="ms-auto text-2xl">🏅</span>}
                       </li>
                     ))}
@@ -464,7 +467,7 @@ function KidsLearning() {
               <section className="mb-space-32">
                 <h2 className="text-heading-l font-black mb-space-16 flex items-center gap-2">
                   <TrophyIcon className="w-6 h-6 text-success-600" />
-                  {eduLabel('eduChallenges', language)}
+                  <span className="sr-only">{eduLabel('eduChallenges', language)}</span>
                 </h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {worldBuiltInChallenges.map((ch) => (
@@ -478,8 +481,7 @@ function KidsLearning() {
                       className="rounded-24 border border-border bg-card p-space-20 text-start min-h-touch-kids shadow-soft hover:shadow-card transition"
                     >
                       <span className="text-3xl block mb-2">{ch.pictogram}</span>
-                      <span className="font-black text-foreground">{eduLabel('eduPlayChallenge', language)}</span>
-                      <span className="block text-caption text-foreground-muted capitalize mt-1">{ch.type}</span>
+                      <span className="sr-only">{eduLabel('eduPlayChallenge', language)} {ch.type}</span>
                     </button>
                   ))}
                 </div>
@@ -489,7 +491,7 @@ function KidsLearning() {
                 <div className="flex flex-wrap items-center justify-between gap-3 mb-space-16">
                   <h2 className="text-heading-l font-black flex items-center gap-2">
                     <PlayIcon className="w-6 h-6 text-success-600" filled />
-                    {eduLabel('eduActivities', language)}
+                    <span className="sr-only">{eduLabel('eduActivities', language)}</span>
                   </h2>
                   <label className="relative block w-full sm:w-72">
                     <SearchIcon className="absolute start-4 top-1/2 -translate-y-1/2 h-5 w-5 text-foreground-muted" />
@@ -539,6 +541,7 @@ function KidsLearning() {
                 badge={eduLabel('eduHubTitle', language)}
                 title={eduLabel('eduHubTitle', language)}
                 subtitle={eduLabel('eduHubSubtitle', language)}
+                nonReader
                 className="mb-space-32"
               />
 
@@ -595,30 +598,32 @@ function KidsLearning() {
                 </section>
               )}
 
-              <section className="mb-space-32 grid grid-cols-2 md:grid-cols-4 gap-3">
-                <div className="rounded-24 bg-card border border-border p-space-16">
-                  <p className="text-caption text-foreground-muted">{eduLabel('eduLevel', language, { level: dashboard.level?.level || 1 })}</p>
-                  <p className="text-heading-l font-black">{eduLabel('eduXp', language, { xp: dashboard.level?.xp || 0 })}</p>
+              <section className="kids-visual-stat-grid mb-space-32" aria-label={eduLabel('eduDashboardTitle', language)}>
+                <div className="kids-visual-stat-card">
+                  <span className="kids-visual-stat-emoji" aria-hidden="true">⭐</span>
+                  <p className="kids-visual-stat-value">{dashboard.level?.xp || 0}</p>
+                  <p className="sr-only">{eduLabel('eduLevel', language, { level: dashboard.level?.level || 1 })}</p>
                   <div className="mt-2 h-2 rounded-full bg-surface-secondary overflow-hidden">
                     <div className="h-full bg-success-500" style={{ width: `${dashboard.level?.percent || 0}%` }} />
                   </div>
                 </div>
-                <div className="rounded-24 bg-card border border-border p-space-16">
-                  <p className="text-caption text-foreground-muted">{eduLabel('eduStars', language)}</p>
-                  <p className="text-heading-l font-black">⭐ {dashboard.challengesCompleted + dashboard.storiesCompleted}</p>
+                <div className="kids-visual-stat-card">
+                  <span className="kids-visual-stat-emoji" aria-hidden="true">🏆</span>
+                  <p className="kids-visual-stat-value">{dashboard.challengesCompleted + dashboard.storiesCompleted}</p>
+                  <p className="sr-only">{eduLabel('eduStars', language)}</p>
                 </div>
-                <div className="rounded-24 bg-card border border-border p-space-16">
-                  <p className="text-caption text-foreground-muted">{eduLabel('eduWorldsExplored', language)}</p>
-                  <p className="text-heading-l font-black">{dashboard.worldsExplored}/{EDUCATIONAL_WORLDS.length}</p>
+                <div className="kids-visual-stat-card">
+                  <span className="kids-visual-stat-emoji" aria-hidden="true">🌍</span>
+                  <p className="kids-visual-stat-value">{dashboard.worldsExplored}/{EDUCATIONAL_WORLDS.length}</p>
+                  <p className="sr-only">{eduLabel('eduWorldsExplored', language)}</p>
                 </div>
-                <button
-                  type="button"
+                <KidsIconAction
+                  action="reward"
+                  size="xl"
+                  label={eduLabel('eduClaimReward', language, { xp: 15 })}
                   onClick={handleClaimDaily}
-                  className="rounded-24 bg-gradient-to-br from-hkids-brown to-hkids-brown text-white p-space-16 text-start shadow-card min-h-touch-kids"
-                >
-                  <p className="text-caption font-bold opacity-90">{eduLabel('eduDailyReward', language)}</p>
-                  <p className="text-heading-m font-black mt-1">{eduLabel('eduClaimReward', language, { xp: 15 })}</p>
-                </button>
+                  className="!h-auto !w-full !rounded-24"
+                />
               </section>
 
               <section className="mb-space-32">
@@ -631,7 +636,7 @@ function KidsLearning() {
               </section>
 
               <section className="mb-space-32">
-                <h2 className="text-heading-l font-black mb-space-12">{eduLabel('eduContinueLearning', language)}</h2>
+                <h2 className="sr-only">{eduLabel('eduContinueLearning', language)}</h2>
                 <button
                   type="button"
                   onClick={() => openWorld(recommendations.continueLearning.worldId)}
@@ -639,13 +644,18 @@ function KidsLearning() {
                 >
                   {(() => {
                     const w = getEducationalWorld(recommendations.continueLearning.worldId);
-                    return w ? `${w.emoji} ${eduLabel(w.labelKey, language)}` : '…';
+                    return w ? (
+                      <>
+                        <span className="text-6xl" aria-hidden="true">{w.emoji}</span>
+                        <span className="sr-only">{eduLabel(w.labelKey, language)}</span>
+                      </>
+                    ) : '…';
                   })()}
                 </button>
               </section>
 
               <section className="mb-space-32">
-                <h2 className="text-heading-l font-black mb-space-12">{eduLabel('eduRecommended', language)}</h2>
+                <h2 className="sr-only">{eduLabel('eduRecommended', language)}</h2>
                 <KidsWorldGrid
                   language={language}
                   progressByWorld={eduProgress.byWorld}
@@ -657,7 +667,7 @@ function KidsLearning() {
 
               {recommendations.practiceAgain.length > 0 && (
                 <section className="mb-space-32">
-                  <h2 className="text-heading-l font-black mb-space-12">{eduLabel('eduPracticeAgain', language)}</h2>
+                  <h2 className="sr-only">{eduLabel('eduPracticeAgain', language)}</h2>
                   <div className="flex flex-wrap gap-2">
                     {recommendations.practiceAgain.map((c) => (
                       <button
@@ -674,20 +684,21 @@ function KidsLearning() {
               )}
 
               <section className="mb-space-32">
-                <h2 className="text-heading-l font-black mb-space-12">{eduLabel('eduNewChallenge', language)}</h2>
+                <h2 className="sr-only">{eduLabel('eduNewChallenge', language)}</h2>
                 {recommendations.newChallenge && (
                   <button
                     type="button"
                     onClick={() => openWorld(recommendations.newChallenge.id)}
                     className={`w-full rounded-24 bg-gradient-to-r ${recommendations.newChallenge.gradient} p-space-20 text-white text-start font-black min-h-touch-kids shadow-card`}
                   >
-                    {recommendations.newChallenge.emoji} {eduLabel(recommendations.newChallenge.labelKey, language)}
+                    <span className="text-5xl" aria-hidden="true">{recommendations.newChallenge.emoji}</span>
+                    <span className="sr-only">{eduLabel(recommendations.newChallenge.labelKey, language)}</span>
                   </button>
                 )}
               </section>
 
               <section className="mb-space-32">
-                <h2 className="text-heading-l font-black mb-space-16">{eduLabel('eduExploreMore', language)}</h2>
+                <h2 className="sr-only">{eduLabel('eduExploreMore', language)}</h2>
                 <KidsWorldGrid
                   language={language}
                   progressByWorld={eduProgress.byWorld}
@@ -700,7 +711,7 @@ function KidsLearning() {
                 <section className="mb-space-32">
                   <h2 className="mb-space-16 text-heading-l flex items-center gap-space-12">
                     <TrophyIcon className="w-7 h-7 text-success-600" />
-                    {t('kidsLearningDailyMissions')}
+                    <span className="sr-only">{t('kidsLearningDailyMissions')}</span>
                   </h2>
                   <div className="grid gap-space-16 md:grid-cols-2 lg:grid-cols-3">
                     {challenges.map((challenge) => {
@@ -711,7 +722,8 @@ function KidsLearning() {
                           key={challenge.id}
                           className={`rounded-24 p-space-20 shadow-card ${isComplete ? `${BRAND_SEMANTIC.success.bg} ${BRAND_SEMANTIC.success.border}` : 'bg-card border border-border'}`}
                         >
-                          <p className="text-heading-m text-foreground mb-space-4">{challenge.title}</p>
+                          <p className="sr-only">{challenge.title}</p>
+                          <div className="mb-space-12 text-center text-4xl" aria-hidden="true">{isComplete ? '🏆' : '⭐'}</div>
                           <div className="h-3 w-full overflow-hidden rounded-full bg-surface-secondary">
                             <div className="h-full rounded-full bg-success-500" style={{ width: `${progress}%` }} />
                           </div>
@@ -723,7 +735,7 @@ function KidsLearning() {
               )}
 
               <section className="mb-space-24">
-                <h2 className="text-heading-l font-black mb-space-12">{eduLabel('eduParentAchievements', language)}</h2>
+                <h2 className="sr-only">{eduLabel('eduParentAchievements', language)}</h2>
                 <KidsAchievementBadges unlockedIds={dashboard.badges} language={language} reducedMotion={reducedMotion} />
               </section>
             </motion.div>

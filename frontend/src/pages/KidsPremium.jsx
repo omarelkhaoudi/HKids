@@ -17,11 +17,11 @@ import { premLabel } from '../constants/premiumLabels';
 import { BookGridSkeleton } from '../components/SkeletonLoader';
 import { KidsEmptyState } from '../components/kids/KidsEmptyState';
 
-function Section({ title, packs, language, lockedDefault, onUnlock, onOpen, onPreview, reducedMotion }) {
+function Section({ title, packs, language, lockedDefault, onUnlock, onOpen, onPreview, reducedMotion, nonReader = false }) {
   if (!packs?.length) return null;
   return (
     <section className="mb-space-32">
-      <h2 className="kids-type-h2 mb-space-16 px-1">{title}</h2>
+      <h2 className={nonReader ? 'sr-only' : 'kids-type-h2 mb-space-16 px-1'}>{title}</h2>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-space-16">
         {packs.map((pack) => (
           <PremiumPackCard
@@ -33,6 +33,7 @@ function Section({ title, packs, language, lockedDefault, onUnlock, onOpen, onPr
             onUnlock={() => onUnlock(pack)}
             onOpen={() => onOpen(pack)}
             onPreview={() => onPreview(pack)}
+            nonReader={nonReader}
           />
         ))}
       </div>
@@ -101,18 +102,21 @@ function KidsPremium() {
           badge={premLabel('premNav', language)}
           title={premLabel('premHeroTitle', language)}
           subtitle={premLabel('premHeroBody', language)}
+          nonReader
           className="mb-space-24"
         />
 
-        <div className="mb-space-24 flex flex-wrap items-center gap-3">
+        <div className="mb-space-24 flex flex-wrap items-center justify-center gap-3">
           <span className={`rounded-full px-4 py-2 text-caption font-black min-h-touch inline-flex items-center ${isPremium ? 'bg-success-100 text-success-800' : 'bg-surface-secondary text-foreground'}`}>
-            {isPremium ? premLabel('premStatusActive', language) : premLabel('premStatusFree', language)}
+            <span aria-hidden="true">{isPremium ? '⭐' : '🔒'}</span>
+            <span className="sr-only">{isPremium ? premLabel('premStatusActive', language) : premLabel('premStatusFree', language)}</span>
           </span>
           <Link
             to="/abonnements"
             className="min-h-touch inline-flex items-center rounded-full bg-primary-600 text-white px-4 font-black text-caption shadow-soft hover:shadow-card transition-shadow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-300"
           >
-            {isPremium ? premLabel('premManage', language) : premLabel('premUnlock', language)}
+            <span aria-hidden="true">{isPremium ? '⚙️' : '🔓'}</span>
+            <span className="sr-only">{isPremium ? premLabel('premManage', language) : premLabel('premUnlock', language)}</span>
           </Link>
         </div>
 
@@ -130,12 +134,12 @@ function KidsPremium() {
           />
         ) : (
           <>
-            <Section title={premLabel('premPopular', language)} packs={sections.popular} language={language} lockedDefault={!isPremium} onUnlock={goUnlock} onOpen={openPack} onPreview={setPreviewPack} reducedMotion={reducedMotion} />
-            <Section title={premLabel('premNew', language)} packs={sections.newPremium} language={language} lockedDefault={!isPremium} onUnlock={goUnlock} onOpen={openPack} onPreview={setPreviewPack} reducedMotion={reducedMotion} />
-            <Section title={premLabel('premSeasonal', language)} packs={sections.seasonal} language={language} lockedDefault={!isPremium} onUnlock={goUnlock} onOpen={openPack} onPreview={setPreviewPack} reducedMotion={reducedMotion} />
-            <Section title={premLabel('premAi', language)} packs={sections.aiStories} language={language} lockedDefault={!isPremium} onUnlock={goUnlock} onOpen={openPack} onPreview={setPreviewPack} reducedMotion={reducedMotion} />
-            <Section title={premLabel('premCollections', language)} packs={sections.collections} language={language} lockedDefault={!isPremium} onUnlock={goUnlock} onOpen={openPack} onPreview={setPreviewPack} reducedMotion={reducedMotion} />
-            <Section title={premLabel('premRecommended', language)} packs={sections.recommended} language={language} lockedDefault={!isPremium} onUnlock={goUnlock} onOpen={openPack} onPreview={setPreviewPack} reducedMotion={reducedMotion} />
+            <Section title={premLabel('premPopular', language)} packs={sections.popular} language={language} lockedDefault={!isPremium} onUnlock={goUnlock} onOpen={openPack} onPreview={setPreviewPack} reducedMotion={reducedMotion} nonReader />
+            <Section title={premLabel('premNew', language)} packs={sections.newPremium} language={language} lockedDefault={!isPremium} onUnlock={goUnlock} onOpen={openPack} onPreview={setPreviewPack} reducedMotion={reducedMotion} nonReader />
+            <Section title={premLabel('premSeasonal', language)} packs={sections.seasonal} language={language} lockedDefault={!isPremium} onUnlock={goUnlock} onOpen={openPack} onPreview={setPreviewPack} reducedMotion={reducedMotion} nonReader />
+            <Section title={premLabel('premAi', language)} packs={sections.aiStories} language={language} lockedDefault={!isPremium} onUnlock={goUnlock} onOpen={openPack} onPreview={setPreviewPack} reducedMotion={reducedMotion} nonReader />
+            <Section title={premLabel('premCollections', language)} packs={sections.collections} language={language} lockedDefault={!isPremium} onUnlock={goUnlock} onOpen={openPack} onPreview={setPreviewPack} reducedMotion={reducedMotion} nonReader />
+            <Section title={premLabel('premRecommended', language)} packs={sections.recommended} language={language} lockedDefault={!isPremium} onUnlock={goUnlock} onOpen={openPack} onPreview={setPreviewPack} reducedMotion={reducedMotion} nonReader />
           </>
         )}
 

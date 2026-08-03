@@ -834,6 +834,333 @@
     @apply h-6 w-6;
   }
 
+  .kids-icon-control {
+    position: relative;
+    display: inline-grid;
+    place-items: center;
+    gap: 0.35rem;
+    min-width: 56px;
+    min-height: 56px;
+    border-radius: 999px;
+    border: 2px solid color-mix(in srgb, var(--color-border) 72%, transparent);
+    background: color-mix(in srgb, var(--color-card) 88%, transparent);
+    color: var(--color-text-primary);
+    box-shadow: var(--shadow-soft);
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 160ms ease, box-shadow 160ms ease, background 160ms ease, border-color 160ms ease;
+  }
+
+  .kids-icon-control--md {
+    width: 4rem;
+    height: 4rem;
+  }
+
+  .kids-icon-control--lg {
+    width: 4.75rem;
+    height: 4.75rem;
+  }
+
+  .kids-icon-control--xl {
+    width: 6.5rem;
+    height: 6.5rem;
+  }
+
+  .kids-icon-control-symbol {
+    display: grid;
+    place-items: center;
+    font-size: 2rem;
+    line-height: 1;
+  }
+
+  .kids-icon-control--lg .kids-icon-control-symbol {
+    font-size: 2.35rem;
+  }
+
+  .kids-icon-control--xl .kids-icon-control-symbol {
+    font-size: 3.25rem;
+  }
+
+  .kids-icon-control-svg {
+    width: 1.85rem;
+    height: 1.85rem;
+  }
+
+  .kids-icon-control--lg .kids-icon-control-svg {
+    width: 2.15rem;
+    height: 2.15rem;
+  }
+
+  .kids-icon-control--xl .kids-icon-control-svg {
+    width: 3rem;
+    height: 3rem;
+  }
+
+  .kids-icon-control-label {
+    max-width: 8rem;
+    padding-inline: 0.5rem;
+    font-size: 0.76rem;
+    font-weight: 800;
+    line-height: 1.1;
+    text-align: center;
+  }
+
+  .kids-icon-control--primary,
+  .kids-icon-control--voice {
+    background: linear-gradient(145deg, var(--color-primary-500), var(--color-primary-700));
+    border-color: color-mix(in srgb, white 48%, transparent);
+    color: white;
+  }
+
+  .kids-icon-control--audio,
+  .kids-icon-control--warm {
+    background: linear-gradient(145deg, var(--hkids-brown), var(--hkids-brown-dark));
+    border-color: color-mix(in srgb, white 50%, transparent);
+    color: white;
+  }
+
+  .kids-icon-control--learn {
+    background: linear-gradient(145deg, var(--color-success-500), var(--color-success-700));
+    border-color: color-mix(in srgb, white 48%, transparent);
+    color: white;
+  }
+
+  .kids-icon-control--reward {
+    background: linear-gradient(145deg, #f6d37a, var(--hkids-brown));
+    border-color: color-mix(in srgb, white 56%, transparent);
+    color: #3d2b1f;
+  }
+
+  .kids-icon-control--night {
+    background: linear-gradient(145deg, #25304a, #111827);
+    border-color: color-mix(in srgb, white 28%, transparent);
+    color: white;
+  }
+
+  .kids-icon-control--calm {
+    background: color-mix(in srgb, white 82%, var(--color-primary-50));
+    color: var(--color-primary-800);
+  }
+
+  .kids-icon-control.is-active {
+    border-color: color-mix(in srgb, var(--color-primary-400) 78%, white);
+    box-shadow: var(--shadow-card), 0 0 0 4px color-mix(in srgb, var(--color-primary-200) 36%, transparent);
+  }
+
+  .kids-icon-control:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  .kids-icon-control:focus-visible {
+    outline: none;
+    box-shadow: var(--shadow-card), 0 0 0 4px color-mix(in srgb, var(--color-primary-300) 45%, transparent);
+  }
+
+  .kids-visual-hero {
+    min-height: 14rem;
+    display: grid;
+    align-items: center;
+  }
+
+  .kids-visual-hero-emoji {
+    position: absolute;
+    inset-inline-end: clamp(1rem, 4vw, 2.75rem);
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: clamp(6rem, 16vw, 10rem);
+    line-height: 1;
+    opacity: 0.28;
+    pointer-events: none;
+    filter: drop-shadow(0 10px 22px rgba(36, 50, 74, 0.12));
+  }
+
+  .kids-visual-hero::after {
+    content: '';
+    position: absolute;
+    inset: auto 1.25rem 1.25rem auto;
+    width: 4rem;
+    height: 0.55rem;
+    border-radius: 999px;
+    background: color-mix(in srgb, white 45%, transparent);
+  }
+
+  .kids-visual-action-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 0.9rem;
+  }
+
+  .kids-visual-stat-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
+  }
+
+  @media (min-width: 768px) {
+    .kids-visual-stat-grid {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+
+  .kids-visual-stat-card {
+    min-height: 7.5rem;
+    border-radius: 1.5rem;
+    display: grid;
+    place-items: center;
+    gap: 0.25rem;
+    padding: 1rem;
+    border: 1px solid color-mix(in srgb, var(--color-border) 70%, transparent);
+    background: color-mix(in srgb, var(--color-card) 80%, transparent);
+    box-shadow: var(--shadow-soft);
+    text-align: center;
+  }
+
+  .kids-visual-stat-emoji {
+    font-size: 2.4rem;
+    line-height: 1;
+  }
+
+  .kids-visual-stat-value {
+    font-size: 1.35rem;
+    font-weight: 900;
+    line-height: 1;
+    color: var(--kids-type-ink);
+  }
+
+  .kids-voice-orb {
+    position: fixed;
+    z-index: 50;
+    bottom: 9.25rem;
+    width: 6.5rem;
+    height: 6.5rem;
+    min-width: 6.5rem;
+    min-height: 6.5rem;
+    display: grid;
+    place-items: center;
+    border-radius: 999px;
+    color: white;
+    border: 4px solid color-mix(in srgb, white 58%, transparent);
+    box-shadow:
+      0 24px 44px -24px rgba(36, 50, 74, 0.34),
+      0 0 0 8px color-mix(in srgb, var(--color-primary-200) 28%, transparent);
+    touch-action: manipulation;
+  }
+
+  .kids-voice-orb--ltr {
+    right: 1rem;
+  }
+
+  .kids-voice-orb--rtl {
+    left: 1rem;
+  }
+
+  .kids-voice-orb-symbol {
+    position: relative;
+    z-index: 2;
+    display: grid;
+    place-items: center;
+  }
+
+  .kids-voice-orb-ring {
+    position: absolute;
+    inset: -0.65rem;
+    border-radius: inherit;
+    border: 2px solid color-mix(in srgb, white 48%, transparent);
+    opacity: 0;
+    transform: scale(0.82);
+    pointer-events: none;
+  }
+
+  .kids-voice-orb.is-listening .kids-voice-orb-ring,
+  .kids-voice-orb.is-thinking .kids-voice-orb-ring {
+    animation: kids-voice-breathe 1.7s ease-in-out infinite;
+  }
+
+  .kids-voice-orb.is-speaking {
+    animation: kids-voice-soft-glow 1.8s ease-in-out infinite;
+  }
+
+  .kids-voice-wave {
+    position: absolute;
+    inset: auto 0.9rem 1rem;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 0.2rem;
+    opacity: 0;
+  }
+
+  .kids-voice-orb.is-listening .kids-voice-wave,
+  .kids-voice-orb.is-thinking .kids-voice-wave {
+    opacity: 0.9;
+  }
+
+  .kids-voice-wave span {
+    width: 0.24rem;
+    height: 0.55rem;
+    border-radius: 999px;
+    background: currentColor;
+    animation: kids-voice-wave 1s ease-in-out infinite;
+  }
+
+  .kids-voice-status-orb {
+    position: relative;
+    width: 6rem;
+    height: 6rem;
+    margin-inline: auto;
+    display: grid;
+    place-items: center;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--color-primary-100) 70%, white);
+    color: var(--color-primary-800);
+    box-shadow: inset 0 0 0 4px color-mix(in srgb, white 65%, transparent);
+  }
+
+  .kids-voice-status-orb.is-active {
+    animation: kids-voice-soft-glow 1.8s ease-in-out infinite;
+  }
+
+  .kids-voice-quick-button {
+    min-height: 5.5rem;
+    border-radius: 1.5rem;
+    display: grid;
+    place-items: center;
+    background: var(--color-surface-secondary);
+    color: var(--color-text-primary);
+    box-shadow: var(--shadow-soft);
+    border: 1px solid color-mix(in srgb, var(--color-border) 70%, transparent);
+  }
+
+  @keyframes kids-voice-breathe {
+    0% { opacity: 0; transform: scale(0.78); }
+    45% { opacity: 0.7; transform: scale(1); }
+    100% { opacity: 0; transform: scale(1.18); }
+  }
+
+  @keyframes kids-voice-soft-glow {
+    0%, 100% { box-shadow: 0 24px 44px -24px rgba(36, 50, 74, 0.34), 0 0 0 7px color-mix(in srgb, var(--color-primary-200) 24%, transparent); }
+    50% { box-shadow: 0 24px 44px -22px rgba(36, 50, 74, 0.4), 0 0 0 13px color-mix(in srgb, var(--color-primary-200) 16%, transparent); }
+  }
+
+  @keyframes kids-voice-wave {
+    0%, 100% { transform: scaleY(0.55); opacity: 0.55; }
+    50% { transform: scaleY(1.65); opacity: 1; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .kids-voice-orb.is-listening .kids-voice-orb-ring,
+    .kids-voice-orb.is-thinking .kids-voice-orb-ring,
+    .kids-voice-orb.is-speaking,
+    .kids-voice-status-orb.is-active,
+    .kids-voice-wave span {
+      animation: none;
+    }
+  }
+
   .kids-page {
     @apply relative z-10 w-full;
   }
@@ -3124,6 +3451,21 @@
   .dark .kids-listen-panel {
     background: rgba(22, 32, 50, 0.96);
     border-color: rgba(255, 255, 255, 0.1);
+  }
+
+  .kids-listen-sleep-mode .kids-listen-panel {
+    background: color-mix(in srgb, #111827 86%, transparent);
+    color: white;
+    border-color: color-mix(in srgb, white 18%, transparent);
+  }
+
+  .kids-listen-sleep-mode .kids-listen-panel .text-foreground,
+  .kids-listen-sleep-mode .kids-listen-panel .text-foreground-muted {
+    color: color-mix(in srgb, white 86%, transparent);
+  }
+
+  .kids-listen-sleep-mode .kids-audio-scrubber {
+    accent-color: #d8cabe;
   }
 
   .kids-listen-wave {

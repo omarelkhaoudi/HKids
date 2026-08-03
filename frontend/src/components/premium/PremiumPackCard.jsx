@@ -19,6 +19,7 @@ export function PremiumPackCard({
   onPreview,
   reducedMotion = false,
   compact = false,
+  nonReader = false,
 }) {
   if (!pack) return null;
   const includes = packIncludesLabels(pack, language);
@@ -34,11 +35,11 @@ export function PremiumPackCard({
           <span className="text-4xl" aria-hidden="true">{pack.emoji || '⭐'}</span>
           <PremiumRibbon language={language} />
         </div>
-        <h3 className="text-heading-m font-black leading-tight">{packDisplayTitle(pack, language)}</h3>
-        {!compact && (
+        <h3 className={nonReader ? 'sr-only' : 'text-heading-m font-black leading-tight'}>{packDisplayTitle(pack, language)}</h3>
+        {!compact && !nonReader && (
           <p className="text-caption mt-2 opacity-90 line-clamp-2">{packDisplayDesc(pack, language)}</p>
         )}
-        {includes.length > 0 && !compact && (
+        {includes.length > 0 && !compact && !nonReader && (
           <p className="text-caption mt-2 opacity-80">
             {premLabel('premIncludes', language)}: {includes.slice(0, 3).join(' · ')}
           </p>
@@ -49,17 +50,21 @@ export function PremiumPackCard({
               <button
                 type="button"
                 onClick={onUnlock}
-                className="min-h-[44px] rounded-full bg-white text-foreground px-4 font-black text-caption"
+                className="min-h-touch-kids min-w-touch-kids rounded-full bg-white text-foreground px-4 font-black text-caption"
+                aria-label={premLabel('premUnlock', language)}
               >
-                🔒 {premLabel('premUnlock', language)}
+                <span aria-hidden="true">🔒</span>
+                {!nonReader && ` ${premLabel('premUnlock', language)}`}
               </button>
               {onPreview && (
                 <button
                   type="button"
                   onClick={onPreview}
-                  className="min-h-[44px] rounded-full bg-white/20 border border-white/40 px-4 font-bold text-caption"
+                  className="min-h-touch-kids min-w-touch-kids rounded-full bg-white/20 border border-white/40 px-4 font-bold text-caption"
+                  aria-label={premLabel('premPreview', language)}
                 >
-                  {premLabel('premPreview', language)}
+                  <span aria-hidden="true">👀</span>
+                  {!nonReader && ` ${premLabel('premPreview', language)}`}
                 </button>
               )}
             </>
@@ -67,9 +72,11 @@ export function PremiumPackCard({
             <button
               type="button"
               onClick={onOpen}
-              className="min-h-[44px] rounded-full bg-white text-foreground px-4 font-black text-caption"
+              className="min-h-touch-kids min-w-touch-kids rounded-full bg-white text-foreground px-4 font-black text-caption"
+              aria-label={premLabel('premOpen', language)}
             >
-              {premLabel('premOpen', language)}
+              <span aria-hidden="true">▶️</span>
+              {!nonReader && ` ${premLabel('premOpen', language)}`}
             </button>
           )}
         </div>

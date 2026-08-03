@@ -37,12 +37,12 @@ function QuestionAudioButton({ audioUrl, label = 'Écouter' }) {
         whileTap: { scale: 0.95 },
       })}
       onClick={play}
-      className="mx-auto mb-space-24 flex min-h-touch-kids items-center gap-space-12 rounded-full bg-success-600 px-space-32 py-space-16 text-body-lg font-black text-white shadow-card focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-success-300"
+      className="relative mx-auto mb-space-24 grid h-20 w-20 min-h-touch-kids min-w-touch-kids place-items-center rounded-full bg-success-600 text-white shadow-card focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-success-300"
       aria-label={label}
     >
-      <AudioIcon className="h-8 w-8" />
-      <PlayIcon className="h-6 w-6" filled />
-      {label}
+      <AudioIcon className="h-9 w-9" />
+      <PlayIcon className="absolute h-5 w-5 translate-x-5 translate-y-5" filled />
+      <span className="sr-only">{label}</span>
     </motion.button>
   );
 }
@@ -64,15 +64,19 @@ function OptionGrid({ options, questionId, answers, onChoose, disabled, columns 
             })}
             onClick={() => !disabled && onChoose(questionId, option.id)}
             disabled={disabled}
-            className={`flex flex-col items-center justify-center min-h-[8rem] rounded-24 border-4 p-space-16 text-center transition-all shadow-soft focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-success-300 ${
+            className={`flex flex-col items-center justify-center min-h-[9rem] rounded-24 border-4 p-space-16 text-center transition-all shadow-soft focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-success-300 ${
               active
                 ? 'border-success-500 bg-success-50 dark:bg-success-900/30 text-success-700 dark:text-success-300 scale-105 shadow-card'
                 : 'border-transparent bg-card hover:border-success-300'
             }`}
             aria-label={option.label}
           >
-            <span className="text-6xl mb-space-8">{option.pictogram || option.label}</span>
-            {option.pictogram && <span className="text-heading-m">{option.label}</span>}
+            <span className="text-6xl leading-none">{option.pictogram || option.label}</span>
+            {option.pictogram ? (
+              <span className="sr-only">{option.label}</span>
+            ) : (
+              <span className="mt-space-8 text-heading-m">{option.label}</span>
+            )}
           </motion.button>
         );
       })}
@@ -89,11 +93,16 @@ export function LearningQuizQuestion({
 }) {
   const questionType = question.question_type || 'multiple_choice';
   const showPrompt = questionType !== 'listen_answer' || !question.audio_url;
+  const hasVisualOptions = (question.options || []).some((option) => option.pictogram);
 
   return (
     <div className="rounded-24 bg-surface-secondary/50 p-space-24 md:p-space-32 border border-border">
       {showPrompt && (
-        <p className="mb-space-24 text-heading-l text-center text-foreground">{question.prompt}</p>
+        hasVisualOptions ? (
+          <p className="sr-only">{question.prompt}</p>
+        ) : (
+          <p className="mb-space-24 text-heading-l text-center text-foreground">{question.prompt}</p>
+        )
       )}
 
       {(questionType === 'listen_answer' || question.audio_url) && (
@@ -140,7 +149,8 @@ export function LearningMemoryGame({ pairs = [], answers, onChoose, disabled }) 
 
   return (
     <div className="rounded-24 bg-surface-secondary/50 p-space-24 md:p-space-32 border border-border">
-      <p className="mb-space-24 text-heading-l text-center text-foreground">Trouve les paires !</p>
+      <p className="sr-only">Trouve les paires !</p>
+      <div className="mb-space-24 text-center text-6xl" aria-hidden="true">🧩</div>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-space-16">
         {pairs.map((pair) => {
           const active = selected.includes(pair.id);

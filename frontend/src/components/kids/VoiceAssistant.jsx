@@ -64,6 +64,7 @@ export function VoiceAssistant({ language: requestedSpeechLanguage, onNavigate }
   const [voiceUnavailable, setVoiceUnavailable] = useState(false);
 
   const canUseVoice = useMemo(() => isAudioRecordingSupported(), []);
+  const assistantState = listening ? 'listening' : thinking ? 'thinking' : 'ready';
   const quickVoiceActions = useMemo(() => [
     { icon: '🎧', label: t('assistantQuickAudio'), prompt: t('assistantPromptAudio') },
     { icon: '🦖', label: t('assistantQuickDino'), prompt: t('assistantPromptDino') },
@@ -245,7 +246,7 @@ export function VoiceAssistant({ language: requestedSpeechLanguage, onNavigate }
           }
           handleAsk();
         }}
-        className={`fixed bottom-40 z-50 grid h-20 w-20 place-items-center rounded-full text-white shadow-2xl ${isRtl ? 'left-6' : 'right-6'} ${
+        className={`kids-voice-orb kids-voice-orb--${isRtl ? 'rtl' : 'ltr'} is-${assistantState} ${
           listening
             ? 'bg-gradient-to-br from-hkids-brown to-hkids-brown'
             : `bg-gradient-to-br ${BRAND_HERO_GRADIENT}`
@@ -253,7 +254,15 @@ export function VoiceAssistant({ language: requestedSpeechLanguage, onNavigate }
         aria-label={t('assistantVoice')}
         title={t('assistantVoice')}
       >
-        <MicrophoneIcon className="h-9 w-9" />
+        <span className="kids-voice-orb-ring" aria-hidden="true" />
+        <span className="kids-voice-orb-symbol" aria-hidden="true">
+          <MicrophoneIcon className="h-12 w-12" />
+        </span>
+        <span className="kids-voice-wave" aria-hidden="true">
+          {Array.from({ length: 5 }).map((_, index) => (
+            <span key={index} style={{ animationDelay: `${index * 0.09}s` }} />
+          ))}
+        </span>
       </motion.button>
 
       <AnimatePresence>
@@ -283,7 +292,7 @@ export function VoiceAssistant({ language: requestedSpeechLanguage, onNavigate }
                     setOpen(false);
                     stopSpeaking();
                   }}
-                  className="grid h-10 w-10 place-items-center rounded-full bg-white/20 transition hover:bg-white/30"
+                  className="grid h-12 w-12 min-h-touch-kids min-w-touch-kids place-items-center rounded-full bg-white/20 transition hover:bg-white/30"
                   aria-label={t('close')}
                 >
                   <XIcon className="h-5 w-5" />
@@ -292,6 +301,14 @@ export function VoiceAssistant({ language: requestedSpeechLanguage, onNavigate }
             </div>
 
             <div className="max-h-80 space-y-3 overflow-y-auto p-4">
+              <div className={`kids-voice-status-orb ${listening || thinking ? 'is-active' : ''}`} aria-hidden="true">
+                <MicrophoneIcon className="h-10 w-10" />
+                <span className="kids-voice-wave !opacity-100">
+                  {Array.from({ length: 5 }).map((_, index) => (
+                    <span key={index} style={{ animationDelay: `${index * 0.09}s` }} />
+                  ))}
+                </span>
+              </div>
               {messages.map((message, index) => (
                 <div
                   key={`${message.role}-${index}`}
@@ -332,7 +349,7 @@ export function VoiceAssistant({ language: requestedSpeechLanguage, onNavigate }
                     type="button"
                     onClick={() => handleQuickAction(action.prompt)}
                     disabled={listening || thinking}
-                    className="grid min-h-20 place-items-center rounded-2xl bg-surface-100 text-surface-900 transition hover:bg-surface-200 disabled:opacity-60"
+                    className="kids-voice-quick-button transition hover:bg-surface-200 disabled:opacity-60"
                     aria-label={action.prompt}
                     title={action.label}
                   >
@@ -352,7 +369,7 @@ export function VoiceAssistant({ language: requestedSpeechLanguage, onNavigate }
                 <button
                   type="submit"
                   disabled={!manualText.trim() || listening || thinking}
-                  className="rounded-2xl bg-secondary-500 px-4 py-3 text-sm font-black text-white transition hover:bg-secondary-600 disabled:opacity-60"
+                  className="min-h-touch-kids rounded-2xl bg-secondary-500 px-4 py-3 text-sm font-black text-white transition hover:bg-secondary-600 disabled:opacity-60"
                 >
                   {t('assistantSend')}
                 </button>
@@ -360,7 +377,7 @@ export function VoiceAssistant({ language: requestedSpeechLanguage, onNavigate }
               <button
                 onClick={handleAsk}
                 disabled={listening || thinking || voiceUnavailable || !canUseVoice}
-                className="inline-flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-surface-900 text-base font-black text-white transition hover:bg-surface-800 disabled:opacity-60"
+                className="inline-flex h-16 min-h-touch-kids w-full items-center justify-center gap-2 rounded-2xl bg-surface-900 text-base font-black text-white transition hover:bg-surface-800 disabled:opacity-60"
               >
                 <MicrophoneIcon className="h-6 w-6" />
                 {listening ? t('assistantRecording') : thinking ? t('assistantWaiting') : voiceUnavailable || !canUseVoice ? t('assistantMicDisabled') : t('assistantTalk')}

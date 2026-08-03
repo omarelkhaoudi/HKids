@@ -36,8 +36,9 @@ export function LearningInteractiveChallenge({
     const done = matched.length >= challenge.pairs.length;
     return (
       <div className="space-y-4">
-        <h3 className="text-heading-m font-black">{eduLabel('eduMatchTitle', language)}</h3>
-        <p className="text-caption text-foreground-muted">{eduLabel('eduMatchHint', language)}</p>
+        <h3 className="sr-only">{eduLabel('eduMatchTitle', language)}</h3>
+        <p className="sr-only">{eduLabel('eduMatchHint', language)}</p>
+        <div className="text-center text-6xl" aria-hidden="true">🧩</div>
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-2">
             {challenge.pairs.map((pair) => {
@@ -94,9 +95,10 @@ export function LearningInteractiveChallenge({
           <motion.p
             initial={reducedMotion ? false : { scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="text-center text-heading-m text-success-700 font-black"
+            className="text-center text-6xl text-success-700 font-black"
           >
-            {eduLabel('eduChallengeComplete', language)} ⭐
+            <span aria-hidden="true">⭐</span>
+            <span className="sr-only">{eduLabel('eduChallengeComplete', language)}</span>
           </motion.p>
         )}
       </div>
@@ -106,7 +108,7 @@ export function LearningInteractiveChallenge({
   if (challenge.type === 'count') {
     return (
       <div className="space-y-4 text-center">
-        <h3 className="text-heading-m font-black">{eduLabel('eduCountTitle', language)}</h3>
+        <h3 className="sr-only">{eduLabel('eduCountTitle', language)}</h3>
         <p className="text-5xl tracking-normal" aria-hidden="true">{challenge.items.join(' ')}</p>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {challenge.options.map((n) => (
@@ -122,11 +124,11 @@ export function LearningInteractiveChallenge({
           ))}
         </div>
         {feedback === 'success' && (
-          <p className="text-heading-m text-success-700 font-black">{eduLabel('eduChallengeComplete', language)}</p>
+          <p className="text-6xl text-success-700 font-black" aria-label={eduLabel('eduChallengeComplete', language)}>⭐</p>
         )}
         {feedback === 'fail' && (
-          <button type="button" className="text-caption font-bold underline" onClick={() => setFeedback(null)}>
-            Retry
+          <button type="button" className="mx-auto grid h-16 w-16 min-h-touch-kids min-w-touch-kids place-items-center rounded-full bg-hkids-brown-soft text-3xl font-black text-hkids-brown-dark" onClick={() => setFeedback(null)} aria-label={eduLabel('eduPracticeAgain', language)}>
+            <span aria-hidden="true">↻</span>
           </button>
         )}
       </div>
@@ -136,7 +138,7 @@ export function LearningInteractiveChallenge({
   if (challenge.type === 'sequence') {
     return (
       <div className="space-y-4 text-center">
-        <h3 className="text-heading-m font-black">{eduLabel('eduSequenceTitle', language)}</h3>
+        <h3 className="sr-only">{eduLabel('eduSequenceTitle', language)}</h3>
         <p className="text-4xl font-black tracking-normal">{challenge.sequence.join('  ')}</p>
         <div className="flex flex-wrap justify-center gap-3">
           {challenge.options.map((opt) => (
@@ -152,11 +154,11 @@ export function LearningInteractiveChallenge({
           ))}
         </div>
         {feedback === 'success' && (
-          <p className="text-heading-m text-success-700 font-black">{eduLabel('eduChallengeComplete', language)}</p>
+          <p className="text-6xl text-success-700 font-black" aria-label={eduLabel('eduChallengeComplete', language)}>⭐</p>
         )}
         {feedback === 'fail' && (
-          <button type="button" className="text-caption font-bold underline" onClick={() => setFeedback(null)}>
-            Retry
+          <button type="button" className="mx-auto grid h-16 w-16 min-h-touch-kids min-w-touch-kids place-items-center rounded-full bg-hkids-brown-soft text-3xl font-black text-hkids-brown-dark" onClick={() => setFeedback(null)} aria-label={eduLabel('eduPracticeAgain', language)}>
+            <span aria-hidden="true">↻</span>
           </button>
         )}
       </div>
@@ -166,7 +168,8 @@ export function LearningInteractiveChallenge({
   if (challenge.type === 'shadow' || challenge.type === 'size') {
     return (
       <div className="space-y-4 text-center">
-        <h3 className="text-heading-m font-black">{challenge.pictogram} {challenge.type === 'size' ? '📏' : '🌑'}</h3>
+        <h3 className="sr-only">{challenge.type === 'size' ? 'Size' : 'Shadow'}</h3>
+        <div className="text-5xl font-black" aria-hidden="true">{challenge.pictogram} {challenge.type === 'size' ? '📏' : '🌑'}</div>
         <p className="text-6xl" aria-hidden="true">{challenge.prompt === 'big' ? '⬆️' : challenge.prompt}</p>
         <div className="grid grid-cols-3 gap-3">
           {(challenge.options || []).map((opt) => (
@@ -182,11 +185,11 @@ export function LearningInteractiveChallenge({
           ))}
         </div>
         {feedback === 'success' && (
-          <p className="text-heading-m text-success-700 font-black">{eduLabel('eduChallengeComplete', language)}</p>
+          <p className="text-6xl text-success-700 font-black" aria-label={eduLabel('eduChallengeComplete', language)}>⭐</p>
         )}
         {feedback === 'fail' && (
-          <button type="button" className="text-caption font-bold underline" onClick={() => setFeedback(null)}>
-            Retry
+          <button type="button" className="mx-auto grid h-16 w-16 min-h-touch-kids min-w-touch-kids place-items-center rounded-full bg-hkids-brown-soft text-3xl font-black text-hkids-brown-dark" onClick={() => setFeedback(null)} aria-label={eduLabel('eduPracticeAgain', language)}>
+            <span aria-hidden="true">↻</span>
           </button>
         )}
       </div>
@@ -220,7 +223,7 @@ export function LearningInteractiveChallenge({
   // find
   return (
     <div className="space-y-4 text-center">
-      <h3 className="text-heading-m font-black">{eduLabel('eduFindTitle', language)}</h3>
+      <h3 className="sr-only">{eduLabel('eduFindTitle', language)}</h3>
       <p className="text-6xl" aria-hidden="true">{challenge.prompt}</p>
       <div className="grid grid-cols-2 gap-3">
         {(challenge.options || []).map((opt) => (
@@ -236,11 +239,11 @@ export function LearningInteractiveChallenge({
         ))}
       </div>
       {feedback === 'success' && (
-        <p className="text-heading-m text-success-700 font-black">{eduLabel('eduChallengeComplete', language)}</p>
+        <p className="text-6xl text-success-700 font-black" aria-label={eduLabel('eduChallengeComplete', language)}>⭐</p>
       )}
       {feedback === 'fail' && (
-        <button type="button" className="text-caption font-bold underline" onClick={() => setFeedback(null)}>
-          Retry
+        <button type="button" className="mx-auto grid h-16 w-16 min-h-touch-kids min-w-touch-kids place-items-center rounded-full bg-hkids-brown-soft text-3xl font-black text-hkids-brown-dark" onClick={() => setFeedback(null)} aria-label={eduLabel('eduPracticeAgain', language)}>
+          <span aria-hidden="true">↻</span>
         </button>
       )}
     </div>
