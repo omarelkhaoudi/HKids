@@ -1,5 +1,9 @@
 import express from 'express';
-import { processStripeWebhookEvent, verifyStripeWebhook } from '../services/stripe/stripeWebhookService.js';
+import {
+  processStripeWebhookEvent,
+  safeWebhookErrorMessage,
+  verifyStripeWebhook
+} from '../services/stripe/stripeWebhookService.js';
 
 const router = express.Router();
 
@@ -12,7 +16,7 @@ router.post('/', express.raw({ type: 'application/json' }), async (req, res) => 
   } catch (error) {
     console.error('Stripe webhook error:', error.message);
     res.status(error.status || 500).json({
-      error: error.message,
+      error: safeWebhookErrorMessage(error),
       code: error.code || 'WEBHOOK_ERROR'
     });
   }

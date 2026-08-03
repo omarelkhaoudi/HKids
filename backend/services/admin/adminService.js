@@ -1,7 +1,7 @@
 import { getDatabase } from '../../database/init.js';
 import { logSecurityEvent } from '../security/auditLog.js';
 import { getStripe, isStripeConfigured } from '../stripe/stripeConfig.js';
-import { mapStripeStatus } from '../stripe/subscriptionService.js';
+import { executeStripeRequest, mapStripeStatus } from '../stripe/subscriptionService.js';
 import { deleteKidData } from '../privacy/privacyService.js';
 import { purgeUserVoiceData } from '../voice/voiceDataDeletionService.js';
 import { invalidateParentDashboardCache } from '../parentDashboardService.js';
@@ -521,10 +521,27 @@ export async function deleteUserAccount({ actor, targetUserId, reason = '', req 
     }
     const stripe = getStripe();
     for (const subscription of stripeSubscriptions.rows) {
-      await stripe.subscriptions.cancel(subscription.provider_subscription_id);
+      try {
+        await executeStripeRequest(
+          (options) => stripe.subscriptions.cancel(subscription.provider_subscription_id, {}, options),
+          {
+            operationName: 'admin.user.delete.subscription.cancel',
+            idempotencyKey: `hkids_admin_delete_cancel_${subscription.provider_subscription_id}`
+          }
+        );
+      } catch (error) {
+        if (error.provider_error_code !== 'resource_missing') throw error;
+      }
     }
     if (target.stripe_customer_id) {
-      await stripe.customers.del(target.stripe_customer_id);
+      try {
+        await executeStripeRequest(
+          () => stripe.customers.del(target.stripe_customer_id),
+          { operationName: 'admin.user.delete.customer.delete' }
+        );
+      } catch (error) {
+        if (error.provider_error_code !== 'resource_missing') throw error;
+      }
     }
   }
 
@@ -620,15 +637,33 @@ export async function manageSubscription({ actor, id, action, status = null, req
     const stripe = getStripe();
     let stripeSubscription;
     if (action === 'cancel_at_period_end') {
-      stripeSubscription = await stripe.subscriptions.update(subscription.provider_subscription_id, {
-        cancel_at_period_end: true
-      });
+      stripeSubscription = await executeStripeRequest(
+        (options) => stripe.subscriptions.update(subscription.provider_subscription_id, {
+          cancel_at_period_end: true
+        }, options),
+        {
+          operationName: 'admin.subscriptions.update.cancel_at_period_end',
+          idempotencyKey: `hkids_admin_cancel_period_end_${subscription.provider_subscription_id}`
+        }
+      );
     } else if (action === 'resume') {
-      stripeSubscription = await stripe.subscriptions.update(subscription.provider_subscription_id, {
-        cancel_at_period_end: false
-      });
+      stripeSubscription = await executeStripeRequest(
+        (options) => stripe.subscriptions.update(subscription.provider_subscription_id, {
+          cancel_at_period_end: false
+        }, options),
+        {
+          operationName: 'admin.subscriptions.update.resume',
+          idempotencyKey: `hkids_admin_resume_${subscription.provider_subscription_id}`
+        }
+      );
     } else if (action === 'cancel_now') {
-      stripeSubscription = await stripe.subscriptions.cancel(subscription.provider_subscription_id);
+      stripeSubscription = await executeStripeRequest(
+        (options) => stripe.subscriptions.cancel(subscription.provider_subscription_id, {}, options),
+        {
+          operationName: 'admin.subscriptions.cancel',
+          idempotencyKey: `hkids_admin_cancel_now_${subscription.provider_subscription_id}`
+        }
+      );
     } else {
       throw httpError(400, 'Unsupported Stripe subscription action', 'INVALID_ACTION');
     }

@@ -1,11 +1,81 @@
 import { getDatabase } from '../../database/init.js';
 import { getCheckoutTrialDays, getFrontendUrl, getStripe, isStripeConfigured } from './stripeConfig.js';
+export { hasPremiumEntitlement } from '../premium/premiumContract.js';
+
+const MANAGEABLE_STRIPE_STATUSES = new Set(['trialing', 'active', 'past_due', 'unpaid']);
+const CHECKOUT_IDEMPOTENCY_WINDOW_MS = 10 * 60 * 1000;
+const STRIPE_RETRYABLE_ERROR_CODES = new Set([
+  'api_connection_error',
+  'api_error',
+  'rate_limit_error',
+]);
 
 function httpError(status, message, code) {
   const error = new Error(message);
   error.status = status;
   error.code = code;
   return error;
+}
+
+export function sanitizeStripeError(error) {
+  if (!error) return 'Stripe request failed';
+  if (error.status || error.code?.startsWith?.('CHECKOUT_') || error.code?.startsWith?.('PLAN_')) {
+    return error.message;
+  }
+  if (error.type || STRIPE_RETRYABLE_ERROR_CODES.has(error.code)) {
+    return 'Payment provider is temporarily unavailable';
+  }
+  return 'Payment service unavailable';
+}
+
+export async function executeStripeRequest(operation, {
+  operationName = 'stripe.request',
+  idempotencyKey = null
+} = {}) {
+  try {
+    return await operation(idempotencyKey ? { idempotencyKey } : undefined);
+  } catch (error) {
+    if (error?.type || error?.rawType) {
+      const wrapped = httpError(
+        error.statusCode || error.status || 502,
+        sanitizeStripeError(error),
+        STRIPE_RETRYABLE_ERROR_CODES.has(error.type) || STRIPE_RETRYABLE_ERROR_CODES.has(error.code)
+          ? 'STRIPE_PROVIDER_RETRYABLE'
+          : 'STRIPE_PROVIDER_ERROR'
+      );
+      wrapped.provider_error_type = error.type || error.rawType || null;
+      wrapped.provider_error_code = error.code || null;
+      wrapped.operation = operationName;
+      throw wrapped;
+    }
+    throw error;
+  }
+}
+
+export function buildCheckoutIdempotencyKey(userId, planCode, now = Date.now()) {
+  const bucket = Math.floor(Number(now || Date.now()) / CHECKOUT_IDEMPOTENCY_WINDOW_MS);
+  const safePlanCode = String(planCode || 'unknown').replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 60);
+  return `hkids_checkout_${userId}_${safePlanCode}_${bucket}`;
+}
+
+export function isCheckoutPaymentComplete(session = {}) {
+  if (session.status !== 'complete') return false;
+  const paymentStatus = String(session.payment_status || 'paid');
+  return paymentStatus === 'paid' || paymentStatus === 'no_payment_required';
+}
+
+export function stripeEventCreatedAt(value) {
+  const seconds = Number(value);
+  if (!Number.isFinite(seconds) || seconds <= 0) return new Date().toISOString();
+  return new Date(seconds * 1000).toISOString();
+}
+
+export function isStaleStripeEvent(existingProviderUpdatedAt, nextProviderUpdatedAt) {
+  if (!existingProviderUpdatedAt || !nextProviderUpdatedAt) return false;
+  const existing = new Date(existingProviderUpdatedAt).getTime();
+  const next = new Date(nextProviderUpdatedAt).getTime();
+  if (!Number.isFinite(existing) || !Number.isFinite(next)) return false;
+  return next < existing;
 }
 
 export function normalizePlan(row) {
@@ -78,7 +148,10 @@ export async function getOrCreateStripeCustomer(pool, userId) {
   if (user.stripe_customer_id) {
     try {
       const stripe = getStripe();
-      const customer = await stripe.customers.retrieve(user.stripe_customer_id);
+      const customer = await executeStripeRequest(
+        () => stripe.customers.retrieve(user.stripe_customer_id),
+        { operationName: 'customers.retrieve' }
+      );
       if (!customer.deleted) return customer.id;
     } catch {
       // Recreate if Stripe customer was deleted.
@@ -86,10 +159,16 @@ export async function getOrCreateStripeCustomer(pool, userId) {
   }
 
   const stripe = getStripe();
-  const customer = await stripe.customers.create({
-    name: user.username,
-    metadata: { user_id: String(userId) }
-  });
+  const customer = await executeStripeRequest(
+    (options) => stripe.customers.create({
+      name: user.username,
+      metadata: { user_id: String(userId) }
+    }, options),
+    {
+      operationName: 'customers.create',
+      idempotencyKey: `hkids_customer_${userId}`
+    }
+  );
 
   await pool.query(
     'UPDATE users SET stripe_customer_id = $1 WHERE id = $2',
@@ -117,7 +196,8 @@ async function recordSubscriptionEvent(client, {
 }) {
   await client.query(
     `INSERT INTO subscription_events (user_id, subscription_id, stripe_event_id, event_type, payload)
-     VALUES ($1, $2, $3, $4, $5::jsonb)`,
+     VALUES ($1, $2, $3, $4, $5::jsonb)
+     ON CONFLICT (stripe_event_id) DO NOTHING`,
     [userId, subscriptionId, stripeEventId, eventType, JSON.stringify(payload)]
   );
 }
@@ -140,15 +220,18 @@ export async function upsertSubscriptionFromStripe(client, {
   plan,
   stripeSubscription,
   stripeEventId = null,
-  eventType = 'subscription.synced'
+  eventType = 'subscription.synced',
+  stripeEventCreated = null
 }) {
   const providerSubscriptionId = stripeSubscription.id;
   const status = mapStripeStatus(stripeSubscription.status);
   const { start, end, trialEnd } = stripePeriodDates(stripeSubscription);
   const cancelAtPeriodEnd = Boolean(stripeSubscription.cancel_at_period_end);
+  const providerUpdatedAt = stripeEventCreatedAt(stripeEventCreated || stripeSubscription.updated || stripeSubscription.created);
 
   const existing = await client.query(
-    `SELECT id FROM user_subscriptions
+    `SELECT *
+     FROM user_subscriptions
      WHERE provider = 'stripe' AND provider_subscription_id = $1
      LIMIT 1`,
     [providerSubscriptionId]
@@ -156,6 +239,22 @@ export async function upsertSubscriptionFromStripe(client, {
 
   let subscriptionRow;
   if (existing.rows[0]) {
+    if (isStaleStripeEvent(existing.rows[0].provider_updated_at, providerUpdatedAt)) {
+      await recordSubscriptionEvent(client, {
+        userId,
+        subscriptionId: existing.rows[0].id,
+        stripeEventId,
+        eventType: `${eventType}.stale_ignored`,
+        payload: {
+          stripe_subscription_id: providerSubscriptionId,
+          ignored_status: status,
+          existing_provider_updated_at: existing.rows[0].provider_updated_at,
+          incoming_provider_updated_at: providerUpdatedAt
+        }
+      });
+      return existing.rows[0];
+    }
+
     const updated = await client.query(
       `UPDATE user_subscriptions
        SET plan_id = $1,
@@ -164,10 +263,11 @@ export async function upsertSubscriptionFromStripe(client, {
            current_period_end = $4::timestamptz,
            cancel_at_period_end = $5,
            trial_end = $6::timestamptz,
+           provider_updated_at = $7::timestamptz,
            updated_at = NOW()
-       WHERE id = $7
+       WHERE id = $8
        RETURNING *`,
-      [plan.id, status, start, end, cancelAtPeriodEnd, trialEnd, existing.rows[0].id]
+      [plan.id, status, start, end, cancelAtPeriodEnd, trialEnd, providerUpdatedAt, existing.rows[0].id]
     );
     subscriptionRow = updated.rows[0];
   } else {
@@ -182,11 +282,11 @@ export async function upsertSubscriptionFromStripe(client, {
          user_id, plan_id, status, started_at,
          current_period_start, current_period_end,
          cancel_at_period_end, trial_end,
-         provider, provider_subscription_id
+         provider, provider_subscription_id, provider_updated_at
        )
-       VALUES ($1, $2, $3, NOW(), $4::timestamptz, $5::timestamptz, $6, $7::timestamptz, 'stripe', $8)
+       VALUES ($1, $2, $3, NOW(), $4::timestamptz, $5::timestamptz, $6, $7::timestamptz, 'stripe', $8, $9::timestamptz)
        RETURNING *`,
-      [userId, plan.id, status, start, end, cancelAtPeriodEnd, trialEnd, providerSubscriptionId]
+      [userId, plan.id, status, start, end, cancelAtPeriodEnd, trialEnd, providerSubscriptionId, providerUpdatedAt]
     );
     subscriptionRow = inserted.rows[0];
   }
@@ -199,7 +299,8 @@ export async function upsertSubscriptionFromStripe(client, {
     payload: {
       stripe_subscription_id: providerSubscriptionId,
       status,
-      cancel_at_period_end: cancelAtPeriodEnd
+      cancel_at_period_end: cancelAtPeriodEnd,
+      provider_updated_at: providerUpdatedAt
     }
   });
 
@@ -349,7 +450,7 @@ export async function unlockBook(user, bookId) {
        WHERE us.user_id = $1
          AND us.current_period_start <= NOW()
          AND us.current_period_end > NOW()
-         AND us.status IN ('trialing', 'active', 'past_due')
+         AND us.status IN ('trialing', 'active')
        ORDER BY CASE WHEN us.status = 'active' THEN 0 WHEN us.status = 'trialing' THEN 1 ELSE 2 END,
                 us.created_at DESC
        LIMIT 1`,
@@ -565,7 +666,11 @@ export async function createCheckoutSession(user, planCode) {
     success_url: `${frontendUrl}/abonnements?checkout=success&session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${frontendUrl}/abonnements?checkout=cancelled`,
     line_items: [buildCheckoutLineItem(plan)],
-    metadata: { user_id: String(user.id), plan_code: plan.code },
+    metadata: {
+      user_id: String(user.id),
+      plan_code: plan.code,
+      checkout_started_at: new Date().toISOString()
+    },
     subscription_data: {
       metadata: { user_id: String(user.id), plan_code: plan.code }
     },
@@ -577,7 +682,13 @@ export async function createCheckoutSession(user, planCode) {
     sessionParams.subscription_data.trial_period_days = trialDays;
   }
 
-  const session = await stripe.checkout.sessions.create(sessionParams);
+  const session = await executeStripeRequest(
+    (options) => stripe.checkout.sessions.create(sessionParams, options),
+    {
+      operationName: 'checkout.sessions.create',
+      idempotencyKey: buildCheckoutIdempotencyKey(user.id, plan.code)
+    }
+  );
   return { checkout_url: session.url, session_id: session.id, trial_days: trialDays };
 }
 
@@ -587,16 +698,26 @@ export async function confirmCheckoutSession(user, sessionId) {
   }
 
   const stripe = getStripe();
-  const session = await stripe.checkout.sessions.retrieve(sessionId, {
-    expand: ['subscription', 'subscription.latest_invoice']
-  });
+  const session = await executeStripeRequest(
+    () => stripe.checkout.sessions.retrieve(sessionId, {
+      expand: ['subscription', 'subscription.latest_invoice']
+    }),
+    { operationName: 'checkout.sessions.retrieve' }
+  );
 
   if (session.client_reference_id !== String(user.id) && session.metadata?.user_id !== String(user.id)) {
     throw httpError(403, 'Checkout session does not belong to this user', 'CHECKOUT_FORBIDDEN');
   }
 
   if (session.status !== 'complete') {
+    if (session.status === 'expired') {
+      throw httpError(410, 'Checkout session has expired', 'CHECKOUT_EXPIRED');
+    }
     throw httpError(402, 'Checkout session is not complete yet', 'CHECKOUT_INCOMPLETE');
+  }
+
+  if (!isCheckoutPaymentComplete(session)) {
+    throw httpError(402, 'Checkout payment is not confirmed yet', 'CHECKOUT_PAYMENT_INCOMPLETE');
   }
 
   const planCode = session.metadata?.plan_code;
@@ -609,7 +730,10 @@ export async function confirmCheckoutSession(user, sessionId) {
     const plan = await getPlanByCode(client, planCode);
 
     const stripeSubscription = typeof session.subscription === 'string'
-      ? await stripe.subscriptions.retrieve(session.subscription)
+      ? await executeStripeRequest(
+        () => stripe.subscriptions.retrieve(session.subscription),
+        { operationName: 'subscriptions.retrieve' }
+      )
       : session.subscription;
 
     if (!stripeSubscription) {
@@ -639,7 +763,10 @@ export async function confirmCheckoutSession(user, sessionId) {
         ? stripeSubscription.latest_invoice
         : stripeSubscription.latest_invoice?.id;
       if (invoiceId) {
-        const invoice = await stripe.invoices.retrieve(invoiceId);
+        const invoice = await executeStripeRequest(
+          () => stripe.invoices.retrieve(invoiceId),
+          { operationName: 'invoices.retrieve' }
+        );
         await recordInvoiceFromStripe(client, invoice, {
           userId: user.id,
           subscriptionId: subscription.id
@@ -665,10 +792,10 @@ async function getStripeManagedSubscription(pool, userId) {
      WHERE us.user_id = $1
        AND us.provider = 'stripe'
        AND us.provider_subscription_id IS NOT NULL
-       AND us.status IN ('trialing', 'active', 'past_due', 'unpaid')
+       AND us.status = ANY($2::text[])
      ORDER BY us.created_at DESC
      LIMIT 1`,
-    [userId]
+    [userId, [...MANAGEABLE_STRIPE_STATUSES]]
   );
   if (!result.rows[0]) throw httpError(404, 'No Stripe subscription found', 'NO_STRIPE_SUBSCRIPTION');
   return result.rows[0];
@@ -686,11 +813,23 @@ export async function cancelSubscription(user, { atPeriodEnd = true } = {}) {
     await client.query('BEGIN');
     let stripeSubscription;
     if (atPeriodEnd) {
-      stripeSubscription = await stripe.subscriptions.update(localSub.provider_subscription_id, {
-        cancel_at_period_end: true
-      });
+      stripeSubscription = await executeStripeRequest(
+        (options) => stripe.subscriptions.update(localSub.provider_subscription_id, {
+          cancel_at_period_end: true
+        }, options),
+        {
+          operationName: 'subscriptions.update.cancel_at_period_end',
+          idempotencyKey: `hkids_cancel_period_end_${localSub.provider_subscription_id}`
+        }
+      );
     } else {
-      stripeSubscription = await stripe.subscriptions.cancel(localSub.provider_subscription_id);
+      stripeSubscription = await executeStripeRequest(
+        (options) => stripe.subscriptions.cancel(localSub.provider_subscription_id, {}, options),
+        {
+          operationName: 'subscriptions.cancel',
+          idempotencyKey: `hkids_cancel_now_${localSub.provider_subscription_id}`
+        }
+      );
     }
 
     const plan = await getPlanByCode(client, localSub.plan_code);
@@ -730,9 +869,15 @@ export async function resumeSubscription(user) {
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
-    const stripeSubscription = await stripe.subscriptions.update(localSub.provider_subscription_id, {
-      cancel_at_period_end: false
-    });
+    const stripeSubscription = await executeStripeRequest(
+      (options) => stripe.subscriptions.update(localSub.provider_subscription_id, {
+        cancel_at_period_end: false
+      }, options),
+      {
+        operationName: 'subscriptions.update.resume',
+        idempotencyKey: `hkids_resume_${localSub.provider_subscription_id}`
+      }
+    );
     const plan = await getPlanByCode(client, localSub.plan_code);
     const subscription = await upsertSubscriptionFromStripe(client, {
       userId: user.id,
@@ -756,10 +901,13 @@ export async function createBillingPortalSession(user) {
   const pool = getDatabase();
   const customerId = await getOrCreateStripeCustomer(pool, user.id);
   const stripe = getStripe();
-  const session = await stripe.billingPortal.sessions.create({
-    customer: customerId,
-    return_url: `${getFrontendUrl()}/abonnements`
-  });
+  const session = await executeStripeRequest(
+    () => stripe.billingPortal.sessions.create({
+      customer: customerId,
+      return_url: `${getFrontendUrl()}/abonnements`
+    }),
+    { operationName: 'billingPortal.sessions.create' }
+  );
   return { portal_url: session.url };
 }
 
@@ -844,10 +992,14 @@ export async function resolvePlanFromStripeSubscription(client, stripeSubscripti
 
 export async function syncStripeSubscriptionById(stripeSubscriptionId, {
   stripeEventId = null,
-  eventType = 'subscription.webhook_sync'
+  eventType = 'subscription.webhook_sync',
+  stripeEventCreated = null
 } = {}) {
   const stripe = getStripe();
-  const stripeSubscription = await stripe.subscriptions.retrieve(stripeSubscriptionId);
+  const stripeSubscription = await executeStripeRequest(
+    () => stripe.subscriptions.retrieve(stripeSubscriptionId),
+    { operationName: 'subscriptions.retrieve' }
+  );
   const userId = Number(stripeSubscription.metadata?.user_id);
   if (!userId) throw httpError(400, 'Stripe subscription missing user_id metadata', 'USER_METADATA_MISSING');
 
@@ -861,7 +1013,8 @@ export async function syncStripeSubscriptionById(stripeSubscriptionId, {
       plan,
       stripeSubscription,
       stripeEventId,
-      eventType
+      eventType,
+      stripeEventCreated
     });
     await client.query('COMMIT');
     return subscription;
@@ -873,22 +1026,51 @@ export async function syncStripeSubscriptionById(stripeSubscriptionId, {
   }
 }
 
-export async function markSubscriptionCanceled(stripeSubscription, { stripeEventId = null } = {}) {
+export async function markSubscriptionCanceled(stripeSubscription, {
+  stripeEventId = null,
+  stripeEventCreated = null
+} = {}) {
   const userId = Number(stripeSubscription.metadata?.user_id);
   if (!userId) return null;
+  const providerUpdatedAt = stripeEventCreatedAt(stripeEventCreated || stripeSubscription.updated || stripeSubscription.created);
 
   const pool = getDatabase();
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
+    const existing = await client.query(
+      `SELECT *
+       FROM user_subscriptions
+       WHERE provider = 'stripe' AND provider_subscription_id = $1
+       LIMIT 1`,
+      [stripeSubscription.id]
+    );
+
+    if (existing.rows[0] && isStaleStripeEvent(existing.rows[0].provider_updated_at, providerUpdatedAt)) {
+      await recordSubscriptionEvent(client, {
+        userId,
+        subscriptionId: existing.rows[0].id,
+        stripeEventId,
+        eventType: 'subscription.deleted.stale_ignored',
+        payload: {
+          stripe_subscription_id: stripeSubscription.id,
+          existing_provider_updated_at: existing.rows[0].provider_updated_at,
+          incoming_provider_updated_at: providerUpdatedAt
+        }
+      });
+      await client.query('COMMIT');
+      return existing.rows[0];
+    }
+
     const updated = await client.query(
       `UPDATE user_subscriptions
        SET status = 'canceled',
            cancel_at_period_end = FALSE,
+           provider_updated_at = $2::timestamptz,
            updated_at = NOW()
        WHERE provider = 'stripe' AND provider_subscription_id = $1
        RETURNING *`,
-      [stripeSubscription.id]
+      [stripeSubscription.id, providerUpdatedAt]
     );
     if (updated.rows[0]) {
       await recordSubscriptionEvent(client, {

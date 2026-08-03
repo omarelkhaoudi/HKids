@@ -16,10 +16,19 @@ export function getStripe() {
   if (!stripeClient) {
     stripeClient = new Stripe(process.env.STRIPE_SECRET_KEY, {
       apiVersion: '2024-11-20.acacia',
-      maxNetworkRetries: 2
+      maxNetworkRetries: 2,
+      timeout: getStripeRequestTimeoutMs()
     });
   }
   return stripeClient;
+}
+
+export function getStripeRequestTimeoutMs() {
+  const configured = Number(process.env.STRIPE_TIMEOUT_MS);
+  if (Number.isFinite(configured) && configured >= 1_000) {
+    return Math.min(configured, 60_000);
+  }
+  return 15_000;
 }
 
 export function getFrontendUrl() {

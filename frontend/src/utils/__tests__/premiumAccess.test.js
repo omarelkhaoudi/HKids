@@ -33,6 +33,8 @@ describe('premiumAccess', () => {
   it('detects active and expired subscriptions', () => {
     expect(hasActiveSubscription({ status: 'active', current_period_end: '2099-01-01' })).toBe(true);
     expect(hasActiveSubscription({ status: 'trialing' })).toBe(true);
+    expect(hasActiveSubscription({ status: 'past_due', current_period_end: '2099-01-01' })).toBe(false);
+    expect(hasActiveSubscription({ status: 'unpaid' })).toBe(false);
     expect(hasActiveSubscription({ status: 'canceled' })).toBe(false);
     expect(hasActiveSubscription({ status: 'active', current_period_end: '2020-01-01' })).toBe(false);
   });

@@ -169,6 +169,7 @@ export async function initDatabase() {
         cancel_at_period_end BOOLEAN DEFAULT FALSE,
         provider TEXT,
         provider_subscription_id TEXT,
+        provider_updated_at TIMESTAMPTZ,
         created_at TIMESTAMPTZ DEFAULT NOW(),
         updated_at TIMESTAMPTZ DEFAULT NOW()
       );`,
@@ -210,6 +211,11 @@ export async function initDatabase() {
       `CREATE TABLE IF NOT EXISTS stripe_webhook_events (
         stripe_event_id TEXT PRIMARY KEY,
         event_type TEXT NOT NULL,
+        status TEXT NOT NULL DEFAULT 'processed',
+        attempts INTEGER NOT NULL DEFAULT 1,
+        last_error TEXT,
+        last_received_at TIMESTAMPTZ DEFAULT NOW(),
+        event_created TIMESTAMPTZ,
         processed_at TIMESTAMPTZ DEFAULT NOW()
       );`,
       `CREATE TABLE IF NOT EXISTS newsletter_subscribers (
@@ -681,6 +687,7 @@ export async function initDatabase() {
     await client.query(`ALTER TABLE user_subscriptions ADD COLUMN IF NOT EXISTS cancel_at_period_end BOOLEAN DEFAULT FALSE`);
     await client.query(`ALTER TABLE user_subscriptions ADD COLUMN IF NOT EXISTS provider TEXT`);
     await client.query(`ALTER TABLE user_subscriptions ADD COLUMN IF NOT EXISTS provider_subscription_id TEXT`);
+    await client.query(`ALTER TABLE user_subscriptions ADD COLUMN IF NOT EXISTS provider_updated_at TIMESTAMPTZ`);
     await client.query(`ALTER TABLE user_subscriptions ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW()`);
     await client.query(`ALTER TABLE user_subscriptions ADD COLUMN IF NOT EXISTS trial_end TIMESTAMPTZ`);
     await client.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS admin_permissions JSONB`);
@@ -706,6 +713,13 @@ export async function initDatabase() {
     await client.query(`CREATE INDEX IF NOT EXISTS subscription_invoices_user_paid_idx ON subscription_invoices(user_id, paid_at DESC)`);
     await client.query(`CREATE INDEX IF NOT EXISTS subscription_events_user_created_idx ON subscription_events(user_id, created_at DESC)`);
     await client.query(`CREATE INDEX IF NOT EXISTS user_subscriptions_provider_sub_idx ON user_subscriptions(provider, provider_subscription_id)`);
+    await client.query(`CREATE INDEX IF NOT EXISTS user_subscriptions_provider_updated_idx ON user_subscriptions(provider, provider_updated_at DESC)`);
+    await client.query(`ALTER TABLE stripe_webhook_events ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'processed'`);
+    await client.query(`ALTER TABLE stripe_webhook_events ADD COLUMN IF NOT EXISTS attempts INTEGER NOT NULL DEFAULT 1`);
+    await client.query(`ALTER TABLE stripe_webhook_events ADD COLUMN IF NOT EXISTS last_error TEXT`);
+    await client.query(`ALTER TABLE stripe_webhook_events ADD COLUMN IF NOT EXISTS last_received_at TIMESTAMPTZ DEFAULT NOW()`);
+    await client.query(`ALTER TABLE stripe_webhook_events ADD COLUMN IF NOT EXISTS event_created TIMESTAMPTZ`);
+    await client.query(`CREATE INDEX IF NOT EXISTS stripe_webhook_events_status_idx ON stripe_webhook_events(status, last_received_at DESC)`);
     await client.query(`CREATE INDEX IF NOT EXISTS kid_download_registry_kid_idx ON kid_download_registry(kid_profile_id, downloaded_at DESC)`);
     await client.query(`ALTER TABLE kid_reading_sessions ADD COLUMN IF NOT EXISTS client_session_id TEXT`);
     await client.query(`

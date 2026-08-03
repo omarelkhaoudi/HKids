@@ -9,6 +9,7 @@ import {
   buildPremiumContext,
   canAccessPremiumBook,
   getBookPremiumState,
+  hasPremiumEntitlement,
   inferPremiumAccess,
   isPremiumContent,
   PREMIUM_ACCESS,
@@ -26,14 +27,7 @@ export function normalizeSubscription(payload) {
 
 export function hasActiveSubscription(subscription) {
   const sub = normalizeSubscription(subscription) || subscription;
-  if (!sub || typeof sub !== 'object') return false;
-  const status = String(sub.status || '').toLowerCase();
-  if (!['active', 'trialing'].includes(status)) return false;
-  if (sub.current_period_end) {
-    const end = new Date(sub.current_period_end);
-    if (Number.isFinite(end.getTime()) && end < new Date()) return false;
-  }
-  return true;
+  return hasPremiumEntitlement(sub);
 }
 
 export function isFeatureEnabled(featureId, flags = getFeatureFlags()) {

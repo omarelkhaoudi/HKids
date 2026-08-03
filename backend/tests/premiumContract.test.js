@@ -4,6 +4,7 @@ import {
   PREMIUM_ACCESS,
   canAccessPremiumBook,
   getBookPremiumState,
+  hasPremiumEntitlement,
   inferPremiumAccess,
   isPremiumContent,
 } from '../services/premium/premiumContract.js';
@@ -23,6 +24,15 @@ test('active subscription unlocks premium books', () => {
   assert.equal(canAccessPremiumBook(book, { hasActiveSubscription: true, unlockedBookIds: [] }), true);
   assert.equal(canAccessPremiumBook(book, { hasActiveSubscription: false, unlockedBookIds: [7] }), true);
   assert.equal(canAccessPremiumBook(book, { hasActiveSubscription: false, unlockedBookIds: [] }), false);
+});
+
+test('premium entitlement excludes billing risk and expired periods', () => {
+  const now = new Date('2026-08-03T00:00:00.000Z');
+  assert.equal(hasPremiumEntitlement({ status: 'active', current_period_end: '2026-08-04T00:00:00.000Z' }, now), true);
+  assert.equal(hasPremiumEntitlement({ status: 'trialing' }, now), true);
+  assert.equal(hasPremiumEntitlement({ status: 'past_due', current_period_end: '2026-08-04T00:00:00.000Z' }, now), false);
+  assert.equal(hasPremiumEntitlement({ status: 'unpaid' }, now), false);
+  assert.equal(hasPremiumEntitlement({ status: 'active', current_period_end: '2026-08-02T00:00:00.000Z' }, now), false);
 });
 
 test('parental policy allows premium books with active subscription', () => {

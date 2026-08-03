@@ -5,6 +5,8 @@ export const PREMIUM_ACCESS = {
   UNLOCK: 'unlock',
 };
 
+const ACTIVE_ENTITLEMENT_STATUSES = new Set(['active', 'trialing']);
+
 export function isPremiumContent(content = {}) {
   return content.is_premium === true || content.is_premium === 1;
 }
@@ -74,13 +76,17 @@ export function buildPremiumContext({
   };
 }
 
-function isActiveSubscriptionStatus(subscription) {
+export function hasPremiumEntitlement(subscription, now = new Date()) {
   if (!subscription || typeof subscription !== 'object') return false;
   const status = String(subscription.status || '').toLowerCase();
-  if (!['active', 'trialing'].includes(status)) return false;
+  if (!ACTIVE_ENTITLEMENT_STATUSES.has(status)) return false;
   if (subscription.current_period_end) {
     const end = new Date(subscription.current_period_end);
-    if (Number.isFinite(end.getTime()) && end < new Date()) return false;
+    return Number.isFinite(end.getTime()) && end > now;
   }
   return true;
+}
+
+function isActiveSubscriptionStatus(subscription) {
+  return hasPremiumEntitlement(subscription);
 }

@@ -2,6 +2,7 @@ import bcrypt from 'bcryptjs';
 import { getDatabase } from '../../database/init.js';
 import { logSecurityEvent } from '../security/auditLog.js';
 import { getStripe, isStripeConfigured } from '../stripe/stripeConfig.js';
+import { executeStripeRequest } from '../stripe/subscriptionService.js';
 import { purgeUserVoiceData } from '../voice/voiceDataDeletionService.js';
 import { invalidateParentDashboardCache } from '../parentDashboardService.js';
 
@@ -380,16 +381,25 @@ async function deleteStripeCustomerData(userId, stripeCustomerId, pool) {
   const stripe = getStripe();
   for (const subscription of stripeSubscriptions) {
     try {
-      await stripe.subscriptions.cancel(subscription.provider_subscription_id);
+      await executeStripeRequest(
+        (options) => stripe.subscriptions.cancel(subscription.provider_subscription_id, {}, options),
+        {
+          operationName: 'privacy.account.delete.subscription.cancel',
+          idempotencyKey: `hkids_privacy_delete_cancel_${subscription.provider_subscription_id}`
+        }
+      );
     } catch (error) {
-      if (error?.code !== 'resource_missing') throw error;
+      if (error?.provider_error_code !== 'resource_missing') throw error;
     }
   }
   if (stripeCustomerId) {
     try {
-      await stripe.customers.del(stripeCustomerId);
+      await executeStripeRequest(
+        () => stripe.customers.del(stripeCustomerId),
+        { operationName: 'privacy.account.delete.customer.delete' }
+      );
     } catch (error) {
-      if (error?.code !== 'resource_missing') throw error;
+      if (error?.provider_error_code !== 'resource_missing') throw error;
     }
   }
 }
@@ -435,6 +445,7 @@ export async function permanentlyDeleteParentAccount({
       action: 'parent_account_deleted_permanently',
       resourceType: 'user',
       resourceId: userId,
+      req,
       metadata: { erasure_completed: true, child_profiles_deleted: kids.length }
     });
     await client.query('DELETE FROM users WHERE id = $1', [userId]);
