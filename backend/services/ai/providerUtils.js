@@ -19,21 +19,47 @@ export function cloneJson(value) {
   return value === undefined ? undefined : JSON.parse(JSON.stringify(value));
 }
 
+function parseJsonCandidate(candidate, provider) {
+  try {
+    return JSON.parse(candidate);
+  } catch (error) {
+    throw new AIError(`${provider} response was not valid JSON`, {
+      code: 'AI_MALFORMED_RESPONSE',
+      status: 502,
+      provider,
+      retryable: false,
+      cause: error
+    });
+  }
+}
+
 export function extractJson(content, provider) {
   const text = String(content || '').trim();
-  if (!text) throw new AIError(`${provider} returned an empty response`, { provider });
+  if (!text) {
+    throw new AIError(`${provider} returned an empty response`, {
+      code: 'AI_EMPTY_RESPONSE',
+      status: 502,
+      provider,
+      retryable: true
+    });
+  }
 
   try {
     return JSON.parse(text);
   } catch {
     const fenced = text.match(/```(?:json)?\s*([\s\S]*?)```/i)?.[1];
-    if (fenced) return JSON.parse(fenced.trim());
+    if (fenced) return parseJsonCandidate(fenced.trim(), provider);
 
     const start = text.indexOf('{');
     const end = text.lastIndexOf('}');
-    if (start >= 0 && end > start) return JSON.parse(text.slice(start, end + 1));
+    if (start >= 0 && end > start) return parseJsonCandidate(text.slice(start, end + 1), provider);
 
-    throw new AIError(`${provider} response was not valid JSON`, { provider });
+    throw new AIError(`${provider} response was not valid JSON`, {
+      code: 'AI_MALFORMED_RESPONSE',
+      status: 502,
+      provider,
+      retryable: false
+    });
   }
 }
 

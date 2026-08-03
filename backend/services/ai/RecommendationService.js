@@ -1,5 +1,6 @@
 import { AIProviderFactory } from '../ai/AIProviderFactory.js';
 import { normalizeAIError } from '../ai/errors.js';
+import { logAIEvent } from '../ai/aiLogger.js';
 import {
   buildSignals,
   normalizeContext,
@@ -220,7 +221,18 @@ export class RecommendationService {
           strategy = 'ai-ranked-with-deterministic-fallback-v2';
           aiMetadata = aiResult.provider_metadata || null;
         }
-      } catch {
+      } catch (error) {
+        const normalized = normalizeAIError(error, {
+          provider: aiProvider.name,
+          fallbackMessage: 'Recommendation service failed',
+        });
+        logAIEvent('warn', 'recommendation_fallback', {
+          provider: aiProvider.name,
+          operation: 'recommend_content',
+          code: normalized.code,
+          status: normalized.status,
+          fallback: 'deterministic-score-v2'
+        });
         // Rule-based scoring remains the safe fallback for kids content.
       }
     }

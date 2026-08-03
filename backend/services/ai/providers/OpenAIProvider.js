@@ -1,4 +1,5 @@
 import { AIProvider } from '../AIProvider.js';
+import { logAIEvent } from '../aiLogger.js';
 import {
   AINetworkError,
   AIProviderMethodNotImplementedError,
@@ -28,23 +29,49 @@ function cloneJson(value) {
   return value === undefined ? undefined : JSON.parse(JSON.stringify(value));
 }
 
+function parseJsonCandidate(candidate) {
+  try {
+    return JSON.parse(candidate);
+  } catch (error) {
+    throw new AIError('OpenAI response was not valid JSON', {
+      code: 'AI_MALFORMED_RESPONSE',
+      status: 502,
+      provider: 'openai',
+      retryable: false,
+      cause: error
+    });
+  }
+}
+
 function extractJson(content) {
   const text = String(content || '').trim();
-  if (!text) throw new AIError('OpenAI returned an empty response', { provider: 'openai' });
+  if (!text) {
+    throw new AIError('OpenAI returned an empty response', {
+      code: 'AI_EMPTY_RESPONSE',
+      status: 502,
+      provider: 'openai',
+      retryable: true
+    });
+  }
 
   try {
     return JSON.parse(text);
   } catch {
     const fenced = text.match(/```(?:json)?\s*([\s\S]*?)```/i)?.[1];
-    if (fenced) return JSON.parse(fenced.trim());
+    if (fenced) return parseJsonCandidate(fenced.trim());
 
     const start = text.indexOf('{');
     const end = text.lastIndexOf('}');
     if (start >= 0 && end > start) {
-      return JSON.parse(text.slice(start, end + 1));
+      return parseJsonCandidate(text.slice(start, end + 1));
     }
 
-    throw new AIError('OpenAI response was not valid JSON', { provider: 'openai' });
+    throw new AIError('OpenAI response was not valid JSON', {
+      code: 'AI_MALFORMED_RESPONSE',
+      status: 502,
+      provider: 'openai',
+      retryable: false
+    });
   }
 }
 
@@ -190,7 +217,14 @@ export class OpenAIProvider extends AIProvider {
     this.assertConfigured();
 
     const cached = this.getCached(cacheKey);
-    if (cached) return cached;
+    if (cached) {
+      logAIEvent('info', 'cache_hit', {
+        provider: this.name,
+        operation: `POST ${path}`,
+        cache: 'hit'
+      });
+      return cached;
+    }
 
     const data = await this.execute(`POST ${path}`, async ({ signal }) => {
       const response = await fetch(`${this.baseUrl}${path}`, {
@@ -215,6 +249,14 @@ export class OpenAIProvider extends AIProvider {
       throw new AIProviderUnavailableError(message, { provider: this.name, retryable: false });
     });
 
+    logAIEvent('info', 'usage_recorded', {
+      provider: this.name,
+      operation: `POST ${path}`,
+      model: data?.model || this.model,
+      tokens_prompt: data?.usage?.prompt_tokens || 0,
+      tokens_completion: data?.usage?.completion_tokens || 0,
+      tokens_total: data?.usage?.total_tokens || 0
+    });
     this.setCached(cacheKey, data);
     return data;
   }

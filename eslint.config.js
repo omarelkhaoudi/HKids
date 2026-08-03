@@ -69,7 +69,7 @@ export default [
     }
   },
   {
-    files: ['backend/**/*.js', 'scripts/**/*.js'],
+    files: ['backend/**/*.js', 'scripts/**/*.js', 'frontend/scripts/**/*.{js,mjs}'],
     languageOptions: {
       ecmaVersion: 2022,
       sourceType: 'module',

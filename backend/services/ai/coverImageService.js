@@ -1,5 +1,13 @@
 import { buildCoverIllustrationPrompt } from '../../content/coverPrompts.js';
 import { renderCoverSvg } from '../../content/svgAssets.js';
+import {
+  AINetworkError,
+  AIProviderUnavailableError,
+  AIQuotaExceededError,
+  AITimeoutError,
+  normalizeAIError
+} from './errors.js';
+import { logAIEvent } from './aiLogger.js';
 
 const OPENAI_BASE_URL = (process.env.OPENAI_BASE_URL || 'https://api.openai.com/v1').replace(/\/+$/, '');
 const OPENAI_IMAGE_MODEL = process.env.OPENAI_IMAGE_MODEL || 'dall-e-3';
@@ -49,32 +57,55 @@ function buildPollinationsPrompt(item, { minimal = false } = {}) {
   return buildCoverIllustrationPrompt(item, { compact: true });
 }
 
-async function generateWithOpenAI(item) {
+async function generateWithOpenAI(item, { timeoutMs = 45000 } = {}) {
   const prompt = buildCoverIllustrationPrompt(item);
-  const response = await fetch(`${OPENAI_BASE_URL}/images/generations`, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      model: OPENAI_IMAGE_MODEL,
-      prompt,
-      n: 1,
-      size: '1024x1792',
-      quality: 'standard',
-      response_format: 'b64_json',
-    }),
-  });
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  let response;
+  try {
+    response = await fetch(`${OPENAI_BASE_URL}/images/generations`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: OPENAI_IMAGE_MODEL,
+        prompt,
+        n: 1,
+        size: '1024x1792',
+        quality: 'standard',
+        response_format: 'b64_json',
+      }),
+      signal: controller.signal,
+    });
+  } catch (error) {
+    if (error?.name === 'AbortError') {
+      throw new AITimeoutError('OpenAI image generation timed out', { provider: 'openai' });
+    }
+    throw new AINetworkError('OpenAI image generation network error', {
+      provider: 'openai',
+      cause: error
+    });
+  } finally {
+    clearTimeout(timer);
+  }
 
   const payload = await response.json().catch(() => ({}));
   if (!response.ok) {
     const message = payload?.error?.message || `OpenAI image API failed (${response.status})`;
-    throw new Error(message);
+    if (response.status === 429) throw new AIQuotaExceededError(message, { provider: 'openai' });
+    if (response.status >= 500) throw new AINetworkError(message, { provider: 'openai' });
+    throw new AIProviderUnavailableError(message, { provider: 'openai', retryable: false });
   }
 
   const b64 = payload?.data?.[0]?.b64_json;
-  if (!b64) throw new Error('OpenAI image API returned no image data');
+  if (!b64) {
+    throw new AIProviderUnavailableError('OpenAI image API returned no image data', {
+      provider: 'openai',
+      retryable: true
+    });
+  }
   return Buffer.from(b64, 'base64');
 }
 
@@ -113,14 +144,7 @@ async function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-export async function generateCoverPngBuffer(item, { provider } = {}) {
-  const resolved = resolveCoverImageProvider(provider);
-
-  if (resolved === 'openai') {
-    const rawBuffer = await generateWithOpenAI(item);
-    return { buffer: await normalizeToPng(rawBuffer), source: 'openai' };
-  }
-
+async function generateWithPollinationsFallback(item) {
   // Keep Pollinations attempts short: free API often 500s and long retries burn minutes.
   const attempts = [
     { minimal: false, attempt: 0, waitMs: 0 },
@@ -144,6 +168,32 @@ export async function generateCoverPngBuffer(item, { provider } = {}) {
   } catch (fallbackError) {
     throw lastError || fallbackError;
   }
+}
+
+export async function generateCoverPngBuffer(item, { provider } = {}) {
+  const resolved = resolveCoverImageProvider(provider);
+
+  if (resolved === 'openai') {
+    try {
+      const rawBuffer = await generateWithOpenAI(item);
+      return { buffer: await normalizeToPng(rawBuffer), source: 'openai' };
+    } catch (error) {
+      const normalized = normalizeAIError(error, {
+        provider: 'openai',
+        fallbackMessage: 'OpenAI image generation failed'
+      });
+      logAIEvent('warn', 'image_provider_fallback', {
+        provider: 'openai',
+        operation: 'image_generation',
+        code: normalized.code,
+        status: normalized.status,
+        fallback: 'pollinations'
+      });
+    }
+  }
+
+  const pollinations = await generateWithPollinationsFallback(item);
+  return pollinations;
 }
 
 export function coverPngFilename(slug) {

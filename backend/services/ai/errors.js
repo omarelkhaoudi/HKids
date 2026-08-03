@@ -104,12 +104,46 @@ export function aiErrorResponse(error) {
   return {
     status: normalized.status,
     body: {
-      error: normalized.message,
+      error: publicAIErrorMessage(normalized),
       code: normalized.code,
       provider: normalized.provider,
       retryable: normalized.retryable
     }
   };
+}
+
+export function publicAIErrorMessage(error) {
+  const code = error?.code || 'AI_ERROR';
+
+  if (code === 'AI_TIMEOUT') {
+    return 'AI service is taking too long. Please try again.';
+  }
+
+  if (code === 'AI_QUOTA_EXCEEDED') {
+    return 'AI service is temporarily limited. Please try again later.';
+  }
+
+  if (code === 'AI_UNSAFE_CONTENT') {
+    return 'The AI response was blocked by child-safety checks.';
+  }
+
+  if (code === 'AI_STREAM_INVALID_EVENT' || code === 'AI_STREAM_ERROR') {
+    return 'AI streaming response could not be completed safely.';
+  }
+
+  if (code === 'AI_EMPTY_RESPONSE' || code === 'AI_MALFORMED_RESPONSE') {
+    return 'AI response could not be processed safely.';
+  }
+
+  if (
+    code === 'AI_PROVIDER_UNAVAILABLE'
+    || code === 'AI_NETWORK_ERROR'
+    || code === 'AI_CIRCUIT_OPEN'
+  ) {
+    return 'AI service is temporarily unavailable. Please try again.';
+  }
+
+  return 'AI service error. Please try again.';
 }
 
 export function withAITimeout(promise, timeoutMs, { provider = null, message = 'AI request timed out' } = {}) {

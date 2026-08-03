@@ -1,5 +1,10 @@
 import { AIProviderFactory } from './AIProviderFactory.js';
 import { normalizeAIError } from './errors.js';
+import {
+  assertChildSafeText,
+  normalizeAIInputText,
+  sanitizeProviderText
+} from './contentSafety.js';
 
 const allowedDurations = [2, 5, 8, 10, 12, 15, 20];
 const allowedLanguages = ['fr', 'en', 'ar'];
@@ -8,11 +13,11 @@ const maxThemeLength = 80;
 const maxCharacterLength = 60;
 
 function normalizeText(value, fallback = '') {
-  return String(value || fallback).trim().slice(0, 120);
+  return normalizeAIInputText(value || fallback, { maxLength: 120 });
 }
 
 function normalizeLongText(value, fallback = '', maxLength = 2000) {
-  return String(value || fallback).trim().slice(0, maxLength);
+  return sanitizeProviderText(value || fallback, { maxLength });
 }
 
 function normalizeCharacters(value) {
@@ -204,6 +209,10 @@ export class StoryGenerationService {
         buildSummary({ title, storyText, theme: normalizedPreferences.theme }),
         500
       );
+      assertChildSafeText([title, summary, storyText].join('\n'), {
+        provider: aiProvider.name,
+        operation: 'story_generation'
+      });
 
       return {
         title,

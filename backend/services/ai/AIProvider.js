@@ -1,6 +1,7 @@
 import {
   AITimeoutError,
   AIProviderMethodNotImplementedError,
+  AIProviderUnavailableError,
   normalizeAIError
 } from './errors.js';
 import { logAIEvent } from './aiLogger.js';
@@ -14,12 +15,58 @@ export class AIProvider {
     name,
     timeoutMs = 15000,
     maxRetries = 2,
-    retryDelayMs = 250
+    retryDelayMs = 250,
+    retryJitterMs = 100,
+    circuitBreakerFailureThreshold = 3,
+    circuitBreakerCooldownMs = 30000
   }) {
     this.name = name;
     this.timeoutMs = timeoutMs;
     this.maxRetries = maxRetries;
     this.retryDelayMs = retryDelayMs;
+    this.retryJitterMs = retryJitterMs;
+    this.circuitBreakerFailureThreshold = circuitBreakerFailureThreshold;
+    this.circuitBreakerCooldownMs = circuitBreakerCooldownMs;
+    this.consecutiveRetryableFailures = 0;
+    this.circuitOpenUntil = 0;
+  }
+
+  assertCircuitClosed(operation) {
+    if (Date.now() < this.circuitOpenUntil) {
+      throw new AIProviderUnavailableError(`${this.name} circuit breaker is open`, {
+        code: 'AI_CIRCUIT_OPEN',
+        provider: this.name,
+        retryable: true,
+        cause: { operation }
+      });
+    }
+  }
+
+  recordSuccess() {
+    this.consecutiveRetryableFailures = 0;
+    this.circuitOpenUntil = 0;
+  }
+
+  recordFailure(error, operation) {
+    if (!error?.retryable) return;
+    this.consecutiveRetryableFailures += 1;
+
+    if (this.consecutiveRetryableFailures >= this.circuitBreakerFailureThreshold) {
+      this.circuitOpenUntil = Date.now() + this.circuitBreakerCooldownMs;
+      logAIEvent('warn', 'circuit_opened', {
+        provider: this.name,
+        operation,
+        code: error.code,
+        status: error.status,
+        circuit_state: 'open',
+        retry_after_ms: this.circuitBreakerCooldownMs
+      });
+    }
+  }
+
+  retryDelay(attempt) {
+    const jitter = this.retryJitterMs > 0 ? Math.floor(Math.random() * this.retryJitterMs) : 0;
+    return this.retryDelayMs * 2 ** attempt + jitter;
   }
 
   async execute(operation, handler, {
@@ -28,6 +75,7 @@ export class AIProvider {
     signal: externalSignal = null
   } = {}) {
     let lastError;
+    this.assertCircuitClosed(operation);
 
     for (let attempt = 0; attempt <= maxRetries; attempt += 1) {
       const startedAt = Date.now();
@@ -45,6 +93,7 @@ export class AIProvider {
           attempt,
           duration_ms: Date.now() - startedAt
         });
+        this.recordSuccess();
         return result;
       } catch (error) {
         const normalized = error?.name === 'AbortError'
@@ -58,7 +107,7 @@ export class AIProvider {
           });
 
         lastError = normalized;
-        const willRetry = normalized.retryable && attempt < maxRetries;
+        const willRetry = !externalSignal?.aborted && normalized.retryable && attempt < maxRetries;
         logAIEvent(willRetry ? 'warn' : 'error', willRetry ? 'request_retry' : 'request_failed', {
           provider: this.name,
           operation,
@@ -68,8 +117,11 @@ export class AIProvider {
           status: normalized.status
         });
 
-        if (!willRetry) throw normalized;
-        await sleep(this.retryDelayMs * 2 ** attempt);
+        if (!willRetry) {
+          this.recordFailure(normalized, operation);
+          throw normalized;
+        }
+        await sleep(this.retryDelay(attempt));
       } finally {
         clearTimeout(timeoutId);
         externalSignal?.removeEventListener('abort', abortRequest);

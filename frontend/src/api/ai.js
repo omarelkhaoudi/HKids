@@ -6,64 +6,83 @@ const authHeaders = () => {
   return token ? { Authorization: `Bearer ${token}` } : {};
 };
 
+function parseStreamPayload(dataText) {
+  try {
+    return JSON.parse(dataText);
+  } catch {
+    const error = new Error('AI stream returned an invalid event');
+    error.response = { status: 502, data: { code: 'AI_STREAM_INVALID_EVENT' } };
+    throw error;
+  }
+}
+
 async function streamVoiceAssistantRequest(
   transcript,
   conversation = [],
   language = null,
   { onDelta, signal } = {}
 ) {
-  const response = await fetch(buildApiUrl('/ai/voice-assistant/stream'), {
-    method: 'POST',
-    headers: {
-      ...authHeaders(),
-      'Content-Type': 'application/json',
-      Accept: 'text/event-stream'
-    },
-    body: JSON.stringify({ transcript, conversation, language }),
-    signal
-  });
+  const timeoutController = signal ? null : new AbortController();
+  const timeoutId = timeoutController
+    ? window.setTimeout(() => timeoutController.abort(), 45000)
+    : null;
 
-  if (!response.ok) {
-    const data = await response.json().catch(() => ({}));
-    const error = new Error(data.error || `AI stream failed with status ${response.status}`);
-    error.response = { status: response.status, data };
-    throw error;
-  }
-  if (!response.body) throw new Error('Streaming is unavailable in this browser');
+  try {
+    const response = await fetch(buildApiUrl('/ai/voice-assistant/stream'), {
+      method: 'POST',
+      headers: {
+        ...authHeaders(),
+        'Content-Type': 'application/json',
+        Accept: 'text/event-stream'
+      },
+      body: JSON.stringify({ transcript, conversation, language }),
+      signal: signal || timeoutController.signal
+    });
 
-  const reader = response.body.getReader();
-  const decoder = new TextDecoder();
-  let buffer = '';
-  let finalReply = null;
+    if (!response.ok) {
+      const data = await response.json().catch(() => ({}));
+      const error = new Error(data.error || `AI stream failed with status ${response.status}`);
+      error.response = { status: response.status, data };
+      throw error;
+    }
+    if (!response.body) throw new Error('Streaming is unavailable in this browser');
 
-  while (true) {
-    const { done, value } = await reader.read();
-    buffer += decoder.decode(value || new Uint8Array(), { stream: !done });
-    const frames = buffer.split(/\r?\n\r?\n/);
-    buffer = frames.pop() || '';
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+    let finalReply = null;
 
-    for (const frame of frames) {
-      const event = frame.split(/\r?\n/).find((line) => line.startsWith('event:'))?.slice(6).trim();
-      const dataText = frame.split(/\r?\n/)
-        .filter((line) => line.startsWith('data:'))
-        .map((line) => line.slice(5).trimStart())
-        .join('\n');
-      if (!dataText) continue;
-      const data = JSON.parse(dataText);
-      if (event === 'delta') onDelta?.(data.chunk || '');
-      if (event === 'done') finalReply = data;
-      if (event === 'error') {
-        const error = new Error(data.error || 'AI stream failed');
-        error.response = { status: data.status || 500, data };
-        throw error;
+    while (true) {
+      const { done, value } = await reader.read();
+      buffer += decoder.decode(value || new Uint8Array(), { stream: !done });
+      const frames = buffer.split(/\r?\n\r?\n/);
+      buffer = frames.pop() || '';
+
+      for (const frame of frames) {
+        const event = frame.split(/\r?\n/).find((line) => line.startsWith('event:'))?.slice(6).trim();
+        const dataText = frame.split(/\r?\n/)
+          .filter((line) => line.startsWith('data:'))
+          .map((line) => line.slice(5).trimStart())
+          .join('\n');
+        if (!dataText) continue;
+        const data = parseStreamPayload(dataText);
+        if (event === 'delta') onDelta?.(data.chunk || '');
+        if (event === 'done') finalReply = data;
+        if (event === 'error') {
+          const error = new Error(data.error || 'AI stream failed');
+          error.response = { status: data.status || 500, data };
+          throw error;
+        }
       }
+
+      if (done) break;
     }
 
-    if (done) break;
+    if (!finalReply) throw new Error('AI stream ended before the final response');
+    return finalReply;
+  } finally {
+    if (timeoutId) window.clearTimeout(timeoutId);
   }
-
-  if (!finalReply) throw new Error('AI stream ended before the final response');
-  return finalReply;
 }
 
 export const aiAPI = {
@@ -88,7 +107,7 @@ export const aiAPI = {
   sendVoiceAssistantRequest: (transcript, conversation = [], language = null) => axios.post(
     buildApiUrl('/ai/voice-assistant'),
     { transcript, conversation, language },
-    { headers: authHeaders() }
+    { headers: authHeaders(), timeout: 25000 }
   ),
 
   streamVoiceAssistantRequest,

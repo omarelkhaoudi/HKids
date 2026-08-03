@@ -7,6 +7,8 @@
 import { generateCoverPngBuffer, resolveCoverImageProvider } from './coverImageService.js';
 import { persistBookAsset } from '../storage/bookAssetStorage.js';
 import { getDatabase } from '../../database/init.js';
+import { normalizeAIError } from './errors.js';
+import { logAIEvent } from './aiLogger.js';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -150,8 +152,16 @@ export async function generateStoryIllustrations(storyId, { provider, force = fa
       [storyId, cover.url]
     );
   } catch (err) {
-    console.warn(`[illustrations] cover failed for story ${storyId}:`, err.message);
-    result.cover = { url: null, error: err.message };
+    const normalized = normalizeAIError(err, {
+      fallbackMessage: 'Story cover illustration failed'
+    });
+    logAIEvent('warn', 'illustration_asset_failed', {
+      provider: normalized.provider || resolvedProvider || resolveCoverImageProvider(),
+      operation: 'story_cover_illustration',
+      code: normalized.code,
+      status: normalized.status
+    });
+    result.cover = { url: null, error: normalized.code };
   }
 
   for (const scene of scenes) {
@@ -167,12 +177,20 @@ export async function generateStoryIllustrations(storyId, { provider, force = fa
         prompt: scenePrompt.slice(0, 200),
       });
     } catch (err) {
-      console.warn(`[illustrations] scene ${scene.index} failed for story ${storyId}:`, err.message);
+      const normalized = normalizeAIError(err, {
+        fallbackMessage: 'Story scene illustration failed'
+      });
+      logAIEvent('warn', 'illustration_asset_failed', {
+        provider: normalized.provider || resolvedProvider || resolveCoverImageProvider(),
+        operation: 'story_scene_illustration',
+        code: normalized.code,
+        status: normalized.status
+      });
       result.scenes.push({
         index: scene.index,
         excerpt: scene.excerpt.slice(0, 100),
         url: null,
-        error: err.message,
+        error: normalized.code,
       });
     }
   }

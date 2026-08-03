@@ -609,7 +609,11 @@ router.post('/:id/narrations/:locale', verifyToken, async (req, res) => {
     res.json(result);
   } catch (err) {
     console.error('Error generating narration:', err);
-    res.status(500).json({ error: err.message || 'Narration generation failed' });
+    if (err?.isAIError) {
+      const { status, body } = aiErrorResponse(err);
+      return res.status(status).json(body);
+    }
+    res.status(err?.status || 500).json({ error: err?.status ? err.message : 'Narration generation failed' });
   }
 });
 
@@ -638,7 +642,11 @@ router.post('/:id/narrations', verifyToken, async (req, res) => {
     res.json({ story_id: story.id, results });
   } catch (err) {
     console.error('Error generating all narrations:', err);
-    res.status(500).json({ error: err.message || 'Narration generation failed' });
+    if (err?.isAIError) {
+      const { status, body } = aiErrorResponse(err);
+      return res.status(status).json(body);
+    }
+    res.status(err?.status || 500).json({ error: err?.status ? err.message : 'Narration generation failed' });
   }
 });
 

@@ -15,7 +15,7 @@ export const generatedStoriesAPI = {
   generate: (data) => axios.post(
     buildApiUrl('/generated-stories/generate'),
     data,
-    { headers: authHeaders(), timeout: 25000 }
+    { headers: authHeaders(), timeout: 60000 }
   ),
 
   getHistory: (params = {}) => axios.get(
@@ -43,7 +43,7 @@ export const generatedStoriesAPI = {
   createVersion: (id, data = {}) => axios.post(
     buildApiUrl(`/generated-stories/${id}/version`),
     data,
-    { headers: authHeaders(), timeout: 25000 }
+    { headers: authHeaders(), timeout: 60000 }
   ),
 
   delete: (id) => axios.delete(

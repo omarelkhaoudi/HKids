@@ -1,6 +1,12 @@
 import { AIProviderFactory } from './AIProviderFactory.js';
 import { normalizeAIError } from './errors.js';
 import { aiConfig } from './aiConfig.js';
+import { logAIEvent } from './aiLogger.js';
+import {
+  assertChildSafeText,
+  normalizeAIInputText,
+  sanitizeProviderText
+} from './contentSafety.js';
 import {
   createFallbackAssistantContext,
   normalizeConversation,
@@ -19,7 +25,17 @@ const DEMO_REPLIES = {
   ar: 'أنا Le Lit في وضع العرض. لتفعيل المحادثة الكاملة، يجب إعداد مفتاح الذكاء الاصطناعي على الخادم.'
 };
 
-function isAiProviderConfigured() {
+const DEGRADED_REPLIES = {
+  fr: 'Le Lit fait une petite pause. On peut recommencer doucement dans un instant.',
+  en: 'Le Lit is taking a short pause. We can try again gently in a moment.',
+  ar: 'ÙŠØ£Ø®Ø° Le Lit Ø§Ø³ØªØ±Ø§Ø­Ø© ØµØºÙŠØ±Ø©. ÙŠÙ…ÙƒÙ†Ù†Ø§ Ø§Ù„Ù…Ø­Ø§ÙˆÙ„Ø© Ù…Ø±Ø© Ø£Ø®Ø±Ù‰ Ø¨Ù‡Ø¯ÙˆØ¡.'
+};
+
+function isAiProviderConfigured(provider = null) {
+  if (provider && Object.prototype.hasOwnProperty.call(provider, 'apiKey')) {
+    return Boolean(String(provider.apiKey || '').trim());
+  }
+
   const providerName = (aiConfig.provider || 'openai').toLowerCase();
   const normalizedName = providerName === 'claude' ? 'anthropic' : providerName;
   const providerConfig = aiConfig.providers[normalizedName];
@@ -37,6 +53,24 @@ function buildDemoReply(transcript, responseLanguage) {
   };
 }
 
+function buildDegradedReply(transcript, responseLanguage, error) {
+  const normalized = normalizeAIError(error, {
+    fallbackMessage: 'AI assistant degraded reply'
+  });
+
+  return {
+    transcript,
+    reply_text: DEGRADED_REPLIES[responseLanguage] || DEGRADED_REPLIES.fr,
+    intent: 'service_degraded',
+    provider: 'demo',
+    language: responseLanguage,
+    demo_mode: true,
+    degraded_mode: true,
+    retryable: normalized.retryable,
+    code: normalized.code
+  };
+}
+
 export class VoiceAssistantService {
   constructor({ aiProvider = null } = {}) {
     this.aiProvider = aiProvider;
@@ -50,7 +84,7 @@ export class VoiceAssistantService {
     requestedLanguage = null
   }) {
     const aiProvider = this.aiProvider || AIProviderFactory.getProvider();
-    const cleanTranscript = String(transcript || '').trim().slice(0, 1000);
+    const cleanTranscript = normalizeAIInputText(transcript, { maxLength: 1000 });
     const safeConversation = normalizeConversation(conversation);
     const responseLanguage = resolveAssistantLanguage(context, requestedLanguage);
 
@@ -59,12 +93,12 @@ export class VoiceAssistantService {
         transcript: '',
         reply_text: EMPTY_REPLIES[responseLanguage] || EMPTY_REPLIES.fr,
         intent: 'empty',
-        provider: isAiProviderConfigured() ? aiProvider.name : 'demo',
+        provider: isAiProviderConfigured(aiProvider) ? aiProvider.name : 'demo',
         language: responseLanguage
       };
     }
 
-    if (!isAiProviderConfigured()) {
+    if (!isAiProviderConfigured(aiProvider)) {
       return buildDemoReply(cleanTranscript, responseLanguage);
     }
 
@@ -76,19 +110,32 @@ export class VoiceAssistantService {
         conversation: safeConversation,
         language: responseLanguage
       });
+      const replyText = sanitizeProviderText(response.text, { maxLength: 900 });
+      assertChildSafeText(replyText, {
+        provider: aiProvider.name,
+        operation: 'voice_assistant_reply'
+      });
 
       return {
         transcript: cleanTranscript,
-        reply_text: response.text,
+        reply_text: replyText || (DEGRADED_REPLIES[responseLanguage] || DEGRADED_REPLIES.fr),
         intent: response.intent || 'unknown',
         provider: aiProvider.name,
         language: responseLanguage
       };
     } catch (error) {
-      throw normalizeAIError(error, {
+      const normalized = normalizeAIError(error, {
         provider: aiProvider.name,
         fallbackMessage: 'AI assistant error'
       });
+      logAIEvent('warn', 'assistant_fallback', {
+        provider: aiProvider.name,
+        operation: 'voice_assistant',
+        code: normalized.code,
+        status: normalized.status,
+        fallback: 'demo'
+      });
+      return buildDegradedReply(cleanTranscript, responseLanguage, normalized);
     }
   }
 
@@ -100,7 +147,7 @@ export class VoiceAssistantService {
     requestedLanguage = null
   }, { onChunk, signal } = {}) {
     const aiProvider = this.aiProvider || AIProviderFactory.getProvider();
-    const cleanTranscript = String(transcript || '').trim().slice(0, 1000);
+    const cleanTranscript = normalizeAIInputText(transcript, { maxLength: 1000 });
     const safeConversation = normalizeConversation(conversation);
     const responseLanguage = resolveAssistantLanguage(context, requestedLanguage);
 
@@ -111,39 +158,65 @@ export class VoiceAssistantService {
         transcript: '',
         reply_text: replyText,
         intent: 'empty',
-        provider: isAiProviderConfigured() ? aiProvider.name : 'demo',
+        provider: isAiProviderConfigured(aiProvider) ? aiProvider.name : 'demo',
         language: responseLanguage
       };
     }
 
-    if (!isAiProviderConfigured()) {
+    if (!isAiProviderConfigured(aiProvider)) {
       const demoReply = buildDemoReply(cleanTranscript, responseLanguage);
       if (onChunk) await onChunk(demoReply.reply_text);
       return demoReply;
     }
 
     try {
+      const streamedChunks = [];
       const response = await aiProvider.chatStream({
         transcript: cleanTranscript,
         user,
         context,
         conversation: safeConversation,
         language: responseLanguage
-      }, { onChunk, signal });
+      }, {
+        signal,
+        onChunk: async (chunk) => {
+          streamedChunks.push(chunk);
+          assertChildSafeText(streamedChunks.join(''), {
+            provider: aiProvider.name,
+            operation: 'voice_assistant_stream_chunk'
+          });
+          if (onChunk) await onChunk(chunk);
+        }
+      });
+      const replyText = sanitizeProviderText(response.text, { maxLength: 900 });
+      assertChildSafeText(replyText, {
+        provider: aiProvider.name,
+        operation: 'voice_assistant_stream_reply'
+      });
 
       return {
         transcript: cleanTranscript,
-        reply_text: response.text,
+        reply_text: replyText || (DEGRADED_REPLIES[responseLanguage] || DEGRADED_REPLIES.fr),
         intent: response.intent || 'conversation',
         provider: aiProvider.name,
         language: responseLanguage,
         provider_metadata: response.provider_metadata || {}
       };
     } catch (error) {
-      throw normalizeAIError(error, {
+      const normalized = normalizeAIError(error, {
         provider: aiProvider.name,
         fallbackMessage: 'AI assistant streaming error'
       });
+      logAIEvent('warn', 'assistant_stream_fallback', {
+        provider: aiProvider.name,
+        operation: 'voice_assistant_stream',
+        code: normalized.code,
+        status: normalized.status,
+        fallback: 'demo'
+      });
+      const fallbackReply = buildDegradedReply(cleanTranscript, responseLanguage, normalized);
+      if (onChunk) await onChunk(fallbackReply.reply_text);
+      return fallbackReply;
     }
   }
 }

@@ -23,6 +23,7 @@ import {
   listSupportTickets,
   updateSupportTicket
 } from '../services/support/supportTicketService.js';
+import { getAIStats } from '../services/ai/aiLogger.js';
 
 const router = express.Router();
 
@@ -118,6 +119,9 @@ router.get('/overview', requireAdminPermission('overview.read'), async (req, res
       recent_activity: recentActivity.rows,
       latest_users: latestUsers.rows,
       latest_books: latestBooks.rows,
+      ai_observability: {
+        metrics: getAIStats()
+      },
     });
   } catch (err) {
     console.error('Error fetching admin overview:', err);

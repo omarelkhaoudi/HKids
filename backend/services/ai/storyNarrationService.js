@@ -8,6 +8,8 @@ import { VoiceProviderFactory } from '../voice/VoiceProviderFactory.js';
 import { voiceConfig } from '../voice/voiceConfig.js';
 import { persistBookAsset } from '../storage/bookAssetStorage.js';
 import { getDatabase } from '../../database/init.js';
+import { AIProviderUnavailableError, normalizeAIError } from './errors.js';
+import { logAIEvent } from './aiLogger.js';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import crypto from 'node:crypto';
@@ -75,6 +77,12 @@ async function synthesizeChunk(provider, voiceId, text) {
 
 async function synthesizeFullText(provider, voiceId, text) {
   const chunks = splitIntoChunks(text);
+  if (chunks.length === 0 || !chunks[0]) {
+    throw new AIProviderUnavailableError('Narration text is empty', {
+      provider: provider.name,
+      retryable: false
+    });
+  }
   if (chunks.length === 1) {
     return synthesizeChunk(provider, voiceId, chunks[0]);
   }
@@ -104,9 +112,30 @@ export async function generateStoryNarration(storyId, locale, { force = false } 
 
   const metadata = story.narration_metadata || {};
   const tracks = metadata.tracks || {};
+  const text = String(story.story_text || '').trim();
+  if (!text) {
+    const error = new Error('Story has no text to narrate');
+    error.status = 422;
+    throw error;
+  }
+  const hash = textHash(text);
 
-  if (!force && tracks[loc]?.url) {
+  if (!force && tracks[loc]?.url && tracks[loc]?.text_hash === hash) {
+    logAIEvent('info', 'narration_cache_hit', {
+      provider: voiceConfig.provider,
+      operation: 'story_narration',
+      cache: 'hit',
+      text_length: text.length
+    });
     return { cached: true, locale: loc, url: tracks[loc].url };
+  }
+  if (!force && tracks[loc]?.url && tracks[loc]?.text_hash !== hash) {
+    logAIEvent('warn', 'narration_cache_stale', {
+      provider: voiceConfig.provider,
+      operation: 'story_narration',
+      cache: 'stale',
+      text_length: text.length
+    });
   }
 
   const voiceId = selectVoice(loc);
@@ -114,13 +143,22 @@ export async function generateStoryNarration(storyId, locale, { force = false } 
     throw new Error(`No ElevenLabs voice configured for locale "${loc}"`);
   }
 
-  const text = story.story_text || '';
-  if (!text.trim()) {
-    throw new Error('Story has no text to narrate');
-  }
-
   const provider = VoiceProviderFactory.getProvider();
-  const audioBuffer = await synthesizeFullText(provider, voiceId, text);
+  let audioBuffer;
+  try {
+    audioBuffer = await synthesizeFullText(provider, voiceId, text);
+  } catch (error) {
+    throw normalizeAIError(error, {
+      provider: provider.name,
+      fallbackMessage: 'Story narration provider failed'
+    });
+  }
+  if (!Buffer.isBuffer(audioBuffer) || audioBuffer.length < 256) {
+    throw new AIProviderUnavailableError('Narration provider returned invalid audio', {
+      provider: provider.name,
+      retryable: true
+    });
+  }
 
   const filename = narrationFilename(storyId, loc);
   const url = await persistBookAsset({
@@ -130,12 +168,13 @@ export async function generateStoryNarration(storyId, locale, { force = false } 
     folder: 'narrations',
   });
 
-  const hash = textHash(text);
   const trackEntry = {
     url,
     voice_id: voiceId,
     text_hash: hash,
     text_length: text.length,
+    audio_bytes: audioBuffer.length,
+    provider: provider.name,
     generated_at: new Date().toISOString(),
   };
 
@@ -151,6 +190,13 @@ export async function generateStoryNarration(storyId, locale, { force = false } 
     'UPDATE generated_stories SET narration_metadata = $2::jsonb, updated_at = NOW() WHERE id = $1',
     [storyId, JSON.stringify(updatedMetadata)]
   );
+
+  logAIEvent('info', 'narration_generated', {
+    provider: provider.name,
+    operation: 'story_narration',
+    text_length: text.length,
+    audio_bytes: audioBuffer.length
+  });
 
   return { cached: false, locale: loc, url, text_length: text.length };
 }

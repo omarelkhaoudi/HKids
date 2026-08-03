@@ -4,6 +4,7 @@ import {
   AIQuotaExceededError,
   AITimeoutError
 } from '../../ai/errors.js';
+import { logAIEvent } from '../../ai/aiLogger.js';
 import { VoiceProvider } from '../VoiceProvider.js';
 
 function fileNameFromMimeType(mimeType = '') {
@@ -12,6 +13,22 @@ function fileNameFromMimeType(mimeType = '') {
   if (mimeType.includes('ogg')) return 'voice-sample.ogg';
   if (mimeType.includes('mp4') || mimeType.includes('m4a')) return 'voice-sample.m4a';
   return 'voice-sample.webm';
+}
+
+function assertAudioPayload({ buffer, contentType }, provider) {
+  const normalizedType = String(contentType || '').toLowerCase();
+  if (!Buffer.isBuffer(buffer) || buffer.length < 256) {
+    throw new AIProviderUnavailableError('Voice provider returned empty audio', {
+      provider,
+      retryable: true
+    });
+  }
+  if (normalizedType && !normalizedType.startsWith('audio/')) {
+    throw new AIProviderUnavailableError('Voice provider returned a non-audio response', {
+      provider,
+      retryable: true
+    });
+  }
 }
 
 export class ElevenLabsProvider extends VoiceProvider {
@@ -80,16 +97,23 @@ export class ElevenLabsProvider extends VoiceProvider {
             chunks.push(chunk);
             await onChunk(chunk);
           }
-          return {
+          const result = {
             buffer: Buffer.concat(chunks),
             contentType: response.headers.get('content-type') || 'audio/mpeg'
           };
+          assertAudioPayload(result, this.name);
+          return {
+            buffer: result.buffer,
+            contentType: result.contentType
+          };
         }
         if (expectBinary) {
-          return {
+          const result = {
             buffer: Buffer.from(await response.arrayBuffer()),
             contentType: response.headers.get('content-type') || 'audio/mpeg'
           };
+          assertAudioPayload(result, this.name);
+          return result;
         }
         return response.status === 204 ? {} : response.json().catch(() => ({}));
       }
@@ -193,6 +217,13 @@ export class ElevenLabsProvider extends VoiceProvider {
       expectBinary: true
       }
     );
+    logAIEvent('info', 'voice_usage_recorded', {
+      provider: this.name,
+      operation: 'text_to_speech',
+      model: this.model,
+      text_length: cleanText.length,
+      audio_bytes: result.buffer.length
+    });
 
     return {
       audioBuffer: result.buffer,
@@ -243,6 +274,13 @@ export class ElevenLabsProvider extends VoiceProvider {
         signal
       }
     );
+    logAIEvent('info', 'voice_usage_recorded', {
+      provider: this.name,
+      operation: 'text_to_speech_stream',
+      model: this.model,
+      text_length: cleanText.length,
+      audio_bytes: result.buffer.length
+    });
 
     return {
       audioBuffer: result.buffer,

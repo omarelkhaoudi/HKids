@@ -10,6 +10,10 @@ import { initDatabase } from '../../database/init.js';
 process.env.NODE_ENV = 'development';
 process.env.SKIP_SERVER_START = '1';
 process.env.JWT_SECRET ||= 'hkids-test-jwt-secret-with-32-characters-minimum';
+process.env.OPENAI_API_KEY = '';
+process.env.GEMINI_API_KEY = '';
+process.env.ANTHROPIC_API_KEY = '';
+process.env.CLAUDE_API_KEY = '';
 
 await initDatabase();
 const { app } = await import('../../server.js');
