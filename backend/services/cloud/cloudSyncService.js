@@ -13,6 +13,146 @@ function httpError(status, message, code) {
   return error;
 }
 
+const MAX_FAVORITES = 20;
+const MAX_PROGRESS = 50;
+const MAX_HISTORY = 50;
+const MAX_DOWNLOADS = 60;
+const ALLOWED_DOWNLOAD_TYPES = new Set(['book', 'generated-story', 'voice-message', 'pack', 'quiz', 'game']);
+const ALLOWED_DOWNLOAD_STATUSES = new Set(['downloaded', 'removed']);
+
+function boundedInteger(value, min = 0, max = 10_000) {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) return min;
+  return Math.max(min, Math.min(max, Math.floor(numeric)));
+}
+
+function normalizePositiveId(value) {
+  const id = Number(value);
+  return Number.isInteger(id) && id > 0 ? id : null;
+}
+
+function uniquePositiveIds(values = [], limit = 50) {
+  const ids = [];
+  const seen = new Set();
+  for (const value of Array.isArray(values) ? values : []) {
+    const id = normalizePositiveId(value?.book_id ?? value?.bookId ?? value);
+    if (!id || seen.has(id)) continue;
+    seen.add(id);
+    ids.push(id);
+    if (ids.length >= limit) break;
+  }
+  return ids;
+}
+
+function optionalIsoDate(value) {
+  if (!value) return null;
+  const date = new Date(value);
+  return Number.isFinite(date.getTime()) ? date.toISOString() : null;
+}
+
+function cleanShortString(value, maxLength = 120) {
+  if (value == null) return null;
+  const trimmed = String(value).trim();
+  if (!trimmed) return null;
+  return trimmed.slice(0, maxLength);
+}
+
+export function normalizeDownloadChange(item = {}) {
+  const contentType = cleanShortString(item.content_type || item.contentType, 40);
+  const contentId = normalizePositiveId(item.content_id ?? item.contentId);
+  const status = cleanShortString(item.status || 'downloaded', 20) || 'downloaded';
+  if (!ALLOWED_DOWNLOAD_TYPES.has(contentType) || !contentId || !ALLOWED_DOWNLOAD_STATUSES.has(status)) {
+    return null;
+  }
+  return {
+    content_type: contentType,
+    content_id: contentId,
+    status,
+    downloaded_at: optionalIsoDate(item.downloaded_at || item.downloadedAt) || new Date().toISOString()
+  };
+}
+
+export function sanitizeCloudSyncChanges(changes = {}) {
+  const favorites = changes?.favorites || {};
+  const reading = Array.isArray(changes?.history?.reading) ? changes.history.reading : [];
+  const listening = Array.isArray(changes?.history?.listening) ? changes.history.listening : [];
+  const preferences = changes?.preferences && typeof changes.preferences === 'object' ? changes.preferences : {};
+
+  return {
+    favorites: {
+      add: uniquePositiveIds(favorites.add, MAX_FAVORITES),
+      remove: uniquePositiveIds(favorites.remove, MAX_FAVORITES),
+      favorited_at: optionalIsoDate(favorites.favorited_at || favorites.favoritedAt)
+    },
+    progress: (Array.isArray(changes?.progress) ? changes.progress : [])
+      .map((item) => {
+        const bookId = normalizePositiveId(item?.book_id ?? item?.bookId);
+        if (!bookId) return null;
+        return {
+          book_id: bookId,
+          current_page: boundedInteger(item.current_page ?? item.currentPage, 0, 2_000),
+          total_pages: boundedInteger(item.total_pages ?? item.totalPages, 0, 2_000),
+          duration_seconds: boundedInteger(item.duration_seconds ?? item.durationSeconds, 0, 86_400),
+          completed: item.completed === true,
+          client_session_id: cleanShortString(item.client_session_id || item.clientSessionId, 120)
+        };
+      })
+      .filter(Boolean)
+      .slice(0, MAX_PROGRESS),
+    history: {
+      reading: reading
+        .map((item) => {
+          const bookId = normalizePositiveId(item?.book_id ?? item?.bookId);
+          if (!bookId) return null;
+          return {
+            book_id: bookId,
+            last_page: boundedInteger(item.last_page ?? item.page, 0, 2_000),
+            occurred_at: optionalIsoDate(item.occurred_at || item.lastRead)
+          };
+        })
+        .filter(Boolean)
+        .slice(0, MAX_HISTORY),
+      listening: listening
+        .map((item) => {
+          const bookId = normalizePositiveId(item?.book_id ?? item?.bookId);
+          if (!bookId) return null;
+          return {
+            book_id: bookId,
+            last_page: boundedInteger(item.last_page ?? item.page, 0, 2_000),
+            listened_seconds: boundedInteger(item.listened_seconds ?? item.listenedSeconds, 0, 86_400),
+            audio_duration_seconds: boundedInteger(item.audio_duration_seconds ?? item.duration, 0, 86_400),
+            completed: item.completed === true,
+            occurred_at: optionalIsoDate(item.occurred_at || item.listenedAt || item.lastRead)
+          };
+        })
+        .filter(Boolean)
+        .slice(0, MAX_HISTORY)
+    },
+    downloads: (Array.isArray(changes?.downloads) ? changes.downloads : [])
+      .map(normalizeDownloadChange)
+      .filter(Boolean)
+      .slice(0, MAX_DOWNLOADS),
+    preferences: Object.fromEntries(
+      Object.entries({
+        language: cleanShortString(preferences.language, 10),
+        darkMode: typeof preferences.darkMode === 'boolean' ? preferences.darkMode : null,
+        reading_mode: cleanShortString(preferences.reading_mode || preferences.readingMode, 30)
+      }).filter(([, value]) => value !== null && value !== undefined)
+    )
+  };
+}
+
+export function hasCloudSyncChanges(changes = {}) {
+  const clean = sanitizeCloudSyncChanges(changes);
+  return clean.favorites.add.length > 0
+    || clean.favorites.remove.length > 0
+    || clean.progress.length > 0
+    || clean.history.reading.length > 0
+    || clean.history.listening.length > 0
+    || clean.downloads.length > 0
+    || Object.keys(clean.preferences).length > 0;
+}
+
 async function requireConnectedKid(pool, user) {
   if (user.role !== 'kid' || !user.kid_profile_id) {
     throw httpError(403, 'Kid account required', 'KID_ACCOUNT_REQUIRED');
@@ -161,13 +301,13 @@ export async function pullCloudSync({ user, clientSyncToken = null }) {
 
 async function applyFavoriteChanges(user, favorites = {}) {
   let resolved = 0;
-  const adds = Array.isArray(favorites.add) ? favorites.add.slice(0, 20) : [];
-  const removes = Array.isArray(favorites.remove) ? favorites.remove.slice(0, 20) : [];
+  const adds = Array.isArray(favorites.add) ? favorites.add.slice(0, MAX_FAVORITES) : [];
+  const removes = Array.isArray(favorites.remove) ? favorites.remove.slice(0, MAX_FAVORITES) : [];
 
   for (const bookId of adds) {
     await setKidBookFavorite({
       user,
-      bookId: Number(bookId),
+      bookId,
       favorite: true,
       favoritedAt: favorites.favorited_at || null
     });
@@ -182,7 +322,7 @@ async function applyFavoriteChanges(user, favorites = {}) {
 
 async function applyProgressChanges(user, progressItems = []) {
   let resolved = 0;
-  for (const item of progressItems.slice(0, 50)) {
+  for (const item of progressItems.slice(0, MAX_PROGRESS)) {
     if (!item?.book_id) continue;
     await recordKidReadingProgress({
       user,
@@ -201,8 +341,8 @@ async function applyProgressChanges(user, progressItems = []) {
 
 async function applyHistoryChanges(user, history = {}) {
   let resolved = 0;
-  const reading = Array.isArray(history.reading) ? history.reading.slice(0, 50) : [];
-  const listening = Array.isArray(history.listening) ? history.listening.slice(0, 50) : [];
+  const reading = Array.isArray(history.reading) ? history.reading.slice(0, MAX_HISTORY) : [];
+  const listening = Array.isArray(history.listening) ? history.listening.slice(0, MAX_HISTORY) : [];
 
   for (const item of reading) {
     if (!item?.book_id && !item?.bookId) continue;
@@ -233,11 +373,10 @@ async function applyHistoryChanges(user, history = {}) {
 async function applyDownloadChanges(kidProfileId, downloads = []) {
   const pool = getDatabase();
   let resolved = 0;
-  for (const item of downloads.slice(0, 60)) {
-    const contentType = String(item.content_type || item.contentType || '').trim();
-    const contentId = Number(item.content_id ?? item.contentId);
-    const status = String(item.status || 'downloaded');
-    if (!contentType || !Number.isInteger(contentId) || contentId <= 0) continue;
+  for (const item of downloads.slice(0, MAX_DOWNLOADS)) {
+    const normalized = normalizeDownloadChange(item);
+    if (!normalized) continue;
+    const { content_type: contentType, content_id: contentId, status, downloaded_at: downloadedAt } = normalized;
 
     if (status === 'removed') {
       await pool.query(
@@ -252,7 +391,7 @@ async function applyDownloadChanges(kidProfileId, downloads = []) {
          DO UPDATE SET status = EXCLUDED.status,
                        downloaded_at = GREATEST(kid_download_registry.downloaded_at, EXCLUDED.downloaded_at),
                        updated_at = NOW()`,
-        [kidProfileId, contentType, contentId, status, item.downloaded_at || null]
+        [kidProfileId, contentType, contentId, status, downloadedAt]
       );
     }
     resolved += 1;
@@ -286,13 +425,14 @@ async function applyPreferencesChanges(kidProfileId, preferences = {}) {
 export async function pushCloudSync({ user, clientSyncToken = null, changes = {} }) {
   const pool = getDatabase();
   const kid = await requireConnectedKid(pool, user);
+  const safeChanges = sanitizeCloudSyncChanges(changes);
   let conflictsResolved = 0;
 
-  conflictsResolved += await applyFavoriteChanges(user, changes.favorites);
-  conflictsResolved += await applyProgressChanges(user, changes.progress);
-  conflictsResolved += await applyHistoryChanges(user, changes.history);
-  conflictsResolved += await applyDownloadChanges(kid.id, changes.downloads);
-  conflictsResolved += await applyPreferencesChanges(kid.id, changes.preferences);
+  conflictsResolved += await applyFavoriteChanges(user, safeChanges.favorites);
+  conflictsResolved += await applyProgressChanges(user, safeChanges.progress);
+  conflictsResolved += await applyHistoryChanges(user, safeChanges.history);
+  conflictsResolved += await applyDownloadChanges(kid.id, safeChanges.downloads);
+  conflictsResolved += await applyPreferencesChanges(kid.id, safeChanges.preferences);
 
   await invalidateParentDashboardCache(kid.id);
 

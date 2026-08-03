@@ -25,6 +25,10 @@ router.get('/manifest', verifyToken, async (req, res) => {
         incremental_downloads: true,
         pause_resume: true,
         safe_rollback: true,
+        checksum_validation: true,
+        corrupted_asset_repair: true,
+        retry_backoff: true,
+        sync_diagnostics: true,
       },
       sync: {
         cloud: '/api/parental/me/cloud-sync',
@@ -46,6 +50,12 @@ router.get('/manifest', verifyToken, async (req, res) => {
         downloads: 'registry_merge',
         queue: 'last_write_wins',
         catalog: 'published_wins_with_local_rollback',
+      },
+      resilience: {
+        asset_integrity: 'size_and_sha256_when_available',
+        sync_retry: 'bounded_exponential_backoff',
+        storage_cleanup: 'failed_old_and_orphaned_assets',
+        offline_recovery: 'local_content_remains_available_until_repair_required',
       },
       ...catalogExtras,
     });

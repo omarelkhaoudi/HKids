@@ -5,7 +5,6 @@ import { verifyToken } from './auth.js';
 import { logSecurityEvent } from '../services/security/auditLog.js';
 import {
   filterAllowedContent,
-  getContentAccessViolation,
   getGlobalAccessViolation,
   loadChildAccessPolicy,
   sendParentalAccessError,
@@ -24,7 +23,7 @@ import {
   setKidBookFavorite,
   upsertKidReadingGoal
 } from '../services/parentDashboardService.js';
-import { pullCloudSync, pushCloudSync } from '../services/cloud/cloudSyncService.js';
+import { hasCloudSyncChanges, pullCloudSync, pushCloudSync } from '../services/cloud/cloudSyncService.js';
 import { permanentlyDeleteKid } from '../services/privacy/privacyService.js';
 
 import {
@@ -846,11 +845,7 @@ router.get('/me/cloud-sync', verifyToken, async (req, res) => {
 router.post('/me/cloud-sync', verifyToken, async (req, res) => {
   try {
     const changes = req.body?.changes || {};
-    const hasChanges = ['favorites', 'progress', 'history', 'downloads'].some(
-      (key) => changes[key] && (
-        Array.isArray(changes[key]) ? changes[key].length > 0 : Object.keys(changes[key]).length > 0
-      )
-    );
+    const hasChanges = hasCloudSyncChanges(changes);
 
     const result = hasChanges
       ? await pushCloudSync({

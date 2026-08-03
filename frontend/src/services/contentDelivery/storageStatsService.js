@@ -3,7 +3,12 @@
  * Optimizer protects favorites when preference is on and honors soft limits.
  */
 
-import { getDownloads, offlineContentIds } from '../offline/offlineContentService';
+import {
+  auditOfflineDownloads,
+  getDownloads,
+  offlineContentIds,
+  removeDownload,
+} from '../offline/offlineContentService';
 import { offlineDb } from '../offline/offlineDb';
 import { storage } from '../../utils/storage';
 import { getLocalCatalogState } from './catalogDeliveryService';
@@ -36,6 +41,18 @@ async function estimateAvailableStorage() {
   return { quota: 0, usage: 0, available: 0 };
 }
 
+export function classifyStoragePressure(disk = {}) {
+  const quota = Number(disk.quota || 0);
+  const usage = Number(disk.usage || 0);
+  const available = Number(disk.available || 0);
+  if (!quota) return 'unknown';
+  const usageRatio = usage / quota;
+  const availableRatio = available / quota;
+  if (usageRatio >= 0.95 || availableRatio <= 0.03) return 'critical';
+  if (usageRatio >= 0.9 || availableRatio <= 0.08) return 'warning';
+  return 'healthy';
+}
+
 function favoriteDownloadIds() {
   try {
     return new Set((storage.getFavorites() || []).map((id) => offlineContentIds.book(id)));
@@ -45,11 +62,12 @@ function favoriteDownloadIds() {
 }
 
 export async function getStorageStats() {
-  const [downloads, blobBytes, disk, catalog] = await Promise.all([
+  const [downloads, blobBytes, disk, catalog, lastIntegrityAudit] = await Promise.all([
     getDownloads({ includeRestricted: true }),
     estimateBlobBytes(),
     estimateAvailableStorage(),
     getLocalCatalogState(),
+    offlineDb.get(offlineDb.stores.metadata, 'offline:integrity:last-audit').catch(() => null),
   ]);
 
   const byType = downloads.reduce((acc, item) => {
@@ -72,10 +90,12 @@ export async function getStorageStats() {
     availableBytesLabel: formatBytes(disk.available),
     quotaBytes: disk.quota,
     usageBytes: disk.usage,
+    storagePressure: classifyStoragePressure(disk),
     lastSync: catalog.lastSync,
     catalogVersion: catalog.active?.version || null,
     softLimit: prefs.softLimit,
     protectFavorites: prefs.protectFavorites,
+    integrity: lastIntegrityAudit?.value || null,
     counts: {
       total: downloads.length,
       books: books.length,
@@ -100,7 +120,6 @@ export async function getStorageStats() {
 export async function clearFailedDownloads() {
   const downloads = await getDownloads({ includeRestricted: true });
   const failed = downloads.filter((d) => d.status === 'failed');
-  const { removeDownload } = await import('../offline/offlineContentService');
   await Promise.all(failed.map((item) => removeDownload(item.id)));
   return failed.length;
 }
@@ -113,8 +132,8 @@ export async function clearFailedDownloads() {
  */
 export async function optimizeStorage({ aggressive = false } = {}) {
   const prefs = getOfflinePrefs();
+  const integrity = await auditOfflineDownloads({ repair: true, removeOrphans: aggressive });
   const downloads = await getDownloads({ includeRestricted: true });
-  const { removeDownload } = await import('../offline/offlineContentService');
   const protectedIds = prefs.protectFavorites ? favoriteDownloadIds() : new Set();
 
   const failed = downloads.filter((d) => d.status === 'failed');
@@ -145,10 +164,13 @@ export async function optimizeStorage({ aggressive = false } = {}) {
     removedFailed: failed.length,
     removedOld: excess.length,
     protectedKept: protectedCount,
+    repairedCorrupted: integrity.repaired || 0,
+    removedOrphans: integrity.removedOrphans || 0,
   };
 
   await recordOfflineEvent('optimize_run', {
-    removed: result.removedFailed + result.removedOld,
+    removed: result.removedFailed + result.removedOld + result.removedOrphans,
+    repaired: result.repairedCorrupted,
   });
 
   return result;
@@ -156,7 +178,6 @@ export async function optimizeStorage({ aggressive = false } = {}) {
 
 export async function clearAllOfflineCache({ keepFavorites = false } = {}) {
   const downloads = await getDownloads({ includeRestricted: true });
-  const { removeDownload } = await import('../offline/offlineContentService');
   const protectedIds = keepFavorites && getOfflinePrefs().protectFavorites
     ? favoriteDownloadIds()
     : new Set();
@@ -170,6 +191,8 @@ export async function clearAllOfflineCache({ keepFavorites = false } = {}) {
     } catch {
       /* ignore */
     }
+  } else {
+    await auditOfflineDownloads({ repair: false, removeOrphans: true }).catch(() => {});
   }
 
   return removable.length;

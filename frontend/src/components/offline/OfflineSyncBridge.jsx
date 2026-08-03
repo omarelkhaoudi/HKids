@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNetworkStatus } from '../../hooks/useNetworkStatus';
 import { parentalAPI } from '../../api/parental';
 import { generatedStoriesAPI } from '../../api/generatedStories';
@@ -20,6 +20,8 @@ import { syncFavoriteDownloads, bindFavoriteAutoDownload } from '../../services/
 import { runPredictiveDownloads } from '../../services/contentDelivery/predictiveDownloadService';
 import { getStorageStats, optimizeStorage } from '../../services/contentDelivery/storageStatsService';
 import { drainQueue, resumePausedDownloads } from '../../services/contentDelivery/smartDownloadService';
+import { recordOfflineEvent } from '../../services/contentDelivery/offlineAnalyticsService';
+import { auditOfflineDownloads } from '../../services/offline/offlineContentService';
 
 const syncHandlers = {
   reading_progress: (payload) => parentalAPI.recordReadingProgress(payload),
@@ -28,9 +30,32 @@ const syncHandlers = {
   ...kidActivityMutationHandlers
 };
 
+let bridgeSyncActive = false;
+let retryTimer = null;
+
+function nextRetryFromMutations(mutations = []) {
+  return mutations
+    .map((mutation) => mutation.nextRetryAt)
+    .filter(Boolean)
+    .sort((a, b) => new Date(a).getTime() - new Date(b).getTime())[0] || null;
+}
+
+function scheduleSyncRetry(nextRetryAt) {
+  if (retryTimer) {
+    clearTimeout(retryTimer);
+    retryTimer = null;
+  }
+  if (!nextRetryAt || typeof window === 'undefined') return;
+  const delay = Math.max(1_000, new Date(nextRetryAt).getTime() - Date.now());
+  retryTimer = window.setTimeout(() => {
+    window.dispatchEvent(new CustomEvent('hkids:sync-retry-due'));
+  }, delay);
+}
+
 export function OfflineSyncBridge() {
   const { online, changedAt } = useNetworkStatus();
   const { user } = useAuth();
+  const [retryTick, setRetryTick] = useState(0);
 
   useEffect(() => {
     setNetworkOnline(online);
@@ -39,9 +64,23 @@ export function OfflineSyncBridge() {
   useEffect(() => bindFavoriteAutoDownload(), []);
 
   useEffect(() => {
+    const onRetryDue = () => setRetryTick((tick) => tick + 1);
+    window.addEventListener('hkids:sync-retry-due', onRetryDue);
+    return () => {
+      window.removeEventListener('hkids:sync-retry-due', onRetryDue);
+      if (retryTimer) {
+        clearTimeout(retryTimer);
+        retryTimer = null;
+      }
+    };
+  }, []);
+
+  useEffect(() => {
     if (!online) return;
+    if (bridgeSyncActive) return;
 
     const synchronize = async () => {
+      bridgeSyncActive = true;
       let queueResult = { synced: 0, failed: 0, pending: 0 };
       let cloudResult = { unchanged: true, conflicts_resolved: 0 };
       let syncError = null;
@@ -49,6 +88,7 @@ export function OfflineSyncBridge() {
       try {
         const pending = await getPendingMutations();
         beginSync({ queuePending: pending.length });
+        await recordOfflineEvent('sync_started', { pending: pending.length });
 
         try {
           await synchronizeParentalPolicy();
@@ -83,6 +123,10 @@ export function OfflineSyncBridge() {
 
         // Smart offline pass: favorites → predictive → resume queue → quota trim
         try {
+          const integrity = await auditOfflineDownloads({ repair: true, removeOrphans: false });
+          if (integrity.repaired > 0) {
+            await recordOfflineEvent('integrity_repaired', { count: integrity.repaired });
+          }
           await syncFavoriteDownloads({ limit: 12 });
           await runPredictiveDownloads({ limit: 3 });
           await resumePausedDownloads();
@@ -98,22 +142,44 @@ export function OfflineSyncBridge() {
         syncError = error;
         console.warn('Offline synchronization failed:', error);
       } finally {
-        const pendingAfter = await getPendingMutations();
+        const [pendingAfter, allQueuedAfter] = await Promise.all([
+          getPendingMutations(),
+          getPendingMutations({ includeDeferred: true }),
+        ]);
+        const nextRetryAt = nextRetryFromMutations(allQueuedAfter);
+        scheduleSyncRetry(nextRetryAt);
         completeSync({
           queueSynced: queueResult.synced,
           queueFailed: queueResult.failed,
           queuePending: pendingAfter.length,
+          queueDeferred: Math.max(0, allQueuedAfter.length - pendingAfter.length),
           cloudUnchanged: cloudResult?.unchanged ?? null,
           conflictsResolved: cloudResult?.conflicts_resolved || 0,
+          nextRetryAt,
           error: syncError,
         });
+        if (syncError) {
+          await recordOfflineEvent('sync_failed', { message: syncError.message || String(syncError) });
+        } else if (queueResult.failed > 0) {
+          await recordOfflineEvent('sync_partial', {
+            failed: queueResult.failed,
+            deferred: Math.max(0, allQueuedAfter.length - pendingAfter.length),
+          });
+        } else {
+          await recordOfflineEvent('sync_completed', {
+            synced: queueResult.synced,
+            conflictsResolved: cloudResult?.conflicts_resolved || 0,
+          });
+        }
+        bridgeSyncActive = false;
       }
     };
 
     synchronize().catch((error) => {
+      bridgeSyncActive = false;
       console.warn('Offline synchronization failed:', error);
     });
-  }, [online, changedAt, user?.id, user?.role]);
+  }, [online, changedAt, retryTick, user?.id, user?.role]);
 
   return null;
 }

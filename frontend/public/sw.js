@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'hkids-covers-v5';
+const CACHE_VERSION = 'hkids-covers-v6';
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 const API_CACHE = `${CACHE_VERSION}-api`;
@@ -18,6 +18,29 @@ const MEDIA_DESTINATIONS = new Set(['image', 'audio', 'video']);
 const MAX_API_ENTRIES = 80;
 const MAX_MEDIA_ENTRIES = 120;
 
+function isCacheableResponse(response) {
+  return response && (response.ok || response.type === 'opaque');
+}
+
+function normalizeCacheUrl(value) {
+  try {
+    const url = new URL(value, self.location.origin);
+    if (!['http:', 'https:'].includes(url.protocol)) return null;
+    return url.toString();
+  } catch {
+    return null;
+  }
+}
+
+async function safeCachePut(cache, request, response) {
+  if (!isCacheableResponse(response)) return;
+  try {
+    await cache.put(request, response.clone());
+  } catch {
+    /* Storage quota or opaque cache failure: keep app usable. */
+  }
+}
+
 async function trimCache(cacheName, maxEntries) {
   const cache = await caches.open(cacheName);
   const keys = await cache.keys();
@@ -30,7 +53,7 @@ async function cacheFirst(request, cacheName) {
   const cached = await cache.match(request);
   if (cached) return cached;
   const response = await fetch(request);
-  if (response && response.ok) cache.put(request, response.clone());
+  await safeCachePut(cache, request, response);
   return response;
 }
 
@@ -38,8 +61,8 @@ async function networkFirst(request, cacheName, fallbackUrl = null) {
   const cache = await caches.open(cacheName);
   try {
     const response = await fetch(request);
-    if (response && response.ok) {
-      cache.put(request, response.clone());
+    if (isCacheableResponse(response)) {
+      await safeCachePut(cache, request, response);
       if (cacheName === API_CACHE) trimCache(API_CACHE, MAX_API_ENTRIES);
     }
     return response;
@@ -55,7 +78,7 @@ async function navigationNetworkFirst(request) {
   const cache = await caches.open(STATIC_CACHE);
   try {
     const response = await fetch(request);
-    if (response && response.ok) cache.put(request, response.clone());
+    await safeCachePut(cache, request, response);
     return response;
   } catch {
     return await cache.match(request)
@@ -78,7 +101,7 @@ async function staleWhileRevalidate(request, cacheName) {
   const refresh = fetch(request)
     .then((response) => {
       if (response && response.ok) {
-        cache.put(request, response.clone());
+        safeCachePut(cache, request, response);
         if (cacheName === MEDIA_CACHE) trimCache(MEDIA_CACHE, MAX_MEDIA_ENTRIES);
       }
       return response;
@@ -149,15 +172,25 @@ self.addEventListener('fetch', (event) => {
 });
 
 self.addEventListener('message', (event) => {
+  if (event.data?.type === 'SKIP_WAITING') {
+    event.waitUntil(self.skipWaiting());
+    return;
+  }
+
   if (event.data?.type === 'CACHE_URLS' && Array.isArray(event.data.urls)) {
     event.waitUntil(
       caches.open(MEDIA_CACHE)
         .then((cache) => Promise.all(
-          event.data.urls.map((url) => fetch(url).then((response) => {
-            if (response.ok) return cache.put(url, response);
+          event.data.urls
+            .map(normalizeCacheUrl)
+            .filter(Boolean)
+            .slice(0, MAX_MEDIA_ENTRIES)
+            .map((url) => fetch(url).then((response) => {
+            if (isCacheableResponse(response)) return safeCachePut(cache, url, response);
             return null;
           }).catch(() => null))
         ))
+        .then(() => trimCache(MEDIA_CACHE, MAX_MEDIA_ENTRIES))
     );
   }
 });

@@ -13,8 +13,13 @@ let currentState = {
   online: typeof navigator !== 'undefined' ? navigator.onLine : true,
   queuePending: 0,
   queueFailed: 0,
+  queueDeferred: 0,
   cloudUnchanged: null,
   conflictsResolved: 0,
+  lastStartedAt: null,
+  lastCompletedAt: null,
+  lastDurationMs: null,
+  nextRetryAt: null,
   lastError: null,
   updatedAt: null,
 };
@@ -49,13 +54,18 @@ export function setNetworkOnline(online) {
 }
 
 export function beginSync({ queuePending = 0 } = {}) {
+  const startedAt = new Date().toISOString();
   currentState = {
     ...currentState,
     phase: SYNC_PHASE.syncing,
     queuePending,
     queueFailed: 0,
+    queueDeferred: 0,
+    lastStartedAt: startedAt,
+    lastDurationMs: null,
+    nextRetryAt: null,
     lastError: null,
-    updatedAt: new Date().toISOString(),
+    updatedAt: startedAt,
   };
   emit();
 }
@@ -63,8 +73,10 @@ export function beginSync({ queuePending = 0 } = {}) {
 export function completeSync({
   queueFailed = 0,
   queuePending = 0,
+  queueDeferred = 0,
   cloudUnchanged = null,
   conflictsResolved = 0,
+  nextRetryAt = null,
   error = null,
 } = {}) {
   const phase = error
@@ -72,16 +84,25 @@ export function completeSync({
     : queueFailed > 0
       ? SYNC_PHASE.partial
       : SYNC_PHASE.success;
+  const completedAt = new Date().toISOString();
+  const startedMs = currentState.lastStartedAt ? new Date(currentState.lastStartedAt).getTime() : 0;
+  const completedMs = new Date(completedAt).getTime();
 
   currentState = {
     ...currentState,
     phase,
     queuePending,
     queueFailed,
+    queueDeferred,
     cloudUnchanged,
     conflictsResolved,
+    lastCompletedAt: completedAt,
+    lastDurationMs: startedMs && Number.isFinite(startedMs)
+      ? Math.max(0, completedMs - startedMs)
+      : null,
+    nextRetryAt,
     lastError: error ? (error.message || String(error)) : null,
-    updatedAt: new Date().toISOString(),
+    updatedAt: completedAt,
   };
   emit();
 

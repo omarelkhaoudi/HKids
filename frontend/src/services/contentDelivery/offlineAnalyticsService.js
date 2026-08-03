@@ -17,6 +17,13 @@ const EMPTY = {
   bytesSavedByReuse: 0,
   optimizeRuns: 0,
   itemsRemovedByOptimize: 0,
+  syncStarted: 0,
+  syncCompleted: 0,
+  syncFailed: 0,
+  syncPartial: 0,
+  retryScheduled: 0,
+  integrityRepairs: 0,
+  orphanBlobsRemoved: 0,
   lastEventAt: null,
   events: [],
 };
@@ -82,6 +89,28 @@ export async function recordOfflineEvent(type, detail = {}) {
       case 'optimize_run':
         next.optimizeRuns += 1;
         next.itemsRemovedByOptimize += Number(detail.removed) || 0;
+        next.integrityRepairs += Number(detail.repaired) || 0;
+        break;
+      case 'sync_started':
+        next.syncStarted += 1;
+        break;
+      case 'sync_completed':
+        next.syncCompleted += 1;
+        break;
+      case 'sync_partial':
+        next.syncPartial += 1;
+        break;
+      case 'sync_failed':
+        next.syncFailed += 1;
+        break;
+      case 'retry_scheduled':
+        next.retryScheduled += 1;
+        break;
+      case 'integrity_repaired':
+        next.integrityRepairs += Number(detail.count) || 1;
+        break;
+      case 'orphan_blobs_removed':
+        next.orphanBlobsRemoved += Number(detail.count) || 1;
         break;
       default:
         break;

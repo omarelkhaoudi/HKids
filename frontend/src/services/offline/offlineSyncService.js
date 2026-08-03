@@ -6,8 +6,30 @@ const SYNC_STATUS = {
   failed: 'failed'
 };
 
+const MAX_SYNC_ATTEMPTS = 8;
+const BASE_RETRY_DELAY_MS = 2_000;
+const MAX_RETRY_DELAY_MS = 5 * 60_000;
+const RETRYABLE_STATUS_CODES = new Set([408, 425, 429, 500, 502, 503, 504]);
+const LAST_WRITE_WINS_TYPES = new Set([
+  'favorite_add',
+  'favorite_remove',
+  'reading_history',
+  'listening_history',
+  'screen_time'
+]);
+
 function nowIso() {
   return new Date().toISOString();
+}
+
+function toTimestamp(value) {
+  const ms = new Date(value || 0).getTime();
+  return Number.isFinite(ms) ? ms : 0;
+}
+
+function networkOnline() {
+  if (typeof navigator === 'undefined') return true;
+  return navigator.onLine !== false;
 }
 
 function createId(type) {
@@ -36,6 +58,9 @@ export async function queueOfflineMutation(type, payload, conflictKey = null) {
     ...currentOwner(),
     status: SYNC_STATUS.pending,
     attempts: 0,
+    retryable: true,
+    terminal: false,
+    nextRetryAt: null,
     createdAt: timestamp,
     updatedAt: timestamp
   };
@@ -43,15 +68,35 @@ export async function queueOfflineMutation(type, payload, conflictKey = null) {
   return entry;
 }
 
-export async function getPendingMutations() {
+export function isRetryableSyncError(error) {
+  const status = Number(error?.response?.status || error?.status || 0);
+  if (!status) return true;
+  return RETRYABLE_STATUS_CODES.has(status);
+}
+
+export function calculateMutationRetryDelayMs(attempts, {
+  baseMs = BASE_RETRY_DELAY_MS,
+  maxMs = MAX_RETRY_DELAY_MS,
+  jitterRatio = 0.15,
+} = {}) {
+  const attempt = Math.max(1, Number(attempts) || 1);
+  const raw = Math.min(maxMs, baseMs * (2 ** Math.min(8, attempt - 1)));
+  const jitter = raw * Math.max(0, jitterRatio) * Math.random();
+  return Math.round(Math.min(maxMs, raw + jitter));
+}
+
+export async function getPendingMutations({ includeDeferred = false } = {}) {
   const all = await offlineDb.getAll(offlineDb.stores.syncQueue);
   const owner = currentOwner();
+  const now = Date.now();
   return all
     .filter((item) => (
       (item.status === SYNC_STATUS.pending || item.status === SYNC_STATUS.failed)
       && item.ownerUserId != null
       && String(item.ownerUserId) === String(owner.ownerUserId)
       && String(item.ownerKidProfileId ?? '') === String(owner.ownerKidProfileId ?? '')
+      && item.terminal !== true
+      && (includeDeferred || !item.nextRetryAt || toTimestamp(item.nextRetryAt) <= now)
     ))
     .sort((a, b) => String(a.createdAt).localeCompare(String(b.createdAt)));
 }
@@ -63,10 +108,19 @@ export async function markMutationSynced(id) {
 export async function markMutationFailed(id, error) {
   const entry = await offlineDb.get(offlineDb.stores.syncQueue, id);
   if (!entry) return;
+  const attempts = (entry.attempts || 0) + 1;
+  const retryable = isRetryableSyncError(error);
+  const terminal = !retryable || attempts >= MAX_SYNC_ATTEMPTS;
+  const delayMs = terminal ? 0 : calculateMutationRetryDelayMs(attempts);
+  const retryAt = delayMs ? new Date(Date.now() + delayMs).toISOString() : null;
   await offlineDb.put(offlineDb.stores.syncQueue, {
     ...entry,
     status: SYNC_STATUS.failed,
-    attempts: (entry.attempts || 0) + 1,
+    attempts,
+    retryable,
+    terminal,
+    nextRetryAt: retryAt,
+    lastAttemptAt: nowIso(),
     lastError: error?.message || String(error),
     updatedAt: nowIso()
   });
@@ -75,25 +129,18 @@ export async function markMutationFailed(id, error) {
 let activeSynchronization = null;
 
 async function runSynchronization(handlers = {}) {
-  if (!navigator.onLine) return { synced: 0, failed: 0, pending: 0 };
+  if (!networkOnline()) return { synced: 0, failed: 0, pending: 0, deferred: 0 };
 
   const pending = await getPendingMutations();
-  const lastWriteWinsTypes = new Set([
-    'favorite_add',
-    'favorite_remove',
-    'reading_history',
-    'listening_history',
-    'screen_time'
-  ]);
   const latestByConflict = new Map();
   for (const mutation of pending) {
-    if (mutation.conflictKey && lastWriteWinsTypes.has(mutation.type)) {
+    if (mutation.conflictKey && LAST_WRITE_WINS_TYPES.has(mutation.type)) {
       latestByConflict.set(mutation.conflictKey, mutation.id);
     }
   }
   const superseded = pending.filter((mutation) => (
     mutation.conflictKey
-    && lastWriteWinsTypes.has(mutation.type)
+    && LAST_WRITE_WINS_TYPES.has(mutation.type)
     && latestByConflict.get(mutation.conflictKey) !== mutation.id
   ));
   await Promise.all(superseded.map((mutation) => markMutationSynced(mutation.id)));
@@ -119,7 +166,11 @@ async function runSynchronization(handlers = {}) {
     }
   }
 
-  return { synced, failed, pending: pendingToSync.length, superseded: superseded.length };
+  const deferred = (await getPendingMutations({ includeDeferred: true }))
+    .filter((mutation) => mutation.nextRetryAt && toTimestamp(mutation.nextRetryAt) > Date.now())
+    .length;
+
+  return { synced, failed, pending: pendingToSync.length, deferred, superseded: superseded.length };
 }
 
 export async function synchronizePendingMutations(handlers = {}) {

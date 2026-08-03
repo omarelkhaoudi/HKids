@@ -5,6 +5,10 @@ import { getPendingMutations } from '../offline/offlineSyncService';
 const SYNC_METADATA_KEY = (kidId) => `cloud-sync-state:kid:${kidId}`;
 const PROFILE_CACHE_KEY = (kidId) => `kid-profile-cache:kid:${kidId}`;
 const LAST_CLOUD_FAVORITES_KEY = (kidId) => `hkids_last_cloud_favorites:kid:${kidId}`;
+const SYNC_DIAGNOSTICS_KEY = (kidId) => `cloud-sync-diagnostics:kid:${kidId}`;
+const CLOUD_SYNC_TIMEOUT_MS = 15_000;
+const MAX_CLOUD_SYNC_ATTEMPTS = 3;
+const RETRYABLE_CLOUD_STATUS = new Set([408, 425, 429, 500, 502, 503, 504]);
 
 function currentKidUser() {
   try {
@@ -30,6 +34,94 @@ function parseJson(value, fallback) {
 function toTimestamp(value) {
   const ms = new Date(value || 0).getTime();
   return Number.isFinite(ms) ? ms : 0;
+}
+
+function wait(ms) {
+  return new Promise((resolve) => {
+    const timer = setTimeout(resolve, ms);
+    if (typeof timer?.unref === 'function') timer.unref();
+  });
+}
+
+function nowMs() {
+  return globalThis.performance?.now ? globalThis.performance.now() : Date.now();
+}
+
+function withTimeout(promise, timeoutMs = CLOUD_SYNC_TIMEOUT_MS) {
+  let timeoutId = null;
+  const timeout = new Promise((_, reject) => {
+    timeoutId = setTimeout(() => {
+      const error = new Error('Cloud synchronization timed out');
+      error.code = 'CLOUD_SYNC_TIMEOUT';
+      reject(error);
+    }, timeoutMs);
+  });
+  return Promise.race([promise, timeout]).finally(() => clearTimeout(timeoutId));
+}
+
+export function isRetryableCloudSyncError(error) {
+  const status = Number(error?.response?.status || error?.status || 0);
+  if (!status) return true;
+  return RETRYABLE_CLOUD_STATUS.has(status);
+}
+
+export function cloudSyncRetryDelayMs(attempt) {
+  return Math.min(10_000, 800 * Math.max(1, attempt) ** 2);
+}
+
+async function recordCloudSyncDiagnostics(kidId, patch) {
+  if (!kidId) return null;
+  const previous = await offlineDb.get(offlineDb.stores.metadata, SYNC_DIAGNOSTICS_KEY(kidId)).catch(() => null);
+  const value = {
+    attempts: 0,
+    successes: 0,
+    failures: 0,
+    lastLatencyMs: null,
+    lastError: null,
+    updatedAt: new Date().toISOString(),
+    ...(previous?.value || {}),
+    ...patch
+  };
+  await offlineDb.put(offlineDb.stores.metadata, {
+    key: SYNC_DIAGNOSTICS_KEY(kidId),
+    value,
+    updatedAt: value.updatedAt
+  }).catch(() => {});
+  return value;
+}
+
+async function executeCloudRequest(kidId, requestFactory) {
+  let lastError = null;
+  for (let attempt = 1; attempt <= MAX_CLOUD_SYNC_ATTEMPTS; attempt += 1) {
+    const startedAt = nowMs();
+    await recordCloudSyncDiagnostics(kidId, {
+      attempts: attempt,
+      lastAttemptAt: new Date().toISOString()
+    });
+    try {
+      const response = await withTimeout(requestFactory());
+      const latencyMs = Math.round(nowMs() - startedAt);
+      await recordCloudSyncDiagnostics(kidId, {
+        successes: ((await offlineDb.get(offlineDb.stores.metadata, SYNC_DIAGNOSTICS_KEY(kidId)).catch(() => null))?.value?.successes || 0) + 1,
+        lastLatencyMs: latencyMs,
+        lastError: null,
+        updatedAt: new Date().toISOString()
+      });
+      return response;
+    } catch (error) {
+      lastError = error;
+      const retryable = isRetryableCloudSyncError(error);
+      await recordCloudSyncDiagnostics(kidId, {
+        failures: ((await offlineDb.get(offlineDb.stores.metadata, SYNC_DIAGNOSTICS_KEY(kidId)).catch(() => null))?.value?.failures || 0) + 1,
+        lastError: error.message || String(error),
+        retryable,
+        updatedAt: new Date().toISOString()
+      });
+      if (!retryable || attempt >= MAX_CLOUD_SYNC_ATTEMPTS) throw error;
+      await wait(cloudSyncRetryDelayMs(attempt));
+    }
+  }
+  throw lastError || new Error('Cloud synchronization failed');
 }
 
 function mergeHistoryByBook(localItems = [], remoteItems = [], { listened = false } = {}) {
@@ -245,6 +337,11 @@ async function getStoredSyncToken(kidId) {
 }
 
 async function storeSyncState(kidId, payload) {
+  if (!payload || typeof payload !== 'object') {
+    const error = new Error('Malformed cloud synchronization response');
+    error.code = 'MALFORMED_CLOUD_SYNC_RESPONSE';
+    throw error;
+  }
   await offlineDb.put(offlineDb.stores.metadata, {
     key: SYNC_METADATA_KEY(kidId),
     value: {
@@ -278,11 +375,11 @@ export async function performCloudSync({ pushLocal = true } = {}) {
     const shouldPush = pushLocal && pending.length === 0;
 
     const response = shouldPush
-      ? await parentalAPI.pushCloudSync({
+      ? await executeCloudRequest(kidId, () => parentalAPI.pushCloudSync({
         sync_token: syncToken,
         changes: collectLocalChanges(kidId)
-      })
-      : await parentalAPI.pullCloudSync(syncToken);
+      }))
+      : await executeCloudRequest(kidId, () => parentalAPI.pullCloudSync(syncToken));
 
     const snapshot = response.data;
     await storeSyncState(kidId, snapshot);
@@ -307,6 +404,11 @@ export async function performCloudSync({ pushLocal = true } = {}) {
 
 export async function getCachedKidProfile(kidId) {
   const record = await offlineDb.get(offlineDb.stores.metadata, PROFILE_CACHE_KEY(kidId));
+  return record?.value || null;
+}
+
+export async function getCloudSyncDiagnostics(kidId) {
+  const record = await offlineDb.get(offlineDb.stores.metadata, SYNC_DIAGNOSTICS_KEY(kidId));
   return record?.value || null;
 }
 
