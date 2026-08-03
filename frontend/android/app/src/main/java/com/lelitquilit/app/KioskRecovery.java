@@ -15,6 +15,8 @@ final class KioskRecovery {
     private static final String TAG = "HKidsKioskRecovery";
     private static final int REQUEST_CODE = 4711;
     private static final long RESTART_DELAY_MS = 1200L;
+    private static final long MAX_RESTART_DELAY_MS = 60L * 1000L;
+    static final long HEALTHY_SESSION_DELAY_MS = 30L * 1000L;
 
     private static boolean installed = false;
 
@@ -61,11 +63,20 @@ final class KioskRecovery {
         AlarmManager alarmManager = (AlarmManager) appContext.getSystemService(Context.ALARM_SERVICE);
         if (alarmManager == null) return;
 
+        int attempt = KioskState.recordRecoveryAttempt(appContext);
+        long delayMs = restartDelayForAttempt(attempt);
+
         // Inexact on purpose: no SCHEDULE_EXACT_ALARM permission is required.
         alarmManager.set(
             AlarmManager.RTC_WAKEUP,
-            System.currentTimeMillis() + RESTART_DELAY_MS,
+            System.currentTimeMillis() + delayMs,
             pendingIntent
         );
+    }
+
+    static long restartDelayForAttempt(int attempt) {
+        int safeAttempt = Math.max(1, attempt);
+        long backoff = RESTART_DELAY_MS * safeAttempt * safeAttempt;
+        return Math.min(MAX_RESTART_DELAY_MS, backoff);
     }
 }

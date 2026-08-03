@@ -14,6 +14,12 @@ final class KioskState {
     private static final String PREFS = "hkids_kiosk";
     private static final String KEY_ENABLED = "kiosk_enabled";
     private static final String KEY_AUTHORIZED_EXIT = "authorized_exit";
+    private static final String KEY_LAST_LAUNCH_AT = "last_launch_at";
+    private static final String KEY_LAST_HEALTHY_AT = "last_healthy_at";
+    private static final String KEY_RECOVERY_WINDOW_STARTED_AT = "recovery_window_started_at";
+    private static final String KEY_RECOVERY_ATTEMPTS = "recovery_attempts";
+    private static final String KEY_LAST_RECOVERY_AT = "last_recovery_at";
+    private static final long RECOVERY_WINDOW_MS = 5L * 60L * 1000L;
 
     private KioskState() {
     }
@@ -55,5 +61,53 @@ final class KioskState {
             preferences.edit().putBoolean(KEY_AUTHORIZED_EXIT, false).commit();
         }
         return authorized;
+    }
+
+    static void markLaunch(Context context) {
+        prefs(context).edit().putLong(KEY_LAST_LAUNCH_AT, System.currentTimeMillis()).commit();
+    }
+
+    static void markHealthy(Context context) {
+        prefs(context).edit()
+            .putLong(KEY_LAST_HEALTHY_AT, System.currentTimeMillis())
+            .putLong(KEY_RECOVERY_WINDOW_STARTED_AT, 0L)
+            .putInt(KEY_RECOVERY_ATTEMPTS, 0)
+            .commit();
+    }
+
+    static int recordRecoveryAttempt(Context context) {
+        SharedPreferences preferences = prefs(context);
+        long now = System.currentTimeMillis();
+        long windowStartedAt = preferences.getLong(KEY_RECOVERY_WINDOW_STARTED_AT, 0L);
+        int attempts = preferences.getInt(KEY_RECOVERY_ATTEMPTS, 0);
+
+        if (windowStartedAt <= 0L || now - windowStartedAt > RECOVERY_WINDOW_MS) {
+            windowStartedAt = now;
+            attempts = 0;
+        }
+
+        attempts += 1;
+        preferences.edit()
+            .putLong(KEY_RECOVERY_WINDOW_STARTED_AT, windowStartedAt)
+            .putInt(KEY_RECOVERY_ATTEMPTS, attempts)
+            .putLong(KEY_LAST_RECOVERY_AT, now)
+            .commit();
+        return attempts;
+    }
+
+    static int getRecoveryAttempts(Context context) {
+        return prefs(context).getInt(KEY_RECOVERY_ATTEMPTS, 0);
+    }
+
+    static long getLastLaunchAt(Context context) {
+        return prefs(context).getLong(KEY_LAST_LAUNCH_AT, 0L);
+    }
+
+    static long getLastHealthyAt(Context context) {
+        return prefs(context).getLong(KEY_LAST_HEALTHY_AT, 0L);
+    }
+
+    static long getLastRecoveryAt(Context context) {
+        return prefs(context).getLong(KEY_LAST_RECOVERY_AT, 0L);
     }
 }

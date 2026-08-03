@@ -45,6 +45,13 @@ describe('kioskService (web fallback)', () => {
     expect(status.platform).toBe('web');
   });
 
+  it('getEmbeddedDiagnostics returns safe web defaults', async () => {
+    const diagnostics = await kiosk.getEmbeddedDiagnostics();
+    expect(diagnostics.platform).toBe('web');
+    expect(diagnostics.health).toBe('healthy');
+    expect(diagnostics.recoveryAttempts).toBe(0);
+  });
+
   it('setScreenBrightness is a safe no-op on web', async () => {
     const result = await kiosk.setScreenBrightness(0.5);
     expect(result).toBeUndefined();
@@ -107,15 +114,18 @@ describe('kiosk exit code', () => {
     expect(kiosk.getKioskExitCode()).toBe(import.meta.env.VITE_KIOSK_EXIT_CODE || null);
   });
 
-  it('stores and verifies a numeric code of 6 to 8 digits', () => {
+  it('stores and verifies a numeric code of 4 to 8 digits', () => {
+    expect(kiosk.setKioskExitCode('1379')).toBe(true);
+    expect(kiosk.getKioskExitCode()).toBe('1379');
+    expect(kiosk.verifyKioskExitCode('1379')).toBe(true);
+    expect(kiosk.verifyKioskExitCode('1380')).toBe(false);
+
     expect(kiosk.setKioskExitCode('482913')).toBe(true);
     expect(kiosk.getKioskExitCode()).toBe('482913');
-    expect(kiosk.verifyKioskExitCode('482913')).toBe(true);
-    expect(kiosk.verifyKioskExitCode('482914')).toBe(false);
   });
 
   it('rejects codes that are too short, too long or not numeric', () => {
-    expect(kiosk.setKioskExitCode('12345')).toBe(false);
+    expect(kiosk.setKioskExitCode('123')).toBe(false);
     expect(kiosk.setKioskExitCode('123456789')).toBe(false);
     expect(kiosk.setKioskExitCode('12a4')).toBe(false);
     expect(kiosk.setKioskExitCode('')).toBe(false);
@@ -133,5 +143,28 @@ describe('kiosk exit code', () => {
     const result = await kiosk.requestKioskExit('918200');
     expect(result.exited).toBe(false);
     expect(result.reason).toBe('not_android');
+  });
+
+  it('summarizes embedded diagnostics into actionable health warnings', () => {
+    const summary = kiosk.summarizeEmbeddedHealth({
+      health: 'healthy',
+      kioskEnabled: true,
+      recoveryAttempts: 4,
+      memory: { pressure: 'warning' },
+      storage: { pressure: 'healthy' },
+      battery: { present: true, percent: 18, charging: false },
+      network: { connected: false },
+      webview: { wakeLockHeld: false },
+    });
+
+    expect(summary.ok).toBe(false);
+    expect(summary.health).toBe('warning');
+    expect(summary.warnings).toEqual(expect.arrayContaining([
+      'memory',
+      'battery',
+      'network',
+      'wake_lock',
+      'recovery',
+    ]));
   });
 });

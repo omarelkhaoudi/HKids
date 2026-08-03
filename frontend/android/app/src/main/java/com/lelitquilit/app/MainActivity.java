@@ -26,6 +26,7 @@ public class MainActivity extends BridgeActivity {
 
     private static final long RELAUNCH_DELAY_MS = 350L;
     private static final long RELAUNCH_THROTTLE_MS = 1000L;
+    private static final long WAKE_LOCK_RENEWAL_THRESHOLD_MS = 6L * 60L * 60L * 1000L;
 
     private final Handler handler = new Handler(Looper.getMainLooper());
     private long lastRelaunchAt = 0L;
@@ -35,16 +36,28 @@ public class MainActivity extends BridgeActivity {
         registerPlugin(KioskPlugin.class);
         super.onCreate(savedInstanceState);
 
+        KioskState.markLaunch(this);
         KioskRecovery.install(this);
         applyDeviceOrientation();
         applyImmersiveMode();
         restoreKioskSession();
+        handler.postDelayed(() -> KioskState.markHealthy(this), KioskRecovery.HEALTHY_SESSION_DELAY_MS);
     }
 
     @Override
     protected void onResume() {
         super.onResume();
         applyImmersiveMode();
+        renewKioskWakeLockIfNeeded();
+        reassertLockTask();
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        applyImmersiveMode();
+        renewKioskWakeLockIfNeeded();
         reassertLockTask();
     }
 
@@ -133,8 +146,17 @@ public class MainActivity extends BridgeActivity {
                 startActivity(intent);
             } catch (Exception error) {
                 Log.w(TAG, "Kiosk relaunch failed: " + error.getMessage());
+                KioskRecovery.scheduleRestart(this);
             }
         }, RELAUNCH_DELAY_MS);
+    }
+
+    private void renewKioskWakeLockIfNeeded() {
+        if (!KioskState.isKioskEnabled(this)) return;
+        if (!KioskWakeLock.isHeld()
+                || KioskWakeLock.getRemainingMs() < WAKE_LOCK_RENEWAL_THRESHOLD_MS) {
+            KioskWakeLock.acquire(this, true, 0);
+        }
     }
 
     /**

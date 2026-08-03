@@ -26,7 +26,7 @@ public class HKidsDeviceAdminReceiver extends DeviceAdminReceiver {
 
     @Override
     public void onDisabled(Context context, Intent intent) {
-        Log.i(TAG, "Device admin disabled — reverting to normal Android mode");
+        Log.i(TAG, "Device admin disabled; reverting to normal Android mode");
         KioskState.setKioskEnabled(context, false);
         KioskPolicyManager.setKioskLauncher(context, false);
     }
@@ -42,7 +42,7 @@ public class HKidsDeviceAdminReceiver extends DeviceAdminReceiver {
      */
     @Override
     public void onProfileProvisioningComplete(Context context, Intent intent) {
-        Log.i(TAG, "Managed provisioning complete — applying kiosk policies");
+        Log.i(TAG, "Managed provisioning complete; applying kiosk policies");
         KioskState.setKioskEnabled(context, true);
         KioskPolicyManager.applyDedicatedDevicePolicies(context);
 

@@ -3,6 +3,7 @@ package com.lelitquilit.app;
 import android.content.Context;
 import android.os.Build;
 import android.os.PowerManager;
+import android.os.SystemClock;
 import android.util.Log;
 
 /**
@@ -15,10 +16,12 @@ import android.util.Log;
 final class KioskWakeLock {
     private static final String TAG = "HKidsWakeLock";
     private static final String LOCK_TAG = "HKids::KioskWakeLock";
-    private static final long DEFAULT_TIMEOUT_MS = 12L * 60L * 60L * 1000L;
+    static final long DEFAULT_TIMEOUT_MS = 26L * 60L * 60L * 1000L;
 
     private static PowerManager.WakeLock wakeLock;
     private static boolean screenLevel = false;
+    private static long acquiredAtElapsedMs = 0L;
+    private static long activeTimeoutMs = 0L;
 
     private KioskWakeLock() {
     }
@@ -37,13 +40,17 @@ final class KioskWakeLock {
         try {
             wakeLock = powerManager.newWakeLock(levelAndFlags, LOCK_TAG);
             wakeLock.setReferenceCounted(false);
-            wakeLock.acquire(timeoutMs > 0 ? timeoutMs : DEFAULT_TIMEOUT_MS);
+            activeTimeoutMs = timeoutMs > 0 ? timeoutMs : DEFAULT_TIMEOUT_MS;
+            wakeLock.acquire(activeTimeoutMs);
+            acquiredAtElapsedMs = SystemClock.elapsedRealtime();
             screenLevel = keepScreenBright;
             return true;
         } catch (Exception error) {
             Log.w(TAG, "Wake lock acquisition failed: " + error.getMessage());
             wakeLock = null;
             screenLevel = false;
+            acquiredAtElapsedMs = 0L;
+            activeTimeoutMs = 0L;
             return false;
         }
     }
@@ -57,6 +64,8 @@ final class KioskWakeLock {
         }
         wakeLock = null;
         screenLevel = false;
+        acquiredAtElapsedMs = 0L;
+        activeTimeoutMs = 0L;
     }
 
     static synchronized boolean isHeld() {
@@ -65,6 +74,20 @@ final class KioskWakeLock {
 
     static synchronized boolean isScreenLevel() {
         return isHeld() && screenLevel;
+    }
+
+    static synchronized long getAcquiredAtElapsedMs() {
+        return isHeld() ? acquiredAtElapsedMs : 0L;
+    }
+
+    static synchronized long getTimeoutMs() {
+        return isHeld() ? activeTimeoutMs : 0L;
+    }
+
+    static synchronized long getRemainingMs() {
+        if (!isHeld() || activeTimeoutMs <= 0L || acquiredAtElapsedMs <= 0L) return 0L;
+        long elapsed = SystemClock.elapsedRealtime() - acquiredAtElapsedMs;
+        return Math.max(0L, activeTimeoutMs - elapsed);
     }
 
     static boolean isDeviceInteractive(Context context) {

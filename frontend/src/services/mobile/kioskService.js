@@ -11,6 +11,7 @@ const Kiosk = Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'andro
   : null;
 
 const EXIT_CODE_KEY = 'hkids_kiosk_exit_code';
+const EXIT_CODE_PATTERN = /^\d{4,8}$/;
 
 const WEB_STATUS = {
   platform: 'web',
@@ -20,7 +21,21 @@ const WEB_STATUS = {
   provisioningAllowed: false,
   launcherEnabled: false,
   wakeLockHeld: false,
+  wakeLockScreenLevel: false,
+  wakeLockRemainingMs: 0,
   tablet: false,
+};
+
+const WEB_DIAGNOSTICS = {
+  diagnosticsVersion: 1,
+  platform: 'web',
+  health: 'healthy',
+  memory: { pressure: 'unknown', availablePercent: -1 },
+  storage: { pressure: 'unknown', availablePercent: -1 },
+  battery: { present: false, percent: -1, charging: false },
+  network: { connected: typeof navigator !== 'undefined' ? navigator.onLine : true, type: 'browser' },
+  webview: { wakeLockHeld: false, wakeLockScreenLevel: false, wakeLockRemainingMs: 0 },
+  recoveryAttempts: 0,
 };
 
 function isAndroid() {
@@ -125,6 +140,60 @@ export async function getKioskStatus() {
   }
 }
 
+export async function getEmbeddedDiagnostics() {
+  if (!isAndroid() || !Kiosk) return { ...WEB_DIAGNOSTICS };
+  try {
+    const diagnostics = await Kiosk.getDiagnostics();
+    return { ...WEB_DIAGNOSTICS, platform: 'android', ...diagnostics };
+  } catch (error) {
+    console.warn('Kiosk getDiagnostics failed:', error);
+    return { ...WEB_DIAGNOSTICS, platform: 'android', health: 'warning', error: true };
+  }
+}
+
+export function summarizeEmbeddedHealth(diagnostics = {}) {
+  const warnings = [];
+  const memoryPressure = diagnostics.memory?.pressure;
+  const storagePressure = diagnostics.storage?.pressure;
+  const battery = diagnostics.battery || {};
+  const network = diagnostics.network || {};
+  const webview = diagnostics.webview || {};
+  const recoveryAttempts = Number(diagnostics.recoveryAttempts || 0);
+
+  if (memoryPressure === 'critical' || memoryPressure === 'warning') {
+    warnings.push('memory');
+  }
+  if (storagePressure === 'critical' || storagePressure === 'warning') {
+    warnings.push('storage');
+  }
+  if (battery.present !== false && battery.charging === false && Number(battery.percent) >= 0 && Number(battery.percent) <= 20) {
+    warnings.push('battery');
+  }
+  if (network.connected === false) {
+    warnings.push('network');
+  }
+  if (diagnostics.kioskEnabled && !webview.wakeLockHeld) {
+    warnings.push('wake_lock');
+  }
+  if (recoveryAttempts >= 3) {
+    warnings.push('recovery');
+  }
+
+  const hasCritical = memoryPressure === 'critical' || storagePressure === 'critical';
+  const nativeHealth = diagnostics.health;
+  const health = hasCritical || nativeHealth === 'critical'
+    ? 'critical'
+    : warnings.length > 0 || nativeHealth === 'warning'
+      ? 'warning'
+      : 'healthy';
+
+  return {
+    ok: warnings.length === 0,
+    health,
+    warnings,
+  };
+}
+
 /**
  * Full provisioning pass for a dedicated tablet: lock task, dedicated-device policies,
  * HOME takeover and wake lock, in the order the system expects.
@@ -167,7 +236,7 @@ export function getKioskExitCode() {
 
 export function setKioskExitCode(code) {
   const normalized = String(code || '').trim();
-  if (!/^\d{6,8}$/.test(normalized)) return false;
+  if (!EXIT_CODE_PATTERN.test(normalized)) return false;
   try {
     localStorage.setItem(EXIT_CODE_KEY, normalized);
     return true;

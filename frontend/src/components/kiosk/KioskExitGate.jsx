@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useLanguage } from '../../context/LanguageContext';
-import { getKioskStatus, requestKioskExit } from '../../services/mobile/kioskService';
+import { getKioskExitCode, getKioskStatus, requestKioskExit } from '../../services/mobile/kioskService';
 
 const HOLD_DURATION_MS = 3000;
 const MAX_ATTEMPTS = 3;
 const LOCKOUT_MS = 30000;
-const CODE_LENGTH = 4;
+const MIN_CODE_LENGTH = 4;
+const MAX_CODE_LENGTH = 8;
 
 const KEYPAD = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '', '0', '⌫'];
 
@@ -25,6 +26,7 @@ export function KioskExitGate() {
   const [attempts, setAttempts] = useState(0);
   const [lockedUntil, setLockedUntil] = useState(0);
   const [holdProgress, setHoldProgress] = useState(0);
+  const [codeLength, setCodeLength] = useState(MIN_CODE_LENGTH);
 
   const holdTimerRef = useRef(null);
   const holdIntervalRef = useRef(null);
@@ -34,6 +36,10 @@ export function KioskExitGate() {
     getKioskStatus().then((status) => {
       if (!cancelled) setKioskEnabled(Boolean(status.kioskEnabled));
     });
+    const expectedCode = getKioskExitCode();
+    if (expectedCode) {
+      setCodeLength(Math.min(MAX_CODE_LENGTH, Math.max(MIN_CODE_LENGTH, expectedCode.length)));
+    }
     return () => { cancelled = true; };
   }, []);
 
@@ -114,11 +120,11 @@ export function KioskExitGate() {
     }
 
     setCode((current) => {
-      const next = (current + key).slice(0, CODE_LENGTH);
-      if (next.length === CODE_LENGTH) submit(next);
+      const next = (current + key).slice(0, codeLength);
+      if (next.length === codeLength) submit(next);
       return next;
     });
-  }, [submit]);
+  }, [codeLength, submit]);
 
   if (!kioskEnabled) return null;
 
@@ -168,7 +174,7 @@ export function KioskExitGate() {
               role="status"
               aria-label={t('kioskExitCodeLabel')}
             >
-              {Array.from({ length: CODE_LENGTH }).map((_, index) => (
+              {Array.from({ length: codeLength }).map((_, index) => (
                 <span
                   key={index}
                   className={`h-4 w-4 rounded-full border-2 ${

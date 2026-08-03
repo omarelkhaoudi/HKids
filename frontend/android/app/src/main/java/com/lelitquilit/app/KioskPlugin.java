@@ -363,6 +363,9 @@ public class KioskPlugin extends Plugin {
         result.put("provisioningAllowed", KioskPolicyManager.isProvisioningAllowed(activity));
         result.put("launcherEnabled", KioskPolicyManager.isKioskLauncherEnabled(activity));
         result.put("wakeLockHeld", KioskWakeLock.isHeld());
+        result.put("wakeLockScreenLevel", KioskWakeLock.isScreenLevel());
+        result.put("wakeLockTimeoutMs", KioskWakeLock.getTimeoutMs());
+        result.put("wakeLockRemainingMs", KioskWakeLock.getRemainingMs());
         result.put("screenOn", screenOn);
         result.put("brightness", params.screenBrightness);
         result.put("orientation", activity.getRequestedOrientation());
@@ -371,7 +374,27 @@ public class KioskPlugin extends Plugin {
         result.put("sdkVersion", Build.VERSION.SDK_INT);
         result.put("model", Build.MODEL);
         result.put("manufacturer", Build.MANUFACTURER);
+        result.put("lastLaunchAt", KioskState.getLastLaunchAt(activity));
+        result.put("lastHealthyAt", KioskState.getLastHealthyAt(activity));
+        result.put("lastRecoveryAt", KioskState.getLastRecoveryAt(activity));
+        result.put("recoveryAttempts", KioskState.getRecoveryAttempts(activity));
         call.resolve(result);
+    }
+
+    @PluginMethod
+    public void getDiagnostics(PluginCall call) {
+        Activity activity = getActivity();
+        Context context = getContext();
+        if (context == null) {
+            call.reject("Context not available");
+            return;
+        }
+
+        try {
+            call.resolve(EmbeddedDeviceDiagnostics.collect(context, activity));
+        } catch (Exception error) {
+            call.reject("Failed to collect diagnostics: " + error.getMessage(), error);
+        }
     }
 
     private static int lockTaskModeState(Activity activity) {

@@ -4,10 +4,11 @@ import { Haptics, ImpactStyle } from '@capacitor/haptics';
 import { SplashScreen } from '@capacitor/splash-screen';
 import { StatusBar, Style } from '@capacitor/status-bar';
 import { unlockAndroidAudio } from './androidAudio';
-import { cleanupAndroidNetwork, initAndroidNetwork } from './androidNetwork';
+import { cleanupAndroidNetwork, getNativeNetworkSnapshot, initAndroidNetwork } from './androidNetwork';
 import {
   acquireWakeLock,
   enableKiosk,
+  getEmbeddedDiagnostics,
   getKioskStatus,
   isKioskActive,
   refreshImmersiveMode,
@@ -18,22 +19,43 @@ import {
   wakeScreen,
 } from './kioskService';
 
+const DIAGNOSTICS_POLL_MS = 5 * 60 * 1000;
+const WAKE_LOCK_RENEWAL_THRESHOLD_MS = 6 * 60 * 60 * 1000;
+const runtimeStartedAt = typeof performance !== 'undefined' ? performance.now() : Date.now();
+
 let initialized = false;
 let removeBackButtonListener = null;
 let removeClickListener = null;
 let removeResumeListener = null;
 let removeWakeListener = null;
+let removeNetworkDiagnosticsListener = null;
+let diagnosticsInterval = null;
 let kioskStatus = null;
+let androidDiagnostics = null;
 
 export function isNativeAndroid() {
   return Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'android';
 }
 
 async function configureAndroidChrome() {
+  const startedAt = performance.now();
   await StatusBar.setStyle({ style: Style.Light });
   await StatusBar.setBackgroundColor({ color: '#fefcfb' });
   await StatusBar.hide();
   await SplashScreen.hide();
+  emitAndroidRuntimeEvent('chrome_ready', { durationMs: Math.round(performance.now() - startedAt) });
+}
+
+function emitAndroidRuntimeEvent(type, detail = {}) {
+  if (!isNativeAndroid()) return;
+  window.dispatchEvent(new CustomEvent('hkids:android-runtime', {
+    detail: {
+      type,
+      timestamp: Date.now(),
+      runtimeSessionMs: Math.round(performance.now() - runtimeStartedAt),
+      ...detail,
+    },
+  }));
 }
 
 function installBackButtonHandling() {
@@ -83,12 +105,76 @@ function installTouchFeedback() {
 }
 
 function installResumeHandling() {
-  removeResumeListener = App.addListener('appStateChange', ({ isActive }) => {
-    if (!isActive) return;
+  removeResumeListener = App.addListener('appStateChange', async ({ isActive }) => {
+    emitAndroidRuntimeEvent(isActive ? 'foreground' : 'background');
+
+    if (!isActive) {
+      stopSleepCycle();
+      return;
+    }
+
     unlockAndroidAudio();
-    // A system dialog or the keyboard can reveal the status bar: hide it again.
     refreshImmersiveMode();
+    if (kioskStatus?.kioskEnabled) {
+      await acquireWakeLock({ screen: true });
+    }
+    startSleepCycle();
+    await refreshAndroidDiagnostics('foreground');
   });
+}
+
+async function refreshAndroidDiagnostics(reason = 'poll') {
+  if (!isNativeAndroid()) return null;
+
+  let diagnostics = await getEmbeddedDiagnostics();
+  if (await renewWakeLockFromDiagnostics(diagnostics)) {
+    diagnostics = await getEmbeddedDiagnostics();
+  }
+
+  androidDiagnostics = {
+    ...diagnostics,
+    reason,
+    networkSnapshot: getNativeNetworkSnapshot(),
+    runtimeSessionMs: Math.round(performance.now() - runtimeStartedAt),
+  };
+
+  document.documentElement.dataset.androidHealth = androidDiagnostics.health || 'unknown';
+  window.dispatchEvent(new CustomEvent('hkids:android-diagnostics', {
+    detail: androidDiagnostics,
+  }));
+
+  return androidDiagnostics;
+}
+
+async function renewWakeLockFromDiagnostics(diagnostics) {
+  if (!kioskStatus?.kioskEnabled) return false;
+
+  const remainingMs = Number(diagnostics?.webview?.wakeLockRemainingMs || 0);
+  const wakeLockHeld = Boolean(diagnostics?.webview?.wakeLockHeld);
+  if (wakeLockHeld && remainingMs >= WAKE_LOCK_RENEWAL_THRESHOLD_MS) return false;
+
+  await acquireWakeLock({ screen: true });
+  emitAndroidRuntimeEvent('wake_lock_renewed', { remainingMs });
+  return true;
+}
+
+function installDiagnosticsPolling() {
+  if (!isNativeAndroid()) return;
+
+  const refreshFromNetwork = () => {
+    refreshAndroidDiagnostics('network');
+  };
+
+  window.addEventListener('hkids:network-status', refreshFromNetwork);
+  removeNetworkDiagnosticsListener = () => {
+    window.removeEventListener('hkids:network-status', refreshFromNetwork);
+  };
+
+  diagnosticsInterval = window.setInterval(() => {
+    refreshAndroidDiagnostics('poll');
+  }, DIAGNOSTICS_POLL_MS);
+
+  refreshAndroidDiagnostics('startup');
 }
 
 /**
@@ -117,11 +203,17 @@ async function configureKioskEnvironment() {
     await acquireWakeLock({ screen: true });
   }
 
+  await refreshAndroidDiagnostics('kiosk_environment');
+
   return kioskStatus;
 }
 
 export function getCachedKioskStatus() {
   return kioskStatus;
+}
+
+export function getCachedAndroidDiagnostics() {
+  return androidDiagnostics;
 }
 
 export async function initCapacitorRuntime() {
@@ -143,6 +235,7 @@ export async function initCapacitorRuntime() {
   installTouchFeedback();
   installResumeHandling();
   installSleepCycle();
+  installDiagnosticsPolling();
 }
 
 function installSleepCycle() {
@@ -188,8 +281,19 @@ export async function cleanupCapacitorRuntime() {
     removeWakeListener = null;
   }
 
+  if (removeNetworkDiagnosticsListener) {
+    removeNetworkDiagnosticsListener();
+    removeNetworkDiagnosticsListener = null;
+  }
+
+  if (diagnosticsInterval) {
+    window.clearInterval(diagnosticsInterval);
+    diagnosticsInterval = null;
+  }
+
   await releaseWakeLock();
   await cleanupAndroidNetwork();
   kioskStatus = null;
+  androidDiagnostics = null;
   initialized = false;
 }
