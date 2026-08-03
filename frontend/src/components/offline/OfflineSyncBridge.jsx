@@ -133,7 +133,7 @@ export function OfflineSyncBridge() {
           await drainQueue();
           const stats = await getStorageStats();
           if (stats.quotaBytes && stats.usageBytes / stats.quotaBytes > 0.9) {
-            await optimizeStorage({ aggressive: true });
+            await optimizeStorage({ aggressive: true, automatic: true });
           }
         } catch (error) {
           console.warn('Smart offline pass failed:', error);

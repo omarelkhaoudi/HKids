@@ -6,6 +6,7 @@
 import {
   auditOfflineDownloads,
   getDownloads,
+  isUserCriticalDownload,
   offlineContentIds,
   removeDownload,
 } from '../offline/offlineContentService';
@@ -120,8 +121,12 @@ export async function getStorageStats() {
 export async function clearFailedDownloads() {
   const downloads = await getDownloads({ includeRestricted: true });
   const failed = downloads.filter((d) => d.status === 'failed');
-  await Promise.all(failed.map((item) => removeDownload(item.id)));
-  return failed.length;
+  const removable = failed.filter((item) => !isUserCriticalDownload(item) && !(item.assetKeys || []).length);
+  await Promise.all(removable.map((item) => removeDownload(item.id, {
+    syncCloud: false,
+    reason: 'clear_failed_downloads'
+  })));
+  return removable.length;
 }
 
 /**
@@ -130,18 +135,28 @@ export async function clearFailedDownloads() {
  * 2) remove oldest non-protected completed items beyond soft limit
  * 3) if quota nearly full, keep trimming unprotected oldest
  */
-export async function optimizeStorage({ aggressive = false } = {}) {
+export async function optimizeStorage({ aggressive = false, automatic = false } = {}) {
   const prefs = getOfflinePrefs();
-  const integrity = await auditOfflineDownloads({ repair: true, removeOrphans: aggressive });
+  const integrity = await auditOfflineDownloads({ repair: true, removeOrphans: aggressive && !automatic });
   const downloads = await getDownloads({ includeRestricted: true });
   const protectedIds = prefs.protectFavorites ? favoriteDownloadIds() : new Set();
 
-  const failed = downloads.filter((d) => d.status === 'failed');
-  await Promise.all(failed.map((item) => removeDownload(item.id)));
+  const failed = automatic
+    ? []
+    : downloads.filter((d) => (
+      d.status === 'failed'
+      && !isUserCriticalDownload(d)
+      && !(d.assetKeys || []).length
+    ));
+  await Promise.all(failed.map((item) => removeDownload(item.id, {
+    syncCloud: false,
+    reason: 'storage_optimize_failed'
+  })));
 
   const completed = downloads
     .filter((d) => d.status === 'downloaded' && d.type !== 'pack')
     .filter((d) => !protectedIds.has(d.id))
+    .filter((d) => !isUserCriticalDownload(d))
     .sort((a, b) => String(a.updatedAt || '').localeCompare(String(b.updatedAt || '')));
 
   const softLimit = prefs.softLimit;
@@ -151,19 +166,24 @@ export async function optimizeStorage({ aggressive = false } = {}) {
   const allowedUnprotected = Math.max(0, softLimit - protectedCount);
   let excess = completed.slice(0, Math.max(0, completed.length - allowedUnprotected));
 
-  if (aggressive) {
+  if (aggressive && !automatic) {
     const disk = await estimateAvailableStorage();
     if (disk.quota && disk.usage / disk.quota > 0.9) {
       excess = completed;
     }
   }
 
-  await Promise.all(excess.map((item) => removeDownload(item.id)));
+  await Promise.all(excess.map((item) => removeDownload(item.id, {
+    syncCloud: false,
+    reason: aggressive ? 'storage_optimize_aggressive' : 'storage_optimize_soft_limit'
+  })));
 
   const result = {
     removedFailed: failed.length,
     removedOld: excess.length,
     protectedKept: protectedCount,
+    preservedCritical: downloads.filter((d) => isUserCriticalDownload(d)).length,
+    automatic,
     repairedCorrupted: integrity.repaired || 0,
     removedOrphans: integrity.removedOrphans || 0,
   };
@@ -183,7 +203,10 @@ export async function clearAllOfflineCache({ keepFavorites = false } = {}) {
     : new Set();
 
   const removable = downloads.filter((d) => !protectedIds.has(d.id));
-  await Promise.all(removable.map((item) => removeDownload(item.id)));
+  await Promise.all(removable.map((item) => removeDownload(item.id, {
+    syncCloud: false,
+    reason: 'clear_offline_cache'
+  })));
 
   if (!keepFavorites) {
     try {
@@ -207,6 +230,7 @@ export async function suggestCacheCleanup() {
   const completed = downloads
     .filter((d) => d.status === 'downloaded' && d.type !== 'pack')
     .filter((d) => !protectedIds.has(d.id))
+    .filter((d) => !isUserCriticalDownload(d))
     .sort((a, b) => String(a.updatedAt || '').localeCompare(String(b.updatedAt || '')));
 
   const protectedCount = downloads.filter(

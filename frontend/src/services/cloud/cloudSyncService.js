@@ -6,9 +6,14 @@ const SYNC_METADATA_KEY = (kidId) => `cloud-sync-state:kid:${kidId}`;
 const PROFILE_CACHE_KEY = (kidId) => `kid-profile-cache:kid:${kidId}`;
 const LAST_CLOUD_FAVORITES_KEY = (kidId) => `hkids_last_cloud_favorites:kid:${kidId}`;
 const SYNC_DIAGNOSTICS_KEY = (kidId) => `cloud-sync-diagnostics:kid:${kidId}`;
+const DOWNLOAD_CHANGE_JOURNAL_KEY = (kidId) => `cloud-sync-download-changes:kid:${kidId}`;
 const CLOUD_SYNC_TIMEOUT_MS = 15_000;
 const MAX_CLOUD_SYNC_ATTEMPTS = 3;
+const MAX_DOWNLOAD_CHANGES = 60;
+const MAX_DOWNLOAD_CHANGE_JOURNAL = 120;
 const RETRYABLE_CLOUD_STATUS = new Set([408, 425, 429, 500, 502, 503, 504]);
+const ALLOWED_DOWNLOAD_TYPES = new Set(['book', 'generated-story', 'voice-message', 'pack', 'quiz', 'game']);
+const ALLOWED_DOWNLOAD_STATUSES = new Set(['downloaded', 'removed']);
 
 function currentKidUser() {
   try {
@@ -29,6 +34,120 @@ function parseJson(value, fallback) {
   } catch {
     return fallback;
   }
+}
+
+function backupKey(key) {
+  return `${key}:backup`;
+}
+
+function setJsonWithBackup(key, value) {
+  const previous = localStorage.getItem(key);
+  if (previous !== null) {
+    try {
+      JSON.parse(previous);
+      localStorage.setItem(backupKey(key), previous);
+    } catch {
+      /* best effort backup */
+    }
+  }
+  localStorage.setItem(key, JSON.stringify(value));
+}
+
+function snapshotLocalStorageKeys(keys) {
+  return keys.reduce((snapshot, key) => {
+    snapshot[key] = localStorage.getItem(key);
+    return snapshot;
+  }, {});
+}
+
+function restoreLocalStorageSnapshot(snapshot) {
+  for (const [key, value] of Object.entries(snapshot || {})) {
+    if (value === null) {
+      localStorage.removeItem(key);
+    } else {
+      localStorage.setItem(key, value);
+    }
+  }
+}
+
+function downloadChangeKey(change) {
+  return `${change.content_type}:${change.content_id}`;
+}
+
+export function normalizeLocalDownloadChange(entry) {
+  if (entry == null) return null;
+
+  if (typeof entry === 'string' || typeof entry === 'number') {
+    const raw = String(entry);
+    if (raw.includes(':')) {
+      const [contentType, contentId] = raw.split(':');
+      return normalizeLocalDownloadChange({
+        content_type: contentType,
+        content_id: contentId,
+        status: 'downloaded'
+      });
+    }
+    return normalizeLocalDownloadChange({
+      content_type: 'book',
+      content_id: raw,
+      status: 'downloaded'
+    });
+  }
+
+  const contentType = String(entry.content_type || entry.contentType || '').trim();
+  const contentId = Number(entry.content_id ?? entry.contentId);
+  const status = entry.status || 'downloaded';
+  if (!ALLOWED_DOWNLOAD_TYPES.has(contentType)) return null;
+  if (!Number.isInteger(contentId) || contentId <= 0) return null;
+  if (!ALLOWED_DOWNLOAD_STATUSES.has(status)) return null;
+
+  return {
+    content_type: contentType,
+    content_id: contentId,
+    status,
+    downloaded_at: entry.downloaded_at || entry.downloadedAt || entry.changed_at || new Date().toISOString()
+  };
+}
+
+export function mergeDownloadChangeJournal(currentDownloads = [], pendingChanges = []) {
+  const byKey = new Map();
+
+  for (const entry of pendingChanges) {
+    const change = normalizeLocalDownloadChange(entry);
+    if (change) byKey.set(downloadChangeKey(change), change);
+  }
+
+  for (const entry of currentDownloads) {
+    const change = normalizeLocalDownloadChange(entry);
+    if (change) byKey.set(downloadChangeKey(change), { ...change, status: 'downloaded' });
+  }
+
+  return [...byKey.values()].slice(0, MAX_DOWNLOAD_CHANGES);
+}
+
+function readDownloadChangeJournal(kidId) {
+  return parseJson(localStorage.getItem(DOWNLOAD_CHANGE_JOURNAL_KEY(kidId)), []);
+}
+
+function writeDownloadChangeJournal(kidId, changes) {
+  setJsonWithBackup(DOWNLOAD_CHANGE_JOURNAL_KEY(kidId), changes.slice(-MAX_DOWNLOAD_CHANGE_JOURNAL));
+}
+
+function rememberDownloadChange(kidId, change) {
+  if (!kidId) return;
+  const normalized = normalizeLocalDownloadChange(change);
+  if (!normalized) return;
+  const existing = readDownloadChangeJournal(kidId);
+  const next = [
+    ...existing.filter((item) => downloadChangeKey(normalizeLocalDownloadChange(item) || {}) !== downloadChangeKey(normalized)),
+    { ...normalized, changed_at: new Date().toISOString() }
+  ];
+  writeDownloadChangeJournal(kidId, next);
+}
+
+function clearDownloadChangeJournal(kidId) {
+  if (!kidId) return;
+  localStorage.removeItem(DOWNLOAD_CHANGE_JOURNAL_KEY(kidId));
 }
 
 function toTimestamp(value) {
@@ -191,6 +310,7 @@ export function hydrateLocalFromCloud(snapshot, kidId) {
   const statsKey = scopedKey('hkids_reading_stats', kidId);
   const downloadsKey = scopedKey('hkids_downloaded_content', kidId);
   const prefsKey = scopedKey('hkids_preferences', kidId);
+  const lastCloudFavoritesKey = LAST_CLOUD_FAVORITES_KEY(kidId);
 
   const localFavorites = parseJson(localStorage.getItem(favoritesKey), []);
   const localHistory = parseJson(localStorage.getItem(historyKey), []);
@@ -202,11 +322,6 @@ export function hydrateLocalFromCloud(snapshot, kidId) {
   const mergedReading = mergeHistoryByBook(localHistory, snapshot.history?.reading || [], { listened: false });
   const mergedListening = mergeHistoryByBook(localListening, snapshot.history?.listening || [], { listened: true });
   const progressMap = mergeProgress(localStats, snapshot.progress || []);
-
-  localStorage.setItem(favoritesKey, JSON.stringify(mergedFavorites));
-  localStorage.setItem(historyKey, JSON.stringify(mergedReading));
-  localStorage.setItem(listeningKey, JSON.stringify(mergedListening));
-  localStorage.setItem(LAST_CLOUD_FAVORITES_KEY(kidId), JSON.stringify(mergedFavorites));
 
   const completedBookIds = [...new Set([
     ...(localStats.completedBookIds || []),
@@ -228,11 +343,11 @@ export function hydrateLocalFromCloud(snapshot, kidId) {
     else mergedSessions.unshift(nextSession);
   }
 
-  localStorage.setItem(statsKey, JSON.stringify({
+  const mergedStats = {
     ...localStats,
     completedBookIds,
     sessions: mergedSessions.slice(0, 50)
-  }));
+  };
 
   const remoteDownloadIds = (snapshot.downloads || [])
     .filter((item) => item.status !== 'removed')
@@ -241,14 +356,37 @@ export function hydrateLocalFromCloud(snapshot, kidId) {
       if (item.content_type === 'book') return [canonical, item.content_id];
       return [canonical];
     });
-  localStorage.setItem(downloadsKey, JSON.stringify([...new Set([...localDownloads, ...remoteDownloadIds])]));
+  const mergedDownloads = [...new Set([...localDownloads, ...remoteDownloadIds])];
+  const localStorageSnapshot = snapshotLocalStorageKeys([
+    favoritesKey,
+    historyKey,
+    listeningKey,
+    lastCloudFavoritesKey,
+    statsKey,
+    downloadsKey,
+    prefsKey,
+    'hkids_preferences',
+  ]);
 
-  if (snapshot.preferences && typeof snapshot.preferences === 'object') {
-    const localPrefs = parseJson(localStorage.getItem(prefsKey), parseJson(localStorage.getItem('hkids_preferences'), {}));
-    localStorage.setItem(prefsKey, JSON.stringify({ ...localPrefs, ...snapshot.preferences }));
-    if (!localStorage.getItem('hkids_preferences')) {
-      localStorage.setItem('hkids_preferences', JSON.stringify({ ...localPrefs, ...snapshot.preferences }));
+  try {
+    setJsonWithBackup(favoritesKey, mergedFavorites);
+    setJsonWithBackup(historyKey, mergedReading);
+    setJsonWithBackup(listeningKey, mergedListening);
+    setJsonWithBackup(lastCloudFavoritesKey, mergedFavorites);
+    setJsonWithBackup(statsKey, mergedStats);
+    setJsonWithBackup(downloadsKey, mergedDownloads);
+
+    if (snapshot.preferences && typeof snapshot.preferences === 'object') {
+      const localPrefs = parseJson(localStorage.getItem(prefsKey), parseJson(localStorage.getItem('hkids_preferences'), {}));
+      const mergedPrefs = { ...localPrefs, ...snapshot.preferences };
+      setJsonWithBackup(prefsKey, mergedPrefs);
+      if (!localStorage.getItem('hkids_preferences')) {
+        setJsonWithBackup('hkids_preferences', mergedPrefs);
+      }
     }
+  } catch (error) {
+    restoreLocalStorageSnapshot(localStorageSnapshot);
+    throw error;
   }
 
   if (snapshot.profile) {
@@ -262,7 +400,7 @@ export function hydrateLocalFromCloud(snapshot, kidId) {
   return { hydrated: true };
 }
 
-function collectLocalChanges(kidId) {
+async function collectLocalChanges(kidId) {
   const favorites = parseJson(localStorage.getItem(scopedKey('hkids_favorites', kidId)), []);
   const lastCloudFavorites = parseJson(localStorage.getItem(LAST_CLOUD_FAVORITES_KEY(kidId)), []);
   const favoriteRemovals = lastCloudFavorites.filter((bookId) => !favorites.includes(bookId));
@@ -270,6 +408,19 @@ function collectLocalChanges(kidId) {
   const listening = parseJson(localStorage.getItem(scopedKey('hkids_listening_history', kidId)), []);
   const stats = parseJson(localStorage.getItem(scopedKey('hkids_reading_stats', kidId)), { sessions: [] });
   const downloads = parseJson(localStorage.getItem(scopedKey('hkids_downloaded_content', kidId)), []);
+  const indexedDownloads = await offlineDb.getAll(offlineDb.stores.downloads).catch(() => []);
+  const indexedDownloadChanges = indexedDownloads
+    .filter((item) => item?.status === 'downloaded' && item.type && item.sourceId)
+    .map((item) => ({
+      content_type: item.type,
+      content_id: item.sourceId,
+      status: 'downloaded',
+      downloaded_at: item.updatedAt || new Date().toISOString()
+    }));
+  const downloadChanges = mergeDownloadChangeJournal(
+    [...downloads, ...indexedDownloadChanges],
+    readDownloadChangeJournal(kidId)
+  );
   const preferences = parseJson(
     localStorage.getItem(scopedKey('hkids_preferences', kidId)),
     parseJson(localStorage.getItem('hkids_preferences'), {})
@@ -305,24 +456,7 @@ function collectLocalChanges(kidId) {
         occurred_at: item.listenedAt || item.lastRead
       }))
     },
-    downloads: downloads.slice(0, 60).map((entry) => {
-      const raw = String(entry);
-      if (raw.includes(':')) {
-        const [contentType, contentId] = raw.split(':');
-        return {
-          content_type: contentType,
-          content_id: Number(contentId),
-          status: 'downloaded',
-          downloaded_at: new Date().toISOString()
-        };
-      }
-      return {
-        content_type: 'book',
-        content_id: Number(raw),
-        status: 'downloaded',
-        downloaded_at: new Date().toISOString()
-      };
-    }).filter((item) => item.content_type && Number.isInteger(item.content_id) && item.content_id > 0),
+    downloads: downloadChanges,
     preferences: {
       language: preferences.language || null,
       darkMode: preferences.darkMode ?? null,
@@ -354,7 +488,7 @@ async function storeSyncState(kidId, payload) {
 
   if (!payload.unchanged && Array.isArray(payload.favorites)) {
     const favoriteIds = payload.favorites.map((item) => item.book_id).filter(Boolean);
-    localStorage.setItem(LAST_CLOUD_FAVORITES_KEY(kidId), JSON.stringify(favoriteIds));
+    setJsonWithBackup(LAST_CLOUD_FAVORITES_KEY(kidId), favoriteIds);
   }
 }
 
@@ -373,11 +507,12 @@ export async function performCloudSync({ pushLocal = true } = {}) {
     const syncToken = await getStoredSyncToken(kidId);
     const pending = await getPendingMutations();
     const shouldPush = pushLocal && pending.length === 0;
+    const changes = shouldPush ? await collectLocalChanges(kidId) : null;
 
     const response = shouldPush
       ? await executeCloudRequest(kidId, () => parentalAPI.pushCloudSync({
         sync_token: syncToken,
-        changes: collectLocalChanges(kidId)
+        changes
       }))
       : await executeCloudRequest(kidId, () => parentalAPI.pullCloudSync(syncToken));
 
@@ -387,8 +522,9 @@ export async function performCloudSync({ pushLocal = true } = {}) {
       hydrateLocalFromCloud(snapshot, kidId);
     } else {
       const favorites = parseJson(localStorage.getItem(scopedKey('hkids_favorites', kidId)), []);
-      localStorage.setItem(LAST_CLOUD_FAVORITES_KEY(kidId), JSON.stringify(favorites));
+      setJsonWithBackup(LAST_CLOUD_FAVORITES_KEY(kidId), favorites);
     }
+    if (shouldPush) clearDownloadChangeJournal(kidId);
 
     return {
       unchanged: Boolean(snapshot.unchanged),
@@ -414,38 +550,50 @@ export async function getCloudSyncDiagnostics(kidId) {
 
 export async function registerDownloadInCloud(contentType, contentId) {
   const user = currentKidUser();
-  if (!user || !navigator.onLine) return;
+  if (!user) return;
+  const change = {
+    content_type: contentType,
+    content_id: contentId,
+    status: 'downloaded',
+    downloaded_at: new Date().toISOString()
+  };
+  if (!navigator.onLine) {
+    rememberDownloadChange(user.kid_profile_id, change);
+    return;
+  }
   try {
     await parentalAPI.pushCloudSync({
       changes: {
-        downloads: [{
-          content_type: contentType,
-          content_id: contentId,
-          status: 'downloaded',
-          downloaded_at: new Date().toISOString()
-        }]
+        downloads: [change]
       }
     });
   } catch (error) {
+    rememberDownloadChange(user.kid_profile_id, change);
     console.warn('Could not register download in cloud:', error);
   }
 }
 
 export async function unregisterDownloadInCloud(contentType, contentId) {
   const user = currentKidUser();
-  if (!user || !navigator.onLine) return;
+  if (!user) return;
+  const change = {
+    content_type: contentType,
+    content_id: contentId,
+    status: 'removed',
+    downloaded_at: new Date().toISOString()
+  };
+  if (!navigator.onLine) {
+    rememberDownloadChange(user.kid_profile_id, change);
+    return;
+  }
   try {
     await parentalAPI.pushCloudSync({
       changes: {
-        downloads: [{
-          content_type: contentType,
-          content_id: contentId,
-          status: 'removed',
-          downloaded_at: new Date().toISOString()
-        }]
+        downloads: [change]
       }
     });
   } catch (error) {
+    rememberDownloadChange(user.kid_profile_id, change);
     console.warn('Could not unregister download in cloud:', error);
   }
 }

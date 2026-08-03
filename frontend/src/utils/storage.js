@@ -25,12 +25,71 @@ function scopedActivityKey(baseKey) {
   return baseKey;
 }
 
+function backupKey(key) {
+  return `${key}:backup`;
+}
+
+function readJsonWithBackup(key, fallback) {
+  const raw = localStorage.getItem(key);
+  if (raw) {
+    try {
+      return JSON.parse(raw);
+    } catch {
+      // Keep going: the last known-good copy may still be readable.
+    }
+  }
+
+  const backup = localStorage.getItem(backupKey(key));
+  if (backup) {
+    try {
+      return JSON.parse(backup);
+    } catch {
+      return fallback;
+    }
+  }
+
+  return fallback;
+}
+
+function setItemWithBackup(key, value) {
+  const previous = localStorage.getItem(key);
+  if (previous !== null) {
+    try {
+      JSON.parse(previous);
+      localStorage.setItem(backupKey(key), previous);
+    } catch {
+      /* best effort backup */
+    }
+  }
+  localStorage.setItem(key, value);
+}
+
+function removeItemWithBackup(key) {
+  const previous = localStorage.getItem(key);
+  if (previous !== null) {
+    try {
+      JSON.parse(previous);
+      localStorage.setItem(backupKey(key), previous);
+    } catch {
+      /* best effort backup */
+    }
+  }
+  localStorage.removeItem(key);
+}
+
+function getScopedJson(baseKey, fallback) {
+  return readJsonWithBackup(scopedActivityKey(baseKey), fallback);
+}
+
+function setScopedJson(baseKey, value) {
+  setItemWithBackup(scopedActivityKey(baseKey), JSON.stringify(value));
+}
+
 export const storage = {
   // Favoris
   getFavorites: () => {
     try {
-      const favorites = localStorage.getItem(scopedActivityKey('hkids_favorites'));
-      return favorites ? JSON.parse(favorites) : [];
+      return getScopedJson('hkids_favorites', []);
     } catch {
       return [];
     }
@@ -41,7 +100,7 @@ export const storage = {
       const favorites = storage.getFavorites();
       if (!favorites.includes(bookId)) {
         favorites.push(bookId);
-        localStorage.setItem(scopedActivityKey('hkids_favorites'), JSON.stringify(favorites));
+        setScopedJson('hkids_favorites', favorites);
         queueMutation('favorite_add', {
           bookId,
           favorite: true,
@@ -62,7 +121,7 @@ export const storage = {
     try {
       const favorites = storage.getFavorites();
       const filtered = favorites.filter(id => id !== bookId);
-      localStorage.setItem(scopedActivityKey('hkids_favorites'), JSON.stringify(filtered));
+      setScopedJson('hkids_favorites', filtered);
       queueMutation('favorite_remove', { bookId, favorite: false }, `book:${bookId}:favorite`);
       if (typeof window !== 'undefined') {
         window.dispatchEvent(new CustomEvent('hkids:favorite-changed', {
@@ -86,9 +145,9 @@ export const storage = {
       let downloaded = localStorage.getItem(key);
       if (!downloaded && key !== 'hkids_downloaded_content') {
         downloaded = localStorage.getItem('hkids_downloaded_content');
-        if (downloaded) localStorage.setItem(key, downloaded);
+        if (downloaded) setItemWithBackup(key, downloaded);
       }
-      return downloaded ? JSON.parse(downloaded) : [];
+      return readJsonWithBackup(key, []);
     } catch {
       return [];
     }
@@ -99,7 +158,7 @@ export const storage = {
       const downloaded = storage.getDownloadedContent();
       if (!downloaded.includes(contentId)) {
         downloaded.push(contentId);
-        localStorage.setItem(scopedActivityKey('hkids_downloaded_content'), JSON.stringify(downloaded));
+        setScopedJson('hkids_downloaded_content', downloaded);
       }
     } catch (error) {
       console.error('Error marking downloaded content:', error);
@@ -110,7 +169,7 @@ export const storage = {
     try {
       const downloaded = storage.getDownloadedContent();
       const filtered = downloaded.filter(id => id !== contentId);
-      localStorage.setItem(scopedActivityKey('hkids_downloaded_content'), JSON.stringify(filtered));
+      setScopedJson('hkids_downloaded_content', filtered);
     } catch (error) {
       console.error('Error unmarking downloaded content:', error);
     }
@@ -124,8 +183,7 @@ export const storage = {
   // Historique d'ecoute audio
   getListeningHistory: () => {
     try {
-      const history = localStorage.getItem(scopedActivityKey('hkids_listening_history'));
-      return history ? JSON.parse(history) : [];
+      return getScopedJson('hkids_listening_history', []);
     } catch {
       return [];
     }
@@ -148,7 +206,7 @@ export const storage = {
       };
 
       const filtered = history.filter((item) => item.bookId !== safeEntry.bookId);
-      localStorage.setItem(scopedActivityKey('hkids_listening_history'), JSON.stringify([safeEntry, ...filtered].slice(0, 50)));
+      setScopedJson('hkids_listening_history', [safeEntry, ...filtered].slice(0, 50));
       queueMutation('listening_history', safeEntry, `book:${safeEntry.bookId}:listening`);
     } catch (error) {
       console.error('Error adding listening history:', error);
@@ -158,8 +216,7 @@ export const storage = {
   // Historique de lecture
   getReadingHistory: () => {
     try {
-      const history = localStorage.getItem(scopedActivityKey('hkids_history'));
-      return history ? JSON.parse(history) : [];
+      return getScopedJson('hkids_history', []);
     } catch {
       return [];
     }
@@ -185,7 +242,7 @@ export const storage = {
 
       // Garder seulement les 50 derniers
       const limited = history.slice(0, 50);
-      localStorage.setItem(scopedActivityKey('hkids_history'), JSON.stringify(limited));
+      setScopedJson('hkids_history', limited);
       queueMutation('reading_history', historyItem, `book:${bookId}:history`);
     } catch (error) {
       console.error('Error adding to history:', error);
@@ -199,13 +256,12 @@ export const storage = {
   },
 
   clearReadingHistory: () => {
-    localStorage.removeItem(scopedActivityKey('hkids_history'));
+    removeItemWithBackup(scopedActivityKey('hkids_history'));
   },
 
   // Statistiques de lecture (temps, livres terminés, sessions)
   getReadingStats: () => {
     try {
-      const raw = localStorage.getItem(scopedActivityKey('hkids_reading_stats'));
       const defaults = {
         totalTimeSeconds: 0,
         totalSessions: 0,
@@ -213,8 +269,8 @@ export const storage = {
         lastSession: null,
         sessions: []
       };
-      if (!raw) return defaults;
-      const parsed = JSON.parse(raw);
+      const parsed = getScopedJson('hkids_reading_stats', null);
+      if (!parsed) return defaults;
       return { ...defaults, ...parsed };
     } catch {
       return {
@@ -265,7 +321,7 @@ export const storage = {
 
       stats.sessions = [session, ...(stats.sessions || [])].slice(0, 50);
 
-      localStorage.setItem(scopedActivityKey('hkids_reading_stats'), JSON.stringify(stats));
+      setScopedJson('hkids_reading_stats', stats);
       queueMutation('reading_progress', {
         book_id: bookId,
         current_page: Math.max(0, Number(currentPage) || 0),
@@ -282,8 +338,7 @@ export const storage = {
   // Préférences
   getPreferences: () => {
     try {
-      const prefs = localStorage.getItem('hkids_preferences');
-      return prefs ? JSON.parse(prefs) : { darkMode: false };
+      return readJsonWithBackup('hkids_preferences', { darkMode: false });
     } catch {
       return { darkMode: false };
     }
@@ -293,7 +348,7 @@ export const storage = {
     try {
       const prefs = storage.getPreferences();
       prefs[key] = value;
-      localStorage.setItem('hkids_preferences', JSON.stringify(prefs));
+      setItemWithBackup('hkids_preferences', JSON.stringify(prefs));
     } catch (error) {
       console.error('Error setting preference:', error);
     }
@@ -301,8 +356,7 @@ export const storage = {
 
   getPinnedFavorites: () => {
     try {
-      const raw = localStorage.getItem(scopedActivityKey('hkids_pinned_favorites_v1'));
-      return raw ? JSON.parse(raw) : [];
+      return getScopedJson('hkids_pinned_favorites_v1', []);
     } catch {
       return [];
     }
@@ -315,7 +369,7 @@ export const storage = {
       const next = current.includes(id)
         ? current.filter((x) => x !== id)
         : [id, ...current].slice(0, 12);
-      localStorage.setItem(scopedActivityKey('hkids_pinned_favorites_v1'), JSON.stringify(next));
+      setScopedJson('hkids_pinned_favorites_v1', next);
       return next;
     } catch (error) {
       console.error('Error toggling pinned favorite:', error);

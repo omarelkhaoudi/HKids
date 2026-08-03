@@ -13,6 +13,9 @@ const MAX_DOWNLOADS = 60;
 const DOWNLOAD_TIMEOUT_MS = 45_000;
 const MAX_ASSET_DOWNLOAD_ATTEMPTS = 3;
 const RETRYABLE_DOWNLOAD_STATUSES = new Set([408, 425, 429, 500, 502, 503, 504]);
+const RETENTION_METADATA_KEY = 'offline:retention:last-prune';
+const REMOVED_DOWNLOAD_AUDIT_PREFIX = 'offline:download:removed';
+const USER_CRITICAL_DOWNLOAD_TYPES = new Set(['book', 'generated-story', 'voice-message', 'pack', 'quiz', 'game']);
 
 function nowIso() {
   return new Date().toISOString();
@@ -377,6 +380,36 @@ function downloadProgress(assetKeys, assets) {
   return Math.round((assetKeys.length / Math.max(1, assets.length)) * 100);
 }
 
+export function isUserCriticalDownload(record) {
+  return Boolean(record?.type && USER_CRITICAL_DOWNLOAD_TYPES.has(record.type));
+}
+
+async function rememberRetentionDecision(value) {
+  const timestamp = nowIso();
+  await offlineDb.put(offlineDb.stores.metadata, {
+    key: RETENTION_METADATA_KEY,
+    value: {
+      ...value,
+      checkedAt: timestamp
+    },
+    updatedAt: timestamp
+  }).catch(() => {});
+}
+
+async function rememberRemovedDownload(record, reason) {
+  if (!record?.id) return;
+  const removedAt = nowIso();
+  await offlineDb.put(offlineDb.stores.metadata, {
+    key: `${REMOVED_DOWNLOAD_AUDIT_PREFIX}:${record.id}`,
+    value: {
+      record,
+      reason,
+      removedAt
+    },
+    updatedAt: removedAt
+  }).catch(() => {});
+}
+
 async function pruneOldDownloads() {
   const all = await getDownloads({ includeRestricted: true });
   const completed = all
@@ -385,7 +418,20 @@ async function pruneOldDownloads() {
 
   if (completed.length <= MAX_DOWNLOADS) return;
   const excess = completed.slice(0, completed.length - MAX_DOWNLOADS);
-  await Promise.all(excess.map((item) => removeDownload(item.id)));
+  const removable = excess.filter((item) => !isUserCriticalDownload(item));
+  await Promise.all(removable.map((item) => removeDownload(item.id, {
+    syncCloud: false,
+    reason: 'automatic_retention_prune'
+  })));
+  await rememberRetentionDecision({
+    maxDownloads: MAX_DOWNLOADS,
+    completedDownloads: completed.length,
+    candidateIds: excess.map((item) => item.id),
+    removedIds: removable.map((item) => item.id),
+    preservedCriticalIds: excess
+      .filter((item) => isUserCriticalDownload(item))
+      .map((item) => item.id),
+  });
 }
 
 export async function getDownloads({ includeRestricted = false } = {}) {
@@ -658,8 +704,9 @@ export async function saveVoiceMessageOffline(message, audioBlob = null) {
   return record;
 }
 
-export async function removeDownload(id) {
+export async function removeDownload(id, { syncCloud = true, reason = 'explicit_remove' } = {}) {
   const record = await offlineDb.get(offlineDb.stores.downloads, id);
+  await rememberRemovedDownload(record, reason);
   if (record?.assetKeys?.length) {
     await Promise.all(record.assetKeys.map((assetKey) => offlineDb.delete(offlineDb.stores.blobs, assetKey)));
   }
@@ -667,6 +714,9 @@ export async function removeDownload(id) {
 
   if (record?.type && record?.sourceId) {
     storage.unmarkDownloaded(record.id);
+  }
+
+  if (syncCloud && record?.type && record?.sourceId) {
     unregisterDownloadInCloud(record.type, record.sourceId).catch(() => {});
   }
 }
