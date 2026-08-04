@@ -23,7 +23,7 @@ const ParentLogin = lazy(() => import('./pages/ParentLogin'));
 const ParentSignUp = lazy(() => import('./pages/ParentSignUp'));
 const OAuthCallback = lazy(() => import('./pages/OAuthCallback'));
 const ParentKidsProfiles = lazy(() => import('./pages/ParentKidsProfiles'));
-const KidsHome = lazy(() => import('./pages/KidsHome'));
+const KidsHome = lazy(() => import('./pages/KidsFlagshipHome'));
 const KidsLibrary = lazy(() => import('./pages/KidsLibrary'));
 const KidsCategoryPage = lazy(() => import('./pages/KidsCategoryPage'));
 const BookReader = lazy(() => import('./pages/BookReader'));
@@ -34,6 +34,9 @@ const KidsStoryStudio = lazy(() => import('./pages/KidsStoryStudio'));
 const KidsAIStories = lazy(() => import('./pages/KidsAIStories'));
 const KidsLearning = lazy(() => import('./pages/KidsLearning'));
 const KidsExplore = lazy(() => import('./pages/KidsExplore'));
+const KidsGames = lazy(() => import('./pages/KidsGames'));
+const KidsDaily = lazy(() => import('./pages/KidsDaily'));
+const KidsProfile = lazy(() => import('./pages/KidsProfile'));
 const KidsPremium = lazy(() => import('./pages/KidsPremium'));
 const KidsListen = lazy(() => import('./pages/KidsListen'));
 const KidsAudioLibrary = lazy(() => import('./pages/KidsAudioLibrary'));
@@ -233,6 +236,9 @@ function App() {
                 <Route path="/kids/learning" element={<RequireAuth><LazyRoute><KidsLearning /></LazyRoute></RequireAuth>} />
                 <Route path="/kids/learning/:worldId" element={<RequireAuth><LazyRoute><KidsLearning /></LazyRoute></RequireAuth>} />
                 <Route path="/kids/explore" element={<RequireAuth><LazyRoute><KidsExplore /></LazyRoute></RequireAuth>} />
+                <Route path="/kids/games" element={<RequireAuth><LazyRoute><KidsGames /></LazyRoute></RequireAuth>} />
+                <Route path="/kids/daily" element={<RequireAuth><LazyRoute><KidsDaily /></LazyRoute></RequireAuth>} />
+                <Route path="/kids/profile" element={<RequireAuth><LazyRoute><KidsProfile /></LazyRoute></RequireAuth>} />
                 <Route path="/kids/premium" element={<RequireAuth><LazyRoute><KidsPremium /></LazyRoute></RequireAuth>} />
                 <Route path="/kids/story-studio" element={<RequireAuth><LazyRoute><KidsStoryStudio /></LazyRoute></RequireAuth>} />
                 <Route path="/kids/storystudio" element={<Navigate to="/kids/story-studio" replace />} />
