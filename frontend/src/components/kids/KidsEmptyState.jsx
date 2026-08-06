@@ -43,16 +43,7 @@ export function KidsEmptyState({
         {illustration || emoji}
       </motion.div>
       ) : null}
-      {title && (
-        <h3 className={`relative kids-type-h1 mb-2 line-clamp-2 ${compact ? '!text-xl' : '!text-[1.5rem] md:!text-[1.75rem]'}`}>
-          {title}
-        </h3>
-      )}
-      {description && (
-        <p className={`relative kids-shelf-subtitle !mx-auto mb-6 ${compact ? '!text-sm line-clamp-3' : 'line-clamp-3'}`}>
-          {description}
-        </p>
-      )}
+      {/* Completely text-free UI: Removed title and description */}
       {Array.isArray(recommendations) && recommendations.length > 0 && (
         <div className="relative mb-6 flex flex-wrap justify-center gap-2">
           {recommendations.slice(0, 4).map((book) => (

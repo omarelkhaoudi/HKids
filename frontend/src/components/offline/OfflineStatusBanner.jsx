@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useNetworkStatus } from '../../hooks/useNetworkStatus';
 import { useLanguage } from '../../context/LanguageContext';
@@ -15,6 +16,7 @@ const bannerMotion = {
 };
 
 export function OfflineStatusBanner() {
+  const location = useLocation();
   const { online, changedAt } = useNetworkStatus();
   const { t } = useLanguage();
   const reducedMotion = useReducedMotion();
@@ -84,3 +86,4 @@ export function OfflineStatusBanner() {
     </AnimatePresence>
   );
 }
+

@@ -10,22 +10,26 @@ export function KidsErrorBanner({ message, onDismiss, className = '' }) {
   return (
     <motion.div
       {...getMotionProps(reducedMotion, {
-        initial: { opacity: 0, y: -8 },
-        animate: { opacity: 1, y: 0 },
+        initial: { opacity: 0, scale: 0.8 },
+        animate: { opacity: 1, scale: 1 },
       })}
-      className={`kids-premium-panel flex items-start gap-3 p-4 md:p-5 border-hkids-brown-light bg-hkids-brown-soft/90 dark:bg-hkids-brown-darker/40 ${className}`}
+      className={`relative w-full max-w-md mx-auto aspect-[16/9] rounded-[3rem] overflow-hidden shadow-2xl border-4 border-white/60 bg-gradient-to-br from-indigo-200 to-purple-300 flex flex-col items-center justify-center p-6 ${className}`}
       role="alert"
     >
-      <span className="text-3xl shrink-0" aria-hidden="true">⚠️</span>
-      <p className="flex-1 kids-type-body text-hkids-brown-darker dark:text-hkids-brown-light text-start">{message}</p>
+      <div className="absolute inset-0 kids-shimmer opacity-20 pointer-events-none" aria-hidden="true" />
+      <span className="text-8xl drop-shadow-md mb-6" aria-hidden="true">💫</span>
       {onDismiss && (
-        <button
+        <motion.button
+          whileHover={{ scale: 1.1, rotate: 180 }}
+          whileTap={{ scale: 0.9 }}
+          transition={{ rotate: { duration: 0.4 } }}
           type="button"
           onClick={onDismiss}
-          className="kids-touch-target kids-type-button shrink-0 rounded-full bg-white/80 px-3 py-1 text-sm text-hkids-brown-dark"
+          className="w-20 h-20 rounded-full bg-gradient-to-br from-sky-300 to-sky-500 text-white flex flex-col items-center justify-center shadow-xl border-4 border-white/60 focus:outline-none transition-shadow"
+          aria-label="Retry"
         >
-          OK
-        </button>
+          <span className="text-4xl drop-shadow-md" aria-hidden="true">🔄</span>
+        </motion.button>
       )}
     </motion.div>
   );

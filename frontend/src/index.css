@@ -8716,3 +8716,188 @@ html {
     color: color-mix(in srgb, var(--kids-type-meta) 92%, var(--kids-type-ink));
   }
 }
+
+/* =========================================================================
+    DISNEY/TOCA BOCA PREMIUM UI OVERRIDES
+   Global visual upgrade for all HKids child components
+   ========================================================================= */
+
+@layer components {
+  /* Enforce massive, toddler-friendly touch targets globally */
+  button, a, [role="button"], .kids-touch-target {
+    min-height: 64px !important;
+    min-width: 64px !important;
+  }
+
+  /* Upgrade all standard cards to Toca Boca style glassmorphism / 3D */
+  .hkids-card, .book-card, .kids-premium-panel, .kids-category-card {
+    border: 4px solid rgba(255, 255, 255, 0.7) !important;
+    border-radius: 2rem !important;
+    box-shadow: 0 20px 40px -10px rgba(0,0,0,0.15), 0 0 20px rgba(255,255,255,0.4) inset !important;
+    background-color: rgba(255, 255, 255, 0.85) !important;
+    backdrop-filter: blur(12px) !important;
+    transform: perspective(1000px) translateZ(0) !important;
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+  }
+
+  .hkids-card:hover, .book-card:hover, .kids-premium-panel:hover, .kids-category-card:hover {
+    transform: perspective(1000px) translateZ(20px) scale(1.05) !important;
+    box-shadow: 0 30px 60px -15px rgba(0,0,0,0.25), 0 0 30px rgba(255,255,255,0.6) inset !important;
+    border-color: rgba(255, 255, 255, 0.95) !important;
+  }
+
+  .hkids-card:active, .book-card:active, .kids-category-card:active {
+    transform: scale(0.95) !important;
+  }
+
+  /* Upgrade primary buttons to Duolingo ABC / Disney bouncy buttons */
+  .hkids-button-primary, .btn-primary, .kids-btn-primary {
+    background: linear-gradient(135deg, #4ade80 0%, #22c55e 100%) !important;
+    border: 4px solid rgba(255, 255, 255, 0.8) !important;
+    border-radius: 999px !important;
+    color: white !important;
+    font-weight: 900 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 1px !important;
+    box-shadow: 0 8px 0 #15803d, 0 15px 20px rgba(21,128,61,0.4) !important;
+    transform: translateY(0) !important;
+    transition: all 0.15s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+  }
+
+  .hkids-button-primary:hover, .btn-primary:hover, .kids-btn-primary:hover {
+    transform: translateY(-4px) scale(1.02) !important;
+    box-shadow: 0 12px 0 #15803d, 0 20px 30px rgba(21,128,61,0.5) !important;
+  }
+
+  .hkids-button-primary:active, .btn-primary:active, .kids-btn-primary:active {
+    transform: translateY(8px) !important;
+    box-shadow: 0 0 0 #15803d, 0 0 0 rgba(21,128,61,0) !important;
+  }
+
+  /* Secondary buttons (fun orange/yellow vibes) */
+  .hkids-button-secondary, .btn-secondary, .kids-btn-secondary {
+    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%) !important;
+    border: 4px solid rgba(255, 255, 255, 0.8) !important;
+    border-radius: 999px !important;
+    color: white !important;
+    font-weight: 900 !important;
+    text-transform: uppercase !important;
+    box-shadow: 0 8px 0 #b45309, 0 15px 20px rgba(180,83,9,0.4) !important;
+    transition: all 0.15s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+  }
+  
+  .hkids-button-secondary:hover, .btn-secondary:hover, .kids-btn-secondary:hover {
+    transform: translateY(-4px) scale(1.02) !important;
+    box-shadow: 0 12px 0 #b45309, 0 20px 30px rgba(180,83,9,0.5) !important;
+  }
+
+  .hkids-button-secondary:active, .btn-secondary:active, .kids-btn-secondary:active {
+    transform: translateY(8px) !important;
+    box-shadow: 0 0 0 #b45309, 0 0 0 rgba(180,83,9,0) !important;
+  }
+
+  /* Make typography pop more (Disney style) */
+  .kids-type-h1, .kids-type-h2, .kids-type-display {
+    text-shadow: 2px 2px 0 rgba(255,255,255,0.8), 0 10px 20px rgba(0,0,0,0.1) !important;
+    color: #1e3a8a !important; /* Deep friendly blue */
+  }
+
+  /* Magical floating animation */
+  @keyframes hkids-magic-float {
+    0%, 100% { transform: translateY(0px) rotate(0deg); }
+    25% { transform: translateY(-10px) rotate(2deg); }
+    75% { transform: translateY(10px) rotate(-2deg); }
+  }
+  
+  .kids-ambient-blob, .kids-ambient-spark, .kids-ambient-star, .kids-home-cloud {
+    animation: hkids-magic-float 6s ease-in-out infinite !important;
+  }
+}
+
+/* =========================================================================
+    DISNEY/TOCA BOCA PIXEL-PERFECT POLISH OVERRIDES
+   ========================================================================= */
+
+@layer base {
+  /* Completely hide native scrollbars for a premium app feel */
+  ::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+  }
+  
+  * {
+    -ms-overflow-style: none !important;
+    scrollbar-width: none !important;
+  }
+  
+  /* Prevent text selection and highlights for toddlers globally */
+  body, .kids-page, .kids-ambient {
+    -webkit-user-select: none !important;
+    user-select: none !important;
+    -webkit-tap-highlight-color: transparent !important;
+  }
+}
+
+@layer components {
+  /* Ensure images in cards never stretch awkwardly */
+  .hkids-card img, .book-card img, .kids-category-card img, .kids-premium-panel img {
+    object-fit: cover !important;
+    border-radius: calc(2rem - 4px) !important; /* Fit perfectly inside the 4px border */
+    transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+  }
+  
+  /* Add subtle inner glow to images for premium feel */
+  .hkids-card, .book-card, .kids-category-card {
+    position: relative;
+    overflow: hidden !important;
+  }
+  
+  .hkids-card::after, .book-card::after, .kids-category-card::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: calc(2rem - 4px);
+    box-shadow: inset 0 0 20px rgba(255, 255, 255, 0.4);
+    pointer-events: none;
+  }
+  
+  /* Animate images slightly on hover for depth */
+  .hkids-card:hover img, .book-card:hover img, .kids-category-card:hover img {
+    transform: scale(1.08) !important;
+  }
+}
+
+/* =========================================================================
+    ULTRA-PREMIUM HOLOGRAPHIC/GLOSSY POLISH
+   ========================================================================= */
+
+@layer components {
+  /* Add a glossy sheen to all premium cards */
+  .hkids-card::before, .book-card::before, .kids-category-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: calc(2rem - 4px);
+    background: linear-gradient(
+      105deg,
+      transparent 20%,
+      rgba(255, 255, 255, 0.4) 25%,
+      transparent 30%
+    );
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.4s ease;
+    z-index: 10;
+  }
+  
+  .hkids-card:hover::before, .book-card:hover::before, .kids-category-card:hover::before {
+    opacity: 1;
+    animation: hkids-sheen 1.5s infinite;
+  }
+  
+  @keyframes hkids-sheen {
+    0% { transform: translateX(-100%) skewX(-15deg); }
+    100% { transform: translateX(200%) skewX(-15deg); }
+  }
+}

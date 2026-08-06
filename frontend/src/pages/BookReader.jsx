@@ -288,43 +288,36 @@ function PDFPageViewer({pdfUrl, pageNumber, onLoad, onPdfLoaded, imageClassName 
 }, [pdfUrl, pageNumber, reloadKey]);
 
  if (loading) {
- return (
-<div className="w-full p-space-8">
-<div className="kids-reader-page-card relative overflow-hidden min-h-[16rem] md:min-h-[22rem] flex items-center justify-center">
-<div className="absolute inset-0 kids-shimmer opacity-30" aria-hidden="true" />
-<div className="relative z-10 text-center px-space-16">
-<div className="mx-auto mb-space-12 h-16 w-12 rounded-md bg-white/70 shadow-soft border border-white/50" />
-{!isKidMinimal && <p className="kids-type-body text-foreground-secondary">{i18nT('kidReaderPagePreparing')}</p>}
-</div>
-</div>
-</div>
- );
-}
+  return (
+ <div className="w-full h-full flex items-center justify-center min-h-[50vh]">
+  <motion.div
+    animate={{ y: [0, -20, 0], scale: [1, 1.1, 1] }}
+    transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+    className="w-32 h-32 bg-white/80 backdrop-blur-md rounded-[2rem] shadow-2xl border-4 border-white flex items-center justify-center"
+  >
+    <div className="w-16 h-16 rounded-full border-8 border-sky-300 border-t-orange-400 animate-spin" />
+  </motion.div>
+ </div>
+  );
+ }
 
  if (error || !imageUrl) {
- return (
-<div className="w-full p-space-8">
-<div className="kids-reader-page-card text-center p-space-24">
- <BookIcon className="w-16 h-16 text-primary-400 mx-auto mb-space-4" />
- {!isKidMinimal && (
-  <>
-  <p className="kids-type-h2 !text-[1.2rem] mb-2">{i18nT('kidReaderPageRetryTitle')}</p>
-  {error && <p className="text-sm text-foreground-secondary">{error}</p>}
-  </>
- )}
- <button
- onClick={() => {
- setReloadKey(prev => prev + 1);
-}}
-className="mt-space-4 px-space-5 py-3 bg-primary-500 text-white rounded-full hover:bg-primary-600 transition-colors"
- aria-label={isKidMinimal ? i18nT('kidReaderRetry') : undefined}
- >
-{isKidMinimal ? '↻' : i18nT('kidReaderRetryCalm')}
- </button>
-</div>
+  return (
+ <div className="w-full h-full flex items-center justify-center min-h-[50vh]">
+  <motion.button
+    whileHover={{ scale: 1.1, rotate: 180 }}
+    whileTap={{ scale: 0.9 }}
+    transition={{ duration: 0.4 }}
+    onClick={() => setReloadKey(prev => prev + 1)}
+    className="w-32 h-32 bg-orange-400 rounded-full shadow-[0_15px_30px_rgba(249,115,22,0.4)] border-8 border-white flex items-center justify-center text-white cursor-pointer"
+  >
+    <svg className="w-16 h-16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+    </svg>
+  </motion.button>
  </div>
- );
-}
+  );
+ }
 
  return (
  <motion.img
@@ -363,7 +356,7 @@ function ReaderClouds() {
  );
 }
 
-function PremiumReaderState({ title, description, actionLabel, onAction, reducedMotion, icon = '📖' }) {
+function PremiumReaderState({ onAction, reducedMotion, icon = '✨' }) {
  return (
   <div className="min-h-screen flex items-center justify-center kids-reader-shell" data-reader-theme="warm">
    <ReaderPaperAtmosphere />
@@ -374,17 +367,26 @@ function PremiumReaderState({ title, description, actionLabel, onAction, reduced
     className="kids-premium-panel max-w-xl w-full mx-5 md:mx-8 p-8 md:p-10 text-center relative overflow-hidden z-10"
    >
     <div className="absolute inset-0 kids-shimmer opacity-20 pointer-events-none" aria-hidden="true" />
-    <div className="text-6xl mb-4" aria-hidden="true">{icon}</div>
-    <h2 className="kids-reader-header-title mb-space-12">{title}</h2>
-    {description ? <p className="kids-type-body text-foreground-secondary mb-space-24">{description}</p> : null}
-    {actionLabel && onAction ? (
-     <button
+    <motion.div 
+      animate={{ scale: [1, 1.2, 1], rotate: [0, -10, 10, -10, 0] }} 
+      transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+      className="text-8xl mb-12 drop-shadow-lg" 
+      aria-hidden="true"
+    >
+      {icon}
+    </motion.div>
+    {onAction ? (
+     <motion.button
       type="button"
+      whileHover={{ scale: 1.1 }}
+      whileTap={{ scale: 0.9 }}
       onClick={onAction}
-      className="kids-reader-toolbar-btn !min-w-[12rem] !w-auto !px-6 mx-auto"
+      className="w-24 h-24 bg-green-400 rounded-full shadow-[0_10px_20px_rgba(74,222,128,0.4)] border-4 border-white mx-auto flex items-center justify-center text-white"
      >
-      {actionLabel}
-     </button>
+      <svg className="w-12 h-12 ml-2 drop-shadow-md" fill="currentColor" viewBox="0 0 24 24">
+        <path d="M8 5v14l11-7z" />
+      </svg>
+     </motion.button>
     ) : null}
    </motion.div>
   </div>
@@ -1842,7 +1844,7 @@ function BookReader() {
  </div>
  </div>
 
- <p className="kids-reader-focus-hint" aria-hidden="true">{t('kidReaderFocusHint')}</p>
+ 
 
  {/* Floating Audio Controls — premium glass dock */}
  <AnimatePresence>
@@ -1855,206 +1857,64 @@ function BookReader() {
  className="kids-reader-audio-dock"
  onClick={(e) => e.stopPropagation()}
  >
-   <div className="kids-reader-audio-panel kids-reader-audio-panel--premium">
-     <KidsReaderTimeline
-       progress={progress}
-       currentPage={currentPage}
-       totalPages={totalPages}
-       remainingLabel={t('kidReaderRemainingTime', { time: remainingReadLabel })}
-       phaseLabel={isKidReader && readingPhaseLabel
-         ? readingPhaseLabel
-         : t('kidReaderProgressLabel', { percent: progressRounded })}
-       ariaLabel={isKidReader && readingPhaseLabel
-         ? `${readingPhaseLabel} · ${progressRounded}%`
-         : `Progression · ${progressRounded}%`}
-       reducedMotion={reducedMotion}
-     />
-
-     {isKidReader && (
-       <KidsReaderVoiceMeta
-         t={t}
-         narrator={voiceNarratorLabel}
-         style={voiceStyleLabel}
-         speedLabel={`${speechRate}x`}
-         remainingLabel={remainingReadLabel}
-       />
-     )}
-
-     {(book.audio_url || audioPlaybackActive) && (
-       <div className="kids-reader-audio-strip">
-         {book.audio_url ? (
-           <ReaderAudioWave active={audioPlaybackActive} reducedMotion={reducedMotion} />
-         ) : null}
-         {book.audio_url && audioProgressMax > 0 && (
-           <div className="kids-reader-timeline-wrap">
-             <span className="kids-reader-time">{formatReaderTime(audioPlayer.currentTime)}</span>
-             <input
-               type="range"
-               min={0}
-               max={audioProgressMax}
-               value={audioProgressValue}
-               onChange={(event) => audioPlayer.seekTo(Number(event.target.value))}
-               className="kids-reader-audio-timeline"
-               aria-label={t('kidReaderAudioProgress')}
-             />
-             <span className="kids-reader-time">{formatReaderTime(audioPlayer.duration)}</span>
-           </div>
-         )}
-       </div>
-     )}
-
-     <div className="kids-reader-primary-row">
-       <button
-         type="button"
-         onClick={prevPage}
-         disabled={isFirstPage}
-         aria-label={t('kidReaderPrev')}
-         className="kids-reader-nav-edge"
-       >
-         <ChevronLeftIcon className={`w-7 h-7 ${isRtl ? 'rotate-180' : ''}`} />
-       </button>
-       <button
-         type="button"
-         onClick={toggleAudio}
-         disabled={!book.audio_url && (isExtracting || (!currentPageData?.content && !currentPageData?.image_path))}
-         aria-label={audioPlaybackActive ? t('pause') : t('kidReaderPlay')}
-         className="kids-reader-play-btn"
-       >
-         {!book.audio_url && isExtracting ? (
-           <span className="inline-block h-6 w-6 rounded-full border-2 border-current border-t-transparent animate-spin" />
-         ) : audioPlaybackActive ? (
-           <PauseIcon className="w-8 h-8" />
-         ) : (
-           <PlayIcon className={`w-8 h-8 ${isRtl ? '' : 'ms-0.5'}`} />
-         )}
-       </button>
-       <button
-         type="button"
-         onClick={nextPage}
-         disabled={isLastPage}
-         aria-label={t('kidReaderNext')}
-         className="kids-reader-nav-edge"
-       >
-         <ChevronRightIcon className={`w-7 h-7 ${isRtl ? 'rotate-180' : ''}`} />
-       </button>
-       <button
-         type="button"
-         onClick={cycleSpeechRate}
-         className="kids-reader-speed-chip"
-         aria-label={t('kidReaderSpeedLabel', { rate: speechRate })}
-         title={t('kidReaderSpeedLabel', { rate: speechRate })}
-       >
-         {speechRate}x
-       </button>
-       {isKidReader && (
-         <button
-           type="button"
-           onClick={(e) => {
-             e.stopPropagation();
-             setShowAmbiencePanel((open) => !open);
-             setShowReaderTools(false);
-           }}
-           className={`kids-reader-ambience-toggle ${showAmbiencePanel ? 'is-open' : ''} ${ambienceId ? 'is-active' : ''}`}
-           aria-label={t('readerAmbienceTitle')}
-           aria-expanded={showAmbiencePanel}
-           aria-pressed={Boolean(ambienceId)}
-         >
-           <span aria-hidden="true">🌿</span>
-         </button>
-       )}
-       <button
-         type="button"
-         onClick={(e) => {
+    <div className="kids-reader-audio-panel kids-reader-audio-panel--premium !bg-white/90 !backdrop-blur-xl !rounded-[3rem] !mx-8 !mb-8 !p-4 !shadow-kids-warm border-4 border-white/50 flex flex-row items-center justify-center gap-8">
+      <motion.button
+        type="button"
+        onClick={toggleAudio}
+        whileHover={{ scale: 1.1, rotate: [0, -3, 3, -3, 0] }}
+        whileTap={{ scale: 0.9 }}
+        disabled={!book.audio_url && (isExtracting || (!currentPageData?.content && !currentPageData?.image_path))}
+        aria-label={audioPlaybackActive ? t('pause') : t('kidReaderPlay')}
+        className="w-24 h-24 rounded-full bg-gradient-to-br from-yellow-300 via-orange-400 to-orange-500 text-white flex flex-col items-center justify-center shadow-2xl border-4 border-white/60 focus:outline-none focus:ring-8 focus:ring-orange-300 transition-shadow"
+      >
+        {audioPlaybackActive ? <PauseIcon className="w-12 h-12 drop-shadow-md" /> : <PlayIcon className="w-12 h-12 ml-2 drop-shadow-md" />}
+      </motion.button>
+      <motion.button
+        type="button"
+        onClick={(e) => {
            e.stopPropagation();
-           setShowReaderTools((open) => !open);
-           setShowAmbiencePanel(false);
-         }}
-         className={`kids-reader-more-btn ${showReaderTools ? 'is-open' : ''}`}
-         aria-label={t('kidReaderMoreOptions')}
-         aria-expanded={showReaderTools}
-       >
-         <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-           <circle cx="5" cy="12" r="1.75" />
-           <circle cx="12" cy="12" r="1.75" />
-           <circle cx="19" cy="12" r="1.75" />
-         </svg>
-       </button>
-     </div>
-
-     {isKidReader && (
-       <KidsReaderAmbientPanel
-         t={t}
-         open={showAmbiencePanel}
-         selectedId={ambienceId}
-         volume={ambienceVolume}
-         onSelect={setAmbienceId}
-         onVolumeChange={setAmbienceVolume}
-       />
-     )}
-
-     <AnimatePresence>
-       {showReaderTools && (
-         <motion.div
-           initial={reducedMotion ? false : { opacity: 0, height: 0 }}
-           animate={{ opacity: 1, height: 'auto' }}
-           exit={reducedMotion ? undefined : { opacity: 0, height: 0 }}
-           transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
-           className="kids-reader-more-tools"
-           onClick={(e) => e.stopPropagation()}
-         >
-           <button
-             type="button"
-             onClick={handleBookmark}
-             className={`kids-reader-toolbar-btn ${bookmarkPulse ? 'is-bookmarked' : ''}`}
-             aria-label={t('kidReaderBookmark')}
-           >
-             <BookmarkGlyph className="w-6 h-6" />
-           </button>
-           <button
-             type="button"
-             onClick={toggleBookFavorite}
-             className={`kids-reader-toolbar-btn ${isFavorite ? 'is-active' : ''}`}
-             aria-label={t('yourFavorites')}
-             aria-pressed={isFavorite}
-           >
-             <svg className="w-6 h-6" fill={isFavorite ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-             </svg>
-           </button>
-           <button
-             type="button"
-             onClick={cycleThemeMode}
-             className="kids-reader-toolbar-btn"
-             aria-label={themeLabel}
-             title={themeLabel}
-           >
-             {readerTheme === 'night' ? <MoonIcon className="w-6 h-6" /> : <SunIcon className="w-6 h-6" />}
-           </button>
-           {!isKidReader && (
-             <button
-               type="button"
-               onClick={() => setShowReadingAid(true)}
-               className="kids-reader-toolbar-btn"
-               aria-label="Aide à la lecture"
-             >
-               <SettingsIcon className="w-6 h-6" />
-             </button>
-           )}
-           {canReport && (
-             <button
-               type="button"
-               onClick={() => setShowReportModal(true)}
-               className="kids-reader-toolbar-btn"
-               aria-label={t('reportContentAction')}
-             >
-               <WarningIcon className="w-6 h-6" />
-             </button>
-           )}
-         </motion.div>
-       )}
-     </AnimatePresence>
-   </div>
- </motion.div>
+           playKidsUiSound('tap');
+           setCompanionMessage("Hello! Let's talk about the story!");
+           setCompanionActive(true);
+        }}
+        whileHover={{ scale: 1.1 }}
+        whileTap={{ scale: 0.9 }}
+        className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-300 to-blue-500 text-white flex flex-col items-center justify-center shadow-xl border-4 border-white/60 focus:outline-none transition-shadow"
+        aria-label="Talk"
+      >
+        <span className="text-3xl drop-shadow-md" aria-hidden="true">🎙️</span>
+      </motion.button>
+      <motion.button
+        type="button"
+        onClick={(e) => {
+           e.stopPropagation();
+           playKidsUiSound('tap');
+           if (audioPlayer) audioPlayer.seekTo(0);
+           setCurrentPage(0);
+        }}
+        whileHover={{ scale: 1.1, rotate: -180 }}
+        transition={{ rotate: { duration: 0.5 } }}
+        whileTap={{ scale: 0.9 }}
+        className="w-16 h-16 rounded-full bg-gradient-to-br from-green-300 to-green-500 text-white flex flex-col items-center justify-center shadow-xl border-4 border-white/60 focus:outline-none transition-shadow"
+        aria-label="Repeat"
+      >
+        <span className="text-3xl drop-shadow-md" aria-hidden="true">🔄</span>
+      </motion.button>
+      <motion.button
+        type="button"
+        onClick={(e) => {
+            e.stopPropagation();
+            toggleBookFavorite();
+        }}
+        whileHover={{ scale: 1.1 }}
+        whileTap={{ scale: 0.9 }}
+        className={`w-16 h-16 rounded-full ${isFavorite ? 'bg-gradient-to-br from-pink-400 to-pink-600' : 'bg-gradient-to-br from-gray-200 to-gray-300'} text-white flex flex-col items-center justify-center shadow-xl border-4 border-white/60 focus:outline-none transition-shadow`}
+        aria-label="Favorite"
+      >
+        <span className="text-3xl drop-shadow-md" aria-hidden="true">{isFavorite ? '❤️' : '🤍'}</span>
+      </motion.button>
+    </div>
+  </motion.div>
  )}
  </AnimatePresence>
 
@@ -2137,3 +1997,5 @@ function BookReader() {
 }
 
 export default BookReader;
+
+

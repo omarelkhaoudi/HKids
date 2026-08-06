@@ -511,42 +511,66 @@ function createServer() {
   }
 }
 
+// True when running under the Node.js test runner (node --test).
+// In that context process.exit() must be avoided because it would
+// terminate the test child process mid-I/O and corrupt the IPC channel
+// used by the parent runner ("Unable to deserialize cloned data...").
+const isTestRunnerContext = typeof process.env.NODE_TEST_CONTEXT !== 'undefined'
+  || /node:internal\/test|node:test/.test(process.execArgv.join(' '))
+  || (process.argv[1] || '').endsWith('.test.js');
+
 // Graceful shutdown handlers
-function gracefulShutdown(signal) {
+function gracefulShutdown(signal, { forceExit = true } = {}) {
   console.log(`\n📛 Received ${signal}. Closing server gracefully...`);
   
+  const finalize = () => {
+    if (!forceExit) return;
+    process.exit(0);
+  };
+
   if (server) {
     server.close(() => {
       console.log('✅ Server closed successfully');
-      process.exit(0);
+      finalize();
     });
     
     // Force close after 10 seconds
     setTimeout(() => {
+      if (!forceExit) return;
       console.error('⚠️  Forced shutdown after timeout');
       process.exit(1);
     }, 10000);
   } else {
-    process.exit(0);
+    finalize();
   }
 }
 
 // Handle termination signals
-process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
-process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+process.on('SIGTERM', () => {
+  console.log('[server] SIGTERM received, testRunner=', isTestRunnerContext);
+  gracefulShutdown('SIGTERM', { forceExit: !isTestRunnerContext });
+});
+process.on('SIGINT', () => {
+  console.log('[server] SIGINT received, testRunner=', isTestRunnerContext);
+  gracefulShutdown('SIGINT', { forceExit: !isTestRunnerContext });
+});
+
+process.on('exit', (code) => {
+  console.log(`[server] process exit code=${code}`);
+});
 
 // Handle uncaught exceptions
 process.on('uncaughtException', (err) => {
   console.error('❌ Uncaught Exception:', err);
   Sentry.captureException(err);
-  gracefulShutdown('uncaughtException');
+  gracefulShutdown('uncaughtException', { forceExit: !isTestRunnerContext });
 });
 
 // Handle unhandled promise rejections
 process.on('unhandledRejection', (reason, promise) => {
   console.error('❌ Unhandled Rejection at:', promise, 'reason:', reason);
   Sentry.captureException(reason instanceof Error ? reason : new Error(String(reason)));
-  gracefulShutdown('unhandledRejection');
+  gracefulShutdown('unhandledRejection', { forceExit: !isTestRunnerContext });
 });
 
 // Initialize database and start server (only for non-Vercel environments)

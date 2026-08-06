@@ -51,7 +51,20 @@ export function getDatabase() {
   return pool;
 }
 
-export async function initDatabase() {
+let initPromise = null;
+
+export function initDatabase() {
+  // Reuse an in-flight initialization to avoid concurrent double-init
+  // (e.g. when a test calls initDatabase() and the server middleware does too).
+  if (initPromise) return initPromise;
+  initPromise = runInitDatabase().catch((err) => {
+    initPromise = null;
+    throw err;
+  });
+  return initPromise;
+}
+
+async function runInitDatabase() {
   const client = await pool.connect();
   try {
     console.log('🔍 Initialisation de la base...');

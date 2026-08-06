@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState, useCallback } from 'react';
+import { useEffect, useMemo, useState, useCallback } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { booksAPI } from '../api/books';
@@ -94,7 +94,7 @@ const SHELF_THEME_IDS = [
 const RECENT_SEARCHES_KEY = 'hkids_recent_library_searches';
 
 const AGE_FILTERS = [
-  { id: ALL_AGES_ID, pictogram: '🧒', labelKey: 'kidsFilterAllAges' },
+  { id: ALL_AGES_ID, pictogram: '??', labelKey: 'kidsFilterAllAges' },
   ...AGE_GROUPS.map((group) => ({
     id: group.id,
     pictogram: group.emoji,
@@ -151,7 +151,7 @@ function KidsLibrary() {
     const blocked = new Set(parentalPolicy?.rules?.blocked_themes || []);
     const allowed = parentalPolicy?.rules?.allowed_themes || [];
     const base = reorderThemesByWorlds([
-      { id: 'all', label: t('allCategories'), shortLabel: t('allCategories'), pictogram: '⭐', cue: 'Go', gradient: 'from-primary-400 to-secondary-400', match: [] },
+      { id: 'all', label: t('allCategories'), shortLabel: t('allCategories'), pictogram: '?', cue: 'Go', gradient: 'from-primary-400 to-secondary-400', match: [] },
       ...localizeKidCategories(language),
     ], personalization.favoriteWorlds);
     return base.filter((theme) => {
@@ -600,7 +600,7 @@ function KidsLibrary() {
     {
       id: 'premium',
       active: filterPremium,
-      pictogram: '✨',
+      pictogram: '?',
       label: t('kidsFilterPremium'),
       onClick: () => setFilterPremium((value) => !value),
     },
@@ -613,481 +613,154 @@ function KidsLibrary() {
     },
   ];
 
-  return (
-    <KidsPageShell
-      isRtl={isRtl}
-      variant="library"
-      world="books"
-      className={`pb-space-32 kids-library-shell kids-home-shell kids-hero-glow ${selectedTheme === 'bedtime' ? 'kids-night-calm' : ''}`}
-      footer={<KidsBottomNav />}
-    >
-      <div className="kids-home-atmosphere" aria-hidden="true">
-        <span className="kids-home-cloud" style={{ width: '8rem', top: '10%', left: '8%' }} />
-        <span className="kids-home-cloud" style={{ width: '5.5rem', top: '20%', right: '12%' }} />
-        <span className="kids-home-star" style={{ top: '14%', left: '32%' }} />
-        <span className="kids-home-star" style={{ top: '26%', right: '22%' }} />
-      </div>
 
-      {selectedTheme !== 'all' && <KidsCategoryAtmosphere categoryId={selectedTheme} />}
+  const { changeLanguage } = useLanguage();
+  const [wizardStep, setWizardStep] = useState('story');
+  const [selectedWizardBook, setSelectedWizardBook] = useState(null);
 
-      <header className="kids-home-header relative z-10 sticky top-0 px-space-20 md:px-space-32 py-space-12 md:py-space-16 flex items-center justify-between gap-space-16">
-        <div className="flex items-center gap-space-12 min-w-0">
-          <button
-            type="button"
-            onClick={() => {
-              playKidsUiSound('tap');
-              navigate('/kids');
-            }}
-            className="kids-reader-toolbar-btn !bg-card/70"
-            aria-label={t('home')}
-          >
-            <span className="text-xl" aria-hidden="true">{KIDS_PICTOGRAMS.back}</span>
-          </button>
-          <div className="min-w-0 flex items-center gap-2">
-            <span className="text-3xl" aria-hidden="true">
-              {selectedTheme === 'all' ? KIDS_PICTOGRAMS.library : (activeThemeData?.pictogram || '📚')}
-            </span>
-            <h1 className="sr-only">{libraryTitle}</h1>
-          </div>
+  const handleBookSelect = (book) => {
+    setSelectedWizardBook(book);
+    setWizardStep('voice');
+  };
+
+  const handleVoiceSelect = (voiceId) => {
+    try {
+      window.localStorage.setItem('hkids_narration_voice_profile', voiceId);
+    } catch (e) {}
+    setWizardStep('language');
+  };
+
+  const handleLanguageSelect = (langCode) => {
+    if (changeLanguage) changeLanguage(langCode);
+    navigate('/kids/read/' + selectedWizardBook.id);
+  };
+
+  
+  if (wizardStep === 'story') {
+    return (
+      <div className="relative min-h-screen bg-gradient-to-b from-sky-400 via-sky-200 to-sky-100 flex flex-col items-center justify-start pt-12 px-6 pb-24 overflow-hidden">
+        {/* Magical Background Elements */}
+        <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
+          <span className="kids-home-cloud" style={{ width: '12rem', top: '5%', left: '2%' }} />
+          <span className="kids-home-cloud" style={{ width: '8rem', top: '15%', right: '5%' }} />
+          <span className="kids-home-star" style={{ top: '10%', left: '30%' }} />
+          <span className="kids-home-star" style={{ top: '25%', right: '20%' }} />
         </div>
-        <Link
-          to="/kids"
-          className="shrink-0 rounded-full opacity-90 transition-opacity hover:opacity-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-300"
-          aria-label="HKids"
-        >
-          <Logo size="default" showText={true} />
-        </Link>
-      </header>
+        <div className="relative z-10 w-full max-w-6xl grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
+          {(() => {
+            const placeholders = [
+              '/illustrations/hkids_stories_1785859306807.jpg',
+              '/illustrations/hkids_explore_1785859328927.jpg',
+              '/illustrations/hkids_games_1785859317533.jpg',
+              '/illustrations/hkids_surprise_1785859339044.jpg',
+              '/illustrations/hkids_avatar_1785859297185.jpg',
+              '/illustrations/avatar_lion.jpg',
+              '/illustrations/avatar_princess.jpg'
+            ];
+            return discoveryPool.slice(0, 16).map((book, index) => {
+              const fallback = placeholders[index % placeholders.length];
+              return (
+            <motion.div
+              key={book.id}
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              whileHover={{ scale: 1.08, rotate: [0, -2, 2, -2, 0] }}
+              whileTap={{ scale: 0.92 }}
+              onClick={() => {
+                playKidsUiSound('tap');
+                handleBookSelect(book);
+              }}
+              className="cursor-pointer rounded-3xl overflow-hidden shadow-2xl bg-gradient-to-br from-pink-300 to-orange-300 aspect-[3/4] relative border-4 border-white/60 transition-shadow hover:shadow-kids-warm"
+            >
+              <img src={book.cover_url || book.image_path || fallback} alt="" className="w-full h-full object-cover" />
+            </motion.div>
+              );
+            });
+          })()}
+        </div>
+      </div>
+    );
+  }
 
-      <main className="kids-main kids-main-tablet-wide kids-home-main kids-library-main relative z-20">
-        <section className="kids-visual-worlds" aria-label={t('allCategories')}>
-          <div className="kids-visual-worlds-grid">
-            {visualThemes.map((theme) => (
-              <KidCategoryCard
-                key={theme.id}
-                category={theme}
-                to={`/kids/library?theme=${theme.id}${ageFilter !== ALL_AGES_ID ? `&age=${ageFilter}` : ''}`}
-                onSelect={(selected) => {
-                  saveRecentSearch(selected.label);
-                  speakGuide(getCategoryVoicePhrase(selected.id, language));
-                }}
-              />
-            ))}
-          </div>
-        </section>
+  if (wizardStep === 'voice') {
+    return (
+      <div className="relative min-h-screen bg-gradient-to-b from-sky-400 via-sky-200 to-sky-100 flex flex-col items-center justify-center p-6 overflow-hidden">
+        <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
+          <span className="kids-home-cloud" style={{ width: '14rem', bottom: '10%', right: '5%' }} />
+          <span className="kids-home-star" style={{ top: '20%', left: '15%' }} />
+          <span className="kids-home-star" style={{ bottom: '30%', left: '25%' }} />
+        </div>
+        <div className="relative z-10 w-full max-w-5xl grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 md:gap-8 p-4">
+          {[
+            { id: 'woman', src: '/illustrations/avatar_mom.jpg' },
+            { id: 'man', src: '/illustrations/avatar_dad.jpg' },
+            { id: 'princess', src: '/illustrations/avatar_princess.jpg' },
+            { id: 'lion', src: '/illustrations/avatar_lion.jpg' },
+            { id: 'robot', src: '/illustrations/avatar_robot.jpg' },
+            { id: 'teddy', src: '/illustrations/avatar_teddy.jpg' },
+            { id: 'fairy', src: '/illustrations/avatar_fairy.jpg' }
+          ].map(voice => (
+            <motion.div
+              key={voice.id}
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              whileHover={{ scale: 1.1, rotate: [0, -3, 3, -3, 0] }}
+              whileTap={{ scale: 0.9 }}
+              onClick={() => {
+                playKidsUiSound('tap');
+                handleVoiceSelect(voice.id);
+              }}
+              className="cursor-pointer rounded-[3rem] overflow-hidden aspect-square shadow-2xl border-4 border-white/80 transition-shadow hover:shadow-kids-warm"
+            >
+              <img src={voice.src} alt="" className="w-full h-full object-cover" />
+            </motion.div>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
-        <section className="kids-library-toolbar kids-library-toolbar--secondary px-space-4 md:px-space-8 space-y-space-16" aria-label={t('library')}>
-          <SearchBar
-            variant="premium"
-            value={searchQuery}
-            onChange={setSearchQuery}
-            onSubmit={(value) => saveRecentSearch(value)}
-            placeholder={t('tryAnotherWord')}
-            aria-label={t('library')}
-          />
-
-          <div className="kids-library-filter-row" role="toolbar" aria-label={t('kidsLibraryFilters')}>
-            {quickFilters.map((filter) => (
-              <button
-                key={filter.id}
-                type="button"
-                onClick={() => {
-                  playKidsUiSound('tap');
-                  filter.onClick();
-                }}
-                className={`kids-library-filter-chip ${filter.active ? 'is-active' : ''}`}
-                aria-pressed={filter.active}
-                title={filter.label}
-              >
-                <span aria-hidden="true">{filter.pictogram}</span>
-                <span className="sr-only">{filter.label}</span>
-              </button>
-            ))}
-            {AGE_FILTERS.map((band) => (
-              <button
-                key={band.id}
-                type="button"
-                onClick={() => {
-                  playKidsUiSound('tap');
-                  handleAgeFilterChange(band.id);
-                }}
-                className={`kids-library-filter-chip ${ageFilter === band.id ? 'is-active' : ''}`}
-                aria-pressed={ageFilter === band.id}
-                title={band.labelKey ? t(band.labelKey) : band.id}
-              >
-                <span aria-hidden="true">{band.pictogram}</span>
-                <span className="sr-only">{band.labelKey ? t(band.labelKey) : band.id}</span>
-              </button>
-            ))}
-          </div>
-
-          <div className="kids-library-search-discovery kids-premium-panel">
-            {recentSearches.length > 0 && (
-              <div className="kids-library-search-group">
-                <p className="sr-only">{t('recentSearches')}</p>
-                <div className="kids-library-search-chips">
-                  {recentSearches.map((item) => (
-                    <button
-                      key={item}
-                      type="button"
-                      onClick={() => {
-                        playKidsUiSound('tap');
-                        setSearchQuery(item);
-                      }}
-                      className="kids-library-search-chip"
-                    >
-                      {item}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-            <div className="kids-library-search-group">
-              <p className="sr-only">{t('popularCategories')}</p>
-              <div className="kids-library-search-chips">
-                {childThemes.filter((theme) => theme.id !== 'all').slice(0, 6).map((theme) => (
-                  <button
-                    key={theme.id}
-                    type="button"
-                    onClick={() => {
-                      playKidsUiSound('tap');
-                      handleThemeChange(theme.id);
-                      saveRecentSearch(theme.label);
-                      speakGuide(getGuideVoicePhrase('library', language));
-                    }}
-                    className="kids-library-search-chip kids-library-search-chip--theme"
-                    aria-label={theme.label}
-                    title={theme.label}
-                  >
-                    <span aria-hidden="true">{theme.pictogram}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-            {(downloadedBooks.length > 0 || downloadingCount > 0) && (
-              <motion.div
-                className="kids-library-search-meta"
-                animate={downloadingCount > 0 && !reducedMotion ? { opacity: [1, 0.72, 1] } : { opacity: 1 }}
-                transition={downloadingCount > 0 && !reducedMotion ? { duration: 2.4, repeat: Infinity, ease: 'easeInOut' } : { duration: 0 }}
-              >
-                <span>{t('offlineBooksReady', { count: downloadedBooks.length })}</span>
-                {downloadingCount > 0 && <span>{t('downloadsInProgress', { count: downloadingCount })}</span>}
-              </motion.div>
-            )}
-          </div>
-
-          <div className="kids-discovery-rail !pt-0 !gap-space-10" role="toolbar" aria-label={t('allCategories')}>
-            {childThemes.map((theme) => (
-              <KidsThemePill
-                key={theme.id}
-                theme={theme}
-                isActive={selectedTheme === theme.id}
-                onClick={() => {
-                  playKidsUiSound('tap');
-                  handleThemeChange(theme.id);
-                }}
-              />
-            ))}
-          </div>
-        </section>
-
-        {selectedTheme === 'bedtime' && (
-          <KidsAmbientSound
-            enabled
-            preset="night"
-            compact
-            labels={{
-              bedtimeSoundRain: t('bedtimeSoundRain'),
-              bedtimeSoundForest: t('bedtimeSoundForest'),
-              bedtimeSoundOcean: t('bedtimeSoundOcean'),
-              bedtimeSoundNight: t('bedtimeSoundNight'),
-              bedtimeSoundWind: t('bedtimeSoundWind'),
-            }}
-          />
-        )}
-
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={`${selectedTheme}-${ageFilter}-${searchQuery.trim()}-${loading ? 'loading' : 'ready'}`}
-            {...getMotionProps(reducedMotion, kidsPageEnter)}
-          >
-        {loading ? (
-          <div className="px-space-4">
-            <BookGridSkeleton count={8} variant="carousel" />
-          </div>
-        ) : noSearchResults ? (
-          <>
-            <KidsEmptyState
-              emoji="🔎"
-            title={t('nothingFound')}
-            description={t('tryAnotherWord')}
-            actionLabel={t('allCategories')}
-            onAction={clearFilters}
-            showMascot
-            mascotMood="encourage"
-          />
-          {todayAnnotated.length > 0 && (
-            <KidsBookCarousel
-              title={t('forYou')}
-              emoji={KIDS_PICTOGRAMS.recommended}
-              books={todayAnnotated.slice(0, 8)}
-              {...carouselProps}
-              seeAllLabel={null}
-            />
-          )}
-        </>
-      ) : books.length === 0 ? (
-        <KidsEmptyState
-          title={t('emptyBooksTitle')}
-          description={t('emptyBooksDescription')}
-          actionLabel={t('allCategories')}
-          onAction={() => handleThemeChange('all')}
-          showMascot
-        />
-      ) : selectedTheme !== 'all' ? (
-        themeBooks.length === 0 ? (
-          <>
-            <KidsEmptyState
-              title={t('nothingFound')}
-              description={t('tryAnotherWord')}
-              actionLabel={t('allCategories')}
-              onAction={() => handleThemeChange('all')}
-              showMascot
-              mascotMood="encourage"
-            />
-            {todayAnnotated.length > 0 && (
-              <KidsBookCarousel
-                title={t('forYou')}
-                subtitle={t('discoverRecommendedSubtitle')}
-                books={todayAnnotated.slice(0, 8)}
-                {...carouselProps}
-                seeAllLabel={null}
-              />
-            )}
-          </>
-        ) : (
-            <>
-              {themeContinueBooks.length > 0 && (
-                <KidsContinueRail
-                  books={themeContinueBooks}
-                  title={t('continueReading')}
-                  emoji={KIDS_PICTOGRAMS.continue}
-                  isRtl={isRtl}
-                  t={t}
-                  onResume={handlePlayBook}
-                />
+  if (wizardStep === 'language') {
+    return (
+      <div className="relative min-h-screen bg-gradient-to-b from-sky-400 via-sky-200 to-sky-100 flex flex-col items-center justify-center p-6 overflow-hidden">
+        <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
+          <span className="kids-home-cloud" style={{ width: '10rem', top: '10%', left: '10%' }} />
+          <span className="kids-home-cloud" style={{ width: '15rem', bottom: '5%', right: '10%' }} />
+          <span className="kids-home-star" style={{ top: '40%', right: '20%' }} />
+        </div>
+        <div className="relative z-10 w-full max-w-4xl grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 p-4">
+          {[
+            { id: 'fr', src: '/illustrations/flag_french.jpg', fallback: '🌍' },
+            { id: 'en', src: '/illustrations/flag_english.jpg', fallback: '🌍' },
+            { id: 'ar', src: '', fallback: '🌍' }
+          ].map(lang => (
+            <motion.div
+              key={lang.id}
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              whileHover={{ scale: 1.1, rotate: [0, -3, 3, -3, 0] }}
+              whileTap={{ scale: 0.9 }}
+              onClick={() => {
+                playKidsUiSound('tap');
+                handleLanguageSelect(lang.id);
+              }}
+              className="cursor-pointer rounded-[3rem] overflow-hidden bg-gradient-to-br from-white to-sky-50 aspect-square flex flex-col items-center justify-center shadow-2xl border-4 border-white/80 transition-shadow hover:shadow-kids-warm"
+            >
+              {lang.src ? (
+                <img src={lang.src} alt="" className="w-full h-full object-cover" />
+              ) : (
+                <span className="text-8xl md:text-[12rem] drop-shadow-md">{lang.fallback}</span>
               )}
-              {featuredHeroBook && (
-                <KidsHeroStoryCard
-                  book={featuredHeroBook}
-                  isRtl={isRtl}
-                  t={t}
-                  onRead={handlePlayBook}
-                  onListen={handleListenBook}
-                  badgeLabel={activeThemeData?.shortLabel || activeThemeData?.label}
-                  onEmptyAction={() => handleThemeChange('all')}
-                />
-              )}
-              <KidsBookCarousel
-                title={t('forYou')}
-                emoji={KIDS_PICTOGRAMS.recommended}
-                books={annotateBooksWithReasons(themePopularBooks.length ? themePopularBooks : themeBooks.slice(0, 12), activeThemeData?.shortLabel || activeThemeData?.label)}
-                {...carouselProps}
-                onSeeAll={() => handleThemeChange('all')}
-              />
-              {themeNewBooks.length > 0 && (
-                <KidsBookCarousel
-                  title={t('newBooks')}
-                  emoji={KIDS_PICTOGRAMS.new}
-                  books={annotateBooksWithReasons(themeNewBooks, t('discoverReasonNew'))}
-                  {...carouselProps}
-                  seeAllLabel={null}
-                />
-              )}
-              <KidsBookCarousel
-                title={activeThemeData?.shortLabel || activeThemeData?.label}
-                emoji={activeThemeData?.pictogram || '📚'}
-                books={annotateBooksWithReasons(themeBooks, activeThemeData?.shortLabel || activeThemeData?.label)}
-                {...carouselProps}
-                onSeeAll={() => handleThemeChange('all')}
-              />
-            </>
-          )
-        ) : (
-          <>
-            {ageFilter !== ALL_AGES_ID && visibleBooks.length > 0 && (
-              <KidsBookCarousel
-                title={t(getAgeGroupById(ageFilter)?.labelKey) || ageFilter}
-                emoji={getAgeGroupById(ageFilter)?.emoji || '📚'}
-                books={annotateBooksWithReasons(visibleBooks.slice(0, 24), t(getAgeGroupById(ageFilter)?.labelKey) || ageFilter)}
-                {...carouselProps}
-                seeAllLabel={null}
-              />
-            )}
+            </motion.div>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
-            {continueBooks.length > 0 && isRecommendationRailEnabled(recommendationRails, 'continue') && (
-              <KidsContinueRail
-                books={continueBooks}
-                title={t('continueReading')}
-                subtitle={continueSubtitle}
-                emoji={KIDS_PICTOGRAMS.continue}
-                isRtl={isRtl}
-                t={t}
-                onResume={handlePlayBook}
-              />
-            )}
-
-            {dailyAnnotated.length > 0 && isRecommendationRailEnabled(recommendationRails, 'recommended') && (
-              <KidsHeroStoryCard
-                book={{
-                  ...dailyAnnotated[0],
-                  progress: Number(dailyAnnotated[0].kid_progress_percent || 0),
-                }}
-                isRtl={isRtl}
-                t={t}
-                onRead={handlePlayBook}
-                onListen={handleListenBook}
-                badgeLabel={t('kidsDailyPick')}
-                onEmptyAction={() => handleThemeChange('all')}
-              />
-            )}
-
-            {todayAnnotated.length > 0 && isRecommendationRailEnabled(recommendationRails, 'recommended') && (
-              <KidsBookCarousel
-                title={t('forYou')}
-                emoji={KIDS_PICTOGRAMS.recommended}
-                books={todayAnnotated}
-                {...carouselProps}
-                seeAllLabel={null}
-              />
-            )}
-
-            {popularAnnotated.length > 0 && isRecommendationRailEnabled(recommendationRails, 'popular') && (
-              <KidsBookCarousel
-                title={t('kidsPopularThisWeek')}
-                emoji="🔥"
-                books={popularAnnotated}
-                {...carouselProps}
-                seeAllLabel={null}
-              />
-            )}
-
-            {newAnnotated.length > 0 && isRecommendationRailEnabled(recommendationRails, 'new') && (
-              <KidsBookCarousel
-                title={t('newBooks')}
-                emoji={KIDS_PICTOGRAMS.new}
-                books={newAnnotated}
-                {...carouselProps}
-                seeAllLabel={null}
-              />
-            )}
-
-            {editorsChoice.length > 0 && (
-              <KidsBookCarousel
-                title={t('kidsEditorsChoice')}
-                emoji="💎"
-                books={editorsChoice}
-                {...carouselProps}
-                seeAllLabel={null}
-              />
-            )}
-
-            {becauseYouLikedBooks.length > 0 && (
-              <KidsBookCarousel
-                title={likedTheme
-                  ? t('discoverBecauseYouLiked', { theme: likedTheme.shortLabel || likedTheme.label })
-                  : t('discoverBecauseSubtitle')}
-                emoji={likedTheme?.pictogram || '⭐'}
-                books={becauseYouLikedBooks}
-                {...carouselProps}
-                seeAllLabel={null}
-              />
-            )}
-
-            {audioFavorites.length > 0 && (
-              <KidsBookCarousel
-                title={t('kidsAudioFavorites')}
-                emoji={KIDS_PICTOGRAMS.listen}
-                books={audioFavorites}
-                {...carouselProps}
-                modality="audio"
-                onPlay={handleListenBook}
-                seeAllLabel={null}
-              />
-            )}
-
-            {favoriteAnnotated.length > 0 && (
-              <KidsBookCarousel
-                title={t('yourFavorites')}
-                emoji={KIDS_PICTOGRAMS.favorites}
-                books={favoriteAnnotated}
-                {...carouselProps}
-                modality="favorites"
-                seeAllLabel={null}
-              />
-            )}
-
-            {premiumShelf.length > 0 && isRecommendationRailEnabled(recommendationRails, 'premium') && (
-              <KidsBookCarousel
-                title={t('kidsPremiumShelf')}
-                emoji="✨"
-                books={premiumShelf}
-                {...carouselProps}
-                seeAllLabel={null}
-              />
-            )}
-
-            {randomExplore.length > 0 && isRecommendationRailEnabled(recommendationRails, 'discover') && (
-              <KidsBookCarousel
-                title={t('kidsSurpriseExplore')}
-                emoji="🎲"
-                books={randomExplore}
-                {...carouselProps}
-                seeAllLabel={null}
-              />
-            )}
-
-            <div className="kids-home-secondary-shelves">
-              {seasonalAnnotated.length > 0 && (
-                <KidsBookCarousel
-                  title={t('discoverSeasonal')}
-                  emoji="🍂"
-                  books={seasonalAnnotated}
-                  {...carouselProps}
-                  seeAllLabel={null}
-                />
-              )}
-
-              {themeShelves.map(({ theme, books: shelfBooks }) => (
-                <KidsBookCarousel
-                  key={theme.id}
-                  title={theme.shortLabel || theme.label}
-                  emoji={theme.pictogram}
-                  books={annotateBooksWithReasons(shelfBooks, theme.shortLabel || theme.label)}
-                  {...carouselProps}
-                  onSeeAll={() => handleThemeChange(theme.id)}
-                />
-              ))}
-            </div>
-          </>
-        )}
-          </motion.div>
-        </AnimatePresence>
-
-        <KidsFamilyMessages />
-        <KidsTrustBadges t={t} compact className="opacity-55" />
-      </main>
-
-      <KidsGuideCompanion
-        mood="encourage"
-        message={getGuideVoicePhrase('library', language)}
-        speakOnMount
-        speakText={getGuideVoicePhrase('library', language)}
-      />
-
-      <VoiceAssistant language={language === 'en' ? 'en-US' : language === 'ar' ? 'ar-MA' : 'fr-FR'} onNavigate={(path) => navigate(path)} />
-    </KidsPageShell>
-  );
+  return null;
 }
-
 export default KidsLibrary;
+
+
+
