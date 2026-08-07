@@ -635,6 +635,37 @@ function KidsLibrary() {
     navigate('/kids/read/' + selectedWizardBook.id);
   };
 
+  if (loading && wizardStep === 'story') {
+    return (
+      <div className="relative min-h-screen bg-gradient-to-b from-sky-400 via-sky-200 to-sky-100 flex flex-col items-center justify-center p-6 overflow-hidden">
+        <motion.div
+          animate={{ scale: [1, 1.2, 1], rotate: [0, -10, 10, -10, 0] }}
+          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+          className="text-8xl drop-shadow-lg"
+        >
+          ✨
+        </motion.div>
+      </div>
+    );
+  }
+
+  if (!loading && discoveryPool.length === 0 && wizardStep === 'story') {
+    return (
+      <div className="relative min-h-screen bg-gradient-to-b from-sky-400 via-sky-200 to-sky-100 flex flex-col items-center justify-center p-6 overflow-hidden">
+        <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
+          <span className="kids-home-cloud" style={{ width: '12rem', top: '20%', left: '10%' }} />
+          <span className="kids-home-cloud" style={{ width: '15rem', top: '15%', right: '5%' }} />
+        </div>
+        <motion.div
+          animate={{ y: [0, -20, 0] }}
+          transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+          className="relative z-10 text-center"
+        >
+          <div className="text-8xl mb-6 drop-shadow-lg" aria-hidden="true">☁️</div>
+        </motion.div>
+      </div>
+    );
+  }
   
   if (wizardStep === 'story') {
     return (

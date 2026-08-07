@@ -356,7 +356,7 @@ function ReaderClouds() {
  );
 }
 
-function PremiumReaderState({ onAction, reducedMotion, icon = '✨' }) {
+function PremiumReaderState({ title, description, actionLabel, onAction, reducedMotion, icon = '✨' }) {
  return (
   <div className="min-h-screen flex items-center justify-center kids-reader-shell" data-reader-theme="warm">
    <ReaderPaperAtmosphere />
@@ -370,21 +370,26 @@ function PremiumReaderState({ onAction, reducedMotion, icon = '✨' }) {
     <motion.div 
       animate={{ scale: [1, 1.2, 1], rotate: [0, -10, 10, -10, 0] }} 
       transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-      className="text-8xl mb-12 drop-shadow-lg" 
+      className="text-8xl mb-8 drop-shadow-lg" 
       aria-hidden="true"
     >
       {icon}
     </motion.div>
+
+    {title && <h2 className="kids-type-h2 mb-4 text-hkids-brown">{title}</h2>}
+    {description && <p className="kids-type-body mb-8 text-hkids-brown/80">{description}</p>}
+
     {onAction ? (
      <motion.button
       type="button"
       whileHover={{ scale: 1.1 }}
       whileTap={{ scale: 0.9 }}
       onClick={onAction}
-      className="w-24 h-24 bg-green-400 rounded-full shadow-[0_10px_20px_rgba(74,222,128,0.4)] border-4 border-white mx-auto flex items-center justify-center text-white"
+      className="w-24 h-24 bg-sky-400 rounded-full shadow-[0_10px_20px_rgba(56,189,248,0.4)] border-4 border-white mx-auto flex items-center justify-center text-white kids-touch-target"
+      aria-label={actionLabel || "Retour"}
      >
-      <svg className="w-12 h-12 ml-2 drop-shadow-md" fill="currentColor" viewBox="0 0 24 24">
-        <path d="M8 5v14l11-7z" />
+      <svg className="w-12 h-12 drop-shadow-md" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={3}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
       </svg>
      </motion.button>
     ) : null}
